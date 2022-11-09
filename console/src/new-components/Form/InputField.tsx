@@ -1,13 +1,13 @@
-import React, { ReactElement } from 'react';
 import clsx from 'clsx';
 import get from 'lodash.get';
+import React, { ReactElement } from 'react';
 import { FieldError, FieldPath, useFormContext } from 'react-hook-form';
-import { z, ZodTypeDef, ZodType } from 'zod';
+import { z, ZodType, ZodTypeDef } from 'zod';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 type TFormValues = Record<string, unknown>;
 
-type Schema = ZodType<TFormValues, ZodTypeDef, TFormValues>;
+export type Schema = ZodType<TFormValues, ZodTypeDef, TFormValues>;
 
 export type InputFieldProps<T extends z.infer<Schema>> =
   FieldWrapperPassThroughProps & {
@@ -51,6 +51,10 @@ export type InputFieldProps<T extends z.infer<Schema>> =
      * A callback for transforming the input onChange for things like sanitizing input
      */
     inputTransform?: (val: string) => string;
+    /**
+     * Render line breaks in the description
+     */
+    renderDescriptionLineBreaks?: boolean;
   };
 
 export const InputField = <T extends z.infer<Schema>>({
@@ -64,6 +68,7 @@ export const InputField = <T extends z.infer<Schema>>({
   appendLabel = '',
   dataTest,
   inputTransform,
+  renderDescriptionLineBreaks = false,
   ...wrapperProps
 }: InputFieldProps<T>) => {
   const {
@@ -76,65 +81,72 @@ export const InputField = <T extends z.infer<Schema>>({
   const { onChange, ...regReturn } = register(name);
 
   return (
-    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
-      <div className={clsx('relative flex')}>
-        {prependLabel !== '' ? (
-          <span className="inline-flex items-center h-input rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">
-            {prependLabel}
-          </span>
-        ) : null}
-        {iconPosition === 'start' && icon ? (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            {React.cloneElement(icon, {
-              className: 'h-5 w-5 text-gray-400',
-            })}
-          </div>
-        ) : null}
-        <input
-          id={name}
-          type={type}
-          aria-invalid={maybeError ? 'true' : 'false'}
-          aria-label={wrapperProps.label}
-          data-test={dataTest}
-          className={clsx(
-            'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500',
-            prependLabel !== '' ? 'rounded-l-none' : '',
-            appendLabel !== '' ? 'rounded-r-none' : '',
-            maybeError
-              ? 'border-red-600 hover:border-red-700'
-              : 'border-gray-300',
-            disabled
-              ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
-              : 'hover:border-gray-400',
-            {
-              'pl-10': iconPosition === 'start' && icon,
-              'pr-10': iconPosition === 'end' && icon,
-            }
-          )}
-          placeholder={placeholder}
-          {...regReturn}
-          onChange={e => {
-            if (inputTransform) {
-              e.target.value = inputTransform(e.target.value);
-            }
-            onChange(e);
-          }}
-          disabled={disabled}
-          data-testid={name}
-        />
-        {iconPosition === 'end' && icon ? (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            {React.cloneElement(icon, {
-              className: 'h-5 text-gray-400',
-            })}
-          </div>
-        ) : null}
-        {appendLabel !== '' ? (
-          <span className="inline-flex items-center h-input rounded-r text-muted font-semibold px-sm border border-l-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">
-            {appendLabel}
-          </span>
-        ) : null}
-      </div>
-    </FieldWrapper>
+    <>
+      <FieldWrapper
+        id={name}
+        {...wrapperProps}
+        error={maybeError}
+        renderDescriptionLineBreaks={renderDescriptionLineBreaks}
+      >
+        <div className={clsx('relative flex')}>
+          {prependLabel !== '' ? (
+            <span className="inline-flex items-center h-input rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">
+              {prependLabel}
+            </span>
+          ) : null}
+          {iconPosition === 'start' && icon ? (
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              {React.cloneElement(icon, {
+                className: 'h-5 w-5 text-gray-400',
+              })}
+            </div>
+          ) : null}
+          <input
+            id={name}
+            type={type}
+            aria-invalid={maybeError ? 'true' : 'false'}
+            aria-label={wrapperProps.label}
+            data-test={dataTest}
+            className={clsx(
+              'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500',
+              prependLabel !== '' ? 'rounded-l-none' : '',
+              appendLabel !== '' ? 'rounded-r-none' : '',
+              maybeError
+                ? 'border-red-600 hover:border-red-700'
+                : 'border-gray-300',
+              disabled
+                ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
+                : 'hover:border-gray-400',
+              {
+                'pl-10': iconPosition === 'start' && icon,
+                'pr-10': iconPosition === 'end' && icon,
+              }
+            )}
+            placeholder={placeholder}
+            {...regReturn}
+            onChange={e => {
+              if (inputTransform) {
+                e.target.value = inputTransform(e.target.value);
+              }
+              onChange(e);
+            }}
+            disabled={disabled}
+            data-testid={name}
+          />
+          {iconPosition === 'end' && icon ? (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              {React.cloneElement(icon, {
+                className: 'h-5 text-gray-400',
+              })}
+            </div>
+          ) : null}
+          {appendLabel !== '' ? (
+            <span className="inline-flex items-center h-input rounded-r text-muted font-semibold px-sm border border-l-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">
+              {appendLabel}
+            </span>
+          ) : null}
+        </div>
+      </FieldWrapper>
+    </>
   );
 };

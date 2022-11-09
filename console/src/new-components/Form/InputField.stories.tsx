@@ -1,11 +1,11 @@
-import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import React from 'react';
 
-import { UseFormReturn } from 'react-hook-form';
-import { z } from 'zod';
 import { Form, InputField } from '@/new-components/Form';
+import { UseFormReturn } from 'react-hook-form';
 import { FiSearch } from 'react-icons/fi';
+import { z } from 'zod';
 
 export default {
   title: 'components/Forms 📁/InputField 🧬',

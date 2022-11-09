@@ -60,6 +60,10 @@ type FieldWrapperProps = {
    * Removing styling only necessary for the error placeholder
    */
   noErrorPlaceholder?: boolean;
+  /**
+   * Render line breaks in the description
+   */
+  renderDescriptionLineBreaks?: boolean;
 };
 
 export type FieldWrapperPassThroughProps = Omit<
@@ -106,6 +110,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     horizontal,
     loading,
     noErrorPlaceholder = false,
+    renderDescriptionLineBreaks = false,
   } = props;
 
   let FieldLabel = () => <></>;
@@ -122,7 +127,11 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
           loading ? 'relative' : ''
         )}
       >
-        {description}
+        <span
+          className={clsx(renderDescriptionLineBreaks && 'whitespace-pre-line')}
+        >
+          {description}
+        </span>
         {loading ? <Skeleton className="absolute inset-0" /> : null}
       </span>
     );
