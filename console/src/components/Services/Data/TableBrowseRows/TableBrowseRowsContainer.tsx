@@ -48,8 +48,7 @@ export const TableBrowseRowsContainer = (
     return () => {
       dispatch(vSetDefaults());
     };
-    // This effect only needs to run once and only needs the table name ref for that time alone
-  }, []);
+  }, [tableName]);
 
   const schemas = useAppSelector<Table[]>(store => store.tables.allSchemas);
   const {
