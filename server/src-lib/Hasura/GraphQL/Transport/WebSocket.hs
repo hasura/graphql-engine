@@ -434,11 +434,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
   (sc, scVer) <- liftIO getSchemaCache
 
-  operationLimit <- askGraphqlOperationLimit requestId
+  operationLimit <- askGraphqlOperationLimit requestId userInfo (scApiLimits sc)
   let runLimits ::
         ExceptT (Either GQExecError QErr) (ExceptT () m) a ->
         ExceptT (Either GQExecError QErr) (ExceptT () m) a
-      runLimits = withErr Right $ runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      runLimits = withErr Right $ runResourceLimits operationLimit
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)

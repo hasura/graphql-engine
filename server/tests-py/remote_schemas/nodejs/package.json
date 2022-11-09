@@ -1,13 +1,7 @@
 {
-  "name": "aws-lambda-nodejs",
+  "name": "hasura-server-tests-py-remote-schemas",
   "version": "1.0.0",
-  "description": "",
-  "main": "lambdaCtx.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
+  "author": "Hasura, Inc.",
   "license": "ISC",
   "dependencies": {
     "apollo-server": "3.8.1",
