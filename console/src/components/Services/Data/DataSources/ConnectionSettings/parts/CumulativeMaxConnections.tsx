@@ -14,7 +14,7 @@ export const CumulativeMaxConnections: React.VFC<ConnectionSettingsFormProps> =
           tooltipText="Maximum number of database connections"
           type="number"
           className={`form-control ${styles.connnection_settings_form_input}`}
-          placeholder="50"
+          placeholder="1000"
           value={
             connectionDBState.connectionSettings?.total_max_connections ||
             undefined
