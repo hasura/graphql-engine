@@ -212,9 +212,13 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
     -- is because, unfortunately, the value returned by the above is
     -- {<rootFieldNameText>:[]} (notice the lack of spaces). So, instead
     -- we're templating according to the format postgres sends JSON responses.
-    emptyRespBS = txtToBs $ [st|{"#{rootFieldNameText}" : []}|]
+    emptyRespBS = Right $ txtToBs [st|{"#{rootFieldNameText}" : []}|]
+    -- Same as the above, but cockroach prefixes the responses with @\x1@ and does not
+    -- have a space between the key and the colon.
+    roachEmptyRespBS = Right $ "\x1" <> txtToBs [st|{"#{rootFieldNameText}": []}|]
 
-    isResponseEmpty = result == Right emptyRespBS
+    isResponseEmpty =
+      result == emptyRespBS || result == roachEmptyRespBS
 
     C.CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
 
