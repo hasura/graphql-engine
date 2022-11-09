@@ -77,7 +77,9 @@ typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
 typeCheck locationHasDefaultValue locationType variable@Variable {vInfo, vType} =
   unless (isVariableUsageAllowed locationHasDefaultValue locationType variable) $
     parseError $
-      "variable " <> toErrorValue (getName vInfo) <> " is declared as "
+      "variable "
+        <> toErrorValue (getName vInfo)
+        <> " is declared as "
         <> toErrorValue vType
         <> ", but used where "
         <> toErrorValue locationType

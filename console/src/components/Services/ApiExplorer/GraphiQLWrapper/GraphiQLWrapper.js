@@ -40,6 +40,8 @@ import 'graphiql-code-exporter/CodeExporter.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
 import { LS_KEYS, setLSItem } from '@/utils/localStorage';
+import { CodeExporterEventTracer } from './CodeExporterEventTracer';
+import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -68,6 +70,8 @@ class GraphiQLWrapper extends Component {
   }
 
   _handleToggleCodeExporter = () => {
+    trackGraphiQlToolbarButtonClick('Code Exporter');
+
     const nextState = !this.state.codeExporterOpen;
 
     persistCodeExporterOpen(nextState);
@@ -116,6 +120,8 @@ class GraphiQLWrapper extends Component {
     let graphiqlContext;
 
     const handleClickPrettifyButton = () => {
+      trackGraphiQlToolbarButtonClick('Prettify');
+
       const editor = graphiqlContext.getQueryEditor();
       const currentText = editor.getValue();
       const prettyText = print(sdlParse(currentText));
@@ -123,12 +129,15 @@ class GraphiQLWrapper extends Component {
     };
 
     const handleToggleHistory = () => {
+      trackGraphiQlToolbarButtonClick('History');
       graphiqlContext.setState(prevState => ({
         historyPaneOpen: !prevState.historyPaneOpen,
       }));
     };
 
     const deriveActionFromOperation = () => {
+      trackGraphiQlToolbarButtonClick('Derive action');
+
       const { schema, query } = graphiqlContext.state;
       if (!schema) return;
       if (!query) return;
@@ -178,6 +187,8 @@ class GraphiQLWrapper extends Component {
     };
 
     const _toggleCacheDirective = () => {
+      trackGraphiQlToolbarButtonClick('Cache');
+
       const editor = graphiqlContext.getQueryEditor();
       const operationString = editor.getValue();
       const cacheToggledOperationString = toggleCacheDirective(operationString);
@@ -242,7 +253,10 @@ class GraphiQLWrapper extends Component {
           {
             label: 'Explorer',
             title: 'Toggle Explorer',
-            onClick: graphiqlProps.toggleExplorer,
+            onClick: () => {
+              trackGraphiQlToolbarButtonClick('Explorer');
+              graphiqlProps.toggleExplorer();
+            },
           },
           {
             label: 'Cache',
@@ -258,7 +272,10 @@ class GraphiQLWrapper extends Component {
           {
             label: 'REST',
             title: 'REST Endpoints',
-            onClick: routeToREST(graphiqlProps),
+            onClick: () => {
+              trackGraphiQlToolbarButtonClick('REST');
+              routeToREST(graphiqlProps);
+            },
           },
         ];
         if (mode === 'graphql') {
@@ -277,6 +294,7 @@ class GraphiQLWrapper extends Component {
 
       return (
         <>
+          <CodeExporterEventTracer />
           <GraphiQL
             {...graphiqlProps}
             ref={c => {

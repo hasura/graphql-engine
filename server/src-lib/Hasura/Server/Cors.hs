@@ -82,10 +82,10 @@ readCorsDomains :: String -> Either String CorsConfig
 readCorsDomains str
   | str == "*" = pure CCAllowAll
   | otherwise = do
-    let domains = map T.strip $ T.splitOn "," (T.pack str)
-    pDomains <- mapM parseOptWildcardDomain domains
-    let (fqdns, wcs) = (lefts pDomains, rights pDomains)
-    return $ CCAllowedOrigins $ Domains (Set.fromList fqdns) (Set.fromList wcs)
+      let domains = map T.strip $ T.splitOn "," (T.pack str)
+      pDomains <- mapM parseOptWildcardDomain domains
+      let (fqdns, wcs) = (lefts pDomains, rights pDomains)
+      return $ CCAllowedOrigins $ Domains (Set.fromList fqdns) (Set.fromList wcs)
 
 data CorsPolicy = CorsPolicy
   { cpConfig :: !CorsConfig,
@@ -104,7 +104,7 @@ mkDefaultCorsPolicy cfg =
 
 inWildcardList :: Domains -> Text -> Bool
 inWildcardList (Domains _ wildcards) origin =
-  either (const False) (`Set.member` wildcards) $ parseOrigin origin
+  any (`Set.member` wildcards) $ parseOrigin origin
 
 -- | Parsers for wildcard domains
 runParser :: AT.Parser a -> Text -> Either String a

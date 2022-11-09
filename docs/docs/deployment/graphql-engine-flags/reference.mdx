@@ -249,7 +249,7 @@ HTTP method to use for the authorization webhook. (default: `GET`)
 Maximum number of Postgres connections that can be opened per stripe (default: `50`). When the maximum is reached we
 will block until a new connection becomes available, even if there is capacity in other stripes.
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -272,7 +272,7 @@ Time from connection creation after which the connection should be destroyed and
 indicates we should never destroy an active connection. If `0` is passed, memory from large query results may not be
 reclaimed. (default: `600` **sec**)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -624,7 +624,9 @@ Interval in milliseconds to sleep before trying to fetch events again after a fe
 <td>
 
 List of experimental features to be enabled. A comma separated value is expected. Options: `inherited_roles`,
-`naming_convention`, `streaming_subscriptions`, `hide_update_many_fields`.
+`optimise_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`,
+`bigquery_string_numeric_input`, `hide_aggregation_predicates`,
+`hide_stream_fields`.
 
 _(Available for versions > v2.0.0)_
 
@@ -670,7 +672,7 @@ _(Available for versions > v2.0.0)_
 
 Transaction isolation. read-committed / repeatable-read / serializable (default: read-committed)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -815,7 +817,7 @@ How long to wait when acquiring a Postgres connection, in seconds. (default: for
 
 The maximum number of query plans that can be cached, allowed values: 0-65535, 0 disables the cache. (Default: 4000)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -836,7 +838,7 @@ The maximum number of query plans that can be cached, allowed values: 0-65535, 0
 
 Number of retries if Postgres connection error occurs. (default: `1`)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -858,7 +860,7 @@ Number of retries if Postgres connection error occurs. (default: `1`)
 Number of stripes (distinct sub-pools) to maintain with Postgres (default: `1`). New connections will be taken from a
 particular stripe pseudo-randomly.
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -964,7 +966,7 @@ multiplexed. (Default: `1000`)
 <tr>
 <td>
 
-**Flag:**
+###### Flag: {#stringify-numeric-types}
 
 `--stringify-numeric-types`
 
@@ -997,7 +999,7 @@ don't fit into the `IEEE-754` spec for JSON encoding-decoding. (default: `false`
 
 Each connection's idle time before it is closed (default: `180` **sec**)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -1039,7 +1041,7 @@ JWT mode. Example: `anonymous`. Now whenever the "authorization" header is absen
 
 Use prepared statements for queries. (default: `true`)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -1160,7 +1162,7 @@ Maximum number of concurrent http workers delivering events at any time. (defaul
 </td>
 <td>
 
-Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres.
+Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres. (default: `1000`)
 
 </td>
 </tr>
@@ -1515,7 +1517,7 @@ Redis URL in the form `redis://username:password@host:port/db` to use for query 
 
 Number of stripes (connection pools) to maintain per read replica.
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>

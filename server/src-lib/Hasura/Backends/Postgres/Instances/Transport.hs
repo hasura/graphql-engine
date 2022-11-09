@@ -100,7 +100,9 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql = do
   withElapsedTime $
     trace ("Postgres Mutation for root field " <>> fieldName) $
       Tracing.interpTraceT
-        ( liftEitherM . liftIO . runExceptT
+        ( liftEitherM
+            . liftIO
+            . runExceptT
             . runTx (_pscExecCtx sourceConfig) PG.ReadWrite
             . withTraceContext ctx
             . withUserInfo userInfo
@@ -115,7 +117,9 @@ runPGSubscription ::
   m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runPGSubscription sourceConfig query variables =
   withElapsedTime $
-    runExceptT $ runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeMultiplexedQuery query variables
+    runExceptT $
+      runQueryTx (_pscExecCtx sourceConfig) $
+        PGL.executeMultiplexedQuery query variables
 
 runPGStreamingSubscription ::
   MonadIO m =>
@@ -177,7 +181,9 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
   ctx <- Tracing.currentContext
   withElapsedTime $ do
     Tracing.interpTraceT
-      ( liftEitherM . liftIO . runExceptT
+      ( liftEitherM
+          . liftIO
+          . runExceptT
           . runTx (_pscExecCtx sourceConfig) PG.ReadWrite
           . withTraceContext ctx
           . withUserInfo userInfo

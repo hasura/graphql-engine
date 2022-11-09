@@ -127,7 +127,8 @@ getMaintenanceModeVersion ::
 getMaintenanceModeVersion sourceConfig =
   liftEitherM $
     liftIO $
-      runMSSQLSourceReadTx sourceConfig $ getMaintenanceModeVersionTx
+      runMSSQLSourceReadTx sourceConfig $
+        getMaintenanceModeVersionTx
 
 recordSuccess ::
   (MonadIO m) =>
@@ -164,7 +165,7 @@ recordError' ::
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
-      onJust invocation $ insertInvocation (tmName (eTrigger event))
+      for_ invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> do
           setRetryTx event retryTime maintenanceModeVersion
@@ -237,9 +238,9 @@ createMissingSQLTriggers ::
 createMissingSQLTriggers sourceConfig table@(TableName tableNameText (SchemaName schemaText)) (allCols, primaryKeyMaybe) triggerName opsDefinition = do
   liftEitherM $
     runMSSQLSourceWriteTx sourceConfig $ do
-      onJust (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
-      onJust (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
-      onJust (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
+      for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
+      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
+      for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
   where
     doesSQLTriggerExist op opSpec = do
       let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
@@ -570,11 +571,11 @@ getMaintenanceModeVersionTx = do
   if
       | catalogVersion == latestSourceCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
-        throw500 $
-          "Maintenance mode is only supported with catalog versions: "
-            <> tshow latestSourceCatalogVersion
-            <> " but received "
-            <> tshow catalogVersion
+          throw500 $
+            "Maintenance mode is only supported with catalog versions: "
+              <> tshow latestSourceCatalogVersion
+              <> " but received "
+              <> tshow catalogVersion
 
 -- | Note: UTCTIME not supported in SQL Server
 --
@@ -637,9 +638,9 @@ mkAllTriggersQ ::
   Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL)) ->
   m ()
 mkAllTriggersQ triggerName tableName allCols fullSpec primaryKey = do
-  onJust (tdInsert fullSpec) (mkInsertTriggerQ triggerName tableName allCols)
-  onJust (tdDelete fullSpec) (mkDeleteTriggerQ triggerName tableName allCols)
-  onJust (tdUpdate fullSpec) (mkUpdateTriggerQ triggerName tableName allCols primaryKey)
+  for_ (tdInsert fullSpec) (mkInsertTriggerQ triggerName tableName allCols)
+  for_ (tdDelete fullSpec) (mkDeleteTriggerQ triggerName tableName allCols)
+  for_ (tdUpdate fullSpec) (mkUpdateTriggerQ triggerName tableName allCols primaryKey)
 
 getApplicableColumns :: [ColumnInfo 'MSSQL] -> SubscribeColumns 'MSSQL -> [ColumnInfo 'MSSQL]
 getApplicableColumns allColumnInfos = \case
@@ -898,7 +899,10 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
             )
             triggersWithcleanupConfig
     unless (null scheduledTriggersAndTimestamps) $
-      liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+      liftEitherM $
+        liftIO $
+          runMSSQLSourceWriteTx sourceConfig $
+            insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the given trigger name and schedules
 insertEventTriggerCleanupLogsTx :: [(TriggerName, [Datetimeoffset])] -> TxET QErr IO ()
@@ -1156,6 +1160,8 @@ deleteEventTriggerLogs ::
   (MonadIO m, MonadError QErr m) =>
   MSSQLSourceConfig ->
   TriggerLogCleanupConfig ->
+  IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
   m DeletedEventLogStats
-deleteEventTriggerLogs sourceConfig cleanupConfig =
-  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
+  deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
+    runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

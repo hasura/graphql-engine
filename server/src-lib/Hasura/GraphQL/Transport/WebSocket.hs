@@ -65,9 +65,9 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits)
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Auth
   ( AuthMode,
@@ -232,11 +232,12 @@ sendCloseWithMsg ::
   m ()
 sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   case mErrServerMsg of
-    Just errServerMsg ->
-      sendMsg wsConn errServerMsg
-    Nothing -> pure ()
-  logWSEvent logger wsConn EClosed
-  liftIO $ WS.sendCloseCode wsc errCloseCode errMsg
+    Just errServerMsg -> do
+      logWSEvent logger wsConn EClosed
+      liftIO $ WS.sendMsgAndCloseConn wsConn errCloseCode errMsg errServerMsg
+    Nothing -> do
+      logWSEvent logger wsConn EClosed
+      liftIO $ WS.sendCloseCode wsc errCloseCode errMsg
   where
     wsc = WS.getRawWebSocketConnection wsConn
     errMsg = encodeServerErrorMsg errCode
@@ -268,8 +269,8 @@ sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata ex
       (SMData (DataMsg opId _)) -> (Just SMT_GQL_DATA, Just opId)
       _ -> (Nothing, Nothing)
     wsInfo =
-      Just
-        $! WS.WSEventInfo
+      Just $!
+        WS.WSEventInfo
           { WS._wseiEventType = msgType,
             WS._wseiOperationId = operationId,
             WS._wseiOperationName = opName,
@@ -435,11 +436,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
   (sc, scVer) <- liftIO getSchemaCache
 
-  operationLimit <- askGraphqlOperationLimit requestId
+  operationLimit <- askGraphqlOperationLimit requestId userInfo (scApiLimits sc)
   let runLimits ::
         ExceptT (Either GQExecError QErr) (ExceptT () m) a ->
         ExceptT (Either GQExecError QErr) (ExceptT () m) a
-      runLimits = withErr Right $ runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      runLimits = withErr Right $ runResourceLimits operationLimit
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
@@ -544,7 +545,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               --       the WS client will respond correctly to multiple messages.
               void $
                 Tracing.interpTraceT (withExceptT mempty) $
-                  cacheStore cacheKey cachedDirective $ encodeAnnotatedResponseParts results
+                  cacheStore cacheKey cachedDirective $
+                    encodeAnnotatedResponseParts results
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -735,7 +737,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         totalTime <- timerTot
         let telemTimeTot = Seconds totalTime
         sendSuccResp (encodeAnnotatedResponseParts results) opName pqh $
-          ES.SubscriptionMetadata $ sum $ fmap arpTimeIO results
+          ES.SubscriptionMetadata $
+            sum $
+              fmap arpTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
         liftIO $ recordGQLQuerySuccess totalTime gqlOpType
@@ -802,7 +806,10 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
-        SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
+        SMErr $
+          ErrorMsg opId $
+            errFn False $
+              err400 StartFailed e
       liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
       liftIO $ reportGQLQueryError Nothing
       liftIO $ closeConnAction wsConn opId (T.unpack e)
@@ -926,7 +933,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           (ES.SubscriptionMetadata dTime)
       resp ->
         sendMsg wsConn $
-          sendDataMsg $ DataMsg opId $ LBS.fromStrict . ES._lqrPayload <$> resp
+          sendDataMsg $
+            DataMsg opId $
+              LBS.fromStrict . ES._lqrPayload <$> resp
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.
@@ -988,7 +997,7 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
     Left e -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
       logWSEvent logger wsConn $ EConnErr err
-      liftIO $ onErrAction wsConn err WS.onClientMessageParseErrorText
+      liftIO $ onErrAction wsConn err WS.ClientMessageParseFailed
     Right msg -> case msg of
       -- common to both protocols
       CMConnInit params ->
@@ -1090,7 +1099,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
 
           let connErr = ConnErrMsg $ qeError e
           logWSEvent logger wsConn $ EConnErr connErr
-          liftIO $ onConnInitErrAction wsConn connErr WS.onConnInitErrorText
+          liftIO $ onConnInitErrAction wsConn connErr WS.ConnInitFailed
         -- we're ignoring the auth headers as headers are irrelevant in websockets
         Right (userInfo, expTimeM, _authHeaders) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
@@ -1104,7 +1113,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
     unexpectedInitError e = do
       let connErr = ConnErrMsg e
       logWSEvent logger wsConn $ EConnErr connErr
-      liftIO $ onConnInitErrAction wsConn connErr WS.onConnInitErrorText
+      liftIO $ onConnInitErrAction wsConn connErr WS.ConnInitFailed
 
     getIpAddress = \case
       CSNotInitialised _ ip -> return ip

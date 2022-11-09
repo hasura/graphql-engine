@@ -17,6 +17,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (defaultSource)
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.ResizePool
 import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import System.Cron (everyMinute)
@@ -34,13 +35,14 @@ buildEventTriggerCleanupSuite = do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
-        throwError $ "Expected: " <> envVar
+        throwError $
+          "Expected: " <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
-  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool
+  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $ do
@@ -235,17 +237,14 @@ eventTriggerLogCleanupSpec sourceConfig = do
       -- run the setup
       liftIO setup
       -- we have 5 logs which are past the retention period
-      -- try deleting 2 event logs and invocation logs
-      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig True))
-        `shouldReturn` (DeletedEventLogStats 2 2)
-      -- we have 3 logs which are past the retention period
-      -- try deleting 2 event logs and no invocation logs
-      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig False))
-        `shouldReturn` (DeletedEventLogStats 2 0)
-      -- we have 1 event log which is past the retention period
-      -- try deleting 2 event logs and invocation logs (should delete only 1)
-      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig True))
-        `shouldReturn` (DeletedEventLogStats 1 1)
+      -- try deleting in batch of 2
+      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig True) (pure Nothing))
+        `shouldReturn` (DeletedEventLogStats 5 5)
+      -- we have 0 logs which are past the retention period now
+      -- try deleting in batch of 2
+      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig False) (pure Nothing))
+        `shouldReturn` (DeletedEventLogStats 0 0)
+
       -- finally teardown
       liftIO teardown
 

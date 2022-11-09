@@ -132,7 +132,8 @@ nodeField sourceCache = do
             [] -> throwInvalidNodeId $ "no such table found: " <> toErrorValue tableName
             l ->
               throwInvalidNodeId $
-                "this V1 node id matches more than one table across different sources: " <> toErrorValue tableName
+                "this V1 node id matches more than one table across different sources: "
+                  <> toErrorValue tableName
                   <> " exists in sources "
                   <> toErrorValue (fst <$> l)
         NodeIdV2 nodev2 ->

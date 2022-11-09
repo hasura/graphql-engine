@@ -155,10 +155,10 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
       textSQL = PG.getQueryText querySQL
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
-      withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+      withExplain = "EXPLAIN " <> textSQL
   let action =
         liftTx $
-          PG.listQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
+          PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
             encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
   pure $
     AB.mkAnyBackend $
@@ -177,7 +177,7 @@ pgDBSubscriptionExplain plan = do
       queryText = PG.getQueryText . PGL.unMultiplexedQuery $ _plqpQuery parameterizedPlan
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
-      explainQuery = PG.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
+      explainQuery = PG.fromText $ "EXPLAIN " <> queryText
   cohortId <- newCohortId
   explanationLines <-
     liftEitherM $
@@ -266,9 +266,9 @@ convertFunction userInfo jsonAggSelect unpreparedQuery = do
           JASMultipleRows -> QDBMultipleRows
           JASSingleObject -> QDBSingleRow
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals $ queryResultFn preparedQuery) queryTags
-  pure
-    $! fst
-    $ mkCurPlanTx userInfo preparedSQLWithQueryTags -- forget (Maybe PreparedSql)
+  pure $!
+    fst $
+      mkCurPlanTx userInfo preparedSQLWithQueryTags -- forget (Maybe PreparedSql)
 
 pgDBMutationPlan ::
   forall pgKind m.
@@ -311,7 +311,8 @@ pgDBLiveQuerySubscriptionPlan ::
 pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
-      for unpreparedAST $ traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
+      for unpreparedAST $
+        traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   subscriptionQueryTagsComment <- ask
   let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
@@ -395,7 +396,9 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
    in (,Just ps) $
-        Tracing.trace "Postgres" $ liftTx $ asSingleRowJsonResp q prepArgs
+        Tracing.trace "Postgres" $
+          liftTx $
+            asSingleRowJsonResp q prepArgs
 
 -- | This function is generally used on the result of 'selectQuerySQL',
 -- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
@@ -480,7 +483,9 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     rowsArgument =
       UVParameter Nothing $
         ColumnValue (ColumnScalar Postgres.PGJSONB) $
-          Postgres.PGValJSONB $ PG.JSONB $ J.toJSON lhs
+          Postgres.PGValJSONB $
+            PG.JSONB $
+              J.toJSON lhs
     jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 
     recordSetDefinitionList =

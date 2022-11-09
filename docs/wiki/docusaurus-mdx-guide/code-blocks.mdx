@@ -1,0 +1,98 @@
+---
+sidebar_position: 6
+---
+
+# Code Blocks
+
+While adding code blocks, ensure you set the correct language type. Sometimes adding placeholders breaks the language's syntax, in which case you'll have to set the language type to none to avoid warnings during builds.
+
+## Docusaurus - MDX
+
+```markdown
+    ```graphql {2,5}
+        query {
+        // highlight-next-line
+          authors (where: {articles: {rating: {_gt: 4}}}) {
+            id
+            name
+            // highlight-next-line
+            articles (where: {rating: {_gt: 4}}) {
+              id
+              title
+              rating
+            }
+          }
+        }
+    ```
+```
+
+## Result in UI
+
+```graphql {2,5}
+  query {
+    authors (where: {articles: {rating: {_gt: 4}}}) {
+      id
+      name
+      articles (where: {rating: {_gt: 4}}) {
+        id
+        title
+        rating
+      }
+    }
+  }
+```
+
+:::caution Supported Languages
+
+- Docusaurus uses prisma under the hood for code-block syntax highlighting. Please refer to the supported languages
+[here](https://prismjs.com/#supported-languages).
+- By default prisma includes a few that are listed
+[here](https://github.com/FormidableLabs/prism-react-renderer/blob/master/src/vendor/prism/includeLangs.js). If any
+supported language is not listed here, please add it to `additionalLanguages` under prisma plugin in
+`docusaurus.config.js`.
+
+:::
+
+## Parsed literals
+
+Sometimes we want to add links within codeblocks, the triple backtick syntax won't work in this case. Please use
+`pre` and `code` tags and use plain html within the `code`. To preserve indentation prefer string templates
+over `\n`, `\t` etc.
+
+```html
+<div className="parsed-literal">
+<pre>
+<code>
+{`{
+  "table"  : `}<a href="#tablename">TableName</a>{`
+  "column" : `}<a href="#pgcolumn">PGColumn</a>{`
+}`}
+</code>
+</pre>
+</div>
+```
+
+<details>
+<summary>Why is it wrapped in a div with parsed-literal className?</summary>
+
+Using html + string templates is a workaround, if markdown ever supports this or provides an alternative, it would be
+easy to find the respective usage and replace it. Nothing more :)
+</details>
+
+<div className="parsed-literal">
+<pre>
+<code>
+{`{
+  "table"  : `}<a href="#tablename">TableName</a>{`
+  "column" : `}<a href="#pgcolumn">PGColumn</a>{`
+}`}
+</code>
+</pre>
+</div>
+
+:::tip
+
+Please refer to docusaurus's [Code Blocks Docs](https://docusaurus.io/docs/markdown-features/code-blocks) for further syntax
+and usage guidance.
+
+:::

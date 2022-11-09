@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { browserHistory } from 'react-router';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import { Tabs } from '@/new-components/Tabs';
 import {
@@ -51,72 +52,74 @@ export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
   }
 
   return (
-    <div className="flex flex-auto overflow-y-hidden h-[calc(100vh-35.49px-54px)]">
-      <PageContainer
-        helmet="Allow List Detail"
-        leftContainer={
-          <div className="bg-white border-r border-gray-300 h-full overflow-y-auto p-4">
-            <AllowListSidebar
-              onQueryCollectionCreate={newName => {
-                pushUrl(newName, 'operations');
-              }}
-              buildQueryCollectionHref={(collectionName: string) =>
-                buildUrl(collectionName, 'operations')
-              }
-              onQueryCollectionClick={url => browserHistory.push(url)}
-              selectedCollectionQuery={name}
-            />
-          </div>
-        }
-      >
-        <div className="h-full overflow-y-auto p-4">
-          {queryCollection && (
-            <div>
-              <QueryCollectionHeader
-                onRename={(_, newName) => {
-                  pushUrl(newName, section);
+    <Analytics name="AllowList" {...REDACT_EVERYTHING}>
+      <div className="flex flex-auto overflow-y-hidden h-[calc(100vh-35.49px-54px)]">
+        <PageContainer
+          helmet="Allow List Detail"
+          leftContainer={
+            <div className="bg-white border-r border-gray-300 h-full overflow-y-auto p-4">
+              <AllowListSidebar
+                onQueryCollectionCreate={newName => {
+                  pushUrl(newName, 'operations');
                 }}
-                onDelete={() => {
-                  if (queryCollections?.[0]?.name) {
-                    pushUrl(queryCollections?.[0]?.name, 'operations');
-                  }
-                }}
-                queryCollection={queryCollection}
+                buildQueryCollectionHref={(collectionName: string) =>
+                  buildUrl(collectionName, 'operations')
+                }
+                onQueryCollectionClick={url => browserHistory.push(url)}
+                selectedCollectionQuery={name}
               />
             </div>
-          )}
-          {isProConsole(window.__env) ? (
-            <Tabs
-              value={section}
-              onValueChange={value => {
-                pushUrl(name, value);
-              }}
-              items={[
-                {
-                  value: 'operations',
-                  label: 'Operations',
-                  content: (
-                    <div className="p-4">
-                      <QueryCollectionsOperations collectionName={name} />
-                    </div>
-                  ),
-                },
-                {
-                  value: 'permissions',
-                  label: 'Permissions',
-                  content: (
-                    <div className="p-4">
-                      <AllowListPermissions collectionName={name} />
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          ) : (
-            <QueryCollectionsOperations collectionName={name} />
-          )}
-        </div>
-      </PageContainer>
-    </div>
+          }
+        >
+          <div className="h-full overflow-y-auto p-4">
+            {queryCollection && (
+              <div>
+                <QueryCollectionHeader
+                  onRename={(_, newName) => {
+                    pushUrl(newName, section);
+                  }}
+                  onDelete={() => {
+                    if (queryCollections?.[0]?.name) {
+                      pushUrl(queryCollections?.[0]?.name, 'operations');
+                    }
+                  }}
+                  queryCollection={queryCollection}
+                />
+              </div>
+            )}
+            {isProConsole(window.__env) ? (
+              <Tabs
+                value={section}
+                onValueChange={value => {
+                  pushUrl(name, value);
+                }}
+                items={[
+                  {
+                    value: 'operations',
+                    label: 'Operations',
+                    content: (
+                      <div className="p-4">
+                        <QueryCollectionsOperations collectionName={name} />
+                      </div>
+                    ),
+                  },
+                  {
+                    value: 'permissions',
+                    label: 'Permissions',
+                    content: (
+                      <div className="p-4">
+                        <AllowListPermissions collectionName={name} />
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <QueryCollectionsOperations collectionName={name} />
+            )}
+          </div>
+        </PageContainer>
+      </div>
+    </Analytics>
   );
 };

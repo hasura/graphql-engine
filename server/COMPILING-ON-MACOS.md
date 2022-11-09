@@ -1,8 +1,8 @@
-# Compile a graphql-engine executable using brew and ghc-8.10.7
+# Compile a graphql-engine executable using brew and ghc-9.2.4
 
 *Note: These instructions use the path `/opt/homebrew` in various places, but this path may be different on your machine depending on where you have installed homebrew (for example, many older homebrew installation were installed to `/usr/local`). You can find out the path of your homebrew installation by running the command `brew --prefix`, and if the output is not `/opt/homebrew`, then you should replace any instances of `/opt/homebrew` in these instructions with the path output by `brew --prefix`.*
 
-1.  Install ghc-8.10.7 and cabal-install via [ghcup](https://www.haskell.org/ghcup/)
+1.  Install ghc-9.2.4 and cabal-install via [ghcup](https://www.haskell.org/ghcup/).
 
 2.  Install dependencies:
 
@@ -19,6 +19,7 @@
     brew install microsoft/mssql-release/mssql-tools
     brew install direnv
     brew install coreutils
+    brew install pcre
     ```
 
      And add them to your environment:
@@ -103,10 +104,10 @@
      (Copying and pasting allows you to add local projects overrides, which may be needed if you are are planning to make changes to the graphql-engine code, but is not required for simply compiling the code as-is).
 
 6. Write the version number of the graphql-server that you are intending to build to the file `server/CURRENT_VERSION`.
-    For example if you are building `v2.6.1` then you can run the following command:
+    For example if you are building `v2.13.0` then you can run the following command:
 
     ```sh
-    echo '2.6.1' > server/CURRENT_VERSION
+    echo '2.13.0' > server/CURRENT_VERSION
     ```
 
     This version number is used for the output of `graphql-engine --version` in your compiled binary, and it also used when fetching the frontend assets for the console from the CDN when running the server (if you do not specify `--console-assets-dir` to make it load from a locally compiled version).
@@ -114,6 +115,6 @@
 7.  Building the server should now work:
 
     ```sh
-    cabal v2-update
-    cabal v2-build exe:graphql-engine -j4
+    cabal update
+    cabal build exe:graphql-engine -j4
     ```

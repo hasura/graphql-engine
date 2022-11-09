@@ -36,13 +36,12 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 		source             cli.Source
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-		// functions which should be run before the test
-		// possibly to prepare test fixtures maybe
-		before func(t *testing.T)
+		name      string
+		fields    fields
+		args      args
+		wantErr   bool
+		before    func(t *testing.T) // functions which should be run before the test possibly to prepare test fixtures maybe
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can apply seeds in hasura/graphql-engine:v1.3.3",
@@ -63,6 +62,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			},
 			false,
 			nil,
+			require.NoError,
 		},
 		{
 			"can apply seeds in latest",
@@ -83,6 +83,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			},
 			false,
 			nil,
+			require.NoError,
 		},
 		{
 			"can apply seeds from files",
@@ -113,6 +114,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 				})
 				require.NoError(t, err)
 			},
+			require.NoError,
 		},
 		{
 			"can apply seeds in citus",
@@ -141,6 +143,7 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			},
 			false,
 			nil,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -152,9 +155,8 @@ func TestDriver_ApplySeedsToDatabase(t *testing.T) {
 			if tt.before != nil {
 				tt.before(t)
 			}
-			if err := d.ApplySeedsToDatabase(tt.args.fs, tt.args.rootSeedsDirectory, tt.args.filenames, tt.args.source); (err != nil) != tt.wantErr {
-				t.Errorf("ApplySeedsToDatabase() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := d.ApplySeedsToDatabase(tt.args.fs, tt.args.rootSeedsDirectory, tt.args.filenames, tt.args.source)
+			tt.assertErr(t, err)
 		})
 	}
 }

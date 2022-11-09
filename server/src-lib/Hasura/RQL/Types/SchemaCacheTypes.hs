@@ -37,7 +37,7 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
@@ -110,7 +110,10 @@ reportSchemaObj = \case
       <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
       <> "." <>> roleName
   SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
-    "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
+    "remote_relationship "
+      <> toTxt relationshipName
+      <> " on type "
+      <> G.unName typeName
       <> " in remote schema "
       <> toTxt remoteSchemaName
   SORole roleName -> "role " <> roleNameToTxt roleName

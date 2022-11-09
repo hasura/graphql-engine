@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
@@ -326,13 +327,15 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   return (
-    <div className="mb-md">
-      {banner()}
-      <div className="clear-both pl-md mt-md mb-md">
-        <h2 className="text-xl font-bold">Hasura Metadata Status</h2>
-        {content()}
+    <Analytics name="MetadataStatus" {...REDACT_EVERYTHING}>
+      <div className="mb-md">
+        {banner()}
+        <div className="clear-both pl-md mt-md mb-md">
+          <h2 className="text-xl font-bold">Hasura Metadata Status</h2>
+          {content()}
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

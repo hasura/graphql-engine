@@ -46,7 +46,8 @@ runDropInheritedRole ::
 runDropInheritedRole (DropInheritedRole roleName) = do
   inheritedRolesMetadata <- _metaInheritedRoles <$> getMetadata
   unless (roleName `OMap.member` inheritedRolesMetadata) $
-    throw400 NotExists $ roleName <<> " inherited role doesn't exist"
+    throw400 NotExists $
+      roleName <<> " inherited role doesn't exist"
   buildSchemaCacheFor (MOInheritedRole roleName) (dropInheritedRoleInMetadata roleName)
   pure successMsg
 

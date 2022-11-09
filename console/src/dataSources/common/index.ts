@@ -73,9 +73,8 @@ export const getTableNameWithSchema = (
   return fullTableName;
 };
 
-export const findTable = (allTables: Table[], tableDef: QualifiedTable) => {
-  return allTables.find(t => isEqual(getTableDef(t), tableDef));
-};
+export const findTable = (allTables: Table[], tableDef: QualifiedTable) =>
+  allTables.find(t => isEqual(getTableDef(t), tableDef));
 
 export const getTrackedTables = (tables: Table[]) => {
   return tables.filter(t => t.is_table_tracked);

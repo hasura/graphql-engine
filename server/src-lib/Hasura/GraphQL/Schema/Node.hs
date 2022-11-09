@@ -188,7 +188,7 @@ Relay query could look like this (assuming that there are corresponding tables
     }
 
 What that means is that the parser for the 'Node' interface needs to delegate to
-*every table parser*, to deal with all possible cases. In practice, we use the
+\*every table parser*, to deal with all possible cases. In practice, we use the
 'selectionSetInterface' combinator (from Hasura.GraphQL.Parser.Internal.Parser):
 we give it a list of all the parsers, and it in turn applies all of them, and
 gives us the result for each possible table:

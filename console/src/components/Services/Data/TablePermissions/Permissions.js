@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import JSONEditor from './JSONEditor';
 import { IconTooltip } from '@/new-components/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
@@ -1964,34 +1965,36 @@ class Permissions extends Component {
 
     return (
       <RightContainer>
-        <div className={styles.container}>
-          {getHeader(currentTableSchema)}
-          <br />
-          <div className={styles.padd_left_remove}>
-            <div className={`${styles.padd_remove} col-xs-12`}>
-              <h4 className={styles.subheading_text}>Permissions</h4>
-              {getPermissionsTable(
-                currentTableSchema,
-                supportedQueryTypes,
-                allRoles
-              )}
-              {getBulkSection(currentTableSchema)}
-              {getEditSection(
-                currentTableSchema,
-                supportedQueryTypes,
-                allRoles
+        <Analytics name="Permissions" {...REDACT_EVERYTHING}>
+          <div className={styles.container}>
+            {getHeader(currentTableSchema)}
+            <br />
+            <div className={styles.padd_left_remove}>
+              <div className={`${styles.padd_remove} col-xs-12`}>
+                <h4 className={styles.subheading_text}>Permissions</h4>
+                {getPermissionsTable(
+                  currentTableSchema,
+                  supportedQueryTypes,
+                  allRoles
+                )}
+                {getBulkSection(currentTableSchema)}
+                {getEditSection(
+                  currentTableSchema,
+                  supportedQueryTypes,
+                  allRoles
+                )}
+              </div>
+            </div>
+            <div className={`${styles.fixed} hidden`}>
+              {getAlertHtml(
+                ongoingRequest,
+                lastError,
+                lastSuccess,
+                lastFormError
               )}
             </div>
           </div>
-          <div className={`${styles.fixed} hidden`}>
-            {getAlertHtml(
-              ongoingRequest,
-              lastError,
-              lastSuccess,
-              lastFormError
-            )}
-          </div>
-        </div>
+        </Analytics>
       </RightContainer>
     );
   }

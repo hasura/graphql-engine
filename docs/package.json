@@ -20,6 +20,7 @@
     "@docusaurus/core": "^2.0.0-beta.18",
     "@docusaurus/preset-classic": "^2.0.0-beta.18",
     "@mdx-js/react": "^1.6.21",
+    "algoliasearch": "^4.14.2",
     "algoliasearch-helper": "^3.7.4",
     "clsx": "^1.1.1",
     "docusaurus-plugin-sass": "^0.2.2",

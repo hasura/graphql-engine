@@ -1,4 +1,4 @@
-import { MetadataTable } from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
 import { OrderBy, WhereClause } from './types';
 
 export const getFields = ({
@@ -93,4 +93,10 @@ export const getOffsetClause = (offset?: number) => {
   if (!offset) return '';
 
   return `offset: ${offset}`;
+};
+
+export const getScalarType = (type: any): string => {
+  if (type.kind === 'SCALAR') return type.name;
+
+  return getScalarType(type.ofType);
 };

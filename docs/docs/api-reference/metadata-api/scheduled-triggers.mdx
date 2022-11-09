@@ -208,3 +208,107 @@ X-Hasura-Role: admin
     "args" : {}
 }
 ```
+
+## get_scheduled_events {#metadata-get-scheduled-events}
+
+`get_scheduled_events` provides a way to retrieve cron/one-off scheduled
+events present in the graphql-engine.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type" : "get_scheduled_events",
+    "args" : {
+      "type": "cron",
+      "trigger_name": "daily_trigger",
+      "limit": 10,
+      "offset": 0,
+      "status": [
+        "scheduled",
+        "delivered"
+      ]
+      "get_rows_count": false
+    }
+}
+```
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type" : "get_scheduled_events",
+    "args" : {
+      "type": "one_off",
+      "limit": 10,
+      "offset": 0,
+      "get_rows_count": true
+    }
+}
+```
+
+### Args Syntax {#metadata-get-scheduled-events-syntax}
+
+| Key            | Required                   | Schema              | Description                                                                          |
+|----------------|----------------------------|---------------------|--------------------------------------------------------------------------------------|
+| type           | true                       | `one_off` \| `cron` | Type of the scheduled trigger.                                                       |
+| trigger_name   | only when `type` is `cron` | String              | Name of the cron trigger                                                             |
+| limit          | false                      | Integer             | Maximum number of events to be returned in one API call.                             |
+| offset         | false                      | Integer             | Starting point from where the rows need to be returned.                              |
+| get_rows_count | false                      | Boolean             | Flag to indicate whether number of rows returned should be included in the response. |
+| status         | false                      | [[ScheduledEventStatus]](/api-reference/syntax-defs.mdx#scheduledEventStatus) | Filter scheduled events by the status |
+
+## get_scheduled_event_invocations {#metadata-get-scheduled-event_invocations}
+
+`get_scheduled_event_invocations` provides a way to retrieve the scheduled
+event invocations of a specific scheduled event or a cron trigger.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "get_scheduled_event_invocations",
+    "args": {
+        "type": "cron",
+        "trigger_name": "daily_trigger",
+        "status": [
+            "scheduled"
+        ],
+        "limit": 10,
+        "offset": 0
+    }
+}
+```
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type" : "get_scheduled_event_invocations",
+    "args" : {
+      "type": "one_off",
+      "limit": 10,
+      "offset": 0,
+      "get_rows_count": true
+    }
+}
+```
+
+### Args Syntax {#metadata-get-scheduled-event-invocations-syntax}
+
+| Key            | Required                   | Schema              | Description                                                                          |
+|----------------|----------------------------|---------------------|--------------------------------------------------------------------------------------|
+| type           | true                       | `one_off` \| `cron` | Type of the scheduled trigger.                                                       |
+| trigger_name   | only when `type` is `cron` | String              | Name of the cron trigger                                                             |
+| event_id       | false                      | String              | Getting invocations of the specified event                                           |
+| limit          | false                      | Integer             | Maximum number of events to be returned in one API call.                             |
+| offset         | false                      | Integer             | Starting point from where the rows need to be returned.                              |
+| get_rows_count | false                      | Boolean             | Flag to indicate whether number of rows returned should be included in the response. |

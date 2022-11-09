@@ -152,10 +152,10 @@ instance FromJSON FunctionCustomRootFields where
     case (function, functionAggregate) of
       (Just f, Just fa)
         | f == fa ->
-          fail $
-            T.unpack $
-              "the following custom root field names are duplicated: "
-                <> toTxt f <<> " and " <>> toTxt fa
+            fail $
+              T.unpack $
+                "the following custom root field names are duplicated: "
+                  <> toTxt f <<> " and " <>> toTxt fa
       _ ->
         pure ()
 

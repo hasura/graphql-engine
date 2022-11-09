@@ -3,6 +3,7 @@ package migrate
 import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 type projectMigrationsApplier struct {
@@ -48,13 +49,14 @@ func ApplyVersion(version string, direction MigrationDirection) ProjectMigration
 }
 
 func (p *projectMigrationsApplier) apply(opts ...ProjectMigrationApplierOption) ([]ApplyResult, error) {
+	var op errors.Op = "migrate.projectMigrationsApplier.apply"
 	for _, opt := range opts {
 		opt(p)
 	}
 	var results []ApplyResult
 	resultChan, err := p.opts.Apply()
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	for v := range resultChan {
 		results = append(results, ApplyResult(v))

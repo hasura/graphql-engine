@@ -115,7 +115,8 @@ fromExpression =
     FunctionExpression function args ->
       fromFunctionName function <+> "(" <+> SepByPrinter ", " (fromExpression <$> args) <+> ")"
     ConditionalProjection expression fieldName ->
-      "(CASE WHEN(" <+> fromExpression expression
+      "(CASE WHEN("
+        <+> fromExpression expression
         <+> ") THEN "
         <+> fromFieldName fieldName
         <+> " ELSE NULL END)"
@@ -352,7 +353,10 @@ fromProjection =
                           ", "
                           ( fields
                               <&> \(fName@FieldName {..}, fieldOrigin :: FieldOrigin) ->
-                                "IFNULL(" <+> fromFieldName fName <+> ", " <+> fromFieldOrigin fieldOrigin
+                                "IFNULL("
+                                  <+> fromFieldName fName
+                                  <+> ", "
+                                  <+> fromFieldOrigin fieldOrigin
                                   <+> ") AS "
                                   <+> fromNameText fieldName
                           )
@@ -510,7 +514,10 @@ fromSelectJson SelectJson {..} = finalExpression
         ("," <+> NewlinePrinter)
         (map extractJsonField selectJsonFields)
     extractJsonField (ColumnName name, scalarType) =
-      "CAST(JSON_VALUE(" <+> jsonStringField <+> ", '$." <+> fromString (T.unpack name)
+      "CAST(JSON_VALUE("
+        <+> jsonStringField
+        <+> ", '$."
+        <+> fromString (T.unpack name)
         <+> "') AS "
         <+> fromScalarType scalarType
         <+> ") AS "
@@ -585,13 +592,15 @@ toTextFlat = LT.toStrict . LT.toLazyText . toBuilderFlat
 -- | Produces a query with holes, and a mapping for each
 renderBuilderFlat :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderFlat =
-  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty
+  second (OMap.fromList . map swap . OMap.toList)
+    . flip runState mempty
     . runBuilderFlat
 
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty
+  second (OMap.fromList . map swap . OMap.toList)
+    . flip runState mempty
     . runBuilderPretty
 
 --------------------------------------------------------------------------------

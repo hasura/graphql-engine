@@ -17,6 +17,16 @@
               }
             },
             "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -56,6 +66,16 @@
           },
           "400": {
             "description": "Invalid `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -104,6 +124,16 @@
           },
           "400": {
             "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -276,11 +306,11 @@
           "comparisons": {
             "$ref": "#/components/schemas/ComparisonCapabilities"
           },
+          "data_schema": {
+            "$ref": "#/components/schemas/DataSchemaCapabilities"
+          },
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
-          },
-          "graphql_schema": {
-            "$ref": "#/components/schemas/GraphQLTypeDefinitions"
           },
           "metrics": {
             "$ref": "#/components/schemas/MetricsCapabilities"
@@ -306,29 +336,72 @@
         },
         "type": "object"
       },
-      "QueryCapabilities": {
+      "ColumnNullability": {
+        "enum": [
+          "only_nullable",
+          "nullable_and_non_nullable"
+        ],
+        "type": "string"
+      },
+      "DataSchemaCapabilities": {
         "properties": {
+          "column_nullability": {
+            "$ref": "#/components/schemas/ColumnNullability"
+          },
+          "supports_foreign_keys": {
+            "default": false,
+            "description": "Whether tables can have foreign keys",
+            "type": "boolean"
+          },
           "supports_primary_keys": {
-            "description": "Does the agent support querying a table by primary key?",
+            "default": false,
+            "description": "Whether tables can have primary keys",
             "type": "boolean"
           }
         },
-        "required": [
-          "supports_primary_keys"
-        ],
         "type": "object"
       },
+      "QueryCapabilities": {},
       "MutationCapabilities": {},
       "SubscriptionCapabilities": {},
-      "GraphQLName": {
-        "description": "A valid GraphQL name",
-        "type": "string"
+      "ScalarType": {
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "string",
+              "number",
+              "bool"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "ComparisonOperators": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ScalarType"
+        },
+        "description": "A map from comparison operator names to their argument types.\nOperator and argument type names must be valid GraphQL names.\nResult type names must be defined scalar types - either builtin or declared in ScalarTypesCapabilities.\n",
+        "type": "object"
+      },
+      "AggregateFunctions": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ScalarType"
+        },
+        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types - either builtin or declared in ScalarTypesCapabilities.\n",
+        "type": "object"
       },
       "ScalarTypeCapabilities": {
-        "description": "Capabilities of a scalar type.\ncomparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.\n",
+        "description": "Capabilities of a scalar type.\ncomparison_operators: The comparison operators supported by the scalar type.\naggregate_functions: The aggregate functions supported by the scalar type.\n",
         "properties": {
-          "comparison_type": {
-            "$ref": "#/components/schemas/GraphQLName"
+          "aggregate_functions": {
+            "$ref": "#/components/schemas/AggregateFunctions"
+          },
+          "comparison_operators": {
+            "$ref": "#/components/schemas/ComparisonOperators"
           }
         },
         "type": "object"
@@ -340,22 +413,16 @@
         "description": "A map from scalar type names to their capabilities.\nKeys must be valid GraphQL names and must be defined as scalar types in the `graphql_schema`\n",
         "type": "object"
       },
-      "GraphQLTypeDefinitions": {
-        "description": "A valid GraphQL schema document containing type definitions",
-        "type": "string"
-      },
       "RelationshipCapabilities": {},
       "SubqueryComparisonCapabilities": {
         "nullable": true,
         "properties": {
           "supports_relations": {
+            "default": false,
             "description": "Does the agent support comparisons that involve related tables (ie. joins)?",
             "type": "boolean"
           }
         },
-        "required": [
-          "supports_relations"
-        ],
         "type": "object"
       },
       "ComparisonCapabilities": {
@@ -667,6 +734,32 @@
         },
         "type": "object"
       },
+      "ErrorResponse": {
+        "properties": {
+          "details": {
+            "additionalProperties": true,
+            "default": null,
+            "description": "Error details"
+          },
+          "message": {
+            "description": "Error message",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ErrorResponseType"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "ErrorResponseType": {
+        "enum": [
+          "uncaught-error"
+        ],
+        "type": "string"
+      },
       "SchemaResponse": {
         "properties": {
           "tables": {
@@ -688,22 +781,6 @@
           "type": "string"
         },
         "type": "array"
-      },
-      "ScalarType": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "string",
-              "number",
-              "bool"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
       },
       "ColumnInfo": {
         "properties": {
@@ -768,19 +845,19 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Constraint"
             },
+            "default": {},
             "description": "Foreign key constraints",
-            "nullable": true,
             "type": "object"
           },
           "name": {
             "$ref": "#/components/schemas/TableName"
           },
           "primary_key": {
+            "default": [],
             "description": "The primary key of the table",
             "items": {
               "type": "string"
             },
-            "nullable": true,
             "type": "array"
           }
         },
@@ -972,6 +1049,9 @@
           "column": {
             "type": "string"
           },
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "column"
@@ -981,6 +1061,7 @@
         },
         "required": [
           "column",
+          "column_type",
           "type"
         ],
         "type": "object"
@@ -1027,16 +1108,7 @@
         "type": "object"
       },
       "SingleColumnAggregateFunction": {
-        "enum": [
-          "avg",
-          "max",
-          "min",
-          "stddev_pop",
-          "stddev_samp",
-          "sum",
-          "var_pop",
-          "var_samp"
-        ],
+        "description": "Single column aggregate function name.\nA valid GraphQL name",
         "type": "string"
       },
       "SingleColumnAggregate": {
@@ -1225,6 +1297,9 @@
       },
       "ComparisonColumn": {
         "properties": {
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "name": {
             "description": "The name of the column",
             "type": "string"
@@ -1239,7 +1314,8 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "column_type"
         ],
         "type": "object"
       },
@@ -1257,6 +1333,9 @@
             ],
             "type": "string"
           },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "values": {
             "items": {
               "additionalProperties": true
@@ -1268,6 +1347,7 @@
           "operator",
           "column",
           "values",
+          "value_type",
           "type"
         ],
         "type": "object"
@@ -1357,10 +1437,14 @@
           },
           "value": {
             "additionalProperties": true
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
           "value",
+          "value_type",
           "type"
         ],
         "type": "object"

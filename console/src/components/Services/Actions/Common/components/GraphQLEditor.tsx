@@ -1,6 +1,7 @@
 import React from 'react';
 import { parse as sdlParser } from 'graphql/language/parser';
 import { GraphQLError } from 'graphql';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { IconTooltip } from '@/new-components/Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
@@ -74,34 +75,36 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
     ` at line ${error.locations[0].line}, column ${error.locations[0].column} `;
 
   return (
-    <div className={`${className || ''}`}>
-      {label ? (
-        <h2 className="text-lg font-bold pb-5 mb-1.5">
-          {label}
-          {tooltip ? <IconTooltip message={tooltip} /> : <></>}
-        </h2>
-      ) : null}
-      <div className="flex mb-1.5">
-        {error && (
-          <div className="flex text-red-600">
-            <CrossIcon className="mr-1.5" />
-            <div>{`${errorMessage} ${errorMessageLine}`}</div>
-          </div>
-        )}
+    <Analytics name="GraphiQLEditor" {...REDACT_EVERYTHING}>
+      <div className={`${className || ''}`}>
+        {label ? (
+          <h2 className="text-lg font-bold pb-5 mb-1.5">
+            {label}
+            {tooltip ? <IconTooltip message={tooltip} /> : <></>}
+          </h2>
+        ) : null}
+        <div className="flex mb-1.5">
+          {error && (
+            <div className="flex text-red-600">
+              <CrossIcon className="mr-1.5" />
+              <div>{`${errorMessage} ${errorMessageLine}`}</div>
+            </div>
+          )}
+        </div>
+        <AceEditor
+          name="sdl-editor"
+          value={value}
+          fontSize={fontSize}
+          onChange={onChangeWithError}
+          placeholder={placeholder}
+          height={height || '200px'}
+          mode="graphqlschema"
+          width={width || '600px'}
+          showPrintMargin={false}
+          readOnly={readOnlyMode}
+        />
       </div>
-      <AceEditor
-        name="sdl-editor"
-        value={value}
-        fontSize={fontSize}
-        onChange={onChangeWithError}
-        placeholder={placeholder}
-        height={height || '200px'}
-        mode="graphqlschema"
-        width={width || '600px'}
-        showPrintMargin={false}
-        readOnly={readOnlyMode}
-      />
-    </div>
+    </Analytics>
   );
 };
 

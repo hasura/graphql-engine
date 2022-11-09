@@ -302,7 +302,9 @@ mkMySQLScalarTypeName = \case
     G.mkName (scalarTypeDBName scalarType)
       `onNothing` throw400
         ValidationFailed
-        ( "cannot use SQL type " <> scalarTypeDBName scalarType <> " in the GraphQL schema because its name is not a "
+        ( "cannot use SQL type "
+            <> scalarTypeDBName scalarType
+            <> " in the GraphQL schema because its name is not a "
             <> "valid GraphQL identifier"
         )
 

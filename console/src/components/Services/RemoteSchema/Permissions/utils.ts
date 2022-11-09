@@ -25,6 +25,7 @@ import {
   StringValueNode,
   BooleanValueNode,
   EnumValueNode,
+  GraphQLInterfaceType,
 } from 'graphql';
 import {
   isJsonString,
@@ -233,6 +234,7 @@ export const getType = (
   const inputObjectTypes: RemoteSchemaFields[] = [];
   const objectTypes: RemoteSchemaFields[] = [];
   const unionTypes: RemoteSchemaFields[] = [];
+  const interfaceTypes: RemoteSchemaFields[] = [];
 
   Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
@@ -241,7 +243,8 @@ export const getType = (
         value instanceof GraphQLInputObjectType ||
         value instanceof GraphQLEnumType ||
         value instanceof GraphQLScalarType ||
-        value instanceof GraphQLUnionType
+        value instanceof GraphQLUnionType ||
+        value instanceof GraphQLInterfaceType
       )
     )
       return;
@@ -295,6 +298,13 @@ export const getType = (
       scalarTypes.push(type);
     } else if (value instanceof GraphQLObjectType) {
       type.name = `type ${name}`;
+      if (value.getInterfaces().length) {
+        const implementsString = value
+          .getInterfaces()
+          .map((i: any) => i.name)
+          .join('& ');
+        type.name = `type ${name} implements ${implementsString}`;
+      }
     } else if (value instanceof GraphQLInputObjectType) {
       type.name = `input ${name}`;
     }
@@ -339,6 +349,10 @@ export const getType = (
           field.args = { [k]: v };
           field.isInputObjectType = true;
           field.parentName = type.name;
+        } else if (v.args?.length) {
+          field.args = v.args.reduce((p: ArgTreeType, c: FieldType) => {
+            return { ...p, [c.name]: { ...c } };
+          }, {});
         }
         childArray.push(field);
       });
@@ -384,6 +398,43 @@ export const getType = (
       type.children = childArray;
       unionTypes.push(type);
     }
+
+    if (value instanceof GraphQLInterfaceType) {
+      let isFieldPresent = true;
+      let permissionsFieldVal: GraphQLFieldMap<any, any, any> = {};
+
+      // Check if the type is present in the permission schema coming from user.
+      if (permissionsSchema !== null && permissionsSchemaFields !== null) {
+        if (key in permissionsSchemaFields) {
+          permissionsFieldVal = permissionsSchemaFields[key].getFields();
+        } else {
+          isFieldPresent = false;
+        }
+      }
+
+      type.name = `interface ${name}`;
+      const childArray: CustomFieldType[] = [];
+      const fieldVal = value.getFields();
+      Object.entries(fieldVal).forEach(([k, v]) => {
+        let checked = false;
+        if (
+          permissionsSchema !== null &&
+          isFieldPresent &&
+          k in permissionsFieldVal
+        ) {
+          checked = true;
+        }
+        const field: CustomFieldType = {
+          name: v.name,
+          checked,
+          return: v.type.toString(),
+        };
+        childArray.push(field);
+      });
+
+      type.children = childArray;
+      interfaceTypes.push(type);
+    }
   });
   return [
     ...objectTypes,
@@ -391,6 +442,7 @@ export const getType = (
     ...unionTypes,
     ...enumTypes,
     ...scalarTypes,
+    ...interfaceTypes,
   ];
 };
 
@@ -458,6 +510,10 @@ const isList = (gqlArg: GraphQLInputField, value: string) =>
 const serialiseArgs = (args: ArgTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
+
+  if (args === null) {
+    return 'null';
+  }
 
   Object.entries(args).forEach(([key, value]) => {
     if (isEmpty(value) || isEmpty(children)) {
@@ -619,7 +675,7 @@ const getSDLField = (
             valueStr = `${arg.name} : ${arg.type.inspect()}`;
 
             // add default value after type definition if it exists
-            if (arg.defaultValue) {
+            if (arg.defaultValue !== undefined) {
               const defaultValue = formatArg({
                 arg,
                 argName: arg.defaultValue,

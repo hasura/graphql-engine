@@ -185,7 +185,8 @@ url = lens getUrl setUrl
           queryString = Types.queryTextToQuery $ Types.parseQueryText $ C8.pack $ URI.uriQuery uri
           path' = C8.pack $ URI.uriPath uri
       pure $
-        req & set host host'
+        req
+          & set host host'
           & set secure ssl
           & set port port'
           & set queryParams queryString

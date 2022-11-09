@@ -50,7 +50,7 @@ import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTrans
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (Metadata, MetadataNoSources)
 import Hasura.RQL.Types.Metadata qualified as Metadata
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
 

@@ -1,7 +1,9 @@
+import type { GlobalWindowHeap } from '@/features/Analytics';
+import { parseSentryDsn } from '@/features/Analytics';
+
 /* eslint no-underscore-dangle: 0 */
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 
-import { sentry } from './features/TracingTools/sentry';
 import { isEmpty } from './components/Common/utils/jsUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
@@ -169,16 +171,8 @@ export type EnvVars = {
 );
 
 declare global {
-  interface Window {
+  interface Window extends GlobalWindowHeap {
     __env: EnvVars;
-    /**
-     * Consuming Heap is allowed only through the TracingTools/heap module, never directly.
-     * @deprecated (when marked as deprecated, the IDE shows it as strikethrough'ed, helping the
-     * developers realize that they should not use it)
-     */
-    heap?: {
-      addUserProperties: (properties: Record<string, string>) => void;
-    };
   }
   const CONSOLE_ASSET_VERSION: string;
 }
@@ -192,7 +186,7 @@ const globals = {
   apiPort: window.__env?.apiPort,
   dataApiUrl: stripTrailingSlash(window.__env?.dataApiUrl || ''), // overridden below if server mode
   urlPrefix: stripTrailingSlash(window.__env?.urlPrefix || '/'), // overridden below if server mode in production
-  consoleSentryDsn: sentry.parseSentryDsn(window.__env?.consoleSentryDsn),
+  consoleSentryDsn: parseSentryDsn(window.__env?.consoleSentryDsn),
   adminSecret: window.__env?.adminSecret || null, // gets updated after login/logout in server mode
   isAdminSecretSet:
     window.__env?.isAdminSecretSet ||

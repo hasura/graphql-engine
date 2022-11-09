@@ -1,6 +1,6 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
-import { MetadataTable, Source, Table } from '@/features/MetadataAPI';
+import { MetadataTable, Source, Table } from '@/features/hasura-metadata-types';
 import { IntrospectedTable, TableColumn, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
 
@@ -55,8 +55,12 @@ export const convertToTreeData = (
 
   return [
     ...uniqueLevelValues.map(levelValue => {
+      const { database, ...rest } = JSON.parse(name);
       // eslint-disable-next-line no-underscore-dangle
-      const _key = JSON.stringify({ ...JSON.parse(name), [key]: levelValue });
+      const _key = JSON.stringify({
+        database,
+        table: { ...rest.table, [key]: levelValue },
+      });
       const children = convertToTreeData(
         tables.filter((t: any) => t[key] === levelValue),
         hierarchy.slice(1),

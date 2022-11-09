@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Metadata.Serialization
     allowlistToOrdJSONList,
     apiLimitsToOrdJSON,
     backendConfigsToOrdJSON,
+    openTelemetryConfigToOrdJSON,
     cronTriggersToOrdJSONList,
     customTypesToOrdJSON,
     endpointsToOrdJSONList,
@@ -37,7 +38,7 @@ import Hasura.RQL.Types.Allowlist (AllowlistEntry (..), MetadataAllowlist)
 import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Column (ColumnValues)
-import Hasura.RQL.Types.Common (Comment, MetricsConfig, commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
+import Hasura.RQL.Types.Common (Comment, MetricsConfig, RemoteRelationshipG (..), commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes
   ( CustomTypes (..),
     EnumTypeDefinition (..),
@@ -62,8 +63,7 @@ import Hasura.RQL.Types.Metadata.Common
     Endpoints,
     FunctionMetadata (..),
     InheritedRoles,
-    RemoteSchemaMetadata (..),
-    RemoteSchemaPermissionMetadata (..),
+    RemoteSchemaMetadata,
     RemoteSchemas,
     SourceMetadata (..),
     Sources,
@@ -71,6 +71,10 @@ import Hasura.RQL.Types.Metadata.Common
     getSourceName,
   )
 import Hasura.RQL.Types.Network (Network, emptyNetwork)
+import Hasura.RQL.Types.OpenTelemetry
+  ( OpenTelemetryConfig (..),
+    emptyOpenTelemetryConfig,
+  )
 import Hasura.RQL.Types.Permission
   ( AllowedRootFields (..),
     DelPerm (..),
@@ -86,12 +90,15 @@ import Hasura.RQL.Types.Permission
   )
 import Hasura.RQL.Types.QueryCollection (CreateCollection (..), QueryCollections)
 import Hasura.RQL.Types.Relationships.Local (RelDef (..))
-import Hasura.RQL.Types.Relationships.Remote (RemoteRelationship (..))
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaDef (..))
 import Hasura.RQL.Types.Roles (InheritedRole, Role (..))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (..), defaultSTRetryConf)
 import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
 import Hasura.RQL.Types.Table (emptyTableConfig)
+import Hasura.RemoteSchema.Metadata
+  ( RemoteSchemaDef (..),
+    RemoteSchemaMetadataG (..),
+    RemoteSchemaPermissionMetadata (..),
+  )
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
@@ -101,7 +108,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 sourcesToOrdJSONList :: Sources -> AO.Array
 sourcesToOrdJSONList sources =
   Vector.fromList $
-    map sourceMetaToOrdJSON $ sortOn getSourceName $ OM.elems sources
+    map sourceMetaToOrdJSON $
+      sortOn getSourceName $
+        OM.elems sources
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
@@ -408,6 +417,17 @@ backendConfigsToOrdJSON = ifNotEmpty (== mempty) configsToOrdJSON
             val = AO.toOrdered backendConfig'
          in (backendTypeStr, val)
 
+openTelemetryConfigToOrdJSON :: OpenTelemetryConfig -> Maybe AO.Value
+openTelemetryConfigToOrdJSON = ifNotEmpty (== emptyOpenTelemetryConfig) configToOrdJSON
+  where
+    configToOrdJSON :: OpenTelemetryConfig -> AO.Value
+    configToOrdJSON (OpenTelemetryConfig enabledDataTypes exporterOtlp batchSpanProcessor) =
+      AO.object
+        [ ("data_types", AO.toOrdered enabledDataTypes),
+          ("exporter_otlp", AO.toOrdered exporterOtlp),
+          ("batch_span_processor", AO.toOrdered batchSpanProcessor)
+        ]
+
 inheritedRolesToOrdJSONList :: InheritedRoles -> Maybe AO.Array
 inheritedRolesToOrdJSONList = listToMaybeArraySort inheritedRolesQToOrdJSON _rRoleName
   where
@@ -470,12 +490,12 @@ customTypesToOrdJSON :: CustomTypes -> Maybe AO.Object
 customTypesToOrdJSON customTypes@(CustomTypes inpObjs objs scalars enums)
   | customTypes == emptyCustomTypes = Nothing
   | otherwise =
-    Just . AO.fromList . catMaybes $
-      [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
-        listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
-        listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
-        listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
-      ]
+      Just . AO.fromList . catMaybes $
+        [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
+          listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
+          listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
+          listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
+        ]
   where
     inputObjectToOrdJSON :: InputObjectTypeDefinition -> AO.Value
     inputObjectToOrdJSON (InputObjectTypeDefinition tyName descM fields) =

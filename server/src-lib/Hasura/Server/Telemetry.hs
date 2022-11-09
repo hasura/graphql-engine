@@ -281,7 +281,8 @@ computeActionsMetrics actionCache =
     customTypesLen = inputTypesLen + outputTypesLen
 
     typeRelationships =
-      length . L.nub
+      length
+        . L.nub
         . concatMap
           ( \aInfo -> case (snd . _aiOutputType $ aInfo) of
               AOTObject aot -> map _atrName $ _aotRelationships aot

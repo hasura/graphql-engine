@@ -1,133 +1,174 @@
-import React from 'react';
+import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
+import { Feature, OrderBy, WhereClause } from '@/features/DataSource';
+import { Table } from '@/features/hasura-metadata-types';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { ColumnSort } from '@tanstack/react-table';
+import React, { useEffect, useState } from 'react';
+import Skeleton from 'react-loading-skeleton';
 import {
-  FaClone,
-  FaEdit,
-  FaExpand,
-  FaTrash,
-  FaCaretDown,
-  FaCaretUp,
-  FaSort,
-} from 'react-icons/fa';
-import { z } from 'zod';
-import { Form, Checkbox } from '@/new-components/Form';
-import { CardedTable } from '@/new-components/CardedTable';
-import { GridIconButton } from '../../../../features/BrowseRows/components/DataGrid/GridIconButton';
-import { UseRowsData } from '../../../../features/BrowseRows/components/DataGrid/types';
+  DEFAULT_ORDER_BY_CLAUSES,
+  DEFAULT_PAGE_INDEX,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_QUERY_DIALOG_STATE,
+  DEFAULT_SORT_CLAUSES,
+  DEFAULT_WHERE_CLAUSES,
+} from './constants';
+import { DataTableOptions } from './parts/DataTableOptions';
+import { ReactTableWrapper } from './parts/ReactTableWrapper';
 
-// Todo: add validation as forms is developed
-const validationSchema = z.object({});
+import { QueryDialog } from './QueryDialog';
+import { useTableColumns } from './useTableColumns';
+import { transformToOrderByClause } from './utils';
 
-type IconSortingMapType = Record<'asc' | 'desc' | 'none', React.ReactElement>;
-
-const IconSortingMap: IconSortingMapType = {
-  desc: <FaCaretUp className="w-2 h-3 ml-1" />,
-  asc: <FaCaretDown className="w-2 h-3 ml-1" />,
-  none: <FaSort className="w-2 h-3 ml-1" />,
-};
-
-const HeaderAction = (
-  columnName: string,
-  onClick: (column: string) => void,
-  Icon: React.ReactElement
-) => {
-  return (
-    <div
-      className="flex items-center cursor-pointer"
-      onClick={() => onClick(columnName)}
-    >
-      <div>{columnName}</div>
-      {Icon}
-    </div>
-  );
-};
-
-type DataGridProps = {
-  data: UseRowsData;
-  onColumnSortClick: (column: string) => void;
-  isLoading: boolean;
-};
-
-const formatData = (rows: Record<string, string | number>[]) => {
-  // Todo: hook up to react-query hooks
-  const rowActions = [
-    { icon: FaClone, type: 'clone', onClick: () => {} },
-    { icon: FaEdit, type: 'edit', onClick: () => {} },
-    { icon: FaExpand, type: 'expand', onClick: () => {} },
-    { icon: FaTrash, type: 'delete', onClick: () => {} },
-  ];
-
-  const tableDataRows = rows?.map(objectRow => Object.values(objectRow)) ?? [];
-  return tableDataRows.map((row, i) => {
-    return [
-      <div>
-        {rowActions.map((action, index) => (
-          <GridIconButton
-            icon={<action.icon />}
-            onClick={() => {}}
-            rowIndex={index}
-            type={action.type}
-          />
-        ))}
-      </div>,
-      <Checkbox
-        name={`browse-rows-check-${i}`}
-        options={[{ value: row[0], label: '' }]}
-        noErrorPlaceholder
-      />,
-      ...row.map(value => <div>{value}</div>),
-    ];
-  });
-};
+interface DataGridProps {
+  table: Table;
+  dataSourceName: string;
+}
 
 export const DataGrid = (props: DataGridProps) => {
-  const { data, onColumnSortClick, isLoading } = props;
+  /**
+   * States used by the component - passed around and shared by the table and it's options
+   */
+  const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sorting, setSorting] =
+    React.useState<ColumnSort[]>(DEFAULT_SORT_CLAUSES);
+  const [queryDialogVisibility, setQueryDialogVisibility] = useState(
+    DEFAULT_QUERY_DIALOG_STATE
+  );
+  const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>(
+    DEFAULT_WHERE_CLAUSES
+  );
+  const [orderByClauses, setOrderClauses] = React.useState<OrderBy[]>(
+    DEFAULT_ORDER_BY_CLAUSES
+  );
 
-  if (isLoading) return <>Loading data ...</>;
+  /**
+   * Function to reset everything back to the original state
+   */
+  const refreshAllOptions = () => {
+    setPageIndex(DEFAULT_PAGE_INDEX);
+    setPageSize(DEFAULT_PAGE_SIZE);
+    setSorting(DEFAULT_SORT_CLAUSES);
+    setWhereClauses(DEFAULT_WHERE_CLAUSES);
+    setOrderClauses(DEFAULT_ORDER_BY_CLAUSES);
+  };
 
-  const formattedRows = formatData(data.rows);
+  const { dataSourceName, table } = props;
+
+  /**
+   * React preserves the component's state between table to table switch.
+   * This helps the component to shed the options in between the user's jump between one table to another
+   */
+  useEffect(() => {
+    refreshAllOptions();
+  }, [dataSourceName, table]);
+
+  /**
+   * React query hook wrapper to get the rows for
+   * the current props.table and props.dataSourceName
+   */
+  const {
+    data: rows,
+    isLoading,
+    isError,
+  } = useRows({
+    table,
+    dataSourceName,
+    options: {
+      limit: pageSize,
+      offset: pageIndex * pageSize,
+      order_by: [...orderByClauses, ...transformToOrderByClause(sorting)],
+      where: whereClauses,
+    },
+  });
+
+  const { data: tableColumnQuery } = useTableColumns({ table, dataSourceName });
+
+  if (rows === Feature.NotImplemented)
+    return <IndicatorCard status="info" headline="Feature Not Implemented" />;
+
   return (
-    <Form
-      // Todo: Add form handling as needed
-      schema={validationSchema}
-      options={{
-        defaultValues: undefined,
-      }}
-      onSubmit={() => {}}
-      className="p-0"
-    >
-      {() => {
-        return (
-          <CardedTable.Table>
-            <CardedTable.Header
-              columns={
-                data.columns
-                  ? [
-                      '', // Padding for first column with actions
-                      <Checkbox
-                        name="browse-rows-check-all"
-                        options={[{ value: 'all', label: '' }]}
-                        noErrorPlaceholder
-                      />,
+    <div>
+      <DataTableOptions
+        pagination={{
+          goToNextPage: () => {
+            setPageIndex(currentPage => currentPage + 1);
+          },
+          goToPreviousPage: () => {
+            setPageIndex(currentPage => currentPage - 1);
+          },
+          isNextPageDisabled: (rows ?? []).length < pageSize,
+          isPreviousPageDisabled: pageIndex <= 0,
+          pageSize,
+          setPageSize,
+        }}
+        query={{
+          onQuerySearch: () => {
+            setQueryDialogVisibility(true);
+          },
+          onRefreshQueryOptions: refreshAllOptions,
+          orderByClauses,
+          whereClauses,
+          supportedOperators: tableColumnQuery?.supportedOperators ?? [],
+          removeWhereClause: id => {
+            setWhereClauses(whereClauses.filter((_, i) => i !== id));
+          },
+          removeOrderByClause: id => {
+            setOrderClauses(orderByClauses.filter((_, i) => i !== id));
+          },
+        }}
+      />
 
-                      ...data.columns.map(column =>
-                        HeaderAction(
-                          column,
-                          onColumnSortClick,
-                          <div className="flex flex-col">
-                            {column === data.orderBy?.column
-                              ? IconSortingMap[data.orderBy?.type]
-                              : IconSortingMap.none}
-                          </div>
-                        )
-                      ),
-                    ]
-                  : []
-              }
-            />
-            <CardedTable.Body data={formattedRows} />
-          </CardedTable.Table>
-        );
-      }}
-    </Form>
+      {isLoading ? (
+        <div className="my-4">
+          <Skeleton height={30} count={8} className="my-2" />
+        </div>
+      ) : isError ? (
+        <div className="my-4">
+          <IndicatorCard status="negative" headline="Something went wrong">
+            Unable to fetch GraphQL response for table
+          </IndicatorCard>
+        </div>
+      ) : (
+        <ReactTableWrapper
+          rows={rows ?? []}
+          sort={{
+            sorting,
+            setSorting,
+          }}
+        />
+      )}
+
+      {queryDialogVisibility && (
+        <QueryDialog
+          onClose={() => {
+            setQueryDialogVisibility(false);
+          }}
+          table={table}
+          dataSourceName={dataSourceName}
+          onSubmit={data => {
+            const { filters, sorts } = data;
+            setWhereClauses(
+              filters.map(filter => {
+                return {
+                  [filter.column]: {
+                    [filter.operator]: filter.value ?? '',
+                  },
+                };
+              })
+            );
+            setOrderClauses(sorts);
+            setQueryDialogVisibility(false);
+          }}
+          filters={whereClauses?.map(clause => {
+            const [column, rest] = Object.entries(clause)[0];
+            const [operator, value] = Object.entries(rest)[0];
+            return { column, operator, value };
+          })}
+          sorts={orderByClauses}
+        />
+      )}
+    </div>
   );
 };

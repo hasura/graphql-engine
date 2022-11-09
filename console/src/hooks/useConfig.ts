@@ -1,6 +1,6 @@
 import { SERVER_CONSOLE_MODE } from '@/constants';
 import Endpoints from '@/Endpoints';
-import { useQuery, UseQueryOptions } from 'react-query';
+import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import { useAppSelector } from '../store';
 import { Api } from './apiUtils';
 import { useConsoleConfig } from './useEnvVars';
@@ -12,7 +12,7 @@ export interface Config {
 
 export function useMigrationMode(
   queryOptions?: UseQueryOptions<{ migration_mode: boolean }, Error, boolean>
-) {
+): UseQueryResult<boolean> {
   const headers = useAppSelector(s => s.tables.dataHeaders);
   const migrationUrl = Endpoints.hasuractlMigrateSettings;
   const { mode } = useConsoleConfig();

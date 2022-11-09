@@ -4,13 +4,13 @@
     X-Hasura-Role: admin
   status: 200
   response:
-    - error_code: Parse Error
-      source_position:
+    - source_position:
         end_column: 15
         start_line: 0
         end_line: 0
         start_column: 14
-      message: Unexpected token '$body'.
+      error_code: Parse Error
+      message: Unexpected token '}'.
   query:
     type: test_webhook_transform
     args:

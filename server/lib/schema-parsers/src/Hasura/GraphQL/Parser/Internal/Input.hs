@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
@@ -28,6 +29,7 @@ import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Monoid (Ap (..))
 import Data.Traversable (for)
 import Data.Type.Equality
 import Data.Vector qualified as V
@@ -64,7 +66,8 @@ data InputFieldsParser origin m a = InputFieldsParser
   { ifDefinitions :: [Definition origin (InputFieldInfo origin)],
     ifParser :: HashMap Name (InputValue Variable) -> m a
   }
-  deriving (Functor)
+  deriving stock (Functor)
+  deriving (Semigroup, Monoid) via Ap (InputFieldsParser origin m) a
 
 instance Applicative m => Applicative (InputFieldsParser origin m) where
   pure v = InputFieldsParser [] (const $ pure v)
@@ -239,6 +242,7 @@ field ::
   Maybe Description ->
   Parser origin k m a ->
   InputFieldsParser origin m a
+{-# INLINE field #-}
 field name description parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) Nothing],
@@ -267,6 +271,7 @@ fieldOptional ::
   Maybe Description ->
   Parser origin k m a ->
   InputFieldsParser origin m (Maybe a)
+{-# INLINE fieldOptional #-}
 fieldOptional name description parser =
   InputFieldsParser
     { ifDefinitions =
@@ -292,6 +297,7 @@ fieldWithDefault ::
   Value Void ->
   Parser origin k m a ->
   InputFieldsParser origin m a
+{-# INLINE fieldWithDefault #-}
 fieldWithDefault name description defaultValue parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) (Just defaultValue)],
@@ -351,6 +357,7 @@ object ::
   Maybe Description ->
   InputFieldsParser origin m a ->
   Parser origin 'Input m a
+{-# INLINE object #-}
 object name description parser =
   Parser
     { pType = schemaType,
@@ -377,11 +384,13 @@ object name description parser =
       for_ (M.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
           withKey (A.Key (K.fromText (unName fieldName))) $
-            parseError $ "field " <> toErrorValue fieldName <> " not found in type: " <> toErrorValue name
+            parseError $
+              "field " <> toErrorValue fieldName <> " not found in type: " <> toErrorValue name
       ifParser parser fields
     invalidName key = parseError $ "variable value contains object with key " <> ErrorValue.dquote key <> ", which is not a legal GraphQL name"
 
 list :: forall origin k m a. (MonadParse m, 'Input <: k) => Parser origin k m a -> Parser origin k m [a]
+{-# INLINE list #-}
 list parser =
   gcastWith
     (inputParserInput @k)

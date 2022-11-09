@@ -22,18 +22,24 @@ import Thumbnail from "@site/src/components/Thumbnail";
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
 
+:::note Supported from
+
+Auto cleanup for event triggers is available from Hasura version `v2.13` and above.
+
+:::
+
 ## Introduction
 
 Hasura provides a way to automate the cleanup of the event trigger logs based on the following parameters:
 
-| Name of the parameter | Description                                                                                               | Default | Example                                                                                                              |
-|-----------------------|-----------------------------------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------------------------------|
-| clear_older_than      | Minimum age (in hours) of the event logs that need to be cleared from when the cleanup action is invoked. | -       | `clear_older_than: 168` means logs older than 168 hours (7 days) will be deleted.                                    |
-| schedule              | Cron expression at which the cleanup should be invoked.                                                   | -       | A `0 0 * * *` schedule means that the cleanup will be invoked every day at 00:00 (UTC time).                         |
-| clean_invocation_logs | Option to indicate whether the corresponding invocation logs are also to be cleaned.                      | false   | `clean_invocation_logs: false` means that invocation logs will not be cleaned.                                       |
-| batch_size            | Maximum number of logs to delete per cleanup action.                                                      | 10000   | A `batch_size` of 10000 means that a maximum of 10000 logs will be deleted every time the cleanup action is invoked. |
-| timeout               | Maximum time (in seconds) the cleanup process can take up during execution.                               | 60      | A timeout of 60 means cleanup process will be aborted if it takes more than 60 seconds.                              |
-| paused                | Indicates if the auto-cleanup process is paused.                                                          | false   | `paused: true` means cleanup is paused, hence no logs will be deleted.                                               |
+| Name of the parameter | Description                                                                                               | Default | Example                                                                                                                       |
+|-----------------------|-----------------------------------------------------------------------------------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------|
+| clear_older_than      | Minimum age (in hours) of the event logs that need to be cleared from when the cleanup action is invoked. | -       | `clear_older_than: 168` means logs older than 168 hours (7 days) will be deleted.                                             |
+| schedule              | Cron expression at which the cleanup should be invoked.                                                   | -       | A `0 0 * * *` schedule means that the cleanup will be invoked every day at 00:00 (UTC time).                                  |
+| clean_invocation_logs | Option to indicate whether the corresponding invocation logs are also to be cleaned.                      | false   | `clean_invocation_logs: false` means that invocation logs will not be cleaned.                                                |
+| batch_size            | Maximum number of logs to delete in a single statement during the cleanup action. If there are more events to be cleaned than the `batch_size` then the cleanup action will execute multiple statements sequentially until all old event logs are cleared. | 10000   | Suppose there are 10000 events pending deletion and a `batch_size` of 1000 then the cleanup will be performed in 10 batches sequentially. |
+| timeout               | Maximum time (in seconds) that a batch can take during the cleanup process. If a batch times out, the cleanup process is halted. | 60      | A timeout of 60 means a batch of cleanup should not take more than 60 seconds. If a batch takes more than the `timeout`, then all the subsequent batches for the cleanup action will be cancelled. |
+| paused                | Indicates if the auto-cleanup process is paused.                                                          | false   | `paused: true` means cleanup is paused, hence no logs will be deleted.                                                        |
 
 
 ## Auto cleanup

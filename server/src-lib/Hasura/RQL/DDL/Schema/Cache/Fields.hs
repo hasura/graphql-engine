@@ -50,7 +50,7 @@ addNonColumnFields ::
     SourceName,
     HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
     FieldInfoMap (ColumnInfo b),
-    RemoteSchemaMap,
+    PartiallyResolvedRemoteSchemaMap,
     DBFunctionsMetadata b,
     NonColumnTableInputs b
   )
@@ -184,11 +184,11 @@ addNonColumnFields =
                               -- more useful error message.
                               Just columnInfo
                                 | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
-                                  throwA
-                                    -<
-                                      err400 AlreadyExists $
-                                        "field definition conflicts with custom field name for postgres column "
-                                          <>> ciColumn columnInfo
+                                    throwA
+                                      -<
+                                        err400 AlreadyExists $
+                                          "field definition conflicts with custom field name for postgres column "
+                                            <>> ciColumn columnInfo
                               _ -> returnA -< ()
                           )
                         |) (fieldInfoGraphQLNames fieldInfo)
@@ -338,7 +338,7 @@ buildRemoteRelationship ::
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   M.HashMap FieldName (DBJoinField b) ->
-  RemoteSchemaMap ->
+  PartiallyResolvedRemoteSchemaMap ->
   (SourceName, TableName b, RemoteRelationship) ->
   m (Either QErr (Maybe (RemoteFieldInfo (DBJoinField b))))
 buildRemoteRelationship allSources allColumns remoteSchemaMap (source, table, rr@RemoteRelationship {..}) = runExceptT $ do
@@ -356,15 +356,14 @@ buildRemoteRelationship allSources allColumns remoteSchemaMap (source, table, rr
       let lhsDependencies =
             -- a direct dependency on the table on which this is defined
             SchemaDependency (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b table) DRTable
-            -- the relationship is also dependent on all the lhs
-            -- columns that are used in the join condition
-            :
-            flip map (M.elems $ _rfiLHS remoteField) \case
-              JoinColumn column _ ->
-                -- TODO: shouldn't this be DRColumn??
-                mkColDep @b DRRemoteRelationship source table column
-              JoinComputedField computedFieldInfo ->
-                mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
+              -- the relationship is also dependent on all the lhs
+              -- columns that are used in the join condition
+              : flip map (M.elems $ _rfiLHS remoteField) \case
+                JoinColumn column _ ->
+                  -- TODO: shouldn't this be DRColumn??
+                  mkColDep @b DRRemoteRelationship source table column
+                JoinComputedField computedFieldInfo ->
+                  mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
       -- Here is the essence of the function: construct dependencies on the RHS
       -- of the join condition.
       recordDependenciesM metadataObject schemaObj (lhsDependencies <> rhsDependencies)

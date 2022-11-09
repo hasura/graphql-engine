@@ -32,7 +32,7 @@ import {
 
 import { Button } from '@/new-components/Button';
 
-import { FilterSectionContainer } from '@/features/BrowseRows/FiltersSection/FiltersSectionContainer';
+import { LegacyRunQueryContainer } from '@/features/BrowseRows';
 import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
 
 import {
@@ -48,8 +48,7 @@ import _push from '../push';
 import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
-import { E_SET_EDITITEM } from './EditActions';
-import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
+import { E_SET_EDITITEM } from '../TableEditItem/EditActions';
 import {
   getTableInsertRowRoute,
   getTableEditRowRoute,
@@ -60,6 +59,7 @@ import {
   dataSource,
   getTableCustomColumnName,
   isFeatureSupported,
+  currentDriver,
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -69,6 +69,8 @@ import {
   getPersistedColumnsOrder,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
+import { push } from 'react-router-redux';
+import globals from '@/Globals';
 
 const ViewRows = props => {
   const {
@@ -411,16 +413,19 @@ const ViewRows = props => {
           const cloneIcon = <FaClone />;
 
           const handleCloneClick = () => {
-            dispatch({ type: I_SET_CLONE, clone: row });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableInsertRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableInsertRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+                state: { row },
+              })
             );
           };
 
@@ -1010,13 +1015,18 @@ const ViewRows = props => {
   const isFilterSectionVisible =
     !isSingleRow && (curRelName === activePath[curDepth] || curDepth === 0);
 
+  const schemaKey = currentDriver === 'bigquery' ? 'dataset' : 'schema';
+
   return (
     <div className={isVisible ? '' : 'hide '}>
       {isFilterSectionVisible && (
         <div className="mt-4">
-          <FilterSectionContainer
+          <LegacyRunQueryContainer
             dataSourceName={currentSource}
-            table={{ schema: tableSchema.table_schema, name: curTableName }}
+            table={{
+              [schemaKey]: tableSchema.table_schema,
+              name: curTableName,
+            }}
             onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
           />
         </div>

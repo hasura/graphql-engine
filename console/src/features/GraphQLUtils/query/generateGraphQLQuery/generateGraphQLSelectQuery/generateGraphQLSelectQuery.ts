@@ -1,4 +1,4 @@
-import { MetadataTable, Source } from '@/features/MetadataAPI';
+import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { OrderBy, WhereClause } from '../../../types';
 import {
   getFields,
@@ -66,27 +66,29 @@ export const generateGraphQLSelectQuery = async ({
 
   const mergedClauses = clauses.length ? `(${clauses})` : '';
 
+  const selectedFields = fields.map(field => `${field} \n`);
+  const GQLOperationName = operationName ?? 'MyQuery';
   /**
    * If the source has a GQL namespace set for it, then we query for our `queryRoot` under that namespace
    */
   if (sourceCustomization?.root_fields?.namespace)
     return {
-      query: `query ${operationName ?? 'MyQuery'}  {
-    ${sourceCustomization.root_fields.namespace} ${mergedClauses} {
-      ${queryRoot} {
-        ${fields.map(field => `${field} \n`)}
-      }
-    }
-  }`,
+      query: `query ${GQLOperationName}  {
+        ${sourceCustomization.root_fields.namespace}  {
+          ${queryRoot} ${mergedClauses} {
+            ${selectedFields}
+          }
+        }
+      }`,
       resultPath: `${sourceCustomization.root_fields?.namespace}.${queryRoot}`,
     };
 
   return {
-    query: `query ${operationName ?? 'MyQuery'} {
-    ${queryRoot} ${mergedClauses} {
-      ${fields.map(field => `${field} \n`)}
-    }
-  }`,
+    query: `query ${GQLOperationName} {
+      ${queryRoot} ${mergedClauses} {
+        ${fields.map(field => `${field} \n`)}
+      }
+    }`,
     resultPath: queryRoot,
   };
 };

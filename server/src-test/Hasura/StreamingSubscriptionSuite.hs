@@ -36,6 +36,7 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..))
 import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
@@ -59,17 +60,19 @@ buildStreamingSubscriptionSuite = do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
-        throwError $ "Expected: " <> envVar
+        throwError $
+          "Expected: " <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
-  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool
+  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $
-    describe "Streaming subscriptions polling tests" $ streamingSubscriptionPollingSpec dbSourceConfig
+    describe "Streaming subscriptions polling tests" $
+      streamingSubscriptionPollingSpec dbSourceConfig
 
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "Use a non empty string") . mkRoleName
@@ -291,8 +294,8 @@ streamingSubscriptionPollingSpec srcConfig = do
 
         -- Checking below that the newly added subscriber is not added in the updated cohort
         cohortKey2CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey2Cohort
-        _cssNewSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` maybe True (notElem temporarySubscriberId)
-        _cssExistingSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` maybe True (notElem temporarySubscriberId)
+        _cssNewSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` all (notElem temporarySubscriberId)
+        _cssExistingSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` all (notElem temporarySubscriberId)
         STM.atomically $
           TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
 

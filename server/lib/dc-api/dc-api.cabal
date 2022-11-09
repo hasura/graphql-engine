@@ -31,6 +31,7 @@ common common-all
     RankNTypes
     RecordWildCards
     ScopedTypeVariables
+    StrictData
     TupleSections
     TypeApplications
     TypeFamilies
@@ -75,6 +76,7 @@ library
     Hasura.Backends.DataConnector.API.V0.Capabilities
     Hasura.Backends.DataConnector.API.V0.Column
     Hasura.Backends.DataConnector.API.V0.ConfigSchema
+    Hasura.Backends.DataConnector.API.V0.ErrorResponse
     Hasura.Backends.DataConnector.API.V0.Expression
     Hasura.Backends.DataConnector.API.V0.OrderBy
     Hasura.Backends.DataConnector.API.V0.Query
@@ -84,6 +86,8 @@ library
     Hasura.Backends.DataConnector.API.V0.Scalar
     Hasura.Backends.DataConnector.API.V0.Schema
     Hasura.Backends.DataConnector.API.V0.Table
+  other-modules:
+    Hasura.Backends.DataConnector.API.V0.Name
 
 test-suite tests-dc-api
   import: common-all
@@ -100,7 +104,10 @@ test-suite tests-dc-api
     data-fix,
     deepseq,
     dc-api,
+    directory,
     file-embed,
+    filepath,
+    graphql-parser,
     hashable,
     hspec,
     hspec-core,
@@ -117,6 +124,7 @@ test-suite tests-dc-api
     servant-client-core,
     servant-openapi3,
     text,
+    time,
     unordered-containers,
     vector,
     xml-conduit,
@@ -132,12 +140,15 @@ test-suite tests-dc-api
     Command
     Paths_dc_api
     Test.Data
+    Test.DataExport
     Test.CapabilitiesSpec
     Test.Expectations
     Test.HealthSpec
+    Test.ConfigSpec
     Test.MetricsSpec
     Test.ExplainSpec
     Test.QuerySpec
+    Test.ErrorSpec
     Test.QuerySpec.AggregatesSpec
     Test.QuerySpec.BasicSpec
     Test.QuerySpec.FilteringSpec

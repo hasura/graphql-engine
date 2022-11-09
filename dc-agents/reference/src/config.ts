@@ -1,9 +1,13 @@
 import { FastifyRequest } from "fastify"
 import { ConfigSchemaResponse } from "@hasura/dc-api-types"
 
+export type Casing = "pascal_case" | "lowercase";
+
 export type Config = {
   tables: string[] | null
   schema: string | null
+  table_name_casing: Casing
+  column_name_casing: Casing
 }
 
 export const getConfig = (request: FastifyRequest): Config => {
@@ -12,7 +16,9 @@ export const getConfig = (request: FastifyRequest): Config => {
   const config = JSON.parse(rawConfigJson);
   return {
     tables: config.tables ?? null,
-    schema: config.schema ?? null
+    schema: config.schema ?? null,
+    table_name_casing: config.table_name_casing ?? "pascal_case",
+    column_name_casing: config.column_name_casing ?? "pascal_case",
   }
 }
 
@@ -31,13 +37,27 @@ export const configSchema: ConfigSchemaResponse = {
         description: "Name of the schema to place the tables in. Omit to have no schema for the tables",
         type: "string",
         nullable: true
-      }
+      },
+      table_name_casing: {
+        $ref: "#/other_schemas/Casing"
+      },
+      column_name_casing: {
+        $ref: "#/other_schemas/Casing"
+      },
     }
   },
   other_schemas: {
     TableName: {
       nullable: false,
       type: "string"
+    },
+    Casing: {
+      enum: [
+        "pascal_case",
+        "lowercase"
+      ],
+      type: "string",
+      nullable: true
     }
   }
 }

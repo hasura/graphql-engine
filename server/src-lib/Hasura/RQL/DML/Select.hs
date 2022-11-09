@@ -278,7 +278,9 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
       pure $
         Left $
           AnnRelationSelectG (fromMaybe relName mAlias) colMapping $
-            AnnObjectSelectG (_asnFields annSel) relTab $ _tpFilter $ _asnPerm annSel
+            AnnObjectSelectG (_asnFields annSel) relTab $
+              _tpFilter $
+                _asnPerm annSel
     ArrRel ->
       pure $
         Right $

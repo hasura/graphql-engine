@@ -11,7 +11,7 @@ import {
 const schema = z.object({ columns: z.record(z.optional(z.boolean())) });
 
 export default {
-  title: 'Features/Permissions Form/Components/Column Section',
+  title: 'Features/Permissions Tab/Permissions Form/Components/Column Section',
   component: ColumnPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
@@ -23,6 +23,7 @@ export default {
             columns: { id: false, name: false, description: false },
           },
         }}
+        className="p-4"
       >
         {() => <StoryComponent />}
       </Form>
@@ -86,6 +87,7 @@ PartiallySelected.decorators = [
           columns: { id: true, name: false, description: true },
         },
       }}
+      className="p-4"
     >
       {() => <S />}
     </Form>
@@ -108,6 +110,7 @@ AllSelected.decorators = [
           columns: { id: true, name: true, description: true },
         },
       }}
+      className="p-4"
     >
       {() => <S />}
     </Form>

@@ -7,14 +7,10 @@
 
 import dataPageConnector from './DataPageContainer';
 import PageContainer from './DataSubSidebar';
-import viewTableConnector from './TableBrowseRows/ViewTable';
 import addExistingTableViewConnector from './Add/AddExistingTableView';
 import addTableConnector from './Add/AddTable';
 import rawSQLConnector from './RawSQL/RawSQL';
 import permissionsSummaryConnector from './PermissionsSummary/PermissionsSummary';
-import insertItemConnector from './TableInsertItem/InsertItem';
-import editItemConnector from './TableBrowseRows/EditItem';
-import modifyTableConnector from './TableModify/ModifyTable';
 import modifyViewConnector from './TableModify/ModifyView';
 import relationshipsConnector from './TableRelationships/Relationships';
 import relationshipsViewConnector from './TableRelationships/RelationshipsView';
@@ -33,14 +29,10 @@ import { useIsUnmounted } from './Common/tsUtils';
 export {
   dataPageConnector,
   PageContainer,
-  viewTableConnector,
   addExistingTableViewConnector,
   addTableConnector,
   rawSQLConnector,
   permissionsSummaryConnector,
-  insertItemConnector,
-  editItemConnector,
-  modifyTableConnector,
   modifyViewConnector,
   relationshipsConnector,
   relationshipsViewConnector,

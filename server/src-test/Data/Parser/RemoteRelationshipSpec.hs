@@ -13,8 +13,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.LegacyCatalog (parseLegacyRemoteRelationshipDefinition)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.Metadata
 import Language.GraphQL.Draft.Syntax qualified as G
 import Test.Hspec
 

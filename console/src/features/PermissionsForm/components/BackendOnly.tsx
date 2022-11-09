@@ -18,7 +18,7 @@ export const BackendOnlySection: React.FC<BackEndOnlySectionProps> = ({
   const enabled = watch('backendOnly');
 
   return (
-    <Collapse defaultOpen={defaultOpen}>
+    <Collapse defaultOpen={defaultOpen || enabled}>
       <Collapse.Header
         title="Backend only"
         tooltip={`When enabled, this ${queryType} mutation is accessible only via

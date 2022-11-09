@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
 import { GraphQLSchema } from 'graphql';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
@@ -105,6 +106,11 @@ const Permissions: React.FC<PermissionsProps> = props => {
       setRemoteSchemaFields(getRemoteSchemaFields(schema, permissionsSchema));
   }, [schema, permissionEdit?.isNewRole, schemaDefinition]);
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'RemoteSchemaPermissions',
+    { redactText: true }
+  );
+
   if (error || !schema) {
     return (
       <div>
@@ -120,7 +126,9 @@ const Permissions: React.FC<PermissionsProps> = props => {
   return (
     <div>
       <Helmet>
-        <title data-heap-redact-text="true">{`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}</title>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}</title>
       </Helmet>
       <PermissionsTable
         allRoles={allRoles}

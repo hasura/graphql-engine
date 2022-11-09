@@ -33,6 +33,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.HashSet qualified as Set
 import Data.List qualified as L
+import Data.List.Extended qualified as L
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
@@ -54,12 +55,10 @@ import Hasura.RQL.DDL.Network
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
-import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
@@ -72,6 +71,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
@@ -85,8 +85,7 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
   forall m r.
-  ( QErrM m,
-    MonadIO m,
+  ( MonadIO m,
     CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -168,8 +167,7 @@ runReplaceMetadata = \case
   RMReplaceMetadataV2 v2args -> runReplaceMetadataV2 v2args
 
 runReplaceMetadataV1 ::
-  ( QErrM m,
-    CacheRWM m,
+  ( CacheRWM m,
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
@@ -185,8 +183,7 @@ runReplaceMetadataV1 =
 
 runReplaceMetadataV2 ::
   forall m r.
-  ( QErrM m,
-    CacheRWM m,
+  ( CacheRWM m,
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
@@ -240,6 +237,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           introspectionDisabledRoles
           emptyNetwork
           mempty
+          emptyOpenTelemetryConfig
   putMetadata metadata
 
   let oldSources = _metaSources oldMetadata
@@ -257,10 +255,10 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   -- Check for duplicate trigger names in the new source metadata
   for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-    onJust (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
+    for_ (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
       dispatch newBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
         let newTriggerNames = concatMap (OMap.keys . _tmEventTriggers) (OMap.elems $ _smTables newSourceMetadata)
-            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (hashNub newTriggerNames)
+            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (L.uniques newTriggerNames)
         unless (null duplicateTriggerNamesInNewMetadata) $ do
           throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
 
@@ -340,7 +338,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
             throw400 AlreadyExists $
               "cron trigger with name "
                 <> ctName ct
-                <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
+                  <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
         -- we add the old cron triggers with included_in_metadata set to false with the
         -- newly added cron triggers
         pure $ allNewCronTriggers <> oldCronTriggersNotIncludedInMetadata
@@ -360,7 +358,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
       -- In the current implementation, this doesn't throw an error because the trigger is dropped
       -- using `DROP IF EXISTS..` meaning this silently fails without throwing an error.
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+        for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
           compose source (unBackendSourceMetadata newBackendSourceMetadata) (unBackendSourceMetadata oldBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               let oldTriggersMap = getTriggersMap oldSourceMetadata
@@ -414,7 +412,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
       -- If there are any event trigger cleanup configs with different cron then delete the older schedules
       -- generate cleanup logs for new event trigger cleanup config
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+        for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
           AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               sourceInfo@(SourceInfo _ _ _ sourceConfig _ _) <- askSourceInfo @b source
@@ -467,7 +465,8 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
       allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
       allDataConnectors =
         maybe mempty (HS.fromList . OMap.keys . unBackendConfigWrapper) $
-          BackendMap.lookup @'DataConnector $ _metaBackendConfigs metadata
+          BackendMap.lookup @'DataConnector $
+            _metaBackendConfigs metadata
       checkRemoteSchema name =
         unless (HS.member name allRemoteSchemas) $
           throw400 NotExists $
@@ -578,6 +577,12 @@ purgeMetadataObj = \case
     MetadataModifier $
       metaBackendConfigs
         %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . OMap.delete agentName . unBackendConfigWrapper)
+  MOOpenTelemetry subobject ->
+    case subobject of
+      OtelSubobjectExporterOtlp ->
+        MetadataModifier $ metaOpenTelemetryConfig . ocExporterOtlp .~ defaultOtelExporterConfig
+      OtelSubobjectBatchSpanProcessor ->
+        MetadataModifier $ metaOpenTelemetryConfig . ocBatchSpanProcessor .~ defaultOtelBatchSpanProcessorConfig
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case
@@ -684,7 +689,7 @@ runTestWebhookTransform (TestWebhookTransform env headers urlE payload rt _ sv) 
     let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
         reqTransform = requestFields rt
         engine = templateEngine rt
-        reqTransformCtx = mkReqTransformCtx url sv engine
+        reqTransformCtx = fmap mkRequestContext $ mkReqTransformCtx url sv engine
     hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
 
   case result of
@@ -709,7 +714,8 @@ interpolateFromEnv env url =
           err e =
             throwError $
               err400 NotFound $
-                "Missing Env Var: " <> e
+                "Missing Env Var: "
+                  <> e
                   <> ". For security reasons when testing request options real environment variable values are not available. Please enter a mock value for "
                   <> e
                   <> " in the Sample Env Variables list. See https://hasura.io/docs/latest/graphql/core/actions/rest-connectors/#action-transforms-sample-context"

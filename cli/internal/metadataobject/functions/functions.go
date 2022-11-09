@@ -41,7 +41,7 @@ func (f *FunctionConfig) CreateFiles() error {
 	return nil
 }
 
-func (f *FunctionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (f *FunctionConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(f.MetadataDir, f.Filename()))
 	if err != nil {
 		return nil, f.error(err)
@@ -54,7 +54,7 @@ func (f *FunctionConfig) Build() (map[string]interface{}, metadataobject.ErrPars
 	return map[string]interface{}{f.Key(): obj}, nil
 }
 
-func (f *FunctionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (f *FunctionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(f, metadata, f.error, metadataobject.DefaultObjectTypeSequence)
 }
 
@@ -66,7 +66,7 @@ func (f *FunctionConfig) Filename() string {
 	return "functions.yaml"
 }
 
-func (f *FunctionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (f *FunctionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(f.BaseDirectory(), f.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -75,7 +75,7 @@ func (f *FunctionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadata
 	return files, nil
 }
 
-func (f *FunctionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (f *FunctionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: f, WriteDiffOpts: opts})
 	if err != nil {
 		return f.error(err)

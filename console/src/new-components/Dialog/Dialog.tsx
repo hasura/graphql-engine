@@ -1,7 +1,9 @@
-import React from 'react';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
+import { IconTooltip } from '@/new-components/Tooltip';
 import * as RadixDialog from '@radix-ui/react-dialog';
-import { FaTimes } from 'react-icons/fa';
 import clsx from 'clsx';
+import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 import { Button } from '../Button/Button';
 
 export type FooterProps = {
@@ -11,23 +13,44 @@ export type FooterProps = {
   onSubmit?: () => void;
   onClose: () => void;
   isLoading?: boolean;
+  className?: string;
+  onSubmitAnalyticsName?: string;
+  onCancelAnalyticsName?: string;
 };
 
-const Footer: React.FC<FooterProps> = ({
+const Footer: React.VFC<FooterProps> = ({
   callToAction,
   callToActionLoadingText = '',
   callToDeny,
   onClose,
   onSubmit,
   isLoading = false,
+  className,
+  onSubmitAnalyticsName,
+  onCancelAnalyticsName,
 }) => {
   const callToActionProps = onSubmit ? { onClick: onSubmit } : {};
 
+  const onSubmitAnalyticsAttributes = useGetAnalyticsAttributes(
+    onSubmitAnalyticsName
+  );
+
+  const onCancelAnalyticsAttributes = useGetAnalyticsAttributes(
+    onCancelAnalyticsName
+  );
+
   return (
-    <div className="flex items-center justify-end border-t border-gray-300 bg-white p-sm">
+    <div
+      className={clsx(
+        'flex items-center justify-end border-t border-gray-300 bg-white p-sm',
+        className
+      )}
+    >
       {callToDeny && (
         <div className="mr-1.5">
-          <Button onClick={onClose}>{callToDeny}</Button>
+          <Button onClick={onClose} {...onCancelAnalyticsAttributes}>
+            {callToDeny}
+          </Button>
         </div>
       )}
       <Button
@@ -36,6 +59,7 @@ const Footer: React.FC<FooterProps> = ({
         mode="primary"
         isLoading={isLoading}
         loadingText={callToActionLoadingText}
+        {...onSubmitAnalyticsAttributes}
       >
         {callToAction}
       </Button>
@@ -47,32 +71,40 @@ const Backdrop = () => (
   <RadixDialog.Overlay className="fixed top-0 left-0 h-full w-full bg-gray-900/90 backdrop-blur-sm z-[100]" />
 );
 
-type DialogSize = 'sm' | 'md' | 'lg';
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const dialogSizing: Record<DialogSize, string> = {
   sm: 'max-w-xl',
   md: 'max-w-2xl',
   lg: 'max-w-3xl',
+  xl: 'max-w-4xl',
 };
 
 export type DialogProps = {
   children: string | React.ReactElement;
   title: string;
+  titleTooltip?: string;
   description?: string;
-  hasBackdrop: boolean;
+  hasBackdrop?: boolean;
   onClose?: () => void;
   footer?: FooterProps | React.ReactElement;
   size?: DialogSize;
+  // provides a way to add styles to the div wrapping the
+  contentContainer?: {
+    className?: string;
+  };
 };
 
 export const Dialog = ({
   children,
   hasBackdrop,
   title,
+  titleTooltip,
   description,
   onClose,
   footer,
   size = 'md',
+  contentContainer,
 }: DialogProps) => (
   <RadixDialog.Root open>
     {hasBackdrop && <Backdrop />}
@@ -90,17 +122,25 @@ export const Dialog = ({
           />
         </RadixDialog.Close>
       )}
-      {title && (
+      {!!title && (
         <RadixDialog.Title className="flex items-top mb-1 pl-sm pt-sm pr-sm text-xl font-semibold">
           {title}
+          {!!titleTooltip && (
+            <IconTooltip className="-ml-1" message={titleTooltip} />
+          )}
         </RadixDialog.Title>
       )}
-      {description && (
+      {!!description && (
         <RadixDialog.Description className="text-muted pl-sm pb-sm pr-sm ">
           {description}
         </RadixDialog.Description>
       )}
-      <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
+      <div
+        className={clsx(
+          'overflow-y-auto max-h-[calc(100vh-14rem)]',
+          contentContainer?.className
+        )}
+      >
         {children}
       </div>
       {React.isValidElement(footer) && footer}

@@ -37,10 +37,10 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.QueryTags (QueryTagsConfig)
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.Run (RunT (..))
 import Hasura.RQL.Types.SchemaCache.Build (MetadataT (..))
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session

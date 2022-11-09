@@ -2,7 +2,7 @@ import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { Form } from '@/new-components/Form';
 import { z } from 'zod';
-
+import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import {
   RowPermissionsSection,
   RowPermissionsProps,
@@ -10,11 +10,10 @@ import {
   RowPermissionsWrapperProps,
 } from './RowPermissions';
 
-import { allSchemas, allFunctions } from '../mocks/mockData';
 import { QueryType } from '../types';
 
 export default {
-  title: 'Features/Permissions Form/Components/Row Section',
+  title: 'Features/Permissions Tab/Permissions Form/Components/Row Section',
   component: RowPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
@@ -22,20 +21,12 @@ export default {
         {() => <StoryComponent />}
       </Form>
     ),
+    ReactQueryDecorator(),
   ],
   parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
 const roleName = 'two';
-
-const dataLeaf = {
-  type: 'schema',
-  name: 'users',
-  leaf: {
-    type: 'table',
-    name: 'users',
-  },
-};
 
 // this will be moved into a utils folder
 const allRowChecks = [
@@ -62,11 +53,15 @@ export const Insert: Story<Props> = args => (
 Insert.args = {
   wrapper: { roleName, queryType: 'insert', defaultOpen: true },
   section: {
-    dataLeaf,
+    table: {
+      schema: 'public',
+      name: 'user',
+    },
+    dataSourceName: 'chinook',
     queryType: 'delete',
     allRowChecks,
-    allSchemas,
-    allFunctions,
+    // allSchemas,
+    // allFunctions,
   },
 };
 

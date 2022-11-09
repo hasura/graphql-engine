@@ -11,57 +11,20 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof ConnectDBScreen>;
 
-export const WithoutNeon: Story = () => (
+export const Base: Story = () => (
   <ConnectDBScreen
     proceed={() => {}}
     dismissOnboarding={() => {}}
     dispatch={() => {}}
-    hasNeonAccess={!true}
+    setStepperIndex={() => {}}
   />
 );
 
-WithoutNeon.play = async ({ canvasElement }) => {
+Base.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  // Expect element renders successfully
-  expect(
-    await canvas.findByText('Welcome to your new Hasura project!')
-  ).toBeVisible();
-  expect(
-    await canvas.findByText(
-      "Let's get started by connecting your first database"
-    )
-  ).toBeVisible();
-};
-
-export const WithNeon: Story = () => (
-  <ConnectDBScreen
-    proceed={() => {}}
-    dismissOnboarding={() => {}}
-    hasNeonAccess
-    dispatch={() => {}}
-  />
-);
-
-WithNeon.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  // Expect element renders successfully
-  expect(
-    await canvas.findByText('Welcome to your new Hasura project!')
-  ).toBeVisible();
-  expect(
-    await canvas.findByText(
-      "Let's get started by connecting your first database"
-    )
-  ).toBeVisible();
-  expect(await canvas.findByText('Connect Neon Database')).toBeVisible();
-
-  expect(await canvas.findByText('Need a new database?')).toBeVisible();
-
-  expect(
-    await canvas.findByText(
-      'Hasura has partnered with Neon to help you seamlessly create your database with their serverless Postgres platform.'
-    )
-  ).toBeVisible();
+  // Expect element renders successfully, these texts are highly dynamic
+  // according to product needs, and doesn't make sense to keep a lot of
+  // "renders successfully" tests.
+  expect(canvas.getByText('Connect Neon Database')).toBeVisible();
 };

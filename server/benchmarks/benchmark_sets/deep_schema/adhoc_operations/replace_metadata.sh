@@ -7,7 +7,7 @@ function adhoc_operation() {
   curl \
     --request POST \
     --header 'Content-Type: application/json' \
-    --data "@$scriptDir/../clear_metadata.json" \
+    --data "@$scriptDir/clear_metadata.json" \
     "$HASURA_URL/v1/query"
   # Re-create the schema
   curl \

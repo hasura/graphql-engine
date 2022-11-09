@@ -9,7 +9,7 @@ module Hasura.Backends.Postgres.Instances.Types
   )
 where
 
-import Autodocodec (HasCodec)
+import Autodocodec (HasCodec (codec))
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Kind (Type)
@@ -25,7 +25,6 @@ import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Insert qualified as Postgres (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
@@ -116,7 +115,7 @@ instance
     Just $
       HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
-          _hciTestCodec = placeholderCodecViaJSON
+          _hciTestCodec = codec
         }
 
   isComparableType = Postgres.isComparableType
@@ -138,3 +137,5 @@ instance
   snakeCaseTableName = Postgres.snakeCaseQualifiedObject
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
+
+  resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)

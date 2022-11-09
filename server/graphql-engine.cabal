@@ -21,10 +21,115 @@ extra-source-files:
   CURRENT_VERSION
   -- These are files referenced by functions from 'file-embed' which uses
   -- addDependentFile internally and has the same issue as above:
-  src-rsr/mysql_table_metadata.sql
-  src-rsr/mssql_table_metadata.sql
-  src-rsr/catalog_versions.txt
+  -- To easily rebuild this list, use the command 'find server/src-rsr -type f | sort'.
   src-rsr/catalog_version.txt
+  src-rsr/catalog_versions.txt
+  src-rsr/citus_table_metadata.sql
+  src-rsr/clear_system_metadata.sql
+  src-rsr/cockroach_table_metadata.sql
+  src-rsr/console.html
+  src-rsr/drop_pg_source.sql
+  src-rsr/init_pg_source.sql
+  src-rsr/initialise.sql
+  src-rsr/introspection.json
+  src-rsr/migrations/08_to_1.sql
+  src-rsr/migrations/10_to_11.sql
+  src-rsr/migrations/11_to_12.sql
+  src-rsr/migrations/12_to_13.sql
+  src-rsr/migrations/13_to_12.sql
+  src-rsr/migrations/13_to_14.sql
+  src-rsr/migrations/14_to_13.sql
+  src-rsr/migrations/14_to_15.sql
+  src-rsr/migrations/15_to_14.sql
+  src-rsr/migrations/15_to_16.sql
+  src-rsr/migrations/16_to_15.sql
+  src-rsr/migrations/16_to_17.sql
+  src-rsr/migrations/17_to_16.sql
+  src-rsr/migrations/17_to_18.sql
+  src-rsr/migrations/18_to_17.sql
+  src-rsr/migrations/18_to_19.sql
+  src-rsr/migrations/19_to_18.sql
+  src-rsr/migrations/19_to_20.sql
+  src-rsr/migrations/1_to_2.sql
+  src-rsr/migrations/20_to_19.sql
+  src-rsr/migrations/20_to_21.sql
+  src-rsr/migrations/21_to_20.sql
+  src-rsr/migrations/21_to_22.sql
+  src-rsr/migrations/22_to_21.sql
+  src-rsr/migrations/22_to_23.sql
+  src-rsr/migrations/23_to_22.sql
+  src-rsr/migrations/23_to_24.sql
+  src-rsr/migrations/24_to_23.sql
+  src-rsr/migrations/24_to_25.sql
+  src-rsr/migrations/25_to_24.sql
+  src-rsr/migrations/25_to_26.sql
+  src-rsr/migrations/26_to_25.sql
+  src-rsr/migrations/26_to_27.sql
+  src-rsr/migrations/27_to_26.sql
+  src-rsr/migrations/27_to_28.sql
+  src-rsr/migrations/28_to_27.sql
+  src-rsr/migrations/28_to_29.sql
+  src-rsr/migrations/29_to_28.sql
+  src-rsr/migrations/29_to_30.sql
+  src-rsr/migrations/2_to_3.sql
+  src-rsr/migrations/30_to_29.sql
+  src-rsr/migrations/30_to_31.sql
+  src-rsr/migrations/31_to_30.sql
+  src-rsr/migrations/31_to_32.sql
+  src-rsr/migrations/32_to_31.sql
+  src-rsr/migrations/32_to_33.sql
+  src-rsr/migrations/33_to_32.sql
+  src-rsr/migrations/33_to_34.sql
+  src-rsr/migrations/34_to_33.sql
+  src-rsr/migrations/34_to_35.sql
+  src-rsr/migrations/35_to_34.sql
+  src-rsr/migrations/35_to_36.sql
+  src-rsr/migrations/36_to_35.sql
+  src-rsr/migrations/36_to_37.sql
+  src-rsr/migrations/37_to_36.sql
+  src-rsr/migrations/37_to_38.sql
+  src-rsr/migrations/38_to_37.sql
+  src-rsr/migrations/38_to_39.sql
+  src-rsr/migrations/39_to_38.sql
+  src-rsr/migrations/39_to_40.sql
+  src-rsr/migrations/40_to_39.sql
+  src-rsr/migrations/41_to_40.sql
+  src-rsr/migrations/41_to_42.sql
+  src-rsr/migrations/42_to_41.sql
+  src-rsr/migrations/42_to_43.sql
+  src-rsr/migrations/43_to_42.sql
+  src-rsr/migrations/43_to_44.sql
+  src-rsr/migrations/44_to_43.sql
+  src-rsr/migrations/44_to_45.sql
+  src-rsr/migrations/45_to_44.sql
+  src-rsr/migrations/45_to_46.sql
+  src-rsr/migrations/46_to_45.sql
+  src-rsr/migrations/46_to_47.sql
+  src-rsr/migrations/47_to_46.sql
+  src-rsr/migrations/4_to_5.sql
+  src-rsr/migrations/5_to_6.sql
+  src-rsr/migrations/6_to_7.sql
+  src-rsr/migrations/7_to_8.sql
+  src-rsr/migrations/8_to_9.sql
+  src-rsr/migrations/9_to_10.sql
+  src-rsr/mssql/drop_mssql_source.sql
+  src-rsr/mssql/init_mssql_source.sql
+  src-rsr/mssql/mssql_delete_trigger.sql.shakespeare
+  src-rsr/mssql/mssql_fetch_events.sql.shakespeare
+  src-rsr/mssql/mssql_insert_trigger.sql.shakespeare
+  src-rsr/mssql/mssql_source_migrations/1_to_2.sql
+  src-rsr/mssql/mssql_source_migrations/2_to_3.sql
+  src-rsr/mssql/mssql_table_metadata.sql
+  src-rsr/mssql/mssql_unlock_events.sql.shakespeare
+  src-rsr/mssql/mssql_update_trigger.sql.shakespeare
+  src-rsr/mysql_table_metadata.sql
+  src-rsr/pg_function_metadata.sql
+  src-rsr/pg_source_migrations/0_to_1.sql
+  src-rsr/pg_source_migrations/1_to_2.sql
+  src-rsr/pg_source_migrations/2_to_3.sql
+  src-rsr/pg_table_metadata.sql
+  src-rsr/table_meta.sql
+  src-rsr/trigger.sql.shakespeare
 
 source-repository head
   type:     git
@@ -447,7 +552,6 @@ library
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
                      , Hasura.Backends.MSSQL.Types.Update
-
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Connection.MonadTx
                      , Hasura.Backends.Postgres.Connection.Settings
@@ -606,6 +710,20 @@ library
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
+                     , Hasura.RemoteSchema.Metadata.Base
+                     , Hasura.RemoteSchema.Metadata.Customization
+                     , Hasura.RemoteSchema.Metadata.Permission
+                     , Hasura.RemoteSchema.Metadata.RemoteRelationship
+                     , Hasura.RemoteSchema.Metadata.Core
+                     , Hasura.RemoteSchema.Metadata
+                     , Hasura.RemoteSchema.MetadataAPI.Core
+                     , Hasura.RemoteSchema.MetadataAPI.Permission
+                     , Hasura.RemoteSchema.MetadataAPI
+                     , Hasura.RemoteSchema.SchemaCache.Types
+                     , Hasura.RemoteSchema.SchemaCache.Permission
+                     , Hasura.RemoteSchema.SchemaCache.RemoteRelationship
+                     , Hasura.RemoteSchema.SchemaCache.Build
+                     , Hasura.RemoteSchema.SchemaCache
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.Allowlist
                      , Hasura.RQL.Types.ApiLimit
@@ -632,17 +750,17 @@ library
                      , Hasura.RQL.Types.Metadata.Object
                      , Hasura.RQL.Types.Metadata.Serialization
                      , Hasura.RQL.Types.Network
+                     , Hasura.RQL.Types.OpenTelemetry
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
                      , Hasura.RQL.Types.Relationships.Local
                      , Hasura.RQL.Types.Relationships.Remote
-                     , Hasura.RQL.Types.Relationships.ToSchema
                      , Hasura.RQL.Types.Relationships.ToSource
-                     , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.ResultCustomization
                      , Hasura.RQL.Types.Roles
                      , Hasura.RQL.Types.Roles.Internal
+                     , Hasura.RQL.Types.ResizePool
                      , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCache.AggregationPredicates
@@ -671,17 +789,17 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.RemoteRelationship
-                     , Hasura.RQL.DDL.RemoteRelationship.Validate
-                     , Hasura.RQL.DDL.RemoteSchema
-                     , Hasura.RQL.DDL.RemoteSchema.Permission
                      , Hasura.RQL.DDL.Webhook.Transform
                      , Hasura.RQL.DDL.Webhook.Transform.Body
                      , Hasura.RQL.DDL.Webhook.Transform.Class
                      , Hasura.RQL.DDL.Webhook.Transform.Headers
                      , Hasura.RQL.DDL.Webhook.Transform.Method
                      , Hasura.RQL.DDL.Webhook.Transform.QueryParams
+                     , Hasura.RQL.DDL.Webhook.Transform.Response
+                     , Hasura.RQL.DDL.Webhook.Transform.Request
                      , Hasura.RQL.DDL.Webhook.Transform.Validation
                      , Hasura.RQL.DDL.Webhook.Transform.Url
+                     , Hasura.RQL.DDL.Webhook.Transform.WithOptional
                      , Hasura.RQL.DDL.SourceKinds
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
@@ -899,6 +1017,7 @@ test-suite graphql-engine-tests
     , hspec >=2.8.3 && <3
     , hspec-core >=2.8.3 && <3
     , hspec-expectations
+    , hspec-expectations-json
     , hspec-expectations-lifted
     , hspec-hedgehog
     , http-client
@@ -970,6 +1089,8 @@ test-suite graphql-engine-tests
     Discover
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
+    Hasura.Backends.BigQuery.SourceSpec
+    Hasura.Backends.DataConnector.Adapter.TypesSpec
     Hasura.Backends.DataConnector.API.V0.AggregateSpec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
@@ -1016,6 +1137,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.Types.AllowlistSpec
     Hasura.RQL.Types.CommonSpec
     Hasura.RQL.Types.EndpointSpec
+    Hasura.RQL.Types.Relationships.RemoteSpec
     Hasura.RQL.Types.TableSpec
     Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec
@@ -1048,240 +1170,3 @@ test-suite graphql-engine-tests
     Test.Parser.Monad
     Test.QuickCheck.Extended
     Test.SIString
-
-test-suite tests-hspec
-  import: common-all, lib-depends
-  type: exitcode-stdio-1.0
-  build-tool-depends: hspec-discover:hspec-discover
-  build-depends:
-      QuickCheck
-    , Spock-core
-    , aeson
-    , aeson-casing
-    , aeson-pretty
-    , aeson-qq
-    , async
-    , base
-    , bytestring
-    , case-insensitive
-    , conduit
-    , containers
-    , cron
-    , dependent-map
-    , dependent-sum
-    , ekg-core
-    , fast-logger
-    , dc-api
-    , graphql-engine
-    , graphql-parser
-    , haskell-src-meta
-    , hasura-prelude
-    , hedgehog
-    , hspec
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
-    , hspec-discover >=2.8.3 && <3
-    , hspec-expectations
-    , hspec-expectations-lifted
-    , hspec-hedgehog
-    , http-client
-    , http-client-tls
-    , http-conduit
-    , http-types
-    , HUnit
-    , insert-ordered-containers
-    , jose
-    , kan-extensions
-    , lens
-    , lens-aeson
-    , libyaml
-    , lifted-base
-    , mmorph
-    , monad-control
-    , monad-logger
-    , morpheus-graphql
-    , mtl
-    , mysql
-    , mysql-simple
-    , natural-transformation >=0.4 && <0.5
-    , network
-    , network-uri
-    , odbc
-    , openapi3
-    , optparse-applicative
-    , parsec
-    , pg-client
-    , postgresql-libpq
-    , postgresql-simple
-    , process
-    , resource-pool
-    , resourcet
-    , safe
-    , safe-exceptions
-    , scientific
-    , servant-server
-    , split
-    , stm
-    , template-haskell
-    , text
-    , text-conversions
-    , th-lift
-    , th-lift-instances
-    , time
-    , transformers-base
-    , typed-process
-    , unix
-    , unliftio-core
-    , unordered-containers
-    , utf8-string
-    , uuid
-    , vector
-    , warp
-    , websockets
-    , yaml
-
-  if !flag(ghci-load-test-with-lib)
-    build-depends: graphql-engine
-
-  hs-source-dirs: tests-hspec
-  if flag(ghci-load-test-with-lib)
-    hs-source-dirs: src-lib
-
-  -- Turning off optimizations is intentional; tests aren't
-  -- performance sensitive and waiting for compilation is a problem.
-  ghc-options:
-    -Wall -O0
-    -threaded
-    -rtsopts "-with-rtsopts=-N"
-
-  main-is: Spec.hs
-  other-modules:
-    SpecHook
-
-
- -- Harness
-    Harness.Constants
-    Harness.Env
-    Harness.Exceptions
-    Harness.GraphqlEngine
-    Harness.Http
-    Harness.RemoteServer
-    Harness.TestEnvironment
-    Harness.Webhook
-    Harness.Yaml
-
- -- Harness.Backend
-    Harness.Backend.BigQuery
-    Harness.Backend.Citus
-    Harness.Backend.Cockroach
-    Harness.Backend.DataConnector
-    Harness.Backend.DataConnector.MockAgent
-    Harness.Backend.Mysql
-    Harness.Backend.Postgres
-    Harness.Backend.Sqlserver
-
- -- Harness.Test
-    Harness.Test.BackendType
-    Harness.Test.CustomOptions
-    Harness.Test.Fixture
-    Harness.Test.Hspec.Extended
-    Harness.Test.Introspection
-    Harness.Test.Schema
-    Harness.Test.Permissions
-    Harness.Test.SchemaName
-
- -- Harness.Quoter
-    Harness.Quoter.Graphql
-    Harness.Quoter.Yaml
-    Harness.Quoter.Yaml.InterpolateYaml
-
- -- Test
-    Test.BigQuery.ComputedFieldSpec
-    Test.BigQuery.Metadata.ComputedFieldSpec
-    Test.BigQuery.Queries.SpatialTypesSpec
-    Test.BigQuery.Schema.RunSQLSpec
-    Test.BigQuery.TypeInterpretationSpec
-    Test.DataConnector.AggregateQuerySpec
-    Test.DataConnector.MetadataApiSpec
-    Test.DataConnector.MockAgent.AggregateQuerySpec
-    Test.DataConnector.MockAgent.BasicQuerySpec
-    Test.DataConnector.MockAgent.QueryRelationshipsSpec
-    Test.DataConnector.MockAgent.TransformedConfigurationSpec
-    Test.DataConnector.QuerySpec
-    Test.DataConnector.SelectPermissionsSpec
-    Test.DisableRootFields.Common
-    Test.DisableRootFields.DefaultRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipSpec
-    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.EnableAggSpec
-    Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTrigger.PG.EventTriggersRecreationSpec
-    Test.EventTrigger.PG.EventTriggersRunSQLSpec
-    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
-    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
-    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
-    Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
-    Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
-    Test.HelloWorldSpec
-    Test.LongIdentifiersSpec
-    Test.Metadata.InconsistentSpec
-    Test.Mutations.MultiplePerRequest.UpdateManySpec
-    Test.Postgres.DataValidation.PermissionSpec
-    Test.Postgres.BackendOnlyPermissionsSpec
-    Test.Postgres.DefaultValuesSpec
-    Test.Postgres.TimestampSpec
-    Test.Postgres.UniqueConstraintsSpec
-    Test.Postgres.JsonbSpec
-    Test.Queries.Directives.IncludeAndSkipSpec
-    Test.Queries.Directives.IncludeSpec
-    Test.Queries.Directives.SkipSpec
-    Test.Queries.DirectivesSpec
-    Test.Queries.AggregationSpec
-    Test.Queries.AggregationPredicatesSpec
-    Test.Queries.FilterSearchSpec
-    Test.Queries.MultiColumnObjectRelationshipsSpec
-    Test.Queries.NestedObjectSpec
-    Test.Queries.Paginate.LimitSpec
-    Test.Queries.Paginate.OffsetSpec
-    Test.Queries.Simple.NoQueriesAvailableSpec
-    Test.Queries.Simple.ObjectQueriesSpec
-    Test.Queries.Simple.OperationNameSpec
-    Test.Queries.Simple.PrimaryKeySpec
-    Test.Queries.SortSpec
-    Test.Quoter.YamlSpec
-    Test.Regression.ArrayLiteralTextEncodingSpec
-    Test.Regression.DoNotTruncateSessionVariables8158Spec
-    Test.Regression.DropColumnWithPermissions8415Spec
-    Test.Regression.InsertOnConflict8260Spec
-    Test.Regression.NullsOrderParsing8780Spec
-    Test.Regression.ObjectRelationshipsLimit7936Spec
-    Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.RemoteRelationship.FromRemoteSchemaSpec
-    Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
-    Test.RemoteRelationship.MetadataAPI.Common
-    Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec
-    Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec
-    Test.RemoteRelationship.XToDBArrayRelationshipSpec
-    Test.RemoteRelationship.XToDBObjectRelationshipSpec
-    Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
-    Test.Schema.CustomFieldNames.MutationSpec
-    Test.Schema.CustomFieldNames.QuerySpec
-    Test.SQLServer.DefaultValuesSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
-    Test.SQLServer.InsertVarcharColumnSpec
-    Test.SQLServer.VarcharLiteralsSpec
-    Test.Schema.ConflictsSpec
-    Test.Schema.DefaultValuesSpec
-    Test.Schema.EnumSpec
-    Test.Schema.TableRelationships.ArrayRelationshipsSpec
-    Test.Schema.TableRelationships.ObjectRelationshipsSpec
-    Test.Schema.ViewsSpec
-    Test.ServiceLivenessSpec
-    Test.SQLServer.InsertVarcharColumnSpec
-    Test.Subscriptions.CustomFieldsSpec

@@ -5,10 +5,7 @@ import pytest
 import queue
 import threading
 
-from context import PytestConf
-
-if not PytestConf.config.getoption("--test-webhook-request-context"):
-    pytest.skip("--test-webhook-https-request-context flag is missing, skipping tests", allow_module_level=True)
+from conftest import extract_server_address_from
 
 
 class QueryEchoWebhookServer(http.server.HTTPServer):
@@ -50,19 +47,25 @@ class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(user_vars).encode('utf-8'))
 
 
-@pytest.fixture(scope="class")
-def query_echo_webhook():
-    # TODO(swann): is this the right port?
-    webhook_httpd = QueryEchoWebhookServer(server_address=("localhost", 5594))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
-    yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def query_echo_webhook(hge_fixture_env: dict[str, str]):
+    server_address = extract_server_address_from('HASURA_GRAPHQL_AUTH_HOOK')
+    server = QueryEchoWebhookServer(server_address)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    url = f'http://{server.server_address[0]}:{server.server_address[1]}'
+    print(f'{query_echo_webhook.__name__} server started on {url}')
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = url + '/'
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK_MODE'] = 'POST'
+    yield server
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 
-@pytest.mark.usefixtures("per_method_tests_db_state")
+@pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.admin_secret
 class TestWebhookRequestContext(object):
     @classmethod
     def dir(cls):

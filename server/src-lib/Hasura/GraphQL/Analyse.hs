@@ -208,17 +208,20 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
       -- both are scalars: we check that they're the same
       (FieldScalarInfo t1 s1, FieldScalarInfo t2 _) -> do
         when (t1 /= t2) $
-          throwDiagnosis $ MismatchedFields name t1 t2
+          throwDiagnosis $
+            MismatchedFields name t1 t2
         pure $ FieldScalarInfo t1 s1
       -- both are enums: we check that they're the same
       (FieldEnumInfo t1 e1, FieldEnumInfo t2 _) -> do
         when (t1 /= t2) $
-          throwDiagnosis $ MismatchedFields name t1 t2
+          throwDiagnosis $
+            MismatchedFields name t1 t2
         pure $ FieldEnumInfo t1 e1
       -- both are objects, we merge their selection sets
       (FieldObjectInfo t1 o1, FieldObjectInfo t2 o2) -> do
         when (t1 /= t2) $
-          throwDiagnosis $ MismatchedFields name t1 t2
+          throwDiagnosis $
+            MismatchedFields name t1 t2
         mergedSelection <-
           Map.unionWithM
             mergeFields
@@ -248,12 +251,16 @@ analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
   G.TypeDefinitionScalar std -> do
     -- scalars do not admit a selection set
     unless (null _fSelectionSet) $
-      throwDiagnosis $ ScalarSelectionSet $ G._stdName std
+      throwDiagnosis $
+        ScalarSelectionSet $
+          G._stdName std
     pure $ Just $ FieldScalarInfo gType $ ScalarInfo std
   G.TypeDefinitionEnum etd -> do
     -- enums do not admit a selection set
     unless (null _fSelectionSet) $
-      throwDiagnosis $ EnumSelectionSet $ G._etdName etd
+      throwDiagnosis $
+        EnumSelectionSet $
+          G._etdName etd
     pure $ Just $ FieldEnumInfo gType $ EnumInfo etd
   G.TypeDefinitionUnion _utd ->
     -- TODO: implement unions
@@ -264,7 +271,9 @@ analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
   G.TypeDefinitionObject otd -> do
     -- TODO: check field arguments?
     when (null _fSelectionSet) $
-      throwDiagnosis $ ObjectMissingSelectionSet $ G._otdName otd
+      throwDiagnosis $
+        ObjectMissingSelectionSet $
+          G._otdName otd
     subselection <- analyzeObjectSelectionSet otd _fSelectionSet
     pure $
       Just $

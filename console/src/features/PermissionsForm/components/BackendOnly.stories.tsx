@@ -6,7 +6,8 @@ import { Form } from '@/new-components/Form';
 import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 
 export default {
-  title: 'Features/Permissions Form/Components/Backend Only Section',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Backend Only Section',
   component: BackendOnlySection,
   parameters: {
     // Disable storybook for playground stories
@@ -30,6 +31,7 @@ BackendOnlyEnabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: true } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>
@@ -48,6 +50,7 @@ BackendOnlyDisabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: false } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>

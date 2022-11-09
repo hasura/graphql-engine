@@ -95,9 +95,9 @@ module Hasura.Eventing.ScheduledTrigger
     getOneOffScheduledEventsTx,
     getCronEventsTx,
     deleteScheduledEventTx,
-    getInvocationsTx,
-    getInvocationsQuery,
-    getInvocationsQueryNoPagination,
+    getScheduledEventInvocationsTx,
+    getScheduledEventsInvocationsQuery,
+    getScheduledEventsInvocationsQueryNoPagination,
 
     -- * Export utility functions which are useful to build
 
@@ -528,7 +528,7 @@ mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson =
 getDeprivedCronTriggerStatsTx :: [TriggerName] -> PG.TxE QErr [CronTriggerStats]
 getDeprivedCronTriggerStatsTx cronTriggerNames =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx)
-    <$> PG.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
       SELECT t.trigger_name, coalesce(q.upcoming_events_count, 0), coalesce(q.max_scheduled_time, now())
@@ -561,7 +561,7 @@ getScheduledEventsForDeliveryTx =
     getCronEventsForDelivery :: PG.TxE QErr [CronEvent]
     getCronEventsForDelivery =
       map (PG.getViaJSON . runIdentity)
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
         WITH cte AS
@@ -587,7 +587,7 @@ getScheduledEventsForDeliveryTx =
     getOneOffEventsForDelivery :: PG.TxE QErr [OneOffScheduledEvent]
     getOneOffEventsForDelivery = do
       map (PG.getViaJSON . runIdentity)
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
          WITH cte AS (
@@ -855,28 +855,28 @@ mkPaginationSelectExp ::
   S.Select
 mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeRowsCount =
   S.mkSelect
-    { S.selCTEs = [(S.toTableAlias countCteAlias, allRowsSelect), (S.toTableAlias limitCteAlias, limitCteSelect)],
+    { S.selCTEs = [(countCteAlias, allRowsSelect), (limitCteAlias, limitCteSelect)],
       S.selExtr =
         case shouldIncludeRowsCount of
           IncludeRowsCount -> [countExtractor, rowsExtractor]
           DontIncludeRowsCount -> [rowsExtractor]
     }
   where
-    countCteAlias = Identifier "count_cte"
-    limitCteAlias = Identifier "limit_cte"
+    countCteAlias = S.mkTableAlias "count_cte"
+    limitCteAlias = S.mkTableAlias "limit_cte"
 
     countExtractor =
       let selectExp =
             S.mkSelect
               { S.selExtr = [S.Extractor S.countStar Nothing],
-                S.selFrom = Just $ S.mkIdenFromExp countCteAlias
+                S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier countCteAlias)
               }
        in S.Extractor (S.SESelect selectExp) Nothing
 
     limitCteSelect =
       S.mkSelect
         { S.selExtr = [S.selectStar],
-          S.selFrom = Just $ S.mkIdenFromExp countCteAlias,
+          S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier countCteAlias),
           S.selLimit = (S.LimitExp . S.intToSQLExp) <$> _sepLimit,
           S.selOffset = (S.OffsetExp . S.intToSQLExp) <$> _sepOffset
         }
@@ -886,7 +886,7 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeR
           selectExp =
             S.mkSelect
               { S.selExtr = [S.Extractor jsonAgg Nothing],
-                S.selFrom = Just $ S.mkIdenFromExp limitCteAlias
+                S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier limitCteAlias)
               }
        in S.Extractor (S.handleIfNull (S.SELit "[]") (S.SESelect selectExp)) Nothing
 
@@ -982,12 +982,12 @@ mkEventIdBoolExp table eventId =
     (S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "event_id")
     (S.SELit $ unEventId eventId)
 
-getInvocationsTx ::
-  GetEventInvocations ->
+getScheduledEventInvocationsTx ::
+  GetScheduledEventInvocations ->
   PG.TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
-getInvocationsTx getEventInvocations = do
+getScheduledEventInvocationsTx getEventInvocations = do
   let eventsTables = EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable
-      sql = PG.fromBuilder $ toSQL $ getInvocationsQuery eventsTables getEventInvocations
+      sql = PG.fromBuilder $ toSQL $ getScheduledEventsInvocationsQuery eventsTables getEventInvocations
   executeWithOptionalTotalCount sql (_geiGetRowsCount getEventInvocations)
   where
     oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
@@ -999,8 +999,8 @@ data EventTables = EventTables
     etCronEventsTable :: QualifiedTable
   }
 
-getInvocationsQueryNoPagination :: EventTables -> GetInvocationsBy -> S.Select
-getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy =
+getScheduledEventsInvocationsQueryNoPagination :: EventTables -> GetScheduledEventInvocationsBy -> S.Select
+getScheduledEventsInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy =
   allRowsSelect
   where
     createdAtOrderBy table =
@@ -1053,7 +1053,7 @@ getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocati
                   S.selOrderBy = Just $ createdAtOrderBy invocationTable
                 }
 
-getInvocationsQuery :: EventTables -> GetEventInvocations -> S.Select
-getInvocationsQuery eventTables (GetEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
-  let invocationsSelect = getInvocationsQueryNoPagination eventTables invocationsBy
+getScheduledEventsInvocationsQuery :: EventTables -> GetScheduledEventInvocations -> S.Select
+getScheduledEventsInvocationsQuery eventTables (GetScheduledEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
+  let invocationsSelect = getScheduledEventsInvocationsQueryNoPagination eventTables invocationsBy
    in mkPaginationSelectExp invocationsSelect pagination shouldIncludeRowsCount

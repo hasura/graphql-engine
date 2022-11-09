@@ -142,10 +142,46 @@ sources.
 
 :::info Time limits on Hasura Cloud projects
 
-All Free tier and Standard tier Hasura Cloud projects get a time limit of 60 seconds. When the cloud limit is hit, the error contains the
-code `tenant-time-limit-exceeded` in the error message.
+All Free tier and Standard tier Hasura Cloud projects get a time limit of 60 seconds. When the cloud limit is hit, the
+error contains the code `tenant-time-limit-exceeded` in the error message.
 
 :::
+
+### Batch Limits
+
+Restricts the number of GraphQL operations in a
+[batched request](/api-reference/graphql-api/index.mdx#batching-requests).
+
+For example, the below request has 3 query operations which will not be allowed if the batch limit is set to 2.
+
+```graphql
+query query1 {
+  artists {
+    name
+    albums {
+      name
+    }
+  }
+}
+
+query query2 {
+  playlist {
+    name
+    songs {
+      name
+    }
+  }
+}
+
+query query3 {
+  songs {
+    name
+    artists {
+      name
+    }
+  }
+}
+```
 
 ## Manage API limits
 
@@ -160,11 +196,11 @@ All API limits are **not** applied for the admin role, and depth limits are **NO
 
 :::
 
-## Metadata Specification
+## Metadata specification
 
 Hasura provides two metadata API's to manage API limits
 
-### Setting API Limits
+### Setting API limits
 
 You can configure api limits using the `set_api_limits` API.
 
@@ -194,6 +230,11 @@ args:
         unique_params: # Optional Field
 
   time_limit: # Optional API Limit
+    global: # Mandatory Field
+    per_role: # Optional Field
+      <role_name>: <limit value> # Eg: user: 5
+
+  batch_limit: # Optional API Limit
     global: # Mandatory Field
     per_role: # Optional Field
       <role_name>: <limit value> # Eg: user: 5
@@ -244,9 +285,14 @@ args:
     global: 10
     per_role:
       user: 5
+
+  batch_limit:
+    global: 5
+    per_role:
+      user: 2
 ```
 
-### Removing API Limits
+### Removing API limits
 
 You can remove **all** the api limits that have been set using `remove_api_limit` API.
 

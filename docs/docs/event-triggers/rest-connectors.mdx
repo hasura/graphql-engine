@@ -20,7 +20,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 ## Introduction
 
 REST Connectors for event triggers are used to invoke existing or third-party webhooks without needing any middleware or
-modifications to the upstream code.  
+modifications to the upstream code.
 
 REST Connectors modify the event trigger's HTTP request to adapt to your webhook's expected format by adding suitable
 transforms.
@@ -413,6 +413,16 @@ X-Hasura-Role: admin
 Use the `escapeUri` function to `urlencode` templated values. For example, if you have to use session variables in the
 URL and those may contain non-ASCII values, then you should provide the template URL as
 `{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}`.
+
+:::
+
+:::info Optional query params
+
+Query params with key/value pairs which evaluate to `null` are ignored by Hasura while performing the HTTP API call.
+Hasura considers such query params optional.
+
+For example, consider a query param value with template `{{$session_variables?['x-hasura-user-id']}}`. If the variable
+`x-hasura-user-id` is absent in the session variables, then the query param will be omitted from the HTTP API call.
 
 :::
 

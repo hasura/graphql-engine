@@ -1,11 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
--- As of GHC 8.6, a use of DefaultSignatures in this module triggers a false positive for this
--- warning, so don’t treat it as an error even if -Werror is enabled.
---
--- TODO: Restructure code so this error can be downgraded to a warning for a
--- much smaller module footprint.
-{-# OPTIONS_GHC -Wwarn=redundant-constraints #-}
 
 module Hasura.RQL.Types.SchemaCache
   ( SchemaCache (..),
@@ -55,14 +49,10 @@ module Hasura.RQL.Types.SchemaCache
     remoteSchemaCustomizeTypeName,
     remoteSchemaCustomizeFieldName,
     RemoteSchemaRelationships,
-    RemoteSchemaCtx (..),
-    getIntrospectionResult,
-    rscName,
-    rscInfo,
-    rscIntroOriginal,
-    rscRawIntrospectionResult,
-    rscPermissions,
-    rscRemoteRelationships,
+    RemoteSchemaCtxG (..),
+    PartiallyResolvedRemoteSchemaCtx,
+    RemoteSchemaCtx,
+    PartiallyResolvedRemoteSchemaMap,
     RemoteSchemaMap,
     DepMap,
     WithDeps,
@@ -119,10 +109,9 @@ module Hasura.RQL.Types.SchemaCache
   )
 where
 
-import Control.Lens (Traversal', at, makeLenses, preview, (^.))
+import Control.Lens (Traversal', at, preview, (^.))
 import Data.Aeson
 import Data.Aeson.TH
-import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
@@ -132,10 +121,8 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental
-  ( Cacheable,
-    Dependency,
+  ( Dependency,
     MonadDepend (..),
     selectKeyD,
   )
@@ -156,14 +143,16 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network (TlsAllow)
+import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap
@@ -222,55 +211,18 @@ mkComputedFieldDep reason s tn computedField =
 
 type WithDeps a = (a, [SchemaDependency])
 
-data IntrospectionResult = IntrospectionResult
-  { irDoc :: RemoteSchemaIntrospection,
-    irQueryRoot :: G.Name,
-    irMutationRoot :: Maybe G.Name,
-    irSubscriptionRoot :: Maybe G.Name
-  }
-  deriving (Show, Eq, Generic)
+type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo G.Name)
 
-instance Cacheable IntrospectionResult
-
-type RemoteSchemaRelationships =
-  InsOrdHashMap G.Name (InsOrdHashMap RelName (RemoteFieldInfo G.Name))
-
--- | See 'fetchRemoteSchema'.
-data RemoteSchemaCtx = RemoteSchemaCtx
-  { _rscName :: RemoteSchemaName,
-    -- | Original remote schema without customizations
-    _rscIntroOriginal :: IntrospectionResult,
-    _rscInfo :: RemoteSchemaInfo,
-    -- | The raw response from the introspection query against the remote server.
-    -- We store this so we can efficiently service 'introspect_remote_schema'.
-    _rscRawIntrospectionResult :: BL.ByteString,
-    _rscPermissions :: M.HashMap RoleName IntrospectionResult,
-    _rscRemoteRelationships :: RemoteSchemaRelationships
-  }
-
-getIntrospectionResult :: Options.RemoteSchemaPermissions -> RoleName -> RemoteSchemaCtx -> Maybe IntrospectionResult
-getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
-  if
-      | -- admin doesn't have a custom annotated introspection, defaulting to the original one
-        role == adminRoleName ->
-        pure $ _rscIntroOriginal remoteSchemaContext
-      | -- if permissions are disabled, the role map will be empty, defaulting to the original one
-        remoteSchemaPermsCtx == Options.DisableRemoteSchemaPermissions ->
-        pure $ _rscIntroOriginal remoteSchemaContext
-      | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
-        otherwise ->
-        M.lookup role (_rscPermissions remoteSchemaContext)
-
-$(makeLenses ''RemoteSchemaCtx)
-
-instance ToJSON RemoteSchemaCtx where
-  toJSON RemoteSchemaCtx {..} =
-    object $
-      [ "name" .= _rscName,
-        "info" .= toJSON _rscInfo
-      ]
+type RemoteSchemaCtx = RemoteSchemaCtxG (RemoteFieldInfo G.Name)
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+
+type PartiallyResolvedRemoteSchemaCtx =
+  RemoteSchemaCtxG
+    (PartiallyResolvedRemoteRelationship RemoteRelationshipDefinition)
+
+type PartiallyResolvedRemoteSchemaMap =
+  M.HashMap RemoteSchemaName PartiallyResolvedRemoteSchemaCtx
 
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
@@ -395,7 +347,8 @@ askTableInfo ::
 askTableInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
   onNothing (unsafeTableInfo sourceName tableName $ scSources rawSchemaCache) $
-    throw400 NotExists $ "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+    throw400 NotExists $
+      "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 -- | Similar to 'askTableInfo', but drills further down to extract the
 -- underlying core info.
@@ -435,7 +388,8 @@ askTableMetadata ::
   m (TableMetadata b)
 askTableMetadata sourceName tableName = do
   onNothingM (getMetadata <&> preview focusTableMetadata) $
-    throw400 NotExists $ "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+    throw400 NotExists $
+      "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
   where
     focusTableMetadata :: Traversal' Metadata (TableMetadata b)
     focusTableMetadata =
@@ -484,7 +438,8 @@ askFunctionInfo ::
 askFunctionInfo sourceName functionName = do
   rawSchemaCache <- askSchemaCache
   onNothing (unsafeFunctionInfo sourceName functionName $ scSources rawSchemaCache) $
-    throw400 NotExists $ "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
+    throw400 NotExists $
+      "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 -------------------------------------------------------------------------------
 
@@ -521,7 +476,8 @@ data SchemaCache = SchemaCache
     scTlsAllowlist :: [TlsAllow],
     scQueryCollections :: QueryCollections,
     scBackendCache :: BackendCache,
-    scSourceHealthChecks :: SourceHealthCheckCache
+    scSourceHealthChecks :: SourceHealthCheckCache,
+    scOpenTelemetryConfig :: OpenTelemetryInfo
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -745,7 +701,7 @@ getBoolExpDeps source tableName =
 
 getBoolExpDeps' ::
   forall b.
-  (Backend b, GetAggregationPredicatesDeps b) =>
+  (GetAggregationPredicatesDeps b) =>
   AnnBoolExpPartialSQL b ->
   BoolExpM b [SchemaDependency]
 getBoolExpDeps' = \case
@@ -769,7 +725,7 @@ getBoolExpDeps' = \case
 
 getColExpDeps ::
   forall b.
-  (Backend b, GetAggregationPredicatesDeps b) =>
+  (GetAggregationPredicatesDeps b) =>
   AnnBoolExpFld b (PartialSQLExp b) ->
   BoolExpM b [SchemaDependency]
 getColExpDeps bexp = do
@@ -798,7 +754,8 @@ getColExpDeps bexp = do
             CFBEScalar opExps ->
               let computedFieldDep =
                     mkComputedFieldDep' $
-                      bool DRSessionVariable DROnType $ any hasStaticExp opExps
+                      bool DRSessionVariable DROnType $
+                        any hasStaticExp opExps
                in (computedFieldDep :) <$> getOpExpDeps opExps
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
@@ -827,4 +784,5 @@ askFieldInfoMapSource ::
 askFieldInfoMapSource tableName = do
   fmap _tciFieldInfoMap $
     onNothingM (lookupTableCoreInfo tableName) $
-      throw400 NotExists $ "table " <> tableName <<> " does not exist"
+      throw400 NotExists $
+        "table " <> tableName <<> " does not exist"

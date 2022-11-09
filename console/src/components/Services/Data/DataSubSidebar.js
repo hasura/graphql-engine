@@ -75,6 +75,7 @@ const DataSubSidebar = props => {
     dataSources,
     sidebarLoadingState,
     currentTable,
+    metadataSources,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -242,7 +243,7 @@ const DataSubSidebar = props => {
     );
   }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
-  const databasesCount = treeViewItems?.length || 0;
+  const databasesCount = metadataSources.length;
 
   return (
     <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
@@ -321,7 +322,8 @@ const mapStateToProps = state => {
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
     dataSources: getDataSources(state),
-    sidebarLoadingState: state.dataSidebar.loading,
+    sidebarLoadingState: !!state.dataSidebar?.loading,
+    metadataSources: state.metadata.metadataObject.sources,
   };
 };
 

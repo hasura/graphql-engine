@@ -10,7 +10,6 @@ import Hasura.HTTP
 import Hasura.Logging
   ( EngineLogType (..),
     Hasura,
-    InternalLogTypes (..),
     LogLevel (..),
     ToEngineLog (..),
   )
@@ -62,4 +61,4 @@ instance ToJSON JwkRefreshLog where
 
 instance ToEngineLog JwkRefreshLog Hasura where
   toEngineLog jwkRefreshLog =
-    (jrlLogLevel jwkRefreshLog, ELTInternal ILTJwkRefreshLog, toJSON jwkRefreshLog)
+    (jrlLogLevel jwkRefreshLog, ELTJwkRefreshLog, toJSON jwkRefreshLog)

@@ -107,7 +107,7 @@ X-Hasura-Role: admin
 :::info Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the server endpoint. See
-[this page](/guides/docker-networking.mdx) for Docker networking.
+[this page](/deployment/deployment-guides/docker.mdx#docker-networking) for Docker networking.
 
 If you are adding the URL using env variable, then run the Hasura docker container with the env variable added during
 _docker run_. Example `-e REMOTE_SCHEMA_ENDPOINT=http://host.docker.internal:4000/mycustomgraphql`.
@@ -178,9 +178,8 @@ interacts with the GraphQL engine API underneath.
 :::info Note
 
 **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by it
-out of the box** (_by as much as 4x_). If you need any help with remodelling these kinds of use cases to use the
-built-in remote schemas feature, please get in touch with us on
-[GitHub](https://github.com/hasura/graphql-engine/discussions).
+out of the box** (_by as much as 4x_). If you need any help with remodeling these kinds of use cases to use the built-in
+remote schemas feature, please get in touch with us on [GitHub](https://github.com/hasura/graphql-engine/discussions).
 
 :::
 

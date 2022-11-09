@@ -40,7 +40,6 @@ import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
-import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
@@ -55,22 +54,23 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata (GetCatalogState, SetCatalogState, emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
+import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
@@ -92,8 +92,7 @@ data RQLMetadataV1
   | RMUntrackTable !(AnyBackend UntrackTable)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
-  | -- Tables (PG-specific)
-    RMPgSetTableIsEnum !SetTableIsEnum
+  | RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
   | -- Tables permissions
     RMCreateInsertPermission !(AnyBackend (CreatePerm InsPerm))
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
@@ -151,7 +150,7 @@ data RQLMetadataV1
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
-  | RMGetEventInvocations !GetEventInvocations
+  | RMGetScheduledEventInvocations !GetScheduledEventInvocations
   | RMGetCronTriggers
   | -- Actions
     RMCreateAction !(Unvalidated CreateAction)
@@ -237,7 +236,7 @@ instance FromJSON RQLMetadataV1 where
       "create_scheduled_event" -> RMCreateScheduledEvent <$> args
       "delete_scheduled_event" -> RMDeleteScheduledEvent <$> args
       "get_scheduled_events" -> RMGetScheduledEvents <$> args
-      "get_event_invocations" -> RMGetEventInvocations <$> args
+      "get_scheduled_event_invocations" -> RMGetScheduledEventInvocations <$> args
       "get_cron_triggers" -> pure RMGetCronTriggers
       "create_action" -> RMCreateAction <$> args
       "drop_action" -> RMDropAction <$> args
@@ -294,7 +293,8 @@ instance FromJSON RQLMetadataV1 where
           command <- choice <$> sequenceA [p backendSourceKind' cmd argValue | p <- metadataV1CommandParsers @b]
           onNothing command $
             fail $
-              "unknown metadata command \"" <> T.unpack cmd
+              "unknown metadata command \""
+                <> T.unpack cmd
                 <> "\" for backend "
                 <> T.unpack (T.toTxt backendSourceKind')
 
@@ -305,9 +305,11 @@ instance FromJSON RQLMetadataV1 where
 parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
 parseQueryType queryType =
   let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
-   in (,cmd) <$> backendSourceKindFromText prefix
+   in (,cmd)
+        <$> backendSourceKindFromText prefix
         `onNothing` fail
-          ( "unknown metadata command \"" <> T.unpack queryType
+          ( "unknown metadata command \""
+              <> T.unpack queryType
               <> "\"; \""
               <> T.unpack prefix
               <> "\" was not recognized as a valid backend name"
@@ -371,10 +373,18 @@ runMetadataQuery ::
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
   (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+  let exportsMetadata = \case
+        RMV1 (RMExportMetadata _) -> True
+        RMV2 (RMV2ExportMetadata _) -> True
+        _ -> False
+      metadataDefaults =
+        if (exportsMetadata _rqlMetadata)
+          then emptyMetadataDefaults
+          else _sccMetadataDefaults serverConfigCtx
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env currentResourceVersion _rqlMetadata
       & flip runReaderT logger
-      & runMetadataT metadata
+      & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
       & peelRun (RunCtx userInfo httpManager serverConfigCtx)
       & runExceptT
@@ -387,10 +397,19 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
         newResourceVersion <-
           Tracing.trace "setMetadata" $
             setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Put new metadata in storage, received new resource version " <> tshow newResourceVersion
 
         -- notify schema cache sync
         Tracing.trace "notifySchemaCacheSync" $
           notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Sent schema cache sync notification at resource version " <> tshow newResourceVersion
+
         (_, modSchemaCache', _) <-
           Tracing.trace "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
@@ -420,7 +439,7 @@ queryModifiesMetadata = \case
       RMSetCatalogState _ -> False
       RMGetCatalogState _ -> False
       RMExportMetadata _ -> False
-      RMGetEventInvocations _ -> False
+      RMGetScheduledEventInvocations _ -> False
       RMGetCronTriggers -> False
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
@@ -581,7 +600,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
-  RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
+  RMPgSetTableIsEnum q -> dispatchMetadata runSetExistingTableIsEnumQ q
   RMCreateInsertPermission q -> dispatchMetadata runCreatePerm q
   RMCreateSelectPermission q -> dispatchMetadata runCreatePerm q
   RMCreateUpdatePermission q -> dispatchMetadata runCreatePerm q
@@ -637,7 +656,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateScheduledEvent q -> runCreateScheduledEvent q
   RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
   RMGetScheduledEvents q -> runGetScheduledEvents q
-  RMGetEventInvocations q -> runGetEventInvocations q
+  RMGetScheduledEventInvocations q -> runGetScheduledEventInvocations q
   RMGetCronTriggers -> runGetCronTriggers
   RMCreateAction q ->
     validateTransforms

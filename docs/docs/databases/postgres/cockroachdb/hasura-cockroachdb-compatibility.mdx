@@ -1,0 +1,80 @@
+---
+sidebar_label: Hasura - CockroachDB compatibility
+sidebar_position: 2
+description: Hasura CockroachDB Postgres database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - cockroachdb
+  - compatibility
+---
+
+# Hasura - CockroachDB Compatibility
+
+## Introduction
+
+As CockroachDB supports PostgreSQL, the way it functions with Hasura is also very similar. However, there are a few
+incompatibilities to be aware of.
+
+## Incompatibilities and unsupported features
+
+The most up-to-date list of unsupported Postgres features can be found on the
+[CockroachDB website](https://www.cockroachlabs.com/docs/stable/postgresql-compatibility.html).
+
+- [Unsupported Postgres features](https://www.cockroachlabs.com/docs/stable/postgresql-compatibility.html#unsupported-features)
+- [Features that differ from Postgres](https://www.cockroachlabs.com/docs/stable/postgresql-compatibility.html#features-that-differ-from-postgresql)
+
+Currently, the following features are supported with CockroachDB and Hasura:
+
+## Queries
+
+Queries are fully supported except for queries containing `distinct_on` arguments, but please note that GraphQL key
+ordering in JSON objects is not guaranteed. This is because CockroachDB implements the `JSONB` variant of the Postgres
+JSON types, which do not preserve key ordering.
+
+Please also note that SERIAL columns will produce numbers that overflow JavaScript numbers. These will need special
+treatment by either enabling the
+[`HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES` environment variable](/deployment/graphql-engine-flags/reference.mdx) or
+bespoke JSON parsing client-side.
+
+## Tables
+
+Querying from all kinds of tables and views is currently supported. This includes local, reference, and distributed
+tables. All the tables can be tracked from the Hasura Console.
+
+## Relationships
+
+The following table describes the supported relationships based on the supported joins in CockroachDB:
+
+|                      | To Local      | To Reference  | To Distributed |
+| -------------------- | ------------- | ------------- | -------------- |
+| **From Local**       | Object, Array | Object, Array |                |
+| **From Reference**   | Object, Array | Object, Array |                |
+| **From Distributed** |               | Object        | Object, Array  |
+
+The Hasura Console allows you to add all the supported relationships.
+
+## Permissions
+
+All permissions work on CockroachDB like on Postgres without any restrictions.
+
+## Functions
+
+CockroachDB, and therefore Hasura, does not yet support user-defined functions (UDFs) on a stable release. However, UDF
+support has recently been added to CockroachDB Beta
+([see issue](https://github.com/cockroachdb/cockroach/issues/58356)), so watch this space!
+
+## Mutations
+
+Mutations are supported in GraphQL Engine with the exception of fetching relationship data as part of `returning`. This
+is not yet supported.
+
+## Subscriptions
+
+Subscriptions are currently not supported with CockroachDB. Support will be added in a future release.
+
+## Event triggers
+
+CockroachDB does not yet support creating triggers ([see issue](https://github.com/cockroachdb/cockroach/issues/28296))
+on reference tables. Hence, this is currently not supported.

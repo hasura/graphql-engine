@@ -8,13 +8,13 @@ keywords:
   - guide
   - heroku
 sidebar_label: Heroku Postgres
-sidebar_position: 11
+sidebar_position: 14
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud With A Heroku Postgres Database
+# Using Hasura Cloud with a Heroku Postgres Database
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -26,8 +26,8 @@ This guide explains how to connect a new or existing Postgres database hosted on
 
 In August of 2022, Heroku announced the
 [deprecation of their free resources](https://devcenter.heroku.com/changelog-items/2461). Starting November 28th, 2022,
-if you have a Hasura project connected to a Heroku database, you'll need to either upgrade your Heroku account or
-migrate your database to a new database provider.
+if you have a Hasura project connected to a free tier Heroku database, you'll need to either upgrade your Heroku account
+or migrate your database to a new database provider.
 
 :::
 
@@ -48,6 +48,7 @@ to help you:
 ### Heroku-specific migration guides
 
 - [Crunchy Postgres](https://www.crunchydata.com/migrate-from-heroku)
+- [Neon Postgres](https://neon.tech/docs/how-to-guides/hasura-heroku-migration/)
 - [Railway Postgres](https://railway.app/heroku)
 - [Render Postgres](https://render.com/docs/migrate-from-heroku)
 - [Supabase Postgres](https://supabase.com/docs/guides/migrations/heroku)
@@ -63,3 +64,46 @@ to help you:
 - [GCP Postgres](https://cloud.google.com/database-migration/docs/postgres)
 - [TimescaleDB](https://docs.timescale.com/timescaledb/latest/how-to-guides/migrate-data/)
 - [YugabyteDB](https://docs.yugabyte.com/preview/migrate/migrate-steps/)
+
+### FAQs regarding the deprecation of Heroku free resources {#heroku-faqs}
+
+<details>
+  <summary>What should I do if I have a free Heroku Postgres database connected to my Hasura project?</summary>
+  Following Heroku’s announcement of deprecation of free resources, you will have to either <a
+    href={'https://help.heroku.com/81MBEG7L/how-do-i-upgrade-from-heroku-s-free-tier-and-begin-using-paid-resources'}
+  >
+    upgrade your Heroku database plan
+  </a> or move to a different database provider. Heroku also appears to not be responding to questions from free-tier users.
+  <br />
+  <br />
+  If you have URL sync enabled via our <a href={'/latest/projects/heroku-url-sync/'}>Heroku integration</a>, you can
+  follow{' '}
+  <a href={'https://devcenter.heroku.com/articles/upgrading-heroku-postgres-databases#upgrading-with-pg-copy'}>
+    these steps
+  </a>{' '}
+  - <i>after</i> verifying your Heroku account with a credit card - to migrate your hobby-tier database to a paid tier.
+</details>
+
+<details>
+  <summary>What should I do if I have a paid Heroku Postgres database connected to my Hasura project?</summary>
+  No other action is required from your end. Your Heroku database will continue to function as before with your Hasura project.
+</details>
+
+<details>
+  <summary>How do I add an existing paid database to my Hasura project?</summary>
+  Please follow the <a href={'/latest/projects/heroku-url-sync/'}>integration guide here</a>.
+</details>
+
+<details>
+  <summary>Will upgrading my Heroku database cause downtime?</summary>
+  These <a href={'https://devcenter.heroku.com/articles/updating-heroku-postgres-databases'}>docs on the Heroku site</a>
+  &nbsp;list the ways a user can upgrade their free Heroku database. As per Heroku’s documentation, it does seem to
+  involve some application downtime for successful upgrade and migration.
+</details>
+
+<details>
+  <summary>What plan should I upgrade to?</summary>
+  Heroku Postgres plans and their specifications can be found&nbsp;
+  <a href={'https://devcenter.heroku.com/articles/heroku-postgres-plans'}>here</a>. Please choose a plan that would work
+  best for your application.
+</details>

@@ -10,6 +10,8 @@ module Hasura.RQL.Types.Relationships.ToSource
   )
 where
 
+import Autodocodec (HasCodec, requiredField')
+import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.HashMap.Strict qualified as HM
@@ -53,6 +55,15 @@ data ToSourceRelationshipDef = ToSourceRelationshipDef
 instance NFData ToSourceRelationshipDef
 
 instance Cacheable ToSourceRelationshipDef
+
+instance HasCodec ToSourceRelationshipDef where
+  codec =
+    AC.object "ToSourceRelationshipDef" $
+      ToSourceRelationshipDef
+        <$> requiredField' "relationship_type" AC..= _tsrdRelationshipType
+        <*> requiredField' "field_mapping" AC..= _tsrdFieldMapping
+        <*> requiredField' "source" AC..= _tsrdSource
+        <*> requiredField' "table" AC..= _tsrdTable
 
 instance ToJSON ToSourceRelationshipDef where
   toJSON = genericToJSON hasuraJSON

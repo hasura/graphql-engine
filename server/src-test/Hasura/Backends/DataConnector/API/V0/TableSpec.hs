@@ -23,7 +23,7 @@ spec = do
   describe "TableInfo" $ do
     describe "minimal" $
       testToFromJSONToSchema
-        (TableInfo (TableName ["my_table_name"]) [] Nothing Nothing Nothing)
+        (TableInfo (TableName ["my_table_name"]) [] [] (ForeignKeys mempty) Nothing)
         [aesonQQ|
           { "name": ["my_table_name"],
             "columns": []
@@ -34,8 +34,8 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
-            (Just [ColumnName "id"])
-            Nothing
+            [ColumnName "id"]
+            (ForeignKeys mempty)
             (Just "my description")
         )
         [aesonQQ|
@@ -50,8 +50,8 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
-            (Just [ColumnName "id"])
-            (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton "ArtistId" "ArtistId")))
+            [ColumnName "id"]
+            (ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
             (Just "my description")
         )
         [aesonQQ|
@@ -82,7 +82,7 @@ genConstraintName = ConstraintName <$> genArbitraryAlphaNumText defaultRange
 
 genConstraint :: MonadGen m => m Constraint
 genConstraint =
-  let mapping = genHashMap (genArbitraryAlphaNumText defaultRange) (genArbitraryAlphaNumText defaultRange) defaultRange
+  let mapping = genHashMap genColumnName genColumnName defaultRange
    in Constraint <$> genTableName <*> mapping
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
@@ -91,6 +91,6 @@ genTableInfo =
   TableInfo
     <$> genTableName
     <*> Gen.list defaultRange genColumnInfo
-    <*> Gen.maybe (Gen.list defaultRange genColumnName)
-    <*> Gen.maybe genForeignKeys
+    <*> Gen.list defaultRange genColumnName
+    <*> genForeignKeys
     <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)

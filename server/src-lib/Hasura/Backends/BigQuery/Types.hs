@@ -69,6 +69,7 @@ module Hasura.Backends.BigQuery.Types
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, object, requiredField', (.=))
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -570,6 +571,13 @@ data TableName = TableName
   }
   deriving (Eq, Show, Generic, Data, Lift, Ord)
 
+instance HasCodec TableName where
+  codec =
+    object "BigQueryTableName" $
+      TableName
+        <$> requiredField' "name" .= tableName
+        <*> requiredField' "dataset" .= tableNameSchema
+
 instance FromJSON TableName where
   parseJSON =
     J.withObject
@@ -613,6 +621,9 @@ newtype ColumnName = ColumnName
   { columnName :: Text
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, Cacheable, NFData, ToTxt)
+
+instance HasCodec ColumnName where
+  codec = dimapCodec ColumnName columnName codec
 
 instance ToErrorValue ColumnName where
   toErrorValue = ErrorValue.squote . columnName

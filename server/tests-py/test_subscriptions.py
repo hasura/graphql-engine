@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import json
+import os
 import pytest
 import queue
 from ruamel.yaml import YAML
@@ -95,6 +96,25 @@ class TestSubscriptionCtrl(object):
         ws_client.send(obj)
         with pytest.raises(queue.Empty):
             ws_client.get_ws_event(3)
+
+# Note(Pranshi): This test class skips in case `HASURA_GRAPHQL_ADMIN_SECRET` env var is not present since the test `no-auth` fails because it start
+# the HGE without an admin-secret, hence the connection is preserved (and fails the assertion).
+# The condition for this feature spec (Apollo-ws) is that the HGE should start with admin-secret and no authentication is given during the test.
+@pytest.mark.skipif(
+    not os.getenv('HASURA_GRAPHQL_ADMIN_SECRET'),
+    reason="This test is applicable only when HGE runs with admin-secret")
+class TestSubscriptionBasicNoAuth:
+    
+    def test_closed_connection(self, ws_client):
+        # sends empty header so that there is not authentication present in the test
+        init_msg = {
+            'type': 'connection_init',
+            'payload':{'headers':{}}
+        }
+        ws_client.send(init_msg)
+        time.sleep(2)
+        ev = ws_client.get_conn_close_state()
+        assert ev == True, ev
 
 @pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')

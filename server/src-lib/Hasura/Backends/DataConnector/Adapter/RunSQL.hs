@@ -80,7 +80,8 @@ runSQL methodConnectorName DataConnectorRunSQL {..} = do
     throwError
       ( err400
           DataConnectorError
-          ( "run_sql query referencing connector type " <> Witch.from methodConnectorName
+          ( "run_sql query referencing connector type "
+              <> Witch.from methodConnectorName
               <> " not supported on source "
               <> sourceNameToText _dcSource
               <> " for data connector of type "

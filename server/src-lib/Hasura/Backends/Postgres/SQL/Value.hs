@@ -162,7 +162,9 @@ scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
 scientificToInteger num =
   toBoundedInteger num
     `onNothing` fail
-      ( "The value " ++ show num ++ " lies outside the "
+      ( "The value "
+          ++ show num
+          ++ " lies outside the "
           ++ "bounds or is not an integer. Maybe it is a "
           ++ "float, or is there integer overflow?"
       )
@@ -172,7 +174,9 @@ scientificToFloat num =
   toBoundedRealFloat num
     `onLeft` \_ ->
       fail
-        ( "The value " ++ show num ++ " lies outside the "
+        ( "The value "
+            ++ show num
+            ++ " lies outside the "
             ++ "bounds. Is it overflowing the float bounds?"
         )
 

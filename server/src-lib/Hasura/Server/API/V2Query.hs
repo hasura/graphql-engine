@@ -8,16 +8,16 @@ module Hasura.Server.API.V2Query
   )
 where
 
+import Control.Lens (preview, _Right)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Environment qualified as Env
 import Data.Text qualified as T
-import Data.Text.NonEmpty (mkNonEmptyText)
 import GHC.Generics.Extended (constrName)
 import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
 import Hasura.Backends.MSSQL.DDL.RunSQL qualified as MSSQL
 import Hasura.Backends.MySQL.SQL qualified as MySQL
 import Hasura.Backends.Postgres.DDL.RunSQL qualified as Postgres
@@ -47,6 +47,7 @@ import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 
 data RQLQuery
@@ -72,7 +73,7 @@ instance FromJSON RQLQuery where
     t <- o .: "type"
     let args :: forall a. FromJSON a => Parser a
         args = o .: "args"
-        dcNameFromRunSql = T.stripSuffix "_run_sql" >=> mkNonEmptyText >=> pure . DataConnectorName
+        dcNameFromRunSql = T.stripSuffix "_run_sql" >=> GQL.mkName >=> preview _Right . mkDataConnectorName
     case t of
       "insert" -> RQInsert <$> args
       "select" -> RQSelect <$> args
@@ -114,7 +115,9 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
   result <-
     runQueryM env rqlQuery & \x -> do
       ((js, meta), rsc, ci) <-
-        x & runMetadataT metadata
+        -- We can use defaults here unconditionally, since there is no MD export function in V2Query
+        x
+          & runMetadataT metadata (_sccMetadataDefaults serverConfigCtx)
           & runCacheRWT schemaCache
           & peelRun runCtx
           & runExceptT

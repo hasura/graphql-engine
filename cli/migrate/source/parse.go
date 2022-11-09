@@ -8,7 +8,8 @@ import (
 	"strconv"
 
 	"github.com/goccy/go-yaml"
-	"github.com/pkg/errors"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 var (
@@ -32,12 +33,13 @@ var Regexv2 = regexp.MustCompile(`^([0-9]+)_(.*)\.(` + string(Down) + `|` + stri
 
 // Parse returns Migration for matching Regex pattern.
 func Parse(raw string) (*Migration, error) {
+	var op errors.Op = "source.Parse"
 	var direction Direction
 	m := Regex.FindStringSubmatch(raw)
 	if len(m) == 5 {
 		versionUint64, err := strconv.ParseUint(m[1], 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(op, err)
 		}
 
 		// Have different direction type for yaml and sql
@@ -47,7 +49,7 @@ func Parse(raw string) (*Migration, error) {
 			} else if m[3] == "down" {
 				direction = MetaDown
 			} else {
-				return nil, errors.New("Invalid Direction type")
+				return nil, errors.E(op, "Invalid Direction type")
 			}
 		} else if m[4] == "sql" {
 			if m[3] == "up" {
@@ -55,7 +57,7 @@ func Parse(raw string) (*Migration, error) {
 			} else if m[3] == "down" {
 				direction = Down
 			} else {
-				return nil, errors.New("Invalid Direction type")
+				return nil, errors.E(op, "Invalid Direction type")
 			}
 		}
 
@@ -65,17 +67,18 @@ func Parse(raw string) (*Migration, error) {
 			Direction:  direction,
 		}, nil
 	}
-	return nil, ErrParse
+	return nil, errors.E(op, ErrParse)
 }
 
 // Parsev2 returns Migration for matching Regex (only sql) pattern.
 func Parsev2(raw string) (*Migration, error) {
+	var op errors.Op = "source.Parsev2"
 	var direction Direction
 	m := Regexv2.FindStringSubmatch(raw)
 	if len(m) == 5 {
 		versionUint64, err := strconv.ParseUint(m[1], 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(op, err)
 		}
 
 		// Have different direction type for sql
@@ -85,7 +88,7 @@ func Parsev2(raw string) (*Migration, error) {
 			} else if m[3] == "down" {
 				direction = Down
 			} else {
-				return nil, errors.New("Invalid Direction type")
+				return nil, errors.E(op, "Invalid Direction type")
 			}
 		}
 
@@ -95,21 +98,22 @@ func Parsev2(raw string) (*Migration, error) {
 			Direction:  direction,
 		}, nil
 	}
-	return nil, ErrParse
+	return nil, errors.E(op, ErrParse)
 }
 
 // Validate file to check for empty sql or yaml content.
 func IsEmptyFile(m *Migration, directory string) (bool, error) {
+	var op errors.Op = "source.IsEmptyFile"
 	data, err := ioutil.ReadFile(filepath.Join(directory, m.Raw))
 	if err != nil {
-		return false, errors.Wrapf(err, "cannot read file %s", m.Raw)
+		return false, errors.E(op, fmt.Errorf("cannot read file %s: %w", m.Raw, err))
 	}
 	switch direction := m.Direction; direction {
 	case MetaUp, MetaDown:
 		var t []interface{}
 		err = yaml.Unmarshal(data, &t)
 		if err != nil {
-			return false, errors.Wrapf(err, "invalid yaml file: %s", m.Raw)
+			return false, errors.E(op, fmt.Errorf("invalid yaml file: %s: %w", m.Raw, err))
 		}
 		if len(t) == 0 {
 			return false, nil

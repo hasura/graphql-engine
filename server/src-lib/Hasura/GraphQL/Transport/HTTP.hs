@@ -64,9 +64,9 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.Config
@@ -328,8 +328,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
           >>= flip onLeft throwError
 
-      operationLimit <- askGraphqlOperationLimit reqId
-      let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      operationLimit <- askGraphqlOperationLimit reqId userInfo (scApiLimits sc)
+      let runLimits = runResourceLimits operationLimit
 
       -- 2. Construct the first step of the execution plan from 'reqParsed :: GQLParsed'.
       queryParts <- getSingleOperation reqParsed
@@ -694,7 +694,8 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
   dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <-
     onNothing (JO.lookup fieldName' dataObj) $
-      do400 $ "expecting key " <> fieldName'
+      do400 $
+        "expecting key " <> fieldName'
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
@@ -752,6 +753,8 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
+      executionCtx <- ask
+      E.checkGQLBatchedReqs userInfo reqId reqs (E._ecxSchemaCache executionCtx) >>= flip onLeft throwError
       let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
           removeHeaders =
             flip HttpResponse []

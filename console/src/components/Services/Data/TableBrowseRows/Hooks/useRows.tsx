@@ -1,5 +1,5 @@
 import { DataSource, OrderBy, WhereClause } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 
@@ -8,7 +8,7 @@ export type UseRowsPropType = {
   table: Table;
   columns?: string[];
   options?: {
-    where?: WhereClause;
+    where?: WhereClause[];
     offset?: number;
     limit?: number;
     order_by?: OrderBy[];
@@ -23,21 +23,32 @@ export const useRows = ({
 }: UseRowsPropType) => {
   const httpClient = useHttpClient();
   return useQuery({
-    queryKey: ['browse-rows', dataSourceName, table, columns],
+    queryKey: [
+      'browse-rows',
+      dataSourceName,
+      table,
+      columns,
+      JSON.stringify(options),
+    ],
     queryFn: async () => {
-      const tableColumns = await DataSource(httpClient).getTableColumns({
-        dataSourceName,
-        table,
-      });
+      try {
+        const tableColumns = await DataSource(httpClient).getTableColumns({
+          dataSourceName,
+          table,
+        });
 
-      const result = await DataSource(httpClient).getTableRows({
-        dataSourceName,
-        table,
-        columns: columns ?? tableColumns.map(column => column.name),
-        options,
-      });
+        const result = await DataSource(httpClient).getTableRows({
+          dataSourceName,
+          table,
+          columns: columns ?? tableColumns.map(column => column.name),
+          options,
+        });
 
-      return result;
+        return result;
+      } catch (err: any) {
+        throw new Error(err);
+      }
     },
+    refetchOnWindowFocus: false,
   });
 };

@@ -1,23 +1,33 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..)) where
+module Hasura.Backends.DataConnector.Adapter.Backend
+  ( CustomBooleanOperator (..),
+    columnTypeToScalarType,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Types qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
+import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.Column (ColumnType (..))
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
+import Witch qualified
 
 -- | An alias for '()' indicating that a particular associated type has not yet
 -- been implemented for the 'DataConnector' backend.
@@ -72,11 +82,24 @@ instance Backend 'DataConnector where
     DC.NumberTy -> True
     DC.StringTy -> True
     DC.BoolTy -> False
-    DC.CustomTy _ -> False -- TODO: extend Capabilities for custom types
+    DC.CustomTy _ -> False
 
   isNumType :: ScalarType 'DataConnector -> Bool
   isNumType DC.NumberTy = True
   isNumType _ = False
+
+  getCustomAggregateOperators :: Adapter.SourceConfig -> HashMap G.Name (HashMap DC.ScalarType DC.ScalarType)
+  getCustomAggregateOperators Adapter.SourceConfig {..} =
+    HashMap.foldrWithKey insertOps mempty scalarTypesCapabilities
+    where
+      scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
+      insertOps typeName API.ScalarTypeCapabilities {..} m =
+        HashMap.foldrWithKey insertOp m $
+          API.unAggregateFunctions _stcAggregateFunctions
+        where
+          insertOp funtionName resultTypeName =
+            HashMap.insertWith HashMap.union funtionName $
+              HashMap.singleton (Witch.from typeName) (Witch.from resultTypeName)
 
   textToScalarValue :: Maybe Text -> ScalarValue 'DataConnector
   textToScalarValue = error "textToScalarValue: not implemented for the Data Connector backend."
@@ -127,6 +150,11 @@ instance Backend 'DataConnector where
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
 
+  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO ()
+  resizeSourcePools _sourceConfig _serverReplicas =
+    -- Data connectors do not have concept of connection pools
+    pure ()
+
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
     _cboRHS :: Maybe (Either (RootOrCurrentColumn 'DataConnector) a) -- TODO turn Either into a specific type
@@ -152,3 +180,8 @@ parseValue type' val =
     -- For custom scalar types we don't know what subset of JSON values
     -- they accept, so we just accept any value.
     (DC.CustomTy _, value) -> pure value
+
+columnTypeToScalarType :: ColumnType 'DataConnector -> DC.ScalarType
+columnTypeToScalarType = \case
+  ColumnScalar scalarType -> scalarType
+  ColumnEnumReference _ -> DC.StringTy

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQueryClient } from 'react-query';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../types';
@@ -56,31 +57,33 @@ const Modify: React.FC<Props> = props => {
   };
 
   return (
-    <div className="mb-md">
-      <CronTriggerFrom state={state} setState={setState} />
-      <div className="flex">
-        <div className="mr-md">
-          <Button
-            onClick={onSave}
-            mode="primary"
-            disabled={state.loading.modify}
-            loadingText="Saving..."
-            isLoading={state.loading.modify}
-          >
-            Save
-          </Button>
-        </div>
-        <div className="mr-md">
-          <Button
-            onClick={deleteFunc}
-            mode="destructive"
-            disabled={state.loading.delete}
-          >
-            {state.loading.delete ? 'Deleting...' : 'Delete'}
-          </Button>
+    <Analytics name="ScheduledTriggerModify" {...REDACT_EVERYTHING}>
+      <div className="mb-md">
+        <CronTriggerFrom state={state} setState={setState} />
+        <div className="flex">
+          <div className="mr-md">
+            <Button
+              onClick={onSave}
+              mode="primary"
+              disabled={state.loading.modify}
+              loadingText="Saving..."
+              isLoading={state.loading.modify}
+            >
+              Save
+            </Button>
+          </div>
+          <div className="mr-md">
+            <Button
+              onClick={deleteFunc}
+              mode="destructive"
+              disabled={state.loading.delete}
+            >
+              {state.loading.delete ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

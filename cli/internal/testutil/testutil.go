@@ -232,7 +232,7 @@ func StartHasuraWithMSSQLSource(t *testing.T, version string) (string, string, f
 		hasuraTeardown()
 		mssqlTeardown()
 	}
-	connectionString := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", DockerSwitchIP, mssqlPort, MSSQLPassword)
+	connectionString := fmt.Sprintf("DRIVER={ODBC Driver 18 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=optional", DockerSwitchIP, mssqlPort, MSSQLPassword)
 	AddMSSQLSourceToHasura(t, fmt.Sprintf("%s:%s", BaseURL, hasuraPort), connectionString, sourcename)
 	return hasuraPort, sourcename, teardown
 }
@@ -343,7 +343,7 @@ func AddDatabaseToHasura(t TestingT, hgeEndpoint, sourceName, databaseKind strin
 
 	if databaseKind == "mssql" {
 		mssqlPort, teardownMSSQL := StartMSSQLContainer(t)
-		connectionStringMSSQL := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", DockerSwitchIP, mssqlPort, MSSQLPassword)
+		connectionStringMSSQL := fmt.Sprintf("DRIVER={ODBC Driver 18 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=optional", DockerSwitchIP, mssqlPort, MSSQLPassword)
 		AddMSSQLSourceToHasura(t, hgeEndpoint, connectionStringMSSQL, sourceName)
 		return connectionStringMSSQL, teardownMSSQL
 

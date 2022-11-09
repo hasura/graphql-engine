@@ -39,6 +39,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
+import Data.List.Extended qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
@@ -56,8 +57,8 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -274,9 +275,11 @@ instance (UserInfoM m) => UserInfoM (MetadataT m) where
 instance HasServerConfigCtx m => HasServerConfigCtx (MetadataT m) where
   askServerConfigCtx = lift askServerConfigCtx
 
-runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
-runMetadataT metadata (MetadataT m) =
-  runStateT m metadata
+-- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
+-- provided so that it can be considered from the --metadataDefaults arguments.
+runMetadataT :: Metadata -> MetadataDefaults -> MetadataT m a -> m (a, Metadata)
+runMetadataT metadata defaults (MetadataT m) =
+  runStateT m (metadata `overrideMetadataDefaults` defaults)
 
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
 buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do
@@ -332,7 +335,7 @@ withNewInconsistentObjsCheck action = do
 
   let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        hashNub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        L.uniques $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")

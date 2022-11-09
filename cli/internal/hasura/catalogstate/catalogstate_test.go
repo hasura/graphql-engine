@@ -8,9 +8,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
@@ -27,11 +29,12 @@ func TestClientCatalogState_Set(t *testing.T) {
 		state interface{}
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    io.Reader
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		want      io.Reader
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can set catalog state",
@@ -49,6 +52,7 @@ func TestClientCatalogState_Set(t *testing.T) {
   "message": "success"
 }`),
 			false,
+			require.NoError,
 		},
 		{
 			"throws an eror on an invalid state type",
@@ -64,6 +68,16 @@ func TestClientCatalogState_Set(t *testing.T) {
 			},
 			nil,
 			true,
+			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
+				require.IsType(t, &errors.Error{}, err)
+				require.Equal(t, errors.Op("catalogstate.ClientCatalogState.Set"), err.(*errors.Error).Op)
+				require.Equal(t, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
+				require.Equal(t, err.(*errors.Error).Err.Error(), `{
+  "code": "parse-failed",
+  "error": "When parsing Hasura.RQL.Types.Metadata.Common.CatalogStateType expected a String with the tag of a constructor but got some_state.",
+  "path": "$.args.type"
+}`)
+			}),
 		},
 	}
 	for _, tt := range tests {
@@ -73,6 +87,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.Set(tt.args.key, tt.args.state)
+			tt.assertErr(t, err)
 			if !tt.wantErr {
 				assert.NoError(t, err)
 				gotb, err := ioutil.ReadAll(got)
@@ -80,10 +95,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 				wantb, err := ioutil.ReadAll(tt.want)
 				assert.NoError(t, err)
 				assert.JSONEq(t, string(wantb), string(gotb))
-			} else {
-				assert.Error(t, err)
 			}
-
 		})
 	}
 }
@@ -101,10 +113,11 @@ func TestClientCatalogState_Get(t *testing.T) {
 		ConsoleState map[string]string `json:"console_state"`
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		want    state
-		wantErr bool
+		name      string
+		fields    fields
+		want      state
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can get catalog state",
@@ -120,6 +133,7 @@ func TestClientCatalogState_Get(t *testing.T) {
 				return s
 			}(),
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -129,9 +143,8 @@ func TestClientCatalogState_Get(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.Get()
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				assert.NoError(t, err)
 				var gotState state
 				assert.NoError(t, json.NewDecoder(got).Decode(&gotState))

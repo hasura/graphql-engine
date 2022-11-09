@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import {
   getEventRequestTransformDefaultState,
   requestTransformReducer,
@@ -335,73 +336,81 @@ const Add: React.FC<Props> = props => {
   };
 
   return (
-    <div className="w-full overflow-y-auto bg-gray-50">
-      <div className="max-w-6xl">
-        <div className="pt-md pb-md clear-both pl-md">
-          <Helmet
-            title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
-          />
-          <div>
-            <h2 className="text-subtitle font-bold pb-md mt-0 mb-0">
-              Create a new event trigger
-            </h2>
-          </div>
-          <br />
-          <div className="w-full pl-0">
-            <form onSubmit={submit}>
-              <div className="w-full pl-0">
-                <CreateETForm
-                  state={state}
-                  databaseInfo={databaseInfo}
-                  dataSourcesList={dataSourcesList}
-                  readOnlyMode={readOnlyMode}
-                  handleTriggerNameChange={handleTriggerNameChange}
-                  handleWebhookValueChange={handleWebhookValueChange}
-                  handleWebhookTypeChange={handleWebhookTypeChange}
-                  handleTableChange={handleTableChange}
-                  handleSchemaChange={handleSchemaChange}
-                  handleDatabaseChange={handleDatabaseChange}
-                  handleOperationsChange={handleOperationsChange}
-                  handleOperationsColumnsChange={handleOperationsColumnsChange}
-                  handleRetryConfChange={handleRetryConfChange}
-                  handleHeadersChange={handleHeadersChange}
-                  handleToggleAllColumn={setState.toggleAllColumnChecked}
-                  handleAutoCleanupChange={handleAutoCleanupChange}
-                />
-                <ConfigureTransformation
-                  transformationType="event"
-                  state={transformState}
-                  resetSampleInput={resetSampleInput}
-                  envVarsOnChange={envVarsOnChange}
-                  sessionVarsOnChange={sessionVarsOnChange}
-                  requestMethodOnChange={requestMethodOnChange}
-                  requestUrlOnChange={requestUrlOnChange}
-                  requestQueryParamsOnChange={requestQueryParamsOnChange}
-                  requestAddHeadersOnChange={requestAddHeadersOnChange}
-                  requestBodyOnChange={requestBodyOnChange}
-                  requestSampleInputOnChange={requestSampleInputOnChange}
-                  requestContentTypeOnChange={requestContentTypeOnChange}
-                  requestUrlTransformOnChange={requestUrlTransformOnChange}
-                  requestPayloadTransformOnChange={
-                    requestPayloadTransformOnChange
-                  }
-                />
-                {!readOnlyMode && (
-                  <Button
-                    type="submit"
-                    mode="primary"
-                    data-test="trigger-create"
-                    data-trackid="events-tab-button-create-event-trigger"
-                  >
-                    {createBtnText}
-                  </Button>
-                )}
-              </div>
-            </form>
+    <Analytics name="AddEventTrigger" {...REDACT_EVERYTHING}>
+      <div className="w-full overflow-y-auto bg-gray-50">
+        <div className="max-w-6xl">
+          <div className="pt-md pb-md clear-both pl-md">
+            <Helmet
+              title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
+            />
+            <div>
+              <h2 className="text-subtitle font-bold pb-md mt-0 mb-0">
+                Create a new event trigger
+              </h2>
+            </div>
+            <br />
+            <div className="w-full pl-0">
+              <form onSubmit={submit}>
+                <div className="w-full pl-0">
+                  <CreateETForm
+                    state={state}
+                    databaseInfo={databaseInfo}
+                    dataSourcesList={dataSourcesList}
+                    readOnlyMode={readOnlyMode}
+                    handleTriggerNameChange={handleTriggerNameChange}
+                    handleWebhookValueChange={handleWebhookValueChange}
+                    handleWebhookTypeChange={handleWebhookTypeChange}
+                    handleTableChange={handleTableChange}
+                    handleSchemaChange={handleSchemaChange}
+                    handleDatabaseChange={handleDatabaseChange}
+                    handleOperationsChange={handleOperationsChange}
+                    handleOperationsColumnsChange={
+                      handleOperationsColumnsChange
+                    }
+                    handleRetryConfChange={handleRetryConfChange}
+                    handleHeadersChange={handleHeadersChange}
+                    handleToggleAllColumn={setState.toggleAllColumnChecked}
+                    handleAutoCleanupChange={handleAutoCleanupChange}
+                  />
+                  <ConfigureTransformation
+                    transformationType="event"
+                    requestTransfromState={transformState}
+                    resetSampleInput={resetSampleInput}
+                    envVarsOnChange={envVarsOnChange}
+                    sessionVarsOnChange={sessionVarsOnChange}
+                    requestMethodOnChange={requestMethodOnChange}
+                    requestUrlOnChange={requestUrlOnChange}
+                    requestQueryParamsOnChange={requestQueryParamsOnChange}
+                    requestAddHeadersOnChange={requestAddHeadersOnChange}
+                    requestBodyOnChange={requestBodyOnChange}
+                    requestSampleInputOnChange={requestSampleInputOnChange}
+                    requestContentTypeOnChange={requestContentTypeOnChange}
+                    requestUrlTransformOnChange={requestUrlTransformOnChange}
+                    requestPayloadTransformOnChange={
+                      requestPayloadTransformOnChange
+                    }
+                  />
+                  {!readOnlyMode && (
+                    <Analytics
+                      name="events-tab-button-create-event-trigger"
+                      passHtmlAttributesToChildren
+                    >
+                      <Button
+                        type="submit"
+                        mode="primary"
+                        data-test="trigger-create"
+                      >
+                        {createBtnText}
+                      </Button>
+                    </Analytics>
+                  )}
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

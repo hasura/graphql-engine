@@ -1,4 +1,6 @@
+import React from 'react';
 import { gql, useSubscription } from '@apollo/client';
+import { StyledTypingIndicator } from '../styles/StyledChatApp';
 import '../App.css';
 
 const getUserTyping = gql`
@@ -28,11 +30,11 @@ function TypingIndicator(props) {
   }
 
   return (
-    <div className="typingIndicator">
+    <StyledTypingIndicator>
       {data?.user_typing?.length === 0
-        ? ''
+        ? ``
         : `${data.user_typing[0].username} is typing ...`}
-    </div>
+    </StyledTypingIndicator>
   );
 }
 

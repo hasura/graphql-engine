@@ -28,15 +28,16 @@ Hasura Migrations are a SQL representation of the state of your database schema 
 update, roll-back or move your schema using the [Hasura CLI](/hasura-cli/index.mdx).
 
 They are automatically generated in a series of Unix nanosecond timestamped directories consisting of `up.sql` and
-`down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and how to
-roll back (`down.sql`) each of your database changes step-by-step.
+`down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and how to roll back
+(`down.sql`) each of your database changes step-by-step.
 
 When these files are committed to version control, your database schema state can be kept in-sync with your codebase.
 
-When used in combination with CI/CD, changes to your database schema can automatically and elegantly be applied to
-your app's development, staging or production versions.
+When used in combination with CI/CD, changes to your database schema can automatically and elegantly be applied to your
+app's development, staging or production versions.
 
 Example `migrations` directory created with the Hasura CLI:
+
 ```text
 📂 migrations
 └─ 📂 default
@@ -57,13 +58,14 @@ Hasura Metadata is a representation of the configuration of the Hasura Server. F
 tables, to permissions, event triggers and API limits, everything regarding the config of the Hasura Server is
 represented in Metadata.
 
-Metadata can also be tracked with version control, allowing your Hasura Metadata to be kept in-sync with your code
-and database schema changes.
+Metadata can also be tracked with version control, allowing your Hasura Metadata to be kept in-sync with your code and
+database schema changes.
 
 The state of Hasura Metadata is managed via snapshots of the state of the Hasura Server Metadata configuration. These
 snapshots can be applied as a whole, using the [Hasura CLI](/hasura-cli/index.mdx) to the Hasura Server.
 
 Example `metadata` directory created with the Hasura CLI:
+
 ```text
 📂 metadata
 ├─ 📂 databases
@@ -92,12 +94,12 @@ Example `metadata` directory created with the Hasura CLI:
 
 ### Config versions
 
-Migrations and Metadata follow their own versioning scheme separate to the that of the Hasura Server and
-CLI. This documentation is for the latest Hasura Migrations `config v3`, supported from `v2.0.0-alpha.1`. (See
+Migrations and Metadata follow their own versioning scheme separate to the that of the Hasura Server and CLI. This
+documentation is for the latest Hasura Migrations `config v3`, supported from `v2.0.0-alpha.1`. (See
 [upgrade guide](/migrations-metadata-seeds/legacy-configs/upgrade-v3.mdx)).
 
-For `config v2`, see [Migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/index.mdx).
-For `config v1`, see [Migrations (config v1)](/migrations-metadata-seeds/legacy-configs/config-v1/index.mdx).
+For `config v2`, see [Migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/index.mdx). For
+`config v1`, see [Migrations (config v1)](/migrations-metadata-seeds/legacy-configs/config-v1/index.mdx).
 
 ---
 
@@ -105,3 +107,8 @@ For `config v1`, see [Migrations (config v1)](/migrations-metadata-seeds/legacy-
 
 See [Setting up Hasura Migrations](/migrations-metadata-seeds/migrations-metadata-setup.mdx).
 
+:::info Additional Resources
+
+- Advanced Hasura - [Learn Tutorial](https://hasura.io/learn/graphql/hasura-advanced/introduction/).
+
+:::

@@ -152,7 +152,9 @@ mergeFields = foldM addField OMap.empty
     mergeField alias oldField newField = do
       unless (_fName oldField == _fName newField) $
         parseError $
-          "selection of both " <> toErrorValue (_fName oldField) <> " and "
+          "selection of both "
+            <> toErrorValue (_fName oldField)
+            <> " and "
             <> toErrorValue (_fName newField)
             <> " specify the same response name, "
             <> toErrorValue (alias)
@@ -161,8 +163,8 @@ mergeFields = foldM addField OMap.empty
         parseError $
           "inconsistent arguments between multiple selections of field " <> toErrorValue (_fName oldField)
 
-      pure
-        $! Field
+      pure $!
+        Field
           { _fAlias = Just alias,
             _fName = _fName oldField,
             _fArguments = _fArguments oldField,

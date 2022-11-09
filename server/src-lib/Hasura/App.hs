@@ -72,7 +72,9 @@ import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock qualified as Clock
 import Data.Yaml qualified as Y
+import Database.MSSQL.Pool qualified as MSPool
 import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
@@ -111,6 +113,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -355,8 +358,9 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
         fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
           let connSettings =
                 PostgresPoolSettings
-                  { _ppsMaxConnections = Just $ PG.cpConns soConnParams,
-                    _ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
+                  { _ppsMaxConnections = Just $ Q.cpConns soConnParams,
+                    _ppsTotalMaxConnections = Nothing,
+                    _ppsIdleTimeout = Just $ Q.cpIdleTime soConnParams,
                     _ppsRetries = snd _gcDefaultPostgresConnInfo <|> Just 1,
                     _ppsPoolTimeout = PG.cpTimeout soConnParams,
                     _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
@@ -382,6 +386,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
           soEventingMode
           soReadOnlyMode
           soDefaultNamingConvention
+          soMetadataDefaults
 
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -587,8 +592,9 @@ runHGEServer ::
   ManagedT m ()
 runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics
+    mkHGEServer setupHook env serveOptions serveCtx postPollHook serverMetrics ekgStore prometheusMetrics
 
+  let logger = _lsLogger $ _scLoggers serveCtx
   -- `startupStatusHook`: add `Service started successfully` message to config_status
   -- table when a tenant starts up in multitenant
   let warpSettings :: Warp.Settings
@@ -597,7 +603,7 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
           . Warp.setHost (soHost serveOptions)
           . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
           . Warp.setInstallShutdownHandler shutdownHandler
-          . Warp.setBeforeMainLoop (onJust startupStatusHook id)
+          . Warp.setBeforeMainLoop (for_ startupStatusHook id)
           . setForkIOWithMetrics
           $ Warp.defaultSettings
 
@@ -622,9 +628,14 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
       shutdownHandler closeSocket =
         LA.link =<< LA.async do
           waitForShutdown $ _scShutdownLatch serveCtx
-          let logger = _lsLogger $ _scLoggers serveCtx
           unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
           closeSocket
+
+  finishTime <- liftIO Clock.getCurrentTime
+  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
+  unLogger logger $
+    mkGenericLog LevelInfo "server" $
+      StartupTimeInfo "starting API server" apiInitTime
 
   -- Here we block until the shutdown latch 'MVar' is filled, and then
   -- shut down the server. Once this blocking call returns, we'll tidy up
@@ -664,14 +675,12 @@ mkHGEServer ::
   ServeCtx ->
   -- and mutations
 
-  -- | start time
-  UTCTime ->
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   PrometheusMetrics ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMetrics ekgStore prometheusMetrics = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -741,6 +750,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soWebSocketConnectionInitTimeout
           soEnableMetadataQueryLogging
           soDefaultNamingConvention
+          soMetadataDefaults
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -752,6 +762,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soEventingMode
           soReadOnlyMode
           soDefaultNamingConvention
+          soMetadataDefaults
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)
@@ -801,7 +812,8 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- start a background thread to check for updates
   _updateThread <-
     C.forkManagedT "checkForUpdates" logger $
-      liftIO $ checkForUpdates loggerCtx _scHttpManager
+      liftIO $
+        checkForUpdates loggerCtx _scHttpManager
 
   -- start a background thread for telemetry
   _telemetryThread <-
@@ -818,14 +830,10 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
 
         telemetryThread <-
           C.forkManagedT "runTelemetry" logger $
-            liftIO $ runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion
+            liftIO $
+              runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion
         return $ Just telemetryThread
       else return Nothing
-
-  finishTime <- liftIO Clock.getCurrentTime
-  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger $
-    mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
   -- These cleanup actions are not directly associated with any
   -- resource, but we still need to make sure we clean them up here.
@@ -862,9 +870,9 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig _ _ :: SourceInfo b) -> do
           let sourceNameText = sourceNameToText sourceName
           logger $ mkGenericLog LevelInfo "event_triggers" $ "unlocking events of source: " <> sourceNameText
-          onJust (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
+          for_ (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
             -- No need to execute unlockEventsTx when events are not present
-            onJust (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
+            for_ (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
               res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b sourceConfig nonEmptyLockedEvents)
               case res of
                 Left err ->
@@ -905,28 +913,28 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       IO ()
     waitForProcessingAction l@(Logger logger) actionType processingEventsCountAction' shutdownAction maxTimeout
       | maxTimeout <= 0 = do
-        case shutdownAction of
-          EventTriggerShutdownAction userDBShutdownAction -> userDBShutdownAction
-          MetadataDBShutdownAction metadataDBShutdownAction ->
-            runMetadataStorageT metadataDBShutdownAction >>= \case
-              Left err ->
-                logger $
-                  mkGenericLog LevelWarn (T.pack actionType) $
-                    "Error while unlocking the processing  "
-                      <> tshow actionType
-                      <> " err - "
-                      <> showQErr err
-              Right () -> pure ()
+          case shutdownAction of
+            EventTriggerShutdownAction userDBShutdownAction -> userDBShutdownAction
+            MetadataDBShutdownAction metadataDBShutdownAction ->
+              runMetadataStorageT metadataDBShutdownAction >>= \case
+                Left err ->
+                  logger $
+                    mkGenericLog LevelWarn (T.pack actionType) $
+                      "Error while unlocking the processing  "
+                        <> tshow actionType
+                        <> " err - "
+                        <> showQErr err
+                Right () -> pure ()
       | otherwise = do
-        processingEventsCount <- processingEventsCountAction'
-        if (processingEventsCount == 0)
-          then
-            logger $
-              mkGenericStrLog LevelInfo (T.pack actionType) $
-                "All in-flight events have finished processing"
-          else unless (processingEventsCount == 0) $ do
-            C.sleep (5) -- sleep for 5 seconds and then repeat
-            waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
+          processingEventsCount <- processingEventsCountAction'
+          if (processingEventsCount == 0)
+            then
+              logger $
+                mkGenericStrLog LevelInfo (T.pack actionType) $
+                  "All in-flight events have finished processing"
+            else unless (processingEventsCount == 0) $ do
+              C.sleep (5) -- sleep for 5 seconds and then repeat
+              waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
 
     startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
       let maxEventThreads = unrefine soEventsHttpPoolSize
@@ -945,20 +953,20 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
                 (unrefine soGracefulShutdownTimeout)
         unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-        void $
-          C.forkManagedTWithGracefulShutdown
+        void
+          $ C.forkManagedTWithGracefulShutdown
             "processEventQueue"
             logger
             (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
-            $ processEventQueue
-              logger
-              _scHttpManager
-              (getSchemaCache cacheRef)
-              eventEngineCtx
-              lockedEventsCtx
-              serverMetrics
-              (pmEventTriggerMetrics prometheusMetrics)
-              soEnableMaintenanceMode
+          $ processEventQueue
+            logger
+            _scHttpManager
+            (getSchemaCache cacheRef)
+            eventEngineCtx
+            lockedEventsCtx
+            serverMetrics
+            (pmEventTriggerMetrics prometheusMetrics)
+            soEnableMaintenanceMode
 
     startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState = do
       -- start a background thread to handle async actions
@@ -977,19 +985,19 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                     )
                 )
 
-          void $
-            C.forkManagedTWithGracefulShutdown
+          void
+            $ C.forkManagedTWithGracefulShutdown
               label
               logger
               (C.ThreadShutdown asyncActionGracefulShutdownAction)
-              $ asyncActionsProcessor
-                env
-                logger
-                (getSchemaCache cacheRef)
-                (leActionEvents lockedEventsCtx)
-                _scHttpManager
-                sleepTime
-                Nothing
+            $ asyncActionsProcessor
+              env
+              logger
+              (getSchemaCache cacheRef)
+              (leActionEvents lockedEventsCtx)
+              _scHttpManager
+              sleepTime
+              Nothing
 
       -- start a background thread to handle async action live queries
       void $
@@ -1013,23 +1021,23 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                 )
             )
 
-      void $
-        C.forkManagedTWithGracefulShutdown
+      void
+        $ C.forkManagedTWithGracefulShutdown
           "processScheduledTriggers"
           logger
           (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
-          $ processScheduledTriggers
-            env
-            logger
-            _scHttpManager
-            (getSchemaCache cacheRef)
-            lockedEventsCtx
+        $ processScheduledTriggers
+          env
+          logger
+          _scHttpManager
+          (getSchemaCache cacheRef)
+          lockedEventsCtx
 
 instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
 
 instance (Monad m) => HasResourceLimits (PGMetadataStorageAppT m) where
   askHTTPHandlerLimit = pure $ ResourceLimits id
-  askGraphqlOperationLimit _ = pure $ \_ _ -> ResourceLimits id
+  askGraphqlOperationLimit _ _ _ = pure $ ResourceLimits id
 
 instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
   type ExtraHttpLogMetadata (PGMetadataStorageAppT m) = ()
@@ -1064,17 +1072,20 @@ instance (Monad m) => MonadMetadataApiAuthorization (PGMetadataStorageAppT m) wh
   authorizeV1QueryApi query handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
     when (requiresAdmin query && currRole /= adminRoleName) $
-      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+      withPathK "args" $
+        throw400 AccessDenied accessDeniedErrMsg
 
   authorizeV1MetadataApi _ handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
     when (currRole /= adminRoleName) $
-      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+      withPathK "args" $
+        throw400 AccessDenied accessDeniedErrMsg
 
   authorizeV2QueryApi _ handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
     when (currRole /= adminRoleName) $
-      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+      withPathK "args" $
+        throw400 AccessDenied accessDeniedErrMsg
 
 instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
   renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
@@ -1088,6 +1099,8 @@ instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
 
   executeIntrospection _ introspectionQuery _ =
     pure $ Right $ ExecStepRaw introspectionQuery
+
+  checkGQLBatchedReqs _ _ _ _ = runExceptT $ pure ()
 
 instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadataStorageAppT m) where
   runConfigApiHandler = configApiGetHandler
@@ -1197,7 +1210,7 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
   clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
   getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
   getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
-  getInvocations a = runInSeparateTx $ getInvocationsTx a
+  getScheduledEventInvocations a = runInSeparateTx $ getScheduledEventInvocationsTx a
   deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
 
   insertAction a b c d = runInSeparateTx $ insertActionTx a b c d
@@ -1254,13 +1267,20 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
             PG.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
             PG.cpTimeout = _ppsPoolTimeout =<< poolSettings
           }
-  pgPool <- liftIO $ PG.initPGPool connInfo connParams pgLogger
-  let pgExecCtx = mkPGExecCtx isoLevel pgPool
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
   env <- lift Env.getEnvironment
-  (connString, mssqlPool) <- createMSSQLPool connInfo env
-  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool
+  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} = connInfo
+      connOptions =
+        MSPool.ConnectionOptions
+          { _coConnections = fromMaybe defaultMSSQLMaxConnections _mpsMaxConnections,
+            _coStripes = 1,
+            _coIdleTime = _mpsIdleTimeout
+          }
+  (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
+  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
   pure $ MSSQLSourceConfig connString mssqlExecCtx

@@ -18,6 +18,8 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Options (IncludeAggregationPredicates (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -52,6 +54,12 @@ defaultAggregationPredicatesParser ::
   TableInfo b ->
   SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicatesImplementation b (UnpreparedValue b)]))
 defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
+  -- Check in schema options whether we should include aggregation predicates
+  include <- retrieve Options.soIncludeAggregationPredicates
+  case include of
+    IncludeAggregationPredicates -> return ()
+    Don'tIncludeAggregationPredicates -> fails $ return Nothing
+
   arrayRelationships <- fails $ return $ nonEmpty $ tableArrayRelationships ti
   aggregationFunctions <- fails $ return $ nonEmpty aggFns
   roleName <- retrieve scRole
@@ -63,7 +71,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
       guard $ spiAllowAgg selectPermissions
       let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
       relGqlName <- textToName $ relNameToTxt $ riName rel
-      typeGqlName <- (<> Name.__ <> relGqlName <> Name.__ <> Name._aggregate) <$> getTableGQLName ti
+      typeGqlName <- (<> Name.__ <> Name._aggregate_bool_exp) <$> getTableGQLName relTable
 
       -- We only make a field for aggregations over a relation if at least
       -- some aggregation predicates are callable.

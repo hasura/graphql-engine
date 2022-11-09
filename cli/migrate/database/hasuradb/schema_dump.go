@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 func (h *HasuraDB) ExportSchemaDump(includeSchemas []string, excludeSchemas []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+	var op errors.Op = "hasuradb.HasuraDB.ExportSchemaDump"
 	switch sourceKind {
 	case hasura.SourceKindPG:
 		opts := []string{"-O", "-x", "--schema-only"}
@@ -26,13 +28,13 @@ func (h *HasuraDB) ExportSchemaDump(includeSchemas []string, excludeSchemas []st
 		resp, err := h.pgDumpClient.Send(query)
 		if err != nil {
 			h.logger.Debug(err)
-			return nil, err
+			return nil, errors.E(op, err)
 		}
 		bs, err := ioutil.ReadAll(resp)
 		if err != nil {
-			return nil, fmt.Errorf("reading response from schema dump api: %w", err)
+			return nil, errors.E(op, errors.KindHasuraAPI, fmt.Errorf("reading response from schema dump api: %w", err))
 		}
 		return bs, nil
 	}
-	return nil, fmt.Errorf("schema dump for source %s of kind %v is not supported", sourceName, sourceKind)
+	return nil, errors.E(op, fmt.Errorf("schema dump for source %s of kind %v is not supported", sourceName, sourceKind))
 }

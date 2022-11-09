@@ -17,6 +17,8 @@ module Hasura.EncJSON
     encJFromAssocList,
     encJFromInsOrdHashMap,
     encJFromOrderedValue,
+    encJFromBsWithoutSoh,
+    encJFromLbsWithoutSoh,
   )
 where
 
@@ -31,25 +33,44 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.NonEmpty (NonEmptyText)
 import Data.Text.NonEmpty qualified as NET
 import Data.Vector qualified as V
+import Data.Word (Word8)
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
 
 newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
 
--- | JSONB bytestrings start with a `SOH` header `/x1` and then
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
 -- follow with a valid JSON string, therefore we should check for this
 -- and remove if necessary before decoding as normal
 instance PG.FromCol EncJSON where
-  fromCol (Just bs) =
-    Right $
-      encJFromBS $ case B.uncons bs of
-        Just (bsHead, bsTail) ->
-          if bsHead == 1
-            then bsTail
-            else bs
-        Nothing -> bs
-  fromCol Nothing =
-    Right (encJFromJValue J.Null) -- null values return a JSON null value
+  fromCol = \case
+    Just bs -> Right $ encJFromBsWithoutSoh bs
+    -- null values return a JSON null value
+    Nothing -> Right $ encJFromJValue J.Null
+
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+encJFromBsWithoutSoh :: B.ByteString -> EncJSON
+encJFromBsWithoutSoh = encJFromBS . removeSOH B.uncons
+
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+encJFromLbsWithoutSoh :: BL.ByteString -> EncJSON
+encJFromLbsWithoutSoh = encJFromLBS . removeSOH BL.uncons
+
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+removeSOH :: (bs -> Maybe (Word8, bs)) -> bs -> bs
+removeSOH uncons bs =
+  case uncons bs of
+    Just (bsHead, bsTail) ->
+      if bsHead == 1
+        then bsTail
+        else bs
+    Nothing -> bs
 
 -- No other instances for `EncJSON`. In particular, because:
 --

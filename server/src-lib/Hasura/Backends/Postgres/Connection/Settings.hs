@@ -48,7 +48,6 @@ import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
 import Hasura.SQL.Types (ExtensionsSchema (..))
@@ -58,6 +57,7 @@ import Test.QuickCheck.Instances.Time ()
 
 data PostgresPoolSettings = PostgresPoolSettings
   { _ppsMaxConnections :: Maybe Int,
+    _ppsTotalMaxConnections :: Maybe Int,
     _ppsIdleTimeout :: Maybe Int,
     _ppsRetries :: Maybe Int,
     _ppsPoolTimeout :: Maybe NominalDiffTime,
@@ -77,12 +77,14 @@ instance HasCodec PostgresPoolSettings where
       AC.object "PostgresPoolSettings" $
         PostgresPoolSettings
           <$> optionalFieldOrNull "max_connections" maxConnectionsDoc .== _ppsMaxConnections
+          <*> optionalFieldOrNull "total_max_connections" totalMaxConnectionsDoc .== _ppsTotalMaxConnections
           <*> optionalFieldOrNull "idle_timeout" idleTimeoutDoc .== _ppsIdleTimeout
           <*> optionalFieldOrNull "retries" retriesDoc .== _ppsRetries
           <*> optionalFieldOrNull "pool_timeout" poolTimeoutDoc .== _ppsPoolTimeout
-          <*> parseConnLifeTime `rmapCodec` optionalFieldOrNull "connection_lifetime" connectionLifetimeDoc .== _ppsConnectionLifetime
+          <*> (parseConnLifeTime `rmapCodec` optionalFieldOrNull "connection_lifetime" connectionLifetimeDoc) .== _ppsConnectionLifetime
     where
       maxConnectionsDoc = "Maximum number of connections to be kept in the pool (default: 50)"
+      totalMaxConnectionsDoc = "Total maximum number of connections across all instances (cloud only, default: null)"
       idleTimeoutDoc = "The idle timeout (in seconds) per connection (default: 180)"
       retriesDoc = "Number of retries to perform (default: 1)"
       poolTimeoutDoc = "Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)"
@@ -93,6 +95,7 @@ instance HasCodec PostgresPoolSettings where
             "never destroy an active connection. If 0 is passed, memory from large",
             "query results may not be reclaimed. (default: 600 sec)"
           ]
+      infix 8 .==
       (.==) = (AC..=)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresPoolSettings)
@@ -101,6 +104,7 @@ instance FromJSON PostgresPoolSettings where
   parseJSON = withObject "PostgresPoolSettings" $ \o ->
     PostgresPoolSettings
       <$> o .:? "max_connections"
+      <*> o .:? "total_max_connections"
       <*> o .:? "idle_timeout"
       <*> o .:? "retries"
       <*> o .:? "pool_timeout"
@@ -123,6 +127,7 @@ setPostgresPoolSettings :: PostgresPoolSettings
 setPostgresPoolSettings =
   PostgresPoolSettings
     { _ppsMaxConnections = (Just $ _dppsMaxConnections defaultPostgresPoolSettings),
+      _ppsTotalMaxConnections = Nothing,
       _ppsIdleTimeout = (Just $ _dppsIdleTimeout defaultPostgresPoolSettings),
       _ppsRetries = (Just $ _dppsRetries defaultPostgresPoolSettings),
       _ppsPoolTimeout = Nothing, -- @Nothing@ is the default value of the pool timeout
@@ -205,6 +210,7 @@ instance HasCodec CertVar where
     AC.object "CertVar" $ CertVar <$> requiredField' "from_env" .== unCertVar
     where
       unCertVar (CertVar t) = t
+      infix 8 .==
       (.==) = (AC..=)
 
 instance ToJSON CertVar where
@@ -247,6 +253,7 @@ instance (HasCodec p, HasCodec a) => HasCodec (PGClientCerts p a) where
       sslrootcertDoc = "Environment variable which stores trusted certificate authorities."
       sslmodeDoc = "The SSL connection mode. See the libpq ssl support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details."
       sslpasswordDoc = "Password in the case where the sslkey is encrypted."
+      infix 8 .==
       (.==) = (AC..=)
 
 $(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
@@ -328,10 +335,10 @@ instance HasCodec PostgresSourceConnInfo where
     CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo" $
       AC.object "PostgresSourceConnInfo" $
         PostgresSourceConnInfo
-          <$> requiredFieldWith "database_url" placeholderCodecViaJSON databaseUrlDoc .== _psciDatabaseUrl
+          <$> requiredField "database_url" databaseUrlDoc .== _psciDatabaseUrl
           <*> optionalFieldOrNull "pool_settings" poolSettingsDoc .== _psciPoolSettings
-          <*> optionalFieldWithOmittedDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
-          <*> optionalFieldWithOmittedDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
+          <*> optionalFieldWithDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
+          <*> optionalFieldWithDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
           <*> optionalFieldOrNull "ssl_configuration" sslConfigurationDoc .== _psciSslConfiguration
     where
       databaseUrlDoc = "The database connection URL as a string, as an environment variable, or as connection parameters."
@@ -348,6 +355,7 @@ instance HasCodec PostgresSourceConnInfo where
             "source will be run with (default: read-committed)."
           ]
       sslConfigurationDoc = "The client SSL certificate settings for the database (Only available in Cloud)."
+      infix 8 .==
       (.==) = (AC..=)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresSourceConnInfo)
@@ -404,6 +412,7 @@ instance HasCodec PostgresConnConfiguration where
       connectionInfoDoc = "Connection parameters for the source"
       readReplicasDoc = "Optional list of read replica configuration (supported only in cloud/enterprise versions)"
       extensionsSchemaDoc = "Name of the schema where the graphql-engine will install database extensions (default: public)"
+      infix 8 .==
       (.==) = (AC..=)
 
 $(makeLenses ''PostgresConnConfiguration)

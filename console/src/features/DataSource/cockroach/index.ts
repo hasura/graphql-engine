@@ -6,6 +6,7 @@ import {
   getTableColumns,
   getFKRelationships,
   getTablesListAsTree,
+  getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -16,7 +17,7 @@ export const cockroach: Database = {
     getDriverInfo: async () => ({
       name: 'cockroach',
       displayName: 'CockroachDB',
-      release: 'disabled',
+      release: 'Beta',
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
@@ -58,6 +59,7 @@ export const cockroach: Database = {
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,
+    getSupportedOperators,
   },
   query: {
     getTableRows,

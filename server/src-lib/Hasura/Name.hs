@@ -195,6 +195,9 @@ __or = [G.name|_or|]
 _aggregate :: G.Name
 _aggregate = [G.name|aggregate|]
 
+_aggregate_bool_exp :: G.Name
+_aggregate_bool_exp = [G.name|aggregate_bool_exp|]
+
 _column :: G.Name
 _column = [G.name|column|]
 

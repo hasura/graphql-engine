@@ -142,6 +142,7 @@ describe('generateGqlQueryFromTable', () => {
       		name
         }
       }
+          
 
           "
     `);

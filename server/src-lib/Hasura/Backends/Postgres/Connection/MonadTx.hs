@@ -217,13 +217,30 @@ enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
       where
         needsPGCryptoError e@(PG.PGTxErr _ _ _ err) =
           case err of
-            PG.PGIUnexpected _ -> requiredError
+            PG.PGIUnexpected _ -> requiredError e
             PG.PGIStatement pgErr -> case PG.edStatusCode pgErr of
               Just "42501" -> err500 PostgresError permissionsMessage
-              _ -> requiredError
+              Just "P0001" -> requiredError (addHintForExtensionError pgErr)
+              _ -> requiredError e
           where
-            requiredError =
-              (err500 PostgresError requiredMessage) {qeInternal = Just $ ExtraInternal $ toJSON e}
+            addHintForExtensionError pgErrDetail =
+              e
+                { PG.pgteError =
+                    PG.PGIStatement $
+                      PG.PGStmtErrDetail
+                        { PG.edExecStatus = PG.edExecStatus pgErrDetail,
+                          PG.edStatusCode = PG.edStatusCode pgErrDetail,
+                          PG.edMessage =
+                            liftA2
+                              (<>)
+                              (PG.edMessage pgErrDetail)
+                              (Just ". Hint: You can set \"extensions_schema\" to provide the schema to install the extensions. Refer to the documentation here: https://hasura.io/docs/latest/deployment/postgres-requirements/#pgcrypto-in-pg-search-path"),
+                          PG.edDescription = PG.edDescription pgErrDetail,
+                          PG.edHint = PG.edHint pgErrDetail
+                        }
+                }
+            requiredError pgTxErr =
+              (err500 PostgresError requiredMessage) {qeInternal = Just $ ExtraInternal $ toJSON pgTxErr}
             requiredMessage =
               "pgcrypto extension is required, but it could not be created;"
                 <> " encountered unknown postgres error"

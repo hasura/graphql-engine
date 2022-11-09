@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -36,32 +37,34 @@ func (r *RemoteSchemaConfig) Validate() error {
 }
 
 func (r *RemoteSchemaConfig) CreateFiles() error {
+	var op errors.Op = "remoteschemas.RemoteSchemaConfig.CreateFiles"
 	v := make([]interface{}, 0)
 	buf := new(bytes.Buffer)
 	err := metadataobject.GetEncoder(buf).Encode(v)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	path := filepath.Join(r.MetadataDir, r.Filename())
 	if err := os.MkdirAll(filepath.Dir(path), 0744); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	err = os.WriteFile(path, buf.Bytes(), 0644)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
-func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) Build() (map[string]interface{}, error) {
+	var op errors.Op = "remoteschemas.RemoteSchemaConfig.Build"
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(r.MetadataDir, r.Filename()))
 	if err != nil {
-		return nil, r.error(err)
+		return nil, errors.E(op, r.error(err))
 	}
 	var obj []yaml.Node
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return nil, r.error(err)
+		return nil, errors.E(op, errors.KindBadInput, r.error(err))
 	}
 	return map[string]interface{}{r.Key(): obj}, nil
 }
@@ -83,7 +86,8 @@ type definition struct {
 	Schema string `yaml:"schema,omitempty"`
 }
 
-func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
+	var op errors.Op = "remoteschemas.RemoteSchemaConfig.Export"
 	var value interface{}
 	if v, ok := metadata[r.Key()]; !ok {
 		value = []yaml.Node{}
@@ -91,10 +95,10 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 		remoteSchemas := []remoteSchema{}
 		bs, err := yaml.Marshal(v)
 		if err != nil {
-			return nil, r.error(err)
+			return nil, errors.E(op, r.error(err))
 		}
 		if err := yaml.Unmarshal(bs, &remoteSchemas); err != nil {
-			return nil, r.error(err)
+			return nil, errors.E(op, r.error(err))
 		}
 
 		for rsIdx := range remoteSchemas {
@@ -122,26 +126,28 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 	var buf bytes.Buffer
 	err := metadataobject.GetEncoder(&buf).Encode(value)
 	if err != nil {
-		return nil, r.error(err)
+		return nil, errors.E(op, r.error(err))
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(r.BaseDirectory(), r.Filename())): buf.Bytes(),
 	}, nil
 }
 
-func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) GetFiles() ([]string, error) {
+	var op errors.Op = "remoteschemas.RemoteSchemaConfig.GetFiles"
 	rootFile := filepath.Join(r.BaseDirectory(), r.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
-		return nil, r.error(err)
+		return nil, errors.E(op, r.error(err))
 	}
 	return files, nil
 }
 
-func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
+	var op errors.Op = "remoteschemas.RemoteSchemaConfig.WriteDiff"
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: r, WriteDiffOpts: opts})
 	if err != nil {
-		return r.error(err)
+		return errors.E(op, r.error(err))
 	}
 	return nil
 }

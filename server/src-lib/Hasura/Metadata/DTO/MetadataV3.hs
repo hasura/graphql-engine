@@ -26,7 +26,8 @@ data MetadataV3 = MetadataV3
     metaV3InheritedRoles :: Maybe PlaceholderArray,
     metaV3GraphqlSchemaIntrospection :: Maybe PlaceholderObject,
     metaV3Network :: Maybe PlaceholderObject,
-    metaV3BackendConfigs :: Maybe PlaceholderObject
+    metaV3BackendConfigs :: Maybe PlaceholderObject,
+    metaV3OpenTelemetryConfig :: Maybe PlaceholderObject
   }
   deriving stock (Show, Eq, Generic)
   deriving (FromJSON, ToJSON, OpenApi.ToSchema) via (Autodocodec MetadataV3)
@@ -55,3 +56,4 @@ instance HasCodec MetadataV3 where
         <*> optionalField "graphql_schema_introspection" "TODO" .= metaV3GraphqlSchemaIntrospection
         <*> optionalField "network" "TODO" .= metaV3Network
         <*> optionalField "backend_configs" "TODO" .= metaV3BackendConfigs
+        <*> optionalField "opentelemetry" "TODO" .= metaV3OpenTelemetryConfig

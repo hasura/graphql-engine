@@ -16,13 +16,15 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Name (nameCodec)
+import Language.GraphQL.Draft.Syntax qualified as GQL
 import Prelude
 
 data SingleColumnAggregate = SingleColumnAggregate
   { _scaFunction :: SingleColumnAggregateFunction,
     _scaColumn :: API.V0.ColumnName
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
 
 singleColumnAggregateObjectCodec :: JSONObjectCodec SingleColumnAggregate
 singleColumnAggregateObjectCodec =
@@ -30,31 +32,15 @@ singleColumnAggregateObjectCodec =
     <$> requiredField "function" "The aggregation function" .= _scaFunction
     <*> requiredField "column" "The column to apply the aggregation function to" .= _scaColumn
 
-data SingleColumnAggregateFunction
-  = Average
-  | Max
-  | Min
-  | StandardDeviationPopulation
-  | StandardDeviationSample
-  | Sum
-  | VariancePopulation
-  | VarianceSample
-  deriving stock (Eq, Ord, Show, Generic, Data, Enum, Bounded)
+newtype SingleColumnAggregateFunction = SingleColumnAggregateFunction {unSingleColumnAggregateFunction :: GQL.Name}
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec SingleColumnAggregateFunction
 
 instance HasCodec SingleColumnAggregateFunction where
   codec =
     named "SingleColumnAggregateFunction" $
-      stringConstCodec
-        [ (Average, "avg"),
-          (Max, "max"),
-          (Min, "min"),
-          (StandardDeviationPopulation, "stddev_pop"),
-          (StandardDeviationSample, "stddev_samp"),
-          (Sum, "sum"),
-          (VariancePopulation, "var_pop"),
-          (VarianceSample, "var_samp")
-        ]
+      dimapCodec SingleColumnAggregateFunction unSingleColumnAggregateFunction nameCodec
+        <?> "Single column aggregate function name."
 
 data ColumnCountAggregate = ColumnCountAggregate
   { _ccaColumn :: API.V0.ColumnName,
@@ -72,7 +58,7 @@ data Aggregate
   = SingleColumn SingleColumnAggregate
   | ColumnCount ColumnCountAggregate
   | StarCount
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Aggregate
 
 instance HasCodec Aggregate where

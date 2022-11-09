@@ -242,7 +242,7 @@ getIndirectDependenciesFromTableDiff source tablesDiff = do
       SOSourceObj s obj
         | s == source,
           Just (SOITableObj tn _) <- AB.unpackAnyBackend @b obj ->
-          not $ tn `HS.member` HS.fromList droppedTables
+            not $ tn `HS.member` HS.fromList droppedTables
       -- table objects in any other source
       SOSourceObj _ obj ->
         AB.runBackend obj \case
@@ -345,18 +345,24 @@ alterTableInMetadata source ti tableDiff = do
           getFunction = fmFunction . ccmFunctionMeta
       forM_ overloaded $ \(columnName, function) ->
         throw400 NotSupported $
-          "The function " <> function
-            <<> " associated with computed field" <> columnName
-            <<> " of table " <> table
-            <<> " is being overloaded"
+          "The function "
+            <> function
+              <<> " associated with computed field"
+            <> columnName
+              <<> " of table "
+            <> table
+              <<> " is being overloaded"
       forM_ altered $ \(old, new) ->
         if
             | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
-              throw400 NotSupported $
-                "The type of function " <> getFunction old
-                  <<> " associated with computed field " <> ccmName old
-                  <<> " of table " <> table
-                  <<> " is being altered to \"VOLATILE\""
+                throw400 NotSupported $
+                  "The type of function "
+                    <> getFunction old
+                      <<> " associated with computed field "
+                    <> ccmName old
+                      <<> " of table "
+                    <> table
+                      <<> " is being altered to \"VOLATILE\""
             | otherwise -> pure ()
 
 dropTablesInMetadata ::
@@ -391,20 +397,21 @@ alterColumnsInMetadata source alteredCols fields sc tn =
        ) -> do
         if
             | oldName /= newName ->
-              renameColumnInMetadata oldName newName source tn fields
+                renameColumnInMetadata oldName newName source tn fields
             | oldType /= newType -> do
-              let colId =
-                    SOSourceObj source $
-                      AB.mkAnyBackend $
-                        SOITableObj @b tn $
-                          TOCol @b oldName
-                  typeDepObjs = getDependentObjsWith (== DROnType) sc colId
+                let colId =
+                      SOSourceObj source $
+                        AB.mkAnyBackend $
+                          SOITableObj @b tn $
+                            TOCol @b oldName
+                    typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
-              unless (null typeDepObjs) $
-                throw400 DependencyError $
-                  "cannot change type of column " <> oldName <<> " in table "
-                    <> tn <<> " because of the following dependencies: "
-                    <> reportSchemaObjs typeDepObjs
+                unless (null typeDepObjs) $
+                  throw400 DependencyError $
+                    "cannot change type of column "
+                      <> oldName <<> " in table "
+                      <> tn <<> " because of the following dependencies: "
+                      <> reportSchemaObjs typeDepObjs
             | otherwise -> pure ()
 
 removeDroppedColumnsFromMetadataField ::

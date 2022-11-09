@@ -23,18 +23,21 @@ export const useTrackTable = (dataSourceName: string) => {
   const queryClient = useQueryClient();
 
   // wrapping in promise so outside consumers can have simpler api
-  const doMutation = (query: TrackingQuery) =>
-    new Promise((res, rej) => {
-      mutation.mutate(
-        {
-          query,
-        },
-        {
-          onSuccess: res,
-          onError: err => rej(err.message),
-        }
-      );
-    });
+  const doMutation = useCallback(
+    (query: TrackingQuery) =>
+      new Promise((res, rej) => {
+        mutation.mutate(
+          {
+            query,
+          },
+          {
+            onSuccess: res,
+            onError: err => rej(err.message),
+          }
+        );
+      }),
+    [mutation]
+  );
 
   const changeTableTracking = useCallback(
     (action: 'track' | 'untrack', tables: TrackableTable[]) => {
@@ -68,7 +71,11 @@ export const useTrackTable = (dataSourceName: string) => {
           // all these return promises so there's no chance of unintentionally getting thrown into the catch block
           queryClient.invalidateQueries(tablesQueryKey(dataSourceName));
           queryClient.invalidateQueries('treeview');
-          queryClient.invalidateQueries(['trackTables', 'metadataSource']);
+          queryClient.invalidateQueries([
+            'export_metadata',
+            'trackTables',
+            'metadataSource',
+          ]);
 
           fireNotification({
             title: 'Success',
@@ -88,7 +95,14 @@ export const useTrackTable = (dataSourceName: string) => {
           if (!unMounted) setLoading(false);
         });
     },
-    [metadata, mutation, queryClient, fireNotification, data]
+    [
+      metadata,
+      dataSourceName,
+      doMutation,
+      queryClient,
+      fireNotification,
+      unMounted,
+    ]
   );
 
   // track single

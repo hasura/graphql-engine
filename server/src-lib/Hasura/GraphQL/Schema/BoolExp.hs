@@ -89,8 +89,9 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
   name <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableBoolExpTypeName tableGQLName
   let description =
         G.Description $
-          "Boolean expression to filter rows from the table " <> tableName
-            <<> ". All fields are combined with a logical 'AND'."
+          "Boolean expression to filter rows from the table "
+            <> tableName
+              <<> ". All fields are combined with a logical 'AND'."
 
   fieldInfos <- tableSelectFields sourceInfo tableInfo
   tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
@@ -118,7 +119,7 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
       FieldInfo b ->
       SchemaT r m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
-      roleName <- retrieve scRole
+      !roleName <- retrieve scRole
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp

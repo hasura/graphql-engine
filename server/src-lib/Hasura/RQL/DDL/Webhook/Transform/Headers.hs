@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Webhook.Transform.Headers
   ( -- * Header Transformations
     Headers (..),
     TransformFn (..),
+    TransformCtx (..),
     HeadersTransformFn (..),
     AddReplaceOrRemoveFields (..),
   )
@@ -23,11 +24,13 @@ import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    TemplatingEngine,
+  ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
+  )
+import Hasura.RQL.DDL.Webhook.Transform.Request
+  ( RequestTransformCtx,
     runUnescapedRequestTemplateTransform',
     validateRequestUnescapedTemplateTransform',
   )
@@ -49,10 +52,12 @@ instance Transform Headers where
     deriving stock (Eq, Generic, Show)
     deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
 
+  newtype TransformCtx Headers = TransformCtx RequestTransformCtx
+
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyHeadersTransformFn' is defined
   -- separately.
-  transform (HeadersTransformFn_ fn) = applyHeadersTransformFn fn
+  transform (HeadersTransformFn_ fn) (TransformCtx reqCtx) = applyHeadersTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateHeadersTransformFn' is defined

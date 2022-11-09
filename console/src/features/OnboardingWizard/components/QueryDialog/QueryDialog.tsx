@@ -1,7 +1,8 @@
 import React from 'react';
+import { FaPlayCircle } from 'react-icons/fa';
 import { Dialog } from '@/new-components/Dialog';
 import { Button } from '@/new-components/Button';
-import { FaPlayCircle } from 'react-icons/fa';
+import { Analytics } from '@/features/Analytics';
 
 export interface Props {
   title: string;
@@ -49,20 +50,19 @@ export function QueryDialog(props: Props) {
         </div>
 
         <div className="border border-gray-300 shadow-lg bg-white flex justify-between items-center px-4 py-4">
-          <div
-            data-trackid="query-dialog-skip-button"
-            className="cursor-pointer text-secondary text-sm hover:text-secondary-dark"
-            onClick={onSkipHandler}
-          >
-            Skip getting started tutorial
-          </div>
-          <Button
-            mode="primary"
-            data-trackid="query-dialog-get-started-button"
-            onClick={onRunHandler}
-          >
-            Run Query <FaPlayCircle />
-          </Button>
+          <Analytics name="query-dialog-skip-button">
+            <div
+              className="cursor-pointer text-secondary text-sm hover:text-secondary-dark"
+              onClick={onSkipHandler}
+            >
+              Skip getting started tutorial
+            </div>
+          </Analytics>
+          <Analytics name="query-dialog-get-started-button">
+            <Button mode="primary" onClick={onRunHandler}>
+              Run Query <FaPlayCircle />
+            </Button>
+          </Analytics>
         </div>
       </>
     </Dialog>

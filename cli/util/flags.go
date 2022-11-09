@@ -2,6 +2,8 @@ package util
 
 import (
 	"github.com/Masterminds/semver"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 type VersionFlag struct {
@@ -15,9 +17,10 @@ func NewVersionFlagValue(p *VersionFlag) *VersionFlag {
 
 // Set sets the value of the named command-line flag.
 func (c *VersionFlag) Set(s string) error {
+	var op errors.Op = "util.VersionFlag.Set"
 	v, err := semver.NewVersion(s)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	c.Version = v
 	return nil

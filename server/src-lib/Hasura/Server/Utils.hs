@@ -60,7 +60,7 @@ import Data.Vector qualified as V
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Prelude
-import Language.Haskell.TH.Syntax (Q, TExp)
+import Language.Haskell.TH.Syntax qualified as TH
 import Network.HTTP.Client qualified as HC
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
@@ -110,7 +110,8 @@ parseStringAsBool t
     falseVals = ["false", "f", "no", "n"]
 
     errMsg =
-      " Not a valid boolean text. " ++ "True values are "
+      " Not a valid boolean text. "
+        ++ "True values are "
         ++ show truthVals
         ++ " and  False values are "
         ++ show falseVals
@@ -142,10 +143,10 @@ runScript file = do
 -}
 
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
-quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
-quoteRegex compOption execOption regexText = do
-  regex <- TDFA.parseRegex regexText `onLeft` (fail . show)
-  [||TDFA.patternToRegex regex compOption execOption||]
+quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> TH.Code TH.Q TDFA.Regex
+quoteRegex compOption execOption regexText =
+  (TDFA.parseRegex regexText `onLeft` (fail . show)) `TH.bindCode` \regex ->
+    [||TDFA.patternToRegex regex compOption execOption||]
 
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)

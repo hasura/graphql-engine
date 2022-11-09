@@ -4,6 +4,7 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import globals from '../../../../../Globals';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
@@ -69,32 +70,35 @@ insert_user(objects: [{name: "testuser"}] ){
   );
 
   return (
-    <div className="pl-0 w-full pt-md">
-      <div className="pl-md">
-        <Helmet
-          title={getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING)}
-        />
-        <div className="flex">
-          <h2 className="text-xl font-bold mr-md">{EVENT_TRIGGER}s</h2>
-          {getAddBtn()}
+    <Analytics name="EventTriggersLanding" {...REDACT_EVERYTHING}>
+      <div className="pl-0 w-full pt-md">
+        <div className="pl-md">
+          <Helmet
+            title={getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING)}
+          />
+
+          <div className="flex">
+            <h2 className="text-xl font-bold mr-md">{EVENT_TRIGGER}s</h2>
+            {getAddBtn()}
+          </div>
+          <hr className="my-md" />
+
+          {getIntroSection()}
+
+          <TryItOut
+            service="eventTrigger"
+            title="Steps to deploy an example Event Trigger to Glitch"
+            queryDefinition={queryDefinition}
+            footerDescription={footerEvent}
+            glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
+            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
+            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
+            awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
+            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
+          />
         </div>
-        <hr className="my-md" />
-
-        {getIntroSection()}
-
-        <TryItOut
-          service="eventTrigger"
-          title="Steps to deploy an example Event Trigger to Glitch"
-          queryDefinition={queryDefinition}
-          footerDescription={footerEvent}
-          glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
-          googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
-          MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
-          awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
-          adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
-        />
       </div>
-    </div>
+    </Analytics>
   );
 };
 

@@ -1,0 +1,94 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: Hasura Cloud for Amazon Athena
+keywords:
+  - hasura
+  - docs
+  - databases
+  - athena
+  - amazon athena
+  - hasura cloud
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Hasura Cloud and Amazon Athena
+
+## Try it out
+
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail src='/img/databases/athena/create-project.png' alt='Connect new or existing database' width='1000px' />
+
+### Step 2: Add your Amazon Athena database as a source to Hasura
+
+Head to the `Data > Manage databases` section on the Console to add your Amazon Athena database as a source to Hasura.
+
+:::info Make sure your Amazon Athena service is reachable by Hasura Cloud:
+
+1.  **Allow public connections or
+    [whitelist the Hasura Cloud IP](/projects/create.mdx#cloud-projects-create-allow-nat-ip) on your Amazon Athena
+    firewall:** This is good for testing and will allow you to quickly try Hasura out with your database!
+2.  **VPC peering:** VPC peering and private network access is available on Hasura Cloud paid tiers: Recommended for
+    production. Get in touch with us if you'd like to try this out against your existing databases!
+
+:::
+
+Begin by clicking "Connect Database":
+
+<Thumbnail src='/img/databases/athena/manage-databases.png' alt='Manage databases' width='1000px' />
+
+Next, choose the `athena (Beta)` driver:
+
+<Thumbnail src='/img/databases/athena/athena-add-service1.png' alt='Adding the Amazon Athena service' width='1000px' />
+
+Finally, enter your Amazon Athena database URL and
+[database schema](https://docs.aws.amazon.com/athena/latest/ug/creating-tables.html):
+
+<Thumbnail
+  src='/img/databases/athena/athena-add-service3.png'
+  alt='Setting the Amazon Athena connection details.'
+  width='1000px'
+/>
+
+Once you add the Amazon Athena service, you'll see it listed as an available database on the sidebar.
+
+### Step 3: Track existing tables
+
+To query against your Amazon Athena service using Hasura, you'll need to have existing tables to select. Those tables
+will appear under the database as shown.
+
+<Thumbnail src='/img/databases/athena/athena-tracking-tables-8.png' alt='Tracking tables.' width='1000px' />
+
+Track tables selectively or all so that Hasura can introspect the tables and create the corresponding GraphQL schema.
+Once you've selected the tables you'd like to track, click "Track Selected" to finish setup:
+
+<Thumbnail src='/img/databases/athena/athena-9.png' alt='Tracking tables selected.' width='1000px' />
+
+### Step 4: Try out a GraphQL query
+
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+creating a GraphQL query.
+
+<Thumbnail src='/img/databases/ms-sql-server/6-make-graphql-query.png' alt='Make GraphQL query' width='1000px' />
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries, subscriptions, relationships, and permissions on Amazon Athena.
+
+:::
+
+If you'd like to stay informed about the status of Amazon Athena support, subscribe to our newsletter and join our
+discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

@@ -229,7 +229,8 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables ->
       onNothing maybeSessionRole $
-        throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
+        throw400 InvalidParams $
+          userRoleHeader <> " not found in session variables"
     URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
     URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess

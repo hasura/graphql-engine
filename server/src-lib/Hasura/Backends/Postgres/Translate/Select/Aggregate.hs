@@ -51,7 +51,8 @@ mkAggregateSelect annAggSel =
       -- aggregate the results into a top-level return value
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
    in renameIdentifiers $
-        generateSQLSelectFromArrayNode selectSource arrayNode $ BELit True
+        generateSQLSelectFromArrayNode selectSource arrayNode $
+          BELit True
   where
     strfyNum = _asnStrfyNum annAggSel
     rootFieldName = FieldName "root"

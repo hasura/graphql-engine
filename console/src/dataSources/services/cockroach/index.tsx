@@ -65,6 +65,7 @@ import {
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
 } from './utils';
+import globals from '../../../Globals';
 import { SupportedFeaturesType } from '../../types';
 import {
   postgres,
@@ -75,9 +76,14 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   ...PgSupportedFeatures,
   connectDbForm: {
     ...PgSupportedFeatures?.connectDbForm,
+    connectionParameters: false,
     enabled: false,
     namingConvention: false,
     extensions_schema: false,
+    ssl_certificates:
+      globals.consoleType === 'cloud' ||
+      globals.consoleType === 'pro' ||
+      globals.consoleType === 'pro-lite',
   },
   driver: {
     name: 'cockroach',
@@ -98,10 +104,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     modify: {
       ...(PgSupportedFeatures?.tables?.modify ?? {}),
       enabled: true,
-      computedFields: true,
-      triggers: true,
+      computedFields: false,
+      triggers: false,
       customGqlRoot: true,
-      setAsEnum: false,
+      setAsEnum: true,
       untrack: true,
       delete: true,
       indexes: {
@@ -112,8 +118,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   events: {
     triggers: {
-      enabled: true,
       add: false,
+      enabled: true,
     },
   },
   actions: {
@@ -121,18 +127,18 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     relationships: false,
   },
   functions: {
-    enabled: true,
+    enabled: false,
     track: {
-      enabled: true,
+      enabled: false,
     },
     nonTrackableFunctions: {
       enabled: true,
     },
     modify: {
-      enabled: true,
+      enabled: false,
       comments: {
-        view: true,
-        edit: true,
+        view: false,
+        edit: false,
       },
     },
   },

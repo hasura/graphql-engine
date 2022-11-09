@@ -7,9 +7,10 @@ import Hasura.Prelude
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
+import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (SCMSNotSupported))
 
 instance BackendMetadata 'MySQL where
-  prepareCatalog _ = pure RETDoNothing
+  prepareCatalog _ = pure (RETDoNothing, SCMSNotSupported)
   buildComputedFieldInfo = error "buildComputedFieldInfo: MySQL backend does not support this operation yet."
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: MySQL backend does not support this operation yet."
   resolveSourceConfig = MySQL.resolveSourceConfig

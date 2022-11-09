@@ -6,7 +6,7 @@ import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
 import viewReducer from './TableBrowseRows/ViewActions';
-import editReducer from './TableBrowseRows/EditActions';
+import editReducer from './TableEditItem/EditActions';
 import modifyReducer from './TableCommon/TableReducer';
 import { getAllUnTrackedRelations } from './TableRelationships/Actions';
 import {
@@ -178,6 +178,7 @@ const loadSchema = (configOptions = {}) => {
           )
       );
     }
+
     const body = {
       type: 'bulk',
       source,
@@ -223,7 +224,6 @@ const loadSchema = (configOptions = {}) => {
       return dispatch(requestAction(url, options)).then(
         data => {
           if (!data || !data[0] || !data[0].result) return;
-
           let mergedData = [];
           switch (currentDriver) {
             case 'postgres':

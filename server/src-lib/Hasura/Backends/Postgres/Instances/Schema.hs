@@ -34,6 +34,7 @@ import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.Base.ToErrorValue
+import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
     BackendTableSelectSchema,
@@ -56,6 +57,7 @@ import Hasura.GraphQL.Schema.Parser
     MonadParse,
     Parser,
     memoize,
+    memoizeOn,
     type (<:),
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
@@ -81,7 +83,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (CustomRootField (..), RolePermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..), ViewInfo (..), getRolePermInfo, isMutable, tableInfoName)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Cockroach, Vanilla))
-import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -121,21 +122,57 @@ class PostgresSchema (pgKind :: PostgresKind) where
     SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
+  pgkBuildTableQueryAndSubscriptionFields ::
+    forall r m n.
+    ( MonadBuildSchema ('Postgres pgKind) r m n,
+      AggregationPredicatesSchema ('Postgres pgKind),
+      BackendTableSelectSchema ('Postgres pgKind)
+    ) =>
+    MkRootFieldName ->
+    SourceInfo ('Postgres pgKind) ->
+    TableName ('Postgres pgKind) ->
+    TableInfo ('Postgres pgKind) ->
+    C.GQLNameIdentifier ->
+    SchemaT
+      r
+      m
+      ( [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))],
+        [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))],
+        Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
+      )
+  pgkBuildTableStreamingSubscriptionFields ::
+    forall r m n.
+    ( MonadBuildSchema ('Postgres pgKind) r m n,
+      AggregationPredicatesSchema ('Postgres pgKind),
+      BackendTableSelectSchema ('Postgres pgKind)
+    ) =>
+    MkRootFieldName ->
+    SourceInfo ('Postgres pgKind) ->
+    TableName ('Postgres pgKind) ->
+    TableInfo ('Postgres pgKind) ->
+    C.GQLNameIdentifier ->
+    SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
 
 instance PostgresSchema 'Vanilla where
   pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
   pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
   pgkRelayExtension = Just ()
+  pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Citus where
   pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
   pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
+  pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Cockroach where
-  pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
-  pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
-  pgkRelayExtension = Just ()
+  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkRelayExtension = Nothing
+  pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 -- postgres schema
 
@@ -239,8 +276,7 @@ aggregationFunctions =
 
 instance
   ( PostgresSchema pgKind,
-    Backend ('Postgres pgKind),
-    HasTag ('Postgres pgKind)
+    Backend ('Postgres pgKind)
   ) =>
   BS.BackendTableSelectSchema ('Postgres pgKind)
   where
@@ -256,9 +292,9 @@ instance
   BackendSchema ('Postgres pgKind)
   where
   -- top level parsers
-  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  buildTableQueryAndSubscriptionFields = pgkBuildTableQueryAndSubscriptionFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
-  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
+  buildTableStreamingSubscriptionFields = pgkBuildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
@@ -273,7 +309,7 @@ instance
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Just ()
 
-  -- indivdual components
+  -- individual components
   columnParser = columnParser
   enumParser = enumParser @pgKind
   possiblyNullable = possiblyNullable
@@ -373,7 +409,7 @@ pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName 
       pure $ case soIncludeUpdateManyFields of
         Options.IncludeUpdateManyFields ->
           singleUpdates ++ maybeToList multiUpdate
-        Options.DontIncludeUpdateManyFields ->
+        Options.Don'tIncludeUpdateManyFields ->
           singleUpdates
 
 -- | Create a parser for 'update_table_many'. This function is very similar to
@@ -479,42 +515,42 @@ columnParser ::
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue ('Postgres pgKind))))
-columnParser columnType nullability =
-  -- TODO(PDV): It might be worth memoizing this function even though it isn’t
-  -- recursive simply for performance reasons, since it’s likely to be hammered
-  -- during schema generation. Need to profile to see whether or not it’s a win.
-  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType ->
-      possiblyNullable scalarType nullability <$> do
-        -- We convert the value to JSON and use the FromJSON instance. This avoids
-        -- having two separate ways of parsing a value in the codebase, which
-        -- could lead to inconsistencies.
-        --
-        -- The mapping from postgres type to GraphQL scalar name is done by
-        -- 'mkScalarTypeName'. This is confusing, and we might want to fix it
-        -- later, as we will parse values differently here than how they'd be
-        -- parsed in other places using the same scalar name; for instance, we
-        -- will accept strings for postgres columns of type "Integer", despite the
-        -- fact that they will be represented as GraphQL ints, which otherwise do
-        -- not accept strings.
-        --
-        -- TODO: introduce new dedicated scalars for Postgres column types.
-        name <- mkScalarTypeName scalarType
-        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
-        pure $
-          P.Parser
-            { pType = schemaType,
-              pParser =
-                P.valueToJSON (P.toGraphQLType schemaType) >=> \case
-                  J.Null -> P.parseError $ "unexpected null value for type " <> toErrorValue name
-                  value ->
-                    runAesonParser (parsePGValue scalarType) value
-                      `onLeft` (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError)
-            }
-    ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
-      case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> enumParser @pgKind tableName enumValuesList tableCustomName nullability
-        Nothing -> throw400 ValidationFailed "empty enum values"
+columnParser columnType nullability = case columnType of
+  ColumnScalar scalarType -> memoizeOn 'columnParser (scalarType, nullability) do
+    -- We convert the value to JSON and use the FromJSON instance. This avoids
+    -- having two separate ways of parsing a value in the codebase, which
+    -- could lead to inconsistencies.
+    --
+    -- The mapping from postgres type to GraphQL scalar name is done by
+    -- 'mkScalarTypeName'. This is confusing, and we might want to fix it
+    -- later, as we will parse values differently here than how they'd be
+    -- parsed in other places using the same scalar name; for instance, we
+    -- will accept strings for postgres columns of type "Integer", despite the
+    -- fact that they will be represented as GraphQL ints, which otherwise do
+    -- not accept strings.
+    --
+    -- TODO: introduce new dedicated scalars for Postgres column types.
+    name <- mkScalarTypeName scalarType
+    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
+    pure $
+      peelWithOrigin $
+        fmap (ColumnValue columnType) $
+          possiblyNullable scalarType nullability $
+            P.Parser
+              { pType = schemaType,
+                pParser =
+                  P.valueToJSON (P.toGraphQLType schemaType) >=> \case
+                    J.Null -> P.parseError $ "unexpected null value for type " <> toErrorValue name
+                    value ->
+                      runAesonParser (parsePGValue scalarType) value
+                        `onLeft` (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError)
+              }
+  ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
+    case nonEmpty (Map.toList enumValues) of
+      Just enumValuesList ->
+        peelWithOrigin . fmap (ColumnValue columnType)
+          <$> enumParser @pgKind tableName enumValuesList tableCustomName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
 
 enumParser ::
   forall pgKind r m n.
@@ -552,7 +588,7 @@ pgScalarSelectionArgumentsParser ::
   InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
 pgScalarSelectionArgumentsParser columnType
   | isScalarColumnWhere Postgres.isJSONType columnType =
-    P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
+      P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
   | otherwise = pure Nothing
   where
     fieldName = Name._path
@@ -630,7 +666,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
         G.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
       textListParser = fmap IR.openValueOrigin <$> P.list textParser
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
   -- Naming conventions
@@ -942,7 +978,8 @@ geographyWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
     P.object Name._st_d_within_geography_input Nothing $
-      DWithinGeogOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+      DWithinGeogOp
+        <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
         <*> (IR.mkParameter <$> P.field Name._from Nothing geographyParser)
         <*> (IR.mkParameter <$> P.fieldWithDefault Name._use_spheroid Nothing (G.VBoolean True) booleanParser)
 
@@ -955,7 +992,8 @@ geometryWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
     P.object Name._st_d_within_input Nothing $
-      DWithinGeomOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+      DWithinGeomOp
+        <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
         <*> (IR.mkParameter <$> P.field Name._from Nothing geometryParser)
 
 intersectsNbandGeomInput ::
@@ -967,7 +1005,8 @@ intersectsNbandGeomInput = do
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
     P.object Name._st_intersects_nband_geom_input Nothing $
-      STIntersectsNbandGeommin <$> (IR.mkParameter <$> P.field Name._nband Nothing integerParser)
+      STIntersectsNbandGeommin
+        <$> (IR.mkParameter <$> P.field Name._nband Nothing integerParser)
         <*> (IR.mkParameter <$> P.field Name._geommin Nothing geometryParser)
 
 intersectsGeomNbandInput ::
