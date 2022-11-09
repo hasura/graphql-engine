@@ -1,8 +1,12 @@
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Definition of backend types and a few helper functions.
 module Harness.Test.BackendType
   ( BackendType (..),
+    pattern DataConnectorMock,
+    pattern DataConnectorReference,
+    pattern DataConnectorSqlite,
     defaultSource,
     defaultBackendTypeString,
     defaultBackendServerUrl,
@@ -11,15 +15,19 @@ module Harness.Test.BackendType
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Aeson (Value)
 import Data.Aeson.Key (Key)
 import Harness.Quoter.Yaml (yaml)
 import Hasura.Prelude
 
+--------------------------------------------------------------------------------
+
 -- | A supported backend type.
 -- NOTE: Different data-connector agents are represented by seperate constructors
 --       If we want to be able to test these generatively we may want to have a
---       parameterized constructor for data-connectors in future.
+--       parameterized constructor for new data-connectors in future.
 data BackendType
   = Postgres
   | MySQL
@@ -27,10 +35,17 @@ data BackendType
   | BigQuery
   | Citus
   | Cockroach
-  | DataConnectorMock
-  | DataConnectorReference
-  | DataConnectorSqlite
+  | DataConnector String
   deriving (Eq, Ord, Show)
+
+pattern DataConnectorSqlite :: BackendType
+pattern DataConnectorSqlite = DataConnector "sqlite"
+
+pattern DataConnectorMock :: BackendType
+pattern DataConnectorMock = DataConnector "mock"
+
+pattern DataConnectorReference :: BackendType
+pattern DataConnectorReference = DataConnector "reference"
 
 -- | The default hasura metadata source name used for a given backend in this test suite project.
 defaultSource :: BackendType -> String
@@ -41,9 +56,7 @@ defaultSource = \case
   BigQuery -> "bigquery"
   Citus -> "citus"
   Cockroach -> "cockroach"
-  DataConnectorMock -> "chinook_mock"
-  DataConnectorReference -> "chinook_reference"
-  DataConnectorSqlite -> "chinook_sqlite"
+  DataConnector agent -> "chinook_" <> agent
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendCapabilities :: BackendType -> Maybe Value
@@ -100,9 +113,7 @@ defaultBackendTypeString = \case
   BigQuery -> "bigquery"
   Citus -> "citus"
   Cockroach -> "cockroach"
-  DataConnectorMock -> "mock"
-  DataConnectorReference -> "reference"
-  DataConnectorSqlite -> "sqlite"
+  DataConnector agent -> agent
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendServerUrl :: BackendType -> Maybe String
@@ -113,9 +124,9 @@ defaultBackendServerUrl = \case
   BigQuery -> Nothing
   Citus -> Nothing
   Cockroach -> Nothing
-  DataConnectorMock -> Nothing
   DataConnectorReference -> Just "http://localhost:65005"
   DataConnectorSqlite -> Just "http://localhost:65007"
+  DataConnector _ -> Nothing
 
 schemaKeyword :: BackendType -> Key
 schemaKeyword = \case
@@ -125,6 +136,4 @@ schemaKeyword = \case
   BigQuery -> "dataset"
   Citus -> "schema"
   Cockroach -> "schema"
-  DataConnectorMock -> "schema"
-  DataConnectorReference -> "schema"
-  DataConnectorSqlite -> "schema"
+  DataConnector _ -> "schema"

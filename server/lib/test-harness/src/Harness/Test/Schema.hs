@@ -434,9 +434,7 @@ mkTableField backend schemaName tableName =
         BigQuery -> nativeFieldName
         Citus -> nativeFieldName
         Cockroach -> nativeFieldName
-        DataConnectorMock -> dcFieldName
-        DataConnectorReference -> dcFieldName
-        DataConnectorSqlite -> dcFieldName
+        DataConnector _ -> dcFieldName
 
 -- | Unified track object relationships
 trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()

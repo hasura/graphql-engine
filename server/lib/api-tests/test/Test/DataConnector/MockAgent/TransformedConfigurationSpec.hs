@@ -12,7 +12,7 @@ import Harness.Backend.DataConnector.Mock (TestCase (..))
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -42,8 +42,8 @@ spec =
 
 sourceMetadata :: Aeson.Value
 sourceMetadata =
-  let source = defaultSource DataConnectorMock
-      backendType = defaultBackendTypeString DataConnectorMock
+  let source = defaultSource Fixture.DataConnectorMock
+      backendType = defaultBackendTypeString Fixture.DataConnectorMock
    in [yaml|
         name : *source
         kind: *backendType

@@ -63,7 +63,7 @@ teardown (testEnvironment, MockAgentEnvironment {..}) = do
 -- | Mock Agent @backend_configs@ field
 agentConfig :: Aeson.Value
 agentConfig =
-  let backendType = Fixture.defaultBackendTypeString $ Fixture.DataConnectorMock
+  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorMock
       agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
    in [yaml|
 dataconnector:

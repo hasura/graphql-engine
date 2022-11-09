@@ -14,14 +14,13 @@ where
 import Data.Aeson qualified as Aeson
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
 -- | Reference Agent @backend_configs@ field.
 agentConfig :: Aeson.Value
 agentConfig =
-  let backendType = Fixture.defaultBackendTypeString $ Fixture.DataConnectorReference
+  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorReference
    in [yaml|
 dataconnector:
   *backendType:

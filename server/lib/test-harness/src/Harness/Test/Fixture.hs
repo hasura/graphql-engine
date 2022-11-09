@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 -- | This module defines a way to setup test fixtures which can help defining
 -- tests.
 --
@@ -11,6 +13,9 @@ module Harness.Test.Fixture
     fixture,
     FixtureName (..),
     BackendType (..),
+    pattern DataConnectorMock,
+    pattern DataConnectorReference,
+    pattern DataConnectorSqlite,
     defaultSource,
     defaultBackendTypeString,
     schemaKeyword,
