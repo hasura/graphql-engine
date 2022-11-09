@@ -1,3 +1,4 @@
+import ToolTip from '@/components/Common/Tooltip/Tooltip';
 import React from 'react';
 
 interface InputProps extends React.ComponentProps<'input'> {
@@ -23,6 +24,10 @@ export const ColumnSelectionRadioButton: React.FC<InputProps> = ({
           className="cursor-pointer"
         />
         All columns
+        <ToolTip
+          placement="top"
+          message="All columns will automatically include (or remove) any columns that are added (or removed) after creating the Event Trigger"
+        />
       </label>
       <label className="radio-inline">
         <input

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from '@/new-components/Button';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import {
   EventTrigger,
@@ -39,6 +40,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
     isAllColumnChecked,
     handleColumnRadioButton,
   } = props;
+  const [allColEnabled, setAllColEnabled] = useState(true);
   const etDef = currentTrigger.configuration.definition;
   const existingOps = parseEventTriggerOperations(etDef);
   const columnInfo =
@@ -52,6 +54,28 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const reset = () => {
     setOperations(existingOps);
     setOperationColumns(existingOpColumns);
+  };
+
+  const handleToggleAllColumns = () => {
+    if (allColEnabled) {
+      const cols = operationColumns.map(o => {
+        return {
+          ...o,
+          enabled: false,
+        };
+      });
+      setOperationColumns(cols);
+      setAllColEnabled(false);
+    } else {
+      const cols = operationColumns.map(o => {
+        return {
+          ...o,
+          enabled: true,
+        };
+      });
+      setOperationColumns(cols);
+      setAllColEnabled(true);
+    }
   };
 
   const renderEditor = (
@@ -93,7 +117,18 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
             </div>
             <>
               {!isAllColumnChecked ? (
-                <div className="w-full p-0">
+                <div className="w-full p-0 mt-sm">
+                  <div>
+                    List of columns to select:
+                    <Button
+                      className="ml-2"
+                      size="sm"
+                      onClick={() => handleToggleAllColumns()}
+                      disabled={readOnly}
+                    >
+                      Toggle All
+                    </Button>
+                  </div>
                   {opCols.map(col => {
                     const toggle = () => {
                       if (!readOnly) {

@@ -21,6 +21,7 @@ import {
   setRequestUrlTransform,
   setRequestPayloadTransform,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
+import { showErrorNotification } from '@/components/Services/Common/Notification';
 import {
   RequestTransformContentType,
   RequestTransformMethod,
@@ -273,6 +274,21 @@ const Add: React.FC<Props> = props => {
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (
+      state.operationColumns.every(
+        operationColumn => !operationColumn.enabled
+      ) &&
+      state.operations.update
+    ) {
+      dispatch(
+        showErrorNotification(
+          'Creating event trigger failed.',
+          'Please select at-least one trigger column for the update trigger operation.'
+        )
+      );
+      return;
+    }
+
     dispatch(createEventTrigger(state, transformState));
   };
 

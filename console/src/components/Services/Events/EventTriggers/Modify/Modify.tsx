@@ -39,6 +39,7 @@ import {
   parseValidateApiData,
   getTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
+import { showErrorNotification } from '@/components/Services/Common/Notification';
 import { Button } from '@/new-components/Button';
 import { isProConsole } from '@/utils/proConsole';
 import { getSourceDriver } from '../../../Data/utils';
@@ -311,6 +312,20 @@ const Modify: React.FC<Props> = props => {
   const saveWrapper =
     (property?: EventTriggerProperty) =>
     (successCb?: () => void, errorCb?: () => void) => {
+      if (
+        state.operationColumns.every(
+          operationColumn => !operationColumn.enabled
+        ) &&
+        state.operations.update
+      ) {
+        dispatch(
+          showErrorNotification(
+            'Updating event trigger failed.',
+            'Please select at-least one trigger column for the update trigger operation.'
+          )
+        );
+        return;
+      }
       dispatch(
         modifyEventTrigger(
           state,
