@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { useMigrationMode, useReadOnlyMode } from '@/hooks';
+import { useReadOnlyMode } from '@/hooks';
 import { useMetadata } from '@/features/MetadataAPI';
 import { HasuraMetadataV3 } from '@/metadata/types';
 import { insertItem } from './InsertActions';
@@ -94,6 +94,8 @@ export const TableInsertItemContainer = (
   const [insertedRows, setInsertedRows] = useState(0);
   const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
 
+  const migrationMode = useAppSelector(store => store.main.migrationMode);
+
   const { data: metadata } = useMetadata();
   const tableMetadata = getTableMetadata(
     dataSourceName,
@@ -101,7 +103,6 @@ export const TableInsertItemContainer = (
     metadata?.metadata
   );
 
-  const { data: migrationMode } = useMigrationMode();
   const { data: readOnlyMode } = useReadOnlyMode();
   const { data: schemas, isLoading: schemasIsLoading } = useSchemas({
     dataSourceName,
@@ -203,8 +204,6 @@ export const TableInsertItemContainer = (
       nextInsert();
     });
   };
-
-  // --- Insert section end ---
 
   if (schemasIsLoading) return <p>Loading...</p>;
 

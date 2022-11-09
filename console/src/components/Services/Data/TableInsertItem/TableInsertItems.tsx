@@ -122,7 +122,7 @@ export const TableInsertItems = ({
             tabName="insert"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
-            isCountEstimated={false}
+            isCountEstimated
           />
           <br />
           <div>
