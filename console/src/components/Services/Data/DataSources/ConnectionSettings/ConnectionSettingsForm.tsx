@@ -59,9 +59,13 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = props => {
       </FormContainer>
     );
   }
+
+  const isOssConsole = !isProConsole(window.__env);
+  const canShowMaxConnections = isOssConsole || isMaxConnectionSet;
+
   return (
     <FormContainer>
-      {isMaxConnectionSet && <MaxConnections {...props} />}
+      {canShowMaxConnections && <MaxConnections {...props} />}
       {formSettings.cumulativeMaxConnections && (
         <CumulativeMaxConnections {...props} />
       )}

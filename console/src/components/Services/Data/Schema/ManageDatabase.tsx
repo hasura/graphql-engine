@@ -106,6 +106,14 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     inconsistentObjects
   );
 
+  const isNotTotalMaxConnectionSet =
+    !dataSource?.connection_pool_settings?.total_max_connections;
+  const isMaxConnectionSet =
+    !!dataSource?.connection_pool_settings?.max_connections;
+  const showMaxConnectionWarning =
+    isProConsole(window.__env) &&
+    (isNotTotalMaxConnectionSet || isMaxConnectionSet);
+
   return (
     <tr data-test={dataSource.name}>
       <td className="px-sm py-xs align-top w-0 whitespace-nowrap">
@@ -131,14 +139,17 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         >
           Reload
         </Button>
-        {isProConsole(window.__env)
-          ? !dataSource?.connection_pool_settings?.total_max_connections && (
-              <span className="bg-blue-100 font-bold rounded-lg pr-xs">
-                <FaExclamationTriangle className="mr-0.5 pb-1 pl-1.5 text-lg" />
-                Set Total Max Connections
-              </span>
-            )
-          : null}
+        {showMaxConnectionWarning && (
+          <span
+            className="bg-blue-100 font-bold rounded-lg pr-xs cursor-pointer"
+            onClick={() => {
+              onEdit(dataSource.name);
+            }}
+          >
+            <FaExclamationTriangle className="mr-0.5 pb-1 pl-1.5 text-lg" />
+            Set Total Max Connections
+          </span>
+        )}
       </td>
       <td className="px-sm py-xs max-w-xs align-top">
         <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
