@@ -25830,7 +25830,7 @@ type HasuraServerApp m = IpAddress -> PendingConnection -> m ()
 --   handlers are used.
 data WSHandlers m a
 WSHandlers :: (WSId -> RequestHead -> IpAddress -> WSSubProtocol -> m (Either RejectRequest (AcceptWith a))) -> (WSConn a -> ByteString -> WSSubProtocol -> m ()) -> OnCloseH m a -> WSHandlers m a
-createServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadWSLog m) => WSConnectionInitTimeout -> WSServer a -> WSHandlers m a -> HasuraServerApp m
+createServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadWSLog m) => IO MetricsConfig -> WSConnectionInitTimeout -> WSServer a -> WSHandlers m a -> HasuraServerApp m
 shutdown :: WSServer a -> IO ()
 instance Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog m => Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog m => Hasura.GraphQL.Transport.WebSocket.Server.MonadWSLog (Control.Monad.Trans.Reader.ReaderT r m)
