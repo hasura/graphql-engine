@@ -50,7 +50,7 @@ const ResponseTransforms: React.FC<PayloadOptionsTransformsProps> = ({
   return (
     <div
       className="m-md pl-lg pr-sm border-l border-l-gray-400"
-      data-cy="Change Payload"
+      data-cy="Change Response"
     >
       <div className="mb-md">
         <NumberedSidebar

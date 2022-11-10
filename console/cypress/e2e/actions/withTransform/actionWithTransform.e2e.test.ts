@@ -1,4 +1,5 @@
 import { testMode } from '../../../helpers/common';
+import { waitForPostCreationRequests } from '../query/utils/requests/waitForPostCreationRequests';
 
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
 import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
@@ -173,6 +174,8 @@ if (testMode !== 'cli') {
 
         cy.log('**--- Type in the Payload Transform Request Body textarea**');
         cy.get('@payloadTransformRequestBody')
+          .wait(500)
+          .clearConsoleTextarea()
           .clearConsoleTextarea()
           .type(
             `{
@@ -189,8 +192,44 @@ if (testMode !== 'cli') {
           );
       });
 
+      cy.log('**------------------------------**');
+      cy.log('**--- Step 1.5: Add Response Transform**');
+      cy.log('**------------------------------**');
+
+      // --------------------
+      cy.log('**--- Click the Add Response Transform button**');
+      cy.contains('Add Response Transform').click();
+
+      // --------------------
+      cy.get('[data-cy="Change Response"]').within(() => {
+        // Assign an alias to the most unclear selectors for future references
+        cy.get('textarea').eq(0).as('responseTransformResponseBody');
+
+        cy.log('**--- Type in the Response Transform Response Body textarea**');
+        cy.get('@responseTransformResponseBody')
+          .wait(500)
+          .clearConsoleTextarea()
+          .clearConsoleTextarea()
+          .type(
+            `{
+            "userInfo": {
+              "name": {{$body.input.username}},
+              "password": {{$body.input.password}},
+              "type": {{$body.action.name}}
+            `,
+            // delay is set to 1 because setting it to 0 causes the test to fail because writes
+            // something like
+            // "name": {{$body.input.username}}name
+            // in the textarea (the closing "name" is a mistake)
+            { force: true, delay: 1, parseSpecialCharSequences: false }
+          );
+      });
+
+
       // --------------------
       cy.log('**--- Click the Create button**');
+      // cy.wait(1000) because of debounce
+      cy.wait(1000);
       cy.getBySel('create-action-btn').click();
 
       // --------------------
@@ -212,8 +251,8 @@ if (testMode !== 'cli') {
       // cy.log('**------------------------------**');
 
       // // --------------------
-      // cy.log('**--- Wait all the requests to be settled**');
-      // waitForPostCreationRequests();
+      cy.log('**--- Wait all the requests to be settled**');
+      waitForPostCreationRequests();
 
       // cy.get('[data-cy="Change Request Options"]').within(() => {
       //   // --------------------
@@ -264,7 +303,7 @@ if (testMode !== 'cli') {
       // --------------------
       cy.log('**--- Set the prompt value**');
       cy.window().then(win => cy.stub(win, 'prompt').returns('login'));
-
+      
       cy.log('**--- Click the Delete button**');
       cy.getBySel('delete-action').click();
 
