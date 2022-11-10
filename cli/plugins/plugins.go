@@ -8,7 +8,9 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -115,7 +117,7 @@ func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 		// Load the plugin index by name
 		ps, err := c.LoadPluginByName(pluginName)
 		if err != nil {
-			if os.IsNotExist(err) {
+			if stderrors.Is(err, fs.ErrNotExist) {
 				return plugin, errors.E(op, fmt.Errorf("plugin %q does not exist in the plugin index", pluginName))
 			}
 			return plugin, errors.E(op, fmt.Errorf("failed to load plugin %q from the index: %w", pluginName, err))
@@ -123,7 +125,7 @@ func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 
 		// Load the installed manifest
 		pluginReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(pluginName))
-		if err != nil && !os.IsNotExist(err) {
+		if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
 			return plugin, errors.E(op, fmt.Errorf("failed to look up plugin receipt: %w", err))
 		}
 
@@ -182,7 +184,7 @@ func (c *Config) Install(plugin Plugin) error {
 func (c *Config) Uninstall(name string) error {
 	var op errors.Op = "plugins.Config.Uninstall"
 	if _, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(name)); err != nil {
-		if os.IsNotExist(err) {
+		if stderrors.Is(err, fs.ErrNotExist) {
 			return errors.E(op, ErrIsNotInstalled)
 		}
 		return errors.E(op, fmt.Errorf("failed to look up install receipt for plugin %q: %w", name, err))
@@ -262,7 +264,7 @@ func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, er
 	var op errors.Op = "plugins.Config.Upgrade"
 	ps, err := c.LoadPluginByName(pluginName)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if stderrors.Is(err, fs.ErrNotExist) {
 			return Plugin{}, errors.E(op, fmt.Errorf("plugin %q does not exist in the plugin index", pluginName))
 		}
 		return Plugin{}, errors.E(op, fmt.Errorf("failed to load the plugin manifest for plugin %s: %w", pluginName, err))

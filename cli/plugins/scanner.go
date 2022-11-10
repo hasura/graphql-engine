@@ -8,7 +8,9 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -125,7 +127,7 @@ func (c *Config) LoadPlugins(files []string, pluginName ...string) Plugins {
 func (c *Config) ReadPluginFromFile(path string) (Plugin, error) {
 	var op errors.Op = "plugins.Config.ReadPluginFromFile"
 	f, err := os.Open(path)
-	if os.IsNotExist(err) {
+	if stderrors.Is(err, fs.ErrNotExist) {
 		return Plugin{}, errors.E(op, err)
 	} else if err != nil {
 		return Plugin{}, errors.E(op, fmt.Errorf("failed to open index file: %w", err))

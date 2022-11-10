@@ -8,8 +8,10 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -171,7 +173,7 @@ func moveToInstallDir(srcDir, installDir string, fos []FileOperation) error {
 func renameOrCopy(from, to string) error {
 	var op errors.Op = "plugins.renameOrCopy"
 	fi, err := os.Stat(to)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
 		return errors.E(op, fmt.Errorf("error checking move target dir %q: %w", to, err))
 	}
 	if fi != nil && fi.IsDir() {
@@ -243,8 +245,8 @@ func copyFile(source, dst string, mode os.FileMode) (err error) {
 
 // isCrossDeviceRenameErr determines if a os.Rename error is due to cross-fs/drive/volume copying.
 func isCrossDeviceRenameErr(err error) bool {
-	le, ok := err.(*os.LinkError)
-	if !ok {
+	var le *os.LinkError
+	if !stderrors.As(err, &le) {
 		return false
 	}
 	errno, ok := le.Err.(syscall.Errno)

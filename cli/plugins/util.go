@@ -8,7 +8,9 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -148,7 +150,7 @@ func createOrUpdateLink(binDir, binary, plugin string) error {
 	if err := removeLink(dst); err != nil {
 		return errors.E(op, fmt.Errorf("failed to remove old symlink: %w", err))
 	}
-	if _, err := os.Stat(binary); os.IsNotExist(err) {
+	if _, err := os.Stat(binary); stderrors.Is(err, fs.ErrNotExist) {
 		return errors.E(op, fmt.Errorf("can't create symbolic link, source binary (%q) cannot be found in extracted archive: %w", binary, err))
 	}
 
@@ -161,7 +163,8 @@ func createOrUpdateLink(binDir, binary, plugin string) error {
 			//
 			// ERROR_PRIVILEGE_NOT_HELD is 1314 (0x522):
 			// https://msdn.microsoft.com/en-us/library/windows/desktop/ms681385(v=vs.85).aspx
-			if lerr, ok := err.(*os.LinkError); ok && lerr.Err != syscall.Errno(1314) {
+			var lerr *os.LinkError
+			if stderrors.As(err, &lerr); lerr.Err != syscall.Errno(1314) {
 				return errors.E(op, err)
 			}
 			if err := copyFile(binary, dst, 0755); err != nil {
@@ -178,7 +181,7 @@ func createOrUpdateLink(binDir, binary, plugin string) error {
 func removeLink(path string) error {
 	var op errors.Op = "plugins.removeLink"
 	fi, err := os.Lstat(path)
-	if os.IsNotExist(err) {
+	if stderrors.Is(err, fs.ErrNotExist) {
 		return nil
 	} else if err != nil {
 		return errors.E(op, fmt.Errorf("failed to read the symlink in %q: %w", path, err))

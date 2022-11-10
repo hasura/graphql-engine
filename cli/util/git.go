@@ -1,6 +1,7 @@
 package util
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -8,6 +9,8 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+
+	stderrors "errors"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
@@ -64,7 +67,7 @@ func (g *GitUtil) EnsureCloned() error {
 func (g *GitUtil) IsGitCloned() (bool, error) {
 	var op errors.Op = "util.GitUtil.IsGitCloned"
 	f, err := os.Stat(filepath.Join(g.Path, ".git"))
-	if os.IsNotExist(err) {
+	if stderrors.Is(err, fs.ErrNotExist) {
 		return false, nil
 	}
 	if err != nil {

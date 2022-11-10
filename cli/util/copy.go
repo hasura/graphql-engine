@@ -1,8 +1,10 @@
 package util
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -75,7 +77,7 @@ func CopyDir(src string, dst string) error {
 	}
 
 	_, err = os.Stat(dst)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
 		return errors.E(op, err)
 	}
 	if err == nil {
