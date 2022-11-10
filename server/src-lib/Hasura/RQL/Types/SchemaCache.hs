@@ -115,7 +115,8 @@ import Data.Aeson.TH
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
-import Data.Text.Extended
+import Data.Text.Extended ((<<>))
+import Data.Text.Extended qualified as T
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
@@ -156,6 +157,7 @@ import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap
+import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -262,9 +264,10 @@ type InheritedRolesCache = M.HashMap RoleName (HashSet RoleName)
 -- This function retrieves the schema cache from the monadic context, and
 -- attempts to look the corresponding source up in the source cache. This
 -- function must be used with a _type annotation_, such as `askSourceInfo
--- @('Postgres 'Vanilla)`. It throws an error if it fails to find that source,
--- in which case it looks that source up in the metadata, to differentiate
--- between the source not existing or the type of the source not matching.
+-- @('Postgres 'Vanilla)`. It throws an error if:
+-- 1. The function fails to find the named source at all
+-- 2. The named source exists but does not match the expected type
+-- 3. The named source exists, and is of the expected type, but is inconsistent
 askSourceInfo ::
   forall b m.
   (CacheRM m, MetadataM m, MonadError QErr m, Backend b) =>
@@ -272,13 +275,27 @@ askSourceInfo ::
   m (SourceInfo b)
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
-  onNothing (unsafeSourceInfo @b =<< M.lookup sourceName sources) do
-    metadata <- getMetadata
-    case metadata ^. metaSources . at sourceName of
-      Nothing ->
-        throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
-      Just _ ->
-        throw400 Unexpected $ "source with name " <> sourceName <<> " is inconsistent"
+  -- find any matching source info by name
+  case M.lookup sourceName sources of
+    -- 1. The function fails to find the named source at all
+    Nothing -> throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+    Just matchingNameSourceInfo -> do
+      -- find matching source info for backend type @b
+      onNothing (unsafeSourceInfo @b matchingNameSourceInfo) do
+        metadata <- getMetadata
+        maybe
+          -- 2. The named source exists but does not match the expected type
+          ( throw400 NotExists $
+              "source with name "
+                <> sourceName <<> " does not match the expected type "
+                <> T.toTxt (reify (backendTag @b))
+          )
+          -- 3. The named source exists, and is of the expected type, but is inconsistent
+          ( const $
+              throw400 Unexpected $
+                "source with name " <> sourceName <<> " is inconsistent"
+          )
+          (metadata ^. metaSources . at sourceName)
 
 -- | Retrieves the source config for a given source name.
 --
