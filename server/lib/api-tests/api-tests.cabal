@@ -171,3 +171,43 @@ executable api-tests
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.LiveQueriesSpec
     Test.Subscriptions.StreamingSubscriptionsSpec
+
+executable render-feature-matrix
+  build-depends:
+    , aeson
+    , attoparsec
+    , base
+    , bytestring
+    , containers
+    , lucid2
+    , mtl
+    , text
+
+  default-extensions:
+    BlockArguments
+    DataKinds
+    DeriveGeneric
+    DerivingStrategies
+    ImportQualifiedPost
+    MultiWayIf
+    NamedFieldPuns
+    NoImplicitPrelude
+    OverloadedStrings
+    PatternGuards
+    RecordWildCards
+    ScopedTypeVariables
+    TypeApplications
+    TypeFamilies
+
+  hs-source-dirs: src-render-feature-matrix
+  default-language: Haskell2010
+
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options:
+    -Wall
+    -Werror
+    -threaded
+    -rtsopts "-with-rtsopts=-N"
+
+  main-is: Main.hs

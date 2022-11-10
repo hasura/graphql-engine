@@ -189,6 +189,7 @@ constraints: any.Cabal ==3.6.3.0,
              any.lifted-base ==0.2.3.12,
              any.list-t ==1.0.5.1,
              any.logict ==0.7.0.3,
+             any.lucid2 ==0.0.20221012,
              any.managed ==1.0.9,
              any.megaparsec ==9.2.0,
              any.memory ==0.17.0,
@@ -374,4 +375,4 @@ constraints: any.Cabal ==3.6.3.0,
              any.xml-types ==0.3.8,
              any.yaml ==0.11.7.0,
              any.zlib ==0.6.2.3,
-index-state: hackage.haskell.org 2022-09-21T21:18:32Z
+index-state: hackage.haskell.org 2022-11-10T12:19:34Z
