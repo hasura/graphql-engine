@@ -18752,10 +18752,10 @@ type InheritedRolesCache = HashMap RoleName (HashSet RoleName)
 --   This function retrieves the schema cache from the monadic context, and
 --   attempts to look the corresponding source up in the source cache. This
 --   function must be used with a _type annotation_, such as `askSourceInfo
---   @('Postgres 'Vanilla)`. It throws an error if it fails to find that
---   source, in which case it looks that source up in the metadata, to
---   differentiate between the source not existing or the type of the
---   source not matching.
+--   @('Postgres 'Vanilla)`. It throws an error if: 1. The function fails
+--   to find the named source at all 2. The named source exists but does
+--   not match the expected type 3. The named source exists, and is of the
+--   expected type, but is inconsistent
 askSourceInfo :: forall b m. (CacheRM m, MetadataM m, MonadError QErr m, Backend b) => SourceName -> m (SourceInfo b)
 
 -- | Retrieves the source config for a given source name.
@@ -22860,21 +22860,21 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqCleanupConfig :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe Text)
-cetqWebhook :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe InputWebhook)
-cetqUpdate :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe (SubscribeOpSpec b_aD44n))
-cetqTable :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (TableName b_aD44n)
-cetqSource :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) SourceName
-cetqRetryConf :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe RequestTransform)
-cetqReplace :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) Bool
-cetqName :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) TriggerName
-cetqInsert :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe (SubscribeOpSpec b_aD44n))
-cetqHeaders :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe Bool)
-cetqDelete :: forall b_aD44n. Lens' (CreateEventTriggerQuery b_aD44n) (Maybe (SubscribeOpSpec b_aD44n))
+cteqCleanupConfig :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe Text)
+cetqWebhook :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe InputWebhook)
+cetqUpdate :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe (SubscribeOpSpec b_aD4aW))
+cetqTable :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (TableName b_aD4aW)
+cetqSource :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) SourceName
+cetqRetryConf :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe RequestTransform)
+cetqReplace :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) Bool
+cetqName :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) TriggerName
+cetqInsert :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe (SubscribeOpSpec b_aD4aW))
+cetqHeaders :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe Bool)
+cetqDelete :: forall b_aD4aW. Lens' (CreateEventTriggerQuery b_aD4aW) (Maybe (SubscribeOpSpec b_aD4aW))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
