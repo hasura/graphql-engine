@@ -10,6 +10,16 @@ actions:
         method: POST
         query_params: {}
         template_engine: Kriti
+        version: 2
+      response_transform:
+        body:
+          action: transform
+          template: |-
+            {
+              "data": {{$body}},
+            }
+        template_engine: Kriti
+        version: 2
 custom_types:
   enums: []
   input_objects:

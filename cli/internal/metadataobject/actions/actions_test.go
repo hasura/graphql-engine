@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -188,12 +190,15 @@ func TestActionConfig_Build(t *testing.T) {
 			gotjson, err := goyaml.YAMLToJSON(gotbs)
 			require.NoError(t, err)
 			goldenFile := fmt.Sprintf("testdata/build/%v/want.json", tt.id)
+			var pretty_json bytes.Buffer
+			err = json.Indent(&pretty_json, gotjson, "", " ")
+			assert.NoError(t, err)
 			// uncomment to update golden file
-			//assert.NoError(t, ioutil.WriteFile(goldenFile, gotjson, os.ModePerm))
+			// assert.NoError(t, ioutil.WriteFile(goldenFile, pretty_json.Bytes(), os.ModePerm))
 
 			want, err := ioutil.ReadFile(goldenFile)
 			assert.NoError(t, err)
-			assert.Equal(t, string(want), string(gotjson))
+			assert.Equal(t, string(want), pretty_json.String())
 		})
 	}
 }

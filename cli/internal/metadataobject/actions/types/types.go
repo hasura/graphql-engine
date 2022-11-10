@@ -79,6 +79,7 @@ type ActionDef struct {
 	Headers              yaml.Node   `json:"-" yaml:"headers,omitempty"`
 	Timeout              int         `json:"-" yaml:"timeout,omitempty"`
 	RequestTransform     yaml.Node   `json:"request_transform,omitempty" yaml:"request_transform,omitempty"`
+	ResponseTransform    yaml.Node   `json:"response_transform,omitempty" yaml:"response_transform,omitempty"`
 }
 
 type CustomTypes struct {
