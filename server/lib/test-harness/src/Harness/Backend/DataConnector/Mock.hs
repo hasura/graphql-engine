@@ -32,6 +32,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -113,14 +114,18 @@ data MockAgentEnvironment = MockAgentEnvironment
   }
 
 -- | Create the 'I.IORef's and launch the servant mock agent.
-mkLocalTestEnvironment :: TestEnvironment -> IO MockAgentEnvironment
-mkLocalTestEnvironment _ = do
+mkLocalTestEnvironment :: TestEnvironment -> Managed MockAgentEnvironment
+mkLocalTestEnvironment _ = mkTestResource do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
   maeQueryConfig <- I.newIORef Nothing
   maeThread <- Async.async $ runMockServer maeConfig maeQuery maeQueryConfig
-  healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
-  pure $ MockAgentEnvironment {..}
+  pure $
+    AcquiredResource
+      { resourceValue = MockAgentEnvironment {..},
+        waitForResource = healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health",
+        teardownResource = Async.cancel maeThread
+      }
 
 -- | Mock Agent test case input.
 data TestCase = TestCase

@@ -48,6 +48,7 @@ import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Hasura.Prelude
 
@@ -381,12 +382,9 @@ type Query {
 
 |]
 
-rhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
-rhsRemoteServerMkLocalTestEnvironment _ = do
-  server <-
-    RemoteServer.run $
-      RemoteServer.generateQueryInterpreter (Query {album})
-  pure $ Just server
+rhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
+rhsRemoteServerMkLocalTestEnvironment _ =
+  Just <$> RemoteServer.run (RemoteServer.generateQueryInterpreter (Query {album}))
   where
     albums =
       [ (1, ("album1_artist1", Just 1)),
@@ -516,12 +514,9 @@ input StringCompExp {
 
 |]
 
-lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
-lhsRemoteServerMkLocalTestEnvironment _ = do
-  server <-
-    RemoteServer.run $
-      RemoteServer.generateQueryInterpreter (LHSQuery {q_hasura_track = hasura_track})
-  pure $ Just server
+lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
+lhsRemoteServerMkLocalTestEnvironment _ =
+  Just <$> RemoteServer.run (RemoteServer.generateQueryInterpreter (LHSQuery {q_hasura_track = hasura_track}))
   where
     -- Implements the @hasura_track@ field of the @Query@ type.
     hasura_track (LHSHasuraTrackArgs {..}) = do

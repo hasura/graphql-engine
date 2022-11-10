@@ -28,6 +28,7 @@ module Harness.Test.Fixture
   )
 where
 
+import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
@@ -121,41 +122,47 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
 -- and at teardown, which is why we use a custom re-implementation of
 -- @bracket@.
 fixtureBracket :: Fixture b -> (ActionWith (TestEnvironment, b)) -> ActionWith TestEnvironment
-fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith globalTestEnvironment =
-  mask \restore -> do
-    -- log DB of test
-    testLogHarness globalTestEnvironment $ "Testing " <> show name <> "..."
+fixtureBracket
+  Fixture
+    { name,
+      mkLocalTestEnvironment,
+      setupTeardown
+    }
+  actionWith
+  globalTestEnvironment =
+    mask \restore -> runManaged do
+      -- log DB of test
+      liftIO $ testLogHarness globalTestEnvironment $ "Testing " <> show name <> "..."
+      localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
+      liftIO $ do
+        -- create a unique id to differentiate this set of tests
+        uniqueTestId <- nextRandom
 
-    localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
+        let globalTestEnvWithUnique =
+              globalTestEnvironment
+                { backendType = case name of
+                    Backend db -> Just db
+                    _ -> Nothing,
+                  uniqueTestId = uniqueTestId
+                }
 
-    -- create a unique id to differentiate this set of tests
-    uniqueTestId <- nextRandom
+        -- create databases we need for the tests
+        createDatabases name globalTestEnvWithUnique
 
-    let globalTestEnvWithUnique =
-          globalTestEnvironment
-            { backendType = case name of
-                Backend db -> Just db
-                _ -> Nothing,
-              uniqueTestId = uniqueTestId
-            }
+        let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
 
-    -- create databases we need for the tests
-    createDatabases name globalTestEnvWithUnique
+        cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
 
-    let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
+        _ <-
+          catchRethrow
+            (restore $ actionWith testEnvironment)
+            cleanup
 
-    cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
-
-    _ <-
-      catchRethrow
-        (restore $ actionWith testEnvironment)
+        -- run test-specific clean up
         cleanup
 
-    -- run test-specific clean up
-    cleanup
-
-    -- drop all DBs created for the tests
-    dropDatabases name globalTestEnvWithUnique
+        -- drop all DBs created for the tests
+        dropDatabases name globalTestEnvWithUnique
 
 -- | given the `FixtureName` and `uniqueTestId`, spin up all necessary
 -- databases for these tests
@@ -190,11 +197,10 @@ fixtureRepl ::
   TestEnvironment ->
   IO (IO ())
 fixtureRepl Fixture {mkLocalTestEnvironment, setupTeardown} globalTestEnvironment = do
-  localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
-  let testEnvironment = (globalTestEnvironment, localTestEnvironment)
-
-  cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
-  return cleanup
+  with (mkLocalTestEnvironment globalTestEnvironment) \localTestEnvironment -> do
+    let testEnvironment = (globalTestEnvironment, localTestEnvironment)
+    cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
+    return cleanup
 
 -- | Run a list of SetupActions.
 --
@@ -251,13 +257,14 @@ data Fixture a = Fixture
     -- e.g. @Postgres@ or @MySQL@
     name :: FixtureName,
     -- | Setup actions associated with creating a local testEnvironment for this
-    -- 'Fixture'; for example:
-    --
-    --  * starting remote servers
+    -- 'Fixture'; for example, starting remote servers.
     --
     -- If any of those resources need to be threaded throughout the tests
-    -- themselves they should be returned here. Otherwise, a ()
-    mkLocalTestEnvironment :: TestEnvironment -> IO a,
+    -- themselves they should be returned here. Otherwise, use 'noTestResource'.
+    --
+    -- Intended to be used with the 'Harness.Test.TestResource' module. See
+    -- 'Harness.Webhook' for an example.
+    mkLocalTestEnvironment :: TestEnvironment -> Managed a,
     -- | Setup actions associated with this 'Fixture'; for example:
     --
     --  * running SQL commands
@@ -296,5 +303,5 @@ instance Show FixtureName where
   show (Combine name1 name2) = show name1 ++ "-" ++ show name2
 
 -- | Default function for 'mkLocalTestEnvironment' when there's no local testEnvironment.
-noLocalTestEnvironment :: TestEnvironment -> IO ()
-noLocalTestEnvironment _ = pure ()
+noLocalTestEnvironment :: TestEnvironment -> Managed ()
+noLocalTestEnvironment = const $ pure ()

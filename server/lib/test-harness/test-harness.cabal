@@ -26,6 +26,7 @@ library
     , libyaml
     , lens
     , lens-aeson
+    , managed
     , morpheus-graphql
     , mtl
     , mysql-simple
@@ -116,6 +117,7 @@ library
     Harness.Test.Schema
     Harness.Test.SchemaName
     Harness.Test.SetupAction
+    Harness.Test.TestResource
     Harness.TestEnvironment
     Harness.Webhook
     Harness.Yaml

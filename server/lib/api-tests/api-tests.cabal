@@ -20,6 +20,7 @@ executable api-tests
     , http-types
     , lens
     , lens-aeson
+    , managed
     , morpheus-graphql
     , pg-client
     , postgresql-simple

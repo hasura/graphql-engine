@@ -24,6 +24,7 @@ import Data.Morpheus.Types
     defaultRootResolver,
   )
 import Harness.Http qualified as Http
+import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (Server (..), serverUrl)
 import Hasura.Prelude
 import Network.Socket qualified as Socket
@@ -54,8 +55,8 @@ run ::
   -- @/graphql@; the JSON value it returns will be the body of the server's
   -- response.
   Interpreter ->
-  IO Server
-run (Interpreter interpreter) = do
+  Managed Server
+run (Interpreter interpreter) = mkTestResource do
   let urlPrefix = "http://127.0.0.1"
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   thread <- Async.async $
@@ -71,7 +72,12 @@ run (Interpreter interpreter) = do
           Spock.lazyBytes result
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck $ serverUrl server
-  pure server
+  pure
+    AcquiredResource
+      { resourceValue = server,
+        waitForResource = Http.healthCheck $ serverUrl server,
+        teardownResource = Async.cancel thread
+      }
 
 -- | This function creates an 'Interpreter', able to handle incoming GraphQL
 -- requests.

@@ -14,7 +14,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment, stopServer)
+import Harness.TestEnvironment (TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -29,12 +29,8 @@ spec =
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.mkLocalTestEnvironment = const Webhook.run,
-              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction = pure (),
-                      Fixture.teardownAction = \_ -> stopServer webhookServer
-                    },
-                  Postgres.setupTablesAction schema testEnvironment,
+              Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment,
                   Fixture.SetupAction
                     { Fixture.setupAction = postgresSetup testEnvironment,
                       Fixture.teardownAction = \_ -> postgresTeardown testEnvironment

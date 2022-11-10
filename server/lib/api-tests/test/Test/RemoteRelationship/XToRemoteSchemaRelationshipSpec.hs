@@ -27,6 +27,7 @@ import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -135,7 +136,7 @@ lhsPostgresSetupAction testEnv =
     (lhsPostgresSetup (testEnv, Nothing))
     (const $ lhsPostgresTeardown (testEnv, Nothing))
 
-lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
@@ -193,7 +194,7 @@ lhsCockroachSetupAction testEnv =
     (lhsCockroachSetup (testEnv, Nothing))
     (const $ lhsCockroachTeardown (testEnv, Nothing))
 
-lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCockroachMkLocalTestEnvironment _ = pure Nothing
 
 lhsCockroachSetup :: (TestEnvironment, Maybe Server) -> IO ()
@@ -245,7 +246,7 @@ lhsCockroachTeardown (testEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
-lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
 lhsSQLServerSetupAction :: TestEnvironment -> Fixture.SetupAction
@@ -399,12 +400,9 @@ input StringCompExp {
 
 |]
 
-lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
-lhsRemoteServerMkLocalTestEnvironment _ = do
-  server <-
-    RemoteServer.run $
-      RemoteServer.generateQueryInterpreter (LHSQuery {q_hasura_track = hasura_track})
-  pure $ Just server
+lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
+lhsRemoteServerMkLocalTestEnvironment _ =
+  Just <$> RemoteServer.run (RemoteServer.generateQueryInterpreter (LHSQuery {q_hasura_track = hasura_track}))
   where
     -- Implements the @hasura_track@ field of the @Query@ type.
     hasura_track (LHSHasuraTrackArgs {..}) = do
@@ -529,10 +527,9 @@ type Query {
 
 |]
 
-rhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO Server
+rhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> Managed Server
 rhsRemoteServerMkLocalTestEnvironment _ =
-  RemoteServer.run $
-    RemoteServer.generateQueryInterpreter (Query {album})
+  RemoteServer.run $ RemoteServer.generateQueryInterpreter (Query {album})
   where
     albums =
       [ (1, ("album1_artist1", Just 1)),

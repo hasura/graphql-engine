@@ -12,6 +12,7 @@ import Data.Aeson qualified as Aeson
 import Data.Parser.JSONPath (parseJSONPath)
 import Data.Text qualified as T
 import Harness.Http qualified as Http
+import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (Server (..), serverUrl)
 import Hasura.Base.Error (iResultToMaybe)
 import Hasura.Prelude
@@ -36,8 +37,8 @@ newtype EventsQueue = EventsQueue (Chan.Chan Aeson.Value)
 -- fails. This function does NOT attempt to kill the thread in such a case,
 -- which might result in a leak if the thread is still running but the server
 -- fails its health check.
-run :: IO (Server, EventsQueue)
-run = do
+run :: Managed (Server, EventsQueue)
+run = mkTestResource do
   let urlPrefix = "http://127.0.0.1"
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   eventsQueueChan <- Chan.newChan
@@ -66,5 +67,9 @@ run = do
           Spock.setHeader "Content-Type" "application/json; charset=utf-8"
           Spock.json $ Aeson.object ["success" Aeson..= True]
   let server = Server {port = fromIntegral port, urlPrefix, thread}
-  Http.healthCheck $ serverUrl server
-  pure (server, eventsQueue)
+  pure
+    AcquiredResource
+      { resourceValue = (server, eventsQueue),
+        waitForResource = Http.healthCheck $ serverUrl server,
+        teardownResource = Async.cancel thread
+      }
