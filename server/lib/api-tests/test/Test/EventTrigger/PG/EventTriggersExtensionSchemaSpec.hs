@@ -8,7 +8,6 @@ module Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec (spec) where
 import Control.Concurrent.Chan qualified as Chan
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Constants (postgresqlConnectionString)
 import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
@@ -176,7 +175,7 @@ postgresSetup testEnvironment webhookServer = do
   let defaultSourceName = BackendType.defaultSource BackendType.Postgres
       sourceName = "hge_test"
       extensionsSchema = "hasura" :: Text
-      databaseUrl = postgresqlConnectionString testEnvironment
+      databaseUrl = Postgres.makeFreshDbConnectionString testEnvironment
       sourceConfig =
         [yaml|
           connection_info:

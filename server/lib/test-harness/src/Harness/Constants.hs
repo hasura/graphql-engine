@@ -8,9 +8,7 @@ module Harness.Constants
     postgresDb,
     postgresHost,
     postgresPort,
-    postgresqlConnectionString,
     postgresqlMetadataConnectionString,
-    defaultPostgresqlConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
     mysqlLivenessCheckAttempts,
@@ -51,7 +49,7 @@ import Data.UUID (UUID)
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as PG
-import Harness.TestEnvironment (BackendSettings (..), TestEnvironment (..))
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -126,40 +124,8 @@ postgresDb = "hasura"
 postgresHost :: String
 postgresHost = "127.0.0.1"
 
--- | the port used for Postgres, unless it is overwritten by
--- the `HASURA_TEST_POSTGRES_PORT` env var
-defaultPostgresPort :: Word16
-defaultPostgresPort = 65002
-
-postgresPort :: BackendSettings -> Word16
-postgresPort =
-  fromMaybe defaultPostgresPort . postgresSourcePort
-
-postgresqlConnectionString :: TestEnvironment -> String
-postgresqlConnectionString testEnv =
-  "postgres://"
-    ++ postgresUser
-    ++ ":"
-    ++ postgresPassword
-    ++ "@"
-    ++ postgresHost
-    ++ ":"
-    ++ show (postgresPort (backendSettings testEnv))
-    ++ "/"
-    ++ uniqueDbName (uniqueTestId testEnv)
-
-defaultPostgresqlConnectionString :: TestEnvironment -> String
-defaultPostgresqlConnectionString testEnv =
-  "postgres://"
-    ++ postgresUser
-    ++ ":"
-    ++ postgresPassword
-    ++ "@"
-    ++ postgresHost
-    ++ ":"
-    ++ show (postgresPort (backendSettings testEnv))
-    ++ "/"
-    ++ postgresDb
+postgresPort :: Word16
+postgresPort = 65002
 
 -- | return a unique database name from our TestEnvironment's uniqueTestId
 uniqueDbName :: UUID -> String

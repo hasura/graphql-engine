@@ -9,7 +9,6 @@ import Data.List.NonEmpty qualified as NE
 import Data.String (fromString)
 import Database.PostgreSQL.Simple qualified as Postgres
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
@@ -136,7 +135,7 @@ checkIfPGTableExists testEnvironment tableName = do
       handleNullExp err = throw err
   catch
     ( bracket
-        (Postgres.connectPostgreSQL (fromString (Constants.postgresqlConnectionString testEnvironment)))
+        (Postgres.connectPostgreSQL (Postgres.makeFreshDbConnectionString testEnvironment))
         Postgres.close
         ( \conn -> do
             rows :: [[String]] <- Postgres.query_ conn (fromString sqlQuery)

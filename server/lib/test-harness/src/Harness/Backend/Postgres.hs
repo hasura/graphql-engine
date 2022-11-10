@@ -4,6 +4,7 @@
 -- | PostgreSQL helpers.
 module Harness.Backend.Postgres
   ( livenessCheck,
+    makeFreshDbConnectionString,
     metadataLivenessCheck,
     run_,
     runWithInitialDb_,
@@ -56,17 +57,49 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
+import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
 import Hasura.Prelude
 import System.Process.Typed
+
+-- | The default connection information based on the 'TestingMode'. The
+-- interesting thing here is the database: in both modes, we specify an
+-- /initial/ database (returned by this function), which we use only as a way
+-- to create other databases for testing.
+defaultConnectInfo :: TestEnvironment -> Postgres.ConnectInfo
+defaultConnectInfo testEnvironment =
+  case testingMode testEnvironment of
+    TestAllBackends ->
+      Postgres.ConnectInfo
+        { connectHost = Constants.postgresHost,
+          connectUser = Constants.postgresUser,
+          connectPort = Constants.postgresPort,
+          connectPassword = Constants.postgresPassword,
+          connectDatabase = Constants.postgresDb
+        }
+    TestNewPostgresVariant {..} ->
+      Postgres.ConnectInfo
+        { connectHost = postgresSourceHost,
+          connectPort = postgresSourcePort,
+          connectUser = postgresSourceUser,
+          connectPassword = postgresSourcePassword,
+          connectDatabase = postgresSourceInitialDatabase
+        }
+
+-- | Create a connection string for whatever unique database has been generated
+-- for this 'TestEnvironment'.
+makeFreshDbConnectionString :: TestEnvironment -> S8.ByteString
+makeFreshDbConnectionString testEnvironment =
+  Postgres.postgreSQLConnectionString
+    (defaultConnectInfo testEnvironment)
+      { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
+      }
 
 metadataLivenessCheck :: HasCallStack => IO ()
 metadataLivenessCheck =
   doLivenessCheck (fromString postgresqlMetadataConnectionString)
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
-livenessCheck =
-  doLivenessCheck . fromString . defaultPostgresqlConnectionString
+livenessCheck = doLivenessCheck . makeFreshDbConnectionString
 
 -- | Check the postgres server is live and ready to accept connections.
 doLivenessCheck :: HasCallStack => BS.ByteString -> IO ()
@@ -90,22 +123,23 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
 -- we started with
 runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
 runWithInitialDb_ testEnvironment =
-  runInternal testEnvironment (Constants.defaultPostgresqlConnectionString testEnvironment)
+  runInternal testEnvironment $
+    Postgres.postgreSQLConnectionString (defaultConnectInfo testEnvironment)
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (Constants.postgresqlConnectionString testEnvironment)
+  runInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
+runInternal :: HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO ()
 runInternal testEnvironment connectionString query = do
   testLogHarness
     testEnvironment
     ( "Executing connection string: "
-        <> connectionString
+        <> show connectionString
         <> "\n"
         <> "Query: "
         <> query
@@ -113,7 +147,7 @@ runInternal testEnvironment connectionString query = do
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString connectionString)
+            connectionString
         )
         Postgres.close
         (\conn -> void (Postgres.execute_ conn (fromString query)))
@@ -133,16 +167,16 @@ runInternal testEnvironment connectionString query = do
 -- we started with
 queryWithInitialDb :: (Postgres.FromRow a, HasCallStack) => TestEnvironment -> String -> IO [a]
 queryWithInitialDb testEnvironment =
-  queryInternal testEnvironment (Constants.defaultPostgresqlConnectionString testEnvironment)
+  queryInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> String -> String -> IO [a]
+queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
 queryInternal testEnvironment connectionString query = do
   testLogHarness
     testEnvironment
     ( "Querying connection string: "
-        <> connectionString
+        <> show connectionString
         <> "\n"
         <> "Query: "
         <> query
@@ -150,7 +184,7 @@ queryInternal testEnvironment connectionString query = do
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString connectionString)
+            connectionString
         )
         Postgres.close
         (\conn -> Postgres.query_ conn (fromString query))
@@ -184,7 +218,7 @@ configuration: *sourceConfiguration
 
 defaultSourceConfiguration :: TestEnvironment -> Value
 defaultSourceConfiguration testEnv =
-  let databaseUrl = postgresqlConnectionString testEnv
+  let databaseUrl = makeFreshDbConnectionString testEnv
    in [yaml|
     connection_info:
       database_url: *databaseUrl

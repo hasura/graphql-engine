@@ -38,7 +38,7 @@ import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
+import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
 import Hasura.Prelude
 import Test.Hspec
   ( ActionWith,
@@ -112,11 +112,20 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
     let n = name fixture'
         co = customOptions fixture'
         options = fromMaybe defaultOptions co
-    case skipTests options of
-      Just skipMsg ->
-        describe (show n) $ aroundSomeWith (\_ _ -> pendingWith $ "Tests skipped: " <> T.unpack skipMsg) (tests options)
-      Nothing ->
-        describe (show n) $ aroundSomeWith (fixtureBracket fixture') (tests options)
+
+        shouldRunIn :: FixtureName -> TestingMode -> Bool
+        shouldRunIn fixtureName = \case
+          TestNewPostgresVariant {} ->
+            Postgres `elem` backendTypesForFixture fixtureName
+          TestAllBackends -> True
+
+    describe (show n) do
+      flip aroundSomeWith (tests options) \test testEnvironment ->
+        if not (n `shouldRunIn` testingMode testEnvironment)
+          then pendingWith $ "Inapplicable test."
+          else case skipTests options of
+            Just skipMsg -> pendingWith $ "Tests skipped: " <> T.unpack skipMsg
+            Nothing -> fixtureBracket fixture' test testEnvironment
 
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of

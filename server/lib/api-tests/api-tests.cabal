@@ -24,6 +24,7 @@ executable api-tests
     , morpheus-graphql
     , pg-client
     , postgresql-simple
+    , postgres-options
     , safe-exceptions
     , split
     , sop-core
@@ -166,7 +167,6 @@ executable api-tests
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
-    Test.ServiceLivenessSpec
     Test.Subscriptions.CustomFieldsSpec
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.LiveQueriesSpec

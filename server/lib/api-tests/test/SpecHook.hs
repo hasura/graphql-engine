@@ -6,40 +6,51 @@ module SpecHook
 where
 
 import Control.Exception.Safe (bracket)
+import Data.Monoid (getLast)
 import Data.UUID.V4 (nextRandom)
+import Database.PostgreSQL.Simple.Options (Options (..), parseConnectionString)
+import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
-import Harness.TestEnvironment
-  ( BackendSettings (..),
-    TestEnvironment (..),
-    stopServer,
-  )
+import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), stopServer)
 import Hasura.Prelude
 import System.Environment (lookupEnv)
 import System.Log.FastLogger qualified as FL
 import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)
-import Test.Hspec.Core.Spec (modifyConfig)
+import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, modifyConfig)
 
-setupBackendSettings :: IO BackendSettings
-setupBackendSettings = do
-  postgresPort <-
-    fmap
-      (>>= readMaybe)
-      (lookupEnv "HASURA_TEST_POSTGRES_PORT")
-  pure
-    ( BackendSettings
-        { postgresSourcePort = postgresPort
-        }
-    )
+-- | Establish the mode in which we're running the tests. Currently, there are
+-- two modes:
+--
+-- * @TestAllBackends@, which runs all the tests for all backends against the
+--   credentials given in `Harness.Constants` from the `test-harness`.
+--
+-- * @TestNewPostgresVariant@, which runs the Postgres tests against the
+--   connection URI given in the @POSTGRES_VARIANT_URI@.
+setupTestingMode :: IO TestingMode
+setupTestingMode =
+  lookupEnv "POSTGRES_VARIANT_URI" >>= \case
+    Nothing -> pure TestAllBackends
+    Just uri ->
+      case parseConnectionString uri of
+        Left reason ->
+          error $ "Parsing variant URI failed: " ++ reason
+        Right options ->
+          pure
+            TestNewPostgresVariant
+              { postgresSourceUser = fromMaybe Constants.postgresUser $ getLast (user options),
+                postgresSourcePassword = fromMaybe Constants.postgresPassword $ getLast (password options),
+                postgresSourceHost = fromMaybe Constants.postgresHost $ getLast (hostaddr options <> host options),
+                postgresSourcePort = maybe Constants.postgresPort fromIntegral $ getLast (port options),
+                postgresSourceInitialDatabase = fromMaybe Constants.postgresDb $ getLast (dbname options)
+              }
 
-setupTestEnvironment ::
-  (Logger, IO ()) ->
-  IO TestEnvironment
-setupTestEnvironment (logger, loggerCleanup) = do
+setupTestEnvironment :: TestingMode -> (Logger, IO ()) -> IO TestEnvironment
+setupTestEnvironment testingMode (logger, loggerCleanup) = do
   murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
   mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
-  backendSettings <- setupBackendSettings
-  server <- startServerThread backendSettings ((,) <$> murlPrefix <*> mport)
+  server <- startServerThread ((,) <$> murlPrefix <*> mport)
+
   uniqueTestId <- nextRandom
   pure
     TestEnvironment
@@ -48,7 +59,7 @@ setupTestEnvironment (logger, loggerCleanup) = do
         backendType = Nothing,
         logger = logger,
         loggerCleanup = loggerCleanup,
-        backendSettings = backendSettings
+        testingMode = testingMode
       }
 
 teardownTestEnvironment :: TestEnvironment -> IO ()
@@ -62,6 +73,13 @@ hook specs = do
   let logger = flLogger logger'
 
   modifyConfig (addLoggingFormatter logger)
-  aroundAllWith
-    (const . bracket (setupTestEnvironment (logger, cleanup)) teardownTestEnvironment)
-    (contextualizeLogger specs)
+
+  testingMode <- runIO setupTestingMode
+
+  let shouldRunTest :: [String] -> Item x -> Bool
+      shouldRunTest labels _ = case testingMode of
+        TestAllBackends -> True
+        TestNewPostgresVariant {} -> "Postgres" `elem` labels
+
+  aroundAllWith (const . bracket (setupTestEnvironment testingMode (logger, cleanup)) teardownTestEnvironment) $
+    mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
