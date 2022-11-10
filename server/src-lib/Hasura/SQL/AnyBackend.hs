@@ -88,6 +88,7 @@ module Hasura.SQL.AnyBackend
   ( AnyBackend,
     SatisfiesForAllBackends,
     liftTag,
+    lowerTag,
     mkAnyBackend,
     mapBackend,
     traverseBackend,
@@ -182,6 +183,16 @@ liftTag MSSQL = MSSQLValue MSSQLTag
 liftTag BigQuery = BigQueryValue BigQueryTag
 liftTag MySQL = MySQLValue MySQLTag
 liftTag DataConnector = DataConnectorValue DataConnectorTag
+
+-- | Obtain a @BackendType@ from a runtime value.
+lowerTag :: AnyBackend i -> BackendType
+lowerTag (PostgresVanillaValue _) = Postgres Vanilla
+lowerTag (PostgresCitusValue _) = Postgres Citus
+lowerTag (PostgresCockroachValue _) = Postgres Cockroach
+lowerTag (MSSQLValue _) = MSSQL
+lowerTag (BigQueryValue _) = BigQuery
+lowerTag (MySQLValue _) = MySQL
+lowerTag (DataConnectorValue _) = DataConnector
 
 -- | Transforms an @AnyBackend i@ into an @AnyBackend j@.
 mapBackend ::

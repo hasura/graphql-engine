@@ -287,8 +287,10 @@ askSourceInfo sourceName = do
           -- 2. The named source exists but does not match the expected type
           ( throw400 NotExists $
               "source with name "
-                <> sourceName <<> " does not match the expected type "
-                <> T.toTxt (reify (backendTag @b))
+                <> sourceName <<> " has backend type "
+                <> T.toTxt (AB.lowerTag matchingNameSourceInfo)
+                  <<> " which does not match the expected type "
+                <> T.toTxt (reify $ backendTag @b)
           )
           -- 3. The named source exists, and is of the expected type, but is inconsistent
           ( const $
