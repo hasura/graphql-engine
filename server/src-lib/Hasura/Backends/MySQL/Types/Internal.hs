@@ -38,6 +38,7 @@ module Hasura.Backends.MySQL.Types.Internal
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson qualified as J
 import Data.ByteString
 import Data.Data
@@ -90,6 +91,9 @@ instance ToErrorValue ConstraintName where
 
 newtype FunctionName = FunctionName {unFunctionName :: Text}
   deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, Cacheable, NFData)
+
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName unFunctionName codec
 
 instance ToErrorValue FunctionName where
   toErrorValue = ErrorValue.squote . unFunctionName

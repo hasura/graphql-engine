@@ -251,6 +251,9 @@ instance FromJSON n => FromJSON (Countable n)
 
 deriving instance Ord ColumnName
 
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName functionNameText codec
+
 deriving instance Monoid Where
 
 deriving instance Semigroup Where

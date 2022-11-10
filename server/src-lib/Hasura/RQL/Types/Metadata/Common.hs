@@ -350,7 +350,6 @@ instance (Backend b) => FromJSON (FunctionMetadata b) where
       <*> o .:? "permissions" .!= []
       <*> o .:? "comment"
 
--- TODO: Replace uses of placeholderCodecViaJSON with proper codecs
 instance (Backend b) => HasCodec (FunctionMetadata b) where
   codec =
     CommentCodec
@@ -362,15 +361,13 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
       )
       $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
       $ FunctionMetadata
-        <$> requiredFieldWith "function" placeholderCodecViaJSON nameDoc .== _fmFunction
-        <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
-        <*> optionalFieldWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
-        <*> optionalField' "comment" .== _fmComment
+        <$> requiredField "function" nameDoc AC..= _fmFunction
+        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc AC..= _fmConfiguration
+        <*> optionalFieldWithOmittedDefault' "permissions" [] AC..= _fmPermissions
+        <*> optionalField' "comment" AC..= _fmComment
     where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"
-
-      (.==) = (AC..=)
 
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 

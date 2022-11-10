@@ -105,6 +105,7 @@ class
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
+    HasCodec (FunctionName b),
     HasCodec (SourceConnConfiguration b),
     HasCodec (TableName b),
     ToJSON (BackendConfig b),

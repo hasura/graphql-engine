@@ -31,7 +31,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
   )
 where
 
-import Autodocodec
+import Autodocodec (HasCodec (codec), dimapCodec, named)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
@@ -284,6 +284,9 @@ instance ToErrorValue ColumnName where
 newtype FunctionName = FunctionName {unFunctionName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving newtype (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName unFunctionName codec
 
 instance ToJSONKey FunctionName where
   toJSONKey = toJSONKeyText toTxt

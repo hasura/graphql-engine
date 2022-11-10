@@ -69,7 +69,7 @@ module Hasura.Backends.BigQuery.Types
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec, object, requiredField', (.=))
+import Autodocodec (HasCodec (codec), dimapCodec, object, optionalField', requiredField', (.=))
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -934,6 +934,13 @@ data FunctionName = FunctionName
     functionNameSchema :: Maybe Text
   }
   deriving (Eq, Show, Generic, Data, Lift, Ord)
+
+instance HasCodec FunctionName where
+  codec =
+    object "BigQueryFunctionName" $
+      FunctionName
+        <$> requiredField' "name" .= functionName
+        <*> optionalField' "dataset" .= functionNameSchema
 
 instance FromJSON FunctionName where
   parseJSON =
