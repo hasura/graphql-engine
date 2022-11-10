@@ -5,32 +5,33 @@ keywords:
   - docs
   - deployment
   - docker
+  - docker networking
 sidebar_position: 3
 sidebar_label: Using Docker
 ---
 
-import LatestRelease from "@site/src/components/LatestRelease";
+import LatestRelease from '@site/src/components/LatestRelease';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Run Hasura GraphQL engine using Docker
 
 ## Introduction
 
-This guide will help you deploy the Hasura GraphQL engine and a Postgres
-database to store its metadata using Docker Compose.
+This guide will help you deploy the Hasura GraphQL engine and a Postgres database to store its metadata using Docker
+Compose.
 
 ## Deploying Hasura using Docker
 
 ### Prerequisites
 
--   [Docker](https://docs.docker.com/install/)
--   [Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://docs.docker.com/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Step 1: Get the docker-compose file
 
-The
-[hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
-repo contains all installation manifests required to deploy Hasura
-anywhere. Get the docker compose file from there:
+The [hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
+repo contains all installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
 
 ```bash
 # in a new directory run
@@ -41,8 +42,7 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 
 ### Step 2: Run Hasura GraphQL engine
 
-The following command will run Hasura GraphQL engine along with a
-Postgres database to store its metadata.
+The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
 
 ```bash
 $ docker compose up -d
@@ -60,8 +60,8 @@ b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 
 ## Securing the GraphQL endpoint {#docker-secure}
 
-To make sure that your GraphQL endpoint and the Hasura console are not
-publicly accessible, you need to configure an admin secret key.
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to configure an
+admin secret key.
 
 ### Run the Docker container with an admin-secret env var
 
@@ -76,10 +76,9 @@ graphql-engine:
 
 :::info Note
 
-The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client
-to the Hasura GraphQL engine as it would give the client full admin
-rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for information on setting up
-authentication.
+The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+information on setting up authentication.
 
 :::
 
@@ -94,8 +93,8 @@ authentication.
 
 ## Hasura GraphQL engine server logs {#docker-logs}
 
-You can check the logs of the Hasura GraphQL engine deployed using
-Docker by checking the logs of the GraphQL engine container:
+You can check the logs of the Hasura GraphQL engine deployed using Docker by checking the logs of the GraphQL engine
+container:
 
 ```bash
 $ docker ps
@@ -113,29 +112,30 @@ $ docker logs 097f58433a2b
 
 **See:**
 
--   [https://docs.docker.com/config/containers/logging](https://docs.docker.com/config/containers/logging) for more details
-    on logging in Docker.
--   [Hasura GraphQL engine logs](/deployment/logging.mdx) for more details on Hasura logs.
+- [https://docs.docker.com/config/containers/logging](https://docs.docker.com/config/containers/logging) for more
+  details on logging in Docker.
+- [Hasura GraphQL engine logs](/deployment/logging.mdx) for more details on Hasura logs.
 
 ## Updating Hasura GraphQL engine {#docker-update}
 
-This guide will help you update the Hasura GraphQL engine running with
-Docker. This guide assumes that you already have Hasura GraphQL engine
-running with Docker.
+This guide will help you update the Hasura GraphQL engine running with Docker. This guide assumes that you already have
+Hasura GraphQL engine running with Docker.
 
 ### Step 1: Check the latest release version
 
 The current latest version is:
 
-<code>hasura/graphql-engine:<LatestRelease /></code>
+<code>
+  hasura/graphql-engine:
+  <LatestRelease />
+</code>
 
 All the versions can be found at:
 [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases)
 
 ### Step 2: Update the Docker image
 
-In the `docker compose` command that you're running, update the image
-tag to this latest version.
+In the `docker compose` command that you're running, update the image tag to this latest version.
 
 For example, if you had:
 
@@ -147,21 +147,147 @@ graphql-engine:
 you should change it to:
 
 <pre>
-<code>
-graphql-engine:<br/>
-{"  "}image: hasura/graphql-engine:<LatestRelease />
-</code>
+  <code>
+    graphql-engine:
+    <br />
+    {'  '}image: hasura/graphql-engine:
+    <LatestRelease />
+  </code>
 </pre>
-
 
 :::info Note
 
-If you are downgrading to an older version of the GraphQL engine you
-might need to downgrade your metadata catalogue version as described in
-[Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx)
+If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue
+version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx)
 
 :::
 
-## Advanced
+## Docker networking
 
--   [Setting up migrations](/migrations-metadata-seeds/migrations-metadata-setup.mdx)
+Sometimes you might want to connect Hasura running in Docker with APIs (e.g. auth webhooks, event triggers, remote
+schemas) that are either running outside of Docker or in a different Docker container. Depending on the setting, the
+network config is different. This section shows how to connect in each of these use cases.
+
+### Network config
+
+<Tabs className="api-tabs">
+<TabItem value="linux" label="Linux">
+
+<table>
+  <thead>
+    <tr>
+      <th>Connection</th>
+      <th>Config</th>
+      <th>Comment</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <strong>Hasura to API (outside Docker)</strong>
+      </td>
+      <td>
+        <ol type='1'>
+          <li>
+            With <code>--net=host</code>, <code>localhost:3000</code>
+          </li>
+          <li>
+            Otherwise, <code>&lt;docker-bridge-ip&gt;:3000</code>, e.g. <code>172.17.0.1:3000</code>
+          </li>
+        </ol>
+      </td>
+      <td>
+        <ol type='1'>
+          <li>
+            Assuming the API is running on port <code>3000</code>
+          </li>
+          <li>
+            The Docker bridge IP can be found via <code>ifconfig</code>
+          </li>
+        </ol>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <strong>API (outside Docker) to Hasura</strong>
+      </td>
+      <td>
+        <code>localhost:8080</code>
+      </td>
+      <td>
+        Hasura runs on port <code>8080</code> by default
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <strong>Hasura to API (both in docker-compose)</strong>
+      </td>
+      <td>
+        service name, e.g.: <code>api:3000</code>
+      </td>
+      <td>
+        Assuming the API is running on port <code>3000</code>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <strong>API to Hasura (both in docker-compose)</strong>
+      </td>
+      <td>
+        service name, e.g.: <code>hasura:8080</code>
+      </td>
+      <td>
+        Hasura runs on port <code>8080</code> by default
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <strong>Hasura to API (both running with separate docker run)</strong>
+      </td>
+      <td>Docker internal IP address</td>
+      <td>
+        Can be obtained with <code>docker inspect</code>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <strong>API to Hasura (both running with separate docker run)</strong>
+      </td>
+      <td>Docker internal IP address</td>
+      <td>
+        Can be obtained with <code>docker inspect</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</TabItem>
+<TabItem value="mac" label="Mac">
+
+| Connection                                                | Config                            | Comment                                    |
+| --------------------------------------------------------- | --------------------------------- | ------------------------------------------ |
+| **Hasura to API (outside Docker)**                        | `host.docker.internal:3000`       | Assuming the API is running on port `3000` |
+| **API (outside Docker) to Hasura**                        | `localhost:8080`                  | Hasura runs on port `8080` by default      |
+| **Hasura to API (both in docker-compose)**                | service name, e.g.: `api:3000`    | Assuming the API is running on port `3000` |
+| **API to Hasura (both in docker-compose)**                | service name, e.g.: `hasura:8080` | Hasura runs on port `8080` by default      |
+| **Hasura to API (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+| **API to Hasura (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+| Connection                                                | Config                            | Comment                                    |
+| --------------------------------------------------------- | --------------------------------- | ------------------------------------------ |
+| **Hasura to API (outside Docker)**                        | `host.docker.internal:3000`       | Assuming the API is running on port `3000` |
+| **API (outside Docker) to Hasura**                        | `localhost:8080`                  | Hasura runs on port `8080` by default      |
+| **Hasura to API (both in docker-compose)**                | service name, e.g.: `api:3000`    | Assuming the API is running on port `3000` |
+| **API to Hasura (both in docker-compose)**                | service name, e.g.: `hasura:8080` | Hasura runs on port `8080` by default      |
+| **Hasura to API (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+| **API to Hasura (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+
+</TabItem>
+</Tabs>
+
+### Advanced
+
+Learn more about Docker specific networking in the [Docker documentation](https://docs.docker.com/network/).
