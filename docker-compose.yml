@@ -52,7 +52,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
 
   postgres:
     image: postgis/postgis:15-3.3-alpine
@@ -75,7 +75,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
 
   yugabyte:
     image: yugabytedb/yugabyte:2.8.9.1-b1
@@ -129,7 +129,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
     # This is commented out because this file can be extended, and dependencies don't work for extensions.
     # Instead, ensure you also run this one.
     # depends_on:
@@ -171,7 +171,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
 
   cockroach:
     image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
@@ -193,7 +193,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
 
   dc-reference-agent:
     build:
@@ -210,7 +210,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
 
   dc-sqlite-agent:
     build:
@@ -234,7 +234,7 @@ services:
       start_period: 5s
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 20
 
 volumes:
   citus-data:
