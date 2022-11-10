@@ -1,13 +1,29 @@
 actions:
-- name: foo
-  definition:
-    kind: synchronous
-    handler: http://localhost:3000
-    timeout: 10
+  - name: foo
+    definition:
+      kind: synchronous
+      handler: http://localhost:3000
+      timeout: 10
+      request_transform:
+        body: "{\n  \"my-baz\": {{$body.input.foo.baz}}\n \"my-bar\": {{$body.input.foo.bar}}\n \n}"
+        content_type: application/json
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+        version: 2
+      response_transform:
+        body:
+          action: transform
+          template: |-
+            {
+              "data": {{$body}},
+            }
+        template_engine: Kriti
+        version: 2
 custom_types:
   enums: []
   input_objects:
-  - name: fooInput
+    - name: fooInput
   objects:
-  - name: fooOutput
+    - name: fooOutput
   scalars: []

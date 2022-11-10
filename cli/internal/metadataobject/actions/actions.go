@@ -137,12 +137,15 @@ input SampleInput {
 		for oldActionIndex, oldActionObj := range oldAction.Actions {
 			if action.Name == oldActionObj.Name {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
+				sdlFromResp.Actions[actionIndex].Comment = oldAction.Actions[oldActionIndex].Comment
 				sdlFromResp.Actions[actionIndex].Definition.Timeout = oldAction.Actions[oldActionIndex].Definition.Timeout
 				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
 				sdlFromResp.Actions[actionIndex].Definition.Type = oldAction.Actions[oldActionIndex].Definition.Type
 				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
 				sdlFromResp.Actions[actionIndex].Definition.ForwardClientHeaders = oldAction.Actions[oldActionIndex].Definition.ForwardClientHeaders
 				sdlFromResp.Actions[actionIndex].Definition.Headers = oldAction.Actions[oldActionIndex].Definition.Headers
+				sdlFromResp.Actions[actionIndex].Definition.RequestTransform = oldAction.Actions[oldActionIndex].Definition.RequestTransform
+				sdlFromResp.Actions[actionIndex].Definition.ResponseTransform = oldAction.Actions[oldActionIndex].Definition.ResponseTransform
 				break
 			}
 		}
@@ -321,6 +324,7 @@ func (a *ActionConfig) Build() (map[string]interface{}, error) {
 				sdlFromResp.Actions[newActionIndex].Definition.ForwardClientHeaders = oldAction.Actions[actionIndex].Definition.ForwardClientHeaders
 				sdlFromResp.Actions[newActionIndex].Definition.Headers = oldAction.Actions[actionIndex].Definition.Headers
 				sdlFromResp.Actions[newActionIndex].Definition.RequestTransform = oldAction.Actions[actionIndex].Definition.RequestTransform
+				sdlFromResp.Actions[newActionIndex].Definition.ResponseTransform = oldAction.Actions[actionIndex].Definition.ResponseTransform
 				break
 			}
 		}
