@@ -124,6 +124,17 @@ instance Print Void where
 instance Print Name where
   printP = nameP
 
+-- Don't inline, to avoid the risk of unreasonably long code being generated
+{-# NOINLINE builtInScalars #-}
+builtInScalars :: [Name]
+builtInScalars =
+  [ Name.Name "Boolean",
+    Name.Name "Float",
+    Name.Name "ID",
+    Name.Name "Int",
+    Name.Name "String"
+  ]
+
 renderExecutableDoc :: ExecutableDocument Name -> Text
 renderExecutableDoc = Text.run . executableDocument
 
@@ -353,7 +364,17 @@ typeSystemDefinition (TypeSystemDefinitionType typeDefn) = typeDefinitionP typeD
 
 schemaDocument :: Printer a => SchemaDocument -> a
 schemaDocument (SchemaDocument typeDefns) =
-  mconcat $ intersperse (textP "\n\n") $ map typeSystemDefinition $ sort typeDefns
+  mconcat $ intersperse (textP "\n\n") $ map typeSystemDefinition $ sort $ filter isNotBuiltInScalar typeDefns
+  where
+    -- According to https://spec.graphql.org/June2018/#sec-Scalars:
+    --   > When representing a GraphQL schema using the type system definition language, the built‐in scalar types should
+    --   > be omitted for brevity.
+    isNotBuiltInScalar :: TypeSystemDefinition -> Bool
+    isNotBuiltInScalar
+      ( TypeSystemDefinitionType
+          (TypeDefinitionScalar (ScalarTypeDefinition _ name _))
+        ) = name `notElem` builtInScalars
+    isNotBuiltInScalar _ = True
 
 typeDefinitionP :: Printer a => TypeDefinition () InputValueDefinition -> a
 typeDefinitionP (TypeDefinitionScalar scalarDefn) = scalarTypeDefinition scalarDefn
