@@ -11,6 +11,7 @@ module Harness.Constants
     postgresqlMetadataConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
+    defaultPostgresPort,
     mysqlLivenessCheckAttempts,
     mysqlLivenessCheckIntervalSeconds,
     mysqlPassword,
@@ -126,6 +127,9 @@ postgresHost = "127.0.0.1"
 
 postgresPort :: Word16
 postgresPort = 65002
+
+defaultPostgresPort :: Word16
+defaultPostgresPort = 5432
 
 -- | return a unique database name from our TestEnvironment's uniqueTestId
 uniqueDbName :: UUID -> String

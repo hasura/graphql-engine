@@ -167,13 +167,11 @@ Now based on what you want to, you can either run the Hasura's Graphql engine
 to debug this further or directly inspect the database using [any of its
 clients](https://en.wikipedia.org/wiki/Comparison_of_database_administration_tools).
 
-## Overwriting database ports
+## Logging
 
-It is useful to be able to test against different DB instances. The current
-environment variables are available:
-
-`HASURA_TEST_POSTGRES_PORT` (default `65002`) - overwrite the port of the Postgres source DB
-(this does not affect the DB used for metadata)
+By default logs are written to `tests-hspec.log`. To view the logs as the tests
+run, use  
+`HASURA_TEST_LOGTYPE=stdout` or `HASURA_TYPE_LOGTYPE=stderr`.
 
 ### Using GHCI
 

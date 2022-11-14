@@ -6,6 +6,7 @@ module SpecHook
 where
 
 import Control.Exception.Safe (bracket)
+import Data.Char qualified as Char
 import Data.Monoid (getLast)
 import Data.UUID.V4 (nextRandom)
 import Database.PostgreSQL.Simple.Options (Options (..), parseConnectionString)
@@ -41,7 +42,7 @@ setupTestingMode =
               { postgresSourceUser = fromMaybe Constants.postgresUser $ getLast (user options),
                 postgresSourcePassword = fromMaybe Constants.postgresPassword $ getLast (password options),
                 postgresSourceHost = fromMaybe Constants.postgresHost $ getLast (hostaddr options <> host options),
-                postgresSourcePort = maybe Constants.postgresPort fromIntegral $ getLast (port options),
+                postgresSourcePort = maybe Constants.defaultPostgresPort fromIntegral $ getLast (port options),
                 postgresSourceInitialDatabase = fromMaybe Constants.postgresDb $ getLast (dbname options)
               }
 
@@ -66,9 +67,21 @@ teardownTestEnvironment :: TestEnvironment -> IO ()
 teardownTestEnvironment TestEnvironment {..} = do
   stopServer server
 
+-- | allow setting log output type
+setupLogType :: IO (FL.LogType' FL.LogStr)
+setupLogType =
+  let defaultLogType = FL.LogFileNoRotate "tests-hspec.log" 1024
+   in lookupEnv "HASURA_TEST_LOGTYPE" >>= \case
+        Nothing -> pure defaultLogType
+        Just str ->
+          case Char.toUpper <$> str of
+            "STDOUT" -> pure (FL.LogStdout 64)
+            "STDERR" -> pure (FL.LogStderr 64)
+            _ -> pure defaultLogType
+
 hook :: SpecWith TestEnvironment -> Spec
 hook specs = do
-  let logType = FL.LogFileNoRotate "tests-hspec.log" 1024
+  logType <- runIO setupLogType
   (logger', cleanup) <- runIO $ FL.newFastLogger logType
   let logger = flLogger logger'
 

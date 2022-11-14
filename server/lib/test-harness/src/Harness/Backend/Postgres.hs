@@ -407,9 +407,11 @@ dropDatabase testEnvironment = do
       AND pid <> pg_backend_pid();
     |]
 
+  -- if this fails, don't make the test fail
   runWithInitialDb_
     testEnvironment
     ("DROP DATABASE " <> dbName <> ";")
+    `catch` \(_ :: SomeException) -> pure ()
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
