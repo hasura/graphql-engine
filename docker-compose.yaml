@@ -1,0 +1,89 @@
+# This file extends the base Docker Compose files to make manual testing easy.
+#
+# Run the following to get started:
+#
+#     docker compose up -d
+#
+# That will start up services in the background. To take them down, you have to
+# run:
+#
+#     docker compose down
+#
+# If you changed DB init scripts, then you should also run:
+#
+#     docker compose down -v
+#
+# That'll delete the volumes. Otherwise e.g. PostgreSQL will skip initializing
+# if a DB already exists.
+#
+# If you omit `-d`, it'll run them all in the foreground, then you can stop them
+# with your usual Ctrl-C terminal command.
+#
+# Facts:
+#
+# * The SERVICE PORTS numbering start at 65001, 65002, etc. to avoid bother
+#   existing instances of databases.
+#
+# * The login credentials are, where possible, all "hasura" to avoid unnecessary
+#   mental overhead.
+
+version: "3.6"
+
+services:
+  mariadb:
+    extends:
+      file: docker-compose/databases.yaml
+      service: mariadb
+
+  postgres:
+    extends:
+      file: docker-compose/databases.yaml
+      service: postgres
+
+  citus:
+    extends:
+      file: docker-compose/databases.yaml
+      service: citus
+
+  cockroach:
+    extends:
+      file: docker-compose/databases.yaml
+      service: cockroach
+
+  sqlserver:
+    extends:
+      file: docker-compose/databases.yaml
+      service: sqlserver
+
+  sqlserver-init:
+    extends:
+      file: docker-compose/databases.yaml
+      service: sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_started
+
+  sqlserver-healthcheck:
+    extends:
+      file: docker-compose/databases.yaml
+      service: sqlserver-healthcheck
+    depends_on:
+      sqlserver:
+        condition: service_started
+
+  dc-reference-agent:
+    extends:
+      file: dc-agents/docker-compose.yaml
+      service: dc-reference-agent
+
+  dc-sqlite-agent:
+    extends:
+      file: dc-agents/docker-compose.yaml
+      service: dc-sqlite-agent
+
+volumes:
+  citus-data:
+  cockroach-data:
+  mariadb-data:
+  mssql-data:
+  postgres-data:

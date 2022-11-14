@@ -1,33 +1,3 @@
-# This file starts up the necessary database services to test
-# graphql-engine.
-#
-# Run the following to get started:
-#
-#     docker compose up -d
-#
-# That will start up services in the background. To take them down,
-# you have to run
-#
-#     docker compose down
-#
-# If you changed DB init scripts, then you should also run:
-#
-#     docker compose down --volumes
-#
-# That'll delete the volumes. Otherwise e.g. PostgreSQL will skip
-# initializing if a DB already exists.
-#
-# If you omit -d, it'll run them all in the foreground, then you can
-# stop them with your usual control-C terminal command.
-#
-# Facts:
-#
-# * The SERVICE PORTS numbering start at 65001, 65002, etc. to avoid
-#   bother existing instances of databases.
-#
-# * The login credentials are, where possible, all "hasura" to avoid
-#   unnecessary mental overhead.
-
 version: "3.6"
 
 services:
@@ -67,11 +37,53 @@ services:
       POSTGRES_DB: "hasura"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
     healthcheck:
       test:
         - CMD-SHELL
         - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  citus:
+    image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
+    ports:
+      - "65004:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+      - citus-data:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  cockroach:
+    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
+    command:
+      - start-single-node
+      - --insecure
+      - --accept-sql-without-tls
+    ports:
+      - "65008:26257"
+    environment:
+      COCKROACH_USER: "root"
+      COCKROACH_DATABASE: "hasura"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - cockroach sql --insecure < /dev/null && sleep 1 && cockroach sql --insecure < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -145,101 +157,18 @@ services:
     environment:
       SERVER_HOST: sqlserver
     volumes:
-      - ./docker-compose/sqlserver-init/init.sh:/init.sh
-      - ./docker-compose/sqlserver-init/init.sql:/init.sql
+      - ./sqlserver-init/init.sh:/init.sh
+      - ./sqlserver-init/init.sql:/init.sql
     # This is commented out because this file can be extended, and dependencies don't work for extensions.
     # Instead, ensure you also run this one.
     # depends_on:
     #   sqlserver:
     #     condition: service_started
 
-  citus:
-    image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
-    ports:
-      - "65004:5432"
-    environment:
-      POSTGRES_USER: "hasura"
-      POSTGRES_PASSWORD: "hasura"
-      POSTGRES_DB: "hasura"
-    volumes:
-      - citus-data:/var/lib/postgresql/data
-      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  cockroach:
-    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
-    command:
-      - start-single-node
-      - --insecure
-      - --accept-sql-without-tls
-    ports:
-      - "65008:26257"
-    environment:
-      COCKROACH_USER: "root"
-      COCKROACH_DATABASE: "hasura"
-    volumes:
-      - cockroach-data:/cockroach/cockroach-data
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - cockroach sql --insecure < /dev/null && sleep 1 && cockroach sql --insecure < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  dc-reference-agent:
-    build:
-      context: ./dc-agents
-      dockerfile: ./Dockerfile-reference
-    ports:
-      - "65005:8100"
-    healthcheck:
-      test:
-        - CMD
-        - curl
-        - -f
-        - localhost:8100/health
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  dc-sqlite-agent:
-    build:
-      context: ./dc-agents
-      dockerfile: ./Dockerfile-sqlite
-    ports:
-      - "65007:8100"
-    volumes:
-      - "./dc-agents/sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
-      - "./dc-agents/sqlite/test/db.sqlite:/db.sqlite"
-    environment:
-      METRICS: y
-      PRETTY_PRINT_LOGS: y
-      LOG_LEVEL: debug
-    healthcheck:
-      test:
-        - CMD
-        - curl
-        - -f
-        - localhost:8100/health
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
 volumes:
   citus-data:
+  cockroach-data:
   mariadb-data:
   mssql-data:
   postgres-data:
-  cockroach-data:
   yugabyte-data:
