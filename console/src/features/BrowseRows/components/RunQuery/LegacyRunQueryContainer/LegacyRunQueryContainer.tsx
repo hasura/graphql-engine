@@ -25,6 +25,7 @@ type LegacyRunQueryContainerProps = {
   onRunQuery: (userQuery: UserQuery) => void | null;
   dataSourceName: string;
   table: Table;
+  userQuery: FiltersAndSortFormValues;
 };
 
 const replaceAllDotsWithUnderscore = (text: string) => text.replace(/\./g, '_');
@@ -33,11 +34,34 @@ const getFileName = (tableName: string) => {
   const currentTime = getCurrTimeForFileName();
   return `export_${replacedTableName}_${currentTime}`;
 };
+export const getUrlQueryParams = (): FiltersAndSortFormValues => {
+  const params = new URLSearchParams(window.location.search);
+  const filters = params.getAll('filter') ?? [];
+  const sorts = params.getAll('sort') ?? [];
 
+  return {
+    filter: filters.map(filter => {
+      const [column, operator, value] = filter.split(';');
+      return {
+        column,
+        operator,
+        value,
+      };
+    }),
+    sort: sorts.map(filter => {
+      const [column, type] = filter.split(';');
+      return {
+        column,
+        type: type as FiltersAndSortFormValues['sort'][0]['type'],
+      };
+    }),
+  };
+};
 export const LegacyRunQueryContainer = ({
   onRunQuery,
   dataSourceName,
   table,
+  userQuery: initialUserQuery,
 }: LegacyRunQueryContainerProps) => {
   const dispatch = useAppDispatch();
   const curFilter = useAppSelector(state => state.tables.view.curFilter);
@@ -56,6 +80,7 @@ export const LegacyRunQueryContainer = ({
 
     dispatch(setOffset(0));
     setUrlParams(userQuery.where.$and, userQuery.order_by);
+    console.log('userQuery.where.$and', userQuery.where.$and);
     dispatch(
       runFilterQuery({
         tableSchema,
@@ -101,6 +126,8 @@ export const LegacyRunQueryContainer = ({
       operators={tableOperators}
       onExport={onExportData}
       key={`${dataSourceName}-${JSON.stringify(table)}-filters`}
+      initialUserQuery={initialUserQuery}
+      uniqueTableName={`${tableSchema?.table_schema}.${tableSchema?.table_name}`}
       onSubmit={(values: FiltersAndSortFormValues) => {
         const userQuery = filterValidUserQuery(
           adaptFormValuesToQuery(values, tableColumns)
