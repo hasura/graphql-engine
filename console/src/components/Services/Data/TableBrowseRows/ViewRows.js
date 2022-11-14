@@ -955,16 +955,18 @@ const ViewRows = props => {
     const paginationProps = {};
     if (useCustomPagination) {
       paginationProps.PaginationComponent = () => (
-        <PaginationWithOnlyNavContainer
-          limit={curFilter.limit}
-          offset={curFilter.offset}
-          onChangePage={handlePageChange}
-          onChangePageSize={handlePageSizeChange}
-          pageSize={curFilter.size}
-          rows={curRows}
-          tableSchema={tableSchema}
-          userQuery={userQuery}
-        />
+        <div className="max-w-5xl">
+          <PaginationWithOnlyNavContainer
+            limit={curFilter.limit}
+            offset={curFilter.offset}
+            onChangePage={handlePageChange}
+            onChangePageSize={handlePageSizeChange}
+            pageSize={curFilter.size}
+            rows={curRows}
+            tableSchema={tableSchema}
+            userQuery={userQuery}
+          />
+        </div>
       );
     }
 
