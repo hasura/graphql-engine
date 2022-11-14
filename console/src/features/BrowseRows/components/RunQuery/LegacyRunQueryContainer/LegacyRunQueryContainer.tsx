@@ -100,6 +100,7 @@ export const LegacyRunQueryContainer = ({
       columns={tableColumns}
       operators={tableOperators}
       onExport={onExportData}
+      key={`${dataSourceName}-${JSON.stringify(table)}-filters`}
       onSubmit={(values: FiltersAndSortFormValues) => {
         const userQuery = filterValidUserQuery(
           adaptFormValuesToQuery(values, tableColumns)
