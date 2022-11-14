@@ -63,7 +63,7 @@ spec = do
               Fixture.customOptions =
                 Just $
                   Fixture.defaultOptions
-                    { Fixture.skipTests = Just "SQL Server currently rounds the average - we think this is a bug"
+                    { Fixture.skipTests = Just "SQL Server currently rounds the average - we think this is a bug. Ref https://hasurahq.atlassian.net/browse/NDAT-335"
                     }
             }
         ]
