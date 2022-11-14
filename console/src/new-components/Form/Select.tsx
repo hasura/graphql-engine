@@ -63,7 +63,7 @@ export const Select: React.VFC<SelectProps> = ({
             : 'hover:border-gray-400'
         )}
         disabled={disabled}
-        value={val}
+        value={val || watchValue}
         data-test={dataTest}
         data-testid={name}
         {...register(name)}

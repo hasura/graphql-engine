@@ -71,6 +71,8 @@ import {
 import { compareRows, isTableWithPK } from './utils';
 import { push } from 'react-router-redux';
 import globals from '@/Globals';
+import { getUrlQueryParams } from '@/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer';
+import { adaptFormValuesToQuery } from '@/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
 
 const ViewRows = props => {
   const {
@@ -838,10 +840,17 @@ const ViewRows = props => {
     return _childComponent;
   };
 
-  const [userQuery, setUserQuery] = useState({
-    where: { $and: [] },
-    order_by: [],
-  });
+  const queryParams = getUrlQueryParams();
+  const [urlParamsFilters, setUrlParamsFilters] = useState(queryParams);
+  const [userQuery, setUserQuery] = useState(
+    adaptFormValuesToQuery(
+      urlParamsFilters,
+      tableSchema.columns.map(column => ({
+        name: column.column_name,
+        dataType: column.data_type,
+      }))
+    )
+  );
 
   const renderTableBody = () => {
     if (isProgressing) {
@@ -964,7 +973,7 @@ const ViewRows = props => {
           offset={curFilter.offset}
           onChangePage={handlePageChange}
           onChangePageSize={handlePageSizeChange}
-          pageSize={curFilter.size}
+          pageSize={curFilter.limit}
           rows={curRows}
           tableSchema={tableSchema}
           userQuery={userQuery}
@@ -1027,7 +1036,11 @@ const ViewRows = props => {
               [schemaKey]: tableSchema.table_schema,
               name: curTableName,
             }}
-            onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
+            userQuery={urlParamsFilters}
+            onRunQuery={newUserQuery => {
+              setUrlParamsFilters(newUserQuery);
+              setUserQuery(newUserQuery);
+            }}
           />
         </div>
       )}

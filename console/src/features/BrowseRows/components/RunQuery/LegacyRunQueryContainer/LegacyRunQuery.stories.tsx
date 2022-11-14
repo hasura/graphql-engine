@@ -64,6 +64,12 @@ export const Primary: ComponentStory<typeof LegacyRunQuery> = () => (
 Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
+  // click on the filter add button
+  userEvent.click((await canvas.findAllByText('Add'))[0]);
+
+  // click on the sort add button
+  userEvent.click((await canvas.findAllByText('Add'))[1]);
+
   expect(await canvas.findAllByDisplayValue('Select a column')).toHaveLength(2);
   expect(await canvas.findByDisplayValue('Select an operator')).toBeVisible();
   expect(await canvas.findByPlaceholderText('-- value --')).toBeVisible();

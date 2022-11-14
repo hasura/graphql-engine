@@ -83,7 +83,6 @@ const vMakeRowsRequest = () => {
       headers,
       credentials: globalCookiePolicy,
     };
-
     return dispatch(requestAction(endpoint, options)).then(
       data => {
         if (data?.errors) {
@@ -115,6 +114,7 @@ const vMakeRowsRequest = () => {
           originalTable,
           tableConfiguration,
         });
+
         const currentTable = getState().tables.currentTable;
         if (currentTable === originalTable) {
           Promise.all([
