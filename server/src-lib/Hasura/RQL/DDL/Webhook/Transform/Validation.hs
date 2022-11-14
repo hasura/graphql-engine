@@ -26,6 +26,7 @@ import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Body (validateBodyTransformFn)
 import Hasura.RQL.DDL.Webhook.Transform.Class
 
 -------------------------------------------------------------------------------
@@ -103,10 +104,20 @@ unUnvalidate1 = lens _unUnvalidate1 (\_ a -> Unvalidated1 a)
 validateTransforms ::
   (MonadError QErr m) =>
   LensLike (Either TransformErrorBundle) api api RequestTransform RequestTransform ->
+  LensLike (Either TransformErrorBundle) api api MetadataResponseTransform MetadataResponseTransform ->
   (api -> m EncJSON) ->
   api ->
   m EncJSON
-validateTransforms focus f q =
-  case traverseOf focus validateRequestTransform q of
-    Left error' -> pure $ encJFromJValue $ J.toJSON error'
-    Right q' -> f q'
+validateTransforms focusRequestTransform focusResponseTransform f q =
+  let validationRes = do
+        q' <- traverseOf focusRequestTransform validateRequestTransform q
+        traverseOf focusResponseTransform validateResponseTransform q'
+   in case validationRes of
+        Left error' -> pure $ encJFromJValue $ J.toJSON error'
+        Right q' -> f q'
+
+validateResponseTransform :: MetadataResponseTransform -> Either TransformErrorBundle MetadataResponseTransform
+validateResponseTransform mrt@MetadataResponseTransform {..} =
+  case mrtBodyTransform of
+    Just bodyTransform -> toEither $ mrt <$ validateBodyTransformFn mrtTemplatingEngine bodyTransform
+    Nothing -> pure mrt

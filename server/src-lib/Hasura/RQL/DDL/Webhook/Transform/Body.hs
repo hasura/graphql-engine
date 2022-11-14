@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.Webhook.Transform.Body
     TransformCtx (..),
     BodyTransformFn (..),
     foldFormEncoded,
+    validateBodyTransformFn,
   )
 where
 

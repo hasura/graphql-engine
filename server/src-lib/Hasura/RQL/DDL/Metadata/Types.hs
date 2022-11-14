@@ -26,7 +26,8 @@ module Hasura.RQL.DDL.Metadata.Types
 
     -- * Test Webhook Transform
     TestWebhookTransform (..),
-    twtTransformer,
+    twtRequestTransformer,
+    twtResponseTransformer,
     WebHookUrl (..),
 
     -- * Dump Internal State
@@ -284,8 +285,11 @@ data TestWebhookTransform = TestWebhookTransform
   }
   deriving (Eq)
 
-twtTransformer :: Lens' TestWebhookTransform RequestTransform
-twtTransformer = Lens.lens _twtTransformer \twt a -> twt {_twtTransformer = a}
+twtRequestTransformer :: Lens' TestWebhookTransform RequestTransform
+twtRequestTransformer = Lens.lens _twtTransformer \twt a -> twt {_twtTransformer = a}
+
+twtResponseTransformer :: Lens' TestWebhookTransform (Maybe MetadataResponseTransform)
+twtResponseTransformer = Lens.lens _twtResponseTransformer \twt a -> twt {_twtResponseTransformer = a}
 
 instance FromJSON TestWebhookTransform where
   parseJSON = Aeson.withObject "TestWebhookTransform" $ \o -> do

@@ -628,6 +628,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
     dispatchMetadataAndEventTrigger
       ( validateTransforms
           (unUnvalidate1 . cetqRequestTransform . _Just)
+          (unUnvalidate1 . cetqResponseTrasnform . _Just)
           (runCreateEventTriggerQuery . _unUnvalidate1)
       )
       q
@@ -650,6 +651,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateCronTrigger q ->
     validateTransforms
       (unUnvalidate . cctRequestTransform . _Just)
+      (unUnvalidate . cctResponseTransform . _Just)
       (runCreateCronTrigger . _unUnvalidate)
       q
   RMDeleteCronTrigger q -> runDeleteCronTrigger q
@@ -661,12 +663,14 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateAction q ->
     validateTransforms
       (unUnvalidate . caDefinition . adRequestTransform . _Just)
+      (unUnvalidate . caDefinition . adResponseTransform . _Just)
       (runCreateAction . _unUnvalidate)
       q
   RMDropAction q -> runDropAction q
   RMUpdateAction q ->
     validateTransforms
       (unUnvalidate . uaDefinition . adRequestTransform . _Just)
+      (unUnvalidate . uaDefinition . adResponseTransform . _Just)
       (runUpdateAction . _unUnvalidate)
       q
   RMCreateActionPermission q -> runCreateActionPermission q
@@ -704,7 +708,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetCatalogState q -> runSetCatalogState q
   RMTestWebhookTransform q ->
     validateTransforms
-      (unUnvalidate . twtTransformer)
+      (unUnvalidate . twtRequestTransformer)
+      (unUnvalidate . twtResponseTransformer . _Just)
       (runTestWebhookTransform . _unUnvalidate)
       q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
