@@ -4,22 +4,22 @@ shopt -s globstar
 
 help(){
 cat << EOF
-  USAGE: $0 (--all | [--target <package_name> <package_version>]... )
+  USAGE: $0 (--normalize | --all | [--target <package_name> <package_version>]...)
 
 This script is to help updating the freeze file to bring in newer versions of
 dependencies. It takes care of a few gotchas and footguns for you (see source).
 
-The simplest mode, when called with '--all',  removes all existing constraints
-and finds a brand new build plan and freezes it. 
+The simplest mode, when called with '--normalize', will reuse the existing
+constraints and just re-freeze, to make sure the file doesn't have extra or
+missing information.
+
+When called with '--all', it removes all existing constraints, finds a brand
+new build plan, and freezes it.
 
 Instead if you want to upgrade one or more particular packages, while keeping
 as many of the other dependencies the same as possible, you can use '--target
 foo 1.2.3.4'. This may take a bit of time, and might fail to find a plan,
 especially if you pass more than one target.
-
-If you want to "normalize" the freeze file (for example removing any extraneous
-items or redoing the formatting), for now you can pass an existing package
-version to the --target flag.
 EOF
 }
 
@@ -42,7 +42,8 @@ fi
 
 # map of: package_name->package_version
 declare -A PACKAGE_TARGETS
-UPDATE_ALL=""
+SKIP_UPDATE=false
+UPGRADE_ALL=false
 
 if [[ $# -eq 0 ]]; then
     echo_error "expecting at least one argument"
@@ -52,13 +53,17 @@ fi
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --normalize)
+      SKIP_UPDATE=true
+      shift # past argument
+      ;;
+    --all)
+      UPGRADE_ALL=true
+      shift # past argument
+      ;;
     --target)
       PACKAGE_TARGETS["$2"]="$3"
       shift ; shift ; shift # past values
-      ;;
-    --all)
-      UPDATE_ALL=YES
-      shift # past argument
       ;;
     *)
       echo_error "Unknown option $1"
@@ -77,29 +82,30 @@ err_report() {
 trap '[[ $? != 0 ]] && err_report' EXIT
 
 
-if [ "$UPDATE_ALL" = "YES" ]; then
-    ### Maybe just updating all dependencies
-
+if "$UPGRADE_ALL"; then
     # Remove all constraints and write new build plan
     rm "$FREEZE_FILE"
+    cabal update
     cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set
-
 else
-    echo_pretty "Doing 'cabal update'... "
-    # First we need to remove the frozen `index-state` so that `cabal update` works
-    sed -i '/^index-state:.*/d' "$FREEZE_FILE"
+    if ! "$SKIP_UPDATE"; then
+        echo_pretty "Doing 'cabal update'... "
+        # First we need to remove the frozen `index-state` so that `cabal update` grabs the latest index
+        sed -i '/^index-state:.*/d' "$FREEZE_FILE"
+    fi
+
     cabal update
 
     echo_pretty "Trying to come up with a new plan with a minimal delta. This may take some time."
     # Replace target dependencies with requested versions:
-    for package_name in "${!PACKAGE_TARGETS[@]}"; do 
-        package_version="${PACKAGE_TARGETS[$package_name]}"; 
+    for package_name in "${!PACKAGE_TARGETS[@]}"; do
+        package_version="${PACKAGE_TARGETS[$package_name]}";
         # Remove existing target entries (baked in flag lines may not be present):
         sed -ri "/\s+any.$package_name ==/d" "$FREEZE_FILE"
         sed -ri "/\s+$package_name /d" "$FREEZE_FILE"  # baked in flags
         # add back target version
         sed -i "\$s/\$/ $package_name ==$package_version,/" "$FREEZE_FILE"
-    done 
+    done
 
     freeze_line_count_orig=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
     freeze_line_count_prev=$freeze_line_count_orig # mutable
@@ -114,14 +120,14 @@ else
                 exit 77
             fi
             # omit target packages:
-            for package_name in "${!PACKAGE_TARGETS[@]}"; do 
+            for package_name in "${!PACKAGE_TARGETS[@]}"; do
                 conflict_set=$(echo "$conflict_set" | sed "/^$package_name$/d")
             done
             # filter conflicts from the freeze file
             while IFS= read -r package_name; do
                 sed -ri "/\s+any.$package_name ==/d" "$FREEZE_FILE"
                 sed -ri "/\s+$package_name /d" "$FREEZE_FILE"  # baked in flags
-            done <<< "$conflict_set" 
+            done <<< "$conflict_set"
 
             freeze_line_count=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
             if [ "$freeze_line_count" -eq "$freeze_line_count_prev" ]; then
@@ -137,11 +143,17 @@ else
                 # ...and try again
             fi
         fi
-    done 
+    done
     echo
 fi
 
 ### Finally do a little cleanup/normalizing:
+
+# Be a little more liberal with GHC, as we use a patched version on CI with
+# performance improvements.
+GHC_VERSION="$(jq -r '.ghc' ./server/VERSIONS.json)"
+LIBERAL_GHC_VERSION="$(sed -r 's/[0-9]+$/\*/' <<< "$GHC_VERSION")"
+sed -ri "s/(\sany\.ghc[^ ]* ==)${GHC_VERSION},$/\1${LIBERAL_GHC_VERSION},/" "$FREEZE_FILE"
 
 # Remove graphql engine internal mono-repo packages. This doesn't matter unless
 # we happen to bump the version number in one of our cabal files.
@@ -151,7 +163,7 @@ sed -ri "/\s+graphql-engine/d" "$FREEZE_FILE"
 # to determine where we might be either intentionally or unintentionally
 # overriding default flags, and it's easy for flags from a local developer’s
 # environment to get accidentally committed. This is checked in CI.  For
-# discussion, see: 
+# discussion, see:
 #   https://hasurahq.slack.com/archives/CV3UR1MT2/p1654544760362949
 #   https://github.com/hasura/graphql-engine-mono/pull/4618
 sed -ri "/\s+\S+ [+-]/d" "$FREEZE_FILE"
