@@ -14,12 +14,15 @@ import (
 
 	"github.com/gonvenience/ytbx"
 	"github.com/homeport/dyff/pkg/dyff"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 func YamlDiff(fromFile, toFile ytbx.InputFile, writer io.Writer, fileName string) (int, error) {
+	var op errors.Op = "diff.YamlDiff"
 	report, err := dyff.CompareInputFiles(fromFile, toFile, dyff.IgnoreOrderChanges(true))
 	if err != nil {
-		return -1, fmt.Errorf("error while getting diff: %w", err)
+		return -1, errors.E(op, fmt.Errorf("error while getting diff: %w", err))
 	}
 	reportWriter := &dyff.HumanReport{
 		Report:            report,
@@ -32,7 +35,7 @@ func YamlDiff(fromFile, toFile ytbx.InputFile, writer io.Writer, fileName string
 		fmt.Fprintf(writer, "%s\n", fileName)
 		err = reportWriter.WriteReport(writer)
 		if err != nil {
-			return -1, fmt.Errorf("error while printing diff: %w", err)
+			return -1, errors.E(op, fmt.Errorf("error while printing diff: %w", err))
 		}
 	}
 	return len(report.Diffs), nil
