@@ -35,6 +35,7 @@ data TestConfig = TestConfig
 data NameCasing
   = PascalCase
   | Lowercase
+  | Uppercase
   deriving (Eq, Show, Read)
 
 data TestOptions = TestOptions

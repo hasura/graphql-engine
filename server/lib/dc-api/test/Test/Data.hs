@@ -451,6 +451,7 @@ applyNameCasing :: NameCasing -> Text -> Text
 applyNameCasing casing text = case casing of
   PascalCase -> text
   Lowercase -> Text.toLower text
+  Uppercase -> Text.toUpper text
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
