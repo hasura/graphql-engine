@@ -25,6 +25,7 @@ where
 import Control.Arrow (left)
 import Data.ByteString.Lazy as BL
 import Data.Data (Proxy (..))
+import Data.Foldable (for_)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.OpenApi (OpenApi)
 import Data.Text (Text)
@@ -47,12 +48,14 @@ capabilitiesCase :: a -> (CapabilitiesResponse -> a) -> (ErrorResponse -> a) -> 
 capabilitiesCase defaultAction capabilitiesAction errorAction union = do
   let capabilitiesM = matchUnion @CapabilitiesResponse union
   let errorM = matchUnion @ErrorResponse union
-  case (capabilitiesM, errorM) of
-    (Just c, Nothing) -> capabilitiesAction c
-    (Nothing, Just e) -> errorAction e
-    _ -> defaultAction -- Note, this could technically include the (Just _, Just _) scenario which is not possible.
+  let errorM400 = matchUnion @ErrorResponse400 union
+  case (capabilitiesM, errorM, errorM400) of
+    (Nothing, Nothing, Nothing) -> defaultAction
+    (Just c, _, _) -> capabilitiesAction c
+    (_, Just e, _) -> errorAction e
+    (_, _, Just (WithStatus e)) -> errorAction e
 
-type CapabilitiesResponses = '[V0.CapabilitiesResponse, V0.ErrorResponse]
+type CapabilitiesResponses = '[V0.CapabilitiesResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
 type CapabilitiesApi =
   "capabilities"
@@ -60,16 +63,19 @@ type CapabilitiesApi =
 
 -- | This function defines a central place to ensure that all cases are covered for schema and error responses.
 --   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
-schemaCase :: Monad m => m a -> (SchemaResponse -> m a) -> (ErrorResponse -> m a) -> Union SchemaResponses -> m a
+schemaCase :: a -> (SchemaResponse -> a) -> (ErrorResponse -> a) -> Union SchemaResponses -> a
 schemaCase defaultAction schemaAction errorAction union = do
   let schemaM = matchUnion @SchemaResponse union
   let errorM = matchUnion @ErrorResponse union
-  case (schemaM, errorM) of
-    (Just c, Nothing) -> schemaAction c
-    (Nothing, Just e) -> errorAction e
-    _ -> defaultAction -- Note, this could technically include the (Just _, Just _) scenario which is not possible.
+  let errorM400 = matchUnion @ErrorResponse400 union
+  case (schemaM, errorM, errorM400) of
+    -- Note, this could technically include the ...Just _, Just _... scenario, but won't occurr due to matchUnion
+    (Nothing, Nothing, Nothing) -> defaultAction
+    (Just x, _, _) -> schemaAction x
+    (_, Just x, _) -> errorAction x
+    (_, _, Just (WithStatus x)) -> errorAction x
 
-type SchemaResponses = '[V0.SchemaResponse, V0.ErrorResponse]
+type SchemaResponses = '[V0.SchemaResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
 type SchemaApi =
   "schema"
@@ -79,16 +85,18 @@ type SchemaApi =
 
 -- | This function defines a central place to ensure that all cases are covered for query and error responses.
 --   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
-queryCase :: Monad m => m a -> (QueryResponse -> m a) -> (ErrorResponse -> m a) -> Union QueryResponses -> m a
+queryCase :: a -> (QueryResponse -> a) -> (ErrorResponse -> a) -> Union QueryResponses -> a
 queryCase defaultAction queryAction errorAction union = do
   let queryM = matchUnion @QueryResponse union
   let errorM = matchUnion @ErrorResponse union
-  case (queryM, errorM) of
-    (Just c, Nothing) -> queryAction c
-    (Nothing, Just e) -> errorAction e
-    _ -> defaultAction -- Note, this could technically include the (Just _, Just _) scenario which is not possible.
+  let errorM400 = matchUnion @ErrorResponse400 union
+  case (queryM, errorM, errorM400) of
+    (Nothing, Nothing, Nothing) -> defaultAction
+    (Just c, _, _) -> queryAction c
+    (_, Just e, _) -> errorAction e
+    (_, _, Just (WithStatus e)) -> errorAction e
 
-type QueryResponses = '[V0.QueryResponse, V0.ErrorResponse]
+type QueryResponses = '[V0.QueryResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
 type QueryApi =
   "query"

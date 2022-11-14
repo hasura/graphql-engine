@@ -1513,7 +1513,7 @@ However, this endpoint can also be used to check whether the ability of the agen
 
 ### Reporting Errors
 
-Any non-200 response code from an Agent (except for the `/health` endpoint) will be interpreted as an error. These should be handled gracefully by `graphql-engine` but provide limited details to users. If you wish to return structured error information to users you can return a status of `500` from the `/capabilities`, `/schema`, and `/query` endpoints with the following JSON format:
+Any non-200 response code from an Agent (except for the `/health` endpoint) will be interpreted as an error. These should be handled gracefully by `graphql-engine` but provide limited details to users. If you wish to return structured error information to users you can return a status of `500`, or `400` from the `/capabilities`, `/schema`, and `/query` endpoints with the following JSON format:
 
 ```
 {

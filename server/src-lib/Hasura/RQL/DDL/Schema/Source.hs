@@ -435,7 +435,7 @@ runGetTableInfo GetTableInfo {..} = do
         pure $ EncJSON.encJFromJValue table
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
 
-schemaGuard :: MonadError QErr m => Union '[API.SchemaResponse, API.ErrorResponse] -> m API.SchemaResponse
+schemaGuard :: MonadError QErr m => Union API.SchemaResponses -> m API.SchemaResponse
 schemaGuard = schemaCase defaultAction pure errorAction
   where
     defaultAction = throw400 DataConnectorError "Error resolving source schema"

@@ -3,6 +3,7 @@
 
 module Hasura.Backends.DataConnector.API.V0.ErrorResponse
   ( ErrorResponse (..),
+    ErrorResponse400,
     ErrorResponseType (..),
     errorResponseJsonText,
     errorResponseSummary,
@@ -53,6 +54,8 @@ data ErrorResponse = ErrorResponse
 
 instance HasStatus ErrorResponse where
   type StatusOf ErrorResponse = 500
+
+type ErrorResponse400 = Servant.WithStatus 400 ErrorResponse
 
 {-# HLINT ignore "Use tshow" #-}
 errorResponseSummary :: ErrorResponse -> Text
