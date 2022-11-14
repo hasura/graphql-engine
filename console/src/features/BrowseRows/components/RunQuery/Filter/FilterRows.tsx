@@ -1,23 +1,49 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
 import { Button } from '@/new-components/Button';
 import { Operator, TableColumn, WhereClause } from '@/features/DataSource';
 import { RiAddBoxLine } from 'react-icons/ri';
 import { useFieldArray } from 'react-hook-form';
 import { FilterRow } from './FilterRow';
+import { FiltersAndSortFormValues } from '../types';
 
 export type FilterRowsProps = {
   columns: TableColumn[];
   operators: Operator[];
   name: string;
+  initialFilters?: FiltersAndSortFormValues['filter'];
 };
 
-export const FilterRows = ({ name, columns, operators }: FilterRowsProps) => {
-  const { fields, append, remove } = useFieldArray<
+export const FilterRows = ({
+  name,
+  columns,
+  operators,
+  initialFilters = [],
+}: FilterRowsProps) => {
+  const { fields, append, remove, update } = useFieldArray<
     Record<string, WhereClause[]>
   >({
     name,
   });
+
+  useEffect(() => {
+    if (initialFilters.length > 0) {
+      initialFilters.forEach((filter, index) => {
+        // TODO-NEXT: find a way to fix the types below
+        update(index, {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          column: filter.column,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          operator: filter.operator,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          value: filter.value,
+        });
+      });
+    }
+  }, [initialFilters]);
 
   const removeEntry = (index: number) => {
     remove(index);

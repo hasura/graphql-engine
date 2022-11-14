@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getManualEventsTriggers } from '@/metadata/selector';
+import { runFilterQuery } from '@/features/BrowseRows';
 
 import { setTable } from '../DataActions';
 import ViewRows from './ViewRows';
@@ -11,7 +12,8 @@ import { exists } from '../../../Common/utils/jsUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import FeatureDisabled from '../FeatureDisabled';
 import { getPersistedPageSize } from './tableUtils';
-import { vMakeTableRequests, vSetDefaults } from './ViewActions';
+import { vSetDefaults } from './ViewActions';
+import { adaptFormValuesToQuery } from '../../../../features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
 
 type TableBrowseRowsContainerProps = {
   params: {
@@ -20,7 +22,32 @@ type TableBrowseRowsContainerProps = {
     table: string;
   };
 };
+export const getUrlQueryParams = (): {
+  filters: any['filter'];
+  sorts: any['sort'];
+} => {
+  const params = new URLSearchParams(window.location.search);
+  const filters = params.getAll('filter') ?? [];
+  const sorts = params.getAll('sort') ?? [];
 
+  return {
+    filters: filters.map(filter => {
+      const [column, operator, value] = filter.split(';');
+      return {
+        column,
+        operator,
+        value,
+      };
+    }),
+    sorts: sorts.map(filter => {
+      const [column, type] = filter.split(';');
+      return {
+        column,
+        type: type as any['sort'][0]['type'],
+      };
+    }),
+  };
+};
 export const TableBrowseRowsContainer = (
   props: TableBrowseRowsContainerProps
 ) => {
@@ -30,25 +57,6 @@ export const TableBrowseRowsContainer = (
     schema: schemaName,
   } = props.params;
   const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    const getInitialData = () => {
-      if (!isFeatureSupported('tables.browse.enabled')) {
-        dispatch(setTable(tableName));
-      }
-
-      const limit = getPersistedPageSize();
-      dispatch(setTable(tableName));
-      dispatch(vSetDefaults(limit));
-      dispatch(vMakeTableRequests());
-    };
-
-    getInitialData();
-
-    return () => {
-      dispatch(vSetDefaults());
-    };
-  }, [tableName]);
 
   const schemas = useAppSelector<Table[]>(store => store.tables.allSchemas);
   const {
@@ -83,6 +91,47 @@ export const TableBrowseRowsContainer = (
     };
   }, [tableName]);
 
+  useEffect(() => {
+    const getInitialData = () => {
+      const tableSchema = schemas.find(
+        s => s.table_name === tableName && s.table_schema === schemaName
+      );
+      if (!tableSchema) return;
+
+      if (!isFeatureSupported('tables.browse.enabled')) {
+        dispatch(setTable(tableName));
+      }
+      dispatch(setTable(tableName));
+      const queryParams = getUrlQueryParams();
+      const limit = getPersistedPageSize();
+
+      dispatch(vSetDefaults(limit));
+
+      const userQuery = adaptFormValuesToQuery(
+        { filter: queryParams.filters, sort: queryParams.sorts },
+        tableSchema.columns.map(column => ({
+          name: column.column_name,
+          dataType: column.data_type,
+        }))
+      );
+
+      dispatch(
+        runFilterQuery({
+          tableSchema,
+          whereAnd: userQuery.where.$and,
+          orderBy: userQuery.order_by,
+          limit: curFilter.limit,
+          offset: curFilter.offset,
+        })
+      );
+    };
+
+    getInitialData();
+
+    return () => {
+      dispatch(vSetDefaults());
+    };
+  }, [tableName]);
   if (!isFeatureSupported('tables.browse.enabled')) {
     return (
       <FeatureDisabled
