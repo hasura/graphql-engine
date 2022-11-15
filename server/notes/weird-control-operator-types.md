@@ -1,8 +1,8 @@
-This note is in [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L219).
+This note is in [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L206).
 It is referenced at:
-  - line 41 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L41)
-  - line 68 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L68)
-  - line 107 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L107)
+  - line 37 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L37)
+  - line 60 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L60)
+  - line 94 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L94)
   - line 32 of [Control.Arrow.Trans](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Trans.hs#L32)
   - line 46 of [Control.Arrow.Trans](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Trans.hs#L46)
   - line 297 of [Hasura.Incremental.Internal.Rule](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Incremental/Internal/Rule.hs#L297)
