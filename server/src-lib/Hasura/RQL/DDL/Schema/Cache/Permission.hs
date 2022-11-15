@@ -329,35 +329,31 @@ buildPermission ::
     Maybe (PermDef b a)
   )
     `arr` Maybe (PermInfo a b)
-buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) ->
-  do
-    (|
-      traverseA
-        ( \permission ->
-            (|
-              withPermission
-                ( do
-                    bindErrorA
-                      -<
-                        when (_pdRole permission == adminRoleName) $
-                          throw400 ConstraintViolation "cannot define permission for admin role"
-                    (info, dependencies) <-
-                      liftEitherA <<< Inc.bindDepend
-                        -<
-                          runExceptT $
-                            runTableCoreCacheRT
-                              ( buildPermInfo
-                                  source
-                                  table
-                                  tableFields
-                                  (_pdRole permission)
-                                  (_pdPermission permission)
-                              )
-                              (source, tableCache)
-                    tellA -< Seq.fromList dependencies
-                    returnA -< info
-                )
-            |) (source, table, permission, proxy)
-        )
-      |) maybePermission
-    >-> (\info -> join info >- returnA)
+buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) -> do
+  case maybePermission of
+    Nothing -> returnA -< Nothing
+    Just permission -> do
+      (|
+        withPermission
+          ( do
+              bindErrorA
+                -<
+                  when (_pdRole permission == adminRoleName) $
+                    throw400 ConstraintViolation "cannot define permission for admin role"
+              (info, dependencies) <-
+                liftEitherA <<< Inc.bindDepend
+                  -<
+                    runExceptT $
+                      runTableCoreCacheRT
+                        ( buildPermInfo
+                            source
+                            table
+                            tableFields
+                            (_pdRole permission)
+                            (_pdPermission permission)
+                        )
+                        (source, tableCache)
+              tellA -< Seq.fromList dependencies
+              returnA -< info
+          )
+        |) (source, table, permission, proxy)

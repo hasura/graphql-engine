@@ -322,17 +322,19 @@ buildInfoMap ::
   (a -> MetadataObject) ->
   (e, a) `arr` Maybe b ->
   (e, [a]) `arr` HashMap k b
-buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
-  (M.groupOn extractKey infos >- returnA)
-    >-> (|
-          Inc.keyed
-            ( \_ duplicateInfos ->
-                (noDuplicates mkMetadataObject duplicateInfos >- interpretWriter)
-                  >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
-                  >-> (\info -> join info >- returnA)
-            )
-        |)
-    >-> (\infoMap -> catMaybes infoMap >- returnA)
+buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
+  let groupedInfos = M.groupOn extractKey infos
+  infoMapMaybes <-
+    (|
+      Inc.keyed
+        ( \_ duplicateInfos -> do
+            infoMaybe <- interpretWriter -< noDuplicates mkMetadataObject duplicateInfos
+            case infoMaybe of
+              Nothing -> returnA -< Nothing
+              Just info -> buildInfo -< (e, info)
+        )
+      |) groupedInfos
+  returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 
 -- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
@@ -349,8 +351,11 @@ buildInfoMapPreservingMetadata ::
   (e, a) `arr` Maybe b ->
   (e, [a]) `arr` HashMap k (b, MetadataObject)
 buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
-  buildInfoMap extractKey mkMetadataObject proc (e, info) ->
-    ((e, info) >- buildInfo) >-> \result -> result <&> (,mkMetadataObject info) >- returnA
+  buildInfoMap extractKey mkMetadataObject buildInfoPreserving
+  where
+    buildInfoPreserving = proc (e, info) -> do
+      result <- buildInfo -< (e, info)
+      returnA -< result <&> (,mkMetadataObject info)
 {-# INLINEABLE buildInfoMapPreservingMetadata #-}
 
 addTableContext :: (Backend b) => TableName b -> Text -> Text

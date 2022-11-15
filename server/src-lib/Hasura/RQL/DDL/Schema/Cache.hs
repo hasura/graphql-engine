@@ -450,11 +450,6 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
     resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, BackendInfoAndSourceMetadata {..}) -> do
       let sourceName = _smName _bcasmSourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
-          logAndResolveDatabaseMetadata :: SourceConfig b -> SourceTypeCustomization -> m (Either QErr (ResolvedSource b))
-          logAndResolveDatabaseMetadata scConfig sType = do
-            resSource <- resolveDatabaseMetadata _bcasmSourceMetadata scConfig sType
-            for_ resSource $ liftIO . unLogger logger
-            pure resSource
 
       maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendInfo)
       case maybeSourceConfig of
@@ -462,7 +457,11 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         Just sourceConfig ->
           (|
             withRecordInconsistency
-              ( liftEitherA <<< bindA -< logAndResolveDatabaseMetadata sourceConfig (getSourceTypeCustomization $ _smCustomization _bcasmSourceMetadata)
+              ( liftEitherA <<< bindA
+                  -< do
+                    resSource <- resolveDatabaseMetadata _bcasmSourceMetadata sourceConfig (getSourceTypeCustomization $ _smCustomization _bcasmSourceMetadata)
+                    for_ resSource $ liftIO . unLogger logger
+                    pure resSource
               )
           |) metadataObj
 
@@ -492,7 +491,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ) =>
       (Proxy b, Bool, SourceConfig b) `arr` (RecreateEventTriggers, SourceCatalogMigrationState)
     initCatalogIfNeeded = Inc.cache proc (Proxy, atleastOneTrigger, sourceConfig) -> do
-      arrM id
+      bindA
         -< do
           if atleastOneTrigger
             then do
@@ -596,44 +595,42 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       let resolvedCustomization = mkResolvedSourceCustomization sourceCustomization namingConv
 
       -- sql functions
-      functionCache <-
-        (mapFromL _fmFunction (OMap.elems functions) >- returnA)
-          >-> (|
-                Inc.keyed
-                  ( \_ (FunctionMetadata qf config functionPermissions comment) -> do
-                      let systemDefined = SystemDefined False
-                          definition = toJSON $ TrackFunction @b qf
-                          metadataObject =
-                            MetadataObject
-                              ( MOSourceObjId sourceName $
-                                  AB.mkAnyBackend $
-                                    SMOFunction @b qf
-                              )
-                              definition
-                          schemaObject =
-                            SOSourceObj sourceName $
-                              AB.mkAnyBackend $
-                                SOIFunction @b qf
-                          addFunctionContext e = "in function " <> qf <<> ": " <> e
-                      (|
-                        withRecordInconsistency
-                          ( (|
-                              modifyErrA
-                                ( do
-                                    let funcDefs = fromMaybe [] $ M.lookup qf dbFunctions
-                                    rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
-                                    let metadataPermissions = mapFromL _fpmRole functionPermissions
-                                        permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
-                                    recordDependencies -< (metadataObject, schemaObject, [dep])
-                                    returnA -< functionInfo
-                                )
-                            |) addFunctionContext
-                          )
-                        |) metadataObject
-                  )
-              |)
-          >-> (\infos -> catMaybes infos >- returnA)
+      functionCacheMaybes <-
+        (|
+          Inc.keyed
+            ( \_ (FunctionMetadata qf config functionPermissions comment) -> do
+                let systemDefined = SystemDefined False
+                    definition = toJSON $ TrackFunction @b qf
+                    metadataObject =
+                      MetadataObject
+                        ( MOSourceObjId sourceName $
+                            AB.mkAnyBackend $
+                              SMOFunction @b qf
+                        )
+                        definition
+                    schemaObject =
+                      SOSourceObj sourceName $
+                        AB.mkAnyBackend $
+                          SOIFunction @b qf
+                    addFunctionContext e = "in function " <> qf <<> ": " <> e
+                (|
+                  withRecordInconsistency
+                    ( do
+                        (functionInfo, dep) <-
+                          bindErrorA
+                            -< modifyErr addFunctionContext do
+                              let funcDefs = fromMaybe [] $ M.lookup qf dbFunctions
+                                  metadataPermissions = mapFromL _fpmRole functionPermissions
+                                  permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
+                              rawfunctionInfo <- handleMultipleFunctions @b qf funcDefs
+                              buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
+                        recordDependencies -< (metadataObject, schemaObject, [dep])
+                        returnA -< functionInfo
+                    )
+                  |) metadataObject
+            )
+          |) (mapFromL _fmFunction (OMap.elems functions))
+      let functionCache = catMaybes functionCacheMaybes
 
       returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig resolvedCustomization
 
@@ -710,7 +707,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
 
       -- sources are build in two steps
       -- first we resolve them, and build the table cache
-      partiallyResolvedSources <-
+      partiallyResolvedSourcesMaybes <-
         (|
           Inc.keyed
             ( \_ exists ->
@@ -767,7 +764,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                     (exists, (invalidationKeys, defaultNC, isNamingConventionEnabled))
             )
           |) (M.fromList $ OMap.toList backendInfoAndSourceMetadata)
-          >-> (\infos -> catMaybes infos >- returnA)
+      let partiallyResolvedSources = catMaybes partiallyResolvedSourcesMaybes
 
       -- then we can build the entire source output
       -- we need to have the table cache of all sources to build cross-sources relationships
@@ -812,25 +809,24 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
           |) partiallyResolvedSources
 
       remoteSchemaCache <-
-        (remoteSchemaMap >- returnA)
-          >-> (|
-                Inc.keyed
-                  ( \_ (partiallyResolvedRemoteSchemaCtx, metadataObj) -> do
-                      let remoteSchemaIntrospection = irDoc $ _rscIntroOriginal partiallyResolvedRemoteSchemaCtx
-                      resolvedSchemaCtx <-
-                        (|
-                          traverseA
-                            ( \PartiallyResolvedRemoteRelationship {..} ->
-                                buildRemoteSchemaRemoteRelationship
-                                  -<
-                                    ( (partiallyResolvedSources, remoteSchemaCtxMap),
-                                      (_rscName partiallyResolvedRemoteSchemaCtx, remoteSchemaIntrospection, _prrrTypeName, _prrrDefinition)
-                                    )
-                            )
-                          |) partiallyResolvedRemoteSchemaCtx
-                      returnA -< (catMaybes $ resolvedSchemaCtx, metadataObj)
-                  )
-              |)
+        (|
+          Inc.keyed
+            ( \_ (partiallyResolvedRemoteSchemaCtx, metadataObj) -> do
+                let remoteSchemaIntrospection = irDoc $ _rscIntroOriginal partiallyResolvedRemoteSchemaCtx
+                resolvedSchemaCtx <-
+                  (|
+                    traverseA
+                      ( \PartiallyResolvedRemoteRelationship {..} ->
+                          buildRemoteSchemaRemoteRelationship
+                            -<
+                              ( (partiallyResolvedSources, remoteSchemaCtxMap),
+                                (_rscName partiallyResolvedRemoteSchemaCtx, remoteSchemaIntrospection, _prrrTypeName, _prrrDefinition)
+                              )
+                      )
+                    |) partiallyResolvedRemoteSchemaCtx
+                returnA -< (catMaybes $ resolvedSchemaCtx, metadataObj)
+            )
+          |) remoteSchemaMap
 
       resolvedEndpoints <- buildInfoMap fst mkEndpointMetadataObject buildEndpoint -< (collections, OMap.toList endpoints)
 
@@ -913,11 +909,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
           addContext err = "in endpoint " <> toTxt (unEndpointName name) <> ": " <> err
       (|
         withRecordInconsistency
-          ( (|
-              modifyErrA
-                (bindErrorA -< resolveEndpoint collections endpoint)
-            |) addContext
-          )
+          (bindErrorA -< modifyErr addContext $ resolveEndpoint collections endpoint)
         |) (mkEndpointMetadataObject e)
 
     resolveEndpoint ::
@@ -1129,11 +1121,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
               addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
           (|
             withRecordInconsistency
-              ( (|
-                  modifyErrA
-                    (bindErrorA -< resolveCronTrigger env cronTrigger)
-                |) addCronTriggerContext
-              )
+              (bindErrorA -< modifyErr addCronTriggerContext $ resolveCronTrigger env cronTrigger)
             |) (mkCronTriggerMetadataObject cronTrigger)
 
     buildInheritedRoles ::
@@ -1153,14 +1141,10 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
               schemaObject = SORole $ _rRoleName inheritedRole
           (|
             withRecordInconsistency
-              ( (|
-                  modifyErrA
-                    ( do
-                        (resolvedInheritedRole, dependencies) <- bindA -< resolveInheritedRole allRoles inheritedRole
-                        recordDependencies -< (metadataObject, schemaObject, dependencies)
-                        returnA -< resolvedInheritedRole
-                    )
-                |) addInheritedRoleContext
+              ( do
+                  (resolvedInheritedRole, dependencies) <- bindErrorA -< modifyErr addInheritedRoleContext $ resolveInheritedRole allRoles inheritedRole
+                  recordDependencies -< (metadataObject, schemaObject, dependencies)
+                  returnA -< resolvedInheritedRole
               )
             |) metadataObject
 
@@ -1168,7 +1152,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        MonadError QErr m
       ) =>
       ( (AnnotatedCustomTypes, BackendMap ScalarMap, OrderedRoles),
         [ActionMetadata]
@@ -1181,21 +1166,16 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
               addActionContext e = "in action " <> name <<> "; " <> e
           (|
             withRecordInconsistency
-              ( (|
-                  modifyErrA
-                    ( do
-                        (resolvedDef, outObject) <-
-                          liftEitherA <<< bindA
-                            -<
-                              runExceptT $ resolveAction env resolvedCustomTypes def scalarsMap
-                        let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-                            metadataPermissionMap = mapFromL _apiRole permissionInfos
-                            permissionsMap = mkBooleanPermissionMap ActionPermissionInfo metadataPermissionMap orderedRoles
-                            forwardClientHeaders = _adForwardClientHeaders resolvedDef
-                            outputType = unGraphQLType $ _adOutputType def
-                        returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
-                    )
-                |) addActionContext
+              ( bindErrorA
+                  -< modifyErr addActionContext $ do
+                    (resolvedDef, outObject) <-
+                      resolveAction env resolvedCustomTypes def scalarsMap
+                    let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                        metadataPermissionMap = mapFromL _apiRole permissionInfos
+                        permissionsMap = mkBooleanPermissionMap ActionPermissionInfo metadataPermissionMap orderedRoles
+                        forwardClientHeaders = _adForwardClientHeaders resolvedDef
+                        outputType = unGraphQLType $ _adOutputType def
+                    return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
               )
             |) (mkActionMetadataObject action)
 
@@ -1221,26 +1201,19 @@ buildRemoteSchemaRemoteRelationship =
         addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
     (|
       withRecordInconsistency
-        ( (|
-            modifyErrA
-              ( do
-                  allowedLHSJoinFields <-
-                    bindErrorA
-                      -<
-                        getRemoteSchemaEntityJoinColumns remoteSchema remoteSchemaIntrospection typeName
-                  (remoteField, rhsDependencies) <-
-                    bindErrorA
-                      -<
-                        buildRemoteFieldInfo (remoteSchemaToLHSIdentifier remoteSchema) allowedLHSJoinFields rr allSources remoteSchemaMap
-                  -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,
-                  -- so the dependencies on the remote relationship on the LHS entity have to be computed here
-                  let lhsDependencies =
-                        -- a direct dependency on the remote schema on which this is defined
-                        [SchemaDependency (SORemoteSchema remoteSchema) DRRemoteRelationship]
-                  recordDependencies -< (metadataObject, schemaObj, lhsDependencies <> rhsDependencies)
-                  returnA -< remoteField
-              )
-          |) addRemoteRelationshipContext
+        ( do
+            (remoteField, rhsDependencies) <-
+              bindErrorA
+                -< modifyErr addRemoteRelationshipContext do
+                  allowedLHSJoinFields <- getRemoteSchemaEntityJoinColumns remoteSchema remoteSchemaIntrospection typeName
+                  buildRemoteFieldInfo (remoteSchemaToLHSIdentifier remoteSchema) allowedLHSJoinFields rr allSources remoteSchemaMap
+            -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,
+            -- so the dependencies on the remote relationship on the LHS entity have to be computed here
+            let lhsDependencies =
+                  -- a direct dependency on the remote schema on which this is defined
+                  [SchemaDependency (SORemoteSchema remoteSchema) DRRemoteRelationship]
+            recordDependencies -< (metadataObject, schemaObj, lhsDependencies <> rhsDependencies)
+            returnA -< remoteField
         )
       |) metadataObject
 

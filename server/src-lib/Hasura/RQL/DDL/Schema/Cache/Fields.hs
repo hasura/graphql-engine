@@ -170,33 +170,21 @@ addNonColumnFields =
 
     noCustomFieldConflicts = proc (columns, nonColumnFields) -> do
       let columnsByGQLName = mapFromL ciName $ M.elems columns
-      (|
-        Inc.keyed
-          ( \_ (fieldInfo, metadata) ->
-              (|
-                withRecordInconsistency
-                  ( do
-                      (|
-                        traverseA_
-                          ( \fieldGQLName -> case M.lookup fieldGQLName columnsByGQLName of
-                              -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
-                              -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
-                              -- more useful error message.
-                              Just columnInfo
-                                | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
-                                    throwA
-                                      -<
-                                        err400 AlreadyExists $
-                                          "field definition conflicts with custom field name for postgres column "
-                                            <>> ciColumn columnInfo
-                              _ -> returnA -< ()
-                          )
-                        |) (fieldInfoGraphQLNames fieldInfo)
-                      returnA -< (fieldInfo, metadata)
-                  )
-              |) metadata
-          )
-        |) nonColumnFields
+      interpretWriter
+        -< do
+          for nonColumnFields \(fieldInfo, metadata) -> withRecordInconsistencyM metadata do
+            for_ (fieldInfoGraphQLNames fieldInfo) \fieldGQLName ->
+              case M.lookup fieldGQLName columnsByGQLName of
+                -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
+                -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
+                -- more useful error message.
+                Just columnInfo
+                  | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
+                      throw400 AlreadyExists $
+                        "field definition conflicts with custom field name for postgres column "
+                          <>> ciColumn columnInfo
+                _ -> return ()
+            return (fieldInfo, metadata)
 
     noColumnConflicts = proc fields -> case fields of
       This columnInfo -> returnA -< FIColumn columnInfo

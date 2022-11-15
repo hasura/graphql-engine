@@ -130,14 +130,11 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
           (_unOrderedRoles orderedRoles)
   -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
   resolvedPermissions <-
-    (|
-      traverseA
-        ( \(roleName, checkPermission) -> do
-            let inconsistentRoleEntity = InconsistentRemoteSchemaPermission remoteSchemaName
-            resolvedCheckPermission <- interpretWriter -< resolveCheckPermission checkPermission roleName inconsistentRoleEntity
-            returnA -< (roleName, resolvedCheckPermission)
-        )
-      |) (M.toList allRolesUnresolvedPermissionsMap)
+    interpretWriter
+      -< for (M.toList allRolesUnresolvedPermissionsMap) \(roleName, checkPermission) -> do
+        let inconsistentRoleEntity = InconsistentRemoteSchemaPermission remoteSchemaName
+        resolvedCheckPermission <- resolveCheckPermission checkPermission roleName inconsistentRoleEntity
+        return (roleName, resolvedCheckPermission)
   returnA -< catMaybes $ M.fromList resolvedPermissions
   where
     buildRemoteSchemaPermission = proc (originalIntrospection, (remoteSchemaName, remoteSchemaPerm)) -> do
