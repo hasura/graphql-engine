@@ -19161,28 +19161,6 @@ runAddCollectionToAllowlist :: (MonadError QErr m, MetadataM m, CacheRWM m) => A
 runDropCollectionFromAllowlist :: (MonadError QErr m, MetadataM m, CacheRWM m) => DropCollectionFromAllowlist -> m EncJSON
 runUpdateScopeOfCollectionInAllowlist :: (MonadError QErr m, MetadataM m, CacheRWM m) => UpdateScopeOfCollectionInAllowlist -> m EncJSON
 
-
--- | This module provides operations to load and modify metadata relating
---   to GraphQL Data Connectors.
-module Hasura.RQL.DDL.DataConnector
-data DCAddAgent
-DCAddAgent :: DataConnectorName -> BaseUrl -> DCAddAgent
-[_gdcaName] :: DCAddAgent -> DataConnectorName
-[_gdcaUrl] :: DCAddAgent -> BaseUrl
-
--- | Insert a new Data Connector Agent into Metadata.
-runAddDataConnectorAgent :: (MetadataM m, CacheRWM m, MonadError QErr m) => DCAddAgent -> m EncJSON
-newtype DCDeleteAgent
-DCDeleteAgent :: DataConnectorName -> DCDeleteAgent
-[_dcdaName] :: DCDeleteAgent -> DataConnectorName
-
--- | Delete a Data Connector Agent from the Metadata.
-runDeleteDataConnectorAgent :: (CacheRWM m, MetadataM m, MonadError QErr m) => DCDeleteAgent -> m EncJSON
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.DataConnector.DCDeleteAgent
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.DataConnector.DCDeleteAgent
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.DataConnector.DCAddAgent
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.DataConnector.DCAddAgent
-
 module Hasura.RQL.DDL.CustomTypes
 runSetCustomTypes :: (MonadError QErr m, CacheRWM m, MetadataM m) => CustomTypes -> m EncJSON
 clearCustomTypesInMetadata :: MetadataModifier
@@ -19269,6 +19247,7 @@ SourceKindInfo :: Text -> SourceType -> SourceKindInfo
 data SourceType
 Builtin :: SourceType
 Agent :: SourceType
+fetchSourceKinds :: MetadataM m => m [SourceKindInfo]
 runListSourceKinds :: MetadataM m => ListSourceKinds -> m EncJSON
 newtype GetSourceKindCapabilities
 GetSourceKindCapabilities :: NonEmptyText -> GetSourceKindCapabilities
@@ -19284,6 +19263,28 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SourceKinds.SourceTyp
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SourceKinds.SourceType
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SourceKinds.ListSourceKinds
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SourceKinds.ListSourceKinds
+
+
+-- | This module provides operations to load and modify metadata relating
+--   to GraphQL Data Connectors.
+module Hasura.RQL.DDL.DataConnector
+data DCAddAgent
+DCAddAgent :: DataConnectorName -> BaseUrl -> DCAddAgent
+[_gdcaName] :: DCAddAgent -> DataConnectorName
+[_gdcaUrl] :: DCAddAgent -> BaseUrl
+
+-- | Insert a new Data Connector Agent into Metadata.
+runAddDataConnectorAgent :: (MetadataM m, CacheRWM m, MonadError QErr m) => DCAddAgent -> m EncJSON
+newtype DCDeleteAgent
+DCDeleteAgent :: DataConnectorName -> DCDeleteAgent
+[_dcdaName] :: DCDeleteAgent -> DataConnectorName
+
+-- | Delete a Data Connector Agent from the Metadata.
+runDeleteDataConnectorAgent :: (CacheRWM m, MetadataM m, MonadError QErr m) => DCDeleteAgent -> m EncJSON
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.DataConnector.DCDeleteAgent
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.DataConnector.DCDeleteAgent
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.DataConnector.DCAddAgent
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.DataConnector.DCAddAgent
 
 
 -- | Functions for fetching and updating @<a>Metadata</a> in the catalog.
@@ -22881,21 +22882,21 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqCleanupConfig :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe Text)
-cetqWebhook :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe InputWebhook)
-cetqUpdate :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe (SubscribeOpSpec b_aD6mt))
-cetqTable :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (TableName b_aD6mt)
-cetqSource :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) SourceName
-cetqRetryConf :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe RequestTransform)
-cetqReplace :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) Bool
-cetqName :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) TriggerName
-cetqInsert :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe (SubscribeOpSpec b_aD6mt))
-cetqHeaders :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe Bool)
-cetqDelete :: forall b_aD6mt. Lens' (CreateEventTriggerQuery b_aD6mt) (Maybe (SubscribeOpSpec b_aD6mt))
+cteqCleanupConfig :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe Text)
+cetqWebhook :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe InputWebhook)
+cetqUpdate :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe (SubscribeOpSpec b_aD6zj))
+cetqTable :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (TableName b_aD6zj)
+cetqSource :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) SourceName
+cetqRetryConf :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe RequestTransform)
+cetqReplace :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) Bool
+cetqName :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) TriggerName
+cetqInsert :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe (SubscribeOpSpec b_aD6zj))
+cetqHeaders :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe Bool)
+cetqDelete :: forall b_aD6zj. Lens' (CreateEventTriggerQuery b_aD6zj) (Maybe (SubscribeOpSpec b_aD6zj))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
