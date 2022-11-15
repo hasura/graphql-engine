@@ -316,7 +316,7 @@ instance (ToJSON rootFieldType) => ToJSON (AllowedRootFields rootFieldType) wher
 -- | Serializes set of allowed fields as a nullable array, where @null@ maps to
 -- 'ARFAllowAllRootFields', and any array value maps to
 -- 'ARFAllowConfiguredRootFields'.
-instance (Eq rootFieldType, Hashable rootFieldType, HasCodec rootFieldType) => HasCodec (AllowedRootFields rootFieldType) where
+instance (Hashable rootFieldType, HasCodec rootFieldType) => HasCodec (AllowedRootFields rootFieldType) where
   codec = dimapCodec dec enc $ maybeCodec $ listCodec codec
     where
       dec (Just fields) = ARFAllowConfiguredRootFields $ Set.fromList fields

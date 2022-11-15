@@ -44,14 +44,14 @@ instance Arbitrary Text where
   arbitrary = T.pack <$> listOf arbitraryUnicodeChar
 
 instance
-  (Arbitrary k, Eq k, Hashable k, Arbitrary v) =>
+  (Arbitrary k, Hashable k, Arbitrary v) =>
   Arbitrary (HashMap k v)
   where
   arbitrary = HashMap.fromList <$> arbitrary
   shrink = fmap HashMap.fromList . shrink . HashMap.toList
 
 instance
-  (Arbitrary k, Eq k, Hashable k, Arbitrary v) =>
+  (Arbitrary k, Hashable k, Arbitrary v) =>
   Arbitrary (InsOrdHashMap k v)
   where
   arbitrary = InsOrd.HashMap.fromList <$> arbitrary
@@ -67,13 +67,13 @@ instance Arbitrary HTTP.Types.Status where
 -- Orphan instances for types defined by us, but which are not coupled to
 -- GraphQL Engine.
 
-instance (Eq k, Hashable k, Arbitrary k, Eq v, Arbitrary v) => Arbitrary (Trie.Trie k v) where
+instance (Hashable k, Arbitrary k, Eq v, Arbitrary v) => Arbitrary (Trie.Trie k v) where
   arbitrary = Trie.Trie <$> scale (`div` 2) arbitrary <*> arbitrary
   shrink (Trie.Trie m v) =
     [Trie.Trie m v' | v' <- shrink v]
       ++ [Trie.Trie m' v | m' <- shrink m]
 
-instance (Eq k, Hashable k, Arbitrary k, Ord v, Arbitrary v) => Arbitrary (MMap.MultiMap k v) where
+instance (Hashable k, Arbitrary k, Ord v, Arbitrary v) => Arbitrary (MMap.MultiMap k v) where
   arbitrary = MMap.fromMap . fmap (Set.fromList . take 5) <$> arbitrary
   shrink m = map MMap.fromMap $ shrink $ MMap.toMap m
 

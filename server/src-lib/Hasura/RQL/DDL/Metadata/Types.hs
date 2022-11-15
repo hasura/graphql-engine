@@ -93,7 +93,7 @@ instance (ToJSON a) => ToJSON (ReloadSpec a) where
     RSReloadAll -> Aeson.Bool True
     RSReloadList l -> Aeson.toJSON l
 
-instance (FromJSON a, Eq a, Hashable a) => FromJSON (ReloadSpec a) where
+instance (FromJSON a, Hashable a) => FromJSON (ReloadSpec a) where
   parseJSON (Aeson.Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
   parseJSON v = RSReloadList <$> Aeson.parseJSON v
 

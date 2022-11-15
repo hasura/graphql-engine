@@ -221,7 +221,7 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
           <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
   pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) remoteTable False io, dependencies)
   where
-    reverseMap :: Eq y => Hashable y => HashMap x y -> HashMap y x
+    reverseMap :: Hashable y => HashMap x y -> HashMap y x
     reverseMap = Map.fromList . fmap swap . Map.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns

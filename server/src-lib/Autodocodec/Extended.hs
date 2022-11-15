@@ -72,13 +72,13 @@ graphQLValueCodec varCodec =
 
 -- | Serializes a hash set by converting it to a list. This matches the FromJSON
 -- and ToJSON instances in aeson.
-hashSetCodec :: (Eq a, Hashable a, HasCodec a) => JSONCodec (HashSet a)
+hashSetCodec :: (Hashable a, HasCodec a) => JSONCodec (HashSet a)
 hashSetCodec = hashSetCodecWith codec
 
 -- | Serializes a hash set by converting it to a list. This matches the FromJSON
 -- and ToJSON instances in aeson. This version accepts a codec for individual
 -- set values as an argument.
-hashSetCodecWith :: (Eq a, Hashable a) => JSONCodec a -> JSONCodec (HashSet a)
+hashSetCodecWith :: Hashable a => JSONCodec a -> JSONCodec (HashSet a)
 hashSetCodecWith elemCodec =
   dimapCodec HashSet.fromList HashSet.toList $
     listCodec elemCodec

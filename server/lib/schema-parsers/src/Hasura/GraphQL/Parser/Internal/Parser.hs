@@ -180,7 +180,7 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   forall n m origin a.
-  (MonadError ErrorMessage n, MonadParse m, Eq origin, Hashable origin, ToErrorValue origin) =>
+  (MonadError ErrorMessage n, MonadParse m, Hashable origin, ToErrorValue origin) =>
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->

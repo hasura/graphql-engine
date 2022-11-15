@@ -44,6 +44,7 @@ fi
 declare -A PACKAGE_TARGETS
 SKIP_UPDATE=false
 UPGRADE_ALL=false
+KEEP_TRYING=true
 
 if [[ $# -eq 0 ]]; then
     echo_error "expecting at least one argument"
@@ -55,6 +56,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --normalize)
       SKIP_UPDATE=true
+      KEEP_TRYING=false
       shift # past argument
       ;;
     --all)
@@ -107,53 +109,51 @@ else
         sed -i "\$s/\$/ $package_name ==$package_version,/" "$FREEZE_FILE"
     done
 
-    freeze_line_count_orig=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
-    freeze_line_count_prev=$freeze_line_count_orig # mutable
-    while : ; do
-        if out=$(cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set 2>&1); then
-            break
-        else
-            # newline-separated:
-            conflict_set=$(echo "$out" |  tr '\n' ' ' | sed -r 's/^.*conflict set: ([^\)]+)\).*$/\1/' | tr ',' '\n' | tr -d ' ')
-            if [ -z "$conflict_set" ]; then
-                echo_error "Something went wrong :/"
-                exit 77
-            fi
-            # omit target packages:
-            for package_name in "${!PACKAGE_TARGETS[@]}"; do
-                conflict_set=$(echo "$conflict_set" | sed "/^$package_name$/d")
-            done
-            # filter conflicts from the freeze file
-            while IFS= read -r package_name; do
-                sed -ri "/\s+any.$package_name ==/d" "$FREEZE_FILE"
-                sed -ri "/\s+$package_name /d" "$FREEZE_FILE"  # baked in flags
-            done <<< "$conflict_set"
-
-            freeze_line_count=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
-            if [ "$freeze_line_count" -eq "$freeze_line_count_prev" ]; then
-                # No longer making progress, so...
-                echo_error "It looks like we can't find a build plan :("
-                echo_error "With the freeze file in its current state, try doing:"
-                echo_error "    $ cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set"
-                echo_error "Exiting"
-                exit 31
+    if "$KEEP_TRYING"; then
+        freeze_line_count_orig=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
+        freeze_line_count_prev=$freeze_line_count_orig # mutable
+        while : ; do
+            if out=$(cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set 2>&1); then
+                break
             else
-                echo -ne "Relaxed $((freeze_line_count_orig-freeze_line_count)) constraints so far...\r"
-                freeze_line_count_prev=$freeze_line_count
-                # ...and try again
+                # newline-separated:
+                conflict_set=$(echo "$out" |  tr '\n' ' ' | sed -r 's/^.*conflict set: ([^\)]+)\).*$/\1/' | tr ',' '\n' | tr -d ' ')
+                if [ -z "$conflict_set" ]; then
+                    echo_error "Something went wrong :/"
+                    exit 77
+                fi
+                # omit target packages:
+                for package_name in "${!PACKAGE_TARGETS[@]}"; do
+                    conflict_set=$(echo "$conflict_set" | sed "/^$package_name$/d")
+                done
+                # filter conflicts from the freeze file
+                while IFS= read -r package_name; do
+                    sed -ri "/\s+any.$package_name ==/d" "$FREEZE_FILE"
+                    sed -ri "/\s+$package_name /d" "$FREEZE_FILE"  # baked in flags
+                done <<< "$conflict_set"
+
+                freeze_line_count=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
+                if [ "$freeze_line_count" -eq "$freeze_line_count_prev" ]; then
+                    # No longer making progress, so...
+                    echo_error "It looks like we can't find a build plan :("
+                    echo_error "With the freeze file in its current state, try doing:"
+                    echo_error "    $ cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set"
+                    echo_error "Exiting"
+                    exit 31
+                else
+                    echo -ne "Relaxed $((freeze_line_count_orig-freeze_line_count)) constraints so far...\r"
+                    freeze_line_count_prev=$freeze_line_count
+                    # ...and try again
+                fi
             fi
-        fi
-    done
+        done
+    else
+        cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set
+    fi
     echo
 fi
 
 ### Finally do a little cleanup/normalizing:
-
-# Be a little more liberal with GHC, as we use a patched version on CI with
-# performance improvements.
-GHC_VERSION="$(jq -r '.ghc' ./server/VERSIONS.json)"
-LIBERAL_GHC_VERSION="$(sed -r 's/[0-9]+$/\*/' <<< "$GHC_VERSION")"
-sed -ri "s/(\sany\.ghc[^ ]* ==)${GHC_VERSION},$/\1${LIBERAL_GHC_VERSION},/" "$FREEZE_FILE"
 
 # Remove graphql engine internal mono-repo packages. This doesn't matter unless
 # we happen to bump the version number in one of our cabal files.

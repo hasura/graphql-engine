@@ -131,7 +131,7 @@ class OnlyRelevantEq a where
   infix 4 ==~ -- same as (==)
   (==~) :: a -> a -> Bool
 
-instance (Backend b, Eq a, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
+instance (Backend b, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
   BoolAnd boolExpL ==~ BoolAnd boolExpR = Set.fromList boolExpL == Set.fromList boolExpR
   BoolOr boolExpL ==~ BoolOr boolExpR = Set.fromList boolExpL == Set.fromList boolExpR
   BoolNot boolExpL ==~ BoolNot boolExpR = boolExpL == boolExpR
@@ -148,7 +148,6 @@ instance
 
 instance
   ( Backend b,
-    Eq (OpExpG b a),
     Hashable (OpExpG b a),
     OnlyRelevantEq (AnnBoolExp b a),
     OnlyRelevantEq (AnnComputedFieldBoolExp b a)
