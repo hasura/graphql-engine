@@ -52,7 +52,7 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
       - HASURA_GRAPHQL_CITUS_SOURCE_URL=postgresql://postgres:hasura@citus/postgres
-      - HASURA_GRAPHQL_MSSQL_SOURCE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=mssql,1433;Uid=sa;Pwd=Password!;Encrypt=optional
+      - HASURA_GRAPHQL_MSSQL_SOURCE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=sqlserver,1433;Uid=sa;Pwd=Password!;Encrypt=optional
       - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
       - HASURA_BIGQUERY_PROJECT_ID
@@ -64,92 +64,41 @@ services:
       - output:/output
     working_dir: /src
     depends_on:
-      citus:
-        condition: service_healthy
-      mssql-healthcheck:
-        condition: service_healthy
       postgres:
         condition: service_healthy
-
-  citus:
-    image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
-    ports:
-      - 5432
-    environment:
-      POSTGRES_PASSWORD: "hasura"
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - psql -U postgres < /dev/null && sleep 5 && psql -U postgres < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 10
-    volumes:
-      - /var/lib/postgresql/data
-
-  mssql:
-    # We cannot use this image on arm64, as it's not available.
-    # Instead, we use `mcr.microsoft.com/azure-sql-edge`.
-    # This uses an environment variable so it can be overridden by scripts to
-    # provide that image instead.
-    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af}
-    ports:
-      - 1433
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "Password!"
-      MSSQL_SA_PASSWORD: "Password!"
-    volumes:
-      - /var/opt/mssql
-
-  # We would prefer to attach the healthcheck directly to the `sqlserver` container.
-  # However, while we can do this in the `mcr.microsoft.com/mssql/server` image,
-  # it's not possible when running on macOS, as we don't use that image, but
-  # instead `mcr.microsoft.com/azure-sql-edge`.
-  # The `mcr.microsoft.com/azure-sql-edge` image does not provide `sqlcmd`.
-  # We therefore need to run it in a separate container.
-  # We can reconsider this once the MSSQL Server image can run on arm64.
-  mssql-healthcheck:
-    image: mcr.microsoft.com/mssql-tools
-    command:
-      - sleep
-      - inf
-    init: true # handle signals correctly
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - |
-          /opt/mssql-tools/bin/sqlcmd -S 'mssql,1433' -U SA -P "Password!"
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 10
-    depends_on:
-      mssql:
-        condition: service_started
+      citus:
+        condition: service_healthy
+      sqlserver-healthcheck:
+        condition: service_healthy
 
   postgres:
-    image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
-    command:
-      - -F # turn fsync off for speed
-      - -N 1000 # increase max connections from 100 so we can run more HGEs
-    ports:
-      - 5432
+    extends:
+      file: ../../docker-compose/databases.yaml
+      service: postgres
     environment:
       POSTGRES_PASSWORD: "hasura"
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - psql -U postgres < /dev/null && sleep 5 && psql -U postgres < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 10
-    volumes:
-      - /var/lib/postgresql/data
     deploy:
       replicas: 2
+
+  citus:
+    extends:
+      file: ../../docker-compose/databases.yaml
+      service: citus
+    environment:
+      POSTGRES_PASSWORD: "hasura"
+
+  sqlserver:
+    extends:
+      file: ../../docker-compose/databases.yaml
+      service: sqlserver
+
+  sqlserver-healthcheck:
+    extends:
+      file: ../../docker-compose/databases.yaml
+      service: sqlserver-healthcheck
+    depends_on:
+      sqlserver:
+        condition: service_started
 
 volumes:
   cabal-cache:

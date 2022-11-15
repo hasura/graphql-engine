@@ -34,39 +34,72 @@ services:
     extends:
       file: docker-compose/databases.yaml
       service: mariadb
+    ports:
+      - "65001:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
 
   postgres:
     extends:
       file: docker-compose/databases.yaml
       service: postgres
+    ports:
+      - "65002:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   citus:
     extends:
       file: docker-compose/databases.yaml
       service: citus
+    ports:
+      - "65004:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+      - citus-data:/var/lib/postgresql/data
+      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   cockroach:
     extends:
       file: docker-compose/databases.yaml
       service: cockroach
+    ports:
+      - "65008:26257"
+    environment:
+      COCKROACH_USER: "root"
+      COCKROACH_DATABASE: "hasura"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
 
   sqlserver:
     extends:
       file: docker-compose/databases.yaml
       service: sqlserver
-
-  sqlserver-init:
-    extends:
-      file: docker-compose/databases.yaml
-      service: sqlserver-init
-    depends_on:
-      sqlserver:
-        condition: service_started
+    ports:
+      - "65003:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
 
   sqlserver-healthcheck:
     extends:
       file: docker-compose/databases.yaml
       service: sqlserver-healthcheck
+    depends_on:
+      sqlserver:
+        condition: service_started
+
+  sqlserver-init:
+    extends:
+      file: docker-compose/sqlserver-init/docker-compose.yaml
+      service: sqlserver-init
     depends_on:
       sqlserver:
         condition: service_started

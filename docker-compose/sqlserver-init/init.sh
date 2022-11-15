@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 set -u
@@ -14,14 +14,14 @@ fi
 
 echo "Initializing ${SERVER_HOST}:${SERVER_PORT}..."
 
-sleep "${SLEEP}"
-for i in $(seq 1 $MAX_ATTEMPTS); do
+sleep "$SLEEP"
+for i in $(seq 1 "$MAX_ATTEMPTS"); do
   echo "Attempt #${i} / ${MAX_ATTEMPTS}:"
-  if /opt/mssql-tools/bin/sqlcmd -S "${SERVER_HOST},${SERVER_PORT}" -U SA -P "DockerComposePassword!" -i /init.sql; then
+  if /opt/mssql-tools/bin/sqlcmd -S "${SERVER_HOST},${SERVER_PORT}" -U SA -P "$SA_PASSWORD" -i /init.sql; then
     break
   fi
   echo "Waiting ${SLEEP} seconds..."
-  sleep "${SLEEP}"
+  sleep "$SLEEP"
 done
 
 echo Finished attempts.

@@ -4,7 +4,7 @@ services:
   mariadb:
     image: mariadb:10.9.3
     ports:
-      - "65001:3306"
+      - 3306
     environment:
       MARIADB_USER: "hasura"
       MARIADB_PASSWORD: "hasura"
@@ -12,7 +12,7 @@ services:
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
       MARIADB_MYSQL_LOCALHOST_USER: "1"
     volumes:
-      - mariadb-data:/var/lib/mysql
+      - /var/lib/mysql
     healthcheck:
       test:
         - CMD
@@ -30,18 +30,15 @@ services:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
     ports:
-      - "65002:5432"
+      - 5432
     environment:
-      POSTGRES_USER: "hasura"
-      POSTGRES_PASSWORD: "hasura"
-      POSTGRES_DB: "hasura"
+      POSTGRES_PASSWORD: "password" # you probably want to override this
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+      - /var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 1 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -50,18 +47,15 @@ services:
   citus:
     image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
     ports:
-      - "65004:5432"
+      - 5432
     environment:
-      POSTGRES_USER: "hasura"
-      POSTGRES_PASSWORD: "hasura"
-      POSTGRES_DB: "hasura"
+      POSTGRES_PASSWORD: "password" # you probably want to override this
     volumes:
-      - citus-data:/var/lib/postgresql/data
-      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+      - /var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 1 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -74,12 +68,9 @@ services:
       - --insecure
       - --accept-sql-without-tls
     ports:
-      - "65008:26257"
-    environment:
-      COCKROACH_USER: "root"
-      COCKROACH_DATABASE: "hasura"
+      - 26257
     volumes:
-      - cockroach-data:/cockroach/cockroach-data
+      - /cockroach/cockroach-data
     healthcheck:
       test:
         - CMD-SHELL
@@ -103,7 +94,7 @@ services:
       YSQL_PASSWORD: "hasura"
       YSQL_DB: "hasura"
     volumes:
-      - yugabyte-data:/var/lib/postgresql/data
+      - /var/lib/postgresql/data
 
   sqlserver:
     # We cannot use this image on arm64, as it's not available.
@@ -112,13 +103,13 @@ services:
     # provide that image instead.
     image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
     ports:
-      - "65003:1433"
+      - 1433
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "DockerComposePassword!"
-      MSSQL_SA_PASSWORD: "DockerComposePassword!"
+      SA_PASSWORD: "Password!"
+      MSSQL_SA_PASSWORD: "Password!"
     volumes:
-      - mssql-data:/var/opt/mssql
+      - /var/opt/mssql
 
   # We would prefer to attach the healthcheck directly to the `sqlserver` container.
   # However, while we can do this in the `mcr.microsoft.com/mssql/server` image,
@@ -137,7 +128,7 @@ services:
       test:
         - CMD-SHELL
         - |
-          /opt/mssql-tools/bin/sqlcmd -S 'sqlserver,1433' -U SA -P "DockerComposePassword!"
+          /opt/mssql-tools/bin/sqlcmd -S 'sqlserver,1433' -U SA -P "Password!"
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -147,28 +138,3 @@ services:
     # depends_on:
     #   sqlserver:
     #     condition: service_started
-
-    # Separated from the `sqlserver` container so we can use the `mssql-tools` image to run `sqlcmd`.
-    # `sqlcmd` is not available in the `azure-sql-edge` image on arm64, which we use for testing on macOS.
-  sqlserver-init:
-    image: mcr.microsoft.com/mssql-tools
-    command:
-      - /init.sh
-    environment:
-      SERVER_HOST: sqlserver
-    volumes:
-      - ./sqlserver-init/init.sh:/init.sh
-      - ./sqlserver-init/init.sql:/init.sql
-    # This is commented out because this file can be extended, and dependencies don't work for extensions.
-    # Instead, ensure you also run this one.
-    # depends_on:
-    #   sqlserver:
-    #     condition: service_started
-
-volumes:
-  citus-data:
-  cockroach-data:
-  mariadb-data:
-  mssql-data:
-  postgres-data:
-  yugabyte-data:

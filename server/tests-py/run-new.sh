@@ -14,7 +14,7 @@ set -o pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
-DATABASES=(citus mssql mssql-healthcheck postgres)
+DATABASES=(postgres citus sqlserver sqlserver-healthcheck)
 
 (
   cd ../..
@@ -44,11 +44,11 @@ echo '*** Starting databases ***'
 docker compose rm -svf "${DATABASES[@]}" # tear down databases beforehand
 docker compose up -d --wait "${DATABASES[@]}"
 
-HASURA_GRAPHQL_CITUS_SOURCE_URL="postgresql://postgres:hasura@localhost:$(docker compose port citus 5432 | sed -E 's/.*://')/postgres"
-HASURA_GRAPHQL_MSSQL_SOURCE_URL="DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,$(docker compose port mssql 1433 | sed -E 's/.*://');Uid=sa;Pwd=Password!;Encrypt=optional"
 HASURA_GRAPHQL_PG_SOURCE_URL_1="postgresql://postgres:hasura@localhost:$(docker compose port --index 1 postgres 5432 | sed -E 's/.*://')/postgres"
 HASURA_GRAPHQL_PG_SOURCE_URL_2="postgresql://postgres:hasura@localhost:$(docker compose port --index 2 postgres 5432 | sed -E 's/.*://')/postgres"
-export HASURA_GRAPHQL_CITUS_SOURCE_URL HASURA_GRAPHQL_MSSQL_SOURCE_URL HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2
+HASURA_GRAPHQL_CITUS_SOURCE_URL="postgresql://postgres:hasura@localhost:$(docker compose port citus 5432 | sed -E 's/.*://')/postgres"
+HASURA_GRAPHQL_MSSQL_SOURCE_URL="DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,$(docker compose port sqlserver 1433 | sed -E 's/.*://');Uid=sa;Pwd=Password!;Encrypt=optional"
+export HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2 HASURA_GRAPHQL_CITUS_SOURCE_URL HASURA_GRAPHQL_MSSQL_SOURCE_URL
 
 echo
 echo '*** Running tests ***'
