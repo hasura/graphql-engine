@@ -362,6 +362,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
               let albums =
                     _tdAlbumsRows
                       & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
+                      & sortOn (^? Data.field "Title" . Data._ColumnFieldString)
                       & fmap joinInTracks
                       & Data.renameColumns [("Title", "nodes_Title")]
                       & Data.filterColumns ["nodes_Title", "nodes_Tracks_aggregate"]
@@ -376,7 +377,9 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                 & fmap joinInAlbums
                 & Data.filterColumns ["Name", "Albums_aggregate"]
 
-        Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+        let receivedArtistRows = Data.responseRows receivedArtists
+
+        receivedArtistRows `rowsShouldBe` expectedArtists
         Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
   describe "Aggregates over ordered and paginated tables" $ do
@@ -498,7 +501,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     --   query {
     --     Artist(where: {_and: [{Name: {_gt: "A"}}, {Name: {_lt: "B"}}]}, limit: 3, offset: 1, order_by: {Name: desc}) {
     --       Name
-    --       Albums_aggregate {
+    --       Albums_aggregate(order_by: {Title: asc}) {
     --         nodes {
     --           Title
     --           Tracks_aggregate(where: {Milliseconds: {_lt: 300000}}, order_by: {Name: desc}) {
@@ -545,7 +548,8 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
               [ ("nodes_Title", _tdColumnField "Title" _tdStringType),
                 ("nodes_Tracks_aggregate", RelField $ RelationshipField _tdTracksRelationshipName tracksSubquery)
               ]
-          albumsSubquery = Data.emptyQuery & qFields ?~ albumsFields
+          albumsOrderBy = OrderBy mempty $ _tdOrderByColumn [] "Title" Ascending :| []
+          albumsSubquery = Data.emptyQuery & qFields ?~ albumsFields & qOrderBy ?~ albumsOrderBy
           artistFields =
             Data.mkFieldsMap
               [ ("Name", _tdColumnField "Name" _tdStringType),
