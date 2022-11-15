@@ -18,6 +18,16 @@
             },
             "description": ""
           },
+          "400": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          },
           "500": {
             "content": {
               "application/json;charset=utf-8": {
@@ -65,7 +75,14 @@
             "description": ""
           },
           "400": {
-            "description": "Invalid `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": " or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
           },
           "500": {
             "content": {
@@ -123,7 +140,14 @@
             "description": ""
           },
           "400": {
-            "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": " or `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
           },
           "500": {
             "content": {
