@@ -44,7 +44,7 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/kriti-lang.git
-  tag: v0.3.3
+  tag: c8fd863d359876af3a0fce47db8a5393dc556667
 
 source-repository-package
   type: git
@@ -86,7 +86,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/ekg-json.git
-  tag: 84990712c165d7e3e76b2b289640ef8b5033f12f
+  tag: 1fab6837e1dd98317a3c2f5bf9deedf4dfcac51b
 
 -- This is v1.2.5.0 with https://github.com/haskell/text/pull/348
 -- cherry-picked.

@@ -16,7 +16,6 @@ import Data.Aeson
   )
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.KeyMap.Extended qualified as KM (mapWithKey)
 import Data.List (permutations)
 import Data.Set (Set)
 import Data.Set qualified as Set
