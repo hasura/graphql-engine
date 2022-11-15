@@ -1,15 +1,15 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- |
--- Tests for GraphQL query directives.
+-- Tests for the interactions between @skip and @include query directives.
 --
 -- https://spec.graphql.org/June2018/#sec-Type-System.Directives
 -- https://hasura.io/docs/latest/queries/postgres/variables-aliases-fragments-directives/
 -- https://hasura.io/docs/latest/queries/ms-sql-server/variables-aliases-fragments-directives/
 -- https://hasura.io/docs/latest/queries/bigquery/variables-aliases-fragments-directives/
-module Test.Queries.DirectivesSpec (spec) where
+module Test.Queries.VariablesAliasesFragments.Directives.IncludeAndSkipSpec (spec) where
 
-import Data.Aeson (Value)
+import Data.Aeson (Value, object, (.=))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
@@ -18,9 +18,9 @@ import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.GraphqlEngine (postGraphql)
+import Harness.GraphqlEngine (postGraphql, postGraphqlWithPair)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -103,19 +103,19 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Directives" do
-    it "Rejects unknown directives" \testEnvironment -> do
+  describe "Mixes @include and @skip directives" do
+    it "Returns the field when @include(if: true) and @skip(if: false)" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
             [interpolateYaml|
-              errors:
-              - extensions:
-                  path: $.selectionSet.#{schemaName}_author.selectionSet
-                  code: validation-failed
-                message: |-
-                  directive 'exclude' is not defined in the schema
+              data:
+                #{schemaName}_author:
+                - id: 1
+                  name: Author 1
+                - id: 2
+                  name: Author 2
             |]
 
           actual :: IO Value
@@ -124,8 +124,8 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  #{schemaName}_author {
-                    id @exclude(if: true)
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @include(if: true) @skip(if: false)
                     name
                   }
                 }
@@ -133,18 +133,16 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Rejects duplicate directives" \testEnvironment -> do
+    it "Doesn't return the field when @include(if: false) and @skip(if: false)" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
             [interpolateYaml|
-              errors:
-              - extensions:
-                  path: $.selectionSet.#{schemaName}_author.selectionSet
-                  code: validation-failed
-                message: |-
-                  the following directives are used more than once: ['include']
+              data:
+                #{schemaName}_author:
+                - name: Author 1
+                - name: Author 2
             |]
 
           actual :: IO Value
@@ -153,8 +151,8 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  #{schemaName}_author {
-                    id @include(if: true) @include(if: true)
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @include(if: false) @skip(if: false)
                     name
                   }
                 }
@@ -162,18 +160,16 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Rejects directives on wrong element" \testEnvironment -> do
+    it "Doesn't return the field when @include(if: false) and @skip(if: true)" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
 
       let expected :: Value
           expected =
-            [yaml|
-              errors:
-              - extensions:
-                  path: $
-                  code: validation-failed
-                message: |-
-                  directive 'include' is not allowed on a query
+            [interpolateYaml|
+              data:
+                #{schemaName}_author:
+                - name: Author 1
+                - name: Author 2
             |]
 
           actual :: IO Value
@@ -181,12 +177,40 @@ tests opts = do
             postGraphql
               testEnvironment
               [graphql|
-                query @include(if: true) {
-                  #{schemaName}_author {
-                    id
+                query {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @include(if: false) @skip(if: true)
                     name
                   }
                 }
               |]
+
+      actual `shouldBe` expected
+
+    it "Doesn't return the field when @include(if: true) and @skip(if: true)" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_author:
+                - name: Author 1
+                - name: Author 2
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphqlWithPair
+              testEnvironment
+              [graphql|
+                query test($skip: Boolean!, $include: Boolean!) {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @include(if: $include) @skip(if: $skip)
+                    name
+                  }
+                }
+              |]
+              ["variables" .= object ["skip" .= True, "include" .= True]]
 
       actual `shouldBe` expected

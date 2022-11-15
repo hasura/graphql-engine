@@ -1,7 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Test that backend which support it are able to explain queries.
-module Test.Queries.ExplainSpec (spec) where
+-- https://hasura.io/docs/latest/api-reference/explain/
+module Test.API.ExplainSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus

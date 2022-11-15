@@ -65,6 +65,7 @@ executable api-tests
   main-is: Spec.hs
   other-modules:
     SpecHook
+    Test.API.ExplainSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.Queries.SpatialTypesSpec
     Test.BigQuery.Schema.RunSQLSpec
@@ -113,18 +114,10 @@ executable api-tests
     Test.Postgres.JsonbSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
-    Test.Queries.AggregationPredicatesSpec
     Test.Queries.AggregationSpec
-    Test.Queries.AliasesSpec
-    Test.Queries.Directives.IncludeAndSkipSpec
-    Test.Queries.Directives.IncludeSpec
-    Test.Queries.Directives.SkipSpec
-    Test.Queries.DirectivesSpec
     Test.Queries.DistinctSpec
-    Test.Queries.ExplainSpec
-    Test.Queries.FilterSearchSpec
-    Test.Queries.FragmentsSpec
-    Test.Queries.MultiColumnObjectRelationshipsSpec
+    Test.Queries.FilterSearch.AggregationPredicatesSpec
+    Test.Queries.FilterSearch.FilterSearchSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
@@ -133,13 +126,20 @@ executable api-tests
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
-    Test.Queries.VariablesSpec
+    Test.Queries.VariablesAliasesFragments.AliasesSpec
+    Test.Queries.VariablesAliasesFragments.Directives.DirectivesSpec
+    Test.Queries.VariablesAliasesFragments.Directives.IncludeAndSkipSpec
+    Test.Queries.VariablesAliasesFragments.Directives.IncludeSpec
+    Test.Queries.VariablesAliasesFragments.Directives.SkipSpec
+    Test.Queries.VariablesAliasesFragments.FragmentsSpec
+    Test.Queries.VariablesAliasesFragments.VariablesSpec
     Test.Quoter.YamlSpec
     Test.Regression.AggregateBoolExpConflictSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
+    Test.Regression.MultiColumnObjectRelationshipsSpec
     Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec

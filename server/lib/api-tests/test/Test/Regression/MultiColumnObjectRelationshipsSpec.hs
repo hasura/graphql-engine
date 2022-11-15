@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Test relationships define using multiple columns.
-module Test.Queries.MultiColumnObjectRelationshipsSpec (spec) where
+module Test.Regression.MultiColumnObjectRelationshipsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

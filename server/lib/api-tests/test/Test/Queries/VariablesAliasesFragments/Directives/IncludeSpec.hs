@@ -1,22 +1,24 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- |
--- Tests for queries involving GraphQL variables.
+-- Tests for the GraphQL @include query directive.
 --
--- https://hasura.io/docs/latest/queries/postgres/variables-aliases-fragments-directives/#using-variables
--- https://hasura.io/docs/latest/queries/ms-sql-server/variables-aliases-fragments-directives/#using-variables
--- https://hasura.io/docs/latest/queries/bigquery/variables-aliases-fragments-directives/#using-variables
-module Test.Queries.VariablesSpec (spec) where
+-- https://spec.graphql.org/June2018/#sec-Type-System.Directives
+-- https://hasura.io/docs/latest/queries/postgres/variables-aliases-fragments-directives/
+-- https://hasura.io/docs/latest/queries/ms-sql-server/variables-aliases-fragments-directives/
+-- https://hasura.io/docs/latest/queries/bigquery/variables-aliases-fragments-directives/
+module Test.Queries.VariablesAliasesFragments.Directives.IncludeSpec (spec) where
 
-import Data.Aeson (Value (String), object, (.=))
+import Data.Aeson (Value, object, (.=))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.GraphqlEngine (postGraphqlWithPair)
+import Harness.GraphqlEngine (postGraphql, postGraphqlWithPair)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
@@ -26,6 +28,9 @@ import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
+
+--------------------------------------------------------------------------------
+-- Preamble
 
 spec :: SpecWith TestEnvironment
 spec = do
@@ -65,6 +70,11 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment
+                ]
             }
         ]
     )
@@ -82,8 +92,8 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableData =
-          [ [Schema.VInt 1, Schema.VStr "Alice"],
-            [Schema.VInt 2, Schema.VStr "Bob"]
+          [ [Schema.VInt 1, Schema.VStr "Author 1"],
+            [Schema.VInt 2, Schema.VStr "Author 2"]
           ]
       }
   ]
@@ -96,36 +106,60 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Using variables" do
-    it "A query involving a single variable" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
+  describe "Include fields conditionally" do
+    it "Includes field with @include(if: true)" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_author:
+                - id: 1
+                  name: Author 1
+                - id: 2
+                  name: Author 2
+            |]
 
           actual :: IO Value
           actual =
             postGraphqlWithPair
               testEnvironment
               [graphql|
-                query($author: String!) {
-                  #{schemaName}_author (where: { name: { _eq: $author } }) {
+                query test($include: Boolean!) {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @include(if: $include)
                     name
-                    id
                   }
                 }
               |]
-              [ "variables"
-                  .= object
-                    [ ("author", String "Alice")
-                    ]
-              ]
+              ["variables" .= object ["include" .= True]]
 
-          expected :: Value
+      actual `shouldBe` expected
+
+    it "Doesn't include field with @include(if: false)" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
           expected =
             [interpolateYaml|
               data:
                 #{schemaName}_author:
-                - name: Alice
-                  id: 1
+                - name: Author 1
+                - name: Author 2
             |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @include(if: false)
+                    name
+                  }
+                }
+              |]
 
       actual `shouldBe` expected

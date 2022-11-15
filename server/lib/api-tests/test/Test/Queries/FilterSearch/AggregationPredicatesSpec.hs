@@ -10,7 +10,7 @@
 -- https://hasura.io/docs/latest/queries/bigquery/query-filters/
 -- https://hasura.io/docs/latest/queries/ms-sql-server/query-filters/
 -- https://hasura.io/docs/latest/queries/postgres/query-filters/
-module Test.Queries.AggregationPredicatesSpec (spec) where
+module Test.Queries.FilterSearch.AggregationPredicatesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

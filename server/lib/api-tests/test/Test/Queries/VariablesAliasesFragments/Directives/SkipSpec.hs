@@ -1,22 +1,24 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- |
--- Tests for queries involving GraphQL aliases.
+-- Tests for the GraphQL @skip query directive.
 --
--- https://hasura.io/docs/latest/queries/postgres/variables-aliases-fragments-directives/#using-aliases
--- https://hasura.io/docs/latest/queries/ms-sql-server/variables-aliases-fragments-directives/#using-aliases
--- https://hasura.io/docs/latest/queries/bigquery/variables-aliases-fragments-directives/#using-aliases
-module Test.Queries.AliasesSpec (spec) where
+-- https://spec.graphql.org/June2018/#sec-Type-System.Directives
+-- https://hasura.io/docs/latest/queries/postgres/variables-aliases-fragments-directives/
+-- https://hasura.io/docs/latest/queries/ms-sql-server/variables-aliases-fragments-directives/
+-- https://hasura.io/docs/latest/queries/bigquery/variables-aliases-fragments-directives/
+module Test.Queries.VariablesAliasesFragments.Directives.SkipSpec (spec) where
 
-import Data.Aeson (Value)
+import Data.Aeson (Value, object, (.=))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.GraphqlEngine (postGraphql)
+import Harness.GraphqlEngine (postGraphql, postGraphqlWithPair)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
@@ -26,6 +28,9 @@ import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
+
+--------------------------------------------------------------------------------
+-- Preamble
 
 spec :: SpecWith TestEnvironment
 spec = do
@@ -65,6 +70,11 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment
+                ]
             }
         ]
     )
@@ -82,8 +92,8 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableData =
-          [ [Schema.VInt 1, Schema.VStr "Alice"],
-            [Schema.VInt 2, Schema.VStr "Bob"]
+          [ [Schema.VInt 1, Schema.VStr "Author 1"],
+            [Schema.VInt 2, Schema.VStr "Author 2"]
           ]
       }
   ]
@@ -96,10 +106,18 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Using aliases" do
-    it "Two aliased queries" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
+  describe "Skip fields conditionally" do
+    it "Skips field with @skip(if: true)" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_author:
+                - name: Author 1
+                - name: Author 2
+            |]
 
           actual :: IO Value
           actual =
@@ -107,19 +125,42 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  first:#{schemaName}_author (where: { id: { _eq: 1 } }) { name }
-                  second:#{schemaName}_author (where: { id: { _eq: 2 } }) { name }
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @skip(if: true)
+                    name
+                  }
                 }
               |]
 
-          expected :: Value
+      actual `shouldBe` expected
+
+    it "Doesn't skip field with @skip(if: false)" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
           expected =
             [interpolateYaml|
               data:
-                first:
-                - name: Alice
-                second:
-                - name: Bob
+                #{schemaName}_author:
+                - id: 1
+                  name: Author 1
+                - id: 2
+                  name: Author 2
             |]
+
+          actual :: IO Value
+          actual =
+            postGraphqlWithPair
+              testEnvironment
+              [graphql|
+                query test($skip: Boolean!) {
+                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                    id @skip(if: $skip)
+                    name
+                  }
+                }
+              |]
+              [ "variables" .= object ["skip" .= False]
+              ]
 
       actual `shouldBe` expected
