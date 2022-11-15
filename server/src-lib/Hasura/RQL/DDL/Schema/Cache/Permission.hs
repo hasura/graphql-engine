@@ -153,8 +153,8 @@ orderRoles allRoles = do
 -- | `resolveCheckPermission` is a helper function which will convert the indermediate
 --    type `CheckPermission` to its original type. It will record any metadata inconsistencies, if exists.
 resolveCheckPermission ::
-  forall m p.
-  (MonadWriter (Seq CollectedInfo) m) =>
+  forall m p md.
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
   CheckPermission p ->
   RoleName ->
   InconsistentRoleEntity ->
@@ -164,7 +164,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPInconsistent -> do
       let inconsistentObj =
             -- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`
-            CIInconsistency $
+            Left $
               ConflictingInheritedPermission roleName inconsistentEntity
       tell $ Seq.singleton inconsistentObj
       pure Nothing
@@ -173,7 +173,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
 
 resolveCheckTablePermission ::
   forall b perm m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b
   ) =>
   CheckPermission perm ->
@@ -197,7 +197,7 @@ buildTablePermissions ::
     Inc.ArrowDistribute arr,
     Inc.ArrowCache m arr,
     MonadError QErr m,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     BackendMetadata b,
     Inc.Cacheable (Proxy b),
     GetAggregationPredicatesDeps b
@@ -281,7 +281,7 @@ mkPermissionMetadataObject source table permDef =
 
 withPermission ::
   forall bknd a b c s arr.
-  (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, BackendMetadata bknd) =>
+  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, BackendMetadata bknd) =>
   WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b ->
   ( a,
     ((SourceName, TableName bknd, PermDef bknd c, Proxy bknd), s)
@@ -313,7 +313,7 @@ withPermission f = proc (e, ((source, table, permDef, _proxy), s)) -> do
 buildPermission ::
   forall b a arr m.
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     Inc.Cacheable (a b),
     Inc.Cacheable (Proxy b),

@@ -21,6 +21,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -73,7 +74,7 @@ class
     ( ArrowChoice arr,
       Inc.ArrowCache m arr,
       Inc.ArrowDistribute arr,
-      ArrowWriter (Seq CollectedInfo) arr,
+      ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
       MonadIO m,
       HasHttpManagerM m
     ) =>

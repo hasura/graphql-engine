@@ -287,7 +287,7 @@ bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
 {-# INLINE bindErrorA #-}
 
 withRecordDependencies ::
-  (ArrowWriter (Seq CollectedInfo) arr) =>
+  (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
   WriterA (Seq SchemaDependency) arr (e, s) a ->
   arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
@@ -297,7 +297,7 @@ withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
 {-# INLINEABLE withRecordDependencies #-}
 
 noDuplicates ::
-  (MonadWriter (Seq CollectedInfo) m) =>
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
   (a -> MetadataObject) ->
   [a] ->
   m (Maybe a)
@@ -307,7 +307,7 @@ noDuplicates mkMetadataObject = \case
   values@(value : _) -> do
     let objectId = _moId $ mkMetadataObject value
         definitions = map (_moDefinition . mkMetadataObject) values
-    tell $ Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
+    tell $ Seq.singleton $ Left (DuplicateObjects objectId definitions)
     return Nothing
 
 -- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
@@ -315,7 +315,7 @@ noDuplicates mkMetadataObject = \case
 buildInfoMap ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -341,7 +341,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
 buildInfoMapPreservingMetadata ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Hashable k
   ) =>
   (a -> k) ->

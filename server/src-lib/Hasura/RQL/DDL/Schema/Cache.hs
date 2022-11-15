@@ -274,7 +274,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
   -- Step 1: Process metadata and collect dependency information.
   (outputs, collectedInfo) <-
     runWriterA buildAndCollectInfo -< (metadata, invalidationKeysDep)
-  let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
+  let (inconsistentObjects, unresolvedDependencies) = partitionEithers $ toList collectedInfo
 
   -- Step 2: Resolve dependency information and drop dangling dependents.
   (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies) <-
@@ -373,7 +373,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         ArrowChoice arr,
         Inc.ArrowCache m arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         HasHttpManagerM m
       ) =>
@@ -391,7 +391,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         HasHttpManagerM m
       ) =>
@@ -409,7 +409,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         MonadResolveSource m,
         HasHttpManagerM m,
@@ -436,7 +436,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
@@ -531,7 +531,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         HasServerConfigCtx m,
         MonadError QErr m,
         BackendMetadata b,
@@ -642,7 +642,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
         MonadError QErr m,
         MonadReader BuildReason m,
@@ -905,7 +905,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
        in MetadataObject objectId (toJSON createEndpoint)
 
     buildEndpoint ::
-      (ArrowChoice arr, ArrowKleisli m arr, MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr) =>
+      (ArrowChoice arr, ArrowKleisli m arr, MonadError QErr m, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr) =>
       (InsOrdHashMap CollectionName CreateCollection, (EndpointName, CreateEndpoint)) `arr` Maybe (EndpointMetadata GQLQueryWithText)
     buildEndpoint = proc (collections, e@(name, createEndpoint)) -> do
       let endpoint = createEndpoint
@@ -985,7 +985,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       forall arr m b.
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         Inc.ArrowCache m arr,
         MonadIO m,
         MonadError QErr m,
@@ -1116,7 +1116,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
     buildCronTriggers ::
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         Inc.ArrowCache m arr,
         MonadError QErr m
       ) =>
@@ -1139,7 +1139,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
     buildInheritedRoles ::
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         Inc.ArrowCache m arr,
         MonadError QErr m
       ) =>
@@ -1168,7 +1168,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq CollectedInfo) arr
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr
       ) =>
       ( (AnnotatedCustomTypes, BackendMap ScalarMap, OrderedRoles),
         [ActionMetadata]
@@ -1202,7 +1202,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
 buildRemoteSchemaRemoteRelationship ::
   forall arr m.
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     ArrowKleisli m arr,
     MonadError QErr m
   ) =>

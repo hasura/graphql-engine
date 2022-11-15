@@ -29,6 +29,7 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
@@ -44,14 +45,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 resolveDependencies ::
   (ArrowKleisli m arr, QErrM m) =>
   ( BuildOutputs,
-    [(MetadataObject, SchemaObjId, SchemaDependency)]
+    [MetadataDependency]
   )
     `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
 resolveDependencies = arrM \(cache, dependencies) -> do
   let dependencyMap =
         dependencies
-          & M.groupOn (view _2)
-          & fmap (map \(metadataObject, _, schemaDependency) -> (metadataObject, schemaDependency))
+          & M.groupOn (\case MetadataDependency _ schemaObjId _ -> schemaObjId)
+          & fmap (map \case MetadataDependency metadataObject _ schemaDependency -> (metadataObject, schemaDependency))
   performIteration 0 cache [] dependencyMap
 
 -- Processes dependencies using an iterative process that alternates between two steps:

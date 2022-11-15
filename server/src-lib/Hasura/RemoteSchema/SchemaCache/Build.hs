@@ -37,7 +37,7 @@ import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 buildRemoteSchemas ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
     HasHttpManagerM m,
@@ -95,7 +95,7 @@ buildRemoteSchemas env =
 buildRemoteSchemaPermissions ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadError QErr m
   ) =>

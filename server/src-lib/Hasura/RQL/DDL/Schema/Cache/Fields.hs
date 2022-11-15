@@ -41,7 +41,7 @@ addNonColumnFields ::
   forall b arr m.
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     ArrowKleisli m arr,
     MonadError QErr m,
     BackendMetadata b
@@ -162,7 +162,7 @@ addNonColumnFields =
         tellA
           -<
             Seq.singleton $
-              CIInconsistency $
+              Left $
                 ConflictingObjects
                   ("conflicting definitions for field " <>> fieldName)
                   [thisMetadata, thatMetadata]
@@ -221,7 +221,7 @@ mkRelationshipMetadataObject relType (source, table, relDef) =
 
 buildObjectRelationship ::
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Backend b
   ) =>
   ( HashMap (TableName b) (HashSet (ForeignKey b)),
@@ -237,7 +237,7 @@ buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
 
 buildArrayRelationship ::
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Backend b
   ) =>
   ( HashMap (TableName b) (HashSet (ForeignKey b)),
@@ -253,7 +253,7 @@ buildArrayRelationship = proc (fkeysMap, (source, table, relDef)) -> do
 
 buildRelationship ::
   forall m b a.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     ToJSON a,
     Backend b
   ) =>
@@ -294,7 +294,7 @@ mkComputedFieldMetadataObject (source, table, ComputedFieldMetadata {..}) =
 
 buildComputedField ::
   forall b m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b
   ) =>
   HashSet (TableName b) ->
@@ -333,7 +333,7 @@ mkRemoteRelationshipMetadataObject (source, table, RemoteRelationship {..}) =
 -- dependencies on the remote relationship on the LHS entity are computed here
 buildRemoteRelationship ::
   forall b m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->

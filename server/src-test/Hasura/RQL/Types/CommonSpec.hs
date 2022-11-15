@@ -82,7 +82,7 @@ withRecordInconsistencyEqualSpec =
     prop "Should equal withRecordInconsistencyM" $
       \inputMetadata (errOrUnit :: Either QErr ()) ->
         let arrowInputArr = ErrorA (arr (const errOrUnit))
-            arrow = withRecordInconsistency @(Kleisli (Writer (Seq InconsistentMetadata))) arrowInputArr
+            arrow = withRecordInconsistency @_ @InconsistentMetadata arrowInputArr
             arrowOutput =
               runWriter $ runKleisli arrow ((), (inputMetadata, ()))
             monadInput = liftEither errOrUnit
