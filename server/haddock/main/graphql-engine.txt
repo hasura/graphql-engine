@@ -19025,21 +19025,19 @@ buildOpenAPI :: (MonadError QErr m, MonadFix m) => SchemaCache -> m OpenApi
 --   from metadata information stored in the <tt>hdb_catalog</tt> schema in
 --   Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
-data CollectedInfo
-CIInconsistency :: InconsistentMetadata -> CollectedInfo
-CIDependency :: MetadataObject -> SchemaObjId -> SchemaDependency -> CollectedInfo
-partitionCollectedInfo :: Seq CollectedInfo -> ([InconsistentMetadata], [(MetadataObject, SchemaObjId, SchemaDependency)])
-recordInconsistency :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
-recordInconsistencyM :: (MonadWriter (Seq w) m, AsInconsistentMetadata w) => Maybe Value -> MetadataObject -> Text -> m ()
-recordInconsistencies :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
-recordDependencies :: ArrowWriter (Seq CollectedInfo) arr => (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
-recordDependenciesM :: MonadWriter (Seq CollectedInfo) m => MetadataObject -> SchemaObjId -> [SchemaDependency] -> m ()
+data MetadataDependency
+MetadataDependency :: MetadataObject -> SchemaObjId -> SchemaDependency -> MetadataDependency
+recordInconsistency :: ArrowWriter (Seq (Either InconsistentMetadata md)) arr => ((Maybe Value, MetadataObject), Text) `arr` ()
+recordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => Maybe Value -> MetadataObject -> Text -> m ()
+recordInconsistencies :: ArrowWriter (Seq (Either InconsistentMetadata md)) arr => ([MetadataObject], Text) `arr` ()
+recordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr => (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
+recordDependenciesM :: MonadWriter (Seq (Either im MetadataDependency)) m => MetadataObject -> SchemaObjId -> [SchemaDependency] -> m ()
 
 -- | Monadic version of <a>withRecordInconsistency</a>
-withRecordInconsistencyM :: (MonadWriter (Seq w) m, AsInconsistentMetadata w) => MetadataObject -> ExceptT QErr m a -> m (Maybe a)
+withRecordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => MetadataObject -> ExceptT QErr m a -> m (Maybe a)
 
 -- | Record any errors resulting from a computation as inconsistencies
-withRecordInconsistency :: (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ErrorA QErr arr (e, s) a -> arr (e, (MetadataObject, s)) (Maybe a)
+withRecordInconsistency :: (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ErrorA QErr arr (e, s) a -> arr (e, (MetadataObject, s)) (Maybe a)
 class (CacheRM m) => CacheRWM m
 buildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> m ()
 setMetadataResourceVersionInSchemaCache :: CacheRWM m => MetadataResourceVersion -> m ()
@@ -19134,11 +19132,9 @@ instance Hasura.RQL.Types.SchemaCache.Build.CacheRWM m => Hasura.RQL.Types.Schem
 instance Hasura.RQL.Types.SchemaCache.Build.CacheRWM m => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Control.Monad.Trans.State.Strict.StateT s m)
 instance Hasura.RQL.Types.SchemaCache.Build.CacheRWM m => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Hasura.Tracing.TraceT m)
 instance Hasura.RQL.Types.SchemaCache.Build.CacheRWM m => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Database.PG.Query.Transaction.TxET Hasura.Base.Error.QErr m)
+instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.Build.MetadataDependency
 instance GHC.Show.Show Hasura.RQL.Types.SchemaCache.Build.BuildReason
 instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.Build.BuildReason
-instance Hasura.RQL.Types.SchemaCache.Build.AsInconsistentMetadata Hasura.RQL.Types.Metadata.Object.InconsistentMetadata
-instance Hasura.RQL.Types.SchemaCache.Build.AsInconsistentMetadata Hasura.RQL.Types.SchemaCache.Build.CollectedInfo
-instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.Build.CollectedInfo
 
 module Hasura.RQL.DDL.QueryTags
 data SetQueryTagsConfig
@@ -21844,7 +21840,7 @@ class (Backend b, Eq (AggregationPredicates b (PartialSQLExp b)), Eq (BooleanOpe
 }
 buildComputedFieldInfo :: (BackendMetadata b, MonadError QErr m) => HashSet (TableName b) -> TableName b -> HashSet (Column b) -> ComputedFieldName -> ComputedFieldDefinition b -> RawFunctionInfo b -> Comment -> m (ComputedFieldInfo b)
 fetchAndValidateEnumValues :: (BackendMetadata b, MonadIO m, MonadBaseControl IO m) => SourceConfig b -> TableName b -> Maybe (PrimaryKey b (RawColumnInfo b)) -> [RawColumnInfo b] -> m (Either QErr EnumValues)
-resolveBackendInfo :: (BackendMetadata b, ArrowChoice arr, ArrowCache m arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, MonadIO m, HasHttpManagerM m) => Logger Hasura -> (Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
+resolveBackendInfo :: (BackendMetadata b, ArrowChoice arr, ArrowCache m arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, MonadIO m, HasHttpManagerM m) => Logger Hasura -> (Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
 resolveBackendInfo :: (BackendMetadata b, Arrow arr, BackendInfo b ~ ()) => Logger Hasura -> (Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
 
 -- | Function that resolves the connection related source configuration,
@@ -22877,21 +22873,21 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqCleanupConfig :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe Text)
-cetqWebhook :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe InputWebhook)
-cetqUpdate :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe (SubscribeOpSpec b_aDmoy))
-cetqTable :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (TableName b_aDmoy)
-cetqSource :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) SourceName
-cetqRetryConf :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe RequestTransform)
-cetqReplace :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) Bool
-cetqName :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) TriggerName
-cetqInsert :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe (SubscribeOpSpec b_aDmoy))
-cetqHeaders :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe Bool)
-cetqDelete :: forall b_aDmoy. Lens' (CreateEventTriggerQuery b_aDmoy) (Maybe (SubscribeOpSpec b_aDmoy))
+cteqCleanupConfig :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe Text)
+cetqWebhook :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe InputWebhook)
+cetqUpdate :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe (SubscribeOpSpec b_aDmb2))
+cetqTable :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (TableName b_aDmb2)
+cetqSource :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) SourceName
+cetqRetryConf :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe RequestTransform)
+cetqReplace :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) Bool
+cetqName :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) TriggerName
+cetqInsert :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe (SubscribeOpSpec b_aDmb2))
+cetqHeaders :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe Bool)
+cetqDelete :: forall b_aDmb2. Lens' (CreateEventTriggerQuery b_aDmb2) (Maybe (SubscribeOpSpec b_aDmb2))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -23488,17 +23484,17 @@ runCacheBuildM :: (MonadIO m, MonadError QErr m, HasHttpManagerM m, HasServerCon
 data RebuildableSchemaCache
 RebuildableSchemaCache :: SchemaCache -> InvalidationKeys -> Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache -> RebuildableSchemaCache
 bindErrorA :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) => arr (m a) a
-withRecordDependencies :: ArrowWriter (Seq CollectedInfo) arr => WriterA (Seq SchemaDependency) arr (e, s) a -> arr (e, (MetadataObject, (SchemaObjId, s))) a
+withRecordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr => WriterA (Seq SchemaDependency) arr (e, s) a -> arr (e, (MetadataObject, (SchemaObjId, s))) a
 
 -- | Processes a list of catalog metadata into a map of processed
 --   information, marking any duplicate entries inconsistent.
-buildInfoMap :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k b
+buildInfoMap :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k b
 
 -- | Like <tt>buildInfo</tt>, but includes each processed info’s associated
 --   <a>MetadataObject</a> in the result. This is useful if the results
 --   will be further processed, and the <a>MetadataObject</a> is still
 --   needed to mark the object inconsistent.
-buildInfoMapPreservingMetadata :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k (b, MetadataObject)
+buildInfoMapPreservingMetadata :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k (b, MetadataObject)
 addTableContext :: Backend b => TableName b -> Text -> Text
 instance Control.Monad.Unique.MonadUnique Hasura.RQL.DDL.Schema.Cache.Common.CacheBuild
 instance Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO Hasura.RQL.DDL.Schema.Cache.Common.CacheBuild
@@ -23585,7 +23581,7 @@ runUntrackTableQ :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetada
 --   triggers, and the returned <tt>FieldInfoMap</tt>s only contain
 --   columns, not relationships; those pieces of information are filled in
 --   later.
-buildTableCache :: forall arr m b. (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowCache m arr, MonadIO m, MonadBaseControl IO m, BackendMetadata b) => (SourceName, SourceConfig b, DBTablesMetadata b, [TableBuildInput b], Dependency InvalidationKey, NamingCase) `arr` HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+buildTableCache :: forall arr m b. (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, ArrowCache m arr, MonadIO m, MonadBaseControl IO m, BackendMetadata b) => (SourceName, SourceConfig b, DBTablesMetadata b, [TableBuildInput b], Dependency InvalidationKey, NamingCase) `arr` HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
 data SetApolloFederationConfig b
 SetApolloFederationConfig :: SourceName -> TableName b -> Maybe ApolloFederationConfig -> SetApolloFederationConfig b
 [_safcSource] :: SetApolloFederationConfig b -> SourceName
@@ -23684,15 +23680,15 @@ orderRoles :: MonadError QErr m => [Role] -> m OrderedRoles
 -- | <a>resolveCheckPermission</a> is a helper function which will convert
 --   the indermediate type <a>CheckPermission</a> to its original type. It
 --   will record any metadata inconsistencies, if exists.
-resolveCheckPermission :: forall m p. MonadWriter (Seq CollectedInfo) m => CheckPermission p -> RoleName -> InconsistentRoleEntity -> m (Maybe p)
-buildTablePermissions :: forall b m arr. (ArrowChoice arr, ArrowDistribute arr, ArrowCache m arr, MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr, BackendMetadata b, Cacheable (Proxy b), GetAggregationPredicatesDeps b) => (Proxy b, SourceName, Dependency (TableCoreCache b), FieldInfoMap (FieldInfo b), TablePermissionInputs b, OrderedRoles) `arr` RolePermInfoMap b
+resolveCheckPermission :: forall m p md. MonadWriter (Seq (Either InconsistentMetadata md)) m => CheckPermission p -> RoleName -> InconsistentRoleEntity -> m (Maybe p)
+buildTablePermissions :: forall b m arr. (ArrowChoice arr, ArrowDistribute arr, ArrowCache m arr, MonadError QErr m, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, BackendMetadata b, Cacheable (Proxy b), GetAggregationPredicatesDeps b) => (Proxy b, SourceName, Dependency (TableCoreCache b), FieldInfoMap (FieldInfo b), TablePermissionInputs b, OrderedRoles) `arr` RolePermInfoMap b
 mkPermissionMetadataObject :: forall b a. BackendMetadata b => SourceName -> TableName b -> PermDef b a -> MetadataObject
 instance GHC.Generics.Generic Hasura.RQL.DDL.Schema.Cache.Permission.OrderedRoles
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Cache.Permission.OrderedRoles
 instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Schema.Cache.Permission.OrderedRoles
 
 module Hasura.RemoteSchema.SchemaCache.Build
-buildRemoteSchemas :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowCache m arr, MonadIO m, HasHttpManagerM m, Cacheable remoteRelationshipDefinition, ToJSON remoteRelationshipDefinition, MonadError QErr m) => Environment -> ((Dependency (HashMap RemoteSchemaName InvalidationKey), OrderedRoles), [RemoteSchemaMetadataG remoteRelationshipDefinition]) `arr` HashMap RemoteSchemaName (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition, MetadataObject)
+buildRemoteSchemas :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, ArrowCache m arr, MonadIO m, HasHttpManagerM m, Cacheable remoteRelationshipDefinition, ToJSON remoteRelationshipDefinition, MonadError QErr m) => Environment -> ((Dependency (HashMap RemoteSchemaName InvalidationKey), OrderedRoles), [RemoteSchemaMetadataG remoteRelationshipDefinition]) `arr` HashMap RemoteSchemaName (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition, MetadataObject)
 addRemoteSchemaP2Setup :: (QErrM m, MonadIO m, HasHttpManagerM m, MonadTrace m) => Environment -> RemoteSchemaName -> RemoteSchemaDef -> m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 
 module Hasura.RemoteSchema.SchemaCache
@@ -24130,7 +24126,7 @@ instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RemoteSchema.Me
 module Hasura.RemoteSchema.MetadataAPI
 
 module Hasura.RQL.DDL.Schema.Cache.Fields
-addNonColumnFields :: forall b arr m. (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr, MonadError QErr m, BackendMetadata b) => (HashMap SourceName (AnyBackend PartiallyResolvedSource), SourceName, HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)), FieldInfoMap (ColumnInfo b), PartiallyResolvedRemoteSchemaMap, DBFunctionsMetadata b, NonColumnTableInputs b) `arr` FieldInfoMap (FieldInfo b)
+addNonColumnFields :: forall b arr m. (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, ArrowKleisli m arr, MonadError QErr m, BackendMetadata b) => (HashMap SourceName (AnyBackend PartiallyResolvedSource), SourceName, HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)), FieldInfoMap (ColumnInfo b), PartiallyResolvedRemoteSchemaMap, DBFunctionsMetadata b, NonColumnTableInputs b) `arr` FieldInfoMap (FieldInfo b)
 
 module Hasura.RQL.DDL.Schema.Cache.Dependencies
 
@@ -24138,7 +24134,7 @@ module Hasura.RQL.DDL.Schema.Cache.Dependencies
 --   performing integrity checking to ensure the dependencies actually
 --   exist. If a dependency is missing, its transitive dependents are
 --   removed from the cache, and <a>InconsistentMetadata</a>s are returned.
-resolveDependencies :: (ArrowKleisli m arr, QErrM m) => (BuildOutputs, [(MetadataObject, SchemaObjId, SchemaDependency)]) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
+resolveDependencies :: (ArrowKleisli m arr, QErrM m) => (BuildOutputs, [MetadataDependency]) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
 
 
 -- | Top-level functions concerned specifically with operations on the
