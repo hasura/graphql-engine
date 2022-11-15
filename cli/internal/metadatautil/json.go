@@ -10,6 +10,8 @@ import (
 	"cuelang.org/go/encoding/json"
 	"cuelang.org/go/encoding/yaml"
 	v3yaml "gopkg.in/yaml.v3"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 // TODO: reuse https://github.com/hasura/graphql-engine-mono/blob/1c76a0bc4cd0004cc30c17ece672363c142296da/cli/internal/projectmetadata/handler.go#L294
@@ -42,6 +44,7 @@ type metadata struct {
 }
 
 func JSONToYAML(bs []byte) ([]byte, error) {
+	var op errors.Op = "metadatautil.JSONToYAML"
 	out := new(bytes.Buffer)
 	cueJSONDecoder := json.NewDecoder(nil, "", bytes.NewReader(bs))
 	for {
@@ -51,16 +54,16 @@ func JSONToYAML(bs []byte) ([]byte, error) {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("cue: reading metadata %w", err)
+			return nil, errors.E(op, fmt.Errorf("cue: reading metadata %w", err))
 		}
 
 		cueNode, err := format.Node(cueExpr)
 		if err != nil {
-			return nil, fmt.Errorf("cue: formatting error %w", err)
+			return nil, errors.E(op, fmt.Errorf("cue: formatting error %w", err))
 		}
 		_, err = fmt.Fprint(out, string(cueNode))
 		if err != nil {
-			return nil, fmt.Errorf("cue: failed writing parsed json to writer %w", err)
+			return nil, errors.E(op, fmt.Errorf("cue: failed writing parsed json to writer %w", err))
 		}
 
 	}
@@ -71,14 +74,14 @@ func JSONToYAML(bs []byte) ([]byte, error) {
 	// ref: https://github.com/cue-lang/cue/blob/6bc922c848660781778819a90a343285d0906e2e/encoding/yaml/yaml_test.go#L234
 	metadataYAML, err := yaml.Encode(cueVal)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	// we have to preserve order of elements, so we have to use a datastructure which has that property
 	var md metadata
 	err = v3yaml.Unmarshal(metadataYAML, &md)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	buf := new(bytes.Buffer)
 
@@ -87,7 +90,7 @@ func JSONToYAML(bs []byte) ([]byte, error) {
 	enc.SetIndent(2)
 	err = enc.Encode(md)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	return buf.Bytes(), nil
 }
