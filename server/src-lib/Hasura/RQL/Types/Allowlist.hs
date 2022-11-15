@@ -187,7 +187,7 @@ inlineAllowlist collections allowlist = InlinedAllowlist global perRole
           | AllowlistEntry coll (AllowlistScopeRoles roles) <- OM.elems allowlist
         ]
 
-    inverseMap :: (Eq b, Hashable b) => [(a, [b])] -> HashMap b [a]
+    inverseMap :: Hashable b => [(a, [b])] -> HashMap b [a]
     inverseMap = M.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
 
     global = inlineQueries globalCollections

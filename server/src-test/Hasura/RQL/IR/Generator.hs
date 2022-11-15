@@ -79,8 +79,6 @@ genAnnBoolExp
 
 genAnnBoolExpFld ::
   MonadGen m =>
-  Eq (ScalarType b) =>
-  Eq (Column b) =>
   Hashable (ScalarType b) =>
   Hashable (Column b) =>
   m (Column b) ->
@@ -147,7 +145,6 @@ genAnnBoolExpFld
 
 genRelInfo ::
   MonadGen m =>
-  Eq (Column b) =>
   Hashable (Column b) =>
   m (TableName b) ->
   m (Column b) ->
@@ -172,8 +169,6 @@ genInsertOrder = element [BeforeParent, AfterParent]
 
 genAnnComputedFieldBolExp ::
   MonadGen m =>
-  Eq (ScalarType b) =>
-  Eq (Column b) =>
   Hashable (ScalarType b) =>
   Hashable (Column b) =>
   m (TableName b) ->
@@ -211,8 +206,6 @@ genAnnComputedFieldBolExp
 
 genComputedFieldBoolExp ::
   MonadGen m =>
-  Eq (ScalarType b) =>
-  Eq (Column b) =>
   Hashable (ScalarType b) =>
   Hashable (Column b) =>
   m (TableName b) ->
@@ -265,7 +258,6 @@ genComputedFieldName = ComputedFieldName <$> genNonEmptyText defaultRange
 
 genOpExpG ::
   MonadGen m =>
-  Eq (ScalarType b) =>
   Hashable (ScalarType b) =>
   m (TableName b) ->
   m (Column b) ->
@@ -403,8 +395,6 @@ genAnnotatedOrderByItemG genBasicOrderType genNullsOrderType genA =
 
 genAnnotatedOrderByElement ::
   MonadGen m =>
-  Eq (ScalarType b) =>
-  Eq (Column b) =>
   Hashable (ScalarType b) =>
   Hashable (Column b) =>
   m (Column b) ->
@@ -515,9 +505,7 @@ genAnnotatedAggregateOrderBy
 
 genComputedFieldOrderBy ::
   MonadGen m =>
-  Eq (ScalarType b) =>
   Hashable (ScalarType b) =>
-  Eq (Column b) =>
   Hashable (Column b) =>
   m (Column b) ->
   m (ScalarType b) ->
@@ -554,9 +542,7 @@ genComputedFieldOrderBy
 
 genComputedFieldOrderByElement ::
   MonadGen m =>
-  Eq (ScalarType b) =>
   Hashable (ScalarType b) =>
-  Eq (Column b) =>
   Hashable (Column b) =>
   m (Column b) ->
   m (ScalarType b) ->

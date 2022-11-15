@@ -107,7 +107,7 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     }
   where
     invalidate ::
-      (Eq a, Hashable a) =>
+      Hashable a =>
       a ->
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey
@@ -295,7 +295,6 @@ buildInfoMap ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
     ArrowWriter (Seq CollectedInfo) arr,
-    Eq k,
     Hashable k
   ) =>
   (a -> k) ->
@@ -322,7 +321,6 @@ buildInfoMapPreservingMetadata ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
     ArrowWriter (Seq CollectedInfo) arr,
-    Eq k,
     Hashable k
   ) =>
   (a -> k) ->

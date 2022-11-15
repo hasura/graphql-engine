@@ -499,7 +499,7 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
     (_, [(ctx, val)]) -> withAuthZ val ctx
     _ -> throw400 InvalidHeaders "Could not verify JWT: Multiple JWTs found"
   where
-    intersectKeys :: (Hashable a, Eq a) => HM.HashMap a [b] -> HM.HashMap a [c] -> [(b, c)]
+    intersectKeys :: Hashable a => HM.HashMap a [b] -> HM.HashMap a [c] -> [(b, c)]
     intersectKeys m n = concatMap (uncurry cartesianProduct) $ HM.elems $ HM.intersectionWith (,) m n
 
     issuerMatch (j, b) = do

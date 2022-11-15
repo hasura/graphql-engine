@@ -116,7 +116,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.
 parseListAsMap ::
-  (Hashable k, Eq k, T.ToTxt k) =>
+  (Hashable k, T.ToTxt k) =>
   Text ->
   (a -> k) ->
   Parser [a] ->

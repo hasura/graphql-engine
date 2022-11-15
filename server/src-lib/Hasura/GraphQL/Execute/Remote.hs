@@ -56,7 +56,7 @@ unresolveVariables =
 
 collectVariables ::
   forall fragments var.
-  (Foldable fragments, Hashable var, Eq var) =>
+  (Foldable fragments, Hashable var) =>
   G.SelectionSet fragments var ->
   Set.HashSet var
 collectVariables =

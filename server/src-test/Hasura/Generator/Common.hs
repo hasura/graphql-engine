@@ -21,7 +21,6 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 genHashMap ::
   MonadGen m =>
-  Eq a =>
   Hashable a =>
   m a ->
   m b ->

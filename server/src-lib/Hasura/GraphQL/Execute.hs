@@ -230,7 +230,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)
         case subscriptionType of
           Streaming -> pure (accLiveQueryFields, OMap.insert gName (src, newQDB) accStreamingFields)
-          LiveQuery -> pure $ (first (OMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields)
+          LiveQuery -> pure (first (OMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields)
       IR.RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         unless (isNothing remoteJoins) $

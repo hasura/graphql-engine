@@ -14,7 +14,7 @@ import Data.Aeson
     Value (..),
   )
 import Data.Aeson qualified as Aeson
-import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.KeyMap qualified as KM (lookup)
 import Data.Aeson.KeyMap.Extended qualified as KM
 import Data.Aeson.Text qualified as Aeson.Text
 import Data.List (permutations)
