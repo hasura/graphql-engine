@@ -15,7 +15,7 @@
 </span><span id="line-15"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Value</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">withBool</span></span><span class="hs-special">)</span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-19"></span><span>
 </span><span id="line-20"></span><span class="hs-comment">-- | The record of options required to build the schema. This includes options</span><span>
 </span><span id="line-21"></span><span class="hs-comment">-- that can be enabled with 'Hasura.Server.Types.ExperimentalFeature' flags.</span><span>
@@ -45,13 +45,13 @@
 </span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="StringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">StringifyNumbers</span></a></span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">StringifyNumbers</span></a></span></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tStringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Don'tStringifyNumbers</span></a></span></span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368070"><span id="local-6989586621690368072"><span class="annot"><span class="annottext">StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434635"><span id="local-6989586621690434637"><span class="annot"><span class="annottext">StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 $c/= :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 == :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 $c== :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368063"><span id="local-6989586621690368065"><span id="local-6989586621690368067"><span class="annot"><span class="annottext">Int -&gt; StringifyNumbers -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434628"><span id="local-6989586621690434630"><span id="local-6989586621690434632"><span class="annot"><span class="annottext">Int -&gt; StringifyNumbers -&gt; ShowS
 [StringifyNumbers] -&gt; ShowS
 StringifyNumbers -&gt; String
 forall a.
@@ -62,7 +62,7 @@ show :: StringifyNumbers -&gt; String
 $cshow :: StringifyNumbers -&gt; String
 showsPrec :: Int -&gt; StringifyNumbers -&gt; ShowS
 $cshowsPrec :: Int -&gt; StringifyNumbers -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="hs-comment">-- | Should we include `TABLE_updates` fields in schemas</span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- This is a toggle so that users can opt-in, and so that we can rename</span><span>
@@ -70,13 +70,13 @@ $cshowsPrec :: Int -&gt; StringifyNumbers -&gt; ShowS
 </span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="IncludeUpdateManyFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#IncludeUpdateManyFields"><span class="hs-identifier hs-var">IncludeUpdateManyFields</span></a></span></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="IncludeUpdateManyFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#IncludeUpdateManyFields"><span class="hs-identifier hs-var">IncludeUpdateManyFields</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tIncludeUpdateManyFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tIncludeUpdateManyFields"><span class="hs-identifier hs-var">Don'tIncludeUpdateManyFields</span></a></span></span><span>
-</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368056"><span id="local-6989586621690368058"><span class="annot"><span class="annottext">IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434621"><span id="local-6989586621690434623"><span class="annot"><span class="annottext">IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 $c/= :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 == :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 $c== :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368050"><span id="local-6989586621690368052"><span id="local-6989586621690368054"><span class="annot"><span class="annottext">Int -&gt; IncludeUpdateManyFields -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434615"><span id="local-6989586621690434617"><span id="local-6989586621690434619"><span class="annot"><span class="annottext">Int -&gt; IncludeUpdateManyFields -&gt; ShowS
 [IncludeUpdateManyFields] -&gt; ShowS
 IncludeUpdateManyFields -&gt; String
 forall a.
@@ -87,7 +87,7 @@ show :: IncludeUpdateManyFields -&gt; String
 $cshow :: IncludeUpdateManyFields -&gt; String
 showsPrec :: Int -&gt; IncludeUpdateManyFields -&gt; ShowS
 $cshowsPrec :: Int -&gt; IncludeUpdateManyFields -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span class="hs-comment">-- | Should we include `TABLE_stream` fields in schemas</span><span>
 </span><span id="line-51"></span><span class="hs-comment">-- This is a toggle so that users can opt-in, and so that we can rename</span><span>
@@ -95,13 +95,13 @@ $cshowsPrec :: Int -&gt; IncludeUpdateManyFields -&gt; ShowS
 </span><span id="line-53"></span><span class="hs-keyword">data</span><span> </span><span id="IncludeStreamFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#IncludeStreamFields"><span class="hs-identifier hs-var">IncludeStreamFields</span></a></span></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="IncludeStreamFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#IncludeStreamFields"><span class="hs-identifier hs-var">IncludeStreamFields</span></a></span></span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tIncludeStreamFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tIncludeStreamFields"><span class="hs-identifier hs-var">Don'tIncludeStreamFields</span></a></span></span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368044"><span id="local-6989586621690368046"><span class="annot"><span class="annottext">IncludeStreamFields -&gt; IncludeStreamFields -&gt; Bool
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434609"><span id="local-6989586621690434611"><span class="annot"><span class="annottext">IncludeStreamFields -&gt; IncludeStreamFields -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: IncludeStreamFields -&gt; IncludeStreamFields -&gt; Bool
 $c/= :: IncludeStreamFields -&gt; IncludeStreamFields -&gt; Bool
 == :: IncludeStreamFields -&gt; IncludeStreamFields -&gt; Bool
 $c== :: IncludeStreamFields -&gt; IncludeStreamFields -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368038"><span id="local-6989586621690368040"><span id="local-6989586621690368042"><span class="annot"><span class="annottext">Int -&gt; IncludeStreamFields -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434603"><span id="local-6989586621690434605"><span id="local-6989586621690434607"><span class="annot"><span class="annottext">Int -&gt; IncludeStreamFields -&gt; ShowS
 [IncludeStreamFields] -&gt; ShowS
 IncludeStreamFields -&gt; String
 forall a.
@@ -112,7 +112,7 @@ show :: IncludeStreamFields -&gt; String
 $cshow :: IncludeStreamFields -&gt; String
 showsPrec :: Int -&gt; IncludeStreamFields -&gt; ShowS
 $cshowsPrec :: Int -&gt; IncludeStreamFields -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span class="hs-comment">-- | Should we include aggregation functions in where clauses?</span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- Because this has the potential to cause naming conflicts in graphql schema</span><span>
@@ -127,13 +127,13 @@ $cshowsPrec :: Int -&gt; IncludeStreamFields -&gt; ShowS
 </span><span id="line-68"></span><span class="hs-keyword">data</span><span> </span><span id="DangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tDangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tDangerouslyCollapseBooleans"><span class="hs-identifier hs-var">Don'tDangerouslyCollapseBooleans</span></a></span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368030"><span id="local-6989586621690368032"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434595"><span id="local-6989586621690434597"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 $c/= :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 == :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 $c== :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368024"><span id="local-6989586621690368026"><span id="local-6989586621690368028"><span class="annot"><span class="annottext">Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434589"><span id="local-6989586621690434591"><span id="local-6989586621690434593"><span class="annot"><span class="annottext">Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
 [DangerouslyCollapseBooleans] -&gt; ShowS
 DangerouslyCollapseBooleans -&gt; String
 forall a.
@@ -144,36 +144,36 @@ show :: DangerouslyCollapseBooleans -&gt; String
 $cshow :: DangerouslyCollapseBooleans -&gt; String
 showsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
 $cshowsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690368021"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-74"></span><span>  </span><span id="local-6989586621690368017"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DangerouslyCollapseBooleans
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690434586"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621690434582"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DangerouslyCollapseBooleans
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withBool</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;DangerouslyCollapseBooleans&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
 </span><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span><span>
 </span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tDangerouslyCollapseBooleans"><span class="hs-identifier hs-var">Don'tDangerouslyCollapseBooleans</span></a></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690368008"><span id="local-6989586621690368010"><span id="local-6989586621690368012"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621690368006"><span class="annot"><span class="annottext">toJSON :: DangerouslyCollapseBooleans -&gt; Value
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690434573"><span id="local-6989586621690434575"><span id="local-6989586621690434577"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621690434571"><span class="annot"><span class="annottext">toJSON :: DangerouslyCollapseBooleans -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
 </span><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tDangerouslyCollapseBooleans"><span class="hs-identifier hs-var">Don'tDangerouslyCollapseBooleans</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span class="hs-comment">-- | Should we infer function permissions? If this flag is set to</span><span>
 </span><span id="line-86"></span><span class="hs-comment">-- 'InferFunctionPermissions', we may fail to build expression parsers</span><span>
@@ -181,13 +181,13 @@ $cshowsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
 </span><span id="line-88"></span><span class="hs-keyword">data</span><span> </span><span id="InferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="InferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tInferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span></span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690367998"><span id="local-6989586621690368000"><span class="annot"><span class="annottext">InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434563"><span id="local-6989586621690434565"><span class="annot"><span class="annottext">InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 $c/= :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 == :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 $c== :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690367992"><span id="local-6989586621690367994"><span id="local-6989586621690367996"><span class="annot"><span class="annottext">Int -&gt; InferFunctionPermissions -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434557"><span id="local-6989586621690434559"><span id="local-6989586621690434561"><span class="annot"><span class="annottext">Int -&gt; InferFunctionPermissions -&gt; ShowS
 [InferFunctionPermissions] -&gt; ShowS
 InferFunctionPermissions -&gt; String
 forall a.
@@ -198,49 +198,49 @@ show :: InferFunctionPermissions -&gt; String
 $cshow :: InferFunctionPermissions -&gt; String
 showsPrec :: Int -&gt; InferFunctionPermissions -&gt; ShowS
 $cshowsPrec :: Int -&gt; InferFunctionPermissions -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690367989"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>  </span><span id="local-6989586621690367987"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InferFunctionPermissions
-</span><a href="#local-6989586621690367987"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690434554"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621690434552"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InferFunctionPermissions
+</span><a href="#local-6989586621690434552"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withBool</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;InferFunctionPermissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-97"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span><span>
 </span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690367980"><span id="local-6989586621690367982"><span id="local-6989586621690367984"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621690367979"><span class="annot"><span class="annottext">toJSON :: InferFunctionPermissions -&gt; Value
-</span><a href="#local-6989586621690367979"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690434545"><span id="local-6989586621690434547"><span id="local-6989586621690434549"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621690434544"><span class="annot"><span class="annottext">toJSON :: InferFunctionPermissions -&gt; Value
+</span><a href="#local-6989586621690434544"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-102"></span><span>    </span><span class="annot"><span class="annottext">InferFunctionPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">InferFunctionPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="hs-comment">-- | Should we enable remote schema permissions? If so, these permissions will</span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- influence 'Hasura.GraphQL.Schema.buildGQLContext'.</span><span>
 </span><span id="line-107"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-var">RemoteSchemaPermissions</span></a></span></span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="EnableRemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DisableRemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span></span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690367973"><span id="local-6989586621690367975"><span class="annot"><span class="annottext">RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434538"><span id="local-6989586621690434540"><span class="annot"><span class="annottext">RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 $c/= :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 == :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 $c== :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690367967"><span id="local-6989586621690367969"><span id="local-6989586621690367971"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaPermissions -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434532"><span id="local-6989586621690434534"><span id="local-6989586621690434536"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaPermissions -&gt; ShowS
 [RemoteSchemaPermissions] -&gt; ShowS
 RemoteSchemaPermissions -&gt; String
 forall a.
@@ -251,36 +251,36 @@ show :: RemoteSchemaPermissions -&gt; String
 $cshow :: RemoteSchemaPermissions -&gt; String
 showsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690367964"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-113"></span><span>  </span><span id="local-6989586621690367962"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaPermissions
-</span><a href="#local-6989586621690367962"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690434529"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-113"></span><span>  </span><span id="local-6989586621690434527"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaPermissions
+</span><a href="#local-6989586621690434527"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-114"></span><span>    </span><span class="annot"><span class="annottext">forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withBool</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;RemoteSchemaPermissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-115"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span><span>
 </span><span id="line-117"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690367955"><span id="local-6989586621690367957"><span id="local-6989586621690367959"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-120"></span><span>  </span><span id="local-6989586621690367954"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaPermissions -&gt; Value
-</span><a href="#local-6989586621690367954"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690434520"><span id="local-6989586621690434522"><span id="local-6989586621690434524"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621690434519"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaPermissions -&gt; Value
+</span><a href="#local-6989586621690434519"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-121"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span class="hs-comment">-- | Should we attempt to deduplicate permission filters? This flag is used in</span><span>
 </span><span id="line-125"></span><span class="hs-comment">-- 'Hasura.GraphQL.Schema.Select.relationshipField' to determine whether</span><span>
@@ -288,13 +288,13 @@ $cshowsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
 </span><span id="line-127"></span><span class="hs-keyword">data</span><span> </span><span id="OptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">OptimizePermissionFilters</span></a></span></span><span>
 </span><span id="line-128"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">OptimizePermissionFilters</span></a></span></span><span>
 </span><span id="line-129"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tOptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tOptimizePermissionFilters"><span class="hs-identifier hs-var">Don'tOptimizePermissionFilters</span></a></span></span><span>
-</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690367948"><span id="local-6989586621690367950"><span class="annot"><span class="annottext">OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434513"><span id="local-6989586621690434515"><span class="annot"><span class="annottext">OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 $c/= :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 == :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 $c== :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690367942"><span id="local-6989586621690367944"><span id="local-6989586621690367946"><span class="annot"><span class="annottext">Int -&gt; OptimizePermissionFilters -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434507"><span id="local-6989586621690434509"><span id="local-6989586621690434511"><span class="annot"><span class="annottext">Int -&gt; OptimizePermissionFilters -&gt; ShowS
 [OptimizePermissionFilters] -&gt; ShowS
 OptimizePermissionFilters -&gt; String
 forall a.
@@ -305,19 +305,19 @@ show :: OptimizePermissionFilters -&gt; String
 $cshow :: OptimizePermissionFilters -&gt; String
 showsPrec :: Int -&gt; OptimizePermissionFilters -&gt; ShowS
 $cshowsPrec :: Int -&gt; OptimizePermissionFilters -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-131"></span><span>
 </span><span id="line-132"></span><span class="hs-comment">-- | Should we enable string-accepting scalar parsers for BigQuery sources</span><span>
 </span><span id="line-133"></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryStringNumericInput"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#BigQueryStringNumericInput"><span class="hs-identifier hs-var">BigQueryStringNumericInput</span></a></span></span><span>
 </span><span id="line-134"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="EnableBigQueryStringNumericInput"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#EnableBigQueryStringNumericInput"><span class="hs-identifier hs-var">EnableBigQueryStringNumericInput</span></a></span></span><span>
 </span><span id="line-135"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DisableBigQueryStringNumericInput"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DisableBigQueryStringNumericInput"><span class="hs-identifier hs-var">DisableBigQueryStringNumericInput</span></a></span></span><span>
-</span><span id="line-136"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690367936"><span id="local-6989586621690367938"><span class="annot"><span class="annottext">BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
+</span><span id="line-136"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690434501"><span id="local-6989586621690434503"><span class="annot"><span class="annottext">BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 $c/= :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 == :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 $c== :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690367930"><span id="local-6989586621690367932"><span id="local-6989586621690367934"><span class="annot"><span class="annottext">Int -&gt; BigQueryStringNumericInput -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690434495"><span id="local-6989586621690434497"><span id="local-6989586621690434499"><span class="annot"><span class="annottext">Int -&gt; BigQueryStringNumericInput -&gt; ShowS
 [BigQueryStringNumericInput] -&gt; ShowS
 BigQueryStringNumericInput -&gt; String
 forall a.
@@ -328,5 +328,5 @@ show :: BigQueryStringNumericInput -&gt; String
 $cshow :: BigQueryStringNumericInput -&gt; String
 showsPrec :: Int -&gt; BigQueryStringNumericInput -&gt; ShowS
 $cshowsPrec :: Int -&gt; BigQueryStringNumericInput -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span></pre></body></html>
