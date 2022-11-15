@@ -22,17 +22,12 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TablePermissionInputs (..),
     addTableContext,
     bindErrorA,
-    boAllowlist,
-    boApiLimits,
-    boMetricsConfig,
-    boTlsAllowlist,
     boActions,
     boCronTriggers,
     boCustomTypes,
     boBackendCache,
     boEndpoints,
     boOpenTelemetryInfo,
-    boQueryCollections,
     boRemoteSchemas,
     boRoles,
     boSources,
@@ -59,8 +54,6 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
-import Hasura.RQL.Types.Allowlist
-import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -70,7 +63,6 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
@@ -212,15 +204,10 @@ data BuildOutputs = BuildOutputs
     -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
     -- generation (because of field conflicts).
     _boRemoteSchemas :: HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject),
-    _boAllowlist :: InlinedAllowlist,
     _boCustomTypes :: AnnotatedCustomTypes,
     _boCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
     _boEndpoints :: M.HashMap EndpointName (EndpointMetadata GQLQueryWithText),
-    _boApiLimits :: ApiLimit,
-    _boMetricsConfig :: MetricsConfig,
     _boRoles :: HashMap RoleName Role,
-    _boTlsAllowlist :: [TlsAllow],
-    _boQueryCollections :: QueryCollections,
     _boBackendCache :: BackendCache,
     _boOpenTelemetryInfo :: OpenTelemetryInfo
   }

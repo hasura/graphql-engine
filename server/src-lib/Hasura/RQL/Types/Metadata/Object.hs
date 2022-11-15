@@ -28,7 +28,6 @@ module Hasura.RQL.Types.Metadata.Object
     _MOCronTrigger,
     _MOCustomTypes,
     _MOEndpoint,
-    _MOHostTlsAllowlist,
     _MOInheritedRole,
     _MORemoteSchema,
     _MORemoteSchemaPermissions,
@@ -40,7 +39,6 @@ where
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as M
-import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
@@ -103,7 +101,6 @@ data MetadataObjId
   | MOCronTrigger TriggerName
   | MOInheritedRole RoleName
   | MOEndpoint EndpointName
-  | MOHostTlsAllowlist String
   | MOQueryCollectionsQuery CollectionName ListedQuery
   | MODataConnectorAgent DataConnectorName
   | MOOpenTelemetry OpenTelemetryConfigSubobject
@@ -129,7 +126,6 @@ moiTypeName = \case
   MOActionPermission _ _ -> "action_permission"
   MOInheritedRole _ -> "inherited_role"
   MOEndpoint _ -> "rest_endpoint"
-  MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
   MOQueryCollectionsQuery _ _ -> "query_collections"
   MODataConnectorAgent _ -> "data_connector_agent"
   MOOpenTelemetry _ -> "open_telemetry"
@@ -167,7 +163,6 @@ moiName objectId =
     MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
     MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
     MOEndpoint name -> toTxt name
-    MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
     MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
     MODataConnectorAgent agentName -> toTxt agentName
     MOOpenTelemetry subobject -> case subobject of

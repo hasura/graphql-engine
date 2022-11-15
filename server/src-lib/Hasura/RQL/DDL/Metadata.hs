@@ -51,7 +51,6 @@ import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata.Types
-import Hasura.RQL.DDL.Network
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
@@ -571,7 +570,6 @@ purgeMetadataObj = \case
   MOCronTrigger ctName -> dropCronTriggerInMetadata ctName
   MOEndpoint epName -> dropEndpointInMetadata epName
   MOInheritedRole role -> dropInheritedRoleInMetadata role
-  MOHostTlsAllowlist host -> dropHostFromAllowList host
   MOQueryCollectionsQuery cName lq -> dropListedQueryFromQueryCollections cName lq
   MODataConnectorAgent agentName ->
     MetadataModifier $

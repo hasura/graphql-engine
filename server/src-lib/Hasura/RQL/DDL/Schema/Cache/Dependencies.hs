@@ -14,18 +14,15 @@ import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.DDL.Network
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types.Action
-import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
@@ -247,12 +244,9 @@ deleteMetadataObject = \case
   MOEndpoint name -> boEndpoints %~ M.delete name
   MOActionPermission name role -> boActions . ix name . aiPermissions %~ M.delete role
   MOInheritedRole name -> boRoles %~ M.delete name
-  MOHostTlsAllowlist host -> removeHostFromAllowList host
-  MOQueryCollectionsQuery cName lq -> \bo@BuildOutputs {..} ->
+  MOQueryCollectionsQuery _ lq -> \bo@BuildOutputs {..} ->
     bo
-      { _boEndpoints = removeEndpointsUsingQueryCollection lq _boEndpoints,
-        _boAllowlist = removeFromAllowList lq _boAllowlist,
-        _boQueryCollections = removeFromQueryCollections cName lq _boQueryCollections
+      { _boEndpoints = removeEndpointsUsingQueryCollection lq _boEndpoints
       }
   MODataConnectorAgent agentName ->
     boBackendCache
@@ -262,11 +256,6 @@ deleteMetadataObject = \case
       OtelSubobjectExporterOtlp -> boOpenTelemetryInfo . otiExporterOtlp .~ Nothing
       OtelSubobjectBatchSpanProcessor -> boOpenTelemetryInfo . otiBatchSpanProcessor .~ Nothing
   where
-    removeHostFromAllowList hst bo =
-      bo
-        { _boTlsAllowlist = filter (not . checkForHostnameInAllowlistObject hst) (_boTlsAllowlist bo)
-        }
-
     deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
     deleteObjId sourceObjId sourceInfo =
       maybe
@@ -291,19 +280,6 @@ deleteMetadataObject = \case
           MTOPerm roleName PTUpdate -> tiRolePermInfoMap . ix roleName . permUpd .~ Nothing
           MTOPerm roleName PTDelete -> tiRolePermInfoMap . ix roleName . permDel .~ Nothing
 
-    removeFromQueryCollections :: CollectionName -> ListedQuery -> QueryCollections -> QueryCollections
-    removeFromQueryCollections cName lq qc =
-      let collectionModifier :: CreateCollection -> CreateCollection
-          collectionModifier cc@CreateCollection {..} =
-            cc
-              { _ccDefinition =
-                  let oldQueries = _cdQueries _ccDefinition
-                   in _ccDefinition
-                        { _cdQueries = filter (/= lq) oldQueries
-                        }
-              }
-       in OMap.adjust collectionModifier cName qc
-
     removeEndpointsUsingQueryCollection :: ListedQuery -> HashMap EndpointName (EndpointMetadata GQLQueryWithText) -> HashMap EndpointName (EndpointMetadata GQLQueryWithText)
     removeEndpointsUsingQueryCollection lq endpointMap =
       case maybeEndpoint of
@@ -312,12 +288,3 @@ deleteMetadataObject = \case
       where
         q = _lqQuery lq
         maybeEndpoint = find (\(_, def) -> (_edQuery . _ceDefinition) def == q) (M.toList endpointMap)
-
-    removeFromAllowList :: ListedQuery -> InlinedAllowlist -> InlinedAllowlist
-    removeFromAllowList lq aList =
-      let oldAList = iaGlobal aList
-          gqlQry = NormalizedQuery . unGQLQuery . getGQLQuery . _lqQuery $ lq
-          newAList = HS.delete gqlQry oldAList
-       in aList
-            { iaGlobal = newAList
-            }

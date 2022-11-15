@@ -266,13 +266,14 @@ buildSchemaCacheRule ::
   Logger Hasura ->
   Env.Environment ->
   (Metadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
+buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   metadataDefaults <- bindA -< askMetadataDefaults
+  let metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
 
   -- Step 1: Process metadata and collect dependency information.
   (outputs, collectedInfo) <-
-    runWriterA buildAndCollectInfo -< (metadataDefaults, metadata, invalidationKeysDep)
+    runWriterA buildAndCollectInfo -< (metadata, invalidationKeysDep)
   let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
 
   -- Step 2: Resolve dependency information and drop dangling dependents.
@@ -298,7 +299,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       endpointObjId md = MOEndpoint (_ceName md)
 
       endpointObject :: EndpointMetadata q -> MetadataObject
-      endpointObject md = MetadataObject (endpointObjId md) (toJSON $ OMap.lookup (_ceName md) $ _metaRestEndpoints metadata)
+      endpointObject md = MetadataObject (endpointObjId md) (toJSON $ OMap.lookup (_ceName md) _metaRestEndpoints)
 
       listedQueryObjects :: (CollectionName, ListedQuery) -> MetadataObject
       listedQueryObjects (cName, lq) = MetadataObject (MOQueryCollectionsQuery cName lq) (toJSON lq)
@@ -322,10 +323,10 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
       ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
 
-      queryCollections = _boQueryCollections resolvedOutputs
-      allowLists = HS.toList . iaGlobal . _boAllowlist $ resolvedOutputs
+      inlinedAllowlist = inlineAllowlist _metaQueryCollections _metaAllowlist
+      globalAllowLists = HS.toList . iaGlobal $ inlinedAllowlist
 
-  inconsistentQueryCollections <- bindA -< do getInconsistentQueryCollections adminIntrospection queryCollections listedQueryObjects endpoints allowLists
+  inconsistentQueryCollections <- bindA -< do getInconsistentQueryCollections adminIntrospection _metaQueryCollections listedQueryObjects endpoints globalAllowLists
 
   returnA
     -<
@@ -335,7 +336,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           -- TODO this is not the right value: we should track what part of the schema
           -- we can stitch without consistencies, I think.
           scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs), -- remoteSchemaMap
-          scAllowlist = _boAllowlist resolvedOutputs,
+          scAllowlist = inlinedAllowlist,
           -- , scCustomTypes = _boCustomTypes resolvedOutputs
           scAdminIntrospection = adminIntrospection,
           scGQLContext = gqlContext,
@@ -355,14 +356,14 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               <> invalidRestSegments
               <> ambiguousRestEndpoints
               <> inconsistentQueryCollections,
-          scApiLimits = _boApiLimits resolvedOutputs,
-          scMetricsConfig = _boMetricsConfig resolvedOutputs,
+          scApiLimits = _metaApiLimits,
+          scMetricsConfig = _metaMetricsConfig,
           scMetadataResourceVersion = Nothing,
-          scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata,
-          scTlsAllowlist = _boTlsAllowlist resolvedOutputs,
-          scQueryCollections = _boQueryCollections resolvedOutputs,
+          scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
+          scTlsAllowlist = networkTlsAllowlist _metaNetwork,
+          scQueryCollections = _metaQueryCollections,
           scBackendCache = _boBackendCache resolvedOutputs,
-          scSourceHealthChecks = buildHealthCheckCache (_metaSources metadata),
+          scSourceHealthChecks = buildHealthCheckCache _metaSources,
           scOpenTelemetryConfig = _boOpenTelemetryInfo resolvedOutputs
         }
   where
@@ -650,24 +651,25 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         HasServerConfigCtx m,
         MonadResolveSource m
       ) =>
-      (MetadataDefaults, Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
-    buildAndCollectInfo = proc (metadataDefaults, metadata, invalidationKeys) -> do
+      (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+    buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata
             sources
             remoteSchemas
             collections
-            metadataAllowlist
+            _metadataAllowlist
             customTypes
             actions
             cronTriggers
             endpoints
-            apiLimits
-            metricsConfig
+            _apiLimits
+            _metricsConfig
             inheritedRoles
             _introspectionDisabledRoles
-            networkConfig
+            _networkConfig
             backendConfigs
-            openTelemetryConfig = overrideMetadataDefaults metadata metadataDefaults
+            openTelemetryConfig =
+              metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
@@ -830,9 +832,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   )
               |)
 
-      -- allowlist
-      let inlinedAllowlist = inlineAllowlist collections metadataAllowlist
-
       resolvedEndpoints <- buildInfoMap fst mkEndpointMetadataObject buildEndpoint -< (collections, OMap.toList endpoints)
 
       -- custom types
@@ -893,15 +892,10 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             { _boSources = M.map fst sourcesOutput,
               _boActions = actionCache,
               _boRemoteSchemas = remoteSchemaCache,
-              _boAllowlist = inlinedAllowlist,
               _boCustomTypes = annotatedCustomTypes,
               _boCronTriggers = cronTriggersMap,
               _boEndpoints = resolvedEndpoints,
-              _boApiLimits = apiLimits,
-              _boMetricsConfig = metricsConfig,
               _boRoles = mapFromL _rRoleName $ _unOrderedRoles orderedRoles,
-              _boTlsAllowlist = (networkTlsAllowlist networkConfig),
-              _boQueryCollections = collections,
               _boBackendCache = backendCache,
               _boOpenTelemetryInfo = openTelemetryInfo
             }
