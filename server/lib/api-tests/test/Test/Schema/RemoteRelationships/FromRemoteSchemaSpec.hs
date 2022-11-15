@@ -8,7 +8,7 @@
 --   - testing the metadata API
 --   - testing how we generate queries to remote schemas for the purpose of
 --     making joins against them.
-module Test.RemoteRelationship.FromRemoteSchemaSpec (spec) where
+module Test.Schema.RemoteRelationships.FromRemoteSchemaSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Data.Morpheus.Document (gqlDocument)

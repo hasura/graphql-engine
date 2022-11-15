@@ -4,7 +4,7 @@
 --
 -- https://hasura.io/docs/latest/schema/bigquery/data-validations/#using-hasura-permissions
 -- https://hasura.io/docs/latest/schema/postgres/data-validations/#using-hasura-permissions
-module Test.Schema.DataValidation.Permissions.SelectSpec (spec) where
+module Test.Schema.DataValidations.Permissions.SelectSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.Aeson.Key qualified as Key (toString)

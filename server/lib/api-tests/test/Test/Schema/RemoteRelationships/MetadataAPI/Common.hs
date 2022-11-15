@@ -23,7 +23,7 @@
 --
 -- The RHS source in the below tests have the source name as "target"
 -- The LHS source in the below tests have the source name as "source"
-module Test.RemoteRelationship.MetadataAPI.Common
+module Test.Schema.RemoteRelationships.MetadataAPI.Common
   ( dbTodbRemoteRelationshipFixture,
     dbToRemoteSchemaRemoteRelationshipFixture,
     remoteSchemaToDBRemoteRelationshipFixture,

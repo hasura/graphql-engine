@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | All tests related to computed fields in a BigQuery source
-module Test.BigQuery.ComputedFieldSpec (spec) where
+-- | All tests related to computed fields
+module Test.Schema.ComputedFieldsSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T

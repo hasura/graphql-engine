@@ -4,7 +4,7 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Test that drop_source metadata API executes successfully when any remote
--- relationships is present between a remote schema and a database.
+-- relationships is present between a database and a database.
 -- Currently remote relationships are possible between:
 --  1. Two Postgres Sources
 --  2. (Postgres - Remote Schema), here a PG source has remote relationship with a
@@ -26,10 +26,10 @@
 -- The RHS source in the below tests have the source name as "target"
 -- The LHS source in the below tests have the source name as "source"
 --
--- In the below test, we test that dropping the remote schema (RHS, source name: "target")
+-- In the below test, we test that dropping the database (RHS, source name: "target"),
 -- does not create any inconsistent metadata, and the remote relationship is also
--- dropped from the databse (LHS, source name: "source").
-module Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec (spec) where
+-- dropped from the other databse (LHS, source name: "source").
+module Test.Schema.RemoteRelationships.MetadataAPI.DropSource.DBtoDBRelationshipSpec (spec) where
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson.Lens (key, values, _String)
@@ -42,7 +42,7 @@ import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..), remoteSchemaToDBRemoteRelationshipFixture)
+import Test.Schema.RemoteRelationships.MetadataAPI.Common (LocalTestTestEnvironment (..), dbTodbRemoteRelationshipFixture)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -50,7 +50,7 @@ import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..)
 spec :: SpecWith TestEnvironment
 spec = Fixture.runWithLocalTestEnvironmentSingleSetup contexts tests
   where
-    contexts = NE.fromList [remoteSchemaToDBRemoteRelationshipFixture]
+    contexts = NE.fromList [dbTodbRemoteRelationshipFixture]
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -61,7 +61,7 @@ tests opts = describe "drop-source-metadata-tests" do
 
 dropMetadataTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 dropMetadataTests opts = describe "drop_source on RHS source should remove remote relationship from LHS" do
-  it "drops the RHS source 'target'" \(testEnvironment, _) -> do
+  it "drops the RHS source 'target' " \(testEnvironment, _) -> do
     let query =
           [yaml|
             type: pg_drop_source
@@ -79,24 +79,26 @@ dropMetadataTests opts = describe "drop_source on RHS source should remove remot
       (GraphqlEngine.postMetadata testEnvironment query)
       expectedDropSourceResponse
 
-  it "export metadata, check if remote relationship is removed from LHS ('source', remote schema)" \(testEnvironment, _) -> do
-    -- No remote relationship should be present for table 'track' in 'source' remote schema
-    let expectedRSRelationshipMetadata =
+  it "export metadata, check if remote relationship is removed from LHS ('source', Postgres DB)" \(testEnvironment, _) -> do
+    -- No remote relationship should be present for table 'track' in 'source' DB
+    let expectedTableMetadata =
           [yaml|
-              - relationships: []
-                type_name: hasura_track
+              - table:
+                  schema: hasura
+                  name: track
             |]
 
     metadata <- GraphqlEngine.exportMetadata testEnvironment
 
-    let remoteSchemas = key "remote_schemas" . values
-        -- Extract the 'source' remote schema and check if any remote relationships exists
-        sourceRemoteSchema =
+    let sources = key "sources" . values
+        -- Extract the 'source' DB info from the sources field in metadata
+        sourceDB =
           Unsafe.fromJust $
             findOf
-              remoteSchemas
+              sources
               (has $ key "name" . _String . only "source")
               metadata
-        sourceRemoteSchemaRemoteRelationships = sourceRemoteSchema ^?! key "remote_relationships"
+        -- Extract the 'tables' field from 'source' DB
+        tables = sourceDB ^?! key "tables"
 
-    shouldBeYaml expectedRSRelationshipMetadata sourceRemoteSchemaRemoteRelationships
+    shouldBeYaml expectedTableMetadata tables

@@ -65,7 +65,6 @@ executable api-tests
   main-is: Spec.hs
   other-modules:
     SpecHook
-    Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.BigQuery.Queries.SpatialTypesSpec
     Test.BigQuery.Schema.RunSQLSpec
@@ -104,10 +103,10 @@ executable api-tests
     Test.Mutations.Delete.PrimaryKeySpec
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
-    Test.Mutations.Upsert.OnConflictSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
+    Test.Mutations.Upsert.OnConflictSpec
     Test.Postgres.BackendOnlyPermissionsSpec
     Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.DefaultValuesSpec
@@ -146,27 +145,28 @@ executable api-tests
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.RemoteRelationship.FromRemoteSchemaSpec
-    Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
-    Test.RemoteRelationship.MetadataAPI.Common
-    Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec
-    Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec
-    Test.RemoteRelationship.XToDBArrayRelationshipSpec
-    Test.RemoteRelationship.XToDBObjectRelationshipSpec
-    Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.SQLServer.DefaultValuesSpec
-    Test.SQLServer.InsertVarcharColumnSpec
-    Test.SQLServer.VarcharLiteralsSpec
+    Test.Schema.ComputedFieldsSpec
     Test.Schema.ConflictsSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
+    Test.Schema.DataValidations.Permissions.InsertSpec
+    Test.Schema.DataValidations.Permissions.SelectSpec
     Test.Schema.DefaultValuesSpec
-    Test.Schema.EnumSpec
+    Test.Schema.EnumsSpec
+    Test.Schema.RemoteRelationships.FromRemoteSchemaSpec
+    Test.Schema.RemoteRelationships.MetadataAPI.ClearMetadataSpec
+    Test.Schema.RemoteRelationships.MetadataAPI.Common
+    Test.Schema.RemoteRelationships.MetadataAPI.DropSource.DBtoDBRelationshipSpec
+    Test.Schema.RemoteRelationships.MetadataAPI.DropSource.RSToDBRelationshipSpec
+    Test.Schema.RemoteRelationships.XToDBArrayRelationshipSpec
+    Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec
+    Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
+    Test.SQLServer.DefaultValuesSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.SQLServer.VarcharLiteralsSpec
     Test.Subscriptions.CustomFieldsSpec
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.LiveQueriesSpec

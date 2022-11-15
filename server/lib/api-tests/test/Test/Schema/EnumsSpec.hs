@@ -4,7 +4,7 @@
 -- Tests for interacting with enum fields.
 --
 -- https://hasura.io/docs/latest/schema/postgres/enums/
-module Test.Schema.EnumSpec (spec) where
+module Test.Schema.EnumsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

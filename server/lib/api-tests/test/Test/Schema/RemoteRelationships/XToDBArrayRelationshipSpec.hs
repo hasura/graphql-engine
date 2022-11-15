@@ -1,21 +1,24 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Tests for object remote relationships to databases. Remote relationships
--- are relationships that are not local to a given source or remote schema, and
--- are handled by the engine itself. Object relationsips are 1-to-1
--- relationships.
+-- | Tests for array remote relationships to databases. Remote relationships are
+-- relationships that are not local to a given source or remote schema, and are
+-- handled by the engine itself. Array relationsips are 1-to-many relationships.
 --
 -- All tests use the same GraphQL syntax, and the only difference is in the
 -- setup: we do a cartesian product of all kinds of sources we support on the
 -- left-hand side and all databases we support on the right-hand side.
-module Test.RemoteRelationship.XToDBObjectRelationshipSpec (spec) where
+module Test.Schema.RemoteRelationships.XToDBArrayRelationshipSpec (spec) where
 
+import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value)
+import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
+import Data.Maybe qualified as Unsafe (fromJust)
 import Data.Morpheus.Document (gqlDocument)
+import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
 import Data.Typeable (Typeable)
 import Harness.Backend.Cockroach qualified as Cockroach
@@ -25,16 +28,17 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Test.Fixture (Fixture (..))
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Preamble
 
 spec :: SpecWith TestEnvironment
@@ -51,21 +55,15 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
 -- Teardown is done in the opposite order.
 --
 -- The metadata is cleared befored each setup.
-combine :: LHSFixture -> RHSFixture -> Fixture.Fixture (Maybe Server)
+combine :: LHSFixture -> RHSFixture -> Fixture (Maybe Server)
 combine lhs (tableName, rhs) =
-  Fixture.Fixture
-    { name = Fixture.Combine lhsName rhsName,
-      mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-      setupTeardown = \(testEnvironment, localTestEnvironment) ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = GraphqlEngine.clearMetadata testEnvironment,
-              Fixture.teardownAction = \_ -> GraphqlEngine.clearMetadata testEnvironment
-            }
-        ]
+  (Fixture.fixture $ Fixture.Combine lhsName rhsName)
+    { Fixture.mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
+      Fixture.setupTeardown = \(testEnvironment, localTestEnvironment) ->
+        [clearMetadataSetupAction testEnvironment]
           <> rhsSetupTeardown (testEnvironment, ())
           <> lhsSetupTeardown (testEnvironment, localTestEnvironment),
-      customOptions =
-        Fixture.combineOptions lhsOptions rhsOptions
+      Fixture.customOptions = Fixture.combineOptions lhsOptions rhsOptions
     }
   where
     Fixture.Fixture
@@ -82,6 +80,13 @@ combine lhs (tableName, rhs) =
 
 --------------------------------------------------------------------------------
 
+clearMetadataSetupAction :: TestEnvironment -> Fixture.SetupAction
+clearMetadataSetupAction testEnv =
+  Fixture.SetupAction
+    { Fixture.setupAction = GraphqlEngine.clearMetadata testEnv,
+      Fixture.teardownAction = \_ -> GraphqlEngine.clearMetadata testEnv
+    }
+
 --------------------------------------------------------------------------------
 
 -- | LHS context.
@@ -89,7 +94,7 @@ combine lhs (tableName, rhs) =
 -- Each LHS context is responsible for setting up the remote relationship, and
 -- for tearing it down. Each lhs context is given the JSON representation for
 -- the table name on the RHS.
-type LHSFixture = Value -> Fixture.Fixture (Maybe Server)
+type LHSFixture = Value -> Fixture (Maybe Server)
 
 lhsPostgres :: LHSFixture
 lhsPostgres tableName =
@@ -150,7 +155,7 @@ lhsRemoteServer tableName =
 --
 -- Each RHS context is responsible for setting up the target table, and for
 -- returning the JSON representation of said table.
-type RHSFixture = (Value, Fixture.Fixture ())
+type RHSFixture = (Value, Fixture ())
 
 rhsPostgres :: RHSFixture
 rhsPostgres =
@@ -161,7 +166,8 @@ rhsPostgres =
     |]
       context =
         (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-          { Fixture.setupTeardown = \testEnv ->
+          { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
               [ Fixture.SetupAction
                   { Fixture.setupAction = rhsPostgresSetup testEnv,
                     Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
@@ -179,7 +185,8 @@ rhsCockroach =
     |]
       context =
         (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
-          { Fixture.setupTeardown = \testEnv ->
+          { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
               [ Fixture.SetupAction
                   { Fixture.setupAction = rhsCockroachSetup testEnv,
                     Fixture.teardownAction = \_ -> rhsCockroachTeardown testEnv
@@ -202,7 +209,8 @@ rhsSQLServer =
     |]
       context =
         (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-          { Fixture.setupTeardown = \testEnv ->
+          { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
               [ Fixture.SetupAction
                   { Fixture.setupAction = rhsSQLServerSetup testEnv,
                     Fixture.teardownAction = \_ -> rhsSQLServerTeardown testEnv
@@ -215,24 +223,18 @@ rhsSQLServer =
 -- Schema
 
 -- | LHS
-track :: Schema.Table
-track =
-  (Schema.table "track")
+artist :: Schema.Table
+artist =
+  (Schema.table "artist")
     { tableColumns =
-        [ Schema.column "id" Schema.TInt,
-          Schema.column "title" Schema.TStr,
-          Schema.columnNull "album_id" Schema.TInt
+        [ Schema.columnNull "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
         ],
-      tablePrimaryKey = ["id"],
       tableData =
-        [ [Schema.VInt 1, Schema.VStr "track1_album1", Schema.VInt 1],
-          [Schema.VInt 2, Schema.VStr "track2_album1", Schema.VInt 1],
-          [Schema.VInt 3, Schema.VStr "track3_album1", Schema.VInt 1],
-          [Schema.VInt 4, Schema.VStr "track1_album2", Schema.VInt 2],
-          [Schema.VInt 5, Schema.VStr "track2_album2", Schema.VInt 2],
-          [Schema.VInt 6, Schema.VStr "track1_album3", Schema.VInt 3],
-          [Schema.VInt 7, Schema.VStr "track2_album3", Schema.VInt 3],
-          [Schema.VInt 8, Schema.VStr "track_no_album", Schema.VNull]
+        [ [Schema.VInt 1, Schema.VStr "artist1"],
+          [Schema.VInt 2, Schema.VStr "artist2"],
+          [Schema.VInt 3, Schema.VStr "artist3_no_albums"],
+          [Schema.VNull, Schema.VStr "artist4_no_id"]
         ]
     }
 
@@ -249,7 +251,8 @@ album =
       tableData =
         [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
           [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
-          [Schema.VInt 3, Schema.VStr "album3_artist2", Schema.VInt 2]
+          [Schema.VInt 3, Schema.VStr "album3_artist1", Schema.VInt 1],
+          [Schema.VInt 4, Schema.VStr "album4_artist2", Schema.VInt 2]
         ]
     }
 
@@ -261,9 +264,10 @@ lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
-      schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -274,53 +278,53 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  Postgres.createTable testEnvironment track
-  Postgres.insertTable testEnvironment track
-  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
+  Postgres.createTable testEnvironment artist
+  Postgres.insertTable testEnvironment artist
+  Schema.trackTable Fixture.Postgres sourceName artist testEnvironment
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-      type: bulk
-      args:
-      - type: pg_create_select_permission
-        args:
-          source: *sourceName
-          role: role1
-          table:
-            schema: *schemaName
-            name: track
-          permission:
-            columns: '*'
-            filter: {}
-      - type: pg_create_select_permission
-        args:
-          source: *sourceName
-          role: role2
-          table:
-            schema: *schemaName
-            name: track
-          permission:
-            columns: '*'
-            filter: {}
-      - type: pg_create_remote_relationship
-        args:
-          source: *sourceName
-          table:
-            schema: *schemaName
-            name: track
-          name: album
-          definition:
-            to_source:
-              source: target
-              table: *rhsTableName
-              relationship_type: object
-              field_mapping:
-                album_id: id
-    |]
+type: bulk
+args:
+- type: pg_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: artist
+    permission:
+      columns: '*'
+      filter: {}
+- type: pg_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: artist
+    permission:
+      columns: '*'
+      filter: {}
+- type: pg_create_remote_relationship
+  args:
+    source: *sourceName
+    table:
+      schema: *schemaName
+      name: artist
+    name: albums
+    definition:
+      to_source:
+        source: target
+        table: *rhsTableName
+        relationship_type: array
+        field_mapping:
+          id: artist_id
+  |]
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (_testEnvironment, _) =
-  pure ()
+lhsPostgresTeardown (_testEnvironment, _) = pure ()
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
@@ -330,9 +334,10 @@ lhsCockroachMkLocalTestEnvironment _ = pure Nothing
 
 lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup rhsTableName (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+
   let sourceName = "source"
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
-      schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -343,9 +348,10 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
         configuration: *sourceConfig
     |]
   -- setup tables only
-  Cockroach.createTable testEnvironment track
-  Cockroach.insertTable testEnvironment track
-  Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
+  Cockroach.createTable testEnvironment artist
+  Cockroach.insertTable testEnvironment artist
+  Schema.trackTable Fixture.Cockroach sourceName artist testEnvironment
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -357,7 +363,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
           role: role1
           table:
             schema: *schemaName
-            name: track
+            name: artist
           permission:
             columns: '*'
             filter: {}
@@ -367,7 +373,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
           role: role2
           table:
             schema: *schemaName
-            name: track
+            name: artist
           permission:
             columns: '*'
             filter: {}
@@ -376,15 +382,15 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
           source: *sourceName
           table:
             schema: *schemaName
-            name: track
-          name: album
+            name: artist
+          name: albums
           definition:
             to_source:
               source: target
               table: *rhsTableName
-              relationship_type: object
+              relationship_type: array
               field_mapping:
-                album_id: id
+                id: artist_id
     |]
 
 lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
@@ -398,10 +404,10 @@ lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
 lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Schema.getSchemaName testEnvironment
-
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -412,9 +418,10 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  SQLServer.createTable track
-  SQLServer.insertTable track
-  Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
+  SQLServer.createTable artist
+  SQLServer.insertTable artist
+  Schema.trackTable Fixture.SQLServer sourceName artist testEnvironment
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -426,7 +433,7 @@ args:
     role: role1
     table:
       schema: *schemaName
-      name: track
+      name: artist
     permission:
       columns: '*'
       filter: {}
@@ -436,7 +443,7 @@ args:
     role: role2
     table:
       schema: *schemaName
-      name: track
+      name: artist
     permission:
       columns: '*'
       filter: {}
@@ -445,19 +452,19 @@ args:
     source: *sourceName
     table:
       schema: *schemaName
-      name: track
-    name: album
+      name: artist
+    name: albums
     definition:
       to_source:
         source: target
         table: *rhsTableName
-        relationship_type: object
+        relationship_type: array
         field_mapping:
-          album_id: id
+          id: artist_id
   |]
 
 lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerTeardown _ = SQLServer.dropTable track
+lhsSQLServerTeardown _ = SQLServer.dropTable artist
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -487,53 +494,50 @@ hasuraTypeOptions =
     }
 
 data Query m = Query
-  { hasura_track :: HasuraTrackArgs -> m [HasuraTrack m]
+  { hasura_artist :: HasuraArtistArgs -> m [HasuraArtist m]
   }
   deriving (Generic)
 
 instance Typeable m => Morpheus.GQLType (Query m)
 
-data HasuraTrackArgs = HasuraTrackArgs
-  { ta_where :: Maybe HasuraTrackBoolExp,
-    ta_order_by :: Maybe [HasuraTrackOrderBy],
-    ta_limit :: Maybe Int
+data HasuraArtistArgs = HasuraArtistArgs
+  { aa_where :: Maybe HasuraArtistBoolExp,
+    aa_order_by :: Maybe [HasuraArtistOrderBy],
+    aa_limit :: Maybe Int
   }
   deriving (Generic)
 
-instance Morpheus.GQLType HasuraTrackArgs where
+instance Morpheus.GQLType HasuraArtistArgs where
   typeOptions _ _ = hasuraTypeOptions
 
-data HasuraTrack m = HasuraTrack
-  { t_id :: m (Maybe Int),
-    t_title :: m (Maybe Text),
-    t_album_id :: m (Maybe Int)
+data HasuraArtist m = HasuraArtist
+  { a_id :: m (Maybe Int),
+    a_name :: m (Maybe Text)
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (HasuraTrack m) where
+instance Typeable m => Morpheus.GQLType (HasuraArtist m) where
   typeOptions _ _ = hasuraTypeOptions
 
-data HasuraTrackOrderBy = HasuraTrackOrderBy
-  { tob_id :: Maybe OrderType,
-    tob_title :: Maybe OrderType,
-    tob_album_id :: Maybe OrderType
+data HasuraArtistOrderBy = HasuraArtistOrderBy
+  { aob_id :: Maybe OrderType,
+    aob_name :: Maybe OrderType
   }
   deriving (Generic)
 
-instance Morpheus.GQLType HasuraTrackOrderBy where
+instance Morpheus.GQLType HasuraArtistOrderBy where
   typeOptions _ _ = hasuraTypeOptions
 
-data HasuraTrackBoolExp = HasuraTrackBoolExp
-  { tbe__and :: Maybe [HasuraTrackBoolExp],
-    tbe__or :: Maybe [HasuraTrackBoolExp],
-    tbe__not :: Maybe HasuraTrackBoolExp,
-    tbe_id :: Maybe IntCompExp,
-    tbe_title :: Maybe StringCompExp,
-    tbe_album_id :: Maybe IntCompExp
+data HasuraArtistBoolExp = HasuraArtistBoolExp
+  { abe__and :: Maybe [HasuraArtistBoolExp],
+    abe__or :: Maybe [HasuraArtistBoolExp],
+    abe__not :: Maybe HasuraArtistBoolExp,
+    abe_id :: Maybe IntCompExp,
+    abe_name :: Maybe StringCompExp
   }
   deriving (Generic)
 
-instance Morpheus.GQLType HasuraTrackBoolExp where
+instance Morpheus.GQLType HasuraArtistBoolExp where
   typeOptions _ _ = hasuraTypeOptions
 
 data OrderType = Asc | Desc
@@ -556,78 +560,68 @@ input StringCompExp {
 
 lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsRemoteServerMkLocalTestEnvironment _ =
-  Just <$> RemoteServer.run (RemoteServer.generateQueryInterpreter (Query {hasura_track}))
+  Just <$> RemoteServer.run (RemoteServer.generateQueryInterpreter (Query {hasura_artist}))
   where
-    -- Implements the @hasura_track@ field of the @Query@ type.
-    hasura_track (HasuraTrackArgs {..}) = do
-      let filterFunction = case ta_where of
+    -- Implements the @hasura_artist@ field of the @Query@ type.
+    hasura_artist (HasuraArtistArgs {..}) = do
+      let filterFunction = case aa_where of
             Nothing -> const True
-            Just whereArg -> flip matchTrack whereArg
-          orderByFunction = case ta_order_by of
+            Just whereArg -> flip matchArtist whereArg
+          orderByFunction = case aa_order_by of
             Nothing -> \_ _ -> EQ
-            Just orderByArg -> orderTrack orderByArg
-          limitFunction = maybe Hasura.Prelude.id take ta_limit
+            Just orderByArg -> orderArtist orderByArg
+          limitFunction = maybe id take aa_limit
       pure $
-        tracks
+        artists
           & filter filterFunction
           & sortBy orderByFunction
           & limitFunction
-          & map mkTrack
-    -- Returns True iif the given track matches the given boolean expression.
-    matchTrack trackInfo@(trackId, trackTitle, maybeAlbumId) (HasuraTrackBoolExp {..}) =
+          & map mkArtist
+    -- Returns True iif the given artist matches the given boolean expression.
+    matchArtist artistInfo@(artistId, artistName) (HasuraArtistBoolExp {..}) =
       and
-        [ all (all (matchTrack trackInfo)) tbe__and,
-          all (any (matchTrack trackInfo)) tbe__or,
-          not (any (matchTrack trackInfo) tbe__not),
-          all (matchInt trackId) tbe_id,
-          all (matchString trackTitle) tbe_title,
-          all (matchMaybeInt maybeAlbumId) tbe_album_id
+        [ all (all (matchArtist artistInfo)) abe__and,
+          all (any (matchArtist artistInfo)) abe__or,
+          not (any (matchArtist artistInfo) abe__not),
+          all (matchMaybeInt artistId) abe_id,
+          all (matchString artistName) abe_name
         ]
-    matchInt intField IntCompExp {..} = Just intField == _eq
     matchString stringField StringCompExp {..} = Just stringField == _eq
     matchMaybeInt maybeIntField IntCompExp {..} = maybeIntField == _eq
-    -- Returns an ordering between the two given tracks.
-    orderTrack
+    -- Returns an ordering between the two given artists.
+    orderArtist
       orderByList
-      (trackId1, trackTitle1, trackAlbumId1)
-      (trackId2, trackTitle2, trackAlbumId2) =
-        flip foldMap orderByList \HasuraTrackOrderBy {..} ->
+      (artistId1, artistName1)
+      (artistId2, artistName2) =
+        flip foldMap orderByList \HasuraArtistOrderBy {..} ->
           if
-              | Just idOrder <- tob_id -> case idOrder of
-                  Asc -> compare trackId1 trackId2
-                  Desc -> compare trackId2 trackId1
-              | Just titleOrder <- tob_title -> case titleOrder of
-                  Asc -> compare trackTitle1 trackTitle2
-                  Desc -> compare trackTitle2 trackTitle1
-              | Just albumIdOrder <- tob_album_id ->
-                  compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
+              | Just idOrder <- aob_id ->
+                  compareWithNullLast idOrder artistId1 artistId2
+              | Just nameOrder <- aob_name -> case nameOrder of
+                  Asc -> compare artistName1 artistName2
+                  Desc -> compare artistName2 artistName1
               | otherwise ->
-                  error "empty track_order object"
+                  error "empty artist_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT
     compareWithNullLast Asc Nothing (Just _) = GT
     compareWithNullLast Asc (Just x1) (Just x2) = compare x1 x2
-    tracks =
-      [ (1, "track1_album1", Just 1),
-        (2, "track2_album1", Just 1),
-        (3, "track3_album1", Just 1),
-        (4, "track1_album2", Just 2),
-        (5, "track2_album2", Just 2),
-        (6, "track1_album3", Just 3),
-        (7, "track2_album3", Just 3),
-        (8, "track_no_album", Nothing)
+    artists =
+      [ (Just 1, "artist1"),
+        (Just 2, "artist2"),
+        (Just 3, "artist3_no_albums"),
+        (Nothing, "artist4_no_id")
       ]
-    mkTrack (trackId, title, albumId) =
-      HasuraTrack
-        { t_id = pure $ Just trackId,
-          t_title = pure $ Just title,
-          t_album_id = pure albumId
+    mkArtist (artistId, artistName) =
+      HasuraArtist
+        { a_id = pure artistId,
+          a_name = pure $ Just artistName
         }
 
 lhsRemoteServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
-  Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
+  Nothing -> error "XToDBArrayRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
     let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
     GraphqlEngine.postMetadata_
@@ -643,15 +637,15 @@ args:
 - type: create_remote_schema_remote_relationship
   args:
     remote_schema: source
-    type_name: hasura_track
-    name: album
+    type_name: hasura_artist
+    name: albums
     definition:
       to_source:
         source: target
         table: *tableName
-        relationship_type: object
+        relationship_type: array
         field_mapping:
-          album_id: id
+          id: artist_id
       |]
 
 lhsRemoteServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
@@ -662,10 +656,9 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
-      schemaName = Schema.getSchemaName testEnvironment
-
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -711,23 +704,21 @@ args:
       filter:
         artist_id:
           _eq: x-hasura-artist-id
-      limit: 1
+      limit: 2
       allow_aggregations: true
   |]
 
 rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
-rhsPostgresTeardown (_testEnvironment, _) =
-  pure ()
+rhsPostgresTeardown (_testEnvironment, _) = pure ()
 
 --------------------------------------------------------------------------------
 -- RHS Cockroach
 
 rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
 rhsCockroachSetup (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
   let sourceName = "target"
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
-      schemaName = Schema.getSchemaName testEnvironment
-
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -773,7 +764,7 @@ rhsCockroachSetup (testEnvironment, _) = do
             filter:
               artist_id:
                 _eq: x-hasura-artist-id
-            limit: 1
+            limit: 2
             allow_aggregations: true
     |]
 
@@ -785,10 +776,10 @@ rhsCockroachTeardown _ = pure ()
 
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerSetup (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+
   let sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Schema.getSchemaName testEnvironment
-
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -834,7 +825,7 @@ args:
       filter:
         artist_id:
           _eq: x-hasura-artist-id
-      limit: 1
+      limit: 2
       allow_aggregations: true
   |]
 
@@ -845,22 +836,107 @@ rhsSQLServerTeardown _ = SQLServer.dropTable album
 -- Tests
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-tests opts = describe "object-relationship" $ do
+tests opts = describe "array-relationship" do
   schemaTests opts
   executionTests opts
   permissionTests opts
 
--- | Basic queries using *-to-DB joins
+schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
+schemaTests _opts =
+  -- we introspect the schema and validate it
+  it "graphql-schema" \(testEnvironment, _) -> do
+    let query =
+          [graphql|
+          fragment type_info on __Type {
+            name
+            kind
+            ofType {
+              name
+              kind
+              ofType {
+                name
+                kind
+                ofType {
+                  name
+                }
+              }
+            }
+          }
+          query {
+            artist_fields: __type(name: "hasura_artist") {
+              fields {
+                name
+                type {
+                  ...type_info
+                }
+                args {
+                  name
+                  type {
+                    ...type_info
+                  }
+                }
+              }
+            }
+          }
+          |]
+    introspectionResult <- GraphqlEngine.postGraphql testEnvironment query
+    let focusArtistFields =
+          key "data"
+            . key "artist_fields"
+            . key "fields"
+            . values
+        albumsField =
+          Unsafe.fromJust $
+            findOf
+              focusArtistFields
+              (has $ key "name" . _String . only "albums")
+              introspectionResult
+        albumsAggregateField =
+          Unsafe.fromJust $
+            findOf
+              focusArtistFields
+              (has $ key "name" . _String . only "albums_aggregate")
+              introspectionResult
+
+    -- check the return type of albums field
+    shouldBeYaml
+      (albumsField ^?! key "type")
+      [yaml|
+      kind: NON_NULL
+      name: null
+      ofType:
+        kind: LIST
+        name: null
+        ofType:
+          kind: NON_NULL
+          name: null
+          ofType:
+            name: hasura_album
+      |]
+
+    -- check the return type of albums_aggregate field
+    shouldBeYaml
+      (albumsAggregateField ^?! key "type")
+      [yaml|
+      name: null
+      kind: NON_NULL
+      ofType:
+        name: hasura_album_aggregate
+        kind: OBJECT
+        ofType: null
+      |]
+
+-- | Basic queries using DB-to-DB joins
 executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-executionTests opts = describe "execution" $ do
+executionTests opts = describe "execution" do
   -- fetches the relationship data
-  it "related-data" $ \(testEnvironment, _) -> do
+  it "related-data" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
-            track: hasura_track(where: {title: {_eq: "track1_album1"}}) {
-              title
-              album {
+            artist: hasura_artist(where: {name: {_eq: "artist1"}}) {
+              name
+              albums {
                 title
               }
             }
@@ -869,10 +945,37 @@ executionTests opts = describe "execution" $ do
         expectedResponse =
           [yaml|
           data:
-            track:
-             - title: "track1_album1"
-               album:
-                 title: album1_artist1
+            artist:
+             - name: artist1
+               albums:
+               - title: album1_artist1
+               - title: album2_artist1
+               - title: album3_artist1
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphql testEnvironment query)
+      expectedResponse
+
+  -- when there are no matching rows, the relationship response should be []
+  it "related-data-empty-array" \(testEnvironment, _) -> do
+    let query =
+          [graphql|
+          query {
+            artist: hasura_artist(where: {name: {_eq: "artist3_no_albums"}}) {
+              name
+              albums {
+                title
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist:
+             - name: artist3_no_albums
+               albums: []
           |]
     shouldReturnYaml
       opts
@@ -880,13 +983,13 @@ executionTests opts = describe "execution" $ do
       expectedResponse
 
   -- when any of the join columns are null, the relationship should be null
-  it "related-data-null" $ \(testEnvironment, _) -> do
+  it "related-data-null" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
-            track: hasura_track(where: {title: {_eq: "track_no_album"}}) {
-              title
-              album {
+            artist: hasura_artist(where: {name: {_eq: "artist4_no_id"}}) {
+              name
+              albums {
                 title
               }
             }
@@ -895,9 +998,9 @@ executionTests opts = describe "execution" $ do
         expectedResponse =
           [yaml|
           data:
-            track:
-             - title: "track_no_album"
-               album: null
+            artist:
+             - name: artist4_no_id
+               albums: null
           |]
     shouldReturnYaml
       opts
@@ -905,21 +1008,21 @@ executionTests opts = describe "execution" $ do
       expectedResponse
 
   -- when the lhs response has both null and non-null values for join columns
-  it "related-data-non-null-and-null" $ \(testEnvironment, _) -> do
+  it "related-data-non-null-and-null" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
-            track: hasura_track(
+            artist: hasura_artist(
               where: {
                 _or: [
-                  {title: {_eq: "track1_album1"}},
-                  {title: {_eq: "track_no_album"}}
+                  {name: {_eq: "artist1"}},
+                  {name: {_eq: "artist4_no_id"}}
                 ]
               },
-              order_by: [{id: asc}]
+              order_by: [{name: asc}]
             ) {
-              title
-              album {
+              name
+              albums {
                 title
               }
             }
@@ -928,34 +1031,40 @@ executionTests opts = describe "execution" $ do
         expectedResponse =
           [yaml|
           data:
-            track:
-             - title: "track1_album1"
-               album:
-                 title: album1_artist1
-             - title: "track_no_album"
-               album: null
+            artist:
+             - name: artist1
+               albums:
+               - title: album1_artist1
+               - title: album2_artist1
+               - title: album3_artist1
+             - name: artist4_no_id
+               albums: null
           |]
     shouldReturnYaml
       opts
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
--- | Spec that describe an object relationship's data in the presence of
--- permisisons.
-permissionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-permissionTests opts = describe "permission" $ do
-  let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
+-- TODO:
+-- 1. where
+-- 1. limit with order_by
+-- 1. offset
+-- 1. _aggregate
 
+-- | tests that describe an array relationship's data in the presence of permisisons
+permissionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
+permissionTests opts = describe "permission" do
   -- only the allowed rows on the target table are queryable
-  it "only-allowed-rows" $ \(testEnvironment, _) -> do
-    let query =
+  it "only-allowed-rows" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
+        query =
           [graphql|
           query {
-            track: hasura_track(
-              order_by: [{id: asc}]
+            artist: hasura_artist(
+              order_by: [{name: asc}]
             ) {
-              title
-              album {
+              name
+              albums {
                 title
               }
             }
@@ -964,28 +1073,18 @@ permissionTests opts = describe "permission" $ do
         expectedResponse =
           [yaml|
           data:
-            track:
-             - title: "track1_album1"
-               album:
-                 title: album1_artist1
-             - title: "track2_album1"
-               album:
-                 title: album1_artist1
-             - title: "track3_album1"
-               album:
-                 title: album1_artist1
-             - title: "track1_album2"
-               album:
-                 title: album2_artist1
-             - title: "track2_album2"
-               album:
-                 title: album2_artist1
-             - title: "track1_album3"
-               album: null
-             - title: "track2_album3"
-               album: null
-             - title: "track_no_album"
-               album: null
+            artist:
+             - name: artist1
+               albums:
+               - title: album1_artist1
+               - title: album2_artist1
+               - title: album3_artist1
+             - name: artist2
+               albums: []
+             - name: artist3_no_albums
+               albums: []
+             - name: artist4_no_id
+               albums: null
           |]
     shouldReturnYaml
       opts
@@ -994,9 +1093,10 @@ permissionTests opts = describe "permission" $ do
 
   -- we use an introspection query to check column permissions:
   -- 1. the type 'hasura_album' has only 'artist_id' and 'title', the allowed columns
-  -- 2. the album field in 'hasura_track' type is of type 'hasura_album'
-  it "only-allowed-columns" $ \(testEnvironment, _) -> do
-    let query =
+  -- 2. the albums field in 'hasura_artist' type is of type 'hasura_album'
+  it "only-allowed-columns" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
+        query =
           [graphql|
           query {
             album_fields: __type(name: "hasura_album") {
@@ -1004,9 +1104,11 @@ permissionTests opts = describe "permission" $ do
                 name
               }
             }
-            track: hasura_track(where: {title: {_eq: "track1_album1"}}) {
-              title
-              album {
+            artist: hasura_artist(
+              where: {name: {_eq: "artist1"}}
+            ) {
+              name
+              albums(limit: 1) {
                 __typename
               }
             }
@@ -1019,38 +1121,24 @@ permissionTests opts = describe "permission" $ do
               fields:
               - name: artist_id
               - name: title
-            track:
-            - title: track1_album1
-              album:
-                __typename: hasura_album
+            artist:
+            - name: artist1
+              albums:
+              - __typename: hasura_album
           |]
     shouldReturnYaml
       opts
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
-schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-schemaTests opts =
-  -- we use an introspection query to check:
-  -- 1. a field 'album' is added to the track table
-  -- 1. track's where clause does not have 'album' field
-  -- 2. track's order_by clause does nat have 'album' field
-  it "graphql-schema" $ \(testEnvironment, _) -> do
-    let query =
+  -- _aggregate field should not be generated when 'allow_aggregations' isn't set to 'true'
+  it "aggregations-not-allowed" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role1")]
+        query =
           [graphql|
           query {
-            track_fields: __type(name: "hasura_track") {
+            artist_fields: __type(name: "hasura_artist") {
               fields {
-                name
-              }
-            }
-            track_where_exp_fields: __type(name: "hasura_track_bool_exp") {
-              inputFields {
-                name
-              }
-            }
-            track_order_by_exp_fields: __type(name: "hasura_track_order_by") {
-              inputFields {
                 name
               }
             }
@@ -1059,27 +1147,206 @@ schemaTests opts =
         expectedResponse =
           [yaml|
           data:
-            track_fields:
+            artist_fields:
               fields:
-              - name: album
-              - name: album_id
+              - name: albums
               - name: id
-              - name: title
-            track_where_exp_fields:
-              inputFields:
-              - name: _and
-              - name: _not
-              - name: _or
-              - name: album_id
-              - name: id
-              - name: title
-            track_order_by_exp_fields:
-              inputFields:
-              - name: album_id
-              - name: id
-              - name: title
+              - name: name
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql testEnvironment query)
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+  -- _aggregate field should only be allowed when 'allow_aggregations' is set to 'true'
+  it "aggregations-allowed" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role2")]
+        query =
+          [graphql|
+          query {
+            artist_fields: __type(name: "hasura_artist") {
+              fields {
+                name
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist_fields:
+              fields:
+              - name: albums
+              - name: albums_aggregate
+              - name: id
+              - name: name
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+  -- permission limit should kick in when no query limit is specified
+  it "no-query-limit" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+        query =
+          [graphql|
+          query {
+            artist: hasura_artist(
+              where: {name: {_eq: "artist1"}}
+            ) {
+              name
+              albums (order_by: {id: asc}){
+                title
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist:
+             - name: artist1
+               albums:
+               - title: album1_artist1
+               - title: album2_artist1
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+  -- query limit should be applied when query limit <= permission limit
+  it "user-limit-less-than-permission-limit" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+        query =
+          [graphql|
+          query {
+            artist: hasura_artist(
+              where: {name: {_eq: "artist1"}}
+            ) {
+              name
+              albums (order_by: {id: asc} limit: 1){
+                title
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist:
+             - name: artist1
+               albums:
+                 - title: album1_artist1
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+  -- permission limit should be applied when query limit > permission limit
+  it "user-limit-greater-than-permission-limit" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+        query =
+          [graphql|
+          query {
+            artist: hasura_artist(
+              where: {name: {_eq: "artist1"}}
+            ) {
+              name
+              albums (order_by: {id: asc} limit: 4){
+                title
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist:
+             - name: artist1
+               albums:
+               - title: album1_artist1
+               - title: album2_artist1
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+  -- permission limit should only apply on 'nodes' but not on 'aggregate'
+  it "aggregations" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+        query =
+          [graphql|
+          query {
+            artist: hasura_artist(
+              where: {name: {_eq: "artist1"}}
+            ) {
+              name
+              albums_aggregate (order_by: {id: asc}){
+                aggregate {
+                  count
+                }
+                nodes {
+                  title
+                }
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist:
+             - name: artist1
+               albums_aggregate:
+                 aggregate:
+                   count: 3
+                 nodes:
+                 - title: album1_artist1
+                 - title: album2_artist1
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
+      expectedResponse
+
+  -- query limit applies to both 'aggregate' and 'nodes'
+  it "aggregations-query-limit" \(testEnvironment, _) -> do
+    let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+        query =
+          [graphql|
+          query {
+            artist: hasura_artist(
+              where: {name: {_eq: "artist1"}}
+            ) {
+              name
+              albums_aggregate (limit: 2 order_by: {id: asc}){
+                aggregate {
+                  count
+                }
+                nodes {
+                  title
+                }
+              }
+            }
+          }
+          |]
+        expectedResponse =
+          [yaml|
+          data:
+            artist:
+             - name: artist1
+               albums_aggregate:
+                 aggregate:
+                   count: 2
+                 nodes:
+                 - title: album1_artist1
+                 - title: album2_artist1
+          |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse

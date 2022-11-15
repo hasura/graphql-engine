@@ -8,7 +8,7 @@
 -- All tests use the same GraphQL syntax, and the only difference is in the
 -- setup: for each left-hand side source we support we do a custom setup and run
 -- the tests.
-module Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec (spec) where
+module Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec (spec) where
 
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE

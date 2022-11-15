@@ -23,7 +23,7 @@
 --
 -- The RHS source in the below tests have the source name as "target"
 -- The LHS source in the below tests have the source name as "source"
-module Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec (spec) where
+module Test.Schema.RemoteRelationships.MetadataAPI.ClearMetadataSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -32,7 +32,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
-import Test.RemoteRelationship.MetadataAPI.Common qualified as Common
+import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
 
 --------------------------------------------------------------------------------
 -- Preamble

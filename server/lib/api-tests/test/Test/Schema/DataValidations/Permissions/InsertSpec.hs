@@ -3,7 +3,7 @@
 -- | Test insert permissions
 --
 -- https://hasura.io/docs/latest/schema/postgres/data-validations/#using-hasura-permissions
-module Test.Schema.DataValidation.Permissions.InsertSpec (spec) where
+module Test.Schema.DataValidations.Permissions.InsertSpec (spec) where
 
 import Control.Lens ((.~))
 import Data.Aeson (Value)
