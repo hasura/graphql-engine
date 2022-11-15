@@ -21,6 +21,7 @@ import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
+import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache.Build qualified as SC.Build
@@ -56,15 +57,19 @@ runAddDataConnectorAgent ::
   m EncJSON
 runAddDataConnectorAgent DCAddAgent {..} = do
   let agent = DC.Types.DataConnectorOptions _gdcaUrl
+  sourceKinds <- (:) "postgres" . fmap _skiSourceKind <$> fetchSourceKinds
 
-  let modifier =
-        Metadata.MetadataModifier $
-          Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
-            Metadata.BackendConfigWrapper $ InsOrdHashMap.insert _gdcaName agent (coerce oldMap)
+  if toTxt _gdcaName `elem` sourceKinds
+    then Error.throw400 Error.AlreadyExists $ "SourceKind '" <> toTxt _gdcaName <> "' already exists."
+    else do
+      let modifier =
+            Metadata.MetadataModifier $
+              Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
+                Metadata.BackendConfigWrapper $ InsOrdHashMap.insert _gdcaName agent (coerce oldMap)
 
-  SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier
+      SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier
 
-  pure Common.successMsg
+      pure Common.successMsg
 
 --------------------------------------------------------------------------------
 

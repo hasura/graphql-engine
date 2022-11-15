@@ -11,6 +11,7 @@ module Hasura.RQL.DDL.SourceKinds
     -- * List Capabilities
     GetSourceKindCapabilities (..),
     runGetSourceKindCapabilities,
+    fetchSourceKinds,
   )
 where
 
@@ -93,12 +94,17 @@ mkNativeSource = \case
   Backend.DataConnector -> Nothing
   b -> Just $ SourceKindInfo {_skiSourceKind = fromMaybe (toTxt b) (Backend.backendShortName b), _skiBuiltin = Builtin}
 
-runListSourceKinds :: Metadata.MetadataM m => ListSourceKinds -> m EncJSON
-runListSourceKinds ListSourceKinds = do
-  let builtins = mapMaybe mkNativeSource $ filter (/= Backend.DataConnector) Backend.supportedBackends
+fetchSourceKinds :: Metadata.MetadataM m => m [SourceKindInfo]
+fetchSourceKinds = do
+  let builtins = mapMaybe mkNativeSource (filter (/= Backend.DataConnector) Backend.supportedBackends)
   agents <- agentSourceKinds
 
-  pure $ EncJSON.encJFromJValue $ Aeson.object ["sources" .= (builtins <> agents)]
+  pure (builtins <> agents)
+
+runListSourceKinds :: Metadata.MetadataM m => ListSourceKinds -> m EncJSON
+runListSourceKinds ListSourceKinds = do
+  sourceKinds <- fetchSourceKinds
+  pure $ EncJSON.encJFromJValue $ Aeson.object ["sources" .= sourceKinds]
 
 --------------------------------------------------------------------------------
 
