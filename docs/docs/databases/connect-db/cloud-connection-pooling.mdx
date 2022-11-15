@@ -1,0 +1,180 @@
+---
+description: Managing connection pools in Hasura Cloud
+title: 'Cloud: Elastic connection pools'
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - elastic
+  - connection
+  - pools
+  - autoscaling
+sidebar_label: Elastic connection pools
+sidebar_position: 2
+sidebar_class_name: cloud-icon
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from "@site/src/components/Thumbnail";
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+## Introduction
+
+In Hasura Cloud, any non-free tier project is backed by several Hasura Server instances. These instances are
+autoscaled to ensure reliable and consistent performance for your API. Each Hasura Server instance connects to data
+sources through [connection pools](https://en.wikipedia.org/wiki/Connection_pool) which you are able to configure.
+
+:::info Note
+
+Connection pooling is only available for [PostgreSQL](/api-reference/syntax-defs.mdx#pgpoolsettings) and
+[MSSQL](/api-reference/syntax-defs.mdx#mssqlpoolsettings) data sources.
+
+:::
+
+A connection pool can only hold live connections up to certain limit, which is specified through the `max_connections`
+pool setting. The `max_connections` setting is applicable per server instance i.e, the cumulative number of maximum
+connections across all instances in a project will be calculated as `number of server instances * max_connections`.
+Under heavy load, when a project is scaled up, total live connections may exceed the data source's true limit. This
+problem can be avoided by using **elastic connection pools**.
+
+## Elastic connection pools
+
+Elastic connection pools in Hasura Cloud have a flexible maximum number of connections as the pool's size is elastic in
+nature. When a project is scaled up or down, Hasura Cloud automatically adjusts the number of maximum connections in a
+data sources' pool, including read replicas, to ensure consistent **total maximum connections across all Hasura Server
+instances**. You can define the upper limit of total maximum connections of a data source's pool per Hasura Cloud
+project, via the `total_max_connections` pool setting.
+
+:::info Note
+
+At any given point in time, a pool's maximum connections = `total_max_connections / number of server instances`
+
+:::
+
+If both `total_max_connections` and `max_connections` are set, then `total_max_connections` will take precedence over
+the `max_connections`. If neither is set, `total_max_connections` assumes a default value. If only `max_connections`
+is set, as it is applicable per instance then Hasura Cloud will not adjust the maximum connections of individual
+pools and hence elastic connection pooling is disabled.
+
+:::tip
+
+It is always recommended to set the `total_max_connections` pool setting in Hasura cloud to take advantage of elastic
+connection pools.
+
+:::
+
+Hasura Cloud tries to keep total maximum connections across all server instances under `total_max_connections`.
+Under heavy load, when a project scales up, the total maximum connections may slightly exceed the limit for a very
+brief period of time during which Hasura Cloud is trying to adjust pools in existing Hasura Server instances. Always
+set the `total_max_connections` value slightly lower than the database true total maximum limit in order to avoid
+exceeding your resource limits.
+
+### Metadata configuration
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+While adding a new database, under `Connection Settings`, set the desired `Total Max Connections` for primary and read
+replica pools. To set or update `total_max_connections` for existing sources, head to the `Data > Databases > Manage >
+[database-name] > Edit` page and scroll down to the `Connection Settings` section.
+
+<Thumbnail src='/img/databases/total-max-connections.png' alt='Total max connections' max-width='543px' />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+To set `total_max_connections`, update the `databases > [source-name] > databases.yaml` file inside the metadata
+directory as per this example:
+
+```yaml {9-10}
+- name: default
+  kind: postgres
+  configuration:
+    connection_info:
+      use_prepared_statements: false
+      database_url:
+        from_env: PG_DATABASE_URL
+      isolation_level: read-committed
+      pool_settings:
+        total_max_connections: 60
+  tables: '!include default/tables/tables.yaml'
+```
+
+Apply the metadata using the CLI by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+The `total_max_connections` pool setting can be set using the `<backend>_add_source` metadata API,
+
+```http {14-15}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_add_source",
+  "args": {
+    "name": "pg1",
+    "configuration": {
+      "connection_info": {
+        "database_url": {
+           "from_env": "<DB_URL_ENV_VAR>"
+         },
+        "pool_settings": {
+          "total_max_connections": 50,
+          "idle_timeout": 180,
+          "retries": 1,
+          "pool_timeout": 360,
+          "connection_lifetime": 600
+        },
+        "use_prepared_statements": true,
+        "isolation_level": "read-committed",
+      }
+    },
+    "replace_configuration": false
+  }
+}
+```
+
+or can be updated using the `<backend>_update_source` metadata API.
+
+```http {14-15}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_update_source",
+  "args": {
+    "name": "pg1",
+    "configuration": {
+      "connection_info": {
+        "database_url": {
+           "from_env": "<DB_URL_ENV_VAR>"
+         },
+        "pool_settings": {
+          "total_max_connections": 50,
+          "idle_timeout": 180,
+          "retries": 1,
+          "pool_timeout": 360,
+          "connection_lifetime": 600
+        },
+        "use_prepared_statements": true,
+        "isolation_level": "read-committed",
+      }
+    }
+  }
+}
+```
+
+
+</TabItem>
+</Tabs>

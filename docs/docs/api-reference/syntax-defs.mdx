@@ -148,7 +148,7 @@ keywords:
 | Key                   | Required | Schema    | Description                                                                                                                                                                                                                                                       |
 |-----------------------|----------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                                                                                                |
-| total_max_connections | false    | `Integer` | Maximum number of total connections to be maintained across any number of Hasura Cloud instances (default: 1000). Takes precedence over `max_connections` in Cloud projects. *(Only available in Cloud)*                                                                                     |
+| total_max_connections | false    | `Integer` | Maximum number of total connections to be maintained across any number of Hasura Cloud instances (default: 1000). Takes precedence over `max_connections` in Cloud projects. *(Only available in Hasura Cloud)*                                                   |
 | idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                                                                                                       |
 | retries               | false    | `Integer` | Number of retries to perform (default: 1)                                                                                                                                                                                                                         |
 | pool_timeout          | false    | `Integer` | Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)                                                                                                                                                           |
@@ -166,11 +166,12 @@ keywords:
 
 ## MsSQLPoolSettings {#mssqlpoolsettings}
 
-| Key                   | Required | Schema    | Description                                                                                                                                                    |
-|-----------------------|----------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                             |
+| Key                   | Required | Schema    | Description                                                                                                                                                                            |
+|-----------------------|----------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                     |
 | total_max_connections | false    | `Integer` | Maximum number of total connections across any number of Hasura Cloud instances (default: 50). Takes precedence over `max_connections` in Cloud projects.  *(Only available in Cloud)* |
-| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                    |
+| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                            |
+
 ## PGColumnType {#pgcolumntype}
 
 <div className="parsed-literal">
