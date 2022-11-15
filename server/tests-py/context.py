@@ -813,17 +813,18 @@ class HGECtx:
     def __init__(
         self,
         hge_url: str,
-        pg_url: str,
+        metadata_schema_url: str,
         hge_key: Optional[str],
         webhook: Optional[HGECtxWebhook],
         enabled_apis: Optional[set[str]],
+        clear_dbs: bool,
         config,
     ):
         self.http = requests.Session()
         self.timeout = 120  # BigQuery can take a while
 
         self.hge_url = hge_url
-        self.pg_url = pg_url
+        self.metadata_schema_url = metadata_schema_url
         self.hge_key = hge_key
         self.webhook = webhook
         hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
@@ -841,7 +842,7 @@ class HGECtx:
         self.may_skip_test_teardown = False
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
-        self.engine = sqlalchemy.create_engine(self.pg_url)
+        self.engine = sqlalchemy.create_engine(self.metadata_schema_url)
         self.meta = sqlalchemy.schema.MetaData()
 
         self.ws_read_cookie = config.getoption('--test-ws-init-cookie')
@@ -866,7 +867,8 @@ class HGECtx:
             # HGE version
             result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
             self.version = result.stdout.decode('utf-8').strip()
-        if self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis) and not config.getoption('--skip-schema-setup'):
+        # TODO: remove once parallelization work is completed
+        if clear_dbs and self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis) and not config.getoption('--skip-schema-setup'):
           try:
               self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:

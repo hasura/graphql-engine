@@ -41,7 +41,6 @@ docker compose pull "${DATABASES[@]}"
 
 echo
 echo '*** Starting databases ***'
-docker compose rm -svf "${DATABASES[@]}" # tear down databases beforehand
 docker compose up -d --wait "${DATABASES[@]}"
 
 HASURA_GRAPHQL_PG_SOURCE_URL_1="postgresql://postgres:hasura@localhost:$(docker compose port --index 1 postgres 5432 | sed -E 's/.*://')/postgres"
@@ -53,6 +52,8 @@ export HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2 HASURA_GRAP
 echo
 echo '*** Running tests ***'
 pytest \
+  --dist=loadscope \
+  -n auto \
   --hge-bin="$(cabal list-bin graphql-engine:exe:graphql-engine)" \
   --pg-urls "$HASURA_GRAPHQL_PG_SOURCE_URL_1" "$HASURA_GRAPHQL_PG_SOURCE_URL_2" \
   "$@"

@@ -26,7 +26,7 @@ def hge_server(
     hge_url: str,
     hge_key: Optional[str],
     hge_fixture_env: dict[str, str],
-    pg_url: str,
+    metadata_schema_url: str,
 ) -> Optional[str]:
     hge_env: dict[str, str] = {name: value for name, value in os.environ.items() if name in _PASS_THROUGH_ENV_VARS}
     hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env') if marker.args[1] is not None}
@@ -42,7 +42,7 @@ def hge_server(
     hge_process = subprocess.Popen(
         args = [
             hge_bin,
-            '--database-url', pg_url,
+            '--metadata-database-url', metadata_schema_url,
             'serve',
             '--server-port', str(hge_port),
             '--stringify-numeric-types',

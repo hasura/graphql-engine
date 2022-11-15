@@ -77,6 +77,8 @@ services:
       service: postgres
     environment:
       POSTGRES_PASSWORD: "hasura"
+    volumes:
+      - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     deploy:
       replicas: 2
 

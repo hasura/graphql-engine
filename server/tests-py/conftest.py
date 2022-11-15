@@ -16,6 +16,7 @@ import uuid
 import auth_webhook_server
 from context import ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, GraphQLWSClient, HGECtx, HGECtxGQLServer, HGECtxWebhook, PytestConf
 import fixtures.hge
+import fixtures.postgres
 import fixtures.tls
 import ports
 import webhook
@@ -193,7 +194,7 @@ def pytest_configure(config):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list = config.getoption('--pg-urls')
-        if config.getoption('-n', default=None):
+        if not config.getoption('--hge-bin') and config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
             assert config.getoption('--hge-bin') or xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
@@ -240,7 +241,7 @@ def pytest_configure_node(node):
         return
     if not node.config.getoption('--hge-bin'):
         node.workerinput["hge-url"] = node.config.hge_url_list.pop()
-    node.workerinput["pg-url"] = node.config.pg_url_list.pop()
+        node.workerinput["pg-url"] = node.config.pg_url_list.pop()
 
 def run_on_current_backend(request: pytest.FixtureRequest):
     current_backend = request.config.getoption('--backend')
@@ -267,17 +268,55 @@ def per_backend_test_function(request: pytest.FixtureRequest):
     return per_backend_tests_fixture(request)
 
 @pytest.fixture(scope='session')
-def pg_version(request) -> int:
-    pg_url: str = request.config.workerinput["pg-url"]
-    with sqlalchemy.create_engine(pg_url).connect() as connection:
-        row = connection.execute('show server_version_num').fetchone()
-        if not row:
-            raise Exception('Could not get the PostgreSQL version.')
-        return int(row['server_version_num']) // 10000
+def pg_version(owner_engine: sqlalchemy.engine.Engine) -> int:
+    return fixtures.postgres.version(owner_engine)
+
+@pytest.fixture(scope='session')
+def owner_engine(request: pytest.FixtureRequest, hge_bin: str):
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
+    if not hge_bin:
+        return sqlalchemy.engine.create_engine(request.config.workerinput["pg-url"])  # type: ignore
+
+    return fixtures.postgres.owner_engine(request)
+
+@pytest.fixture(scope='session')
+def runner_engine(owner_engine: sqlalchemy.engine.Engine):
+    return fixtures.postgres.runner_engine(owner_engine)
 
 @pytest.fixture(scope='class')
-def pg_url(request) -> str:
-    return request.config.workerinput["pg-url"]
+def metadata_schema_url(
+    request: pytest.FixtureRequest,
+    owner_engine: sqlalchemy.engine.Engine,
+    runner_engine: sqlalchemy.engine.Engine,
+    hge_bin: Optional[str],
+):
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
+    if not hge_bin:
+        return request.config.workerinput["pg-url"]  # type: ignore
+
+    return fixtures.postgres.metadata_schema_url(request, owner_engine, runner_engine)
+
+@pytest.fixture(scope='class')
+def source_backend(
+    request: pytest.FixtureRequest,
+    owner_engine: sqlalchemy.engine.Engine,
+    runner_engine: sqlalchemy.engine.Engine,
+    hge_ctx_fixture: HGECtx,
+    hge_bin: Optional[str],
+):
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
+    if not hge_bin:
+        yield None
+        return
+
+    yield from fixtures.postgres.source_backend(request, owner_engine, runner_engine, hge_ctx_fixture)
+
+@pytest.fixture(scope='class')
+def postgis(owner_engine: sqlalchemy.engine.Engine, source_backend: fixtures.postgres.Backend):
+    return fixtures.postgres.postgis(owner_engine, source_backend)
 
 @pytest.fixture(scope='session')
 def tls_ca_configuration(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Optional[fixtures.tls.TLSCAConfiguration]:
@@ -289,6 +328,7 @@ def tls_ca_configuration(request: pytest.FixtureRequest, tmp_path_factory: pytes
     else:
         return None
 
+# TODO: remove once parallelization work is completed
 @pytest.fixture(scope='class', autouse=True)
 def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[str], hge_fixture_env: dict[str, str]):
     # Let `hge_server` manage this stuff.
@@ -311,18 +351,6 @@ def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[str], hge_fixt
         if os.environ['HASURA_GRAPHQL_AUTH_HOOK'] != hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK']:
             pytest.skip(f'HGE expects a running webhook at {os.environ["HASURA_GRAPHQL_AUTH_HOOK"]}, but this test provides one at {hge_fixture_env["HASURA_GRAPHQL_AUTH_HOOK"]}.')
 
-@pytest.fixture(scope='class')
-def postgis(pg_url):
-    with sqlalchemy.create_engine(pg_url).connect() as connection:
-        connection.execute('CREATE EXTENSION IF NOT EXISTS postgis')
-        connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_topology')
-        result = connection.execute('SELECT PostGIS_lib_version() as postgis_version').fetchone()
-        if not result:
-            raise Exception('Could not detect the PostGIS version.')
-        postgis_version: str = result['postgis_version']
-        if re.match('^3\\.', postgis_version):
-            connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_raster')
-
 @pytest.fixture(scope='session')
 def hge_bin(request: pytest.FixtureRequest) -> Optional[str]:
     return request.config.getoption('--hge-bin')  # type: ignore
@@ -335,6 +363,8 @@ def hge_port() -> int:
 def hge_url(request: pytest.FixtureRequest, hge_bin: Optional[str], hge_port: int) -> str:
     if hge_bin:
         return f'http://localhost:{hge_port}'
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
     else:
         return request.config.workerinput['hge-url']  # type: ignore
 
@@ -362,6 +392,8 @@ def hge_key(
     if hge_bin:
         # If the test requests an admin secret, generate one.
         return str(uuid.uuid4()) if marker else None
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
     else:
         # If the environment variable is set, use it.
         # This will be used in the event that we start the server outside the test harness.
@@ -380,17 +412,21 @@ def hge_server(
     hge_url: str,
     hge_key: Optional[str],
     hge_fixture_env: dict[str, str],
-    pg_url: str,
+    metadata_schema_url: str,
 ) -> Optional[str]:
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
     if not hge_bin:
       return None
-    return fixtures.hge.hge_server(request, hge_bin, hge_port, hge_url, hge_key, hge_fixture_env, pg_url)
+    return fixtures.hge.hge_server(request, hge_bin, hge_port, hge_url, hge_key, hge_fixture_env, metadata_schema_url)
 
 @pytest.fixture(scope='class')
 def enabled_apis(request: pytest.FixtureRequest, hge_bin: Optional[str]) -> Optional[set[str]]:
     if hge_bin:
         hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env') if marker.args[1] is not None}
         enabled_apis_str = hge_marker_env.get('HASURA_GRAPHQL_ENABLED_APIS')
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
     else:
         enabled_apis_str = os.environ.get('HASURA_GRAPHQL_ENABLED_APIS')
     if not enabled_apis_str:
@@ -398,13 +434,13 @@ def enabled_apis(request: pytest.FixtureRequest, hge_bin: Optional[str]) -> Opti
     return set(enabled_apis_str.split(','))
 
 @pytest.fixture(scope='class')
-def hge_ctx(
+def hge_ctx_fixture(
     request: pytest.FixtureRequest,
     hge_url: str,
-    pg_url: str,
+    hge_bin: Optional[str],
+    metadata_schema_url: str,
     hge_key: Optional[str],
     enabled_apis: Optional[set[str]],
-    hge_server: Optional[str], # only here to ensure the server is started before `hge_ctx` is constructed
 ):
     # This madness allows us to figure out whether there is a webhook running.
     # We need this information because we dynamically decide how we run queries according to the authentication method.
@@ -417,10 +453,13 @@ def hge_ctx(
 
     hge_ctx = HGECtx(
         hge_url=hge_url,
-        pg_url=pg_url,
+        metadata_schema_url=metadata_schema_url,
         hge_key=hge_key,
         webhook=webhook,
         enabled_apis=enabled_apis,
+        # TODO: remove once parallelization work is completed
+        #       `hge_bin` will no longer be optional
+        clear_dbs=not hge_bin,
         config=request.config,
     )
 
@@ -428,6 +467,15 @@ def hge_ctx(
 
     hge_ctx.teardown()
     time.sleep(1)  # TODO why do we sleep here?
+
+# tie everything together
+@pytest.fixture(scope='class')
+def hge_ctx(
+    hge_ctx_fixture: HGECtx,
+    hge_server: Optional[str],
+    source_backend: Optional[fixtures.postgres.Backend],
+):
+    return hge_ctx_fixture
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
@@ -485,6 +533,8 @@ def webhook_server(
     server_address = extract_server_address_from('HASURA_GRAPHQL_AUTH_HOOK')
 
     scheme = None
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
     if not hge_bin:
         scheme = str(urllib.parse.urlparse(os.getenv('HASURA_GRAPHQL_AUTH_HOOK')).scheme)
     if tls_ca_configuration:
@@ -551,6 +601,8 @@ def gql_server(
 ):
     server_address = extract_server_address_from('REMOTE_SCHEMAS_WEBHOOK_DOMAIN')
     scheme = None
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
     if not hge_bin:
         scheme = str(urllib.parse.urlparse(os.getenv('REMOTE_SCHEMAS_WEBHOOK_DOMAIN')).scheme)
 

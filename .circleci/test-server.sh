@@ -972,7 +972,8 @@ EOF
 )
 	psql "$HASURA_GRAPHQL_PG_SOURCE_URL_1" -c "$readonly_sql"
 
-	export HASURA_READONLY_DB_URL="postgresql://hasuraro:passme@localhost:5432/pg_source_1"
+	PG_URL_HOST_PORT="$(sed -E 's#^postgresql://.+?@([^/]+)/.*#\1#' <<< "$HASURA_GRAPHQL_PG_SOURCE_URL_1")"
+	export HASURA_READONLY_DB_URL="postgresql://hasuraro:passme@${PG_URL_HOST_PORT}/pg_source_1"
 
 	run_hge_with_args serve
 	wait_for_port 8080
