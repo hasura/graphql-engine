@@ -36,7 +36,7 @@ export const AllowListSidebarSearchForm: React.FC<AllowListSidebarSearchFormProp
       <Form
         schema={schema}
         onSubmit={() => {}}
-        className="pl-0 pr-0 !p-0 !bg-white"
+        className="pl-0 pr-0 !p-0 bg-transparent"
       >
         {() => <SearchInput setSearch={setSearch} />}
       </Form>

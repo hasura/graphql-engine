@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useAddToAllowList } from './useAddToAllowList';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -11,7 +11,7 @@ afterAll(() => server.close());
 
 describe('useAddToAllowList', () => {
   beforeEach(() => {
-    server.use(...handlers(0, ''));
+    server.use(...handlers({ url: '' }));
   });
 
   test('should work correctly when adding an existing collection', async () => {
@@ -20,7 +20,7 @@ describe('useAddToAllowList', () => {
       { wrapper }
     );
 
-    await result.current.addToAllowList('allowed-queries');
+    await result.current.addToAllowList('not-existing');
 
     await waitForValueToChange(() => result.current.isSuccess);
     expect(result.current.isSuccess).toBe(true);
@@ -32,7 +32,7 @@ describe('useAddToAllowList', () => {
       { wrapper }
     );
 
-    await result.current.addToAllowList('not-existing');
+    await result.current.addToAllowList('allowed-queries');
 
     await waitForValueToChange(() => result.current.error);
     expect(result.current.error).toBeDefined();
