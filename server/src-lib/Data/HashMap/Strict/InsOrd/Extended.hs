@@ -13,7 +13,7 @@ import Prelude
 catMaybes :: InsOrdHashMap k (Maybe v) -> InsOrdHashMap k v
 catMaybes = OMap.mapMaybe id
 
-partition :: (Eq k, Hashable k) => (v -> Bool) -> OMap.InsOrdHashMap k v -> (OMap.InsOrdHashMap k v, OMap.InsOrdHashMap k v)
+partition :: Hashable k => (v -> Bool) -> OMap.InsOrdHashMap k v -> (OMap.InsOrdHashMap k v, OMap.InsOrdHashMap k v)
 partition predicate =
   OMap.foldlWithKey'
     ( \(left, right) key val ->
@@ -26,7 +26,7 @@ partition predicate =
 -- | Alter a hashmap using a function that can fail, in which case the entire operation fails.
 -- (Maybe a version with the key also being passed to the function could be useful.)
 alterF ::
-  (Functor f, Eq k, Hashable k) =>
+  (Functor f, Hashable k) =>
   (Maybe v -> f (Maybe v)) ->
   k ->
   InsOrdHashMap k v ->

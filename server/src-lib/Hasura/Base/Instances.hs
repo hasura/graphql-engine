@@ -63,12 +63,12 @@ instance NFData C.CronSchedule
 --------------------------------------------------------------------------------
 -- Template Haskell
 
-instance (Hashable k, Eq k, TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
+instance (Hashable k, TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [|M.fromList $(TH.lift $ M.toList m)|]
   -- liftTyped = TH.unsafeTExpCoerce . TH.lift
   liftTyped m = [|| M.fromList $$(TH.liftTyped $ M.toList m) ||]
 
-instance (Hashable a, Eq a, TH.Lift a) => TH.Lift (S.HashSet a) where
+instance (Hashable a, TH.Lift a) => TH.Lift (S.HashSet a) where
   lift s = [|S.fromList $(TH.lift $ S.toList s)|]
   -- liftTyped = TH.unsafeTExpCoerce . TH.lift
   liftTyped m = [|| S.fromList $$(TH.liftTyped $ S.toList m) ||]

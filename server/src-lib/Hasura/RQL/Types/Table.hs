@@ -800,7 +800,7 @@ deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
 
 instance (Backend b, NFData a) => NFData (PrimaryKey b a)
 
-instance (Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
+instance (Eq a, Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
 
 instance (Backend b, Cacheable a) => Cacheable (PrimaryKey b a)
 
@@ -897,7 +897,7 @@ type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
 tciUniqueOrPrimaryKeyConstraints ::
   forall b f.
-  (Eq (Column b), Hashable (Column b)) =>
+  Hashable (Column b) =>
   TableCoreInfoG b f (ColumnInfo b) ->
   Maybe (NonEmpty (UniqueConstraint b))
 tciUniqueOrPrimaryKeyConstraints info =

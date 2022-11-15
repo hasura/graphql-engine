@@ -652,7 +652,7 @@ createRemoteJoin joinColumnAliases = \case
 -- NOTE: if the @fieldName@ argument is a valid GraphQL name, then the
 -- constructed alias MUST also be a valid GraphQL name.
 getJoinColumnAlias ::
-  (Eq field, Hashable field) =>
+  Hashable field =>
   FieldName ->
   field ->
   HashMap field FieldName ->

@@ -17,7 +17,6 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens (key, _Object)
-import Data.HashMap.Strict qualified as HM
 import Data.Proxy (Proxy (..))
 import Data.Text qualified as T
 import Data.Typeable (Typeable, typeRep)
@@ -279,8 +278,8 @@ mk_backend_remote_relationship_argument :: Text -> Text -> Aeson.Value
 mk_backend_remote_relationship_argument backend action =
   backend_create_remote_relationship_fragment
     & _Object
-      %~ HM.insert
-        ("type" :: Text)
+      %~ KM.insert
+        ("type" :: KM.Key)
         (Aeson.String $ backend <> "_" <> action <> "_remote_relationship")
 
 -- | Constructor for @v1/metadata@ @mssql_(create|update|delete)_remote_relationship@
@@ -323,8 +322,8 @@ mk_pg_remote_relationship_old_argument :: Text -> Aeson.Value
 mk_pg_remote_relationship_old_argument action =
   fragment
     & _Object
-      %~ HM.insert
-        ("type" :: Text)
+      %~ KM.insert
+        ("type" :: KM.Key)
         (Aeson.String $ "pg_" <> action <> "_remote_relationship")
   where
     fragment =
@@ -348,8 +347,8 @@ mk_pg_remote_relationship_old_new_argument :: Text -> Aeson.Value
 mk_pg_remote_relationship_old_new_argument action =
   fragment
     & _Object
-      %~ HM.insert
-        ("type" :: Text)
+      %~ KM.insert
+        ("type" :: KM.Key)
         (Aeson.String $ "pg_" <> action <> "_remote_relationship")
   where
     fragment =

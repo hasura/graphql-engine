@@ -1,8 +1,8 @@
-# Compile a graphql-engine executable using brew and ghc-8.10.7
+# Compile a graphql-engine executable using brew and ghc-9.2.5
 
 *Note: These instructions use the path `/opt/homebrew` in various places, but this path may be different on your machine depending on where you have installed homebrew (for example, many older homebrew installation were installed to `/usr/local`). You can find out the path of your homebrew installation by running the command `brew --prefix`, and if the output is not `/opt/homebrew`, then you should replace any instances of `/opt/homebrew` in these instructions with the path output by `brew --prefix`.*
 
-1.  Install ghc-8.10.7 and cabal-install via [ghcup](https://www.haskell.org/ghcup/)
+1.  Install ghc-9.2.5 and cabal-install via [ghcup](https://www.haskell.org/ghcup/).
 
 2.  Install dependencies:
 

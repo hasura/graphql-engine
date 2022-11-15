@@ -69,7 +69,7 @@ instance (ToJSON a) => ToJSON (ReloadSpec a) where
     RSReloadAll -> Bool True
     RSReloadList l -> toJSON l
 
-instance (FromJSON a, Eq a, Hashable a) => FromJSON (ReloadSpec a) where
+instance (FromJSON a, Hashable a) => FromJSON (ReloadSpec a) where
   parseJSON (Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
   parseJSON v = RSReloadList <$> parseJSON v
 

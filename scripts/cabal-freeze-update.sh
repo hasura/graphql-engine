@@ -42,7 +42,9 @@ fi
 
 # map of: package_name->package_version
 declare -A PACKAGE_TARGETS
-UPDATE_ALL=""
+SKIP_UPDATE=false
+UPGRADE_ALL=false
+KEEP_TRYING=true
 
 if [[ $# -eq 0 ]]; then
     echo_error "expecting at least one argument"
@@ -132,9 +134,35 @@ else
                 echo_error "Exiting"
                 exit 31
             else
-                echo -ne "Relaxed $((freeze_line_count_orig-freeze_line_count)) constraints so far...\r"
-                freeze_line_count_prev=$freeze_line_count
-                # ...and try again
+                # newline-separated:
+                conflict_set=$(echo "$out" |  tr '\n' ' ' | sed -r 's/^.*conflict set: ([^\)]+)\).*$/\1/' | tr ',' '\n' | tr -d ' ')
+                if [ -z "$conflict_set" ]; then
+                    echo_error "Something went wrong :/"
+                    exit 77
+                fi
+                # omit target packages:
+                for package_name in "${!PACKAGE_TARGETS[@]}"; do
+                    conflict_set=$(echo "$conflict_set" | sed "/^$package_name$/d")
+                done
+                # filter conflicts from the freeze file
+                while IFS= read -r package_name; do
+                    sed -ri "/\s+any.$package_name ==/d" "$FREEZE_FILE"
+                    sed -ri "/\s+$package_name /d" "$FREEZE_FILE"  # baked in flags
+                done <<< "$conflict_set"
+
+                freeze_line_count=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
+                if [ "$freeze_line_count" -eq "$freeze_line_count_prev" ]; then
+                    # No longer making progress, so...
+                    echo_error "It looks like we can't find a build plan :("
+                    echo_error "With the freeze file in its current state, try doing:"
+                    echo_error "    $ cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set"
+                    echo_error "Exiting"
+                    exit 31
+                else
+                    echo -ne "Relaxed $((freeze_line_count_orig-freeze_line_count)) constraints so far...\r"
+                    freeze_line_count_prev=$freeze_line_count
+                    # ...and try again
+                fi
             fi
         fi
     done 

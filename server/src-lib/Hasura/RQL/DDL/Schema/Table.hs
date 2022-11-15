@@ -445,10 +445,10 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       |) (withSourceInKey source rawTableCache)
   returnA -< removeSourceInKey (catMaybes tableInfos)
   where
-    withSourceInKey :: (Eq k, Hashable k) => SourceName -> HashMap k v -> HashMap (SourceName, k) v
+    withSourceInKey :: Hashable k => SourceName -> HashMap k v -> HashMap (SourceName, k) v
     withSourceInKey source = mapKeys (source,)
 
-    removeSourceInKey :: (Eq k, Hashable k) => HashMap (SourceName, k) v -> HashMap k v
+    removeSourceInKey :: Hashable k => HashMap (SourceName, k) v -> HashMap k v
     removeSourceInKey = mapKeys snd
 
     withTable :: ErrorA QErr arr (e, s) a -> arr (e, ((SourceName, TableName b), s)) (Maybe a)

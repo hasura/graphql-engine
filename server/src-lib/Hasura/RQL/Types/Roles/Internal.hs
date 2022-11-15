@@ -57,8 +57,6 @@ data CombineRolePermInfo (b :: BackendType) = CombineRolePermInfo
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
@@ -74,8 +72,6 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
@@ -127,7 +123,7 @@ rolePermInfoToCombineRolePermInfo RolePermInfo {..} =
 class OnlyRelevantEq a where
   relevantEq :: a -> a -> Bool
 
-instance (Backend b, Eq a, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
+instance (Backend b, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
   BoolAnd boolExpL `relevantEq` BoolAnd boolExpR = Set.fromList boolExpL == Set.fromList boolExpR
   BoolOr boolExpL `relevantEq` BoolOr boolExpR = Set.fromList boolExpL == Set.fromList boolExpR
   BoolNot boolExpL `relevantEq` BoolNot boolExpR = boolExpL == boolExpR
@@ -148,10 +144,7 @@ instance
 instance
   ( Backend b,
     Hashable a,
-    Eq a,
     Hashable (BooleanOperators b a),
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
     Hashable (FunctionArgumentExp b a)
   ) =>
   OnlyRelevantEq (AnnBoolExpFld b a)
@@ -168,10 +161,8 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
-    Hashable (FunctionArgumentExp b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   OnlyRelevantEq (InsPermInfo b)
   where
@@ -185,8 +176,6 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
@@ -204,8 +193,6 @@ instance
 
 instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
