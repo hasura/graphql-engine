@@ -255,17 +255,23 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
-              then
-                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
-                    Right events -> do
-                      _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
-                      eventsFetchedTime <- liftIO getCurrentTime
-                      saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
-                      return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event sourceConfig sourceName eventsFetchedTime) events
-                    Left err -> do
-                      liftIO $ L.unLogger logger $ EventInternalErr err
-                      pure []
-                )
+              then do
+                eventPollStartTime <- getCurrentTime
+                runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                  Right events -> do
+                    if (null events)
+                      then return []
+                      else do
+                        eventsFetchedTime <- getCurrentTime -- This is also the poll end time
+                        let eventPollTime = realToFrac $ diffUTCTime eventsFetchedTime eventPollStartTime
+                        _ <- EKG.Distribution.add (smEventFetchTimePerBatch serverMetrics) eventPollTime
+                        Prometheus.Histogram.observe (eventsFetchTimePerBatch eventTriggerMetrics) eventPollTime
+                        _ <- EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
+                        saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
+                        return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event sourceConfig sourceName eventsFetchedTime) events
+                  Left err -> do
+                    liftIO $ L.unLogger logger $ EventInternalErr err
+                    pure []
               else pure []
 
     -- !!! CAREFUL !!!
@@ -390,6 +396,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
               runExceptT (setRetry sourceConfig e (addUTCTime 60 currentTime) maintenanceModeVersion)
                 >>= flip onLeft logQErr
             Right eti -> runTraceT (spanName eti) do
+              eventExecutionStartTime <- liftIO getCurrentTime
               let webhook = wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -424,9 +431,13 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                         (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
                     pure (request, resp)
               case eitherReqRes of
-                Right (req, resp) ->
+                Right (req, resp) -> do
                   let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
-                   in processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
+                  processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
+                  eventExecutionFinishTime <- liftIO getCurrentTime
+                  let eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
+                  _ <- liftIO $ EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
+                  liftIO $ Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
                 Left (HTTPError reqBody err) ->
                   processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
                 Left (TransformationError _ err) -> do

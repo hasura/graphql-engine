@@ -79,6 +79,19 @@ data
       "active_streaming_subscriptions"
       'GaugeType
       ()
+  -- | The polling latency of fetching events
+  EventFetchTimePerBatch ::
+    ServerMetricsSpec
+      "events_fetch_time_per_batch"
+      'DistributionType
+      ()
+  -- | The time (in seconds) between when a event is picked for delivery to the
+  --   time its status is updated in the DB
+  EventProcessingTime ::
+    ServerMetricsSpec
+      "event_processing_time"
+      'DistributionType
+      ()
 
 -- | Mutable references for the server metrics. See `ServerMetricsSpec` for a
 -- description of each metric.
@@ -91,7 +104,9 @@ data ServerMetrics = ServerMetrics
     smEventQueueTime :: !Distribution,
     smSchemaCacheMetadataResourceVersion :: !Gauge,
     smActiveLiveQueries :: !Gauge,
-    smActiveStreamingSubscriptions :: !Gauge
+    smActiveStreamingSubscriptions :: !Gauge,
+    smEventFetchTimePerBatch :: !Distribution,
+    smEventProcessingTime :: !Distribution
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
@@ -105,4 +120,6 @@ createServerMetrics store = do
   smSchemaCacheMetadataResourceVersion <- createGauge SchemaCacheMetadataResourceVersion () store
   smActiveLiveQueries <- createGauge ActiveLiveQueries () store
   smActiveStreamingSubscriptions <- createGauge ActiveStreaming () store
+  smEventFetchTimePerBatch <- createDistribution EventFetchTimePerBatch () store
+  smEventProcessingTime <- createDistribution EventProcessingTime () store
   pure ServerMetrics {..}
