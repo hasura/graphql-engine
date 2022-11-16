@@ -12,14 +12,6 @@ module Harness.Constants
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
     defaultPostgresPort,
-    mysqlLivenessCheckAttempts,
-    mysqlLivenessCheckIntervalSeconds,
-    mysqlPassword,
-    mysqlUser,
-    mysqlDb,
-    mysqlHost,
-    mysqlPort,
-    mysqlConnectInfo,
     sqlserverLivenessCheckAttempts,
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverConnectInfo,
@@ -48,7 +40,6 @@ import Data.Char qualified
 import Data.HashSet qualified as Set
 import Data.UUID (UUID)
 import Data.Word (Word16)
-import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as PG
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
@@ -244,39 +235,6 @@ sqlserverConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,
 
 sqlserverDb :: String
 sqlserverDb = "hasura"
-
-mysqlLivenessCheckAttempts :: Int
-mysqlLivenessCheckAttempts = 5
-
-mysqlLivenessCheckIntervalSeconds :: DiffTime
-mysqlLivenessCheckIntervalSeconds = 1
-
--- * MySQL
-
-mysqlPassword :: String
-mysqlPassword = "hasura"
-
-mysqlUser :: String
-mysqlUser = "hasura"
-
-mysqlDb :: String
-mysqlDb = "hasura"
-
-mysqlHost :: String
-mysqlHost = "127.0.0.1"
-
-mysqlPort :: Word16
-mysqlPort = 65001
-
-mysqlConnectInfo :: Mysql.ConnectInfo
-mysqlConnectInfo =
-  Mysql.defaultConnectInfo
-    { Mysql.connectUser = mysqlUser,
-      Mysql.connectPassword = mysqlPassword,
-      Mysql.connectDatabase = mysqlDb,
-      Mysql.connectHost = mysqlHost,
-      Mysql.connectPort = mysqlPort
-    }
 
 bigqueryServiceKeyVar :: String
 bigqueryServiceKeyVar = "HASURA_BIGQUERY_SERVICE_KEY"

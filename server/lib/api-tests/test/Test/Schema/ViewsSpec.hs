@@ -6,7 +6,6 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Database.PG.Query.Pool (sql)
 import Harness.Backend.Cockroach qualified as Cockroach
-import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
@@ -23,14 +22,7 @@ spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Mysql.setupTablesAction schema testEnvironment,
-                  setupMysql,
-                  setupMetadata Fixture.MySQL testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupPostgres testEnvironment,
@@ -99,25 +91,6 @@ tests opts = do
               |]
 
       actual `shouldBe` expected
-
---------------------------------------------------------------------------------
--- MySQL setup
-
-setupMysql :: Fixture.SetupAction
-setupMysql =
-  Fixture.SetupAction
-    { Fixture.setupAction =
-        Mysql.run_
-          [sql|
-            CREATE OR REPLACE VIEW author_view
-            AS SELECT * FROM author
-          |],
-      Fixture.teardownAction = \_ ->
-        Mysql.run_
-          [sql|
-            DROP VIEW IF EXISTS author_view
-          |]
-    }
 
 --------------------------------------------------------------------------------
 -- Postgres setup

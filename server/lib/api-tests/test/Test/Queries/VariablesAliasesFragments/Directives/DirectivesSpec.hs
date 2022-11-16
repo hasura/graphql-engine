@@ -15,7 +15,6 @@ import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
-import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
@@ -33,12 +32,7 @@ spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Mysql.setupTablesAction schema testEnv
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]

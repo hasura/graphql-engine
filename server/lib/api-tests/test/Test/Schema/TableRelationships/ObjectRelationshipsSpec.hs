@@ -13,7 +13,6 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Cockroach qualified as Cockroach
-import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
@@ -29,16 +28,6 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Fixture.run
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Mysql.setupTablesAction schema testEnv]
-            }
-        ]
-    )
-    $ tests MySQL
-
   Fixture.run
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
@@ -187,7 +176,7 @@ tests backend opts = describe "Object relationships" do
 
     actual `shouldBe` expected
 
-  unless (backend `elem` [MySQL, BigQuery]) do
+  unless (backend == BigQuery) do
     describe "Null relationships" do
       it "Select articles their (possibly null) co-authors" \testEnvironment -> do
         let schemaName = Schema.getSchemaName testEnvironment

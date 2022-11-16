@@ -30,7 +30,6 @@ import Hasura.Prelude
 --       parameterized constructor for new data-connectors in future.
 data BackendType
   = Postgres
-  | MySQL
   | SQLServer
   | BigQuery
   | Citus
@@ -51,7 +50,6 @@ pattern DataConnectorReference = DataConnector "reference"
 defaultSource :: BackendType -> String
 defaultSource = \case
   Postgres -> "postgres"
-  MySQL -> "mysql"
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
@@ -108,7 +106,6 @@ defaultBackendCapabilities = \case
 defaultBackendTypeString :: BackendType -> String
 defaultBackendTypeString = \case
   Postgres -> "pg"
-  MySQL -> "mysql"
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
@@ -119,7 +116,6 @@ defaultBackendTypeString = \case
 defaultBackendServerUrl :: BackendType -> Maybe String
 defaultBackendServerUrl = \case
   Postgres -> Nothing
-  MySQL -> Nothing
   SQLServer -> Nothing
   BigQuery -> Nothing
   Citus -> Nothing
@@ -131,7 +127,6 @@ defaultBackendServerUrl = \case
 schemaKeyword :: BackendType -> Key
 schemaKeyword = \case
   Postgres -> "schema"
-  MySQL -> "schema"
   SQLServer -> "schema"
   BigQuery -> "dataset"
   Citus -> "schema"

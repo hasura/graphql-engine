@@ -94,7 +94,6 @@ library
     Harness.Backend.DataConnector.Mock
     Harness.Backend.DataConnector.Mock.Server
     Harness.Backend.DataConnector.Sqlite
-    Harness.Backend.Mysql
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver
     Harness.Constants

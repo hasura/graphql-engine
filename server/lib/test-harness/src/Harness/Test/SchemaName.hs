@@ -47,7 +47,6 @@ getSchemaName testEnv = case backendType testEnv of
   Nothing -> SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
   Just db -> case db of
     Postgres -> SchemaName $ T.pack Constants.postgresDb
-    MySQL -> SchemaName $ T.pack Constants.mysqlDb
     SQLServer -> SchemaName $ T.pack Constants.sqlserverDb
     BigQuery ->
       SchemaName $

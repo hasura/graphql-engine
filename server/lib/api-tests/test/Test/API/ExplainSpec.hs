@@ -7,7 +7,6 @@ module Test.API.ExplainSpec (spec) where
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
-import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine
@@ -40,11 +39,6 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Mysql.setupTablesAction schema testEnvironment
                 ]
             }
         ]

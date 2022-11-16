@@ -429,7 +429,6 @@ mkTableField backend schemaName tableName =
       nativeFieldName = Aeson.object [schemaKeyword backend .= Aeson.String (unSchemaName schemaName), "name" .= Aeson.String tableName]
    in case backend of
         Postgres -> nativeFieldName
-        MySQL -> nativeFieldName
         SQLServer -> nativeFieldName
         BigQuery -> nativeFieldName
         Citus -> nativeFieldName
