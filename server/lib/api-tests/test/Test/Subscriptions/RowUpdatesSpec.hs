@@ -2,7 +2,9 @@
 
 -- | Test that each supported backend is able to do a simple live query /
 -- subscription.
-module Test.Subscriptions.LiveQueriesSpec (spec) where
+--
+-- https://hasura.io/docs/latest/subscriptions/postgres/livequery/use-cases/#pg-subscribe-table
+module Test.Subscriptions.RowUpdatesSpec (spec) where
 
 import Data.Aeson
 import Data.List.NonEmpty qualified as NE

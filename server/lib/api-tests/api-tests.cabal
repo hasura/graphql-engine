@@ -149,6 +149,7 @@ executable api-tests
     Test.Schema.ConflictsSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
+    Test.Schema.CustomFieldsSpec
     Test.Schema.DataValidations.Permissions.InsertSpec
     Test.Schema.DataValidations.Permissions.SelectSpec
     Test.Schema.DefaultValuesSpec
@@ -167,9 +168,8 @@ executable api-tests
     Test.SQLServer.DefaultValuesSpec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.SQLServer.VarcharLiteralsSpec
-    Test.Subscriptions.CustomFieldsSpec
     Test.Subscriptions.DerivedDataSpec
-    Test.Subscriptions.LiveQueriesSpec
+    Test.Subscriptions.RowUpdatesSpec
     Test.Subscriptions.StreamingSubscriptionsSpec
 
 executable render-feature-matrix

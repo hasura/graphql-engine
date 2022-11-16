@@ -1,9 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Testing custom root fields for subscriptions.
+-- | Testing custom root fields
 --
--- https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/custom-field-names/#expose-table-root-fields-with-a-different-name-in-the-graphql-api
-module Test.Subscriptions.CustomFieldsSpec (spec) where
+-- https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/custom-field-names/
+module Test.Schema.CustomFieldsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.Aeson.Key qualified as Key (toString)
