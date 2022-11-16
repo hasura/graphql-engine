@@ -66,10 +66,18 @@ executable api-tests
   other-modules:
     SpecHook
     Test.API.ExplainSpec
-    Test.BigQuery.Metadata.ComputedFieldSpec
+    Test.API.Metadata.ComputedFieldsSpec
+    Test.API.Metadata.InconsistentSpec
+    Test.API.Schema.RunSQLSpec
+    Test.Auth.Authorization.DisableRootFields.Common
+    Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
+    Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Auth.Authorization.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
+    Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAggSpec
+    Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
+    Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.BigQuery.Queries.SpatialTypesSpec
-    Test.BigQuery.Schema.RunSQLSpec
-    Test.BigQuery.TypeInterpretationSpec
+    Test.BigQuery.Queries.TypeInterpretationSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
@@ -79,25 +87,17 @@ executable api-tests
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
-    Test.DisableRootFields.Common
-    Test.DisableRootFields.DefaultRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipSpec
-    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.EnableAggSpec
-    Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
-    Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
-    Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
-    Test.EventTrigger.PG.EventTriggersRecreationSpec
-    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
-    Test.EventTrigger.PG.EventTriggersRunSQLSpec
-    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
-    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
+    Test.EventTriggers.MSSQL.EventTiggersUniqueNameSpec
+    Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
+    Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTriggers.PG.EventTriggersRecreationSpec
+    Test.EventTriggers.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTriggers.PG.EventTriggersRunSQLSpec
+    Test.EventTriggers.PG.EventTriggersUniqueNameSpec
+    Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
+    Test.Harness.Quoter.YamlSpec
     Test.HelloWorldSpec
-    Test.LongIdentifiersSpec
-    Test.Metadata.InconsistentSpec
     Test.Mutations.Delete.AllSpec
     Test.Mutations.Delete.FieldSpec
     Test.Mutations.Delete.NestedFieldSpec
@@ -133,12 +133,12 @@ executable api-tests
     Test.Queries.VariablesAliasesFragments.Directives.SkipSpec
     Test.Queries.VariablesAliasesFragments.FragmentsSpec
     Test.Queries.VariablesAliasesFragments.VariablesSpec
-    Test.Quoter.YamlSpec
     Test.Regression.AggregateBoolExpConflictSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
+    Test.Regression.LongIdentifiers3796Spec
     Test.Regression.MultiColumnObjectRelationshipsSpec
     Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
