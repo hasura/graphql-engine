@@ -47,20 +47,3 @@ build-multitenant: $(GENERATED_CABAL_FILES)
 ## build-multitenant-integration-tests: build multitenant integration tests
 build-multitenant-integration-tests: $(GENERATED_CABAL_FILES)
 	cabal build multitenant-integration-test
-
-# This makes use of Make's static pattern rules. Effectively, it is generating
-# multiple rules, of the form:
-#
-#     path/to/foo/foo.cabal: path/to/foo/package.yaml
-#         hpack ...
-#     path/to/bar/bar.cabal: path/to/bar/package.yaml
-#         hpack ...
-#
-# In order to call `dir`, it uses secondary expansion.
-#
-# See the documentation for more information:
-# https://www.gnu.org/software/make/manual/html_node/Static-Pattern.html
-# https://www.gnu.org/software/make/manual/html_node/Secondary-Expansion.html
-$(GENERATED_CABAL_FILES): %.cabal: $$(dir %)/package.yaml server/lib/common.yaml $$(shell find $$(dir %) -name '*.hs')
-	./scripts/hpack.sh $@
-	@ touch $@  # Required because `hpack` will not change the modified timestamp if the file is up-to-date.

@@ -1,13 +1,5 @@
 cabal-version: 1.12
 
--- This file is generated using hpack.
--- Do not modify it directly. Instead, edit package.yaml and then run:
---     make server/lib/aeson-ordered/aeson-ordered.cabal
-
--- This file has been generated from package.yaml by hpack version 0.34.7.
---
--- see: https://github.com/sol/hpack
-
 name:           aeson-ordered
 version:        0.1.0.0
 description:    Provides a data type that mirrors Aeson's 'Value', but that preserves order of object properties using an insertion-ordered map.
