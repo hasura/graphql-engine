@@ -5,32 +5,35 @@ import { Select } from '@/new-components/Form';
 import { FaArrowRight, FaCircle, FaTrashAlt } from 'react-icons/fa';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { Schema } from '../schema';
-import { useTableColumns } from '../hooks/useTableColumns';
+import { useTableColumns } from '../../hooks/useTableColumns';
+import { Schema } from '../ManualLocalRelationship/schema';
 
-export const MapColumns = ({ disabled }: { disabled: boolean }) => {
-  const { fields, append } = useFieldArray<Schema>({ name: 'column_mapping' });
+const name = 'columnMap';
+
+export const MapColumns = () => {
+  const { fields, append } = useFieldArray<Schema>({ name });
 
   const {
     watch,
     setValue,
     formState: { errors },
   } = useFormContext<Schema>();
-  const formErrorMessage = (errors?.column_mapping as unknown as FieldError)
-    ?.message;
-  const sourceTable = watch('source_table');
-  const sourceDataSourceName = watch('source_name');
-  const targetTable = watch('target_table');
-  const targetDataSourceName = watch('target_name');
 
-  const columnMappings = watch('column_mapping');
+  const formErrorMessage = (
+    errors?.[name as keyof Schema] as unknown as FieldError
+  )?.message;
+
+  const fromSource = watch('fromSource');
+  const toSource = watch('toSource');
+
+  const columnMappings = watch(name);
   const {
     data: sourceTableColumns,
     isLoading: areSourceColumnsLoading,
     error: sourceColumnsFetchError,
   } = useTableColumns({
-    dataSourceName: sourceDataSourceName,
-    table: sourceTable,
+    dataSourceName: fromSource?.dataSourceName,
+    table: fromSource?.table,
   });
 
   const {
@@ -38,10 +41,8 @@ export const MapColumns = ({ disabled }: { disabled: boolean }) => {
     isLoading: areTargetColumnsLoading,
     error: targetColumnsFetchError,
   } = useTableColumns({
-    dataSourceName: targetDataSourceName,
-    // This condition is wait for targetTable to get set/unset, until then `undefined` is passed to react-query, which will stop the
-    //  unnessacary call from being made
-    table: targetTable ? JSON.parse(targetTable) : undefined,
+    dataSourceName: toSource?.dataSourceName,
+    table: toSource?.table,
   });
 
   if (sourceColumnsFetchError || targetColumnsFetchError)
@@ -98,10 +99,10 @@ export const MapColumns = ({ disabled }: { disabled: boolean }) => {
                     label: column.name,
                     value: column.name,
                   }))}
-                  name={`column_mapping.${index}.from`}
+                  name={`${name}.${index}.from`}
+                  disabled={!sourceTableColumns?.length}
                   placeholder="Select source column"
-                  noErrorPlaceholder={false}
-                  disabled={disabled}
+                  noErrorPlaceholder
                 />
               )}
             </div>
@@ -118,10 +119,10 @@ export const MapColumns = ({ disabled }: { disabled: boolean }) => {
                     label: column.name,
                     value: column.name,
                   }))}
-                  name={`column_mapping.${index}.to`}
+                  name={`${name}.${index}.to`}
+                  disabled={!targetTableColumns?.length}
                   placeholder="Select reference column"
-                  noErrorPlaceholder={false}
-                  disabled={disabled}
+                  noErrorPlaceholder
                 />
               )}
             </div>
@@ -131,18 +132,21 @@ export const MapColumns = ({ disabled }: { disabled: boolean }) => {
                 icon={<FaTrashAlt />}
                 onClick={() => {
                   setValue(
-                    'column_mapping',
+                    name,
                     columnMappings.filter((_, i) => index !== i)
                   );
                 }}
-                disabled={disabled}
               />
             </div>
           </div>
         );
       })}
       <div className="my-4">
-        <Button type="button" onClick={() => append({})} disabled={disabled}>
+        <Button
+          type="button"
+          onClick={() => append({})}
+          disabled={!targetTableColumns?.length || !sourceTableColumns?.length}
+        >
           Add New Mapping
         </Button>
       </div>

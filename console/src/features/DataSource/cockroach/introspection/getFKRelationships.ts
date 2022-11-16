@@ -1,29 +1,41 @@
 import { CockroachDBTable } from '..';
 import { runSQL, RunSQLResponse } from '../../api';
-import { GetFKRelationshipProps } from '../../types';
+import { GetFKRelationshipProps, TableFkRelationships } from '../../types';
+
+const getTable = (tableName: string) => {
+  const splitResult = tableName.split('.');
+  if (splitResult.length === 1)
+    return { schema: 'public', name: splitResult[0] };
+  return { schema: splitResult[0], name: splitResult[1] };
+};
 
 const adaptFkRelationships = (
-  result: RunSQLResponse['result'],
-  schema: string
-) => {
+  result: RunSQLResponse['result']
+): TableFkRelationships[] => {
   if (!result) return [];
+  const adaptedResult: TableFkRelationships[] = result.slice(1).map(row => {
+    const sourceTable: CockroachDBTable = getTable(row[0]);
+    const targetTable: CockroachDBTable = getTable(row[2]);
 
-  return result.slice(1).map(row => ({
-    from: {
-      /**
-       * This is to remove the schema name from tables that are not from `public` schema
-       */
-      table: row[0]?.replace(/"/g, '').replace(`${schema}.`, ''),
-      /**
-       * break complex fk joins into array of string and remove and `"` character in the names
-       */
-      column: row[1].split(',')?.map(i => i?.replace(/"/g, '')),
-    },
-    to: {
-      table: row[2]?.replace(/"/g, '').replace(`${schema}.`, ''),
-      column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
-    },
-  }));
+    return {
+      from: {
+        /**
+         * This is to remove the schema name from tables that are not from `public` schema
+         */
+        table: sourceTable,
+        /**
+         * break complex fk joins into array of string and remove and `"` character in the names
+         */
+        column: row[1].split(',')?.map(i => i?.replace(/"/g, '')),
+      },
+      to: {
+        table: targetTable,
+        column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
+      },
+    };
+  });
+
+  return adaptedResult;
 };
 
 export const getFKRelationships = async ({
@@ -32,7 +44,6 @@ export const getFKRelationships = async ({
   httpClient,
 }: GetFKRelationshipProps) => {
   const { schema, name } = table as CockroachDBTable;
-
   /**
    * This SQL goes through the pg_constraint (https://www.postgresql.org/docs/current/catalog-pg-constraint.html) and the pg_namespace (https://www.postgresql.org/docs/14/catalog-pg-namespace.html)
    * and links fk_constraint object that have the same Object ID on both tables and finally
@@ -55,11 +66,11 @@ export const getFKRelationships = async ({
   const response = await runSQL({
     source: {
       name: dataSourceName,
-      kind: 'postgres',
+      kind: 'cockroach',
     },
     sql,
     httpClient,
   });
 
-  return adaptFkRelationships(response.result, schema);
+  return adaptFkRelationships(response.result);
 };

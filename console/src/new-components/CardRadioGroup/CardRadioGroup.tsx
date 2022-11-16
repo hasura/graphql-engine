@@ -69,7 +69,6 @@ export const CardRadioGroup = <T extends string = string>(
           </div>
         );
       })}
-      <br />
     </div>
   );
 };

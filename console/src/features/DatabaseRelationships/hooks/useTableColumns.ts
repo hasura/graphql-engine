@@ -3,6 +3,7 @@ import { useQuery } from 'react-query';
 import { DataSource, TableColumn } from '@/features/DataSource';
 import { Table } from '@/features/hasura-metadata-types';
 import { AxiosError } from 'axios';
+import { generateQueryKeys } from '../utils/queryClientUtils';
 
 export const useTableColumns = ({
   dataSourceName,
@@ -13,7 +14,7 @@ export const useTableColumns = ({
 }) => {
   const httpClient = useHttpClient();
   return useQuery<TableColumn[], AxiosError>({
-    queryKey: ['tableColumns', dataSourceName, table],
+    queryKey: generateQueryKeys.columns({ dataSourceName, table }),
     queryFn: () => {
       const columns = DataSource(httpClient).getTableColumns({
         dataSourceName,

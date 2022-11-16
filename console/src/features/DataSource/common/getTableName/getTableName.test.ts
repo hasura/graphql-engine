@@ -9,7 +9,6 @@ describe('getTableName', () => {
   `(
     'when invoked for $table & $hierarchy, should return $expectedName',
     ({ table, databaseHierarchy, expectedName }) => {
-      console.log(table, databaseHierarchy);
       const result = getTableName(table, databaseHierarchy);
       expect(result).toBe(expectedName);
     }

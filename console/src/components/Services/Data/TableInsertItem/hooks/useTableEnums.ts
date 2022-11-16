@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 import Endpoints from '@/Endpoints';
+import { areTablesEqual } from '@/features/RelationshipsTable';
 import { useHttpClient } from '@/features/Network';
 import { useQuery, UseQueryResult } from 'react-query';
 import { useTablesForeignKeys } from './useTableForeignKeys';
@@ -40,7 +41,7 @@ export const useTableEnums = ({
         for (const table of tables) {
           const relation = foreignKeys.reduce(
             (tally: ForeignKeyMapping | null, fk: ForeignKeyMapping[]) => {
-              const found = fk.find(f => f.to.table === table.name);
+              const found = fk.find(f => areTablesEqual(f.to.table, table));
               if (!found) return tally;
               return found;
             },

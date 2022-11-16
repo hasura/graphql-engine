@@ -20,6 +20,10 @@ import { useListAllRelationshipsFromMetadata } from './hooks/useListAllRelations
 export const columns = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', null];
 
 const getTableDisplayName = (table: Table): string => {
+  /*
+  this function isn't entirely generic but it will hold for the current set of native DBs we have & GDC as well
+  */
+
   if (Array.isArray(table)) return table.join('.');
 
   if (!table) return 'Empty Object';

@@ -71,13 +71,14 @@ const Backdrop = () => (
   <RadixDialog.Overlay className="fixed top-0 left-0 h-full w-full bg-gray-900/90 backdrop-blur-sm z-[100]" />
 );
 
-type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'max';
 
 const dialogSizing: Record<DialogSize, string> = {
   sm: 'max-w-xl',
   md: 'max-w-2xl',
   lg: 'max-w-3xl',
   xl: 'max-w-4xl',
+  max: 'max-w-max',
 };
 
 export type DialogProps = {
@@ -110,7 +111,8 @@ export const Dialog = ({
     {hasBackdrop && <Backdrop />}
     <RadixDialog.Content
       className={clsx(
-        `fixed transform -translate-x-2/4 left-2/4 mt-lg top-0 w-full h-auto  bg-gray-50 rounded overflow-hidden shadow-lg z-[101]`,
+        size === 'max' ? '' : 'w-full',
+        `fixed transform -translate-x-2/4 left-2/4 mt-lg top-0 h-auto  bg-gray-50 rounded overflow-hidden shadow-lg z-[101]`,
         dialogSizing[size]
       )}
     >

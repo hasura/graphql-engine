@@ -1,5 +1,5 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
-import { DatabaseRelationshipsContainer } from '@/features/DataRelationships';
+import { DatabaseRelationships } from '@/features/DatabaseRelationships';
 import { getTableName } from '@/features/DataSource';
 import { PermissionsTab } from '@/features/PermissionsTab';
 import { Table } from '@/features/hasura-metadata-types';
@@ -47,10 +47,7 @@ const availableTabs = (
     value: 'relationships',
     label: 'Relationships',
     content: (
-      <DatabaseRelationshipsContainer
-        dataSourceName={dataSourceName}
-        table={table}
-      />
+      <DatabaseRelationships dataSourceName={dataSourceName} table={table} />
     ),
   },
   {
