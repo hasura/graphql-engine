@@ -259,6 +259,10 @@ class
   healthCheckImplementation :: Maybe (HealthCheckImplementation (HealthCheckTest b))
   healthCheckImplementation = Nothing
 
+  -- | An Implementation for version checking when adding a source.
+  versionCheckImplementation :: SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation = const (pure $ Right ())
+
   -- Backend-specific IR types
 
   -- | Intermediate Representation of extensions to the shared set of boolean

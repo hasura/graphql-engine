@@ -15,6 +15,7 @@ import Data.Aeson qualified as J
 import Data.Kind (Type)
 import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
+import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
@@ -51,6 +52,8 @@ class
   PostgresBackend (pgKind :: PostgresKind)
   where
   type PgExtraTableMetadata pgKind :: Type
+  versionCheckImpl :: SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl = const (pure $ Right ())
 
 instance PostgresBackend 'Vanilla where
   type PgExtraTableMetadata 'Vanilla = ()
@@ -60,6 +63,7 @@ instance PostgresBackend 'Citus where
 
 instance PostgresBackend 'Cockroach where
   type PgExtraTableMetadata 'Cockroach = ()
+  versionCheckImpl = runCockroachVersionCheck
 
 ----------------------------------------------------------------
 -- Backend instance
@@ -118,6 +122,7 @@ instance
           _hciTestCodec = codec
         }
 
+  versionCheckImplementation = versionCheckImpl @pgKind
   isComparableType = Postgres.isComparableType
   isNumType = Postgres.isNumType
   textToScalarValue = Postgres.textToScalarValue

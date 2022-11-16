@@ -104,11 +104,15 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) 
 
 runAddSource ::
   forall m b.
-  (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
+  (MonadIO m, MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   AddSource b ->
   m EncJSON
 runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourceCustomization healthCheckConfig) = do
   sources <- scSources <$> askSchemaCache
+  do
+    -- version check
+    result <- liftIO $ versionCheckImplementation @b sourceConfig
+    liftEither result
 
   metadataModifier <-
     MetadataModifier
