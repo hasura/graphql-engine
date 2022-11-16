@@ -1,0 +1,36 @@
+table:
+  schema: public
+  name: order_status
+is_enum: true
+array_relationships:
+  - name: orders
+    using:
+      foreign_key_constraint_on:
+        column: status
+        table:
+          schema: public
+          name: order
+insert_permissions:
+  - role: site-admin
+    permission:
+      check: {}
+      columns: '*'
+select_permissions:
+  - role: site-admin
+    permission:
+      columns: '*'
+      filter: {}
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+update_permissions:
+  - role: site-admin
+    permission:
+      columns: '*'
+      filter: {}
+      check: null
+delete_permissions:
+  - role: site-admin
+    permission:
+      filter: {}

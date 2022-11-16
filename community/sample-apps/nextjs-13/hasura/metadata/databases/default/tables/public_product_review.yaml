@@ -1,0 +1,82 @@
+table:
+  schema: public
+  name: product_review
+object_relationships:
+  - name: product
+    using:
+      foreign_key_constraint_on: product_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+insert_permissions:
+  - role: site-admin
+    permission:
+      check: {}
+      columns: '*'
+  - role: user
+    permission:
+      check:
+        user:
+          id:
+            _eq: X-Hasura-User-Id
+          orders:
+            products:
+              id:
+                _ceq: product_id
+      set:
+        user_id: X-Hasura-User-Id
+      columns:
+        - product_id
+        - rating
+        - comment
+select_permissions:
+  - role: anonymous
+    permission:
+      columns: '*'
+      filter: {}
+  - role: site-admin
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter: {}
+update_permissions:
+  - role: site-admin
+    permission:
+      columns: '*'
+      filter: {}
+      check: null
+  - role: user
+    permission:
+      columns:
+        - product_id
+        - rating
+        - comment
+      filter:
+        user:
+          id:
+            _eq: X-Hasura-User-Id
+          orders:
+            products:
+              id:
+                _ceq: product_id
+      check: null
+      set:
+        user_id: X-Hasura-User-Id
+delete_permissions:
+  - role: site-admin
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter:
+        user:
+          id:
+            _eq: X-Hasura-User-Id
+          orders:
+            products:
+              id:
+                _ceq: product_id
