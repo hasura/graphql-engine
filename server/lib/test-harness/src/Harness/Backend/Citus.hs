@@ -38,7 +38,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (Citus), defaultSource)
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
@@ -93,14 +93,14 @@ run_ q =
 -- | Metadata source information for the default Citus instance.
 defaultSourceMetadata :: Value
 defaultSourceMetadata =
-  [yaml|
-name: citus
-kind: citus
-tables: []
-configuration:
-  connection_info:
-    database_url: *citusConnectionString
-    pool_settings: {}
+  [interpolateYaml|
+    name: citus
+    kind: citus
+    tables: []
+    configuration:
+      connection_info:
+        database_url: #{ citusConnectionString }
+        pool_settings: {}
   |]
 
 -- | Serialize Table into a Citus-SQL statement, as needed, and execute it on the Citus backend
@@ -108,19 +108,17 @@ createTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "CREATE TABLE",
-          T.pack Constants.citusDb <> "." <> wrapIdentifier tableName,
-          "(",
-          commaSeparated $
-            (mkColumnSql <$> tableColumns)
-              <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
-              <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
-              <> map Postgres.uniqueConstraintSql tableConstraints,
-          ");"
-        ]
+  run_
+    [i|
+      CREATE TABLE #{ Constants.citusDb }."#{ tableName }"
+        ( #{ commaSeparated $
+              (mkColumnSql <$> tableColumns)
+                <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
+                <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
+                <> map Postgres.uniqueConstraintSql tableConstraints
+          }
+        );
+    |]
 
   for_ tableUniqueIndexes (run_ . Postgres.createUniqueIndexSql schemaName tableName)
 
@@ -144,22 +142,15 @@ mkColumnSql Schema.Column {columnName, columnType, columnNullable, columnDefault
 
 -- | Serialize tableData into a Citus-SQL insert statement and execute it.
 insertTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
-insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
-  | null tableData = pure ()
-  | otherwise = do
-      let schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
-      run_ $
-        T.unpack $
-          T.unwords
-            [ "INSERT INTO",
-              T.pack Constants.citusDb <> "." <> wrapIdentifier schemaName <> "." <> wrapIdentifier tableName,
-              "(",
-              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+insertTable testEnv Schema.Table {tableName, tableColumns, tableData} = unless (null tableData) do
+  let schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
+
+  run_
+    [i|
+      INSERT INTO #{ Constants.citusDb }."#{ schemaName }"."#{ tableName }"
+        (#{ commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns) })
+        VALUES #{ commaSeparated $ mkRow <$> tableData };
+    |]
 
 -- | Citus identifiers which may be case-sensitive needs to be wrapped in @""@.
 wrapIdentifier :: Text -> Text
@@ -185,15 +176,10 @@ mkRow row =
     ]
 
 -- | Serialize Table into a Citus-SQL DROP statement and execute it
+-- We don't want @IF EXISTS@ here, because we don't want this to fail silently.
 dropTable :: HasCallStack => Schema.Table -> IO ()
-dropTable Schema.Table {tableName} = do
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.citusDb <> "." <> tableName,
-          ";"
-        ]
+dropTable Schema.Table {tableName} =
+  run_ [i| DROP TABLE #{ Constants.citusDb }.#{ tableName }; |]
 
 -- | Post an http request to start tracking the table
 trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
@@ -223,7 +209,7 @@ setup tables (testEnvironment, _) = do
       SET LOCAL client_min_messages = warning;
       CREATE SCHEMA IF NOT EXISTS #{unSchemaName schemaName};
       COMMIT;
-  |]
+    |]
 
   -- Setup and track tables
   for_ tables $ \table -> do
