@@ -452,7 +452,12 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
         let offset = 15
         let limit = 10
         let orderByRelations = HashMap.fromList [(_tdTracksRelationshipName, OrderByRelation Nothing mempty)]
-        let orderBy = OrderBy orderByRelations $ OrderByElement [_tdTracksRelationshipName] OrderByStarCountAggregate Ascending :| []
+        let orderBy =
+              OrderBy orderByRelations $
+                NonEmpty.fromList
+                  [ OrderByElement [_tdTracksRelationshipName] OrderByStarCountAggregate Descending,
+                    _tdOrderByColumn [] "Title" Descending
+                  ]
         let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title"))]
         let queryRequest =
               albumsQueryRequest
@@ -471,7 +476,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
 
         let names =
               _tdAlbumsRows
-                & sortOn getRelatedTracksCount
+                & sortOn (\album -> (Down $ getRelatedTracksCount album, Down $ album ^? Data.field "Title" . Data._ColumnFieldString))
                 & drop offset
                 & take limit
                 & mapMaybe (^? Data.field "Title" . Data._ColumnFieldString)
