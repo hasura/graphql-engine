@@ -44,8 +44,10 @@ test-cockroach: remove-tix-file
 
 .PHONY: test-postgres
 ## test-postgres: run tests for Postgres backend
+# we have a few tests labeled with 'Postgres' which test their variants, too,
+# so this also starts containers for Postgres variants
 test-postgres: remove-tix-file
-	docker compose up -d --wait postgres
+	docker compose up -d --wait postgres cockroach citus
 	$(call stop_after, \
 		cabal run api-tests:exe:api-tests -- -m 'Postgres')
 

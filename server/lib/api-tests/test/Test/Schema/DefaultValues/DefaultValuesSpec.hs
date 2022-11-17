@@ -5,7 +5,7 @@
 --
 -- https://hasura.io/docs/latest/schema/postgres/default-values/postgres-defaults/
 -- https://hasura.io/docs/latest/schema/ms-sql-server/default-values/index/
-module Test.Schema.DefaultValuesSpec (spec) where
+module Test.Schema.DefaultValues.DefaultValuesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

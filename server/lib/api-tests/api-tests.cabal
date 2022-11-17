@@ -80,11 +80,10 @@ executable api-tests
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
-    Test.Databases.Postgres.DefaultValuesSpec
     Test.Databases.Postgres.JsonbSpec
     Test.Databases.Postgres.TimestampSpec
     Test.Databases.Postgres.UniqueConstraintsSpec
-    Test.Databases.SQLServer.DefaultValuesSpec
+    Test.Databases.SQLServer.DefaultValues.OnConflictSpec
     Test.Databases.SQLServer.InsertVarcharColumnSpec
     Test.Databases.SQLServer.VarcharLiteralsSpec
     Test.DataConnector.AggregateQuerySpec
@@ -155,7 +154,8 @@ executable api-tests
     Test.Schema.CustomFieldsSpec
     Test.Schema.DataValidations.Permissions.InsertSpec
     Test.Schema.DataValidations.Permissions.SelectSpec
-    Test.Schema.DefaultValuesSpec
+    Test.Schema.DefaultValues.DefaultValuesSpec
+    Test.Schema.DefaultValues.OnConflictSpec
     Test.Schema.EnumsSpec
     Test.Schema.RemoteRelationships.FromRemoteSchemaSpec
     Test.Schema.RemoteRelationships.MetadataAPI.ClearMetadataSpec

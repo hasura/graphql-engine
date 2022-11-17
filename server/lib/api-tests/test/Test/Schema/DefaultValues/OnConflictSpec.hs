@@ -2,14 +2,17 @@
 -- For runWithLocalTestEnvironmentSingleSetup
 {-# OPTIONS_GHC -Wno-deprecations #-}
 
--- | Test that Postgres databases correctly roundtrip timestamps.
+-- |
+-- Tests for the behaviour of columns with default values.
 --
--- https://hasura.io/docs/latest/mutations/ms-sql-server/insert/#insert-multiple-objects-of-the-same-type-in-the-same-mutation
-module Test.Databases.SQLServer.DefaultValuesSpec (spec) where
+-- https://hasura.io/docs/latest/schema/postgres/default-values/postgres-defaults/
+module Test.Schema.DefaultValues.OnConflictSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.Sqlserver qualified as Sqlserver
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -24,9 +27,19 @@ spec :: SpecWith TestEnvironment
 spec =
   Fixture.runSingleSetup
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Sqlserver.setupTablesAction schema testEnv
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
                 ]
             }
         ]
@@ -72,6 +85,7 @@ defaultDateTimeType =
         Schema.bstMssql = Just "DATETIME DEFAULT GETDATE()",
         Schema.bstCitus = Just "TIMESTAMP DEFAULT NOW()",
         Schema.bstPostgres = Just "TIMESTAMP DEFAULT NOW()",
+        Schema.bstCockroach = Just "TIMESTAMP DEFAULT NOW()",
         Schema.bstBigQuery = Nothing
       }
 
@@ -84,7 +98,7 @@ tests opts = do
       shouldBe = shouldReturnYaml opts
 
   describe "Default values tests" do
-    it "Upsert simple object with default values - check empty if_matched" \testEnvironment -> do
+    it "Upsert simple object with default values - check empty constraints" \testEnvironment -> do
       let expected :: Value
           expected =
             [yaml|
@@ -103,11 +117,11 @@ tests opts = do
                 mutation {
                   insert_hasura_somedefaults(
                     objects: [{ name: "a" }]
-                    if_matched: {
-                      match_columns: [],
+                    on_conflict: {
+                      constraint: somedefaults_pkey,
                       update_columns: []
                     }
-                  ) {
+                  ){
                     affected_rows
                     returning {
                       id
@@ -136,14 +150,55 @@ tests opts = do
                 mutation {
                   insert_hasura_somedefaults(
                     objects: [{ name: "a" }]
-                    if_matched: {
-                      match_columns: name,
+                    on_conflict: {
+                      constraint: somedefaults_pkey,
+                      update_columns: []
+                    }
+                  ){
+                    affected_rows
+                    returning {
+                      id
+                    }
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
+
+    it "Nested insert with empty object" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                insert_hasura_withrelationship:
+                  affected_rows: 2
+                  returning:
+                  - id: 1
+                    nickname: "the a"
+                    alldefaults_by_time_id_to_id:
+                      id: 1
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_withrelationship(
+                    objects: [{ nickname: "the a", alldefaults_by_time_id_to_id: {data: {} } }]
+                    on_conflict: {
+                      constraint: withrelationship_pkey,
                       update_columns: []
                     }
                   ) {
                     affected_rows
                     returning {
                       id
+                      nickname
+                      alldefaults_by_time_id_to_id {
+                        id
+                      }
                     }
                   }
                 }
