@@ -4,7 +4,7 @@
 -- Postgres-specific test case for permissions expressed as arrays.
 --
 -- https://github.com/hasura/graphql-engine-mono/pull/4651
-module Test.Postgres.DataValidation.PermissionSpec (spec) where
+module Test.Databases.Postgres.DataValidation.PermissionSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)

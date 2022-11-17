@@ -2,7 +2,7 @@
 
 -- |
 -- Tests around inserting non-ASCII characters in @VARCHAR@ column type.
-module Test.SQLServer.InsertVarcharColumnSpec (spec) where
+module Test.Databases.SQLServer.InsertVarcharColumnSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

@@ -2,7 +2,7 @@
 
 -- |
 -- Tests around varchar literals in where clauses
-module Test.SQLServer.VarcharLiteralsSpec (spec) where
+module Test.Databases.SQLServer.VarcharLiteralsSpec (spec) where
 
 import Data.Aeson (Value, (.:))
 import Data.Aeson qualified as J

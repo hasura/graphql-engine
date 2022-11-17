@@ -3,7 +3,7 @@
 -- | Testing whether BigQuery types are understood and aggregated correctly.
 --
 -- TODO: extend this test when we understand @STRUCT@/@RECORD@.
-module Test.BigQuery.Queries.TypeInterpretationSpec (spec) where
+module Test.Databases.BigQuery.Queries.TypeInterpretationSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

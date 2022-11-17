@@ -4,7 +4,7 @@
 -- Tests that we can decode JSONB values correctly
 --
 -- https://hasura.io/docs/latest/schema/postgres/default-values/postgres-defaults/
-module Test.Postgres.JsonbSpec (spec) where
+module Test.Databases.Postgres.JsonbSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

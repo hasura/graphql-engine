@@ -2,7 +2,7 @@
 -- Tests to determine whether we can create tables with unique constraints.
 --
 -- https://hasura.io/docs/latest/guides/postgres/constraints/#unique-constraints
-module Test.Postgres.UniqueConstraintsSpec (spec) where
+module Test.Databases.Postgres.UniqueConstraintsSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus

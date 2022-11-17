@@ -71,13 +71,22 @@ executable api-tests
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
-    Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAggSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.BigQuery.Queries.SpatialTypesSpec
-    Test.BigQuery.Queries.TypeInterpretationSpec
+    Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Databases.BigQuery.Queries.SpatialTypesSpec
+    Test.Databases.BigQuery.Queries.TypeInterpretationSpec
+    Test.Databases.Postgres.BackendOnlyPermissionsSpec
+    Test.Databases.Postgres.DataValidation.PermissionSpec
+    Test.Databases.Postgres.DefaultValuesSpec
+    Test.Databases.Postgres.JsonbSpec
+    Test.Databases.Postgres.TimestampSpec
+    Test.Databases.Postgres.UniqueConstraintsSpec
+    Test.Databases.SQLServer.DefaultValuesSpec
+    Test.Databases.SQLServer.InsertVarcharColumnSpec
+    Test.Databases.SQLServer.VarcharLiteralsSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
@@ -108,12 +117,6 @@ executable api-tests
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Upsert.OnConflictSpec
-    Test.Postgres.BackendOnlyPermissionsSpec
-    Test.Postgres.DataValidation.PermissionSpec
-    Test.Postgres.DefaultValuesSpec
-    Test.Postgres.JsonbSpec
-    Test.Postgres.TimestampSpec
-    Test.Postgres.UniqueConstraintsSpec
     Test.Queries.AggregationSpec
     Test.Queries.DistinctSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
@@ -165,9 +168,6 @@ executable api-tests
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
-    Test.SQLServer.DefaultValuesSpec
-    Test.SQLServer.InsertVarcharColumnSpec
-    Test.SQLServer.VarcharLiteralsSpec
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.RowUpdatesSpec
     Test.Subscriptions.StreamingSubscriptionsSpec

@@ -2,7 +2,7 @@
 
 -- | Test support for geospatial data types on BigQuery
 -- https://cloud.google.com/bigquery/docs/geospatial-data
-module Test.BigQuery.Queries.SpatialTypesSpec (spec) where
+module Test.Databases.BigQuery.Queries.SpatialTypesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

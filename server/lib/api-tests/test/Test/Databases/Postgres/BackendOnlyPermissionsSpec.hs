@@ -4,7 +4,7 @@
 -- Tests for backend-only permissions.
 --
 -- https://hasura.io/docs/latest/schema/postgres/data-validations/#using-hasura-permissions
-module Test.Postgres.BackendOnlyPermissionsSpec (spec) where
+module Test.Databases.Postgres.BackendOnlyPermissionsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)

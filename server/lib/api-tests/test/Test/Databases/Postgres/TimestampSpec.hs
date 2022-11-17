@@ -3,7 +3,7 @@
 -- | Test that Postgres databases correctly roundtrip timestamps.
 --
 -- https://hasura.io/docs/latest/mutations/postgres/insert/#insert-multiple-objects-of-the-same-type-in-the-same-mutation
-module Test.Postgres.TimestampSpec (spec) where
+module Test.Databases.Postgres.TimestampSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
