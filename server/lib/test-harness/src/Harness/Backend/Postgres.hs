@@ -46,7 +46,7 @@ import Database.PostgreSQL.Simple qualified as Postgres
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
@@ -206,61 +206,57 @@ runSQL = Schema.runSQL Postgres (defaultSource Postgres)
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnv =
-  let source = defaultSource Postgres
-      backendType = defaultBackendTypeString Postgres
-      sourceConfiguration = defaultSourceConfiguration testEnv
-   in [yaml|
-name: *source
-kind: *backendType
-tables: []
-configuration: *sourceConfiguration
-|]
+  [interpolateYaml|
+    name: #{ defaultSource Postgres }
+    kind: #{ defaultBackendTypeString Postgres }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnv }
+  |]
 
 defaultSourceConfiguration :: TestEnvironment -> Value
-defaultSourceConfiguration testEnv =
-  let databaseUrl = makeFreshDbConnectionString testEnv
-   in [yaml|
+defaultSourceConfiguration testEnv = do
+  let connectionString :: Text
+      connectionString = bsToTxt $ makeFreshDbConnectionString testEnv
+
+  [interpolateYaml|
     connection_info:
-      database_url: *databaseUrl
+      database_url: #{ connectionString }
       pool_settings: {}
-   |]
+  |]
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "CREATE TABLE",
-          T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
-          "(",
+  run_
+    testEnv
+    [i|
+      CREATE TABLE #{ Constants.postgresDb }."#{ tableName }"
+        (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
               <> (bool [mkPrimaryKeySql pk] [] (null pk))
               <> (mkReferenceSql schemaName <$> tableReferences)
-              <> map uniqueConstraintSql tableConstraints,
-          ");"
-        ]
+              <> map uniqueConstraintSql tableConstraints
+        });
+    |]
 
   for_ tableUniqueIndexes (run_ testEnv . createUniqueIndexSql schemaName tableName)
 
 uniqueConstraintSql :: Schema.Constraint -> Text
 uniqueConstraintSql = \case
   Schema.UniqueConstraintColumns cols ->
-    T.unwords $ ["UNIQUE ", "("] ++ [commaSeparated cols] ++ [")"]
+    [i| UNIQUE (#{ commaSeparated cols }) |]
   Schema.CheckConstraintExpression ex ->
-    T.unwords $ ["CHECK ", "(", ex, ")"]
+    [i| CHECK (#{ ex }) |]
 
 createUniqueIndexSql :: SchemaName -> Text -> Schema.UniqueIndex -> String
-createUniqueIndexSql schemaName tableName = \case
+createUniqueIndexSql (SchemaName schemaName) tableName = \case
   Schema.UniqueIndexColumns cols ->
-    T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", qualifiedTableName, "("] ++ [commaSeparated cols] ++ [")"]
+    [i| CREATE UNIQUE INDEX ON "#{ schemaName }"."#{ tableName }" (#{ commaSeparated cols }) |]
   Schema.UniqueIndexExpression ex ->
-    T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", qualifiedTableName, "((", ex, "))"]
-  where
-    qualifiedTableName = wrapIdentifier (unSchemaName schemaName) <> "." <> wrapIdentifier tableName
+    [i| CREATE UNIQUE INDEX ON "#{ schemaName }"."#{ tableName }" ((#{ ex })) |]
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -290,38 +286,24 @@ mkPrimaryKeySql key =
     ]
 
 mkReferenceSql :: SchemaName -> Schema.Reference -> Text
-mkReferenceSql schemaName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  T.unwords
-    [ "FOREIGN KEY",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      unSchemaName schemaName <> "." <> wrapIdentifier referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
-    ]
+mkReferenceSql (SchemaName schemaName) Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+  [i|
+    FOREIGN KEY ("#{ referenceLocalColumn }")
+    REFERENCES #{ schemaName }."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
+    ON DELETE CASCADE ON UPDATE CASCADE
+  |]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
 insertTable :: TestEnvironment -> Schema.Table -> IO ()
-insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
-  | null tableData = pure ()
-  | otherwise = do
-      run_ testEnv $
-        T.unpack $
-          T.unwords
-            [ "INSERT INTO",
-              T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
-              "(",
-              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+insertTable testEnv Schema.Table {tableName, tableColumns, tableData} = unless (null tableData) do
+  run_
+    testEnv
+    [i|
+      INSERT INTO "#{ Constants.postgresDb }"."#{ tableName }"
+        (#{ commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns) })
+      VALUES
+        #{ commaSeparated $ mkRow <$> tableData };
+    |]
 
 -- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
 --
@@ -350,26 +332,26 @@ mkRow row =
     ]
 
 -- | Serialize Table into a PL-SQL DROP statement and execute it
+-- We don't want @IF EXISTS@ here, because we don't want this to fail silently.
 dropTable :: TestEnvironment -> Schema.Table -> IO ()
-dropTable testEnv Schema.Table {tableName} = do
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.postgresDb <> "." <> tableName,
-          -- "CASCADE",
-          ";"
-        ]
+dropTable testEnv Schema.Table {tableName} =
+  run_
+    testEnv
+    [i| DROP TABLE #{ Constants.postgresDb }.#{ tableName }; |]
 
 dropTableIfExists :: TestEnvironment -> Schema.Table -> IO ()
 dropTableIfExists testEnv Schema.Table {tableName} = do
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "SET client_min_messages TO WARNING;", -- suppress a NOTICE if the table isn't there
-          "DROP TABLE IF EXISTS",
-          T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName
-        ]
+  -- A transaction means that the @SET LOCAL@ is scoped to this operation.
+  -- In other words, whatever the @client_min_messages@ flag's previous value
+  -- was will be restored after running this.
+  run_
+    testEnv
+    [i|
+      BEGIN;
+      SET LOCAL client_min_messages = warning;
+      DROP TABLE IF EXISTS #{ Constants.postgresDb }."#{ tableName }";
+      COMMIT;
+    |]
 
 -- | Post an http request to start tracking the table
 trackTable :: TestEnvironment -> Schema.Table -> IO ()
@@ -418,6 +400,10 @@ dropDatabase testEnvironment = do
 createSchema :: TestEnvironment -> IO ()
 createSchema testEnvironment = do
   let schemaName = Schema.getSchemaName testEnvironment
+
+  -- A transaction means that the @SET LOCAL@ is scoped to this operation.
+  -- In other words, whatever the @client_min_messages@ flag's previous value
+  -- was will be restored after running this.
   run_
     testEnvironment
     [i|
