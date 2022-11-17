@@ -55,7 +55,7 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
--- Metadata
+-- Metadata (FIXME: this grouping is inaccurate)
 
 data SourceInfo b = SourceInfo
   { _siName :: SourceName,

@@ -24,7 +24,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.GraphQL.Schema.Typename (mkTypename)
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -33,7 +33,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyTypeNameCaseIdentifier, mkTableSelectColumnTypeName, mkTableUpdateColumnTypeName)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -85,15 +85,16 @@ getTableIdentifierName tableInfo =
 tableSelectColumnsEnum ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceInfo b ->
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Both n (Column b)))
-tableSelectColumnsEnum sourceInfo tableInfo = do
-  tCase <- asks getter
+tableSelectColumnsEnum tableInfo = do
+  customization <- retrieve $ _siCustomization @b
+  let tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- tableSelectColumns sourceInfo tableInfo
-  enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
-  let description =
+  columns <- tableSelectColumns tableInfo
+  let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
+      description =
         Just $
           G.Description $
             "select columns of table " <>> tableInfoName tableInfo
@@ -122,14 +123,15 @@ tableSelectColumnsPredEnum ::
   MonadBuildSchema b r m n =>
   (ColumnType b -> Bool) ->
   G.Name ->
-  SourceInfo b ->
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Both n (Column b)))
-tableSelectColumnsPredEnum columnPredicate predName sourceInfo tableInfo = do
+tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
+  customization <- retrieve $ _siCustomization @b
+  let mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableGQLName @b tableInfo
-  columns <- filter (columnPredicate . ciType) <$> tableSelectColumns sourceInfo tableInfo
-  enumName <- mkTypename $ tableGQLName <> Name.__select_column <> Name.__ <> predName
-  let description =
+  columns <- filter (columnPredicate . ciType) <$> tableSelectColumns tableInfo
+  let enumName = mkTypename $ tableGQLName <> Name.__select_column <> Name.__ <> predName
+      description =
         Just $
           G.Description $
             "select \"" <> G.unName predName <> "\" columns of table " <>> tableInfoName tableInfo
@@ -157,10 +159,12 @@ tableUpdateColumnsEnum ::
   SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo = do
   roleName <- retrieve scRole
-  tCase <- asks getter
+  customization <- retrieve $ _siCustomization @b
+  let tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableIdentifierName tableInfo
-  enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
-  let tableName = tableInfoName tableInfo
+  let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
+      tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
       enumValues = do
         column <- tableUpdateColumns roleName tableInfo
@@ -173,17 +177,20 @@ tableUpdateColumnsEnum tableInfo = do
 -- permissions, this functions returns an enum that only contains a
 -- placeholder, so as to still allow this type to exist in the schema.
 updateColumnsPlaceholderParser ::
-  MonadBuildSchema backend r m n =>
-  TableInfo backend ->
-  SchemaT r m (Parser 'Both n (Maybe (Column backend)))
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  TableInfo b ->
+  SchemaT r m (Parser 'Both n (Maybe (Column b)))
 updateColumnsPlaceholderParser tableInfo = do
-  tCase <- asks getter
+  customization <- retrieve $ _siCustomization @b
+  let tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
   maybeEnum <- tableUpdateColumnsEnum tableInfo
   case maybeEnum of
     Just e -> pure $ Just <$> e
     Nothing -> do
       tableGQLName <- getTableIdentifierName tableInfo
-      enumName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
+      let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
       pure $
         P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
           pure
@@ -199,12 +206,12 @@ tableSelectFields ::
   ( Backend b,
     MonadError QErr m,
     MonadReader r m,
-    Has SchemaContext r
+    Has SchemaContext r,
+    Has (SourceInfo b) r
   ) =>
-  SourceInfo b ->
   TableInfo b ->
   m [FieldInfo b]
-tableSelectFields sourceInfo tableInfo = do
+tableSelectFields tableInfo = do
   roleName <- retrieve scRole
   let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
       permissions = tableSelectPermissions roleName tableInfo
@@ -214,14 +221,14 @@ tableSelectFields sourceInfo tableInfo = do
     canBeSelected _ (Just permissions) (FIColumn columnInfo) =
       pure $! Map.member (ciColumn columnInfo) (spiCols permissions)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
-      tableInfo' <- askTableInfo sourceInfo $ riRTable relationshipInfo
+      tableInfo' <- askTableInfo $ riRTable relationshipInfo
       pure $! isJust $ tableSelectPermissions @b role tableInfo'
     canBeSelected role (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->
           pure $! Map.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
         ReturnsTable tableName -> do
-          tableInfo' <- askTableInfo sourceInfo tableName
+          tableInfo' <- askTableInfo tableName
           pure $! isJust $ tableSelectPermissions @b role tableInfo'
         ReturnsOthers -> pure False
     canBeSelected _ _ (FIRemoteRelationship _) = pure True
@@ -241,13 +248,13 @@ tableSelectColumns ::
   ( Backend b,
     MonadError QErr m,
     MonadReader r m,
-    Has SchemaContext r
+    Has SchemaContext r,
+    Has (SourceInfo b) r
   ) =>
-  SourceInfo b ->
   TableInfo b ->
   m [ColumnInfo b]
-tableSelectColumns sourceInfo tableInfo =
-  mapMaybe columnInfo <$> tableSelectFields sourceInfo tableInfo
+tableSelectColumns tableInfo =
+  mapMaybe columnInfo <$> tableSelectFields tableInfo
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing

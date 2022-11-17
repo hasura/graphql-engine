@@ -12,7 +12,6 @@ import Control.Lens hiding (index)
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
 import Data.Align (align)
-import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as T
@@ -23,7 +22,6 @@ import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
@@ -52,28 +50,28 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- both the parsed fields and all the relevant table information required to
 -- craft a request.
 nodeInterface :: SourceCache -> NodeInterfaceParserBuilder
-nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterface () do
+nodeInterface sourceCache = NodeInterfaceParserBuilder $ \context options -> memoizeOn 'nodeInterface () do
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ Name._id (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  roleName <- retrieve scRole
+      roleName = scRole context
   tables :: [Parser 'Output n (SourceName, AB.AnyBackend TableMap)] <-
     catMaybes . concat <$> for (Map.toList sourceCache) \(sourceName, anySourceInfo) ->
       AB.dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
         anySourceInfo
         \(sourceInfo :: SourceInfo b) ->
-          withSourceCustomization (_siCustomization sourceInfo) do
+          runSourceSchema context options sourceInfo do
             for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
               tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
               selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
-              annotatedFieldsParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
+              annotatedFieldsParser <- MaybeT $ tableSelectionSet tableInfo
               pure $
                 annotatedFieldsParser <&> \fields ->
                   ( sourceName,
                     AB.mkAnyBackend $
                       TableMap $
                         Map.singleton tableName $
-                          NodeInfo (_siConfiguration sourceInfo) selectPermissions tablePkeyColumns fields
+                          NodeInfo sourceInfo selectPermissions tablePkeyColumns fields
                   )
   pure $
     Map.fromListWith fuseAnyMaps
@@ -99,19 +97,19 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
 -- 'NodeMap' returned by 'nodeInterface', and, if successful, attempts to craft
 -- a corresponding 'QueryRootField' that will extract the requested row.
 nodeField ::
-  forall m n r.
+  forall m n.
+  (MonadError QErr m, P.MonadMemoize m, P.MonadParse n) =>
   SourceCache ->
-  MonadBuildSourceSchema r m n =>
-  SchemaT r m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
-nodeField sourceCache = do
+  SchemaContext ->
+  Options.SchemaOptions ->
+  m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
+nodeField sourceCache context options = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field Name._id (Just idDescription) P.identifier
-  stringifyNumbers <- retrieve Options.soStringifyNumbers
-  tCase <- asks getter
-  nodeObject <-
-    retrieve scSchemaKind >>= \case
-      HasuraSchema -> throw500 "internal error: the node field should only be built for the Relay schema"
-      RelaySchema nodeBuilder -> runNodeBuilder nodeBuilder
+      stringifyNumbers = Options.soStringifyNumbers options
+  nodeObject <- case scSchemaKind context of
+    HasuraSchema -> throw500 "internal error: the node field should only be built for the Relay schema"
+    RelaySchema nodeBuilder -> runNodeBuilder nodeBuilder context options
   pure $
     P.subselection Name._node Nothing idArgument nodeObject `P.bindField` \(ident, parseds) -> do
       nodeId <- parseNodeId ident
@@ -126,16 +124,16 @@ nodeField sourceCache = do
           -- if ever encounter a V1 ID it means it has been manually entered bya
           -- user, saved from an older version of the engine?
           let matchingTables = flip mapMaybe (Map.keys sourceCache) \sourceName ->
-                (sourceName,) <$> findNode @('Postgres 'Vanilla) sourceName tableName parseds
+                findNode @('Postgres 'Vanilla) sourceName tableName parseds
           case matchingTables of
-            [(sourceName, nodeValue)] -> createRootField stringifyNumbers sourceName tableName nodeValue pKeys (Just tCase)
+            [nodeValue] -> createRootField stringifyNumbers tableName nodeValue pKeys
             [] -> throwInvalidNodeId $ "no such table found: " <> toErrorValue tableName
             l ->
               throwInvalidNodeId $
                 "this V1 node id matches more than one table across different sources: "
                   <> toErrorValue tableName
                   <> " exists in sources "
-                  <> toErrorValue (fst <$> l)
+                  <> toErrorValue (_siName . nvSourceInfo <$> l)
         NodeIdV2 nodev2 ->
           -- Node id V2.
           --
@@ -145,7 +143,7 @@ nodeField sourceCache = do
             nodeValue <-
               findNode @b sourceName tableName parseds
                 `onNothing` throwInvalidNodeId ("no table " <> toErrorValue tableName <> " found in source " <> toErrorValue sourceName)
-            createRootField stringifyNumbers sourceName tableName nodeValue pKeys (Just tCase)
+            createRootField stringifyNumbers tableName nodeValue pKeys
   where
     throwInvalidNodeId :: ErrorMessage -> n a
     throwInvalidNodeId t = P.withKey (J.Key "args") $ P.withKey (J.Key "id") $ P.parseError $ "invalid node id: " <> t
@@ -160,18 +158,16 @@ nodeField sourceCache = do
     createRootField ::
       Backend b =>
       Options.StringifyNumbers ->
-      SourceName ->
       TableName b ->
       NodeInfo b ->
       NESeq.NESeq J.Value ->
-      Maybe NamingCase ->
       n (IR.QueryRootField IR.UnpreparedValue)
-    createRootField stringifyNumbers sourceName tableName (NodeInfo sourceConfig perms pKeys fields) columnValues tCase = do
+    createRootField stringifyNumbers tableName (NodeInfo sourceInfo perms pKeys fields) columnValues = do
       whereExp <- buildNodeIdBoolExp columnValues pKeys
       pure $
-        IR.RFDB sourceName $
+        IR.RFDB (_siName sourceInfo) $
           AB.mkAnyBackend $
-            IR.SourceConfigWith sourceConfig Nothing $
+            IR.SourceConfigWith (_siConfiguration sourceInfo) Nothing $
               IR.QDBR $
                 IR.QDBSingleRow $
                   IR.AnnSelectG
@@ -187,7 +183,7 @@ nodeField sourceCache = do
                             IR._saDistinct = Nothing
                           },
                       IR._asnStrfyNum = stringifyNumbers,
-                      IR._asnNamingConvention = tCase
+                      IR._asnNamingConvention = Just $ _rscNamingConvention $ _siCustomization sourceInfo
                     }
 
     -- Craft the 'where' condition of the query by making an `AEQ` entry for

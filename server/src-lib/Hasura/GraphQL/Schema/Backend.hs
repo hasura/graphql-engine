@@ -65,7 +65,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- modules.
 type MonadBuildSchema b r m n =
   ( BackendSchema b,
-    MonadBuildSourceSchema r m n
+    MonadBuildSourceSchema b r m n
   )
 
 -- | This type class is responsible for generating the schema of a backend.
@@ -95,7 +95,6 @@ class
   buildTableQueryAndSubscriptionFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -109,7 +108,6 @@ class
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -117,7 +115,6 @@ class
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -127,7 +124,6 @@ class
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
     Scenario ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -143,8 +139,6 @@ class
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
     Scenario ->
-    -- | The source that the table lives in
-    SourceInfo b ->
     -- | The name of the table being acted on
     TableName b ->
     -- | table info
@@ -157,7 +151,6 @@ class
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
     Scenario ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -166,7 +159,6 @@ class
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
@@ -175,7 +167,6 @@ class
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
@@ -185,7 +176,6 @@ class
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
@@ -195,10 +185,9 @@ class
   -- relationships altogether.
   mkRelationshipParser ::
     MonadBuildSchema b r m n =>
-    SourceInfo b ->
     RelInfo b ->
     SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
-  mkRelationshipParser _ _ = pure Nothing
+  mkRelationshipParser _ = pure Nothing
 
   -- backend extensions
   relayExtension :: Maybe (XRelay b)
@@ -238,7 +227,6 @@ class
 
   comparisonExps ::
     MonadBuildSchema b r m n =>
-    SourceInfo b ->
     ColumnType b ->
     SchemaT r m (Parser 'Input n [ComparisonExp b])
 
@@ -254,7 +242,6 @@ class
   -- | Computed field parser
   computedField ::
     MonadBuildSchema b r m n =>
-    SourceInfo b ->
     ComputedFieldInfo b ->
     TableName b ->
     TableInfo b ->
@@ -273,20 +260,17 @@ class
 -- 'Hasura.GraphQL.Schema.Select'.
 class Backend b => BackendTableSelectSchema (b :: BackendType) where
   tableArguments ::
-    MonadBuildSourceSchema r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     TableInfo b ->
     SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   tableSelectionSet ::
-    MonadBuildSourceSchema r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     TableInfo b ->
     SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
   selectTable ::
-    MonadBuildSourceSchema r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     -- | table info
     TableInfo b ->
     -- | field display name
@@ -296,8 +280,7 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
     SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 
   selectTableAggregate ::
-    MonadBuildSourceSchema r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     -- | table info
     TableInfo b ->
     -- | field display name

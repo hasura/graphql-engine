@@ -11,7 +11,6 @@ module Hasura.RQL.Types.SourceCustomization
     SourceCustomization (..),
     ResolvedSourceCustomization (..),
     mkResolvedSourceCustomization,
-    withSourceCustomization,
     MkRootFieldName (..),
 
     -- * Naming Convention specific
@@ -242,18 +241,6 @@ mkResolvedSourceCustomization sourceCustomization namingConv =
 -- | Function to apply root field name customizations.
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
   deriving (Semigroup, Monoid) via (Endo G.Name)
-
--- | Inject NamingCase, typename and root field name customizations from @SourceCustomization@ into
--- the environment.
-withSourceCustomization ::
-  forall m r a.
-  (MonadReader r m, Has MkTypename r, Has NamingCase r) =>
-  ResolvedSourceCustomization ->
-  m a ->
-  m a
-withSourceCustomization ResolvedSourceCustomization {..} = do
-  withTypenameCustomization _rscTypeNames
-    . withNamingCaseCustomization _rscNamingConvention
 
 getNamingCase ::
   forall m.

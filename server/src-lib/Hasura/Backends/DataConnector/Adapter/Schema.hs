@@ -47,13 +47,13 @@ instance BackendSchema 'DataConnector where
 
   buildTableRelayQueryFields = experimentalBuildTableRelayQueryFields
 
-  buildFunctionQueryFields _ _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ _ = pure []
-  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
-  buildTableStreamingSubscriptionFields _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ = pure []
+  buildTableStreamingSubscriptionFields _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -84,13 +84,12 @@ instance BackendTableSelectSchema 'DataConnector where
 experimentalBuildTableRelayQueryFields ::
   MonadBuildSchema 'DataConnector r m n =>
   RQL.MkRootFieldName ->
-  RQL.SourceInfo 'DataConnector ->
   RQL.TableName 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
   GS.C.SchemaT r m [P.FieldParser n a]
-experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
+experimentalBuildTableRelayQueryFields _mkRootFieldName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 columnParser' ::
@@ -158,51 +157,51 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
 comparisonExps' ::
   forall m n r.
   MonadBuildSchema 'DataConnector r m n =>
-  RQL.SourceInfo 'DataConnector ->
   RQL.ColumnType 'DataConnector ->
   GS.C.SchemaT r m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
-comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnectorName, columnType) $ do
-  tCase <- asks getter
+comparisonExps' columnType = do
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
-
-  typedParser <- columnParser' columnType (GQL.Nullability False)
-  let name = GQL.addSuffixes (P.getName typedParser) [$$(GQL.litSuffix "_"), GQL.convertNameToSuffix (DC.unDataConnectorName dataConnectorName), $$(GQL.litSuffix "_comparison_exp")]
-      desc =
-        GQL.Description $
-          "Boolean expression to compare columns of type "
-            <> P.getName typedParser
-              <<> ". All fields are combined with logical 'AND'."
-      columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
-  customOperators <- (fmap . fmap . fmap) IR.ABackendSpecific <$> mkCustomOperators tCase collapseIfNull (P.getName typedParser)
-  pure $
-    P.object name (Just desc) $
-      fmap catMaybes $
-        sequenceA $
-          concat
-            [ GS.BE.equalityOperators
-                tCase
-                collapseIfNull
-                (IR.mkParameter <$> typedParser)
-                (mkListLiteral <$> columnListParser),
-              GS.BE.comparisonOperators
-                tCase
-                collapseIfNull
-                (IR.mkParameter <$> typedParser),
-              customOperators
-            ]
+  sourceInfo :: RQL.SourceInfo 'DataConnector <- asks getter
+  let dataConnectorName = sourceInfo ^. RQL.siConfiguration . DC.scDataConnectorName
+      tCase = RQL._rscNamingConvention $ RQL._siCustomization sourceInfo
+  P.memoizeOn 'comparisonExps' (dataConnectorName, columnType) do
+    typedParser <- columnParser' columnType (GQL.Nullability False)
+    let name = GQL.addSuffixes (P.getName typedParser) [$$(GQL.litSuffix "_"), GQL.convertNameToSuffix (DC.unDataConnectorName dataConnectorName), $$(GQL.litSuffix "_comparison_exp")]
+        desc =
+          GQL.Description $
+            "Boolean expression to compare columns of type "
+              <> P.getName typedParser
+                <<> ". All fields are combined with logical 'AND'."
+        columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
+    customOperators <- (fmap . fmap . fmap) IR.ABackendSpecific <$> mkCustomOperators sourceInfo tCase collapseIfNull (P.getName typedParser)
+    pure $
+      P.object name (Just desc) $
+        fmap catMaybes $
+          sequenceA $
+            concat
+              [ GS.BE.equalityOperators
+                  tCase
+                  collapseIfNull
+                  (IR.mkParameter <$> typedParser)
+                  (mkListLiteral <$> columnListParser),
+                GS.BE.comparisonOperators
+                  tCase
+                  collapseIfNull
+                  (IR.mkParameter <$> typedParser),
+                customOperators
+              ]
   where
-    dataConnectorName = sourceInfo ^. RQL.siConfiguration . DC.scDataConnectorName
-
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
       IR.UVLiteral $ DC.ArrayLiteral (columnTypeToScalarType columnType) (RQL.cvValue <$> columnValues)
 
     mkCustomOperators ::
+      RQL.SourceInfo 'DataConnector ->
       NamingCase ->
       Options.DangerouslyCollapseBooleans ->
       GQL.Name ->
       GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
-    mkCustomOperators tCase collapseIfNull typeName = do
+    mkCustomOperators sourceInfo tCase collapseIfNull typeName = do
       let capabilities = sourceInfo ^. RQL.siConfiguration . DC.scCapabilities
       case Map.lookup (Witch.from $ DC.fromGQLType typeName) (API.unScalarTypesCapabilities $ API._cScalarTypes capabilities) of
         Nothing -> pure []
@@ -230,12 +229,11 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
 tableArgs' ::
   forall r m n.
   MonadBuildSchema 'DataConnector r m n =>
-  RQL.SourceInfo 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
   GS.C.SchemaT r m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
-tableArgs' sourceName tableInfo = do
-  whereParser <- GS.S.tableWhereArg sourceName tableInfo
-  orderByParser <- GS.S.tableOrderByArg sourceName tableInfo
+tableArgs' tableInfo = do
+  whereParser <- GS.S.tableWhereArg tableInfo
+  orderByParser <- GS.S.tableOrderByArg tableInfo
   let mkSelectArgs whereArg orderByArg limitArg offsetArg =
         IR.SelectArgs
           { _saWhere = whereArg,

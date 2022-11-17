@@ -443,7 +443,7 @@ remoteInputObjectParser schemaDoc defn@(G.InputObjectTypeDefinition desc name _ 
     -- the same parser.
 
       Right <$> P.memoizeOn 'remoteInputObjectParser defn do
-        typename <- mkTypename name
+        typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
 
         -- Disallow short-circuit optimisation if the type name has been changed by remote schema customization
         let altered = Altered $ typename /= name
@@ -591,7 +591,7 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
     implements <- traverse (remoteSchemaInterface schemaDoc remoteRelationships) interfaceDefs
     -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
     traverse_ validateImplementsFields interfaceDefs
-    typename <- mkTypename name
+    typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers <> map (fmap IR.FieldRemote) remoteJoinParsers
     pure $
       P.selectionSetObject typename description allFields implements
@@ -797,7 +797,7 @@ remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinit
     -- types in the schema document that claim to implement this interface.  We
     -- should have a check that expresses that that collection of objects is equal
     -- to 'possibleTypes'.
-    typename <- mkTypename name
+    typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers
     pure $
       P.selectionSetInterface typename description allFields objs
@@ -834,7 +834,7 @@ remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition desc
     when (null objs) $
       throw400 RemoteSchemaError $
         "List of member types cannot be empty for union type " <> squote name
-    typename <- mkTypename name
+    typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     pure $ P.selectionSetUnion typename description objs <&> IR.mkUnionSelectionSet
   where
     getObject :: G.Name -> SchemaT r m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)

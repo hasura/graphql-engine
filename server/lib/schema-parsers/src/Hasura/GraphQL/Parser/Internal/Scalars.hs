@@ -18,6 +18,7 @@ module Hasura.GraphQL.Parser.Internal.Scalars
     scientific,
     -- internal
     jsonScalar,
+    mkScalar,
   )
 where
 
@@ -158,6 +159,7 @@ jsonScalar name description =
 --------------------------------------------------------------------------------
 -- Local helpers
 
+-- | Creates a custom scalar, exposed in the schema with the given name.
 mkScalar ::
   MonadParse m =>
   Name ->

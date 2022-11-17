@@ -104,7 +104,6 @@ class PostgresSchema (pgKind :: PostgresKind) where
     forall r m n.
     MonadBuildSchema ('Postgres pgKind) r m n =>
     MkRootFieldName ->
-    SourceInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
     C.GQLNameIdentifier ->
@@ -114,7 +113,6 @@ class PostgresSchema (pgKind :: PostgresKind) where
     forall r m n.
     MonadBuildSchema ('Postgres pgKind) r m n =>
     MkRootFieldName ->
-    SourceInfo ('Postgres pgKind) ->
     FunctionName ('Postgres pgKind) ->
     FunctionInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
@@ -129,7 +127,6 @@ class PostgresSchema (pgKind :: PostgresKind) where
       BackendTableSelectSchema ('Postgres pgKind)
     ) =>
     MkRootFieldName ->
-    SourceInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
     C.GQLNameIdentifier ->
@@ -147,7 +144,6 @@ class PostgresSchema (pgKind :: PostgresKind) where
       BackendTableSelectSchema ('Postgres pgKind)
     ) =>
     MkRootFieldName ->
-    SourceInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
     C.GQLNameIdentifier ->
@@ -161,15 +157,15 @@ instance PostgresSchema 'Vanilla where
   pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Citus where
-  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
-  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildTableRelayQueryFields _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
   pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Cockroach where
-  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
-  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildTableRelayQueryFields _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
   pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
@@ -323,7 +319,7 @@ instance
   orderByOperators _sourceInfo = \case
     HasuraCase -> orderByOperatorsHasuraCase
     GraphqlCase -> orderByOperatorsGraphqlCase
-  comparisonExps = const comparisonExps
+  comparisonExps = comparisonExps
   countTypeInput = countTypeInput
   aggregateOrderByCountType = Postgres.PGInteger
   computedField = computedFieldPG
@@ -331,11 +327,10 @@ instance
 backendInsertParser ::
   forall pgKind m r n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   SchemaT r m (InputFieldsParser n (PGIR.BackendInsert pgKind (IR.UnpreparedValue ('Postgres pgKind))))
-backendInsertParser sourceName tableInfo =
-  fmap BackendInsert <$> onConflictFieldParser sourceName tableInfo
+backendInsertParser tableInfo =
+  fmap BackendInsert <$> onConflictFieldParser tableInfo
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -346,19 +341,20 @@ buildTableRelayQueryFields ::
     BackendTableSelectSchema ('Postgres pgKind)
   ) =>
   MkRootFieldName ->
-  SourceInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   C.GQLNameIdentifier ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
-buildTableRelayQueryFields mkRootFieldName sourceName tableName tableInfo gqlName pkeyColumns = do
-  tCase <- asks getter
-  let fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+buildTableRelayQueryFields mkRootFieldName tableName tableInfo gqlName pkeyColumns = do
+  sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
       rootFieldName = runMkRootFieldName mkRootFieldName $ applyFieldNameCaseIdentifier tCase (mkRelayConnectionField gqlName)
   fmap afold $
     optionalFieldParser QDBConnection $
-      selectTableConnection sourceName tableInfo rootFieldName fieldDesc pkeyColumns
+      selectTableConnection tableInfo rootFieldName fieldDesc pkeyColumns
 
 pgkBuildTableUpdateMutationFields ::
   forall r m n pgKind.
@@ -367,8 +363,6 @@ pgkBuildTableUpdateMutationFields ::
   ) =>
   MkRootFieldName ->
   Scenario ->
-  -- | The source that the table lives in
-  SourceInfo ('Postgres pgKind) ->
   -- | The name of the table being acted on
   TableName ('Postgres pgKind) ->
   -- | table info
@@ -376,10 +370,10 @@ pgkBuildTableUpdateMutationFields ::
   -- | field display name
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
-pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
+pgkBuildTableUpdateMutationFields mkRootFieldName scenario tableName tableInfo gqlName = do
   -- check in schema options whether we should include multiple updates field
-  Options.SchemaOptions {soIncludeUpdateManyFields} <- retrieve id
   roleName <- retrieve scRole
+  includeUpdateManyFields <- retrieve Options.soIncludeUpdateManyFields
   concat . maybeToList <$> runMaybeT do
     updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
     lift $ do
@@ -390,7 +384,6 @@ pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName 
           (\ti -> fmap BackendUpdate <$> updateOperators ti updatePerms)
           mkRootFieldName
           scenario
-          sourceInfo
           tableName
           tableInfo
           gqlName
@@ -400,13 +393,12 @@ pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName 
         updateTableMany
           mkRootFieldName
           scenario
-          sourceInfo
           tableInfo
           gqlName
 
       -- we only include the multiUpdate field if the
       -- experimental feature 'hide_update_many_fields' is off
-      pure $ case soIncludeUpdateManyFields of
+      pure $ case includeUpdateManyFields of
         Options.IncludeUpdateManyFields ->
           singleUpdates ++ maybeToList multiUpdate
         Options.Don'tIncludeUpdateManyFields ->
@@ -437,20 +429,21 @@ updateTableMany ::
   ) =>
   MkRootFieldName ->
   Scenario ->
-  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   C.GQLNameIdentifier ->
   SchemaT r m (Maybe (P.FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))))
-updateTableMany mkRootFieldName scenario sourceInfo tableInfo gqlName = runMaybeT do
-  tCase <- asks getter
+updateTableMany mkRootFieldName scenario tableInfo gqlName = runMaybeT do
+  sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
   roleName <- retrieve scRole
-  let columns = tableColumns tableInfo
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      columns = tableColumns tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
   updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
-  updates <- lift (mkMultiRowUpdateParser sourceInfo tableInfo updatePerms)
-  selection <- lift $ P.multiple <$> GSB.mutationSelectionSet sourceInfo tableInfo
+  updates <- lift (mkMultiRowUpdateParser tableInfo updatePerms)
+  selection <- lift $ P.multiple <$> GSB.mutationSelectionSet tableInfo
   let updateName = runMkRootFieldName mkRootFieldName $ GSB.setFieldNameCase tCase tableInfo _tcrfUpdateMany mkUpdateManyField gqlName
       argsParser = liftA2 (,) updates (pure annBoolExpTrue)
   pure $
@@ -469,20 +462,22 @@ updateTableMany mkRootFieldName scenario sourceInfo tableInfo gqlName = runMaybe
 mkMultiRowUpdateParser ::
   forall pgKind r m n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   UpdPermInfo ('Postgres pgKind) ->
   SchemaT r m (P.InputFieldsParser n (PGIR.BackendUpdate pgKind (IR.UnpreparedValue ('Postgres pgKind))))
-mkMultiRowUpdateParser sourceInfo tableInfo updatePerms = do
-  tCase <- asks getter
+mkMultiRowUpdateParser tableInfo updatePerms = do
+  sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableIdentifierName tableInfo -- getTableGQLName tableInfo
-  updatesObjectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkMultiRowUpdateTypeName tableGQLName
+  let updatesObjectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkMultiRowUpdateTypeName tableGQLName
   fmap BackendMultiRowUpdate
     . P.field Name._updates (Just updatesDesc)
     . P.list
     . P.object updatesObjectName Nothing
     <$> do
-      mruWhere <- P.field Name._where Nothing <$> boolExp sourceInfo tableInfo
+      mruWhere <- P.field Name._where Nothing <$> boolExp tableInfo
       mruExpression <- updateOperators tableInfo updatePerms
       pure $ MultiRowUpdate <$> mruWhere <*> mruExpression
   where
@@ -494,17 +489,16 @@ buildFunctionRelayQueryFields ::
     BackendTableSelectSchema ('Postgres pgKind)
   ) =>
   MkRootFieldName ->
-  SourceInfo ('Postgres pgKind) ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
-buildFunctionRelayQueryFields mkRootFieldName sourceName functionName functionInfo tableName pkeyColumns = do
+buildFunctionRelayQueryFields mkRootFieldName functionName functionInfo tableName pkeyColumns = do
   let fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $
     optionalFieldParser QDBConnection $
-      selectFunctionConnection mkRootFieldName sourceName functionInfo fieldDesc pkeyColumns
+      selectFunctionConnection mkRootFieldName functionInfo fieldDesc pkeyColumns
 
 ----------------------------------------------------------------
 -- Individual components
@@ -561,9 +555,11 @@ enumParser ::
   G.Nullability ->
   SchemaT r m (Parser 'Both n (ScalarValue ('Postgres pgKind)))
 enumParser tableName enumValues tableCustomName nullability = do
-  tCase <- asks getter
+  sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
   tableGQLName <- liftEither (getIdentifierQualifiedObject tableName)
-  name <- addEnumSuffix tableGQLName tableCustomName tCase
+  let name = addEnumSuffix customization tableGQLName tableCustomName
   pure $ possiblyNullable PGText nullability $ P.enum name Nothing (mkEnumValue tCase <$> enumValues)
   where
     mkEnumValue :: NamingCase -> (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue ('Postgres pgKind))
@@ -644,6 +640,10 @@ comparisonExps ::
   ColumnType ('Postgres pgKind) ->
   SchemaT r m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
 comparisonExps = memoize 'comparisonExps \columnType -> do
+  sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+
   -- see Note [Columns in comparison expression are never nullable]
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
@@ -659,7 +659,6 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
   lqueryParser <- columnParser (ColumnScalar PGLquery) (G.Nullability False)
   -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
-  tCase <- asks getter
   maybeCastParser <- castExp columnType tCase
   let name = applyTypeNameCaseCust tCase $ P.getName typedParser <> Name.__comparison_exp
       desc =

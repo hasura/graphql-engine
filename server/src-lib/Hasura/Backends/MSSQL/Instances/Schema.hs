@@ -8,7 +8,6 @@
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import Data.Char qualified as Char
-import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -46,7 +45,7 @@ import Hasura.RQL.Types.Backend hiding (BackendInsert)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (MkRootFieldName (..))
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -58,15 +57,15 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  buildTableRelayQueryFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
 
-  buildFunctionQueryFields _ _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -83,7 +82,7 @@ instance BackendSchema 'MSSQL where
       otherTableInfo <- lift $ askTableInfo sourceName otherTableName
       guard (supportsInserts otherTableInfo)
   -}
-  mkRelationshipParser _ _ = pure Nothing
+  mkRelationshipParser _ = pure Nothing
 
   -- individual components
   columnParser = msColumnParser
@@ -91,10 +90,10 @@ instance BackendSchema 'MSSQL where
   possiblyNullable = msPossiblyNullable
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = msOrderByOperators
-  comparisonExps = const msComparisonExps
+  comparisonExps = msComparisonExps
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
-  computedField _ _ _ _ = pure Nothing
+  computedField _ _ _ = pure Nothing
 
 instance BackendTableSelectSchema 'MSSQL where
   tableArguments = msTableArgs
@@ -109,11 +108,10 @@ instance BackendTableSelectSchema 'MSSQL where
 backendInsertParser ::
   forall m r n.
   MonadBuildSchema 'MSSQL r m n =>
-  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   SchemaT r m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
-backendInsertParser sourceName tableInfo = do
-  ifMatched <- ifMatchedFieldParser sourceName tableInfo
+backendInsertParser tableInfo = do
+  ifMatched <- ifMatchedFieldParser tableInfo
   let _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
   pure $ do
     _biIfMatched <- ifMatched
@@ -123,12 +121,11 @@ msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   MkRootFieldName ->
   Scenario ->
-  SourceInfo 'MSSQL ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName tableInfo gqlName = do
+msBuildTableUpdateMutationFields mkRootFieldName scenario tableName tableInfo gqlName = do
   roleName <- retrieve scRole
   fieldParsers <- runMaybeT do
     updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
@@ -145,7 +142,6 @@ msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName t
         mkBackendUpdate
         mkRootFieldName
         scenario
-        sourceName
         tableName
         tableInfo
         gqlName
@@ -158,12 +154,11 @@ msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName t
 msTableArgs ::
   forall r m n.
   MonadBuildSchema 'MSSQL r m n =>
-  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
-msTableArgs sourceName tableInfo = do
-  whereParser <- tableWhereArg sourceName tableInfo
-  orderByParser <- tableOrderByArg sourceName tableInfo
+msTableArgs tableInfo = do
+  whereParser <- tableWhereArg tableInfo
+  orderByParser <- tableOrderByArg tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser
@@ -338,7 +333,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
               <<> ". All fields are combined with logical 'AND'."
 
   -- Naming convention
-  tCase <- asks getter
+  tCase <- retrieve $ _rscNamingConvention . _siCustomization @'MSSQL
 
   pure $
     P.object name (Just desc) $

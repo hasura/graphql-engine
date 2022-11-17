@@ -41,7 +41,7 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier, applyTypeNameCaseIdentifier, mkTableOperatorInputTypeName, mkTablePkColumnsInputTypeName)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
@@ -174,7 +174,10 @@ updateOperator ::
   Description ->
   SchemaT r m (P.InputFieldsParser n (HashMap (Column b) a))
 updateOperator tableGQLName opName opFieldName mkParser columns opDesc objDesc = do
-  tCase <- asks getter
+  sourceInfo :: SourceInfo b <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
   fieldParsers :: NonEmpty (P.InputFieldsParser n (Maybe (Column b, a))) <-
     for columns \columnInfo -> do
       let fieldName = ciName columnInfo
@@ -183,8 +186,7 @@ updateOperator tableGQLName opName opFieldName mkParser columns opDesc objDesc =
       pure $
         P.fieldOptional fieldName fieldDesc fieldParser
           `mapField` \value -> (ciColumn columnInfo, value)
-
-  objName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableOperatorInputTypeName tableGQLName opName
+  let objName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableOperatorInputTypeName tableGQLName opName
   pure $
     fmap (M.fromList . (fold :: Maybe [(Column b, a)] -> [(Column b, a)])) $
       P.fieldOptional (applyFieldNameCaseIdentifier tCase opFieldName) (Just opDesc) $
@@ -252,8 +254,6 @@ updateTable ::
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
   Scenario ->
-  -- | table source
-  SourceInfo b ->
   -- | table info
   TableInfo b ->
   -- | field display name
@@ -261,28 +261,29 @@ updateTable ::
   -- | field description, if any
   Maybe Description ->
   SchemaT r m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-updateTable backendUpdate scenario sourceInfo tableInfo fieldName description = runMaybeT do
-  let columns = tableColumns tableInfo
+updateTable backendUpdate scenario tableInfo fieldName description = runMaybeT do
+  sourceInfo :: SourceInfo b <- asks getter
+  roleName <- retrieve scRole
+  let sourceName = _siName sourceInfo
+      tableName = tableInfoName tableInfo
+      customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      columns = tableColumns tableInfo
+      viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
       whereName = $$(litName "where")
       whereDesc = "filter the rows which have to be updated"
-      viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  roleName <- retrieve scRole
   updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   -- If we're in a frontend scenario, we should not include backend_only updates
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
-  whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceInfo tableInfo
-  selection <- lift $ mutationSelectionSet sourceInfo tableInfo
-  tCase <- asks getter
+  whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp tableInfo
+  selection <- lift $ mutationSelectionSet tableInfo
   let argsParser = liftA2 (,) backendUpdate whereArg
   pure $
     P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
       P.subselection fieldName description argsParser selection
         <&> mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutMultirowFields
-  where
-    sourceName = _siName sourceInfo
-    tableName = tableInfoName tableInfo
 
 -- | Construct a root field, normally called 'update_tablename_by_pk', that can be used
 -- to update a single in a DB table, specified by primary key. Only returns a
@@ -295,8 +296,6 @@ updateTableByPk ::
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
   Scenario ->
-  -- | table source
-  SourceInfo b ->
   -- | table info
   TableInfo b ->
   -- | field display name
@@ -304,22 +303,27 @@ updateTableByPk ::
   -- | field description, if any
   Maybe Description ->
   SchemaT r m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
-  let columns = tableColumns tableInfo
+updateTableByPk backendUpdate scenario tableInfo fieldName description = runMaybeT $ do
+  sourceInfo :: SourceInfo b <- asks getter
+  roleName <- retrieve scRole
+  let sourceName = _siName sourceInfo
+      tableName = tableInfoName tableInfo
+      customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
+      columns = tableColumns tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  roleName <- retrieve scRole
   updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   -- If we're in a frontend scenario, we should not include backend_only updates
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo
-  selection <- MaybeT $ tableSelectionSet sourceInfo tableInfo
-  tCase <- asks getter
+  selection <- MaybeT $ tableSelectionSet tableInfo
   lift $ do
     tableGQLName <- getTableIdentifierName tableInfo
-    pkObjectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTablePkColumnsInputTypeName tableGQLName
-    let pkFieldName = $$(litName "pk_columns")
+    let pkObjectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTablePkColumnsInputTypeName tableGQLName
+        pkFieldName = $$(litName "pk_columns")
         pkObjectDesc = Description $ "primary key columns input for table: " <> toTxt tableName
         pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs
         argsParser = (,) <$> backendUpdate <*> P.field pkFieldName Nothing pkParser
@@ -327,9 +331,6 @@ updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName descriptio
       P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
         P.subselection fieldName description argsParser selection
           <&> mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutSinglerowObject
-  where
-    sourceName = _siName sourceInfo
-    tableName = tableInfoName tableInfo
 
 mkUpdateObject ::
   Backend b =>

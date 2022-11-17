@@ -13,6 +13,7 @@ module Hasura.Backends.MSSQL.Schema.IfMatched
   )
 where
 
+import Data.Has
 import Data.Text.Extended
 import Hasura.Backends.MSSQL.Types.Insert
 import Hasura.Backends.MSSQL.Types.Internal (ScalarType (..))
@@ -27,7 +28,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
-import Hasura.GraphQL.Schema.Typename (mkTypename)
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -36,6 +37,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -58,11 +60,10 @@ ifMatchedFieldParser ::
   ( MonadBuildSchema 'MSSQL r m n,
     AggregationPredicatesSchema 'MSSQL
   ) =>
-  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   SchemaT r m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedFieldParser sourceInfo tableInfo = do
-  maybeObject <- ifMatchedObjectParser sourceInfo tableInfo
+ifMatchedFieldParser tableInfo = do
+  maybeObject <- ifMatchedObjectParser tableInfo
   pure case maybeObject of
     Nothing -> pure Nothing
     Just object -> P.fieldOptional Name._if_matched (Just "upsert condition") object
@@ -73,25 +74,27 @@ ifMatchedObjectParser ::
   ( MonadBuildSchema 'MSSQL r m n,
     AggregationPredicatesSchema 'MSSQL
   ) =>
-  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   SchemaT r m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
+ifMatchedObjectParser tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
+  sourceInfo :: SourceInfo 'MSSQL <- asks getter
   roleName <- retrieve scRole
+  let customization = _siCustomization sourceInfo
+      mkTypename = runMkTypename $ _rscTypeNames customization
   updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
-  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceInfo tableInfo
+  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum tableInfo
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
     tableGQLName <- getTableGQLName tableInfo
-    objectName <- mkTypename $ tableGQLName <> Name.__if_matched
-    let _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
+    let objectName = mkTypename $ tableGQLName <> Name.__if_matched
+        _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
         updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
         objectDesc = G.Description $ "upsert condition type for table " <>> tableInfoName tableInfo
         matchColumnsName = Name._match_columns
         updateColumnsName = Name._update_columns
         whereName = Name._where
-    whereExpParser <- boolExp sourceInfo tableInfo
+    whereExpParser <- boolExp tableInfo
     pure $
       P.object objectName (Just objectDesc) do
         _imConditions <-
@@ -116,15 +119,17 @@ ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
 -- permissions for.
 tableInsertMatchColumnsEnum ::
   forall r m n.
-  MonadBuildSourceSchema r m n =>
-  SourceInfo 'MSSQL ->
+  MonadBuildSourceSchema 'MSSQL r m n =>
   TableInfo 'MSSQL ->
   SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
-tableInsertMatchColumnsEnum sourceInfo tableInfo = do
+tableInsertMatchColumnsEnum tableInfo = do
+  sourceInfo :: SourceInfo 'MSSQL <- asks getter
+  let customization = _siCustomization sourceInfo
+      mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
-  columns <- tableSelectColumns sourceInfo tableInfo
-  enumName <- mkTypename $ tableGQLName <> Name.__insert_match_column
-  let description =
+  columns <- tableSelectColumns tableInfo
+  let enumName = mkTypename $ tableGQLName <> Name.__insert_match_column
+      description =
         Just $
           G.Description $
             "select match_columns of table " <>> tableInfoName tableInfo

@@ -30,6 +30,7 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 
@@ -236,7 +237,7 @@ type NodeMap = HashMap SourceName (AB.AnyBackend TableMap)
 -- | All the information required to craft a query to a row pointed to by a
 -- 'NodeId'.
 data NodeInfo b = NodeInfo
-  { nvSourceConfig :: SourceConfig b,
+  { nvSourceInfo :: SourceInfo b,
     nvSelectPermissions :: SelPermInfo b,
     nvPrimaryKeys :: PrimaryKeyColumns b,
     nvAnnotatedFields :: IR.AnnFieldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)

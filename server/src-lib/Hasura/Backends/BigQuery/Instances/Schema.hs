@@ -43,7 +43,8 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Source (SourceInfo)
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -54,14 +55,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  buildTableRelayQueryFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
-  buildFunctionQueryFields _ _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -74,7 +75,7 @@ instance BackendSchema 'BigQuery where
   possiblyNullable = const bqPossiblyNullable
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
-  comparisonExps = const bqComparisonExps
+  comparisonExps = bqComparisonExps
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
@@ -228,7 +229,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
   dWithinGeogOpParser <- geographyWithinDistanceInput
-  tCase <- asks getter
+  tCase <- retrieve $ _rscNamingConvention . _siCustomization @'BigQuery
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
@@ -369,22 +370,24 @@ geographyWithinDistanceInput = do
 bqComputedField ::
   forall r m n.
   MonadBuildSchema 'BigQuery r m n =>
-  SourceInfo 'BigQuery ->
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   SchemaT r m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
+bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
+  sourceInfo :: SourceInfo 'BigQuery <- asks getter
+  let customization = _siCustomization sourceInfo
+      mkTypename = runMkTypename $ _rscTypeNames customization
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
-  functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
+  functionArgsParser <- lift $ computedFieldFunctionArgs mkTypename _cfiFunction
   case _cfiReturnType of
     BigQuery.ReturnExistingTable returnTable -> do
-      returnTableInfo <- lift $ askTableInfo sourceName returnTable
+      returnTableInfo <- lift $ askTableInfo returnTable
       returnTablePermissions <- hoistMaybe $ tableSelectPermissions roleName returnTableInfo
-      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet sourceName returnTableInfo)
-      selectArgsParser <- lift $ tableArguments sourceName returnTableInfo
+      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet returnTableInfo)
+      selectArgsParser <- lift $ tableArguments returnTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $
         P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
@@ -404,7 +407,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ Map.member _cfiName $ spiComputedFields selectPermissions
       objectTypeName <-
-        mkTypename =<< do
+        mkTypename <$> do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           pure $ computedFieldGQLName <> Name.__ <> Name.__fields
       selectionSetParser <- do
@@ -440,11 +443,12 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
           $> IR.mkAnnColumnField columnName (ColumnScalar columnType) Nothing Nothing
 
     computedFieldFunctionArgs ::
+      (G.Name -> G.Name) ->
       ComputedFieldFunction 'BigQuery ->
       SchemaT r m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
-    computedFieldFunctionArgs ComputedFieldFunction {..} = do
+    computedFieldFunctionArgs mkTypename ComputedFieldFunction {..} = do
       objectName <-
-        mkTypename =<< do
+        mkTypename <$> do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           tableGQLName <- getTableGQLName @'BigQuery tableInfo
           pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args

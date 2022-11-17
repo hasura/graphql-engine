@@ -36,7 +36,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (relNameToTxt)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
-import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend (BackendType)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -50,10 +49,9 @@ defaultAggregationPredicatesParser ::
     AggregationPredicatesSchema b
   ) =>
   [FunctionSignature b] ->
-  SourceInfo b ->
   TableInfo b ->
   SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicatesImplementation b (UnpreparedValue b)]))
-defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
+defaultAggregationPredicatesParser aggFns ti = runMaybeT do
   -- Check in schema options whether we should include aggregation predicates
   include <- retrieve Options.soIncludeAggregationPredicates
   case include of
@@ -66,7 +64,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
 
   collectOptionalFieldsNE . succeedingBranchesNE $
     arrayRelationships <&> \rel -> do
-      relTable <- askTableInfo si (riRTable rel)
+      relTable <- askTableInfo $ riRTable rel
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
       guard $ spiAllowAgg selectPermissions
       let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
@@ -90,12 +88,12 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
                   case fnArguments of
                     ArgumentsStar ->
                       maybe AggregationPredicateArgumentsStar AggregationPredicateArguments . nonEmpty
-                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum si relTable))
+                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum relTable))
                     SingleArgument typ ->
                       AggregationPredicateArguments . (NE.:| [])
                         <$> fuse
                           ( P.field Name._arguments Nothing
-                              <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName si relTable)
+                              <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName relTable)
                           )
                     Arguments args ->
                       AggregationPredicateArguments
@@ -104,14 +102,14 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
                               . P.object (typeGqlName <> Name.__ <> fnGQLName <> Name.__ <> Name._arguments) Nothing
                               <$> collectFieldsNE
                                 ( args `for` \ArgumentSignature {..} ->
-                                    P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relFunGqlName si relTable)
+                                    P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relFunGqlName relTable)
                                 )
                           )
 
                 aggPredDistinct <- fuse $ return $ fieldOptionalDefault Name._distinct Nothing False P.boolean
                 let aggPredFunctionName = fnName
-                aggPredPredicate <- fuse $ P.field Name._predicate Nothing <$> lift (comparisonExps @b si (ColumnScalar fnReturnType))
-                aggPredFilter <- fuse $ P.fieldOptional Name._filter Nothing <$> lift (boolExp si relTable)
+                aggPredPredicate <- fuse $ P.field Name._predicate Nothing <$> lift (comparisonExps @b (ColumnScalar fnReturnType))
+                aggPredFilter <- fuse $ P.fieldOptional Name._filter Nothing <$> lift (boolExp relTable)
                 pure $ AggregationPredicate {..}
           )
   where

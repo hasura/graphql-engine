@@ -1,7 +1,6 @@
 module Hasura.GraphQL.Schema.Typename
   ( MkTypename (..),
     withTypenameCustomization,
-    mkTypename,
   )
 where
 
@@ -20,8 +19,3 @@ newtype MkTypename = MkTypename {runMkTypename :: Name -> Name}
 -- the correct type name customizations are applied.
 withTypenameCustomization :: forall m r a. (MonadReader r m, Has MkTypename r) => MkTypename -> m a -> m a
 withTypenameCustomization = local . set hasLens
-
--- | Apply the type name customization function from the current environment.
-mkTypename :: (MonadReader r m, Has MkTypename r) => Name -> m Name
-mkTypename name =
-  ($ name) . runMkTypename <$> asks getter
