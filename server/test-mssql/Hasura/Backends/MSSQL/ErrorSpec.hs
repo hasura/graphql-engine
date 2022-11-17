@@ -4,10 +4,10 @@ import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Prelude
 import Test.Hspec
 
-spec :: Spec
+spec :: SpecWith a
 spec = do
-  it "test parseErrorClass all classes" $ mapM_ testParseErrorClass testCases
-  it "test parseErrorClass invalid SQLSTATE" $ (parseErrorClass "99999") `shouldBe` Nothing
+  it "test parseErrorClass all classes" $ const $ mapM_ testParseErrorClass testCases
+  it "test parseErrorClass invalid SQLSTATE" $ const $ (parseErrorClass "99999") `shouldBe` Nothing
   where
     testParseErrorClass :: (String, ErrorClass) -> Expectation
     testParseErrorClass (sqlStateCode, expectedClass) =

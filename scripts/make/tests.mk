@@ -7,9 +7,9 @@ test-bigquery: remove-tix-file
 		cabal run api-tests:exe:api-tests -- -m 'BigQuery')
 
 .PHONY: test-sqlserver
-## test-sqlserver: run tests for SQL Server backend
-test-sqlserver: start-sqlserver remove-tix-file
-	docker compose up -d --wait postgres
+## test-sqlserver: run tests for MS SQL Server backend
+test-sqlserver: remove-tix-file
+	docker compose up -d --wait postgres sqlserver{,-healthcheck,-init}
 	$(call stop_after, \
 		cabal run api-tests:exe:api-tests -- -m 'SQLServer')
 
@@ -30,6 +30,7 @@ test-citus: remove-tix-file
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
 test-data-connectors: remove-tix-file
+	docker compose build
 	docker compose up -d --wait postgres dc-reference-agent dc-sqlite-agent
 	$(call stop_after, \
 		cabal run api-tests:exe:api-tests -- -m 'DataConnector')
@@ -43,7 +44,8 @@ test-cockroach: remove-tix-file
 
 .PHONY: test-postgres
 ## test-postgres: run tests for Postgres backend
-test-postgres: start-backends remove-tix-file
+test-postgres: remove-tix-file
+	docker compose up -d --wait postgres
 	$(call stop_after, \
 		cabal run api-tests:exe:api-tests -- -m 'Postgres')
 
@@ -57,4 +59,20 @@ test-backends: start-backends remove-tix-file
 .PHONY: test-unit
 ## test-unit: run unit tests from main suite
 test-unit: remove-tix-file
-	cabal run graphql-engine-tests -- unit
+	cabal run graphql-engine:test:graphql-engine-tests
+
+.PHONY: test-integration-mssql
+## test-integration-mssql: run MS SQL Server integration tests
+test-integration-mssql: remove-tix-file
+	docker compose up -d --wait sqlserver{,-healthcheck,-init}
+	$(call stop_after, \
+		HASURA_MSSQL_CONN_STR='$(TEST_MSSQL_CONNECTION_STRING)' \
+			cabal run graphql-engine:test:graphql-engine-test-mssql)
+
+.PHONY: test-integration-postgres
+## test-integration-postgres: run PostgreSQL integration tests
+test-integration-postgres: remove-tix-file
+	docker compose up -d --wait postgres
+	$(call stop_after, \
+		HASURA_GRAPHQL_DATABASE_URL='$(TEST_POSTGRES_URL)' \
+			cabal run graphql-engine:test:graphql-engine-test-postgres)

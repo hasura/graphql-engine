@@ -129,9 +129,9 @@ If you want, you can also run the server and test suite manually against an inst
 The following command can be used to build and launch a local `graphql-engine` instance:
 
 ```
-cabal new-run -- exe:graphql-engine \
-  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=console/static/dist
+$ cabal new-run -- exe:graphql-engine \
+    --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
@@ -157,7 +157,7 @@ All sets of tests require running databases:
 The easiest way to run the Python integration test suite is by running:
 
 ```sh
-scripts/dev.sh test --integration
+$ scripts/dev.sh test --integration
 ```
 
 For more details please check out the [README](./tests-py/README.md).
@@ -166,46 +166,39 @@ For more details please check out the [README](./tests-py/README.md).
 
 There are three categories of unit tests:
 
-- true unit tests
-- Postgres unit tests (require a postgres instance)
-- MSSQL unit tests (require a MSSQL instance)
+- unit tests
+- PostgreSQL integration tests (requires a PostgreSQL instance)
+- MS SQL Server integration tests (requires a MS SQL Server instance)
 
-The easiest way to run these tests is through `dev.sh`:
-
-```
-./scripts/dev.sh test --unit
-```
-
-If you want to limit to a specific set of tests:
+The easiest way to run these tests is through `make`, which will automatically spin up and shut down Docker containers for the databases:
 
 ```
-./scripts/dev.sh test --unit --match "some pattern" mssql
+$ make test-unit
+$ make test-integration-postgres
+$ make test-integration-mssql
 ```
 
-Note that you have to use one of 'unit', 'postgres' or 'mssql' when
-using '--match'. There is no way to match without specifying the subset
-of tests to run.
-
-Alternatively, you can run unit tests directly through cabal:
+If you want to limit to a specific set of tests, use `HSPEC_MATCH`:
 
 ```
-cabal new-run -- test:graphql-engine-tests unit
-HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-    cabal new-run -- test:graphql-engine-tests postgres
+$ make test-unit HSPEC_MATCH='Memoize'
+```
+
+Alternatively, you can use Cabal directly (though you'll have to start the databases yourself):
+
+```
+$ cabal run -- graphql-engine:test:graphql-engine-tests
+$ HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    cabal run -- graphql-engine:test:graphql-engine-test-postgres
 ```
 
 ##### Running the Haskell integration test suite
 
-1. To run the Haskell integration test suite, you'll first need to bring up the database containers:
+Run `make test-backends`. This effectively runs the following two commands:
 
-```sh
-docker compose up
 ```
-
-2. Once the containers are up, you can run the test suite via
-
-```sh
-cabal run api-tests
+$ docker compose up --detach --wait
+$ cabal run api-tests:exe:api-tests
 ```
 
 For more details please check out the [README](./lib/api-tests/README.md).
@@ -218,7 +211,7 @@ workaround to allow loading both the `graphql-engine` library and the unit
 testing library in `ghcid` at the same time:
 
 ```sh
-ghcid -a -c "cabal repl graphql-engine-tests -f -O0 -fghci-load-test-with-lib" --test Main.main
+$ ghcid -a -c "cabal repl graphql-engine-tests -f -O0 -fghci-load-test-with-lib" --test Main.main
 ```
 
 This assumes you already have `HASURA_GRAPHQL_DATABASE_URL` and `HASURA_MSSQL_CONN_STR`
@@ -234,7 +227,7 @@ To build with profiling support, you need to both enable profiling via `cabal`
 and set the `profiling` flag. E.g.
 
 ```
-cabal build exe:graphql-engine -f profiling --enable-profiling
+$ cabal build exe:graphql-engine -f profiling --enable-profiling
 ```
 
 ### Create Pull Request
@@ -279,7 +272,7 @@ instructions help in setting up a local hoogle server that enables searching thr
 Installing `hoogle` is fairly simple with `cabal`.
 
 ```bash
-cabal install hoogle
+$ cabal install hoogle
 ```
 
 ### Step 2: Generating hoogle database

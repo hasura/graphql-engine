@@ -1,4 +1,4 @@
-module Database.MSSQL.TransactionSuite (suite) where
+module Database.MSSQL.TransactionSpec (spec) where
 
 import Control.Exception.Base (bracket)
 import Data.ByteString (ByteString)
@@ -41,13 +41,13 @@ newtype Transaction = Transaction
   { unTransaction :: [Query]
   }
 
-suite :: Text -> Spec
-suite connString = do
-  runBasicChecks connString
-  transactionStateTests connString
+spec :: SpecWith ConnectionString
+spec = do
+  runBasicChecks
+  transactionStateTests
 
-runBasicChecks :: Text -> Spec
-runBasicChecks connString =
+runBasicChecks :: SpecWith ConnectionString
+runBasicChecks =
   describe "runTx transaction basic checks" $ do
     run
       TestCase
@@ -115,10 +115,6 @@ runBasicChecks connString =
           runWith = unitQuery,
           description = "Bad syntax error/transaction rollback"
         }
-  where
-    -- Partially apply connString to runTest for convenience
-    run :: forall a. Eq a => Show a => TestCase a -> Spec
-    run = runTest connString
 
 -- | Test COMMIT and ROLLBACK for Active and NoActive states.
 --
@@ -126,8 +122,8 @@ runBasicChecks connString =
 -- in a TRY..CATCH block, which is not currently doable with our current API.
 -- Consider changing the API to allow such a test if we ever end up having
 -- bugs because of it.
-transactionStateTests :: Text -> Spec
-transactionStateTests connString =
+transactionStateTests :: SpecWith ConnectionString
+transactionStateTests =
   describe "runTx Transaction State -> Action" $ do
     run
       TestCase
@@ -183,10 +179,6 @@ transactionStateTests connString =
           runWith = unitQuery,
           description = "NoActive -> ROLLBACK"
         }
-  where
-    -- Partially apply connString to runTest for convenience
-    run :: forall a. Eq a => Show a => TestCase a -> Spec
-    run = runTest connString
 
 -- | Run a 'TestCase' by executing the queries in order. The last 'ODBC.Query'
 -- is the one we check he result against.
@@ -204,14 +196,14 @@ transactionStateTests connString =
 --
 -- Please also note that we are discarding 'Left's from "setup" transactions
 -- (all but the last transaction). See the 'runSetup' helper below.
-runTest :: forall a. Eq a => Show a => Text -> TestCase a -> Spec
-runTest connString TestCase {..} =
-  it description do
+run :: forall a. Eq a => Show a => TestCase a -> SpecWith ConnectionString
+run TestCase {..} =
+  it description \connString -> do
     case reverse transactions of
       [] -> expectationFailure "Empty transaction list: nothing to do."
       (mainTransaction : leadingTransactions) -> do
         -- Run all transactions before the last (main) transaction.
-        runSetup (reverse leadingTransactions)
+        runSetup connString (reverse leadingTransactions)
         -- Get the result from the last transaction.
         result <-
           runInConn connString $
@@ -235,12 +227,12 @@ runTest connString TestCase {..} =
             expectationFailure $
               "Expected error but got success: " <> show res
   where
-    runSetup :: [Transaction] -> IO ()
-    runSetup [] = pure ()
-    runSetup (t : ts) = do
+    runSetup :: ConnectionString -> [Transaction] -> IO ()
+    runSetup _ [] = pure ()
+    runSetup connString (t : ts) = do
       -- Discards 'Left's.
       _ <- runInConn connString (runQueries unitQuery $ unTransaction t)
-      runSetup ts
+      runSetup connString ts
 
     runQueries :: (Query -> TxT IO x) -> [Query] -> TxT IO x
     runQueries _ [] = error $ "Expected at least one query per transaction in " <> description
@@ -248,16 +240,16 @@ runTest connString TestCase {..} =
     runQueries f (x : xs) = unitQuery x *> runQueries f xs
 
 -- | spec helper functions
-runInConn :: Text -> TxT IO a -> IO (Either MSSQLTxError a)
+runInConn :: ConnectionString -> TxT IO a -> IO (Either MSSQLTxError a)
 runInConn connString query =
   bracket
     (createMinimalPool connString)
     drainMSSQLPool
     (runExceptT . runTx ReadCommitted query)
 
-createMinimalPool :: Text -> IO MSSQLPool
+createMinimalPool :: ConnectionString -> IO MSSQLPool
 createMinimalPool connString =
-  initMSSQLPool (ConnectionString connString) $ ConnectionOptions 1 1 5
+  initMSSQLPool connString $ ConnectionOptions 1 1 5
 
 invalidSyntaxError :: String
 invalidSyntaxError =

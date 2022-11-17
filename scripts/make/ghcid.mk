@@ -65,8 +65,7 @@ ghcid-test-harness:
 
 .PHONY: ghcid-test-backends
 ## ghcid-test-backends: run all api tests in ghcid
-ghcid-test-backends: start-sqlserver remove-tix-file
-	docker compose up -d --wait postgres citus cockroach mariadb dc-reference-agent dc-sqlite-agent
+ghcid-test-backends: start-backends remove-tix-file
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests)
 
 .PHONY: ghcid-test-bigquery
@@ -78,8 +77,8 @@ ghcid-test-bigquery: remove-tix-file
 
 .PHONY: ghcid-test-sqlserver
 ## ghcid-test-sqlserver: run tests for SQL Server backend in ghcid
-ghcid-test-sqlserver: start-sqlserver remove-tix-file
-	docker compose up -d --wait postgres
+ghcid-test-sqlserver: remove-tix-file
+	docker compose up -d --wait postgres sqlserver{,-healthcheck,-init}
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests,SQLServer)
 
 .PHONY: ghcid-test-mysql
@@ -103,6 +102,7 @@ ghcid-test-cockroach: remove-tix-file
 .PHONY: ghcid-test-data-connectors
 ## ghcid-test-data-connectors: run tests for DataConnectors in ghcid
 ghcid-test-data-connectors: remove-tix-file
+	docker compose build
 	docker compose up -d --wait postgres dc-reference-agent dc-sqlite-agent
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests,DataConnector)
 
