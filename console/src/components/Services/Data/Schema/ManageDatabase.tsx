@@ -199,6 +199,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
               isLoading={removing}
               loadingText="Removing..."
               className="text-red-600"
+              data-test={`remove-${dataSource.name}`}
               onClick={() => {
                 setRemoving(true);
                 onRemove(dataSource.name, dataSource.driver, () =>
