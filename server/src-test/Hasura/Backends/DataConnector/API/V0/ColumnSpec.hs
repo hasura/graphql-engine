@@ -43,7 +43,7 @@ spec = do
 genColumnName :: MonadGen m => m ColumnName
 genColumnName = ColumnName <$> genArbitraryAlphaNumText defaultRange
 
-genColumnInfo :: MonadGen m => m ColumnInfo
+genColumnInfo :: (MonadGen m, GenBase m ~ Identity) => m ColumnInfo
 genColumnInfo =
   ColumnInfo
     <$> genColumnName
