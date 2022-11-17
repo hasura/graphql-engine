@@ -41,7 +41,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (Cockroach), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
@@ -116,43 +116,38 @@ runInternal testEnvironment connectionString query = do
 -- | Metadata source information for the default CockroachDB instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
-  let source = defaultSource Cockroach
-      backendType = defaultBackendTypeString Cockroach
-      sourceConfiguration = defaultSourceConfiguration testEnvironment
-   in [yaml|
-        name: *source
-        kind: *backendType
-        tables: []
-        configuration: *sourceConfiguration
-      |]
+  [interpolateYaml|
+    name: #{ defaultSource Cockroach }
+    kind: #{ defaultBackendTypeString Cockroach }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnvironment }
+  |]
 
 defaultSourceConfiguration :: TestEnvironment -> Value
 defaultSourceConfiguration testEnvironment =
-  let databaseUrl = cockroachConnectionString testEnvironment
-   in [yaml|
-        connection_info:
-          database_url: *databaseUrl
-          pool_settings: {}
-      |]
+  [interpolateYaml|
+    connection_info:
+      database_url: #{ cockroachConnectionString testEnvironment }
+      pool_settings: {}
+  |]
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Cockroach backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "CREATE TABLE",
-          T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
-          "(",
+  run_
+    testEnv
+    [i|
+      CREATE TABLE #{ Constants.cockroachDb }."#{ tableName }"
+        (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
               <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
               <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
-              <> map Postgres.uniqueConstraintSql tableConstraints,
-          ");"
-        ]
+              <> map Postgres.uniqueConstraintSql tableConstraints
+        });
+    |]
 
   for_ tableUniqueIndexes (run_ testEnv . Postgres.createUniqueIndexSql schemaName tableName)
 
