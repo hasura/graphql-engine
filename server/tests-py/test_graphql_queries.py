@@ -797,44 +797,19 @@ class TestGraphQLQueryBoolExpPostGIS:
 class TestGraphQLQueryBoolExpRaster:
 
     def test_query_st_intersects_geom_nband(self, hge_ctx, transport):
-        PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == "15":
-            # these are broken in postgres 15
-            assert True == True
-        else:
-            check_query_f(hge_ctx, self.dir() + '/query_st_intersects_geom_nband.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_geom_nband.yaml', transport)
 
     def test_query_st_intersects_geom_nband_no_rows(self, hge_ctx, transport):
-        PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == "15":
-            # these are broken in postgres 15
-            assert True == True
-        else:
-            check_query_f(hge_ctx, self.dir() + '/query_st_intersects_geom_nband_no_rows.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_geom_nband_no_rows.yaml', transport)
 
     def test_query_st_intersects_rast(self, hge_ctx, transport):
-        PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == "15":
-            # these are broken in postgres 15
-            assert True == True
-        else:
-            check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast.yaml', transport)
 
     def test_query_st_intersects_rast_no_rows(self, hge_ctx, transport):
-        PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == "15":
-            # these are broken in postgres 15
-            assert True == True
-        else:
-            check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_no_rows.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_no_rows.yaml', transport)
 
     def test_query_st_intersects_rast_fail(self, hge_ctx, transport):
-        PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == "15":
-            # these are broken in postgres 15
-            assert True == True
-        else:
-            check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_fail.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/query_st_intersects_rast_fail.yaml', transport)
 
     @classmethod
     def dir(cls):
