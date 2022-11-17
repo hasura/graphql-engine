@@ -99,7 +99,7 @@ duplicateTriggerNameNotAllowed opts =
                 type: run_sql
                 args:
                   source: postgres
-                  sql: "INSERT INTO authors (id, name) values (3, 'john')"
+                  sql: "INSERT INTO hasura.authors (id, name) values (3, 'john')"
               |]
 
             expectedResponse =

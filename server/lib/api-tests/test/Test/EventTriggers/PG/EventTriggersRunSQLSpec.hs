@@ -110,7 +110,7 @@ triggerListeningToAllColumnTests opts = do
 type: run_sql
 args:
   source: postgres
-  sql: "ALTER TABLE authors DROP COLUMN created_at;"
+  sql: "ALTER TABLE hasura.authors DROP COLUMN created_at;"
 |]
         )
         [yaml|
@@ -128,7 +128,7 @@ result: null
 type: run_sql
 args:
   source: postgres
-  sql: "INSERT INTO authors (id, name) values (1, 'john') RETURNING name"
+  sql: "INSERT INTO hasura.authors (id, name) values (1, 'john') RETURNING name"
 |]
         )
         [yaml|
@@ -166,7 +166,7 @@ triggerListeningToSpecificColumnsTests _ = do
 type: run_sql
 args:
   source: postgres
-  sql: "ALTER TABLE users DROP COLUMN created_at;"
+  sql: "ALTER TABLE hasura.users DROP COLUMN created_at;"
 |]
       Http.getResponseStatusCode response `shouldBe` 400
       let responseBody = Http.getResponseBody response
@@ -207,7 +207,7 @@ dropTableContainingTriggerTest opts = do
 type: run_sql
 args:
   source: postgres
-  sql: "DROP TABLE users"
+  sql: "DROP TABLE hasura.users"
 |]
         )
         [yaml|
@@ -232,7 +232,7 @@ renameTableContainingTriggerTests opts = do
 type: run_sql
 args:
   source: postgres
-  sql: "ALTER TABLE authors RENAME TO authors_new;"
+  sql: "ALTER TABLE hasura.authors RENAME TO authors_new;"
 |]
         )
         [yaml|
@@ -250,7 +250,7 @@ result: null
 type: run_sql
 args:
   source: postgres
-  sql: "INSERT INTO authors_new (id, name) values (2, 'dan') RETURNING name"
+  sql: "INSERT INTO hasura.authors_new (id, name) values (2, 'dan') RETURNING name"
 |]
         )
         [yaml|
