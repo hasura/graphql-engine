@@ -176,7 +176,9 @@ instance Witch.From DataConnectorName Text where
   from = GQL.unName . unDataConnectorName
 
 data DataConnectorOptions = DataConnectorOptions
-  {_dcoUri :: BaseUrl}
+  { _dcoUri :: BaseUrl,
+    _dcoDisplayName :: Maybe Text
+  }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (Cacheable)
 
@@ -184,14 +186,16 @@ instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON
 
 instance ToJSON DataConnectorOptions where
-  toJSON = genericToJSON hasuraJSON
+  toJSON = genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 --------------------------------------------------------------------------------
 
 data DataConnectorInfo = DataConnectorInfo
   { _dciOptions :: DataConnectorOptions,
     _dciCapabilities :: API.Capabilities,
-    _dciConfigSchemaResponse :: API.ConfigSchemaResponse
+    _dciConfigSchemaResponse :: API.ConfigSchemaResponse,
+    _dciDisplayName :: Maybe Text,
+    _dciReleaseName :: Maybe Text
   }
   deriving stock (Eq, Show, Generic)
 
@@ -199,7 +203,7 @@ instance FromJSON DataConnectorInfo where
   parseJSON = genericParseJSON hasuraJSON
 
 instance ToJSON DataConnectorInfo where
-  toJSON = genericToJSON hasuraJSON
+  toJSON = genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 instance Cacheable DataConnectorInfo where
   unchanged a dci0 dci1 =

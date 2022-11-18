@@ -8,6 +8,7 @@ module Harness.Test.BackendType
     pattern DataConnectorReference,
     pattern DataConnectorSqlite,
     defaultSource,
+    defaultBackendDisplayNameString,
     defaultBackendTypeString,
     defaultBackendServerUrl,
     defaultBackendCapabilities,
@@ -111,6 +112,11 @@ defaultBackendTypeString = \case
   Citus -> "citus"
   Cockroach -> "cockroach"
   DataConnector agent -> agent
+
+defaultBackendDisplayNameString :: BackendType -> String
+defaultBackendDisplayNameString b = case defaultBackendTypeString b of
+  "sqlite" -> "Hasura SQLite (sqlite)"
+  x -> x
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendServerUrl :: BackendType -> Maybe String

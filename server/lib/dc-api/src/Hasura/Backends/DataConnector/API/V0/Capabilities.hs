@@ -290,7 +290,9 @@ instance HasCodec RawCapabilities where
 
 data CapabilitiesResponse = CapabilitiesResponse
   { _crCapabilities :: Capabilities,
-    _crConfigSchemaResponse :: ConfigSchemaResponse
+    _crConfigSchemaResponse :: ConfigSchemaResponse,
+    _crDisplayName :: Maybe Text,
+    _crReleaseName :: Maybe Text
   }
   deriving stock (Eq, Show, Generic)
   deriving (FromJSON, ToJSON) via Autodocodec CapabilitiesResponse
@@ -304,6 +306,8 @@ instance HasCodec CapabilitiesResponse where
       CapabilitiesResponse
         <$> requiredField "capabilities" "The capabilities of the agent" .= _crCapabilities
         <*> requiredField "config_schemas" "The agent's configuration schemas" .= _crConfigSchemaResponse
+        <*> optionalField "display_name" "The agent's preferred display name" .= _crDisplayName
+        <*> optionalField "release_name" "The agent's release name. For example: 'beta'" .= _crDisplayName
 
 instance ToSchema CapabilitiesResponse where
   declareNamedSchema _ = do
@@ -316,7 +320,9 @@ instance ToSchema CapabilitiesResponse where
               _schemaRequired = ["capabilities", "config_schemas"],
               _schemaProperties =
                 InsOrdHashMap.fromList
-                  [ ("capabilities", capabilitiesSchemaRef),
+                  [ ("display_name", Inline (mempty {_schemaType = Just OpenApiString})), -- TODO: Can we derive this from Codec?
+                    ("release_name", Inline (mempty {_schemaType = Just OpenApiString})), -- TODO: Can we derive this from Codec?
+                    ("capabilities", capabilitiesSchemaRef),
                     ("config_schemas", configSchemasSchemaRef)
                   ]
             }

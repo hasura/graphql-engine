@@ -17,6 +17,7 @@ module Harness.Test.Fixture
     pattern DataConnectorReference,
     pattern DataConnectorSqlite,
     defaultSource,
+    defaultBackendDisplayNameString,
     defaultBackendTypeString,
     schemaKeyword,
     noLocalTestEnvironment,

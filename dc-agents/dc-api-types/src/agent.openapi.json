@@ -317,6 +317,12 @@
           },
           "config_schemas": {
             "$ref": "#/components/schemas/ConfigSchemaResponse"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "release_name": {
+            "type": "string"
           }
         },
         "required": [

@@ -122,7 +122,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
           $ genericClient // API._capabilities
 
       let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
-          capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse
+          capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
 
       capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 

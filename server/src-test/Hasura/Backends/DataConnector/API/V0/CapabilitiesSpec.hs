@@ -24,7 +24,7 @@ spec = do
     jsonOpenApiProperties genCapabilities
   describe "CapabilitiesResponse" $ do
     testToFromJSON
-      (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse)
+      (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse Nothing Nothing)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
   describe "ScalarTypesCapabilities" $ do
     testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton StringTy (ScalarTypeCapabilities mempty mempty))) [aesonQQ|{"string": {}}|]

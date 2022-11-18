@@ -3,6 +3,8 @@ import { CapabilitiesResponse } from "@hasura/dc-api-types"
 import { envToBool } from "./util"
 
 export const capabilitiesResponse: CapabilitiesResponse = {
+  display_name: 'Hasura SQLite',
+  // release_name: 'Beta',
   config_schemas: configSchema,
   capabilities: {
     data_schema: {

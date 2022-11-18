@@ -71,7 +71,9 @@ capabilities =
                       )
                 },
             _csrOtherSchemas = mempty
-          }
+          },
+      _crDisplayName = Nothing,
+      _crReleaseName = Nothing
     }
 
 -- | Stock Schema for a Chinook Agent

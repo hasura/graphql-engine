@@ -19,7 +19,7 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (defaultBackendCapabilities, defaultBackendServerUrl)
-import Harness.Test.Fixture (defaultBackendTypeString, defaultSource)
+import Harness.Test.Fixture (defaultBackendDisplayNameString, defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.TestEnvironment qualified as TE
@@ -155,12 +155,14 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
                   . Lens.set (key "config_schema_response" . key "config_schema") J.Null
                   . Lens.set (key "options" . key "uri") J.Null
+                  . Lens.set (_Object . Lens.at "display_name") (Just J.Null)
             )
             [yaml|
             capabilities: *backendCapabilities
             config_schema_response:
               config_schema: null
               other_schemas: null
+            display_name: null
             options:
               uri: null
             |]
@@ -192,9 +194,9 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "list_source_kinds" $ do
     it "success" $ \(testEnvironment, _) -> do
-      case defaultBackendTypeString <$> TE.backendType testEnvironment of
+      case (defaultBackendTypeString &&& defaultBackendDisplayNameString) <$> TE.backendType testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
-        Just backendString -> do
+        Just (backendString, backendDisplayName) -> do
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -208,18 +210,25 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               sources:
               - builtin: true
                 kind: pg
+                display_name: pg
               - builtin: true
                 kind: citus
+                display_name: citus
               - builtin: true
                 kind: cockroach
+                display_name: cockroach
               - builtin: true
                 kind: mssql
+                display_name: mssql
               - builtin: true
                 kind: bigquery
+                display_name: bigquery
               - builtin: true
                 kind: mysql
+                display_name: mysql
               - builtin: false
                 kind: *backendString
+                display_name: *backendDisplayName
             |]
 
   describe "<kind>_add_source" $ do
