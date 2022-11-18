@@ -1,7 +1,11 @@
 {
   "name": "docs",
+  "description": "Hasura GraphQL Engine Documentation",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": ">=16.14"
+  },
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
@@ -17,25 +21,26 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.0.0-beta.18",
-    "@docusaurus/preset-classic": "^2.0.0-beta.18",
+    "@docusaurus/core": "^2.1.0",
+    "@docusaurus/preset-classic": "^2.1.0",
     "@mdx-js/react": "^1.6.21",
     "algoliasearch": "^4.14.2",
     "algoliasearch-helper": "^3.7.4",
-    "clsx": "^1.1.1",
+    "clsx": "^1.2.1",
     "docusaurus-plugin-sass": "^0.2.2",
     "graphiql": "^1.5.1",
     "graphql": "^15.7.2",
-    "prism-react-renderer": "^1.2.1",
+    "prism-react-renderer": "^1.3.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-transition-group": "^4.4.2",
     "sass": "^1.49.8"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^2.0.0-beta.18",
-    "@tsconfig/docusaurus": "^1.0.4",
-    "typescript": "^4.5.5"
+    "@docusaurus/module-type-aliases": "^2.1.0",
+    "@tsconfig/docusaurus": "^1.0.6",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4"
   },
   "browserslist": {
     "production": [
@@ -48,5 +53,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "packageManager": "yarn@3.2.4"
 }

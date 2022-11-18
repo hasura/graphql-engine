@@ -1,0 +1,59 @@
+// Custom for index
+
+.custom_doc_item_wrapper-x-wide {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+
+  .row {
+    .col {
+      max-width: 100vw !important;
+
+      article {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Card gallery
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
+}
+
+// Card
+.card {
+  display: flex;
+  flex-direction: column;
+  // border: solid 1px white;
+  border-radius: 8px;
+  padding: 20px;
+
+  h4 {
+    text-transform: uppercase;
+    font-size: 1.1rem;
+  }
+
+  a {
+    margin-left: auto;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+  }
+
+  &:hover {
+    .arrow {
+      transform: translateX(5px);
+    }
+  }
+}
+
+
+/* Dark Mode Styles */
+
+html[data-theme='dark'] {
+  .card:hover {
+    --ifm-card-background-color: var(--color-gray-78) !important;
+  }
+}
