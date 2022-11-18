@@ -86,6 +86,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         setOptions={{
           enableBasicAutocompletion: true,
           enableLiveAutocompletion: true,
+          useWorker: false,
         }}
       />
     </>

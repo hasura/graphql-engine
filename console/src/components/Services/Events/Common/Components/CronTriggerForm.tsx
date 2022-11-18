@@ -98,6 +98,7 @@ const Form: React.FC<Props> = props => {
           value={payload}
           onChange={setState.payload}
           height="200px"
+          setOptions={{ useWorker: false }}
         />
       </FormSection>
       <CollapsibleToggle

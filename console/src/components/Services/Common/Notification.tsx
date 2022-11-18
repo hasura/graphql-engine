@@ -92,6 +92,7 @@ export const getNotificationDetails = (
         minLines={1}
         maxLines={25}
         width="100%"
+        setOptions={{ useWorker: false }}
       />
       {children}
     </div>

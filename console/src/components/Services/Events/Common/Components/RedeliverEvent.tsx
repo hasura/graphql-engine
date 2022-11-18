@@ -78,6 +78,7 @@ const RedeliverEvent: React.FC<Props> = ({
               showPrintMargin={false}
               showGutter={false}
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
+              setOptions={{ useWorker: false }}
             />
           </div>
           <div className="pl-xs w-1/2">
@@ -102,6 +103,7 @@ const RedeliverEvent: React.FC<Props> = ({
                 backgroundColor: '#fdf9ed',
                 marginTop: '10px',
               }}
+              setOptions={{ useWorker: false }}
             />
           </div>
         </div>

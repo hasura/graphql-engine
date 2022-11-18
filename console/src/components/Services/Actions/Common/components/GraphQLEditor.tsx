@@ -102,6 +102,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
           width={width || '600px'}
           showPrintMargin={false}
           readOnly={readOnlyMode}
+          setOptions={{ useWorker: false }}
         />
       </div>
     </Analytics>

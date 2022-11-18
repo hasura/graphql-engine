@@ -27,6 +27,7 @@ const InvocationLogDetails = ({ requestPayload, responsePayload }: Props) => {
               width="100%"
               showPrintMargin={false}
               showGutter={false}
+              setOptions={{ useWorker: false }}
             />
           </div>
         </Tab>
@@ -43,6 +44,7 @@ const InvocationLogDetails = ({ requestPayload, responsePayload }: Props) => {
               width="100%"
               showPrintMargin={false}
               showGutter={false}
+              setOptions={{ useWorker: false }}
             />
           </div>
         </Tab>

@@ -204,6 +204,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
             style={{ background: '#e2e8f0' }}
             setOptions={{
               highlightGutterLine: false,
+              useWorker: false,
             }}
             readOnly
           />

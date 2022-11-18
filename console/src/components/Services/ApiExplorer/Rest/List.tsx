@@ -119,6 +119,7 @@ const ListComponent: React.FC<Props> = ({
                             height="300px"
                             mode="graphqlschema"
                             readOnly
+                            setOptions={{ useWorker: false }}
                           />
                         </CollapsibleToggle>
                       </div>

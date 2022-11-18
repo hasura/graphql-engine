@@ -118,6 +118,7 @@ const TextInput = props => {
             exec: handleEditorExec,
           },
         ]}
+        setOptions={{ useWorker: false }}
       />
     );
   };

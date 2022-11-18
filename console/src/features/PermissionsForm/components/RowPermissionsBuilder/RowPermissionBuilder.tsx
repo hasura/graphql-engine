@@ -56,6 +56,7 @@ export const RowPermissionBuilder = ({
           name={`${tableName}-json-editor`}
           value={json}
           editorProps={{ $blockScrolling: true }}
+          setOptions={{ useWorker: false }}
         />
       </div>
       <div className="p-6 rounded-lg bg-white border border-gray-200w-full">

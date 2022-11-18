@@ -6,6 +6,7 @@ import AceEditor, {
   IAceEditorProps,
   ICommandManager,
 } from 'react-ace';
+import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-github';
 import 'ace-builds/src-noconflict/theme-eclipse';
 import 'ace-builds/src-noconflict/ext-language_tools';
@@ -70,7 +71,12 @@ export type CodeEditorFieldProps = FieldWrapperPassThroughProps & {
   disabled?: boolean;
 };
 
-const DEFAULT_EDITOR_OPTIONS = { minLines: 5, maxLines: 8, showGutter: false };
+const DEFAULT_EDITOR_OPTIONS = {
+  minLines: 5,
+  maxLines: 8,
+  showGutter: false,
+  useWorker: false,
+};
 
 export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
   name,

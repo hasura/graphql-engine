@@ -103,6 +103,7 @@ const JsonInput = props => {
             exec: handleEditorExec,
           },
         ]}
+        setOptions={{ useWorker: false }}
       />
     );
   };

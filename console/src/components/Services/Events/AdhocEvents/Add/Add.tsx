@@ -80,6 +80,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
           value={payload}
           onChange={setState.payload}
           height="200px"
+          setOptions={{ useWorker: false }}
         />
       </FormSection>
       <CollapsibleToggle
