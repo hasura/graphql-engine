@@ -5,6 +5,7 @@ export default {
   transform: {
     '^.+\\.[tj]sx?$': 'babel-jest',
   },
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../../coverage/libs/console/legacy-ce',
 };

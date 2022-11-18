@@ -252,10 +252,11 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
 };
 
 const getHeaders = (header, token, defaultValue = null) => {
+  let headers = { ...CONSTANT_HEADERS };
   switch (header) {
     case 'pat':
       const personalAccessToken = loadPATState();
-      let headers = {
+      headers = {
         ...CONSTANT_HEADERS,
         [globals.patLabel]: `pat ${personalAccessToken}`,
       };
@@ -644,7 +645,7 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
               }
             }
           }
-        } 
+        }
       `,
       variables: {
         id: globals.hasuraCloudProjectId,

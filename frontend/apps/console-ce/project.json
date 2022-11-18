@@ -2,7 +2,24 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ce/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
+    "build-server-assets": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/apps/server-assets-console-ce"],
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "rm -rf dist/apps/server-assets-console-ce",
+          "cp dist/apps/console-ce dist/apps/server-assets-console-ce -r",
+          "mkdir -p dist/apps/server-assets-console-ce/versioned",
+          "mv dist/apps/server-assets-console-ce/*.{js,css} dist/apps/server-assets-console-ce/versioned",
+          "gzip -r -f dist/apps/server-assets-console-ce/versioned",
+          "mv dist/apps/server-assets-console-ce/*.map dist/apps/server-assets-console-ce/versioned"
+        ],
+        "parallel": false
+      }
+    },
     "build": {
       "executor": "@nrwl/web:webpack",
       "outputs": ["{options.outputPath}"],
@@ -48,7 +65,7 @@
           "sourceMap": true,
           "namedChunks": false,
           "generateIndexHtml": false,
-          "extractLicenses": true,
+          "extractLicenses": false,
           "vendorChunk": false
         }
       }
@@ -85,6 +102,5 @@
         "passWithNoTests": true
       }
     }
-  },
-  "tags": []
+  }
 }

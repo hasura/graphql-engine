@@ -3,9 +3,14 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "nx serve",
-    "build": "nx build",
-    "test": "nx test"
+    "test:unit": "nx run-many --target=test",
+    "test:e2e": "nx run-many --target=e2e",
+    "lint": "nx run-many --target=lint",
+    "storybook": "nx run console-legacy-ce:storybook",
+    "start:ce": "nx run console-ce:serve",
+    "build:ce": "nx run console-ce:build",
+    "start:ee": "nx run console-ee:serve",
+    "build:ee": "nx run console-ee:build"
   },
   "private": true,
   "overrides": {
@@ -250,6 +255,7 @@
     "eslint-plugin-react": "7.30.1",
     "eslint-plugin-react-hooks": "4.6.0",
     "jest": "27.5.1",
+    "jest-transform-stub": "^2.0.0",
     "msw": "^0.47.4",
     "msw-storybook-addon": "^1.6.3",
     "nx": "14.5.2",
