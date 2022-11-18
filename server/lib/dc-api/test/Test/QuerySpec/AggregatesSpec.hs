@@ -108,8 +108,10 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can count all rows with distinct non-null values in a column, after applying pagination and filtering" $ do
       let limit = 20
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "InvoiceId" _tdIntType) (ScalarValue (Number 380) _tdIntType)
+      -- It is important to add an explicit order by for this query as different database engines will order implicitly resulting in incorrect results
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "InvoiceId" Ascending :| []
       let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where')
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- guardedQuery api sourceName config queryRequest
 
       let billingStateCount =
