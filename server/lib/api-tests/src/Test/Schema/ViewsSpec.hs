@@ -102,14 +102,14 @@ setupPostgres testEnvironment =
         Postgres.run_
           testEnvironment
           [sql|
-            CREATE OR REPLACE VIEW author_view
-            AS SELECT * FROM author
+            CREATE OR REPLACE VIEW hasura.author_view
+            AS SELECT * FROM hasura.author
           |],
       Fixture.teardownAction = \_ ->
         Postgres.run_
           testEnvironment
           [sql|
-            DROP VIEW IF EXISTS author_view
+            DROP VIEW IF EXISTS hasura.author_view
           |]
     }
 

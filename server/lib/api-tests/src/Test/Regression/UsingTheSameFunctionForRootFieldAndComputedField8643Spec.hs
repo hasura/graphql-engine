@@ -1,15 +1,13 @@
 -- | Testing regression reported at https://github.com/hasura/graphql-engine/issues/8643
 module Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec (spec) where
 
--- import Data.Aeson (Value (Null))
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Constants qualified as Constants
--- import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Schema
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..))
--- import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec
 
@@ -54,20 +52,25 @@ schema =
 
 functionSetup :: TestEnvironment -> Fixture.SetupAction
 functionSetup testEnvironment =
-  Fixture.SetupAction
-    { setupAction =
-        Postgres.run_ testEnvironment $
-          "CREATE FUNCTION "
-            ++ Constants.postgresDb
-            ++ ".authors(author_row author) \
-               \RETURNS SETOF author AS $$ \
-               \  SELECT * \
-               \  FROM "
-            ++ Constants.postgresDb
-            ++ ".author \
-               \$$ LANGUAGE sql STABLE;",
-      teardownAction = \_ -> Postgres.run_ testEnvironment $ "DROP FUNCTION " ++ Constants.postgresDb ++ ".authors;"
-    }
+  let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)
+   in Fixture.SetupAction
+        { setupAction =
+            Postgres.run_ testEnvironment $
+              "CREATE FUNCTION "
+                ++ schemaName
+                ++ ".authors(author_row "
+                ++ schemaName
+                ++ ".author) \
+                   \RETURNS SETOF "
+                ++ schemaName
+                ++ ".author AS $$ \
+                   \  SELECT * \
+                   \  FROM "
+                ++ schemaName
+                ++ ".author \
+                   \$$ LANGUAGE sql STABLE;",
+          teardownAction = \_ -> Postgres.run_ testEnvironment $ "DROP FUNCTION " ++ schemaName ++ ".authors;"
+        }
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -76,6 +79,7 @@ tests :: Fixture.Options -> SpecWith TestEnvironment
 tests _opts = do
   describe "Tracking the same function as a root field and as a computed field" do
     it "Does not give rise to metadata inconsistencies" \testEnvironment -> do
+      let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)
       -- The error message we're looking out for if this fails is:
       --
       -- {
@@ -84,5 +88,5 @@ tests _opts = do
       --   "path": "$"
       -- }
       Postgres.runSQL
-        ("alter table \"" ++ Constants.postgresDb ++ "\".\"author\" add column \"iae\" integer\n null;")
+        ("alter table \"" ++ schemaName ++ "\".\"author\" add column \"iae\" integer\n null;")
         testEnvironment
