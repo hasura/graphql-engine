@@ -2,8 +2,28 @@ cabal-version: 2.2
 name: api-tests
 version: 1.0.0
 
-executable api-tests
+
+library
   build-tool-depends: hspec-discover:hspec-discover
+  hs-source-dirs: src
+
+  default-extensions:
+    BlockArguments
+    DataKinds
+    DeriveGeneric
+    DerivingStrategies
+    ImportQualifiedPost
+    LambdaCase
+    MultiWayIf
+    NamedFieldPuns
+    NoImplicitPrelude
+    OverloadedStrings
+    PatternGuards
+    RecordWildCards
+    ScopedTypeVariables
+    TypeApplications
+    TypeFamilies
+
 
   build-depends:
     , HUnit
@@ -34,36 +54,8 @@ executable api-tests
     , uuid
     , vector
 
-  default-extensions:
-    BlockArguments
-    DataKinds
-    DeriveGeneric
-    DerivingStrategies
-    ImportQualifiedPost
-    LambdaCase
-    MultiWayIf
-    NamedFieldPuns
-    NoImplicitPrelude
-    OverloadedStrings
-    PatternGuards
-    RecordWildCards
-    ScopedTypeVariables
-    TypeApplications
-    TypeFamilies
-
-  hs-source-dirs: test
-  default-language: Haskell2010
-
-  -- Turning off optimizations is intentional; tests aren't
-  -- performance sensitive and waiting for compilation is a problem.
-  ghc-options:
-    -Wall
-    -Werror
-    -threaded
-    -rtsopts "-with-rtsopts=-N"
-
-  main-is: Spec.hs
-  other-modules:
+  exposed-modules:
+    Spec
     SpecHook
     Test.API.ExplainSpec
     Test.API.Metadata.ComputedFieldsSpec
@@ -171,6 +163,23 @@ executable api-tests
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.RowUpdatesSpec
     Test.Subscriptions.StreamingSubscriptionsSpec
+executable api-tests
+  build-depends:
+    , api-tests
+    , base
+    , hspec
+  default-language: Haskell2010
+
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options:
+    -Wall
+    -Werror
+    -threaded
+    -rtsopts "-with-rtsopts=-N"
+
+  hs-source-dirs: test-runner
+  main-is: Main.hs
 
 executable render-feature-matrix
   build-depends:
