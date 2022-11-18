@@ -17,9 +17,21 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Try it out
 
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail src='/img/databases/athena/create-project.png' alt='Connect new or existing database' width='1000px' />
+
+### Step 2: Add your Amazon Athena database as a source to Hasura
+
 :::info Note
 
-**Prerequisite: Turn on the experimental features for GDC**.
+** Step 2 Prerequisite: Turn on the experimental features for GDC**.
 
 While the Amazon Athena Connector is in beta, the feature can only be enabled by turning on the _Experimental features
 for GDC_ under the _Feature Flags_ section of the Console configuration page.
@@ -34,18 +46,6 @@ Click the gear icon (1) in the top-right corner of your Cloud project; in the si
 />
 
 :::
-
-### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
-
-Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
-create a new Hasura Cloud account.
-
-Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
-
-<Thumbnail src='/img/databases/athena/create-project.png' alt='Connect new or existing database' width='1000px' />
-
-### Step 2: Add your Amazon Athena database as a source to Hasura
 
 Head to the `Data > Manage databases` section on the Console to add your Amazon Athena database as a source to Hasura.
 
