@@ -33,6 +33,7 @@ import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions
@@ -184,6 +185,8 @@ createDatabases fixtureName testEnvironment =
           Postgres.createDatabase testEnvironment
         Cockroach ->
           Cockroach.createDatabase testEnvironment
+        Citus ->
+          Citus.createDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)
@@ -196,6 +199,8 @@ dropDatabases fixtureName testEnvironment =
           Postgres.dropDatabase testEnvironment
         Cockroach ->
           Cockroach.dropDatabase testEnvironment
+        Citus ->
+          Citus.dropDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)

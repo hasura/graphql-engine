@@ -23,7 +23,7 @@ test-mysql: remove-tix-file
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
 test-citus: remove-tix-file
-	docker compose -d --wait postgres citus
+	docker compose up -d --wait postgres citus
 	$(call stop_after, \
 		cabal run api-tests:exe:api-tests -- -m 'Citus')
 

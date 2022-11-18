@@ -46,6 +46,10 @@ services:
 
   citus:
     image: citusdata/citus:11
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
+      - "-cclient_min_messages=error"
     ports:
       - 5432
     environment:

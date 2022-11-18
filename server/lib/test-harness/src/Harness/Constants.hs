@@ -23,6 +23,7 @@ module Harness.Constants
     httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
+    defaultCitusConnectionString,
     cockroachConnectionString,
     defaultCockroachConnectionString,
     cockroachDb,
@@ -155,8 +156,21 @@ citusHost = "127.0.0.1"
 citusPort :: Word16
 citusPort = 65004
 
-citusConnectionString :: String
-citusConnectionString =
+citusConnectionString :: TestEnvironment -> String
+citusConnectionString testEnv =
+  "postgres://"
+    ++ citusUser
+    ++ ":"
+    ++ citusPassword
+    ++ "@"
+    ++ citusHost
+    ++ ":"
+    ++ show citusPort
+    ++ "/"
+    ++ uniqueDbName (uniqueTestId testEnv)
+
+defaultCitusConnectionString :: String
+defaultCitusConnectionString =
   "postgres://"
     ++ citusUser
     ++ ":"

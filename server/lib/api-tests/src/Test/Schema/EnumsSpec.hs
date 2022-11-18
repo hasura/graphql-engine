@@ -50,9 +50,9 @@ spec =
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Fixture.SetupAction
                     { Fixture.setupAction =
-                        Citus.run_ setup,
+                        Citus.run_ testEnvironment setup,
                       Fixture.teardownAction = \_ ->
-                        Citus.run_ teardown
+                        pure ()
                     },
                   Citus.setupTablesAction schema testEnvironment
                 ]
@@ -85,9 +85,6 @@ schema =
 
 setup :: String
 setup = "create type \"role\" as enum ('admin', 'editor', 'moderator')"
-
-teardown :: String
-teardown = "drop type \"role\""
 
 --------------------------------------------------------------------------------
 -- Tests

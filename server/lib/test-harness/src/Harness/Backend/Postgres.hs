@@ -29,6 +29,7 @@ module Harness.Backend.Postgres
     createUniqueIndexSql,
     mkPrimaryKeySql,
     mkReferenceSql,
+    wrapIdentifier,
   )
 where
 
