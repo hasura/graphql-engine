@@ -11,6 +11,7 @@ import {
   FaSort,
   FaTrash,
 } from 'react-icons/fa';
+import clsx from 'clsx';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
@@ -767,20 +768,23 @@ const ViewRows = props => {
       }
     });
 
-    const childTabs = childQueries.map((q, i) => {
+    const childTabs = childQueries.map(q => {
       const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
       return (
-        <li key={i} className={isActive} role="presentation">
-          <a
-            href="#"
+        <div>
+          <Button
+            className={clsx(
+              'mr-2',
+              isActive === 'active' ? 'border-4' : 'border-white'
+            )}
             onClick={e => {
               e.preventDefault();
               dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });
             }}
           >
             {[...activePath.slice(0, 1), ...curPath, q.name].join('.')}
-          </a>
-        </li>
+          </Button>
+        </div>
       );
     });
 
@@ -831,7 +835,7 @@ const ViewRows = props => {
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul>{childTabs}</ul>
+          <div className="flex">{childTabs}</div>
           {childViewRows}
         </div>
       );
