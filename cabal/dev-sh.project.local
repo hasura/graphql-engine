@@ -15,11 +15,11 @@ package *
 
   -- For compile-time performance (see cabal.project.ci.local):
   ghc-options:
-    -- We compile with package-level parallelism, so just use a small amount 
+    -- We compile with package-level parallelism, so just use a small amount
     -- of module-level parallelism for dependencies:
     -j2
     +RTS -A64m -n2m -RTS
-  
+
 -- Modify this to '+optimize-hasura' to enable optimizations. Be sure also to comment
 -- 'coverage: true' below for full prod performance.
 --
@@ -65,7 +65,6 @@ package api-tests
   -- See "package graphql-engine" for more information
   executable-dynamic: True
   library-vanilla: False
-
 
 package mysql
   extra-include-dirs:
