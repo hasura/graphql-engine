@@ -6,10 +6,10 @@ It is referenced at:
   - line 431 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L431)
   - line 278 of [Hasura.GraphQL.Schema.Update](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Update.hs#L278)
   - line 319 of [Hasura.GraphQL.Schema.Update](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Update.hs#L319)
-  - line 272 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L272)
-  - line 428 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L428)
-  - line 465 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L465)
-  - line 175 of [Hasura.Session](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Session.hs#L175)
+  - line 259 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L259)
+  - line 409 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L409)
+  - line 444 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L444)
+  - line 173 of [Hasura.Session](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Session.hs#L173)
 
 # Backend only permissions
 
