@@ -30,7 +30,6 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Scientific (floatingOrInteger)
 import Data.Text qualified as T
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.Metadata.Base
@@ -48,8 +47,6 @@ data ToSchemaRelationshipDef = ToSchemaRelationshipDef
 
 instance NFData ToSchemaRelationshipDef
 
-instance Cacheable ToSchemaRelationshipDef
-
 instance HasCodec ToSchemaRelationshipDef where
   codec =
     object "ToSchemaRelationshipDef" $
@@ -64,8 +61,6 @@ newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
   deriving (Show, Eq, Generic)
 
 instance NFData RemoteFields
-
-instance Cacheable RemoteFields
 
 instance HasCodec RemoteFields where
   codec =
@@ -140,8 +135,6 @@ data FieldCall = FieldCall
 
 instance NFData FieldCall
 
-instance Cacheable FieldCall
-
 instance Hashable FieldCall
 
 -- | Arguments to a remote GraphQL fields, represented as a mapping from name to
@@ -151,7 +144,7 @@ instance Hashable FieldCall
 newtype RemoteArguments = RemoteArguments
   { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
   }
-  deriving (Show, Eq, Generic, Cacheable, NFData)
+  deriving (Show, Eq, Generic, NFData)
 
 instance Hashable RemoteArguments
 
@@ -248,8 +241,6 @@ instance J.ToJSON (RemoteRelationshipG r) => J.ToJSON (RemoteSchemaTypeRelations
       [ "type_name" J..= _rstrsName,
         "relationships" J..= OM.elems _rstrsRelationships
       ]
-
-instance Cacheable r => Cacheable (RemoteSchemaTypeRelationships r)
 
 type SchemaRemoteRelationships r = InsOrdHashMap G.Name (RemoteSchemaTypeRelationships r)
 

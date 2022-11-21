@@ -115,7 +115,6 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
 import Hasura.Backends.DataConnector.Adapter.Types (mkDataConnectorName)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
@@ -503,8 +502,6 @@ deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 deriving instance i `SatisfiesForAllBackends` Ord => Ord (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
-
-instance i `SatisfiesForAllBackends` Cacheable => Cacheable (AnyBackend i)
 
 backendSourceKindFromText :: Text -> Maybe (AnyBackend BackendSourceKind)
 backendSourceKindFromText text =

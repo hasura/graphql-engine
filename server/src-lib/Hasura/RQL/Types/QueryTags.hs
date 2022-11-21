@@ -14,15 +14,12 @@ import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 
 data QueryTagsFormat
   = Standard
   | SQLCommenter
   deriving (Show, Eq, Generic)
-
-instance Cacheable QueryTagsFormat
 
 instance Hashable QueryTagsFormat
 
@@ -82,8 +79,6 @@ data QueryTagsConfig = QueryTagsConfig
     _qtcFormat :: !QueryTagsFormat
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable QueryTagsConfig
 
 instance Hashable QueryTagsConfig
 

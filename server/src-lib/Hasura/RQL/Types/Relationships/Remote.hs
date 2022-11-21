@@ -33,7 +33,6 @@ import Data.Aeson.Types (Parser)
 import Data.HashMap.Strict qualified as HM
 import Data.Text.Extended (ToTxt (toTxt))
 import GHC.TypeLits (ErrorMessage (..), TypeError)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -75,8 +74,6 @@ data RRFormat
     RRFUnifiedFormat
   deriving (Show, Eq, Generic)
 
-instance Cacheable RRFormat
-
 -- | Metadata representation of the internal definition of a remote relationship.
 data RemoteRelationshipDefinition
   = -- | Remote relationship targetting a source.
@@ -84,8 +81,6 @@ data RemoteRelationshipDefinition
   | -- | Remote relationship targetting a remote schema.
     RelationshipToSchema RRFormat ToSchemaRelationshipDef
   deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteRelationshipDefinition
 
 -- See documentation for 'parseRemoteRelationshipDefinition' for why
 -- this is necessary.
@@ -261,8 +256,6 @@ data RemoteFieldInfo lhsJoinField = RemoteFieldInfo
   }
   deriving (Generic, Eq)
 
-instance (Cacheable lhsJoinField) => Cacheable (RemoteFieldInfo lhsJoinField)
-
 instance (ToJSON lhsJoinField) => ToJSON (RemoteFieldInfo lhsJoinField)
 
 -- | Resolved remote relationship's RHS
@@ -270,8 +263,6 @@ data RemoteFieldInfoRHS
   = RFISchema RemoteSchemaFieldInfo
   | RFISource (AnyBackend RemoteSourceFieldInfo)
   deriving (Generic, Eq)
-
-instance Cacheable RemoteFieldInfoRHS
 
 instance ToJSON RemoteFieldInfoRHS where
   toJSON =
@@ -288,8 +279,6 @@ data DBJoinField (b :: BackendType)
 deriving instance Backend b => Eq (DBJoinField b)
 
 deriving instance Backend b => Show (DBJoinField b)
-
-instance Backend b => Cacheable (DBJoinField b)
 
 instance Backend b => Hashable (DBJoinField b)
 
@@ -312,8 +301,6 @@ data ScalarComputedField (b :: BackendType) = ScalarComputedField
 deriving instance Backend b => Eq (ScalarComputedField b)
 
 deriving instance Backend b => Show (ScalarComputedField b)
-
-instance Backend b => Cacheable (ScalarComputedField b)
 
 instance Backend b => Hashable (ScalarComputedField b)
 

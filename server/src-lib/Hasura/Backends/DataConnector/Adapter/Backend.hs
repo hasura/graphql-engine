@@ -19,7 +19,6 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
-import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
@@ -164,8 +163,6 @@ data CustomBooleanOperator a = CustomBooleanOperator
 instance NFData a => NFData (CustomBooleanOperator a)
 
 instance Hashable a => Hashable (CustomBooleanOperator a)
-
-instance Cacheable a => Cacheable (CustomBooleanOperator a)
 
 instance J.ToJSON a => ToJSONKeyValue (CustomBooleanOperator a) where
   toJSONKeyValue CustomBooleanOperator {..} = (fromText _cboName, J.toJSON _cboRHS)

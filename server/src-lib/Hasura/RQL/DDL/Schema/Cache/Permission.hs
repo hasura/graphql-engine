@@ -109,8 +109,6 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
 newtype OrderedRoles = OrderedRoles {_unOrderedRoles :: [Role]}
   deriving (Eq, Generic)
 
-instance Inc.Cacheable OrderedRoles
-
 -- | 'orderRoles' is used to order the roles, in such a way that given
 --   a role R with n parent roles - PR1, PR2 .. PRn, then the 'orderRoles'
 --   function will order the roles in such a way that all the parent roles
@@ -199,7 +197,6 @@ buildTablePermissions ::
     MonadError QErr m,
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     BackendMetadata b,
-    Inc.Cacheable (Proxy b),
     GetAggregationPredicatesDeps b
   ) =>
   ( Proxy b,
@@ -315,8 +312,6 @@ buildPermission ::
   ( ArrowChoice arr,
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
-    Inc.Cacheable (a b),
-    Inc.Cacheable (Proxy b),
     MonadError QErr m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b

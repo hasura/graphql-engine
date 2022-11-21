@@ -77,7 +77,6 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
@@ -99,8 +98,7 @@ newtype RelName = RelName {getRelTxt :: NonEmptyText}
       PG.ToPrepArg,
       PG.FromCol,
       Generic,
-      NFData,
-      Cacheable
+      NFData
     )
 
 instance ToTxt RelName where
@@ -123,8 +121,6 @@ data RelType
 instance NFData RelType
 
 instance Hashable RelType
-
-instance Cacheable RelType
 
 instance HasCodec RelType where
   codec =
@@ -171,8 +167,6 @@ instance NFData InsertOrder
 
 instance Hashable InsertOrder
 
-instance Cacheable InsertOrder
-
 instance HasCodec InsertOrder where
   codec =
     stringConstCodec
@@ -194,7 +188,7 @@ instance ToJSON InsertOrder where
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID {unOID :: Int}
-  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, PG.FromCol, Cacheable)
+  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, PG.FromCol)
 
 newtype FieldName = FieldName {getFieldNameTxt :: Text}
   deriving
@@ -210,7 +204,6 @@ newtype FieldName = FieldName {getFieldNameTxt :: Text}
       Generic,
       IsString,
       NFData,
-      Cacheable,
       Semigroup
     )
 
@@ -269,8 +262,6 @@ instance Hashable SourceName
 
 instance NFData SourceName
 
-instance Cacheable SourceName
-
 defaultSource :: SourceName
 defaultSource = SNDefault
 
@@ -285,10 +276,8 @@ data InpValInfo = InpValInfo
   }
   deriving (Show, Eq, TH.Lift, Generic)
 
-instance Cacheable InpValInfo
-
 newtype SystemDefined = SystemDefined {unSystemDefined :: Bool}
-  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData, Cacheable)
+  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData)
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
@@ -309,14 +298,10 @@ newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
 
 instance NFData ResolvedWebhook
 
-instance Cacheable ResolvedWebhook
-
 newtype InputWebhook = InputWebhook {unInputWebhook :: URLTemplate}
   deriving (Show, Eq, Generic)
 
 instance NFData InputWebhook
-
-instance Cacheable InputWebhook
 
 instance Hashable InputWebhook
 
@@ -352,7 +337,7 @@ resolveWebhook env (InputWebhook urlTemplate) = do
     eitherRenderedTemplate
 
 newtype Timeout = Timeout {unTimeout :: Int}
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable)
+  deriving (Show, Eq, ToJSON, Generic, NFData)
 
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
@@ -376,8 +361,6 @@ data PGConnectionParams = PGConnectionParams
   deriving (Show, Eq, Generic)
 
 instance NFData PGConnectionParams
-
-instance Cacheable PGConnectionParams
 
 instance Hashable PGConnectionParams
 
@@ -422,8 +405,6 @@ data UrlConf
   deriving (Show, Eq, Generic)
 
 instance NFData UrlConf
-
-instance Cacheable UrlConf
 
 instance Hashable UrlConf
 
@@ -563,8 +544,6 @@ data Comment
 
 instance NFData Comment
 
-instance Cacheable Comment
-
 instance Hashable Comment
 
 instance HasCodec Comment where
@@ -607,8 +586,6 @@ data EnvRecord a = EnvRecord
 
 instance NFData a => NFData (EnvRecord a)
 
-instance Cacheable a => Cacheable (EnvRecord a)
-
 instance Hashable a => Hashable (EnvRecord a)
 
 instance (ToJSON a) => ToJSON (EnvRecord a) where
@@ -617,8 +594,6 @@ instance (ToJSON a) => ToJSON (EnvRecord a) where
 instance (FromJSON a) => FromJSON (EnvRecord a)
 
 data ApolloFederationVersion = V1 deriving (Show, Eq, Generic)
-
-instance Cacheable ApolloFederationVersion
 
 instance HasCodec ApolloFederationVersion where
   codec = stringConstCodec [(V1, "v1")]
@@ -638,8 +613,6 @@ data ApolloFederationConfig = ApolloFederationConfig
   { enable :: ApolloFederationVersion
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable ApolloFederationConfig
 
 instance HasCodec ApolloFederationConfig where
   codec =
@@ -672,8 +645,6 @@ data RemoteRelationshipG definition = RemoteRelationship
     _rrDefinition :: definition
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable definition => Cacheable (RemoteRelationshipG definition)
 
 $(makeLenses ''RemoteRelationshipG)
 $(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)

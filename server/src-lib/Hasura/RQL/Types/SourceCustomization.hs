@@ -74,7 +74,6 @@ import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
-import Hasura.Incremental.Internal.Dependency (Cacheable)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -88,8 +87,6 @@ data RootFieldsCustomization = RootFieldsCustomization
     _rootfcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
-
-instance Cacheable RootFieldsCustomization
 
 instance ToJSON RootFieldsCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -105,8 +102,6 @@ data SourceTypeCustomization = SourceTypeCustomization
     _stcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
-
-instance Cacheable SourceTypeCustomization
 
 instance ToJSON SourceTypeCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -199,8 +194,6 @@ data SourceCustomization = SourceCustomization
     _scNamingConvention :: Maybe NamingCase
   }
   deriving (Eq, Show, Generic)
-
-instance Cacheable SourceCustomization
 
 instance ToJSON SourceCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}

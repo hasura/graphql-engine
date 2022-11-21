@@ -31,7 +31,6 @@ import Data.Scientific (Scientific)
 import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 
@@ -258,9 +257,6 @@ deriving instance Show BigQueryConnSourceConfig
 
 deriving instance Hashable BigQueryConnSourceConfig
 
-instance Cacheable BigQueryConnSourceConfig where
-  unchanged _ = (==)
-
 data RetryOptions = RetryOptions
   { _retryBaseDelay :: Microseconds,
     _retryNumRetries :: Int
@@ -281,9 +277,6 @@ data BigQuerySourceConfig = BigQuerySourceConfig
     _scGlobalSelectLimit :: Int.Int64
   }
   deriving (Eq)
-
-instance Cacheable BigQuerySourceConfig where
-  unchanged _ = (==)
 
 instance J.ToJSON BigQuerySourceConfig where
   toJSON BigQuerySourceConfig {..} =

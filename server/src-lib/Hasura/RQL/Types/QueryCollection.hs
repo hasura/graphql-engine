@@ -31,7 +31,6 @@ import Data.Aeson.TH
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as PG
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -51,14 +50,14 @@ newtype CollectionName = CollectionName {unCollectionName :: NonEmptyText}
     )
 
 newtype QueryName = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic)
 
 newtype GQLQuery = GQLQuery {unGQLQuery :: G.ExecutableDocument G.Name}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, FromJSON, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, FromJSON)
 
 newtype GQLQueryWithText
   = GQLQueryWithText (Text, GQLQuery)
-  deriving (Show, Eq, Ord, NFData, Generic, Cacheable, Hashable)
+  deriving (Show, Eq, Ord, NFData, Generic, Hashable)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t,) <$> parseJSON v
@@ -81,15 +80,13 @@ data ListedQuery = ListedQuery
 
 instance NFData ListedQuery
 
-instance Cacheable ListedQuery
-
 instance Hashable ListedQuery
 
 $(deriveJSON hasuraJSON ''ListedQuery)
 
 newtype CollectionDef = CollectionDef
   {_cdQueries :: [ListedQuery]}
-  deriving (Show, Eq, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Generic, NFData)
 
 $(deriveJSON hasuraJSON ''CollectionDef)
 $(makeLenses ''CollectionDef)

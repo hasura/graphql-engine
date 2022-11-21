@@ -36,7 +36,6 @@ import Data.Aeson.TH
 import Data.HashMap.Strict qualified as M
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -46,12 +45,12 @@ import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype EnumValue = EnumValue {getEnumValue :: G.Name}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 
 newtype EnumValueInfo = EnumValueInfo
   { evComment :: Maybe Text
   }
-  deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable)
 
 $(deriveJSON hasuraJSON ''EnumValueInfo)
 
@@ -76,8 +75,6 @@ instance (Backend b) => NFData (EnumReference b)
 
 instance (Backend b) => Hashable (EnumReference b)
 
-instance (Backend b) => Cacheable (EnumReference b)
-
 instance (Backend b) => FromJSON (EnumReference b) where
   parseJSON = genericParseJSON hasuraJSON
 
@@ -101,8 +98,6 @@ data ColumnType (b :: BackendType)
 instance (Backend b) => NFData (ColumnType b)
 
 instance (Backend b) => Hashable (ColumnType b)
-
-instance (Backend b) => Cacheable (ColumnType b)
 
 instance (Backend b) => ToJSON (ColumnType b) where
   toJSON = genericToJSON $ defaultOptions {constructorTagModifier = drop 6}
@@ -193,8 +188,6 @@ deriving instance Backend b => Show (RawColumnInfo b)
 
 instance Backend b => NFData (RawColumnInfo b)
 
-instance Backend b => Cacheable (RawColumnInfo b)
-
 instance Backend b => ToJSON (RawColumnInfo b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -216,8 +209,6 @@ data ColumnMutability = ColumnMutability
     _cmIsUpdatable :: Bool
   }
   deriving (Eq, Generic, Show)
-
-instance Cacheable ColumnMutability
 
 instance NFData ColumnMutability
 
@@ -247,8 +238,6 @@ data ColumnInfo (b :: BackendType) = ColumnInfo
 deriving instance Backend b => Eq (ColumnInfo b)
 
 deriving instance Backend b => Show (ColumnInfo b)
-
-instance Backend b => Cacheable (ColumnInfo b)
 
 instance Backend b => NFData (ColumnInfo b)
 

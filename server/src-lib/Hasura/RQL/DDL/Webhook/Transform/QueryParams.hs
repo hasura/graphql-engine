@@ -16,7 +16,6 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as M
 import Data.Validation (Validation)
 import Data.Validation qualified as V
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( TemplatingEngine,
@@ -46,7 +45,7 @@ instance Transform QueryParams where
   newtype TransformFn QueryParams
     = QueryParamsTransformFn_ QueryParamsTransformFn
     deriving stock (Show, Eq, Generic)
-    deriving newtype (NFData, Cacheable, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
 
   newtype TransformCtx QueryParams = TransformCtx RequestTransformCtx
 
@@ -65,7 +64,7 @@ instance Transform QueryParams where
 newtype QueryParamsTransformFn
   = AddOrReplace [(UnescapedTemplate, Maybe UnescapedTemplate)]
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData)
+  deriving newtype (NFData)
 
 -- | Provide an implementation for the transformations defined by
 -- 'QueryParamsTransformFn'.

@@ -9,7 +9,6 @@ where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Coerce (Coercible)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 
 -------------------------------------------------------------------------------
@@ -24,10 +23,6 @@ newtype WithOptional f result = WithOptional
   }
   deriving stock (Eq, Functor, Foldable, Generic, Show)
   deriving newtype (FromJSON, ToJSON)
-
-deriving newtype instance
-  (Cacheable (f result)) =>
-  Cacheable (WithOptional f result)
 
 deriving newtype instance
   (NFData (f result)) =>

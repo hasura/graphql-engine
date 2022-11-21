@@ -15,7 +15,6 @@ import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.HashMap.Strict qualified as HM
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -54,8 +53,6 @@ data ToSourceRelationshipDef = ToSourceRelationshipDef
 
 instance NFData ToSourceRelationshipDef
 
-instance Cacheable ToSourceRelationshipDef
-
 instance HasCodec ToSourceRelationshipDef where
   codec =
     AC.object "ToSourceRelationshipDef" $
@@ -88,8 +85,6 @@ data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
   deriving stock (Generic)
 
 deriving instance (Backend tgt) => Eq (RemoteSourceFieldInfo tgt)
-
-instance (Backend tgt) => Cacheable (RemoteSourceFieldInfo tgt)
 
 --------------------------------------------------------------------------------
 -- template haskell generation

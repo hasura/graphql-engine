@@ -21,7 +21,6 @@ import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
@@ -30,7 +29,7 @@ import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
-type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
+type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -138,9 +137,6 @@ class
     ToErrorValue (ScalarType b),
     ToErrorValue (TableName b),
     ToErrorValue (ConstraintName b),
-    Cacheable (SourceConfig b),
-    Cacheable (BackendConfig b),
-    Cacheable (BackendInfo b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
     Typeable b,
@@ -160,6 +156,7 @@ class
     Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
+    Eq (SourceConfig b),
     -- Extension constraints.
     Eq (XNodesAgg b),
     Show (XNodesAgg b),

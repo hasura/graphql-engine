@@ -41,7 +41,6 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
 import Database.PG.Query qualified as PG
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -62,8 +61,6 @@ data PermType
   deriving (Eq, Ord, Generic)
 
 instance NFData PermType
-
-instance Cacheable PermType
 
 instance Hashable PermType
 
@@ -105,8 +102,6 @@ deriving instance (Backend b) => Show (PermColSpec b)
 
 deriving instance (Backend b) => Eq (PermColSpec b)
 
-instance (Backend b) => Cacheable (PermColSpec b)
-
 instance (Backend b) => FromJSON (PermColSpec b) where
   parseJSON (String "*") = return PCStar
   parseJSON x = PCCols <$> parseJSON x
@@ -121,8 +116,6 @@ data PermDef (b :: BackendType) (perm :: BackendType -> Type) = PermDef
     _pdComment :: Maybe T.Text
   }
   deriving (Show, Eq, Generic)
-
-instance (Backend b, Cacheable (perm b)) => Cacheable (PermDef b perm)
 
 -- | The permission data as it appears in a 'PermDef'.
 -- Since this type is a GADT it facilitates that values which are polymorphic
@@ -162,12 +155,6 @@ instance (Backend b, HasCodec (perm b), IsPerm perm) => HasCodec (PermDefPermiss
 deriving stock instance Backend b => Show (PermDefPermission b perm)
 
 deriving stock instance Backend b => Eq (PermDefPermission b perm)
-
-instance Backend b => Cacheable (PermDefPermission b perm) where
-  unchanged accesses (SelPerm' p1) (SelPerm' p2) = unchanged accesses p1 p2
-  unchanged accesses (InsPerm' p1) (InsPerm' p2) = unchanged accesses p1 p2
-  unchanged accesses (UpdPerm' p1) (UpdPerm' p2) = unchanged accesses p1 p2
-  unchanged accesses (DelPerm' p1) (DelPerm' p2) = unchanged accesses p1 p2
 
 -----------------------------
 
@@ -230,7 +217,7 @@ data QueryRootFieldType
   | QRFTSelectByPk
   | QRFTSelectAggregate
   deriving stock (Show, Eq, Generic, Enum, Bounded)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance FromJSON QueryRootFieldType where
   parseJSON = genericParseJSON defaultOptions {constructorTagModifier = snakeCase . drop 4}
@@ -250,7 +237,7 @@ data SubscriptionRootFieldType
   | SRFTSelectAggregate
   | SRFTSelectStream
   deriving stock (Show, Eq, Generic, Enum, Bounded)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance FromJSON SubscriptionRootFieldType where
   parseJSON = genericParseJSON defaultOptions {constructorTagModifier = snakeCase . drop 4}
@@ -272,8 +259,6 @@ data InsPerm (b :: BackendType) = InsPerm
     ipBackendOnly :: Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
-
-instance Backend b => Cacheable (InsPerm b)
 
 instance Backend b => FromJSON (InsPerm b) where
   parseJSON = withObject "InsPerm" $ \o ->
@@ -303,8 +288,6 @@ data AllowedRootFields rootFieldType
   = ARFAllowAllRootFields
   | ARFAllowConfiguredRootFields (Set.HashSet rootFieldType)
   deriving (Show, Eq, Generic)
-
-instance (Cacheable rootFieldType) => Cacheable (AllowedRootFields rootFieldType)
 
 instance (NFData rootFieldType) => NFData (AllowedRootFields rootFieldType)
 
@@ -353,8 +336,6 @@ data SelPerm (b :: BackendType) = SelPerm
     spAllowedSubscriptionRootFields :: AllowedRootFields SubscriptionRootFieldType
   }
   deriving (Show, Eq, Generic)
-
-instance Backend b => Cacheable (SelPerm b)
 
 instance Backend b => ToJSON (SelPerm b) where
   toJSON SelPerm {..} =
@@ -429,8 +410,6 @@ data DelPerm (b :: BackendType) = DelPerm
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => Cacheable (DelPerm b)
-
 instance Backend b => FromJSON (DelPerm b) where
   parseJSON = withObject "DelPerm" $ \o ->
     DelPerm
@@ -465,8 +444,6 @@ data UpdPerm (b :: BackendType) = UpdPerm
     ucBackendOnly :: Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
-
-instance Backend b => Cacheable (UpdPerm b)
 
 instance Backend b => FromJSON (UpdPerm b) where
   parseJSON = withObject "UpdPerm" $ \o ->

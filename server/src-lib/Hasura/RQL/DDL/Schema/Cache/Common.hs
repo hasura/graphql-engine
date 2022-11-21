@@ -89,8 +89,6 @@ deriving newtype instance Eq (BackendInvalidationKeys b) => Eq (BackendInvalidat
 
 deriving newtype instance Ord (BackendInvalidationKeys b) => Ord (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Inc.Cacheable (BackendInvalidationKeys b) => Inc.Cacheable (BackendInvalidationKeysWrapper b)
-
 deriving newtype instance Show (BackendInvalidationKeys b) => Show (BackendInvalidationKeysWrapper b)
 
 deriving newtype instance Semigroup (BackendInvalidationKeys b) => Semigroup (BackendInvalidationKeysWrapper b)
@@ -107,8 +105,6 @@ data InvalidationKeys = InvalidationKeys
     _ikBackends :: BackendMap BackendInvalidationKeysWrapper
   }
   deriving (Show, Eq, Generic)
-
-instance Inc.Cacheable InvalidationKeys
 
 instance Inc.Select InvalidationKeys
 
@@ -147,8 +143,6 @@ data TableBuildInput b = TableBuildInput
 
 instance (Backend b) => NFData (TableBuildInput b)
 
-instance (Backend b) => Inc.Cacheable (TableBuildInput b)
-
 data NonColumnTableInputs b = NonColumnTableInputs
   { _nctiTable :: TableName b,
     _nctiObjectRelationships :: [ObjRelDef b],
@@ -170,8 +164,6 @@ data TablePermissionInputs b = TablePermissionInputs
 deriving instance (Backend b) => Show (TablePermissionInputs b)
 
 deriving instance (Backend b) => Eq (TablePermissionInputs b)
-
-instance (Backend b) => Inc.Cacheable (TablePermissionInputs b)
 
 mkTableInputs ::
   TableMetadata b -> (TableBuildInput b, NonColumnTableInputs b, TablePermissionInputs b)

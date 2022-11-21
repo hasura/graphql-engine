@@ -46,7 +46,6 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
 import Hasura.GraphQL.Parser.Name.TypeSystem (_Boolean, _Float, _Int, _String)
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -82,9 +81,6 @@ instance FromJSON ConnSourceConfig where
 -- instances.
 instance HasCodec ConnSourceConfig where
   codec = named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
-
-instance Cacheable ConnSourceConfig where
-  unchanged _ = (==)
 
 --------------------------------------------------------------------------------
 
@@ -146,9 +142,6 @@ instance Show SourceConfig where
 instance J.ToJSON SourceConfig where
   toJSON _ = J.String "SourceConfig"
 
-instance Cacheable SourceConfig where
-  unchanged _ = (==)
-
 --------------------------------------------------------------------------------
 
 -- | Note: Currently you should not use underscores in this name.
@@ -157,7 +150,7 @@ instance Cacheable SourceConfig where
 newtype DataConnectorName = DataConnectorName {unDataConnectorName :: GQL.Name}
   deriving stock (Eq, Ord, Show, Typeable, Generic)
   deriving newtype (ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 instance FromJSON DataConnectorName where
   parseJSON v = (`onLeft` fail) =<< (mkDataConnectorName <$> J.parseJSON v)
@@ -180,7 +173,6 @@ data DataConnectorOptions = DataConnectorOptions
     _dcoDisplayName :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic)
-  deriving anyclass (Cacheable)
 
 instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON
@@ -205,12 +197,6 @@ instance FromJSON DataConnectorInfo where
 instance ToJSON DataConnectorInfo where
   toJSON = genericToJSON hasuraJSON {J.omitNothingFields = True}
 
-instance Cacheable DataConnectorInfo where
-  unchanged a dci0 dci1 =
-    unchanged a (_dciOptions dci0) (_dciOptions dci1)
-      && _dciCapabilities dci0 == _dciCapabilities dci1
-      && _dciConfigSchemaResponse dci0 == _dciConfigSchemaResponse dci1
-
 --------------------------------------------------------------------------------
 
 -- | The fully qualified name of a table. The last element in the list is the table name
@@ -218,7 +204,7 @@ instance Cacheable DataConnectorInfo where
 -- For example, for a database that has schemas, the name would be '[<schema>,<table name>]'
 newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving newtype (Cacheable, Hashable, NFData, ToJSON)
+  deriving newtype (Hashable, NFData, ToJSON)
 
 instance HasCodec TableName where
   codec = dimapCodec TableName unTableName codec
@@ -248,7 +234,7 @@ instance ToErrorValue TableName where
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (NFData, Hashable, Cacheable, FromJSON, ToJSON)
+  deriving newtype (NFData, Hashable, FromJSON, ToJSON)
 
 instance Witch.From API.ConstraintName ConstraintName where
   from (API.ConstraintName n) = ConstraintName n
@@ -266,7 +252,7 @@ instance ToErrorValue ConstraintName where
 
 newtype ColumnName = ColumnName {unColumnName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (NFData, Hashable, Cacheable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
+  deriving newtype (NFData, Hashable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
 
 instance HasCodec ColumnName where
   codec = dimapCodec ColumnName unColumnName codec
@@ -287,7 +273,7 @@ instance ToErrorValue ColumnName where
 
 newtype FunctionName = FunctionName {unFunctionName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving newtype (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+  deriving newtype (FromJSON, Hashable, NFData, ToJSON)
 
 instance HasCodec FunctionName where
   codec = dimapCodec FunctionName unFunctionName codec
@@ -308,7 +294,7 @@ data CountAggregate
   | ColumnCount ColumnName
   | ColumnDistinctCount ColumnName
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 --------------------------------------------------------------------------------
 
@@ -316,7 +302,7 @@ data Literal
   = ValueLiteral ScalarType J.Value
   | ArrayLiteral ScalarType [J.Value]
   deriving stock (Eq, Show, Generic, Ord)
-  deriving anyclass (Cacheable, Hashable, NFData, ToJSON)
+  deriving anyclass (Hashable, NFData, ToJSON)
 
 --------------------------------------------------------------------------------
 
@@ -324,7 +310,7 @@ data OrderDirection
   = Ascending
   | Descending
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance ToJSON OrderDirection where
   toJSON = J.genericToJSON J.defaultOptions
@@ -345,7 +331,7 @@ data ScalarType
   | BoolTy
   | CustomTy Text
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
+  deriving anyclass (FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
 
 instance ToTxt ScalarType where
   toTxt = tshow

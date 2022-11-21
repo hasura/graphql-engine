@@ -1,3 +1,4 @@
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
@@ -10,6 +11,7 @@ where
 
 import Control.Arrow.Extended
 import Control.Monad.Unique
+import Data.Reflection
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Incremental.Internal.Rule
 import Hasura.Incremental.Select
@@ -29,7 +31,7 @@ class (ArrowKleisli m arr) => ArrowCache m arr | arr -> m where
   --
   -- __Note that only direct inputs and outputs of the given arrow are cached.__ If an arrow
   -- provides access to values through a side-channel, they will __not__ participate in caching.
-  cache :: (Cacheable a) => arr a b -> arr a b
+  cache :: (Given Accesses => Eq a) => arr a b -> arr a b
 
   -- | Creates a new 'Dependency', which allows fine-grained caching of composite values; see the
   -- documentation for 'Dependency' for more details.
@@ -37,7 +39,7 @@ class (ArrowKleisli m arr) => ArrowCache m arr | arr -> m where
 
   -- | Extract the value from a 'Dependency', incurring a dependency on its entirety. To depend on
   -- only a portion of the value, use 'selectD' or 'selectKeyD' before passing it to 'dependOn'.
-  dependOn :: (Cacheable a) => arr (Dependency a) a
+  dependOn :: (Eq a) => arr (Dependency a) a
 
   -- | Run a monadic sub-computation with the ability to access dependencies; see 'MonadDepend' for
   -- more details.
@@ -64,6 +66,11 @@ instance (Monoid w, ArrowCache m arr) => ArrowCache m (WriterA w arr) where
   {-# INLINE bindDepend #-}
 
 instance (MonadUnique m) => ArrowCache m (Rule m) where
+  cache ::
+    forall a b.
+    (Given Accesses => Eq a) =>
+    Rule m a b ->
+    Rule m a b
   cache r0 = Rule \s a k -> do
     let Rule r = listenAccesses r0
     r s a \s' (b, accesses) r' -> k s' b (cached accesses a b r')
@@ -72,6 +79,7 @@ instance (MonadUnique m) => ArrowCache m (Rule m) where
       listenAccesses (Rule r) = Rule \s a k -> r mempty a \s' b r' ->
         (k $! (s <> s')) (b, s') (listenAccesses r')
 
+      cached :: Accesses -> a -> b -> Rule m a (b, Accesses) -> Rule m a b
       cached accesses a b (Rule r) = Rule \s a' k ->
         if
             | unchanged accesses a a' -> (k $! (s <> accesses)) b (cached accesses a b (Rule r))
@@ -89,7 +97,7 @@ instance (MonadUnique m) => ArrowCache m (Rule m) where
 -- | A restricted, monadic variant of 'ArrowCache' that can only read dependencies, not create new
 -- ones or add local caching. This serves as a limited adapter between arrow and monadic code.
 class (Monad m) => MonadDepend m where
-  dependOnM :: (Cacheable a) => Dependency a -> m a
+  dependOnM :: Eq a => Dependency a -> m a
 
 instance (MonadDepend m) => MonadDepend (ExceptT e m) where
   dependOnM = lift . dependOnM

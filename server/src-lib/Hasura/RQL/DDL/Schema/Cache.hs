@@ -1237,8 +1237,6 @@ deriving instance (Backend b) => Show (BackendInfoAndSourceMetadata b)
 
 deriving instance (Backend b) => Eq (BackendInfoAndSourceMetadata b)
 
-instance (Backend b) => Inc.Cacheable (BackendInfoAndSourceMetadata b)
-
 joinBackendInfosToSources ::
   BackendCache ->
   InsOrdHashMap SourceName BackendSourceMetadata ->

@@ -77,7 +77,6 @@ import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Schema.Options
-import Hasura.Incremental (Cacheable)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
@@ -312,7 +311,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
 -- | An 'Int' representing a Port number in the range 0 to 65536.
 newtype Port = Port {_getPort :: Int}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (ToJSON, NFData, Cacheable, Hashable)
+  deriving newtype (ToJSON, NFData, Hashable)
 
 mkPort :: Int -> Maybe Port
 mkPort x = case x >= 0 && x < 65536 of

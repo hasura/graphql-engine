@@ -79,7 +79,6 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.Incremental (Cacheable)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -141,8 +140,6 @@ deriving instance (Backend b) => Show (ComputedFieldMetadata b)
 
 deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
-instance (Backend b) => Cacheable (ComputedFieldMetadata b)
-
 instance Backend b => HasCodec (ComputedFieldMetadata b) where
   codec =
     AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
@@ -196,8 +193,6 @@ data TableMetadata b = TableMetadata
 deriving instance (Backend b) => Show (TableMetadata b)
 
 deriving instance (Backend b) => Eq (TableMetadata b)
-
-instance (Backend b) => Cacheable (TableMetadata b)
 
 instance (Backend b) => ToJSON (TableMetadata b) where
   toJSON = genericToJSON hasuraJSON
@@ -335,8 +330,6 @@ deriving instance (Backend b) => Show (FunctionMetadata b)
 
 deriving instance (Backend b) => Eq (FunctionMetadata b)
 
-instance (Backend b) => Cacheable (FunctionMetadata b)
-
 instance (Backend b) => ToJSON (FunctionMetadata b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -403,8 +396,6 @@ $(makeLenses ''SourceMetadata)
 deriving instance (Backend b) => Show (SourceMetadata b)
 
 deriving instance (Backend b) => Eq (SourceMetadata b)
-
-instance (Backend b) => Cacheable (SourceMetadata b)
 
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadata b) where
   parseJSONWithContext _smKind = withObject "Object" $ \o -> do

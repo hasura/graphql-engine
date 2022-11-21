@@ -41,7 +41,7 @@ buildRemoteSchemas ::
     Inc.ArrowCache m arr,
     MonadIO m,
     HasHttpManagerM m,
-    Inc.Cacheable remoteRelationshipDefinition,
+    Eq remoteRelationshipDefinition,
     ToJSON remoteRelationshipDefinition,
     MonadError QErr m
   ) =>

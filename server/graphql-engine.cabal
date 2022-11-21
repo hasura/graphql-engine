@@ -282,6 +282,7 @@ common lib-depends
                      , process
                      , profunctors
                      , refined
+                     , reflection
                      , retry
                      , safe-exceptions
                      , scientific

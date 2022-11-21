@@ -40,7 +40,6 @@ class
     Eq (BooleanOperators b (PartialSQLExp b)),
     Eq (FunctionArgumentExp b (PartialSQLExp b)),
     Ord (BackendInvalidationKeys b),
-    Inc.Cacheable (BackendInvalidationKeys b),
     Hashable (AggregationPredicates b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b)),

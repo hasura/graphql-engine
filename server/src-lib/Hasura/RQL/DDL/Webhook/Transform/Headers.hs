@@ -21,7 +21,6 @@ import Data.HashMap.Strict qualified as M
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation)
 import Data.Validation qualified as V
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( TemplatingEngine,
@@ -50,7 +49,7 @@ instance Transform Headers where
   -- wrapper.
   newtype TransformFn Headers = HeadersTransformFn_ HeadersTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
 
   newtype TransformCtx Headers = TransformCtx RequestTransformCtx
 
@@ -70,7 +69,7 @@ newtype HeadersTransformFn
   = -- | Add or replace matching 'HTTP.Types.Header's.
     AddReplaceOrRemove AddReplaceOrRemoveFields
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+  deriving newtype (NFData, FromJSON, ToJSON)
 
 -- | The user can supply a set of header keys to be filtered from the
 -- request and a set of headers to be added to the request.
@@ -84,7 +83,7 @@ data AddReplaceOrRemoveFields = AddReplaceOrRemoveFields
     removeHeaders :: [CI.CI Text]
   }
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
 
 -- | Provide an implementation for the transformations defined by
 -- 'HeadersTransformFn'.
@@ -155,7 +154,7 @@ instance ToJSON AddReplaceOrRemoveFields where
 -- eliminated in the `TransformHeaders` `FromJSON` instance.
 newtype HeaderKey = HeaderKey {unHeaderKey :: CI.CI Text}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
 
 instance FromJSON HeaderKey where
   parseJSON = J.withText "HeaderKey" \txt -> case CI.mk txt of

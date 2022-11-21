@@ -24,7 +24,6 @@ import Database.PG.Query qualified as PG
 import Database.PG.Query.Connection qualified as PG
 import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
 import Hasura.SQL.Types (ExtensionsSchema)
@@ -137,9 +136,6 @@ instance Eq PGSourceConfig where
   lconf == rconf =
     (_pscConnInfo lconf, _pscReadReplicaConnInfos lconf, _pscExtensionsSchema lconf)
       == (_pscConnInfo rconf, _pscReadReplicaConnInfos rconf, _pscExtensionsSchema rconf)
-
-instance Cacheable PGSourceConfig where
-  unchanged _ = (==)
 
 instance J.ToJSON PGSourceConfig where
   toJSON = J.toJSON . show . _pscConnInfo

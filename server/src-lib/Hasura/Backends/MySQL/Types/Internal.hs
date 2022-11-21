@@ -57,7 +57,6 @@ import Database.MySQL.Base.Types qualified as MySQLTypes (Type (..))
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
-import Hasura.Incremental.Internal.Dependency (Cacheable (..))
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -84,13 +83,13 @@ data SourceConfig = SourceConfig
   }
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
-  deriving newtype (Show, Eq, ToTxt, J.FromJSON, J.ToJSON, Hashable, NFData, Cacheable)
+  deriving newtype (Show, Eq, ToTxt, J.FromJSON, J.ToJSON, Hashable, NFData)
 
 instance ToErrorValue ConstraintName where
   toErrorValue = ErrorValue.squote . unConstraintName
 
 newtype FunctionName = FunctionName {unFunctionName :: Text}
-  deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, Cacheable, NFData)
+  deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, NFData)
 
 instance HasCodec FunctionName where
   codec = dimapCodec FunctionName unFunctionName codec
@@ -99,7 +98,7 @@ instance ToErrorValue FunctionName where
   toErrorValue = ErrorValue.squote . unFunctionName
 
 newtype Column = Column {unColumn :: Text}
-  deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, Cacheable, NFData)
+  deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, NFData)
   deriving (Generic)
 
 instance ToErrorValue Column where
@@ -140,7 +139,7 @@ data ScalarValue
   | VarbinaryValue ByteString
   | VarcharValue Text
   | YearValue Text
-  deriving (Show, Read, Eq, Ord, Generic, J.ToJSON, J.ToJSONKey, J.FromJSON, Data, NFData, Cacheable)
+  deriving (Show, Read, Eq, Ord, Generic, J.ToJSON, J.ToJSONKey, J.FromJSON, Data, NFData)
 
 instance Hashable ScalarValue where
   hashWithSalt i = hashWithSalt i . tshow

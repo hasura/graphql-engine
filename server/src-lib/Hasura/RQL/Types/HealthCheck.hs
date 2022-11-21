@@ -14,7 +14,6 @@ import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
 import Data.Aeson.Extended
 import Data.Aeson.Types (parseFail)
-import Hasura.Incremental (Cacheable)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -23,7 +22,7 @@ import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (He
 newtype HealthCheckTestSql = HealthCheckTestSql
   { _hctSql :: Text
   }
-  deriving (Eq, Generic, Show, Cacheable, Hashable, NFData)
+  deriving (Eq, Generic, Show, Hashable, NFData)
 
 instance HasCodec HealthCheckTestSql where
   codec =
@@ -45,25 +44,25 @@ defaultTestSql :: Text
 defaultTestSql = "SELECT 1"
 
 newtype HealthCheckInterval = HealthCheckInterval {unHealthCheckInterval :: Seconds}
-  deriving (Eq, Generic, Show, Cacheable, ToJSON, FromJSON)
+  deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance HasCodec HealthCheckInterval where
   codec = AC.codecViaAeson "HealthCheckInterval"
 
 newtype HealthCheckRetries = HealthCheckRetries {unHealthCheckRetries :: Int}
-  deriving (Eq, Generic, Show, Cacheable, FromJSON, ToJSON)
+  deriving (Eq, Generic, Show, FromJSON, ToJSON)
 
 instance HasCodec HealthCheckRetries where
   codec = dimapCodec HealthCheckRetries unHealthCheckRetries codec
 
 newtype HealthCheckRetryInterval = HealthCheckRetryInterval {unHealthCheckRetryInterval :: Seconds}
-  deriving (Eq, Generic, Show, Cacheable, ToJSON, FromJSON)
+  deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance HasCodec HealthCheckRetryInterval where
   codec = AC.codecViaAeson "HealthCheckRetryInterval"
 
 newtype HealthCheckTimeout = HealthCheckTimeout {unHealthCheckTimeout :: Seconds}
-  deriving (Eq, Generic, Show, Cacheable, FromJSON, ToJSON)
+  deriving (Eq, Generic, Show, FromJSON, ToJSON)
 
 instance HasCodec HealthCheckTimeout where
   codec = AC.codecViaAeson "HealthCheckTimeout"
@@ -80,8 +79,6 @@ data HealthCheckConfig b = HealthCheckConfig
 deriving instance (Backend b) => Eq (HealthCheckConfig b)
 
 deriving instance (Backend b) => Show (HealthCheckConfig b)
-
-instance (Backend b) => Cacheable (HealthCheckConfig b)
 
 instance (Backend b) => ToJSON (HealthCheckConfig b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}

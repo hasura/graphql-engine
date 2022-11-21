@@ -9,7 +9,6 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -23,8 +22,6 @@ data RemoteTypeCustomization = RemoteTypeCustomization
   deriving (Show, Eq, Generic)
 
 instance NFData RemoteTypeCustomization
-
-instance Cacheable RemoteTypeCustomization
 
 instance Hashable RemoteTypeCustomization
 
@@ -47,8 +44,6 @@ data RemoteFieldCustomization = RemoteFieldCustomization
 
 instance NFData RemoteFieldCustomization
 
-instance Cacheable RemoteFieldCustomization
-
 instance Hashable RemoteFieldCustomization
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteFieldCustomization)
@@ -69,8 +64,6 @@ data RemoteSchemaCustomization = RemoteSchemaCustomization
   deriving (Show, Eq, Generic)
 
 instance NFData RemoteSchemaCustomization
-
-instance Cacheable RemoteSchemaCustomization
 
 instance Hashable RemoteSchemaCustomization
 

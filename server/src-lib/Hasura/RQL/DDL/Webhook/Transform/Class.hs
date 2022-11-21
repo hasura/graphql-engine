@@ -34,7 +34,6 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.Kind (Constraint, Type)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Validation (Validation)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 
 -------------------------------------------------------------------------------
@@ -79,7 +78,7 @@ newtype TransformErrorBundle = TransformErrorBundle
   }
   deriving stock (Eq, Generic, Show)
   deriving newtype (Monoid, Semigroup, FromJSON, ToJSON)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 -- | A helper function for serializing transformation errors to JSON.
 throwErrorBundle ::
@@ -104,7 +103,7 @@ throwErrorBundle msg val = do
 data TemplatingEngine
   = Kriti
   deriving stock (Bounded, Enum, Eq, Generic, Show)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 -- XXX(jkachmar): We need roundtrip tests for these instances.
 instance FromJSON TemplatingEngine where
@@ -134,7 +133,7 @@ newtype Template = Template
   }
   deriving stock (Eq, Generic, Ord, Show)
   deriving newtype (Hashable, FromJSONKey, ToJSONKey)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 instance J.FromJSON Template where
   parseJSON = J.withText "Template" (pure . Template)
@@ -154,7 +153,7 @@ newtype UnescapedTemplate = UnescapedTemplate
   }
   deriving stock (Eq, Generic, Ord, Show)
   deriving newtype (Hashable, FromJSONKey, ToJSONKey)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 instance J.FromJSON UnescapedTemplate where
   parseJSON = J.withText "Template" (pure . UnescapedTemplate)

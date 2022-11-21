@@ -62,7 +62,6 @@ import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Typename
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
@@ -82,8 +81,6 @@ data IntrospectionResult = IntrospectionResult
     irSubscriptionRoot :: Maybe G.Name
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable IntrospectionResult
 
 -- | The resolved information of a remote schema. It is parameterized by
 -- `remoteFieldInfo` so as to work on an arbitrary 'remote relationship'
@@ -123,8 +120,6 @@ data PartiallyResolvedRemoteRelationship remoteRelationshipDefinition = Partiall
   }
   deriving (Eq, Generic)
 
-instance Cacheable remoteRelationshipDefinition => Cacheable (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition)
-
 -- | We can't go from RemoteSchemaMetadata to RemoteSchemaCtx in a single phase
 -- because we don't have information to resolve remote relationships. So we
 -- annotate remote relationships with as much information as we know about them
@@ -145,8 +140,6 @@ data ValidatedRemoteSchemaDef = ValidatedRemoteSchemaDef
 
 instance NFData ValidatedRemoteSchemaDef
 
-instance Cacheable ValidatedRemoteSchemaDef
-
 instance Hashable ValidatedRemoteSchemaDef
 
 data RemoteSchemaCustomizer = RemoteSchemaCustomizer
@@ -162,8 +155,6 @@ identityCustomizer :: RemoteSchemaCustomizer
 identityCustomizer = RemoteSchemaCustomizer Nothing mempty mempty
 
 instance NFData RemoteSchemaCustomizer
-
-instance Cacheable RemoteSchemaCustomizer
 
 instance Hashable RemoteSchemaCustomizer
 
@@ -196,8 +187,6 @@ data RemoteSchemaInfo = RemoteSchemaInfo
   deriving (Show, Eq, Generic)
 
 instance NFData RemoteSchemaInfo
-
-instance Cacheable RemoteSchemaInfo
 
 instance Hashable RemoteSchemaInfo
 
@@ -254,8 +243,6 @@ data SessionArgumentPresetInfo
 
 instance Hashable SessionArgumentPresetInfo
 
-instance Cacheable SessionArgumentPresetInfo
-
 -- | Details required to resolve a "session variable preset" variable.
 --
 -- See Notes [Remote Schema Argument Presets] and [Remote Schema Permissions
@@ -268,8 +255,6 @@ data RemoteSchemaVariable
 
 instance Hashable RemoteSchemaVariable
 
-instance Cacheable RemoteSchemaVariable
-
 -- | Extends 'G.InputValueDefinition' with an optional preset argument.
 --
 -- See Note [Remote Schema Argument Presets] for additional information.
@@ -281,11 +266,9 @@ data RemoteSchemaInputValueDefinition = RemoteSchemaInputValueDefinition
 
 instance Hashable RemoteSchemaInputValueDefinition
 
-instance Cacheable RemoteSchemaInputValueDefinition
-
 newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
-  deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
+  deriving (Show, Eq, Generic, Hashable, Ord)
 
 -- | Extracts the name of a given type from its definition.
 -- TODO: move this to Language.GraphQL.Draft.Syntax.
@@ -373,8 +356,6 @@ lookupInputObject introspection name =
 newtype LHSIdentifier = LHSIdentifier {getLHSIdentifier :: Text}
   deriving (Show, Eq, Generic)
 
-instance Cacheable LHSIdentifier
-
 remoteSchemaToLHSIdentifier :: RemoteSchemaName -> LHSIdentifier
 remoteSchemaToLHSIdentifier = LHSIdentifier . toTxt
 
@@ -411,8 +392,6 @@ data RemoteSchemaFieldInfo = RemoteSchemaFieldInfo
     _rrfiLHSIdentifier :: LHSIdentifier
   }
   deriving (Generic, Eq, Show)
-
-instance Cacheable RemoteSchemaFieldInfo
 
 -- FIXME: deduplicate this
 graphQLValueToJSON :: G.Value Void -> J.Value

@@ -44,7 +44,6 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -68,7 +67,6 @@ newtype TriggerName = TriggerName {unTriggerName :: NonEmptyText}
       PG.ToPrepArg,
       Generic,
       NFData,
-      Cacheable,
       PG.FromCol
     )
 
@@ -87,8 +85,6 @@ deriving instance Backend b => Show (SubscribeColumns b)
 deriving instance Backend b => Eq (SubscribeColumns b)
 
 instance Backend b => NFData (SubscribeColumns b)
-
-instance Backend b => Cacheable (SubscribeColumns b)
 
 instance Backend b => FromJSON (SubscribeColumns b) where
   parseJSON (String s) = case s of
@@ -111,8 +107,6 @@ data SubscribeOpSpec (b :: BackendType) = SubscribeOpSpec
   deriving (Show, Eq, Generic)
 
 instance (Backend b) => NFData (SubscribeOpSpec b)
-
-instance (Backend b) => Cacheable (SubscribeOpSpec b)
 
 instance Backend b => FromJSON (SubscribeOpSpec b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
@@ -141,8 +135,6 @@ data RetryConf = RetryConf
 
 instance NFData RetryConf
 
-instance Cacheable RetryConf
-
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''RetryConf)
 
 data EventHeaderInfo = EventHeaderInfo
@@ -159,8 +151,6 @@ data WebhookConf = WCValue InputWebhook | WCEnv Text
   deriving (Show, Eq, Generic)
 
 instance NFData WebhookConf
-
-instance Cacheable WebhookConf
 
 instance ToJSON WebhookConf where
   toJSON (WCValue w) = toJSON w
@@ -182,8 +172,6 @@ data WebhookConfInfo = WebhookConfInfo
 
 instance NFData WebhookConfInfo
 
-instance Cacheable WebhookConfInfo
-
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookConfInfo)
 
 -- | The table operations on which the event trigger will be invoked.
@@ -197,8 +185,6 @@ data TriggerOpsDef (b :: BackendType) = TriggerOpsDef
 
 instance Backend b => NFData (TriggerOpsDef b)
 
-instance Backend b => Cacheable (TriggerOpsDef b)
-
 instance Backend b => FromJSON (TriggerOpsDef b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
@@ -208,8 +194,6 @@ instance Backend b => ToJSON (TriggerOpsDef b) where
 data EventTriggerCleanupStatus = ETCSPaused | ETCSUnpaused deriving (Show, Eq, Generic)
 
 instance NFData EventTriggerCleanupStatus
-
-instance Cacheable EventTriggerCleanupStatus
 
 instance ToJSON EventTriggerCleanupStatus where
   toJSON = Bool . (ETCSPaused ==)
@@ -237,8 +221,6 @@ data AutoTriggerLogCleanupConfig = AutoTriggerLogCleanupConfig
   deriving (Show, Eq, Generic)
 
 instance NFData AutoTriggerLogCleanupConfig
-
-instance Cacheable AutoTriggerLogCleanupConfig
 
 instance FromJSON AutoTriggerLogCleanupConfig where
   parseJSON =
@@ -273,8 +255,6 @@ data TriggerLogCleanupConfig = TriggerLogCleanupConfig
 
 instance NFData TriggerLogCleanupConfig
 
-instance Cacheable TriggerLogCleanupConfig
-
 instance FromJSON TriggerLogCleanupConfig where
   parseJSON =
     withObject "TriggerLogCleanupConfig" $ \o -> do
@@ -297,8 +277,6 @@ data EventTriggerQualifier = EventTriggerQualifier
 
 instance NFData EventTriggerQualifier
 
-instance Cacheable EventTriggerQualifier
-
 instance FromJSON EventTriggerQualifier where
   parseJSON =
     withObject "EventTriggerQualifier" $ \o -> do
@@ -313,8 +291,6 @@ data TriggerLogCleanupSources = TriggerAllSource | TriggerSource (NE.NonEmpty So
   deriving (Show, Eq, Generic)
 
 instance NFData TriggerLogCleanupSources
-
-instance Cacheable TriggerLogCleanupSources
 
 instance ToJSON TriggerLogCleanupSources where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -331,8 +307,6 @@ data TriggerLogCleanupToggleConfig = TriggerLogCleanupSources TriggerLogCleanupS
   deriving (Show, Eq, Generic)
 
 instance NFData TriggerLogCleanupToggleConfig
-
-instance Cacheable TriggerLogCleanupToggleConfig
 
 instance ToJSON TriggerLogCleanupToggleConfig where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -364,8 +338,6 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => Cacheable (EventTriggerConf b)
-
 instance Backend b => FromJSON (EventTriggerConf b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
@@ -379,8 +351,6 @@ data RecreateEventTriggers
   = RETRecreate
   | RETDoNothing
   deriving (Show, Eq, Generic)
-
-instance Cacheable RecreateEventTriggers
 
 instance Semigroup RecreateEventTriggers where
   RETRecreate <> RETRecreate = RETRecreate

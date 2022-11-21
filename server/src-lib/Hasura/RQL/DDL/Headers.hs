@@ -12,7 +12,6 @@ import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.Base.Instances ()
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Network.HTTP.Types qualified as HTTP
 
@@ -23,8 +22,6 @@ instance NFData HeaderConf
 
 instance Hashable HeaderConf
 
-instance Cacheable HeaderConf
-
 type HeaderName = Text
 
 data HeaderValue = HVValue Text | HVEnv Text
@@ -33,8 +30,6 @@ data HeaderValue = HVValue Text | HVEnv Text
 instance NFData HeaderValue
 
 instance Hashable HeaderValue
-
-instance Cacheable HeaderValue
 
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do
