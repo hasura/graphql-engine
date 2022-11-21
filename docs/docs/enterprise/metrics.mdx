@@ -85,10 +85,22 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
   </tr>
   <tr>
     <td>hasura_event_queue_time_seconds</td>
-    <td>Queueing delay of event trigger batches in the processing queue</td>
+    <td>Queue time for an event already in the processing queue</td>
     <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100</td>
     <td>none</td>
-  </tr>  
+  </tr>
+  <tr>
+    <td>hasura_event_fetch_time_per_batch_seconds</td>
+    <td>Latency of fetching a batch of events</td>
+    <td>Histogram<br/><br/>Buckets: 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
+    <td>none</td>
+  </tr>
+  <tr>
+    <td>hasura_event_webhook_processing_time_seconds</td>
+    <td>The time between when an HTTP worker picks an event for delivery to the time its response is updated in the DB</td>
+    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
+    <td>none</td>
+  </tr> 
   <tr>
     <td>hasura_event_trigger_http_workers</td>
     <td>Current number of active event trigger HTTP workers</td>
