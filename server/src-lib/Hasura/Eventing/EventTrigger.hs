@@ -435,9 +435,9 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                   let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
                   processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
                   eventExecutionFinishTime <- liftIO getCurrentTime
-                  let eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
-                  _ <- liftIO $ EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
-                  liftIO $ Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
+                  let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
+                  _ <- liftIO $ EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
+                  liftIO $ Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
                 Left (HTTPError reqBody err) ->
                   processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
                 Left (TransformationError _ err) -> do

@@ -79,7 +79,7 @@ data
       "active_streaming_subscriptions"
       'GaugeType
       ()
-  -- | The polling latency of fetching events
+  -- | Latency of fetching a batch of events
   EventFetchTimePerBatch ::
     ServerMetricsSpec
       "events_fetch_time_per_batch"
@@ -87,9 +87,9 @@ data
       ()
   -- | The time (in seconds) between when a event is picked for delivery to the
   --   time its status is updated in the DB
-  EventProcessingTime ::
+  EventWebhookProcessingTime ::
     ServerMetricsSpec
-      "event_processing_time"
+      "event_webhook_processing_time"
       'DistributionType
       ()
 
@@ -106,7 +106,7 @@ data ServerMetrics = ServerMetrics
     smActiveLiveQueries :: !Gauge,
     smActiveStreamingSubscriptions :: !Gauge,
     smEventFetchTimePerBatch :: !Distribution,
-    smEventProcessingTime :: !Distribution
+    smEventWebhookProcessingTime :: !Distribution
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
@@ -121,5 +121,5 @@ createServerMetrics store = do
   smActiveLiveQueries <- createGauge ActiveLiveQueries () store
   smActiveStreamingSubscriptions <- createGauge ActiveStreaming () store
   smEventFetchTimePerBatch <- createDistribution EventFetchTimePerBatch () store
-  smEventProcessingTime <- createDistribution EventProcessingTime () store
+  smEventWebhookProcessingTime <- createDistribution EventWebhookProcessingTime () store
   pure ServerMetrics {..}

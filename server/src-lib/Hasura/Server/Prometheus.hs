@@ -51,7 +51,7 @@ data EventTriggerMetrics = EventTriggerMetrics
   { eventTriggerHTTPWorkers :: Gauge,
     eventQueueTimeSeconds :: Histogram,
     eventsFetchTimePerBatch :: Histogram,
-    eventProcessingTime :: Histogram
+    eventWebhookProcessingTime :: Histogram
   }
 
 -- | Create dummy mutable references without associating them to a metrics
@@ -80,7 +80,7 @@ makeDummyEventTriggerMetrics = do
   eventTriggerHTTPWorkers <- Gauge.new
   eventQueueTimeSeconds <- Histogram.new []
   eventsFetchTimePerBatch <- Histogram.new []
-  eventProcessingTime <- Histogram.new []
+  eventWebhookProcessingTime <- Histogram.new []
   pure EventTriggerMetrics {..}
 
 --------------------------------------------------------------------------------
