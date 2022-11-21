@@ -7,7 +7,9 @@
     "build": "react-static build",
     "bundle": "react-static bundle",
     "export": "react-static export",
-    "serve": "serve dist -p 3000 -s"
+    "serve": "serve dist -p 3000 -s",
+    "prepare": "yarn run snyk-protect",
+    "snyk-protect": "snyk-protect"
   },
   "dependencies": {
     "@reach/router": "^1.2.1",
@@ -23,10 +25,12 @@
     "react-apollo": "^2.4.1",
     "react-dom": "^16.6.3",
     "react-hot-loader": "^4.3.12",
-    "react-static": "^6.0.18"
+    "react-static": "^7.5.0",
+    "@snyk/protect": "latest"
   },
   "devDependencies": {
     "eslint-config-react-tools": "1.x.x",
     "serve": "10.1.1"
-  }
+  },
+  "snyk": true
 }

@@ -1,0 +1,51 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.0
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-AXIOS-174505:
+    - react-static > axios:
+        patched: '2022-11-21T04:19:23.069Z'
+  SNYK-JS-LODASH-567746:
+    - react-static > @babel/register > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > css-loader > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > extract-css-chunks-webpack-plugin > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > inquirer > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > webpack-bundle-analyzer > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > @babel/preset-env > @babel/plugin-transform-block-scoping > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > eslint > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > eslint-plugin-import > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > react-dev-utils > inquirer > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > thread-loader > async > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > @babel/preset-env > @babel/plugin-transform-modules-umd > @babel/helper-module-transforms > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > babel-eslint > @babel/traverse > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > eslint > inquirer > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > eslint > table > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > babel-eslint > @babel/traverse > @babel/generator > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > @babel/preset-env > @babel/plugin-transform-exponentiation-operator > @babel/helper-builder-binary-assignment-operator-visitor > @babel/helper-explode-assignable-expression > @babel/traverse > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > babel-eslint > @babel/traverse > @babel/helper-function-name > @babel/template > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > @babel/preset-env > @babel/plugin-transform-exponentiation-operator > @babel/helper-builder-binary-assignment-operator-visitor > @babel/helper-explode-assignable-expression > @babel/traverse > @babel/generator > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > eslint-config-react-tools > babel-eslint > @babel/traverse > @babel/helper-function-name > @babel/template > @babel/types > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > @babel/preset-env > @babel/plugin-transform-exponentiation-operator > @babel/helper-builder-binary-assignment-operator-visitor > @babel/helper-explode-assignable-expression > @babel/traverse > @babel/helper-split-export-declaration > @babel/types > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
+    - react-static > @babel/preset-env > @babel/plugin-transform-exponentiation-operator > @babel/helper-builder-binary-assignment-operator-visitor > @babel/helper-explode-assignable-expression > @babel/traverse > @babel/helper-function-name > @babel/helper-get-function-arity > @babel/types > lodash:
+        patched: '2022-11-21T04:19:23.069Z'
