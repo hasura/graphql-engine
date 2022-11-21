@@ -25531,7 +25531,7 @@ instance Hasura.Logging.ToEngineLog Hasura.Server.Migrate.MigrationResult Hasura
 -- | API related to server configuration
 module Hasura.Server.API.Config
 data ServerConfig
-ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermissions -> !Bool -> !Bool -> !Bool -> ![JWTInfo] -> !Bool -> !LiveQueriesOptions -> !SubscriptionsOptions -> !Maybe Text -> !HashSet ExperimentalFeature -> !Bool -> ServerConfig
+ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermissions -> !Bool -> !Bool -> !Bool -> ![JWTInfo] -> !Bool -> !LiveQueriesOptions -> !SubscriptionsOptions -> !Maybe Text -> !HashSet ExperimentalFeature -> !Bool -> !Maybe NamingCase -> ServerConfig
 [scfgVersion] :: ServerConfig -> !Version
 [scfgIsFunctionPermissionsInferred] :: ServerConfig -> !InferFunctionPermissions
 [scfgIsRemoteSchemaPermissionsEnabled] :: ServerConfig -> !RemoteSchemaPermissions
@@ -25545,7 +25545,8 @@ ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermission
 [scfgConsoleAssetsDir] :: ServerConfig -> !Maybe Text
 [scfgExperimentalFeatures] :: ServerConfig -> !HashSet ExperimentalFeature
 [scfgIsPrometheusMetricsEnabled] :: ServerConfig -> !Bool
-runGetConfig :: InferFunctionPermissions -> RemoteSchemaPermissions -> AuthMode -> Bool -> LiveQueriesOptions -> SubscriptionsOptions -> Maybe Text -> HashSet ExperimentalFeature -> HashSet API -> ServerConfig
+[scfgDefaultNamingConvention] :: ServerConfig -> !Maybe NamingCase
+runGetConfig :: InferFunctionPermissions -> RemoteSchemaPermissions -> AuthMode -> Bool -> LiveQueriesOptions -> SubscriptionsOptions -> Maybe Text -> HashSet ExperimentalFeature -> HashSet API -> Maybe NamingCase -> ServerConfig
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.API.Config.ServerConfig
 instance GHC.Classes.Eq Hasura.Server.API.Config.ServerConfig
 instance GHC.Show.Show Hasura.Server.API.Config.ServerConfig
