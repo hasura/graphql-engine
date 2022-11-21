@@ -723,6 +723,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 consoleAssetsDir
                 scExperimentalFeatures
                 scEnabledAPIs
+                scDefaultNamingConvention
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp

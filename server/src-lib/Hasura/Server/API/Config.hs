@@ -11,6 +11,7 @@ where
 import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.Server.Auth
@@ -41,7 +42,8 @@ data ServerConfig = ServerConfig
     scfgStreamingQueries :: !ES.SubscriptionsOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
     scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature),
-    scfgIsPrometheusMetricsEnabled :: !Bool
+    scfgIsPrometheusMetricsEnabled :: !Bool,
+    scfgDefaultNamingConvention :: !(Maybe NamingCase)
   }
   deriving (Show, Eq)
 
@@ -57,6 +59,7 @@ runGetConfig ::
   Maybe Text ->
   Set.HashSet ExperimentalFeature ->
   Set.HashSet API ->
+  Maybe NamingCase ->
   ServerConfig
 runGetConfig
   functionPermsCtx
@@ -67,7 +70,8 @@ runGetConfig
   streamQueryOpts
   consoleAssetsDir
   experimentalFeatures
-  enabledAPIs =
+  enabledAPIs
+  defaultNamingConvention =
     ServerConfig
       currentVersion
       functionPermsCtx
@@ -82,6 +86,7 @@ runGetConfig
       consoleAssetsDir
       experimentalFeatures
       isPrometheusMetricsEnabled
+      defaultNamingConvention
     where
       isPrometheusMetricsEnabled = METRICS `Set.member` enabledAPIs
 
