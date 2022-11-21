@@ -290,7 +290,18 @@ const showErrorNotification = (
       }
 
       const isAddTableView = window.location.pathname.includes('table/add');
-      if (errorMessage?.includes('found duplicate fields') && !isAddTableView) {
+      /*
+       * NOTE: this way of identifying specific errors from the server is very error-prone
+       * https://hasurahq.atlassian.net/browse/NDAT-374 aims at finding a better solution
+       */
+      const conflictMessages = [
+        'found duplicate fields',
+        'Encountered conflicting definitions',
+      ];
+      const isConflictError = conflictMessages.some(conflictMessage =>
+        errorMessage?.includes(conflictMessage)
+      );
+      if (isConflictError && !isAddTableView) {
         const action = {
           label: 'Resolve Conflict',
           callback: () => {
