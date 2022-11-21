@@ -95,7 +95,9 @@ export const TableEditItemContainer = (
         return acc;
       }
 
-      acc[colName] = values?.[colName]?.valueNode?.value?.toString();
+      acc[colName] = values?.[colName]?.valueNode?.value?.toString()
+        ? values?.[colName]?.valueNode?.value?.toString()
+        : values?.[colName]?.valueNode?.props?.value?.toString();
 
       return acc;
     }, {});
