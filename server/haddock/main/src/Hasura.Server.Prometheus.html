@@ -65,8 +65,8 @@
 </span><a href="Hasura.Server.Prometheus.html#eventQueueTimeSeconds"><span class="hs-identifier hs-var hs-var">eventQueueTimeSeconds</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Histogram</span></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>    </span><span id="eventsFetchTimePerBatch"><span class="annot"><span class="annottext">EventTriggerMetrics -&gt; Histogram
 </span><a href="Hasura.Server.Prometheus.html#eventsFetchTimePerBatch"><span class="hs-identifier hs-var hs-var">eventsFetchTimePerBatch</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Histogram</span></span><span class="hs-special">,</span><span>
-</span><span id="line-54"></span><span>    </span><span id="eventProcessingTime"><span class="annot"><span class="annottext">EventTriggerMetrics -&gt; Histogram
-</span><a href="Hasura.Server.Prometheus.html#eventProcessingTime"><span class="hs-identifier hs-var hs-var">eventProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Histogram</span></span><span>
+</span><span id="line-54"></span><span>    </span><span id="eventWebhookProcessingTime"><span class="annot"><span class="annottext">EventTriggerMetrics -&gt; Histogram
+</span><a href="Hasura.Server.Prometheus.html#eventWebhookProcessingTime"><span class="hs-identifier hs-var hs-var">eventWebhookProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Histogram</span></span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="hs-comment">-- | Create dummy mutable references without associating them to a metrics</span><span>
@@ -157,16 +157,16 @@ gqlRequestsQuerySuccess :: Counter
 </span><a href="#local-6989586621690444223"><span class="hs-identifier hs-var">eventsFetchTimePerBatch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-83"></span><span>  </span><span id="local-6989586621690444222"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690444222"><span class="hs-identifier hs-var">eventProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><a href="#local-6989586621690444222"><span class="hs-identifier hs-var">eventWebhookProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-84"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#EventTriggerMetrics"><span class="hs-identifier hs-type">EventTriggerMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Gauge
 Histogram
-eventProcessingTime :: Histogram
+eventWebhookProcessingTime :: Histogram
 eventsFetchTimePerBatch :: Histogram
 eventQueueTimeSeconds :: Histogram
 eventTriggerHTTPWorkers :: Gauge
-eventProcessingTime :: Histogram
+eventWebhookProcessingTime :: Histogram
 eventsFetchTimePerBatch :: Histogram
 eventQueueTimeSeconds :: Histogram
 eventTriggerHTTPWorkers :: Gauge
