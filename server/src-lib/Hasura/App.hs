@@ -11,7 +11,6 @@ module Hasura.App
     Loggers (..),
     PGMetadataStorageAppT (runPGMetadataStorageAppT),
     ServeCtx (ServeCtx, _scLoggers, _scMetadataDbPool, _scShutdownLatch),
-    ShutdownLatch,
     accessDeniedErrMsg,
     flushLogger,
     getCatalogStateTx,
@@ -20,7 +19,6 @@ module Hasura.App
     migrateCatalogSchema,
     mkLoggers,
     mkPGLogger,
-    newShutdownLatch,
     notifySchemaCacheSyncTx,
     parseArgs,
     throwErrExit,
@@ -31,9 +29,6 @@ module Hasura.App
     resolvePostgresConnInfo,
     runHGEServer,
     setCatalogStateTx,
-    shutdownGracefully,
-    waitForShutdown,
-    shuttingDown,
 
     -- * Exported for testing
     mkHGEServer,
@@ -144,6 +139,7 @@ import Hasura.Server.Telemetry
 import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.Session
+import Hasura.ShutdownLatch
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Blocklisting (Blocklist)
 import Network.HTTP.Client.CreateManager (mkHttpManager)
@@ -496,9 +492,6 @@ migrateCatalogSchema
     unLogger logger migrationResult
     pure schemaCache
 
--- | A latch for the graceful shutdown of a server process.
-newtype ShutdownLatch = ShutdownLatch {unShutdownLatch :: C.MVar ()}
-
 -- | Event triggers live in the user's DB and other events
 --  (cron, one-off and async actions)
 --   live in the metadata DB, so we need a way to differentiate the
@@ -506,22 +499,6 @@ newtype ShutdownLatch = ShutdownLatch {unShutdownLatch :: C.MVar ()}
 data ShutdownAction
   = EventTriggerShutdownAction (IO ())
   | MetadataDBShutdownAction (MetadataStorageT IO ())
-
-newShutdownLatch :: IO ShutdownLatch
-newShutdownLatch = fmap ShutdownLatch C.newEmptyMVar
-
--- | Block the current thread, waiting on the latch.
-waitForShutdown :: ShutdownLatch -> IO ()
-waitForShutdown = C.readMVar . unShutdownLatch
-
--- | Initiate a graceful shutdown of the server associated with the provided
--- latch.
-shutdownGracefully :: ShutdownLatch -> IO ()
-shutdownGracefully = void . flip C.tryPutMVar () . unShutdownLatch
-
--- | Returns True if the latch is set for shutdown and vice-versa
-shuttingDown :: ShutdownLatch -> IO Bool
-shuttingDown latch = not <$> C.isEmptyMVar (unShutdownLatch latch)
 
 -- | If an exception is encountered , flush the log buffer and
 -- rethrow If we do not flush the log buffer on exception, then log lines
