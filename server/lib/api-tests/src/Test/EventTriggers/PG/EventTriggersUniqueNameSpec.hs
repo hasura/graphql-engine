@@ -10,7 +10,6 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Test.BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -94,12 +93,14 @@ duplicateTriggerNameNotAllowed opts =
   describe "only unique trigger names are allowed" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
-              [yaml|
+              [interpolateYaml|
                 type: run_sql
                 args:
                   source: postgres
-                  sql: "INSERT INTO hasura.authors (id, name) values (3, 'john')"
+                  sql: "INSERT INTO #{schemaName}.authors (id, name) values (3, 'john')"
               |]
 
             expectedResponse =
@@ -132,18 +133,20 @@ duplicateTriggerNameNotAllowed opts =
 
     it "metadata_api: does not allow creating an event trigger with a name that already exists" $
       \(testEnvironment, (webhookServer, _)) -> do
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
         -- metadata <- GraphqlEngine.exportMetadata testEnvironment
         let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
         let createEventTriggerWithDuplicateName =
-              [yaml|
+              [interpolateYaml|
               type: pg_create_event_trigger
               args:
                 name: authors_all
                 source: postgres
                 table:
                     name: articles
-                    schema: hasura
-                webhook: *webhookServerEchoEndpoint
+                    schema: #{schemaName}
+                webhook: #{webhookServerEchoEndpoint}
                 insert:
                     columns: "*"
             |]
@@ -184,9 +187,11 @@ duplicateTriggerNameNotAllowed opts =
 
 postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -195,28 +200,29 @@ postgresSetup testEnvironment webhookServer = do
           source: postgres
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
     |]
 
 getReplaceMetadata :: TestEnvironment -> GraphqlEngine.Server -> Value
 getReplaceMetadata testEnvironment webhookServer =
-  let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
-      schemaName = schemaKeyword Fixture.Postgres
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-   in [yaml|
+   in [interpolateYaml|
       type: replace_metadata
       args:
         version: 3
         sources:
-        - configuration: *sourceConfig
+        - configuration: #{sourceConfig}
           name: postgres
           kind: postgres
           tables:
           - table:
-              schema: *schemaName
+              schema: #{schemaName}
               name: authors
             event_triggers:
             - name: authors_all
@@ -228,9 +234,9 @@ getReplaceMetadata testEnvironment webhookServer =
                 interval_sec: 10
                 num_retries: 0
                 timeout_sec: 60
-              webhook: *webhookServerEchoEndpoint
+              webhook: #{webhookServerEchoEndpoint}
           - table:
-              schema: *schemaName
+              schema: #{schemaName}
               name: articles
             event_triggers:
             - name: authors_all
@@ -244,7 +250,7 @@ getReplaceMetadata testEnvironment webhookServer =
                 interval_sec: 10
                 num_retries: 0
                 timeout_sec: 60
-              webhook: *webhookServerEchoEndpoint
+              webhook: #{webhookServerEchoEndpoint}
     |]
 
 postgresTeardown :: TestEnvironment -> IO ()

@@ -111,9 +111,11 @@ cleanupEventTriggersWhenSourceRemoved opts =
 
 postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -122,8 +124,8 @@ postgresSetup testEnvironment webhookServer = do
           source: postgres
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
     |]

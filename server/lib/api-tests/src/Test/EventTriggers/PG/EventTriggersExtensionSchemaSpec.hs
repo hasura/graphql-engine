@@ -81,12 +81,14 @@ checkEventTriggerWhenExtensionInDifferentSchema opts =
   describe "event triggers should work when extensions are created in different schema using 'extensions_schema'" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
-              [yaml|
+              [interpolateYaml|
                 type: run_sql
                 args:
                   source: hge_test
-                  sql: "INSERT INTO hasura.authors (id, name) values (3, 'john')"
+                  sql: "INSERT INTO #{schemaName}.authors (id, name) values (3, 'john')"
               |]
 
             expectedResponse =
@@ -172,17 +174,18 @@ checkEventTriggerWhenExtensionInDifferentSchema opts =
 
 postgresSetup :: HasCallStack => TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
-  let defaultSourceName = BackendType.defaultSource BackendType.Postgres
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+      defaultSourceName = BackendType.defaultSource BackendType.Postgres
       sourceName = "hge_test"
-      extensionsSchema = "hasura" :: Text
       databaseUrl = Postgres.makeFreshDbConnectionString testEnvironment
       sourceConfig =
         [yaml|
           connection_info:
             database_url: *databaseUrl
             pool_settings: {}
-            extensions_schema: *extensionsSchema
-             |]
+            extensions_schema: *schemaName
+        |]
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
 
   -- create a new source
@@ -201,17 +204,17 @@ postgresSetup testEnvironment webhookServer = do
 
   -- create the event trigger
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
         args:
           name: authors_all
-          source: *sourceName
+          source: #{sourceName}
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
     |]

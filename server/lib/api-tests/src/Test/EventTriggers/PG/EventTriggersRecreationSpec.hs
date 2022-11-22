@@ -67,6 +67,8 @@ schema = [usersTable]
 
 postgresSetup :: TestEnvironment -> IO ()
 postgresSetup testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
   -- In the setup, we create postgres's event triggers that capture every DDL
   -- change made in the database and then store them in a table called
   -- `ddl_history` that contains metadata about the DDL query like
@@ -74,7 +76,7 @@ postgresSetup testEnvironment = do
   -- what type of query it was etc.
   GraphqlEngine.postV2Query_
     testEnvironment
-    [yaml|
+    [interpolateYaml|
        type: run_sql
        args:
          source: postgres
@@ -94,7 +96,7 @@ postgresSetup testEnvironment = do
 
            DROP TABLE IF EXISTS hdb_catalog.hdb_event_log_cleanups;
 
-           CREATE TABLE hasura.ddl_history (
+           CREATE TABLE #{schemaName}.ddl_history (
              id serial primary key,
              event text,
              tag text,
@@ -105,7 +107,7 @@ postgresSetup testEnvironment = do
              created_at timestamptz default now()
            );
 
-           CREATE or REPLACE FUNCTION hasura.log_ddl_command()
+           CREATE or REPLACE FUNCTION #{schemaName}.log_ddl_command()
              RETURNS event_trigger AS
              $$ DECLARE
              v1 text;
@@ -126,7 +128,7 @@ postgresSetup testEnvironment = do
              pg_event_trigger_ddl_commands();
              if r.classid > 0
              then
-               insert into hasura.ddl_history(
+               insert into #{schemaName}.ddl_history(
              event, tag, object_type, schema_name, object_identity, query
            )
            values
@@ -156,22 +158,24 @@ postgresSetup testEnvironment = do
            end;
            $$ LANGUAGE plpgsql;
 
-           CREATE EVENT TRIGGER pg_get_ddl_command on ddl_command_end EXECUTE PROCEDURE hasura.log_ddl_command();
+           CREATE EVENT TRIGGER pg_get_ddl_command on ddl_command_end EXECUTE PROCEDURE #{schemaName}.log_ddl_command();
     |]
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
   GraphqlEngine.postV2Query_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
 type: run_sql
 args:
   source: postgres
   sql: |
     DROP EVENT TRIGGER pg_get_ddl_command;
 
-    DROP FUNCTION hasura.log_ddl_command;
+    DROP FUNCTION #{schemaName}.log_ddl_command;
 
-    DROP TABLE hasura.ddl_history;
+    DROP TABLE #{schemaName}.ddl_history;
 |]
 
 --------------------------------------------------------------------------------
@@ -181,28 +185,32 @@ args:
 tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
   it "Creating an event trigger should create the SQL triggers" $ \(testEnvironment, (webhookServer, _)) -> do
-    let webhookEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/hello"
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+        webhookEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/hello"
     shouldReturnYaml
       opts
       ( GraphQLEngine.postMetadata
           testEnvironment
-          [yaml|
+          [interpolateYaml|
 type: pg_create_event_trigger
 args:
   source: postgres
   table:
-    schema: hasura
+    schema: #{schemaName}
     name: users
   name: users_INSERT
-  webhook: *webhookEndpoint
+  webhook: #{webhookEndpoint}
   insert:
     columns: "*"
           |]
       )
-      [yaml|
+      [interpolateYaml|
 message: success
            |]
   it "The source catalog should have been initialized along with the creation of the SQL trigger" $ \(testEnvironment, _) -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
     -- fetch `$.result` from the result / expectation so we can compare array
     -- membership
     let getResult :: Aeson.Value -> [Aeson.Value]
@@ -218,25 +226,25 @@ message: success
       GraphQLEngine.postV2Query
         200
         testEnvironment
-        [yaml|
+        [interpolateYaml|
             type: run_sql
             args:
               source: postgres
               sql: |
-                  SELECT tag, object_identity FROM hasura.ddl_history ORDER BY object_identity COLLATE "C";
+                  SELECT tag, object_identity FROM #{schemaName}.ddl_history ORDER BY object_identity COLLATE "C";
           |]
 
     let expected =
-          [yaml|
+          [interpolateYaml|
         result:
         - - tag
           - object_identity
         - - CREATE TRIGGER
-          - '"notify_hasura_users_INSERT_INSERT" on hasura.users'
+          - '"notify_#{schemaName}_users_INSERT_INSERT" on #{schemaName}.users'
         - - CREATE SCHEMA
           - "hdb_catalog"
         - - CREATE FUNCTION
-          - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
+          - hdb_catalog."notify_#{schemaName}_users_INSERT_INSERT"()
         - - CREATE TABLE
           - hdb_catalog.event_invocation_logs
         - - CREATE INDEX
@@ -262,14 +270,16 @@ message: success
     getResult result `shouldContain` getResult expected
 
   it "only reloading the metadata should not recreate the SQL triggers" $ \(testEnvironment, _) -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
     -- Truncate the ddl_history
     postV2Query_
       testEnvironment
-      [yaml|
+      [interpolateYaml|
 type: run_sql
 args:
   source: postgres
-  sql: TRUNCATE hasura.ddl_history RESTART IDENTITY;
+  sql: TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
 |]
     shouldReturnYaml
       opts
@@ -289,11 +299,11 @@ args:
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
-          [yaml|
+          [interpolateYaml|
                type: run_sql
                args:
                  source: postgres
-                 sql:  SELECT tag, object_identity FROM hasura.ddl_history WHERE schema_name = 'hdb_catalog' ORDER BY object_identity;
+                 sql:  SELECT tag, object_identity FROM #{schemaName}.ddl_history WHERE schema_name = 'hdb_catalog' ORDER BY object_identity;
            |]
       )
       [yaml|
@@ -303,14 +313,16 @@ args:
            result_type: TuplesOk
        |]
   it "reloading the metadata with `recreate_event_triggers: true` should recreate the SQL triggers" $ \(testEnvironment, _) -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
     -- Truncate the ddl_history
     postV2Query_
       testEnvironment
-      [yaml|
+      [interpolateYaml|
 type: run_sql
 args:
   source: postgres
-  sql: TRUNCATE hasura.ddl_history RESTART IDENTITY;
+  sql: TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
 |]
     shouldReturnYaml
       opts
@@ -332,52 +344,54 @@ args:
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
-          [yaml|
+          [interpolateYaml|
                type: run_sql
                args:
                  source: postgres
-                 sql:  SELECT tag, object_identity FROM hasura.ddl_history WHERE schema_name = 'hdb_catalog' ORDER BY object_identity;
+                 sql:  SELECT tag, object_identity FROM #{schemaName}.ddl_history WHERE schema_name = 'hdb_catalog' ORDER BY object_identity;
            |]
       )
-      [yaml|
+      [interpolateYaml|
            result:
            - - tag
              - object_identity
            - - CREATE FUNCTION
-             - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
+             - hdb_catalog."notify_#{schemaName}_users_INSERT_INSERT"()
            result_type: TuplesOk
        |]
   it "adding a new column to the table should recreate the SQL trigger" $ \(testEnvironment, _) -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
     -- Truncate the ddl_history
     postV2Query_
       testEnvironment
-      [yaml|
+      [interpolateYaml|
 type: run_sql
 args:
   source: postgres
   sql: |
-    TRUNCATE hasura.ddl_history RESTART IDENTITY;
-    ALTER TABLE hasura.users ADD COLUMN last_name TEXT;
+    TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
+    ALTER TABLE #{schemaName}.users ADD COLUMN last_name TEXT;
 |]
     shouldReturnYaml
       opts
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
-          [yaml|
+          [interpolateYaml|
                type: run_sql
                args:
                  source: postgres
-                 sql:  SELECT tag, object_identity FROM hasura.ddl_history WHERE schema_name = 'hdb_catalog' ORDER BY object_identity;
+                 sql:  SELECT tag, object_identity FROM #{schemaName}.ddl_history WHERE schema_name = 'hdb_catalog' ORDER BY object_identity;
            |]
       )
-      [yaml|
+      [interpolateYaml|
            result:
            - - tag
              - object_identity
            - - CREATE FUNCTION
-             - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
+             - hdb_catalog."notify_#{schemaName}_users_INSERT_INSERT"()
            - - CREATE FUNCTION
-             - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
+             - hdb_catalog."notify_#{schemaName}_users_INSERT_INSERT"()
            result_type: TuplesOk
        |]

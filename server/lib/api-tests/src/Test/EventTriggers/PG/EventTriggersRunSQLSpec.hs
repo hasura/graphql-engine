@@ -100,17 +100,19 @@ triggerListeningToAllColumnTests opts = do
         <> " it should not throw any error even when an event trigger"
         <> " that accesses all the columns of that table exists"
     )
-    $ \(testEnvironment, _) ->
+    $ \(testEnvironment, _) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
         opts
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
-            [yaml|
+            [interpolateYaml|
 type: run_sql
 args:
   source: postgres
-  sql: "ALTER TABLE hasura.authors DROP COLUMN created_at;"
+  sql: "ALTER TABLE #{schemaName}.authors DROP COLUMN created_at;"
 |]
         )
         [yaml|
@@ -119,17 +121,19 @@ result: null
          |]
   it "inserting a new row should work fine" $
     \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
         opts
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
-            [yaml|
-type: run_sql
-args:
-  source: postgres
-  sql: "INSERT INTO hasura.authors (id, name) values (1, 'john') RETURNING name"
-|]
+            [interpolateYaml|
+              type: run_sql
+              args:
+                source: postgres
+                sql: "INSERT INTO #{schemaName}.authors (id, name) values (1, 'john') RETURNING name"
+            |]
         )
         [yaml|
 result_type: TuplesOk
@@ -157,16 +161,19 @@ triggerListeningToSpecificColumnsTests _ = do
         <> " and an event trigger is defined to access that column"
         <> " dependency error should be thrown"
     )
-    $ \((getServer -> Server {urlPrefix, port}), _) -> do
+    $ \(testEnvironment, _) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+          Server {urlPrefix, port} = getServer testEnvironment
       response <-
         Http.post
           (urlPrefix ++ ":" ++ show port ++ "/v2/query")
           mempty
-          [yaml|
+          [interpolateYaml|
 type: run_sql
 args:
   source: postgres
-  sql: "ALTER TABLE hasura.users DROP COLUMN created_at;"
+  sql: "ALTER TABLE #{schemaName}.users DROP COLUMN created_at;"
 |]
       Http.getResponseStatusCode response `shouldBe` 400
       let responseBody = Http.getResponseBody response
@@ -183,9 +190,9 @@ args:
                   ++ L8.unpack responseBody
               )
       responseValue
-        `shouldBeYaml` [yaml|
+        `shouldBeYaml` [interpolateYaml|
 path: $
-error: 'cannot drop due to the following dependent objects: event-trigger hasura.users.users_name_created_at
+error: 'cannot drop due to the following dependent objects: event-trigger #{schemaName}.users.users_name_created_at
                    in source "postgres"'
 code: dependency-error
                                         |]
@@ -197,18 +204,20 @@ dropTableContainingTriggerTest opts = do
         <> " dependency error should be thrown when an event trigger"
         <> " accesses specific columns of the table"
     )
-    $ \(testEnvironment, _) ->
+    $ \(testEnvironment, _) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
         opts
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
-            [yaml|
-type: run_sql
-args:
-  source: postgres
-  sql: "DROP TABLE hasura.users"
-|]
+            [interpolateYaml|
+              type: run_sql
+              args:
+                source: postgres
+                sql: "DROP TABLE #{schemaName}.users"
+            |]
         )
         [yaml|
 result_type: CommandOk
@@ -222,43 +231,47 @@ renameTableContainingTriggerTests opts = do
         <> " should not throw any error even when an event trigger"
         <> " that accesses all the columns of that table exists"
     )
-    $ \(testEnvironment, _) ->
+    $ \(testEnvironment, _) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
         opts
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
-            [yaml|
-type: run_sql
-args:
-  source: postgres
-  sql: "ALTER TABLE hasura.authors RENAME TO authors_new;"
-|]
+            [interpolateYaml|
+              type: run_sql
+              args:
+                source: postgres
+                sql: "ALTER TABLE #{schemaName}.authors RENAME TO authors_new;"
+              |]
         )
         [yaml|
-result_type: CommandOk
-result: null
+           result_type: CommandOk
+           result: null
          |]
   it "inserting a new row should work fine" $
     \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
         opts
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
-            [yaml|
-type: run_sql
-args:
-  source: postgres
-  sql: "INSERT INTO hasura.authors_new (id, name) values (2, 'dan') RETURNING name"
-|]
+            [interpolateYaml|
+              type: run_sql
+              args:
+                source: postgres
+                sql: "INSERT INTO #{schemaName}.authors_new (id, name) values (2, 'dan') RETURNING name"
+            |]
         )
         [yaml|
-result_type: TuplesOk
-result:
-  - - name
-  - - dan
-         |]
+          result_type: TuplesOk
+          result:
+            - - name
+            - - dan
+        |]
       eventPayload <-
         -- wait for the event for a maximum of 5 seconds
         timeout (5 * 1000000) (Chan.readChan eventsQueue)
@@ -277,46 +290,48 @@ new:
 
 postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-type: bulk
-args:
-- type: pg_create_event_trigger
-  args:
-    name: authors_all
-    source: postgres
-    table:
-      name: authors
-      schema: hasura
-    webhook: *webhookServerEchoEndpoint
-    insert:
-      columns: "*"
-- type: pg_create_event_trigger
-  args:
-    name: users_name_created_at
-    source: postgres
-    table:
-      name: users
-      schema: hasura
-    webhook: *webhookServerEchoEndpoint
-    insert:
-      columns:
-        - name
-        - created_at
-|]
+    [interpolateYaml|
+      type: bulk
+      args:
+      - type: pg_create_event_trigger
+        args:
+          name: authors_all
+          source: postgres
+          table:
+            name: authors
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
+          insert:
+            columns: "*"
+      - type: pg_create_event_trigger
+        args:
+          name: users_name_created_at
+          source: postgres
+          table:
+            name: users
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
+          insert:
+            columns:
+              - name
+              - created_at
+    |]
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
-type: bulk
-args:
-- type: pg_delete_event_trigger
-  args:
-    name: authors_all
-    source: postgres
-|]
+      type: bulk
+      args:
+      - type: pg_delete_event_trigger
+        args:
+          name: authors_all
+          source: postgres
+    |]
   -- only authors table needs to be tear down because
   -- the users table has already been dropped in the
   -- `dropTableContainingTriggerTest` test.
