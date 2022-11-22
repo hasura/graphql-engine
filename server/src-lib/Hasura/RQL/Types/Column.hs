@@ -208,7 +208,7 @@ data ColumnMutability = ColumnMutability
   { _cmIsInsertable :: Bool,
     _cmIsUpdatable :: Bool
   }
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Ord, Generic, Show)
 
 instance NFData ColumnMutability
 
@@ -236,6 +236,8 @@ data ColumnInfo (b :: BackendType) = ColumnInfo
   deriving (Generic)
 
 deriving instance Backend b => Eq (ColumnInfo b)
+
+deriving instance Backend b => Ord (ColumnInfo b)
 
 deriving instance Backend b => Show (ColumnInfo b)
 

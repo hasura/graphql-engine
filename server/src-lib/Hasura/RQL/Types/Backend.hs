@@ -88,6 +88,7 @@ class
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
+    Ord (Column b),
     Data (TableName b),
     FromJSON (BackendConfig b),
     FromJSON (BackendInfo b),
@@ -139,6 +140,7 @@ class
     ToErrorValue (ConstraintName b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
+    Typeable (Column b),
     Typeable b,
     HasTag b,
     -- constraints of function argument
