@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskellQuotes #-}
+
 -- | Helper functions for generating the schema of database tables
 module Hasura.GraphQL.Schema.Table
   ( getTableGQLName,
@@ -95,14 +97,16 @@ tableSelectColumnsEnum sourceInfo tableInfo = do
         Just $
           G.Description $
             "select columns of table " <>> tableInfoName tableInfo
-  pure $
-    P.enum enumName description
-      <$> nonEmpty
-        [ ( define $ ciName column,
-            ciColumn column
-          )
-          | column <- columns
-        ]
+  -- We noticed many 'Definition's allocated, from 'define' below, so memoize
+  -- to gain more sharing and lower memory residency.
+  case nonEmpty $ map (define . ciName &&& ciColumn) columns of
+    Nothing -> pure Nothing
+    Just columnDefinitions ->
+      Just
+        <$> ( P.memoizeOn 'tableSelectColumnsEnum (enumName, description, columns) $
+                pure $
+                  P.enum enumName description columnDefinitions
+            )
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
