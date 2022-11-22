@@ -253,6 +253,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     ("DROP DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> " WITH (FORCE);")
+    `catch` \(ex :: SomeException) -> testLogHarness testEnvironment ("Failed to drop the database: " <> show ex)
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.

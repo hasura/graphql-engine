@@ -271,9 +271,7 @@ createDatabase testEnvironment = do
 
   createSchema testEnvironment
 
--- | we drop databases at the end of test runs so we don't need to do DB clean
--- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
--- < 13 in CI so instead we boot all the active users then drop as normal.
+-- | We drop databases at the end of test runs so we don't need to do DB cleanup.
 dropDatabase :: TestEnvironment -> IO ()
 dropDatabase testEnvironment = do
   let dbName = Constants.uniqueDbName (uniqueTestId testEnvironment)
@@ -281,6 +279,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     [i|DROP DATABASE #{dbName}|]
+    `catch` \(ex :: SomeException) -> testLogHarness testEnvironment ("Failed to drop the database: " <> show ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
