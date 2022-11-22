@@ -52,7 +52,10 @@ spec =
                     { Fixture.setupAction =
                         Citus.run_ testEnvironment setup,
                       Fixture.teardownAction = \_ ->
-                        pure ()
+                        -- Teardown is only run on Citus to avoid individual worker configuration
+                        -- for easier local testing of distributed DBs like Azure CosmosDB.
+                        -- In all other cases, we simply drop the DB.
+                        Citus.run_ testEnvironment teardown
                     },
                   Citus.setupTablesAction schema testEnvironment
                 ]
@@ -84,7 +87,10 @@ schema =
   ]
 
 setup :: String
-setup = "create type \"role\" as enum ('admin', 'editor', 'moderator')"
+setup = "create type \"role\" as enum ('admin', 'editor', 'moderator');"
+
+teardown :: String
+teardown = "drop type \"role\" cascade;"
 
 --------------------------------------------------------------------------------
 -- Tests
