@@ -67,10 +67,13 @@ import Test.Hspec
 -- For a more general version that can run tests for any 'Fixture'@ a@, see
 -- 'runWithLocalTestEnvironment'.
 --
--- This function runs setup and teardown for each Spec item individually.
+-- The commented out version of this function runs setup and teardown for each Spec item individually.
+-- however it makes CI punishingly slow, so we defer to the "worse" version for
+-- now. When we come to run specs in parallel this will be helpful.
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
-run fixtures tests = do
-  runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+run = runSingleSetup
+
+-- runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
 
 {-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
 runSingleSetup :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
