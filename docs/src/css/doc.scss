@@ -32,6 +32,12 @@ Code blocks
 .theme-code-block {
   box-shadow: none !important;
 }
+
+pre code {
+  background-color: var(--ifm-code-background);
+}
+
+
 .prism-code code {
   background-color: var(--color-gray-4);
   .theme-code-block-highlighted-line {
