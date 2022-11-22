@@ -38,6 +38,7 @@
   - [Cleanup for dropped triggers](cleanup-for-dropped-triggers.md)
   - [Backend only permissions](backend-only-permissions.md)
   - [Roles Inheritance](roles-inheritance.md)
+  - [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata](avoiding-graphql-schema-rebuilds-when-changing-irrelevant-metadata.md)
   - [Keep invalidation keys for inconsistent objects](keep-invalidation-keys-for-inconsistent-objects.md)
   - [Function Permissions](function-permissions.md)
   - [Remote Schema Argument Presets](remote-schema-argument-presets.md)
