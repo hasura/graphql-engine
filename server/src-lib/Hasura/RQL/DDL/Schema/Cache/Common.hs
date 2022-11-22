@@ -23,11 +23,8 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     addTableContext,
     bindErrorA,
     boActions,
-    boCronTriggers,
     boCustomTypes,
     boBackendCache,
-    boEndpoints,
-    boOpenTelemetryInfo,
     boRemoteSchemas,
     boRoles,
     boSources,
@@ -57,15 +54,11 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
-import Hasura.RQL.Types.Endpoint
-import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles
@@ -189,6 +182,8 @@ mkTableInputs TableMetadata {..} =
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
+--
+-- See also Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
 data BuildOutputs = BuildOutputs
   { _boSources :: SourceCache,
     _boActions :: ActionCache,
@@ -197,11 +192,8 @@ data BuildOutputs = BuildOutputs
     -- generation (because of field conflicts).
     _boRemoteSchemas :: HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject),
     _boCustomTypes :: AnnotatedCustomTypes,
-    _boCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
-    _boEndpoints :: M.HashMap EndpointName (EndpointMetadata GQLQueryWithText),
     _boRoles :: HashMap RoleName Role,
-    _boBackendCache :: BackendCache,
-    _boOpenTelemetryInfo :: OpenTelemetryInfo
+    _boBackendCache :: BackendCache
   }
 
 $(makeLenses ''BuildOutputs)
