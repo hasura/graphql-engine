@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module provides constants that are either:</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- * Simply in common user</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- * Define names that that multiple pieces of code reference.</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.FromIr.Constants</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#trueExpression"><span class="hs-identifier">trueExpression</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#nullExpression"><span class="hs-identifier">nullExpression</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#emptyArrayExpression"><span class="hs-identifier">emptyArrayExpression</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#jsonFieldName"><span class="hs-identifier">jsonFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggSubselectName"><span class="hs-identifier">aggSubselectName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier">existsFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggFieldName"><span class="hs-identifier">aggFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier">tempTableNameInserted</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier">tempTableNameValues</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameDeleted"><span class="hs-identifier">tempTableNameDeleted</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameUpdated"><span class="hs-identifier">tempTableNameUpdated</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.SQLServer</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Instances.Types.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Instances.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TSQL</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#trueExpression"><span class="hs-identifier hs-type">trueExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-26"></span><span id="trueExpression"><span class="annot"><span class="annottext">trueExpression :: Expression
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#trueExpression"><span class="hs-identifier hs-var hs-var">trueExpression</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">ODBC.BoolValue</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#nullExpression"><span class="hs-identifier hs-type">nullExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-29"></span><span id="nullExpression"><span class="annot"><span class="annottext">nullExpression :: Expression
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#nullExpression"><span class="hs-identifier hs-var hs-var">nullExpression</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;null&quot;</span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#emptyArrayExpression"><span class="hs-identifier hs-type">emptyArrayExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-32"></span><span id="emptyArrayExpression"><span class="annot"><span class="annottext">emptyArrayExpression :: Expression
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#emptyArrayExpression"><span class="hs-identifier hs-var hs-var">emptyArrayExpression</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;[]&quot;</span></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#jsonFieldName"><span class="hs-identifier hs-type">jsonFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-35"></span><span id="jsonFieldName"><span class="annot"><span class="annottext">jsonFieldName :: Text
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#jsonFieldName"><span class="hs-identifier hs-var hs-var">jsonFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;json&quot;</span></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggSubselectName"><span class="hs-identifier hs-type">aggSubselectName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-38"></span><span id="aggSubselectName"><span class="annot"><span class="annottext">aggSubselectName :: Text
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggSubselectName"><span class="hs-identifier hs-var hs-var">aggSubselectName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;agg_sub&quot;</span></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier hs-type">existsFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-41"></span><span id="existsFieldName"><span class="annot"><span class="annottext">existsFieldName :: Text
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier hs-var hs-var">existsFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;exists_placeholder&quot;</span></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggFieldName"><span class="hs-identifier hs-type">aggFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-44"></span><span id="aggFieldName"><span class="annot"><span class="annottext">aggFieldName :: Text
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggFieldName"><span class="hs-identifier hs-var hs-var">aggFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;agg&quot;</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier hs-type">tempTableNameInserted</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span>
+</span><span id="line-47"></span><span id="tempTableNameInserted"><span class="annot"><span class="annottext">tempTableNameInserted :: TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier hs-var hs-var">tempTableNameInserted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TempTableName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-var">TempTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;inserted&quot;</span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier hs-type">tempTableNameValues</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span>
+</span><span id="line-50"></span><span id="tempTableNameValues"><span class="annot"><span class="annottext">tempTableNameValues :: TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier hs-var hs-var">tempTableNameValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TempTableName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-var">TempTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;values&quot;</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameDeleted"><span class="hs-identifier hs-type">tempTableNameDeleted</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span>
+</span><span id="line-53"></span><span id="tempTableNameDeleted"><span class="annot"><span class="annottext">tempTableNameDeleted :: TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameDeleted"><span class="hs-identifier hs-var hs-var">tempTableNameDeleted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TempTableName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-var">TempTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;deleted&quot;</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameUpdated"><span class="hs-identifier hs-type">tempTableNameUpdated</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span>
+</span><span id="line-56"></span><span id="tempTableNameUpdated"><span class="annot"><span class="annottext">tempTableNameUpdated :: TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameUpdated"><span class="hs-identifier hs-var hs-var">tempTableNameUpdated</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TempTableName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-var">TempTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;updated&quot;</span></span><span>
+</span><span id="line-57"></span></pre></body></html>
