@@ -79,12 +79,14 @@ cleanupEventTriggersWhenTableUntracked opts =
   describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
-        let insertQuery =
-              [yaml|
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
+            insertQuery =
+              [interpolateYaml|
                 type: mssql_run_sql
                 args:
                   source: mssql
-                  sql: "INSERT INTO authors (id, name) values (3, N'john')"
+                  sql: "INSERT INTO #{schemaName}.authors (id, name) values (3, N'john')"
               |]
 
             expectedResponse =
@@ -117,13 +119,15 @@ cleanupEventTriggersWhenTableUntracked opts =
 
     it "untrack table, check the SQL triggers are deleted from the table" $
       \(testEnvironment, _) -> do
-        let untrackTableQuery =
-              [yaml|
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
+            untrackTableQuery =
+              [interpolateYaml|
               type: mssql_untrack_table
               args:
                 source: mssql
                 table:
-                  schema: hasura
+                  schema: #{schemaName}
                   name: authors
             |]
 
@@ -136,7 +140,7 @@ cleanupEventTriggersWhenTableUntracked opts =
           untrackTableQueryExpectedResponse
 
         let checkIfTriggerExists =
-              [yaml|
+              [interpolateYaml|
               type: mssql_run_sql
               args:
                 source: mssql
@@ -146,7 +150,7 @@ cleanupEventTriggersWhenTableUntracked opts =
                           FROM sys.triggers tr
                           INNER join sys.tables tb on tr.parent_id = tb.object_id
                           INNER join sys.schemas s on tb.schema_id = s.schema_id
-                          WHERE tb.name = 'authors' AND tr.name = 'notify_hasura_insert_author_INSERT' AND s.name = 'hasura'
+                          WHERE tb.name = 'authors' AND tr.name = 'notify_#{schemaName}_insert_author_INSERT' AND s.name = 'hasura'
                           )
                         THEN CAST(1 AS BIT)
                         ELSE CAST(0 AS BIT)
@@ -174,9 +178,11 @@ cleanupEventTriggersWhenTableUntracked opts =
 
 mssqlSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 mssqlSetup testEnvironment webhookServer = do
-  let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+      webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -185,8 +191,8 @@ mssqlSetup testEnvironment webhookServer = do
           source: mssql
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
     |]

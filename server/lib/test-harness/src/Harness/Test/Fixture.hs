@@ -36,6 +36,7 @@ import Data.UUID.V4 (nextRandom)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
@@ -187,6 +188,8 @@ createDatabases fixtureName testEnvironment =
           Cockroach.createDatabase testEnvironment
         Citus ->
           Citus.createDatabase testEnvironment
+        SQLServer ->
+          Sqlserver.createDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)
@@ -201,6 +204,8 @@ dropDatabases fixtureName testEnvironment =
           Cockroach.dropDatabase testEnvironment
         Citus ->
           Citus.dropDatabase testEnvironment
+        SQLServer ->
+          Sqlserver.dropDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)

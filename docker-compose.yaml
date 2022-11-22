@@ -96,14 +96,6 @@ services:
       sqlserver:
         condition: service_started
 
-  sqlserver-init:
-    extends:
-      file: docker-compose/sqlserver-init/docker-compose.yaml
-      service: sqlserver-init
-    depends_on:
-      sqlserver:
-        condition: service_started
-
   dc-reference-agent:
     extends:
       file: dc-agents/docker-compose.yaml

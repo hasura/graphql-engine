@@ -399,7 +399,7 @@ lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = SQLServer.defaultSourceConfiguration
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
@@ -412,8 +412,8 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  SQLServer.createTable track
-  SQLServer.insertTable track
+  SQLServer.createTable testEnvironment track
+  SQLServer.insertTable testEnvironment track
   Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -457,7 +457,7 @@ args:
   |]
 
 lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerTeardown _ = SQLServer.dropTable track
+lhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -786,7 +786,7 @@ rhsCockroachTeardown _ = pure ()
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "target"
-      sourceConfig = SQLServer.defaultSourceConfiguration
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
@@ -799,8 +799,8 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  SQLServer.createTable album
-  SQLServer.insertTable album
+  SQLServer.createTable testEnvironment album
+  SQLServer.insertTable testEnvironment album
   Schema.trackTable Fixture.SQLServer sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -839,7 +839,7 @@ args:
   |]
 
 rhsSQLServerTeardown :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerTeardown _ = SQLServer.dropTable album
+rhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment album
 
 --------------------------------------------------------------------------------
 -- Tests

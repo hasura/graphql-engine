@@ -7,6 +7,8 @@ module Harness.Backend.Sqlserver
     run_,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    createDatabase,
+    dropDatabase,
     createTable,
     insertTable,
     trackTable,
@@ -22,6 +24,7 @@ import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.String (fromString)
+import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
@@ -31,11 +34,11 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (SQLServer), defaultBackendTypeString, defaultSource)
-import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment, testLogHarness)
+import Harness.Test.SetupAction (SetupAction (..))
+import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -47,7 +50,7 @@ livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
     loop attempts =
       catch
         ( bracket
-            (Sqlserver.connect Constants.sqlserverConnectInfo)
+            (Sqlserver.connect Constants.sqlserverAdminConnectInfo)
             Sqlserver.close
             (const (pure ()))
         )
@@ -56,13 +59,32 @@ livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
             loop (attempts - 1)
         )
 
+-- | run SQL with the currently created DB for this test
+run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ testEnvironment =
+  runInternal testEnvironment (Constants.sqlserverConnectInfo testEnvironment)
+
+-- | when we are creating databases, we want to connect with the 'original' DB
+-- we started with
+runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
+runWithInitialDb_ testEnvironment =
+  runInternal testEnvironment Constants.sqlserverAdminConnectInfo
+
 -- | Run a plain SQL string against the server, ignore the
 -- result. Just checks for errors.
-run_ :: HasCallStack => String -> IO ()
-run_ query' =
+runInternal :: HasCallStack => TestEnvironment -> Text -> String -> IO ()
+runInternal testEnvironment connectionString query' = do
+  testLogHarness
+    testEnvironment
+    ( "Executing with connection string: "
+        <> show connectionString
+        <> "\n"
+        <> "Query: "
+        <> query'
+    )
   catch
     ( bracket
-        (Sqlserver.connect Constants.sqlserverConnectInfo)
+        (Sqlserver.connect connectionString)
         Sqlserver.close
         (\conn -> void (Sqlserver.exec conn (fromString query')))
     )
@@ -78,33 +100,34 @@ run_ query' =
     )
 
 -- | Metadata source information for the default MSSQL instance.
-defaultSourceMetadata :: Value
-defaultSourceMetadata =
+defaultSourceMetadata :: TestEnvironment -> Value
+defaultSourceMetadata testEnvironment =
   let source = defaultSource SQLServer
       backendType = defaultBackendTypeString SQLServer
+      sourceConfiguration = defaultSourceConfiguration testEnvironment
    in [yaml|
 name: *source
 kind: *backendType
 tables: []
-configuration: *defaultSourceConfiguration
+configuration: *sourceConfiguration
   |]
 
-defaultSourceConfiguration :: Value
-defaultSourceConfiguration =
+defaultSourceConfiguration :: TestEnvironment -> Value
+defaultSourceConfiguration testEnvironment =
   [yaml|
 connection_info:
   database_url: *sqlserverConnectInfo
   pool_settings: {}
 |]
   where
-    sqlserverConnectInfo = Constants.sqlserverConnectInfo
+    sqlserverConnectInfo = Constants.sqlserverConnectInfo testEnvironment
 
 -- | Serialize Table into a T-SQL statement, as needed, and execute it on the Sqlserver backend
-createTable :: Schema.Table -> IO ()
-createTable Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented: SqlServer test harness support for unique indexes"
-createTable Schema.Table {tableConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for constraints"
-createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
-  run_ $
+createTable :: TestEnvironment -> Schema.Table -> IO ()
+createTable _ Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented: SqlServer test harness support for unique indexes"
+createTable _ Schema.Table {tableConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for constraints"
+createTable testEnvironment Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
+  run_ testEnvironment $
     T.unpack $
       T.unwords
         [ "CREATE TABLE",
@@ -172,11 +195,11 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
         <> referenceLocalColumn
 
 -- | Serialize tableData into a T-SQL insert statement and execute it.
-insertTable :: HasCallStack => Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData}
+insertTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+insertTable testEnvironment Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-      run_ $
+      run_ testEnvironment $
         T.unpack $
           T.unwords
             [ "INSERT INTO",
@@ -199,7 +222,7 @@ wrapIdentifier identifier = "[" <> identifier <> "]"
 -- | 'ScalarValue' serializer for Mssql
 serialize :: ScalarValue -> Text
 serialize = \case
-  VInt i -> tshow i
+  VInt int -> tshow int
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
@@ -216,9 +239,9 @@ mkRow row =
     ]
 
 -- | Serialize Table into a T-SQL DROP statement and execute it
-dropTable :: HasCallStack => Schema.Table -> IO ()
-dropTable Schema.Table {tableName} = do
-  run_ $
+dropTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+dropTable testEnvironment Schema.Table {tableName} = do
+  run_ testEnvironment $
     T.unpack $
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
@@ -236,16 +259,50 @@ untrackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
   Schema.untrackTable SQLServer (defaultSource SQLServer) table testEnvironment
 
+-- | create a database to use and later drop for these tests
+-- note we use the 'initial' connection string here, ie, the one we started
+-- with.
+createDatabase :: TestEnvironment -> IO ()
+createDatabase testEnvironment = do
+  let dbName = Constants.uniqueDbName (uniqueTestId testEnvironment)
+  runWithInitialDb_
+    testEnvironment
+    [i|CREATE DATABASE #{dbName}|]
+
+  createSchema testEnvironment
+
+-- | we drop databases at the end of test runs so we don't need to do DB clean
+-- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
+-- < 13 in CI so instead we boot all the active users then drop as normal.
+dropDatabase :: TestEnvironment -> IO ()
+dropDatabase testEnvironment = do
+  let dbName = Constants.uniqueDbName (uniqueTestId testEnvironment)
+
+  runWithInitialDb_
+    testEnvironment
+    [i|DROP DATABASE #{dbName}|]
+
+-- Because the test harness sets the schema name we use for testing, we need
+-- to make sure it exists before we run the tests.
+createSchema :: TestEnvironment -> IO ()
+createSchema testEnvironment = do
+  let schemaName = Schema.getSchemaName testEnvironment
+  run_
+    testEnvironment
+    [i|
+      CREATE SCHEMA #{Schema.unSchemaName schemaName};
+    |]
+
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment defaultSourceMetadata Nothing
+  GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
   -- Setup and track tables
   for_ tables $ \table -> do
-    createTable table
-    insertTable table
+    createTable testEnvironment table
+    insertTable testEnvironment table
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
@@ -265,7 +322,7 @@ teardown (reverse -> tables) (testEnvironment, _) = do
     ( forFinally_ tables $ \table ->
         finally
           (untrackTable testEnvironment table)
-          (dropTable table)
+          (dropTable testEnvironment table)
     )
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction

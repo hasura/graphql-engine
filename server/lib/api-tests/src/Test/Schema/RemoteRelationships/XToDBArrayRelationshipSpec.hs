@@ -407,7 +407,7 @@ lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "source"
-      sourceConfig = SQLServer.defaultSourceConfiguration
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -418,8 +418,8 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  SQLServer.createTable artist
-  SQLServer.insertTable artist
+  SQLServer.createTable testEnvironment artist
+  SQLServer.insertTable testEnvironment artist
   Schema.trackTable Fixture.SQLServer sourceName artist testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -464,7 +464,7 @@ args:
   |]
 
 lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerTeardown _ = SQLServer.dropTable artist
+lhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment artist
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -779,7 +779,7 @@ rhsSQLServerSetup (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "target"
-      sourceConfig = SQLServer.defaultSourceConfiguration
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -790,8 +790,8 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  SQLServer.createTable album
-  SQLServer.insertTable album
+  SQLServer.createTable testEnvironment album
+  SQLServer.insertTable testEnvironment album
   Schema.trackTable Fixture.SQLServer sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -830,7 +830,7 @@ args:
   |]
 
 rhsSQLServerTeardown :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerTeardown _ = SQLServer.dropTable album
+rhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment album
 
 --------------------------------------------------------------------------------
 -- Tests
