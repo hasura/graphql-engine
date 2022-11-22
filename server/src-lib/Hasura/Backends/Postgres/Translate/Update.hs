@@ -27,6 +27,7 @@ data UpdateCTE
     Update S.TopLevelCTE
   | -- | Used for /update_table_many/.
     MultiUpdate [S.TopLevelCTE]
+  deriving (Show)
 
 -- | Create the update CTE.
 mkUpdateCTE ::
@@ -35,56 +36,48 @@ mkUpdateCTE ::
   AnnotatedUpdate ('Postgres pgKind) ->
   UpdateCTE
 mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo _tCase) =
-  case backendUpdate of
-    BackendUpdate opExps ->
-      Update $ S.CTEUpdate update
-      where
-        update =
-          S.SQLUpdate
-            { upTable = tn,
-              upSet =
-                S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps),
-              upFrom = Nothing,
-              upWhere =
-                Just
-                  . S.WhereFrag
-                  . S.simplifyBoolExp
-                  . toSQLBoolExp (S.QualTable tn)
-                  $ andAnnBoolExps permFltr wc,
-              upRet =
-                Just $
-                  S.RetExp
-                    [ S.selectStar,
-                      asCheckErrorExtractor $
-                        insertCheckConstraint $
-                          toSQLBoolExp (S.QualTable tn) chk
-                    ]
-            }
-    BackendMultiRowUpdate updates ->
-      MultiUpdate $ translateUpdate <$> updates
-      where
-        translateUpdate :: MultiRowUpdate pgKind S.SQLExp -> S.TopLevelCTE
-        translateUpdate MultiRowUpdate {..} =
-          S.CTEUpdate
-            S.SQLUpdate
-              { upTable = tn,
-                upSet =
-                  S.SetExp $ map (expandOperator columnsInfo) (Map.toList mruExpression),
-                upFrom = Nothing,
-                upWhere =
-                  Just
-                    . S.WhereFrag
-                    . S.simplifyBoolExp
-                    $ toSQLBoolExp (S.QualTable tn) mruWhere,
-                upRet =
-                  Just $
-                    S.RetExp
-                      [ S.selectStar,
-                        asCheckErrorExtractor
-                          . insertCheckConstraint
-                          $ toSQLBoolExp (S.QualTable tn) chk
-                      ]
-              }
+  let mkWhere =
+        Just
+          . S.WhereFrag
+          . S.simplifyBoolExp
+          . toSQLBoolExp (S.QualTable tn)
+          . andAnnBoolExps permFltr
+      checkConstraint =
+        Just $
+          S.RetExp
+            [ S.selectStar,
+              asCheckErrorExtractor
+                . insertCheckConstraint
+                . toSQLBoolExp (S.QualTable tn)
+                $ chk
+            ]
+   in case backendUpdate of
+        BackendUpdate opExps ->
+          Update $ S.CTEUpdate update
+          where
+            update =
+              S.SQLUpdate
+                { upTable = tn,
+                  upSet =
+                    S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps),
+                  upFrom = Nothing,
+                  upWhere = mkWhere wc,
+                  upRet = checkConstraint
+                }
+        BackendMultiRowUpdate updates ->
+          MultiUpdate $ translateUpdate <$> updates
+          where
+            translateUpdate :: MultiRowUpdate pgKind S.SQLExp -> S.TopLevelCTE
+            translateUpdate MultiRowUpdate {..} =
+              S.CTEUpdate
+                S.SQLUpdate
+                  { upTable = tn,
+                    upSet =
+                      S.SetExp $ map (expandOperator columnsInfo) (Map.toList mruExpression),
+                    upFrom = Nothing,
+                    upWhere = mkWhere mruWhere,
+                    upRet = checkConstraint
+                  }
 
 expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $
