@@ -52,11 +52,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
               { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsCockroachSetupAction testEnv],
-                Fixture.customOptions =
-                  Just
-                    Fixture.defaultOptions
-                      { Fixture.skipTests = Just "NDAT-47"
-                      }
+                Fixture.customOptions = Nothing
               },
             (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
               { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,

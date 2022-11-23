@@ -113,11 +113,7 @@ lhsCockroach tableName =
               Fixture.teardownAction = \_ -> lhsCockroachTeardown testEnv
             }
         ],
-      Fixture.customOptions =
-        Just
-          Fixture.defaultOptions
-            { Fixture.skipTests = Just "NDAT-47"
-            }
+      Fixture.customOptions = Nothing
     }
 
 lhsSQLServer :: LHSFixture
@@ -185,11 +181,7 @@ rhsCockroach =
                     Fixture.teardownAction = \_ -> rhsCockroachTeardown testEnv
                   }
               ],
-            Fixture.customOptions =
-              Just
-                Fixture.defaultOptions
-                  { Fixture.skipTests = Just "NDAT-47"
-                  }
+            Fixture.customOptions = Nothing
           }
    in (table, context)
 

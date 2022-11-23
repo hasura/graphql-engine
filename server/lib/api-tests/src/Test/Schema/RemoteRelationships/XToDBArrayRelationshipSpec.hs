@@ -121,7 +121,7 @@ lhsCockroach tableName =
       Fixture.customOptions =
         Just
           Fixture.defaultOptions
-            { Fixture.skipTests = Just "NDAT-47"
+            { Fixture.skipTests = Just "NDAT-177"
             }
     }
 
@@ -195,7 +195,7 @@ rhsCockroach =
             Fixture.customOptions =
               Just
                 Fixture.defaultOptions
-                  { Fixture.skipTests = Just "NDAT-47"
+                  { Fixture.skipTests = Just "NDAT-177"
                   }
           }
    in (table, context)
