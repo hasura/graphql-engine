@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
-import { inputStyles } from '../constants';
 
 const LeftSidebar = ({
   appPrefix,
@@ -21,18 +20,22 @@ const LeftSidebar = ({
       <input
         type="text"
         onChange={handleSearch}
-        className={inputStyles}
+        className="form-control"
         placeholder="search actions"
         data-test="search-actions"
       />
     );
   };
 
+  const findIfSubStringExists = (originalString, subString) => {
+    return originalString.toLowerCase().includes(subString.toLocaleLowerCase());
+  };
+
   const actionsList = useMemo(() => {
     if (!searchText) return actions;
 
     return actions.reduce((acc, action) => {
-      const idx = action.name.search(RegExp(searchText, 'i'));
+      const idx = findIfSubStringExists(action.name, searchText);
       if (idx === 0) return [action, ...acc];
       if (idx > 0) return [...acc, action];
       return acc;
