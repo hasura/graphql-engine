@@ -910,29 +910,34 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       ) =>
       OpenTelemetryConfig `arr` OpenTelemetryInfo
     buildOpenTelemetry = proc openTelemetryConfig -> do
-      mOtelExporterInfo <-
-        let exporterOtlp = _ocExporterOtlp openTelemetryConfig
-         in (|
-              withRecordInconsistency
-                ( bindErrorA -< liftEither (parseOtelExporterConfig env exporterOtlp)
+      case _ocStatus openTelemetryConfig of
+        OtelDisabled ->
+          -- Disable all components if OpenTelemetry export not enabled
+          returnA -< OpenTelemetryInfo Nothing Nothing
+        OtelEnabled -> do
+          mOtelExporterInfo <-
+            let exporterOtlp = _ocExporterOtlp openTelemetryConfig
+             in (|
+                  withRecordInconsistency
+                    ( bindErrorA -< liftEither (parseOtelExporterConfig env exporterOtlp)
+                    )
+                |) (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON exporterOtlp))
+          mOtelBatchSpanProcessorInfo <-
+            let batchSpanProcessor = _ocBatchSpanProcessor openTelemetryConfig
+             in (|
+                  withRecordInconsistency
+                    ( bindErrorA -< liftEither (parseOtelBatchSpanProcessorConfig batchSpanProcessor)
+                    )
+                |) (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON batchSpanProcessor))
+          returnA
+            -<
+              OpenTelemetryInfo
+                mOtelExporterInfo
+                -- Disable data types if they are not in the enabled set
+                ( if OtelTraces `S.member` _ocEnabledDataTypes openTelemetryConfig
+                    then mOtelBatchSpanProcessorInfo
+                    else Nothing
                 )
-            |) (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON exporterOtlp))
-      mOtelBatchSpanProcessorInfo <-
-        let batchSpanProcessor = _ocBatchSpanProcessor openTelemetryConfig
-         in (|
-              withRecordInconsistency
-                ( bindErrorA -< liftEither (parseOtelBatchSpanProcessorConfig batchSpanProcessor)
-                )
-            |) (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON batchSpanProcessor))
-      let openTelemetryInfo =
-            -- Disable configuration for a data type if it is not in the enabled set
-            OpenTelemetryInfo
-              mOtelExporterInfo
-              ( if OtelTraces `S.member` _ocEnabledDataTypes openTelemetryConfig
-                  then mOtelBatchSpanProcessorInfo
-                  else Nothing
-              )
-      returnA -< openTelemetryInfo
 
     buildEndpoint ::
       (ArrowChoice arr, ArrowKleisli m arr, MonadError QErr m, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
