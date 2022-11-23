@@ -1,19 +1,19 @@
-import globals from '@/Globals';
 import endpoints from '@/Endpoints';
 import { Api } from '@/hooks/apiUtils';
 import { print, DocumentNode } from 'graphql/language';
 
-export const makeClient = (
-  g: typeof globals,
-  endpoint: string,
-  headers = {}
+export const controlPlaneClient = (
+  endpoint: string = endpoints.luxDataGraphql
 ) => {
   const query = <
     ResponseType = Record<string, any>,
     VariablesType = Record<string, any>
   >(
     queryDoc: DocumentNode,
-    variables: VariablesType
+    variables: VariablesType,
+    headers: Record<string, string> = {
+      'content-type': 'application/json',
+    }
   ): Promise<ResponseType> => {
     return Api.post<ResponseType>({
       url: endpoint,
@@ -29,7 +29,3 @@ export const makeClient = (
     query,
   };
 };
-
-export const client = makeClient(globals, endpoints.luxDataGraphql, {
-  'content-type': 'application/json',
-});
