@@ -249,6 +249,22 @@ buildHealthCheckCache sources =
           healthCheck = _smHealthCheckConfig sourceMetadata
        in SourceHealthCheckInfo sourceName connection <$> healthCheck
 
+-- | Generate cache of source connection details so that we can ping sources for
+-- attribution
+buildSourcePingCache :: Sources -> SourcePingCache
+buildSourcePingCache sources =
+  M.fromList $ map (second mkSourcePing) (OMap.toList sources)
+  where
+    mkSourcePing :: BackendSourceMetadata -> BackendSourcePingInfo
+    mkSourcePing (BackendSourceMetadata sourceMetadata) =
+      AB.mapBackend sourceMetadata mkSourcePingBackend
+
+    mkSourcePingBackend :: SourceMetadata b -> SourcePingInfo b
+    mkSourcePingBackend sourceMetadata =
+      let sourceName = _smName sourceMetadata
+          connection = _smConfiguration sourceMetadata
+       in SourcePingInfo sourceName connection
+
 {- Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 There are many Metadata operations that don't influence the GraphQL schema.  So
@@ -390,6 +406,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
           scQueryCollections = _metaQueryCollections,
           scBackendCache = _boBackendCache resolvedOutputs,
           scSourceHealthChecks = buildHealthCheckCache _metaSources,
+          scSourcePingConfig = buildSourcePingCache _metaSources,
           scOpenTelemetryConfig = openTelemetryInfo
         }
   where

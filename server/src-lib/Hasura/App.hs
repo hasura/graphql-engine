@@ -96,6 +96,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (toParsed)
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.PingSources
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
@@ -791,6 +792,17 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
     C.forkManagedT "checkForUpdates" logger $
       liftIO $
         checkForUpdates loggerCtx _scHttpManager
+
+  -- Start a background thread for source pings
+  _sourcePingPoller <-
+    C.forkManagedT "sourcePingPoller" logger $ do
+      let pingLog =
+            unLogger logger . mkGenericStrLog LevelInfo "sources-ping"
+      liftIO
+        ( runPingSources
+            pingLog
+            (scSourcePingConfig <$> getSchemaCache cacheRef)
+        )
 
   -- start a background thread for telemetry
   _telemetryThread <-

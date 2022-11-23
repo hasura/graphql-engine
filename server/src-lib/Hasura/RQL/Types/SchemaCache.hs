@@ -496,6 +496,7 @@ data SchemaCache = SchemaCache
     scQueryCollections :: QueryCollections,
     scBackendCache :: BackendCache,
     scSourceHealthChecks :: SourceHealthCheckCache,
+    scSourcePingConfig :: SourcePingCache,
     scOpenTelemetryConfig :: OpenTelemetryInfo
   }
 
