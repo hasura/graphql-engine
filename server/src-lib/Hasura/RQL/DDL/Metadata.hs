@@ -577,6 +577,8 @@ purgeMetadataObj = \case
         %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . OMap.delete agentName . unBackendConfigWrapper)
   MOOpenTelemetry subobject ->
     case subobject of
+      OtelSubobjectAll ->
+        MetadataModifier $ metaOpenTelemetryConfig .~ emptyOpenTelemetryConfig
       OtelSubobjectExporterOtlp ->
         MetadataModifier $ metaOpenTelemetryConfig . ocExporterOtlp .~ defaultOtelExporterConfig
       OtelSubobjectBatchSpanProcessor ->

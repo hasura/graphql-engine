@@ -2,7 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
-import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
+import {
+  FaExclamationTriangle,
+  FaEye,
+  FaTimes,
+  FaHourglassHalf,
+  FaRedoAlt,
+  FaExternalLinkAlt,
+} from 'react-icons/fa';
 import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
 import { useMetadataSource } from '@/features/MetadataAPI';
@@ -12,8 +19,12 @@ import {
 } from '@/features/FeatureFlags';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { nativeDrivers } from '@/features/DataSource';
+import { getProjectId } from '@/utils/cloudConsole';
+import { TaskEvent, useCheckDatabaseLatency } from '@/features/ConnectDB';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { isCloudConsole } from '@/utils';
 import globals from '@/Globals';
+import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -38,8 +49,16 @@ import { showErrorNotification } from '../../Common/Notification';
 import { services } from '../../../../dataSources/services';
 import CollapsibleToggle from './CollapsibleToggle';
 import VPCBanner from '../../../Common/VPCBanner/VPCBanner';
-import { useVPCBannerVisibility } from './utils';
+import {
+  checkHighLatencySources,
+  DBLatencyData,
+  getSourceInfoFromLatencyData,
+  useVPCBannerVisibility,
+} from './utils';
 import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
+
+const KNOW_MORE_PROJECT_REGION_UPDATE =
+  'https://hasura.io/docs/latest/projects/regions/#changing-region-of-an-existing-project';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -50,6 +69,7 @@ type DatabaseListItemProps = {
   pushRoute: (route: string) => void;
   dispatch: Dispatch;
   dataHeaders: Record<string, string>;
+  dbLatencyData?: DBLatencyData;
 };
 
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
@@ -61,6 +81,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   inconsistentObjects,
   dispatch,
   dataHeaders,
+  dbLatencyData,
 }) => {
   const [reloading, setReloading] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -157,7 +178,11 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         )}
       </td>
       <td className="px-sm py-xs max-w-xs align-top">
-        <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
+        <CollapsibleToggle
+          dataSource={dataSource}
+          dbVersion={dbVersion}
+          dbLatencyData={dbLatencyData}
+        />
         {isInconsistentDataSource && (
           <ToolTip
             id={`inconsistent-source-${dataSource.name}`}
@@ -308,6 +333,56 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
     dispatch(_push(`/data/manage/edit/${dbName}`));
   };
 
+  const isPgMssqlSourceConnected = sourcesFromMetadata.some(
+    source => source.kind === 'mssql' || source.kind === 'postgres'
+  );
+
+  const [fireLatencyRequest, setFireLatencyRequest] = useState(false);
+
+  const queryResponse = useCheckDatabaseLatency(
+    fireLatencyRequest,
+    dataHeaders
+  );
+
+  const checkDatabaseLatency = () => {
+    setFireLatencyRequest(true);
+  };
+
+  const openUpdateProjectRegionPage = () => {
+    const projectId = getProjectId(globals);
+    if (!projectId) {
+      return;
+    }
+
+    const cloudDetailsPage = `${window.location.protocol}//${window.location.host}/project/${projectId}/details?open_update_region_drawer=true`;
+
+    window.open(cloudDetailsPage, '_blank');
+  };
+
+  const [showCheckLatencyButton, setLatencyButtonVisibility] = useState(
+    isPgMssqlSourceConnected && isCloudConsole(globals)
+  );
+
+  const [latencyCheckData, setLatencyCheckData] = useState<
+    TaskEvent | undefined
+  >(undefined);
+
+  const [showErrorIndicator, setShowErrorIndicator] = useState(false);
+
+  useEffect(() => {
+    if (queryResponse.isSuccess && typeof queryResponse.data !== 'string') {
+      setFireLatencyRequest(false);
+      setLatencyButtonVisibility(false);
+      setLatencyCheckData(queryResponse.data);
+    } else if (typeof queryResponse.data === 'string') {
+      setShowErrorIndicator(true);
+    }
+    setFireLatencyRequest(false);
+  }, [queryResponse.isSuccess, queryResponse.data]);
+
+  const showAccelerateProjectSection =
+    !showCheckLatencyButton && !checkHighLatencySources(latencyCheckData);
+
   return (
     <RightContainer>
       <Helmet title="Manage - Data | Hasura" />
@@ -371,6 +446,14 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                             onRemove={onRemove}
                             dispatch={dispatch}
                             dataHeaders={dataHeaders}
+                            dbLatencyData={
+                              isCloudConsole(globals)
+                                ? getSourceInfoFromLatencyData(
+                                    data.name,
+                                    latencyCheckData
+                                  )
+                                : undefined
+                            }
                           />
                         );
                       }
@@ -403,7 +486,89 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
               <ManageAgents />
             </div>
           ) : null}
-
+          {showCheckLatencyButton ? (
+            <Button
+              size="md"
+              className="mt-xs mr-xs"
+              icon={<FaHourglassHalf />}
+              onClick={checkDatabaseLatency}
+              isLoading={queryResponse.isLoading}
+              loadingText="Measuring Latencies..."
+            >
+              Check Database Latency
+            </Button>
+          ) : null}
+          {showAccelerateProjectSection ? (
+            <div className="mt-xs">
+              <IndicatorCard
+                status="negative"
+                headline="Accelerate your Hasura Project"
+              >
+                <div className="flex items-center flex-row">
+                  <span>
+                    Databases marked with “Elevated Latency” indicate that it
+                    took us over 200 ms for this Hasura project to communicate
+                    with your database. These conditions generally happen when
+                    databases and projects are in geographically distant
+                    regions. This can cause API and subsequently application
+                    performance issues. We want your GraphQL APIs to be{' '}
+                    <b>lightning fast</b>, therefore we recommend that you
+                    either deploy your Hasura project in the same region as your
+                    database or select a database instance that&apos;s closer to
+                    where you&apos;ve deployed Hasura.
+                    <KnowMoreLink href={KNOW_MORE_PROJECT_REGION_UPDATE} />
+                  </span>
+                  <div className="flex items-center flex-row ml-xs">
+                    <Button
+                      className="mr-xs"
+                      onClick={checkDatabaseLatency}
+                      isLoading={queryResponse.isLoading}
+                      loadingText="Measuring Latencies..."
+                      icon={<FaRedoAlt />}
+                    >
+                      Re-check Database Latency
+                    </Button>
+                    <Button
+                      className="mr-xs"
+                      onClick={openUpdateProjectRegionPage}
+                      icon={<FaExternalLinkAlt />}
+                    >
+                      Update Project Region
+                    </Button>
+                  </div>
+                </div>
+              </IndicatorCard>
+            </div>
+          ) : null}
+          {showErrorIndicator ? (
+            <div className="mt-xs">
+              <IndicatorCard
+                status="negative"
+                headline="Houston, we've got a problem here!"
+                showIcon
+              >
+                <div className="flex items-center flex-row">
+                  <span>
+                    There was an error in fetching the latest latency data.
+                    <pre className="w-1/2">{queryResponse.data}</pre>
+                  </span>
+                  <div className="flex items-center flex-row ml-xs">
+                    <Button
+                      className="mr-xs"
+                      onClick={checkDatabaseLatency}
+                      isLoading={queryResponse.isLoading}
+                      loadingText="Measuring Latencies..."
+                    >
+                      Re-check Database Latency
+                    </Button>
+                    <Button onClick={() => setLatencyButtonVisibility(true)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </IndicatorCard>
+            </div>
+          ) : null}
           <NeonDashboardLink className="mt-lg" />
         </div>
       </Analytics>

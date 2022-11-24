@@ -1,47 +1,56 @@
-import pytest
 import json
 import jsondiff
 from ruamel.yaml import YAML
 
 yaml=YAML(typ='safe', pure=True)
 
+def load_yaml(path):
+    with open(path) as f:
+        return json.loads(json.dumps(yaml.load(f)))
+
 class TestInconsistentObjects():
 
     reload_metadata = {
         "type": "reload_metadata",
-        "args": {}
+        "args": {},
     }
     drop_inconsistent_metadata = {
         "type": "drop_inconsistent_metadata",
-        "args": {}
+        "args": {},
     }
     export_metadata = {
         "type": "export_metadata",
-        "args": {}
+        "args": {},
     }
 
-    def test_inconsistent_objects(self, hge_ctx):
-        with open(self.dir() + "/test.yaml") as c:
-            test = yaml.load(c)
+    def test_inconsistent_objects(self, hge_ctx, source_backend):
+        setup = load_yaml(self.dir() + "/setup.yaml")
+        expected_inconsistent_objects = load_yaml(self.dir() + "/expectation.yaml")
+        teardown = load_yaml(self.dir() + "/teardown.yaml")
 
-        # setup
-        resp = hge_ctx.v1q(json.loads(json.dumps(test['setup'])))
+        hge_ctx.v1q(setup)
 
         try:
             # exec sql to cause inconsistentancy
-            hge_ctx.sql(test['sql'])
+            # TODO: remove once parallelization work is completed
+            #       `source_backend` will no longer be optional
+            if source_backend:
+                with source_backend.engine.connect() as connection:
+                    connection.execute('drop table article')
+            else:
+                # this only works when the metadata database and the source database are the same
+                hge_ctx.sql('drop table article')
 
             # reload metadata
             resp = hge_ctx.v1q(q=self.reload_metadata)
             # check inconsistent objects
-            incons_objs_test = test['inconsistent_objects']
-            incons_objs_resp = resp['inconsistent_objects']
+            actual_inconsistent_objects = resp['inconsistent_objects']
 
             assert resp['is_consistent'] == False, resp
-            assert incons_objs_resp == incons_objs_test, yaml.dump({
-                'response': incons_objs_resp,
-                'expected': incons_objs_test,
-                'diff': jsondiff.diff(incons_objs_test, incons_objs_resp)
+            assert actual_inconsistent_objects == expected_inconsistent_objects, yaml.dump({
+                'response': actual_inconsistent_objects,
+                'expected': expected_inconsistent_objects,
+                'diff': jsondiff.diff(expected_inconsistent_objects, actual_inconsistent_objects)
             })
 
             # export metadata
@@ -51,9 +60,9 @@ class TestInconsistentObjects():
             hge_ctx.v1q(
                 q={
                     "type": "replace_metadata",
-                    "args": export
+                    "args": export,
                 },
-                expected_status_code = 400
+                expected_status_code = 400,
             )
 
         finally:
@@ -65,8 +74,7 @@ class TestInconsistentObjects():
             # check inconsistent objects
             assert resp['is_consistent'] == True, resp
 
-            # teardown
-            hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
+            hge_ctx.v1q(teardown)
 
     @classmethod
     def dir(cls):

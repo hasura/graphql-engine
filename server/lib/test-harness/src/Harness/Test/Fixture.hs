@@ -36,6 +36,7 @@ import Data.UUID.V4 (nextRandom)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
@@ -66,10 +67,13 @@ import Test.Hspec
 -- For a more general version that can run tests for any 'Fixture'@ a@, see
 -- 'runWithLocalTestEnvironment'.
 --
--- This function runs setup and teardown for each Spec item individually.
+-- The commented out version of this function runs setup and teardown for each Spec item individually.
+-- however it makes CI punishingly slow, so we defer to the "worse" version for
+-- now. When we come to run specs in parallel this will be helpful.
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
-run fixtures tests = do
-  runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+run = runSingleSetup
+
+-- runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
 
 {-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
 runSingleSetup :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
@@ -187,6 +191,8 @@ createDatabases fixtureName testEnvironment =
           Cockroach.createDatabase testEnvironment
         Citus ->
           Citus.createDatabase testEnvironment
+        SQLServer ->
+          Sqlserver.createDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)
@@ -201,6 +207,8 @@ dropDatabases fixtureName testEnvironment =
           Cockroach.dropDatabase testEnvironment
         Citus ->
           Citus.dropDatabase testEnvironment
+        SQLServer ->
+          Sqlserver.dropDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)

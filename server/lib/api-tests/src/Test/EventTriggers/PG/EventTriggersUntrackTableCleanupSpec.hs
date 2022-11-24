@@ -79,12 +79,14 @@ cleanupEventTriggersWhenTableUntracked opts =
   describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
-              [yaml|
+              [interpolateYaml|
                 type: run_sql
                 args:
                   source: postgres
-                  sql: "INSERT INTO hasura.authors (id, name) values (3, 'john')"
+                  sql: "INSERT INTO #{schemaName}.authors (id, name) values (3, 'john')"
               |]
 
             expectedResponse =
@@ -117,13 +119,15 @@ cleanupEventTriggersWhenTableUntracked opts =
 
     it "untrack table, check the SQL triggers are deleted from the table" $
       \(testEnvironment, _) -> do
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
         let untrackTableQuery =
-              [yaml|
+              [interpolateYaml|
               type: pg_untrack_table
               args:
                 source: postgres
                 table:
-                  schema: hasura
+                  schema: #{schemaName}
                   name: authors
             |]
 
@@ -137,11 +141,11 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         -- Query the database and see if the trigger exists
         let checkIfTriggerExists =
-              [yaml|
+              [interpolateYaml|
               type: run_sql
               args:
                 source: postgres
-                sql: "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE NOT tgisinternal AND tgname = 'notify_hasura_insert_author_INSERT' AND tgrelid = 'hasura.authors'::regclass);"
+                sql: "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE NOT tgisinternal AND tgname = 'notify_#{schemaName}_insert_author_INSERT' AND tgrelid = '#{schemaName}.authors'::regclass);"
             |]
 
             expectedResponse =
@@ -164,9 +168,11 @@ cleanupEventTriggersWhenTableUntracked opts =
 
 postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -175,8 +181,8 @@ postgresSetup testEnvironment webhookServer = do
           source: postgres
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
     |]

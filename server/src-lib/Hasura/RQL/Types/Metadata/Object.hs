@@ -166,6 +166,7 @@ moiName objectId =
     MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
     MODataConnectorAgent agentName -> toTxt agentName
     MOOpenTelemetry subobject -> case subobject of
+      OtelSubobjectAll -> "all"
       OtelSubobjectExporterOtlp -> "exporter_otlp"
       OtelSubobjectBatchSpanProcessor -> "batch_span_processor"
   where

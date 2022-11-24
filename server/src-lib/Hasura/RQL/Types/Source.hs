@@ -31,6 +31,11 @@ module Hasura.RQL.Types.Source
     SourceHealthCheckInfo (..),
     BackendSourceHealthCheckInfo,
     SourceHealthCheckCache,
+
+    -- * Source pings
+    SourcePingInfo (..),
+    BackendSourcePingInfo,
+    SourcePingCache,
   )
 where
 
@@ -196,3 +201,15 @@ data SourceHealthCheckInfo b = SourceHealthCheckInfo
 type BackendSourceHealthCheckInfo = AB.AnyBackend SourceHealthCheckInfo
 
 type SourceHealthCheckCache = HashMap SourceName BackendSourceHealthCheckInfo
+
+-------------------------------------------------------------------------------
+-- Source pings
+
+data SourcePingInfo b = SourcePingInfo
+  { _spiName :: SourceName,
+    _spiConnection :: SourceConnConfiguration b
+  }
+
+type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
+
+type SourcePingCache = HashMap SourceName BackendSourcePingInfo

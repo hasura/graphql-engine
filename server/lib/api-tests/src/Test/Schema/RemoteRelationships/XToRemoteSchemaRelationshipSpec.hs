@@ -52,11 +52,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
               { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsCockroachSetupAction testEnv],
-                Fixture.customOptions =
-                  Just
-                    Fixture.defaultOptions
-                      { Fixture.skipTests = Just "NDAT-47"
-                      }
+                Fixture.customOptions = Nothing
               },
             (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
               { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
@@ -258,7 +254,7 @@ lhsSQLServerSetupAction testEnv =
 lhsSQLServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = SQLServer.defaultSourceConfiguration
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
@@ -271,8 +267,8 @@ args:
   configuration: *sourceConfig
 |]
   -- setup tables only
-  SQLServer.createTable track
-  SQLServer.insertTable track
+  SQLServer.createTable testEnvironment track
+  SQLServer.insertTable testEnvironment track
   Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -300,7 +296,7 @@ lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerTeardown (testEnvironment, _) = do
   let sourceName = "source"
   Schema.untrackTable Fixture.SQLServer sourceName track testEnvironment
-  SQLServer.dropTable track
+  SQLServer.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server

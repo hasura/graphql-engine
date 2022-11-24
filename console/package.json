@@ -36,6 +36,7 @@
     "--- LINTING ------------------------------------------------": "",
     "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
     "lint:quiet": "eslint --quiet -c .eslintrc src --ext .js,.ts,.tsx",
+    "lint:fix": "eslint --quiet --fix -c .eslintrc src --ext .js,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,mdx}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,mdx}\"",
     "build-unused": "webpack --stats=verbose --config webpack/prod.config.js --json | webpack-unused -s src",

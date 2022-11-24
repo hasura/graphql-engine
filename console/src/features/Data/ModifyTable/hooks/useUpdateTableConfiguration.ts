@@ -49,6 +49,7 @@ export const useUpdateTableConfiguration = (
               queryClient.invalidateQueries(
                 manageTableMetadataQueryKey(dataSourceName)
               );
+              queryClient.invalidateQueries('export_metadata');
               fireNotification({
                 type: 'success',
                 title: 'Success!',

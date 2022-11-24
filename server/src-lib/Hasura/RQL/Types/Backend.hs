@@ -22,6 +22,7 @@ import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
@@ -88,6 +89,7 @@ class
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
+    Ord (Column b),
     Data (TableName b),
     FromJSON (BackendConfig b),
     FromJSON (BackendInfo b),
@@ -139,6 +141,7 @@ class
     ToErrorValue (ConstraintName b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
+    Typeable (Column b),
     Typeable b,
     HasTag b,
     -- constraints of function argument
@@ -259,6 +262,12 @@ class
   -- | An Implementation for version checking when adding a source.
   versionCheckImplementation :: SourceConnConfiguration b -> IO (Either QErr ())
   versionCheckImplementation = const (pure $ Right ())
+
+  -- | A backend type can opt into providing an implementation for
+  -- fingerprinted pings to the source,
+  -- useful for attribution that the user is using Hasura
+  runPingSource :: (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
+  runPingSource _ _ _ = pure ()
 
   -- Backend-specific IR types
 

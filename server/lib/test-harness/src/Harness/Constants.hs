@@ -15,6 +15,7 @@ module Harness.Constants
     sqlserverLivenessCheckAttempts,
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverConnectInfo,
+    sqlserverAdminConnectInfo,
     sqlserverDb,
     bigqueryServiceKeyVar,
     bigqueryProjectIdVar,
@@ -39,6 +40,7 @@ where
 
 import Data.Char qualified
 import Data.HashSet qualified as Set
+import Data.Text qualified as T
 import Data.UUID (UUID)
 import Data.Word (Word16)
 import Database.PG.Query qualified as PG
@@ -244,8 +246,18 @@ sqlserverLivenessCheckIntervalSeconds = 1
 
 -- | SQL Server has strict password requirements, that's why it's not
 -- simply @hasura@ like the others.
-sqlserverConnectInfo :: Text
-sqlserverConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=optional"
+-- connection info for admin (with CREATE DATABASE permissions)
+sqlserverAdminConnectInfo :: Text
+sqlserverAdminConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Encrypt=optional"
+
+-- | SQL Server has strict password requirements, that's why it's not
+-- simply @hasura@ like the others.
+sqlserverConnectInfo :: TestEnvironment -> Text
+sqlserverConnectInfo testEnvironment =
+  let dbName = T.pack $ uniqueDbName $ uniqueTestId testEnvironment
+   in "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Database="
+        <> dbName
+        <> ";Encrypt=optional"
 
 sqlserverDb :: String
 sqlserverDb = "hasura"

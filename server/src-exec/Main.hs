@@ -27,6 +27,7 @@ import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
+import Hasura.ShutdownLatch
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals

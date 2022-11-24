@@ -21,12 +21,9 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -233,29 +230,35 @@ pruneDanglingDependents cache =
 deleteMetadataObject ::
   MetadataObjId -> BuildOutputs -> BuildOutputs
 deleteMetadataObject = \case
+  -- The objective here is to delete components of `BuildOutputs` that could
+  -- freshly become inconsistent, due to it requiring another component of
+  -- `BuildOutputs` that doesn't exist (e.g. because it has
+  -- become inconsistent in a previous round of `performIteration`).
   MOSource name -> boSources %~ M.delete name
   MOSourceObjId source exists -> AB.dispatchAnyBackend @Backend exists (\sourceObjId -> boSources %~ M.adjust (deleteObjId sourceObjId) source)
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas . ix name . _1 . rscPermissions %~ M.delete role
   MORemoteSchemaRemoteRelationship remoteSchema typeName relationshipName ->
     boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ OMap.delete relationshipName
-  MOCronTrigger name -> boCronTriggers %~ M.delete name
   MOCustomTypes -> boCustomTypes %~ const mempty
   MOAction name -> boActions %~ M.delete name
-  MOEndpoint name -> boEndpoints %~ M.delete name
   MOActionPermission name role -> boActions . ix name . aiPermissions %~ M.delete role
   MOInheritedRole name -> boRoles %~ M.delete name
-  MOQueryCollectionsQuery _ lq -> \bo@BuildOutputs {..} ->
-    bo
-      { _boEndpoints = removeEndpointsUsingQueryCollection lq _boEndpoints
-      }
   MODataConnectorAgent agentName ->
     boBackendCache
       %~ (BackendMap.modify @'DataConnector $ BackendInfoWrapper . M.delete agentName . unBackendInfoWrapper)
-  MOOpenTelemetry subobject ->
-    case subobject of
-      OtelSubobjectExporterOtlp -> boOpenTelemetryInfo . otiExporterOtlp .~ Nothing
-      OtelSubobjectBatchSpanProcessor -> boOpenTelemetryInfo . otiBatchSpanProcessor .~ Nothing
+  -- These parts of Metadata never become inconsistent as a result of
+  -- inconsistencies elsewhere, i.e. they don't have metadata dependencies.  So
+  -- we never need to prune them, and in fact don't even bother storing them in
+  -- `BuildOutputs`.  For instance, Cron Triggers are an isolated feature that
+  -- don't depend on e.g. DB sources, so their consistency is not dependent on
+  -- the consistency of DB sources.
+  --
+  -- See also Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
+  MOCronTrigger _ -> id
+  MOEndpoint _ -> id
+  MOQueryCollectionsQuery _ _ -> id
+  MOOpenTelemetry _ -> id
   where
     deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
     deleteObjId sourceObjId sourceInfo =
@@ -280,12 +283,3 @@ deleteMetadataObject = \case
           MTOPerm roleName PTInsert -> tiRolePermInfoMap . ix roleName . permIns .~ Nothing
           MTOPerm roleName PTUpdate -> tiRolePermInfoMap . ix roleName . permUpd .~ Nothing
           MTOPerm roleName PTDelete -> tiRolePermInfoMap . ix roleName . permDel .~ Nothing
-
-    removeEndpointsUsingQueryCollection :: ListedQuery -> HashMap EndpointName (EndpointMetadata GQLQueryWithText) -> HashMap EndpointName (EndpointMetadata GQLQueryWithText)
-    removeEndpointsUsingQueryCollection lq endpointMap =
-      case maybeEndpoint of
-        Just (n, _) -> M.delete n endpointMap
-        Nothing -> endpointMap
-      where
-        q = _lqQuery lq
-        maybeEndpoint = find (\(_, def) -> (_edQuery . _ceDefinition) def == q) (M.toList endpointMap)

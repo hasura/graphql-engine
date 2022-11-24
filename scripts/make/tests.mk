@@ -9,7 +9,7 @@ test-bigquery: remove-tix-file
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for MS SQL Server backend
 test-sqlserver: remove-tix-file
-	docker compose up -d --wait postgres sqlserver{,-healthcheck,-init}
+	docker compose up -d --wait postgres sqlserver-healthcheck
 	$(call stop_after, \
 		cabal run api-tests:exe:api-tests -- -m 'SQLServer')
 

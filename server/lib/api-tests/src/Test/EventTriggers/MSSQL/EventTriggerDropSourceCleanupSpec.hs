@@ -80,12 +80,14 @@ cleanupEventTriggersWhenSourceDropped opts =
   describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
-        let insertQuery =
-              [yaml|
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
+            insertQuery =
+              [interpolateYaml|
                 type: mssql_run_sql
                 args:
                   source: mssql
-                  sql: "INSERT INTO authors (id, name) values (3, N'john')"
+                  sql: "INSERT INTO #{schemaName}.authors (id, name) values (3, N'john')"
               |]
 
             expectedResponse =
@@ -118,6 +120,8 @@ cleanupEventTriggersWhenSourceDropped opts =
 
     it "drop source, check the table works as it was before event trigger was created on it" $
       \(testEnvironment, _) -> do
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
         let dropSourceQuery =
               [yaml|
               type: mssql_drop_source
@@ -142,7 +146,7 @@ cleanupEventTriggersWhenSourceDropped opts =
         --       do this so that we can use run_sql to make SQL queries
         --    2. Do an insert statement and see that it goes through
 
-        let sourceConfig = Sqlserver.defaultSourceConfiguration
+        let sourceConfig = Sqlserver.defaultSourceConfiguration testEnvironment
             addSourceQuery =
               [yaml|
               type: mssql_add_source
@@ -153,11 +157,11 @@ cleanupEventTriggersWhenSourceDropped opts =
         _ <- GraphqlEngine.postMetadata testEnvironment addSourceQuery
 
         let insertQuery =
-              [yaml|
+              [interpolateYaml|
               type: mssql_run_sql
               args:
                 source: mssql
-                sql: "INSERT INTO authors (id, name) values (4, N'harry')"
+                sql: "INSERT INTO #{schemaName}.authors (id, name) values (4, N'harry')"
             |]
 
             expectedResponse =
@@ -180,9 +184,11 @@ cleanupEventTriggersWhenSourceDropped opts =
 
 mssqlSetupWithEventTriggers :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 mssqlSetupWithEventTriggers testEnvironment webhookServer = do
-  let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+      webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -191,8 +197,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
           source: mssql
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
       |]

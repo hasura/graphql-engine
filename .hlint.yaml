@@ -151,6 +151,7 @@
     - error: {lhs: "if x then y; else return ()", rhs: "when x y"}
     - error: {lhs: "unless (not x)", rhs: "when x"}
     - error: {lhs: "when (not x)", rhs: "unless x"}
+    - error: {lhs: "arr id", rhs: "returnA"}
     - suggest: {lhs: "not x && not y", rhs: "not (x || y)"}
     - suggest: {lhs: "not x || not y", rhs: "not (x && y)"}
     - error: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}

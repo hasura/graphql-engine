@@ -10,7 +10,6 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.Test.BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -94,12 +93,14 @@ duplicateTriggerNameNotAllowed opts =
   describe "only unique trigger names are allowed" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
-        let insertQuery =
-              [yaml|
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
+            insertQuery =
+              [interpolateYaml|
                 type: mssql_run_sql
                 args:
                   source: mssql
-                  sql: "INSERT INTO authors (id, name) values (3, N'john')"
+                  sql: "INSERT INTO #{schemaName}.authors (id, name) values (3, N'john')"
               |]
 
             expectedResponse =
@@ -133,17 +134,19 @@ duplicateTriggerNameNotAllowed opts =
     it "metadata_api: does not allow creating an event trigger with a name that already exists" $
       \(testEnvironment, (webhookServer, _)) -> do
         -- metadata <- GraphqlEngine.exportMetadata testEnvironment
-        let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-        let createEventTriggerWithDuplicateName =
-              [yaml|
+        let schemaName :: Schema.SchemaName
+            schemaName = Schema.getSchemaName testEnvironment
+            webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+            createEventTriggerWithDuplicateName =
+              [interpolateYaml|
               type: mssql_create_event_trigger
               args:
                 name: authors_all
                 source: mssql
                 table:
                     name: articles
-                    schema: hasura
-                webhook: *webhookServerEchoEndpoint
+                    schema: #{schemaName}
+                webhook: #{webhookServerEchoEndpoint}
                 insert:
                     columns: "*"
             |]
@@ -163,7 +166,7 @@ duplicateTriggerNameNotAllowed opts =
 
     it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
       \(testEnvironment, (webhookServer, _)) -> do
-        let replaceMetadata = getReplaceMetadata webhookServer
+        let replaceMetadata = getReplaceMetadata testEnvironment webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
               [yaml|
@@ -184,9 +187,11 @@ duplicateTriggerNameNotAllowed opts =
 
 mssqlSetupWithEventTriggers :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 mssqlSetupWithEventTriggers testEnvironment webhookServer = do
-  let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+      webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+    [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -195,28 +200,29 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
           source: mssql
           table:
             name: authors
-            schema: hasura
-          webhook: *webhookServerEchoEndpoint
+            schema: #{schemaName}
+          webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
       |]
 
-getReplaceMetadata :: GraphqlEngine.Server -> Value
-getReplaceMetadata webhookServer =
-  let sourceConfig = Sqlserver.defaultSourceConfiguration
-      schemaName = schemaKeyword Fixture.SQLServer
+getReplaceMetadata :: TestEnvironment -> GraphqlEngine.Server -> Value
+getReplaceMetadata testEnvironment webhookServer =
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+      sourceConfig = Sqlserver.defaultSourceConfiguration testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-   in [yaml|
+   in [interpolateYaml|
       type: replace_metadata
       args:
         version: 3
         sources:
-        - configuration: *sourceConfig
+        - configuration: #{sourceConfig}
           name: mssql
           kind: mssql
           tables:
           - table:
-              schema: *schemaName
+              schema: #{schemaName}
               name: authors
             event_triggers:
             - name: authors_all
@@ -228,9 +234,9 @@ getReplaceMetadata webhookServer =
                 interval_sec: 10
                 num_retries: 0
                 timeout_sec: 60
-              webhook: *webhookServerEchoEndpoint
+              webhook: #{webhookServerEchoEndpoint}
           - table:
-              schema: *schemaName
+              schema: #{schemaName}
               name: articles
             event_triggers:
             - name: authors_all
@@ -244,7 +250,7 @@ getReplaceMetadata webhookServer =
                 interval_sec: 10
                 num_retries: 0
                 timeout_sec: 60
-              webhook: *webhookServerEchoEndpoint
+              webhook: #{webhookServerEchoEndpoint}
     |]
 
 mssqlTeardown :: TestEnvironment -> IO ()

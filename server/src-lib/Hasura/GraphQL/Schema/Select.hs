@@ -959,14 +959,18 @@ tableAggregationFields tableInfo = do
     mkNumericAggFields :: G.Name -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.ColFld b)]
     mkNumericAggFields name
       | name == Name._sum = traverse mkColumnAggField
+      -- Memoize here for more sharing. Note: we can't do `P.memoizeOn 'mkNumericAggFields...`
+      -- due to stage restrictions, so just add a string key:
       | otherwise = traverse \columnInfo ->
-          pure $! do
-            let !cfcol = IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
-            P.selection_
-              (ciName columnInfo)
-              (ciDescription columnInfo)
-              (P.nullable P.float)
-              $> cfcol
+          P.memoizeOn 'tableAggregationFields ("mkNumericAggFields" :: Text, columnInfo) $
+            -- CAREFUL!: below must only reference columnInfo else memoization key needs to be adapted
+            pure $! do
+              let !cfcol = IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
+              P.selection_
+                (ciName columnInfo)
+                (ciDescription columnInfo)
+                (P.nullable P.float)
+                $> cfcol
 
     mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.ColFld b))
     mkColumnAggField columnInfo =

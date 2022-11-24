@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
+import { Button } from '@/new-components/Button';
 import { REDACT_EVERYTHING } from '../core/heap/getRedactAttributes';
 import { Analytics } from './Analytics';
 
@@ -233,6 +234,20 @@ describe('Analytics misuses', () => {
     expect(console.error).toHaveBeenCalledWith(
       new Error(
         `Passing HTML attributes to strings is not does not make sense, you must remove the 'passHtmlAttributesToChildren' option passes to the element with name "my-name"`
+      )
+    );
+  });
+
+  it('When the children accepts HTML attributes and passHtmlAttributesToChildren is not passed, then should warn the developer', () => {
+    render(
+      <Analytics name="my-name">
+        <Button>Button</Button>
+      </Analytics>
+    );
+
+    expect(console.error).toHaveBeenCalledWith(
+      new Error(
+        `The children accept HTML attributes but you are not using the 'passHtmlAttributesToChildren' prop to the element with name "my-name"`
       )
     );
   });

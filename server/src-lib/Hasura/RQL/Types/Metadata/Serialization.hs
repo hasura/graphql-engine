@@ -421,9 +421,10 @@ openTelemetryConfigToOrdJSON :: OpenTelemetryConfig -> Maybe AO.Value
 openTelemetryConfigToOrdJSON = ifNotEmpty (== emptyOpenTelemetryConfig) configToOrdJSON
   where
     configToOrdJSON :: OpenTelemetryConfig -> AO.Value
-    configToOrdJSON (OpenTelemetryConfig enabledDataTypes exporterOtlp batchSpanProcessor) =
+    configToOrdJSON (OpenTelemetryConfig status enabledDataTypes exporterOtlp batchSpanProcessor) =
       AO.object
-        [ ("data_types", AO.toOrdered enabledDataTypes),
+        [ ("status", AO.toOrdered status),
+          ("data_types", AO.toOrdered enabledDataTypes),
           ("exporter_otlp", AO.toOrdered exporterOtlp),
           ("batch_span_processor", AO.toOrdered batchSpanProcessor)
         ]
