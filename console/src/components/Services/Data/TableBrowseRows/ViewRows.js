@@ -64,43 +64,47 @@ import {
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  persistColumnCollapseChange,
   getPersistedCollapsedColumns,
-  persistColumnOrderChange,
   getPersistedColumnsOrder,
+  persistColumnCollapseChange,
+  persistColumnOrderChange,
+  setPersistedPageSize,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import { push } from 'react-router-redux';
 import globals from '@/Globals';
-import { getUrlQueryParams } from '@/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer';
-import { adaptFormValuesToQuery } from '@/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
 
 const ViewRows = props => {
   const {
-    curTableName,
-    currentSchema,
-    curQuery,
-    curFilter,
-    curRows,
-    curPath = [],
-    parentTableName,
-    curDepth,
     activePath,
-    schemas,
+    count,
+    curDepth,
+    curFilter,
+    curPath = [],
+    curQuery,
+    currentSchema,
+    currentSource,
+    curRows,
+    curTableName,
     dispatch,
-    ongoingRequest,
+    expandedRow,
+    filtersAndSort,
     isProgressing,
+    isView,
     lastError,
     lastSuccess,
-    isView,
-    count,
-    expandedRow,
     manualTriggers = [],
+    onChangePageSize,
+    ongoingRequest,
+    onRunQuery,
+    parentTableName,
     readOnlyMode,
+    schemas,
     shouldHidePagination,
-    currentSource,
     useCustomPagination,
+    paginationUserQuery,
   } = props;
+
   const [invokedRow, setInvokedRow] = useState(null);
   const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -844,18 +848,6 @@ const ViewRows = props => {
     return _childComponent;
   };
 
-  const queryParams = getUrlQueryParams();
-  const [urlParamsFilters, setUrlParamsFilters] = useState(queryParams);
-  const [userQuery, setUserQuery] = useState(
-    adaptFormValuesToQuery(
-      urlParamsFilters,
-      tableSchema.columns.map(column => ({
-        name: column.column_name,
-        dataType: column.data_type,
-      }))
-    )
-  );
-
   const renderTableBody = () => {
     if (isProgressing) {
       return (
@@ -964,8 +956,10 @@ const ViewRows = props => {
     };
 
     const handlePageSizeChange = size => {
-      if (curFilter.size !== size) {
+      if (curFilter.limit !== size) {
         setSelectedRows([]);
+        onChangePageSize(size);
+        setPersistedPageSize(size);
       }
     };
 
@@ -980,7 +974,7 @@ const ViewRows = props => {
           pageSize={curFilter.limit}
           rows={curRows}
           tableSchema={tableSchema}
-          userQuery={userQuery}
+          userQuery={paginationUserQuery}
         />
       );
     }
@@ -1040,10 +1034,9 @@ const ViewRows = props => {
               [schemaKey]: tableSchema.table_schema,
               name: curTableName,
             }}
-            userQuery={urlParamsFilters}
+            initialFiltersAndSort={filtersAndSort}
             onRunQuery={newUserQuery => {
-              setUrlParamsFilters(newUserQuery);
-              setUserQuery(newUserQuery);
+              onRunQuery(newUserQuery);
             }}
           />
         </div>

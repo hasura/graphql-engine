@@ -3,6 +3,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { UpdatedForm } from '@/new-components/Form';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
+import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
 import { FilterRows } from './FilterRows';
 
@@ -90,6 +91,7 @@ export const Primary: ComponentStory<typeof FilterRows> = () => {
               columns={columns}
               operators={operators}
               name="filters"
+              onRemove={action('onRemove')}
             />
 
             <div className="py-4" data-testid="output">

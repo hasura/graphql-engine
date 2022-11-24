@@ -10,8 +10,8 @@ export type SortFormValues = {
 };
 
 export type FiltersAndSortFormValues = {
-  filter: FilterFormValues[];
-  sort: SortFormValues[];
+  filters: FilterFormValues[];
+  sorts: SortFormValues[];
 };
 
 export const defaultColumn = '-- column --';

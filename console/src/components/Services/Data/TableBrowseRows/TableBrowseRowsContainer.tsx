@@ -1,7 +1,14 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getManualEventsTriggers } from '@/metadata/selector';
-import { runFilterQuery } from '@/features/BrowseRows';
+import {
+  adaptFormValuesToQuery,
+  getFiltersAndSortFromUrlQueryParams,
+  runFilterQuery,
+  UserQuery,
+} from '@/features/BrowseRows';
+import useIsFirstRender from '@/hooks/useIsFirstRender';
+import { vSetDefaults } from './ViewActions';
 
 import { setTable } from '../DataActions';
 import ViewRows from './ViewRows';
@@ -11,9 +18,13 @@ import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { exists } from '../../../Common/utils/jsUtils';
 import TableHeader from '../TableCommon/TableHeader';
 import FeatureDisabled from '../FeatureDisabled';
-import { getPersistedPageSize } from './tableUtils';
-import { vSetDefaults } from './ViewActions';
-import { adaptFormValuesToQuery } from '../../../../features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
+import {
+  getFiltersAndSortFromLocalStorage,
+  getUniqueTableKey,
+  saveUserQueryToLocalStorage,
+  useFiltersAndSortFormValues,
+} from './Hooks/useFiltersAndSortFormValues';
+import { setOffset } from './FilterActions';
 
 type TableBrowseRowsContainerProps = {
   params: {
@@ -22,32 +33,7 @@ type TableBrowseRowsContainerProps = {
     table: string;
   };
 };
-export const getUrlQueryParams = (): {
-  filters: any['filter'];
-  sorts: any['sort'];
-} => {
-  const params = new URLSearchParams(window.location.search);
-  const filters = params.getAll('filter') ?? [];
-  const sorts = params.getAll('sort') ?? [];
 
-  return {
-    filters: filters.map(filter => {
-      const [column, operator, value] = filter.split(';');
-      return {
-        column,
-        operator,
-        value,
-      };
-    }),
-    sorts: sorts.map(filter => {
-      const [column, type] = filter.split(';');
-      return {
-        column,
-        type: type as any['sort'][0]['type'],
-      };
-    }),
-  };
-};
 export const TableBrowseRowsContainer = (
   props: TableBrowseRowsContainerProps
 ) => {
@@ -91,35 +77,75 @@ export const TableBrowseRowsContainer = (
     };
   }, [tableName]);
 
+  const tableSchema = schemas.find(
+    x => x.table_name === tableName && x.table_schema === schemaName
+  );
+
+  const { filtersAndSort, onRunQuery, initialUserQuery } =
+    useFiltersAndSortFormValues({
+      sourceName,
+      tableSchema,
+    });
+
+  const isFirstRender = useIsFirstRender();
   useEffect(() => {
+    if (!isFirstRender) {
+      return;
+    }
+
     const getInitialData = () => {
-      const tableSchema = schemas.find(
-        s => s.table_name === tableName && s.table_schema === schemaName
-      );
       if (!tableSchema) return;
 
-      if (!isFeatureSupported('tables.browse.enabled')) {
-        dispatch(setTable(tableName));
-      }
       dispatch(setTable(tableName));
-      const queryParams = getUrlQueryParams();
-      const limit = getPersistedPageSize();
 
-      dispatch(vSetDefaults(limit));
+      dispatch(vSetDefaults(curFilter.limit));
 
-      const userQuery = adaptFormValuesToQuery(
-        { filter: queryParams.filters, sort: queryParams.sorts },
-        tableSchema.columns.map(column => ({
+      const filterAndSortFromQueryParams =
+        getFiltersAndSortFromUrlQueryParams();
+
+      const initialUserQueryFromUrlParams = adaptFormValuesToQuery(
+        filterAndSortFromQueryParams,
+        (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
           dataType: column.data_type,
         }))
       );
 
+      const areFiltersAndSortsEmpty =
+        filterAndSortFromQueryParams.filters.length === 0 &&
+        filterAndSortFromQueryParams.sorts.length === 0;
+
+      if (areFiltersAndSortsEmpty) {
+        const localUserQuery = getFiltersAndSortFromLocalStorage({
+          sourceName,
+          tableSchema,
+        });
+
+        dispatch(
+          runFilterQuery({
+            tableSchema,
+            whereAnd: localUserQuery.where.$and,
+            orderBy: localUserQuery.order_by,
+            limit: curFilter.limit,
+            offset: curFilter.offset,
+          })
+        );
+        return;
+      }
+
+      const uniqueTableKey = getUniqueTableKey({ sourceName, tableSchema });
+      if (uniqueTableKey) {
+        saveUserQueryToLocalStorage(
+          uniqueTableKey,
+          initialUserQueryFromUrlParams
+        );
+      }
+
       dispatch(
         runFilterQuery({
           tableSchema,
-          whereAnd: userQuery.where.$and,
-          orderBy: userQuery.order_by,
+          whereAnd: initialUserQueryFromUrlParams.where.$and,
+          orderBy: initialUserQueryFromUrlParams.order_by,
           limit: curFilter.limit,
           offset: curFilter.offset,
         })
@@ -127,11 +153,41 @@ export const TableBrowseRowsContainer = (
     };
 
     getInitialData();
+  }, []);
 
-    return () => {
-      dispatch(vSetDefaults());
+  useEffect(() => {
+    if (isFirstRender) {
+      return;
+    }
+    const getInitialData = () => {
+      if (!tableSchema) return;
+
+      dispatch(setTable(tableName));
+      dispatch(vSetDefaults(curFilter.limit));
+      dispatch(setOffset(0));
+
+      const localUserQuery = getFiltersAndSortFromLocalStorage({
+        sourceName,
+        tableSchema,
+      });
+
+      dispatch(
+        runFilterQuery({
+          tableSchema,
+          whereAnd: localUserQuery.where.$and,
+          orderBy: localUserQuery.order_by,
+          limit: curFilter.limit,
+          offset: 0,
+        })
+      );
     };
+
+    getInitialData();
   }, [tableName]);
+
+  const [paginationUserQuery, setPaginationUserQuery] =
+    useState(initialUserQuery);
+
   if (!isFeatureSupported('tables.browse.enabled')) {
     return (
       <FeatureDisabled
@@ -147,6 +203,9 @@ export const TableBrowseRowsContainer = (
   const tableCount = exists(count) ? count : estimatedCount;
   const shouldHidePagination = !exists(count) && !estimatedCount;
 
+  const onChangePageSize = (newLimit: number) =>
+    dispatch(vSetDefaults(newLimit));
+
   return (
     <RightContainer>
       <TableHeader
@@ -160,28 +219,35 @@ export const TableBrowseRowsContainer = (
         readOnlyMode={readOnlyMode}
       />
       <ViewRows
-        curTableName={tableName}
-        currentSchema={schemaName}
-        dispatch={dispatch}
-        readOnlyMode={readOnlyMode}
-        parentTableName={null}
-        curQuery={query}
-        curFilter={curFilter}
-        curRows={rows}
-        isView={isTableView}
         activePath={activePath}
+        count={tableCount}
+        curDepth={0}
+        curFilter={curFilter}
+        curQuery={query}
+        currentSchema={schemaName}
         currentSource={sourceName}
-        ongoingRequest={ongoingRequest}
+        curRows={rows}
+        curTableName={tableName}
+        dispatch={dispatch}
+        expandedRow={expandedRow}
+        isProgressing={isProgressing}
+        isView={isTableView}
         lastError={lastError}
         lastSuccess={lastSuccess}
-        schemas={schemas}
-        curDepth={0}
-        count={tableCount}
-        shouldHidePagination={shouldHidePagination}
-        expandedRow={expandedRow}
         manualTriggers={manualTriggers}
+        ongoingRequest={ongoingRequest}
+        parentTableName={null}
+        readOnlyMode={readOnlyMode}
+        schemas={schemas}
+        shouldHidePagination={shouldHidePagination}
         useCustomPagination={shouldUseCustomPagination}
-        isProgressing={isProgressing}
+        filtersAndSort={filtersAndSort}
+        onRunQuery={(newUserQuery: UserQuery) => {
+          onRunQuery(newUserQuery);
+          setPaginationUserQuery(newUserQuery);
+        }}
+        paginationUserQuery={paginationUserQuery}
+        onChangePageSize={onChangePageSize}
       />
     </RightContainer>
   );

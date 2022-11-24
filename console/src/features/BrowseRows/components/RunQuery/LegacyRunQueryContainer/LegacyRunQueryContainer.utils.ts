@@ -30,6 +30,10 @@ const convertValue = (
   }
 
   if (tableColumnType === 'boolean') {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+
     return Boolean(value);
   }
 
@@ -41,7 +45,7 @@ export const adaptFormValuesToQuery = (
   columnDataTypes: TableColumn[]
 ): UserQuery => {
   const where =
-    formValues?.filter?.map(filter => {
+    formValues?.filters?.map(filter => {
       const columnDataType = columnDataTypes.find(
         col => col.name === filter.column
       );
@@ -63,7 +67,7 @@ export const adaptFormValuesToQuery = (
     }) ?? [];
 
   const orderBy =
-    formValues?.sort?.map(order => {
+    formValues?.sorts?.map(order => {
       const orderCondition: OrderCondition = {
         column: order.column,
         type: order.type,
@@ -233,3 +237,32 @@ export const runFilterQuery =
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeTableRequests());
   };
+
+export const convertUserQueryToFiltersAndSortFormValues = (
+  userQuery: UserQuery
+): FiltersAndSortFormValues => {
+  const filters: FiltersAndSortFormValues['filters'] = userQuery.where.$and.map(
+    and => {
+      const columnName = Object.keys(and)[0];
+      const operator = Object.keys(and[columnName])[0];
+      const value = and[columnName][operator];
+      return {
+        column: columnName,
+        operator,
+        value: value.toString(),
+      };
+    }
+  );
+
+  const sorts: FiltersAndSortFormValues['sorts'] = userQuery.order_by.map(
+    order => ({
+      column: order.column,
+      type: order.type,
+    })
+  );
+
+  return {
+    filters,
+    sorts,
+  };
+};
