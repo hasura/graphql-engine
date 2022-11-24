@@ -187,7 +187,7 @@ renderFeatureMatrix =
     featureRow :: (FeatureName, [TestRun]) -> Html ()
     featureRow (name, runs) = tr_ $ do
       td_ (toHtml name)
-      td_ [title_ (runNames runs)] (runsStatus runs)
+      td_ [title_ (runNames runs)] (toHtml $ runsStatus runs)
 
     -- Construct a sensible list of indications of which tests have been run.
     runNames :: [TestRun] -> Text
@@ -196,7 +196,7 @@ renderFeatureMatrix =
         . Set.toList
         . Set.fromList
         . filter (not . T.null)
-        . map (inlineGroups . testRunGroups)
+        . map (\testRun -> runsStatus [testRun] <> " " <> inlineGroups (testRunGroups $ testRun))
 
     inlineGroups :: [Text] -> Text
     inlineGroups groups =
@@ -204,7 +204,7 @@ renderFeatureMatrix =
         "."
         (filter (/= "Postgres") $ tail groups)
 
-    runsStatus :: [TestRun] -> Html ()
+    runsStatus :: [TestRun] -> Text
     runsStatus runs
       | all testRunPassed runs = "☑️ "
       | otherwise = "☒"
