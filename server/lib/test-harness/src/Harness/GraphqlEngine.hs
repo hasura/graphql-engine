@@ -19,6 +19,7 @@ module Harness.GraphqlEngine
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
+    postGraphqlWithVariables,
     postGraphqlWithPair,
     postGraphqlWithHeaders,
     postWithHeadersStatus,
@@ -148,6 +149,18 @@ postGraphqlYamlWithHeaders testEnvironment headers =
 postGraphql :: HasCallStack => TestEnvironment -> Value -> IO Value
 postGraphql testEnvironment value =
   withFrozenCallStack $ postGraphqlYaml testEnvironment (object ["query" .= value])
+
+-- | Same as 'postGraphql', but accepts variables to the GraphQL query as well.
+postGraphqlWithVariables :: HasCallStack => TestEnvironment -> Value -> Value -> IO Value
+postGraphqlWithVariables testEnvironment query variables =
+  withFrozenCallStack $
+    postGraphqlYaml
+      testEnvironment
+      ( object
+          [ "query" .= query,
+            "variables" .= variables
+          ]
+      )
 
 -- | Same as postGraphql but accepts a list of 'Pair' to pass
 -- additional parameters to the endpoint.

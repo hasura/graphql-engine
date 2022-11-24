@@ -743,7 +743,7 @@ class EchoGraphQL(RequestHandler):
     def post(self, req):
         if not req.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = echo_schema.execute(req.json['query'])
+        res = echo_schema.execute(req.json['query'], variables=req.json.get('variables',None))
         resp_dict = res.to_dict()
         types_list = resp_dict.get('data',{}).get('__schema',{}).get('types', None)
         #Hack around enum default_value serialization issue: https://github.com/graphql-python/graphql-core/issues/166

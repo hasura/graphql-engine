@@ -149,6 +149,7 @@ library
     Test.Schema.DefaultValues.DefaultValuesSpec
     Test.Schema.DefaultValues.OnConflictSpec
     Test.Schema.EnumsSpec
+    Test.Schema.RemoteSchemaCustomizationSpec
     Test.Schema.RemoteRelationships.FromRemoteSchemaSpec
     Test.Schema.RemoteRelationships.MetadataAPI.ClearMetadataSpec
     Test.Schema.RemoteRelationships.MetadataAPI.Common
