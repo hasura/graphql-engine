@@ -35,7 +35,7 @@ export function useMetadata(
     args: {},
   };
 
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
   const queryFn = () => {
     return Api.post<MetadataResponse>({
       headers,
@@ -48,6 +48,6 @@ export function useMetadata(
     queryKey: 'metadata',
     queryFn,
     ...queryOptions,
-    select: (d) => transformFn(select(d)),
+    select: d => transformFn(select(d)),
   });
 }

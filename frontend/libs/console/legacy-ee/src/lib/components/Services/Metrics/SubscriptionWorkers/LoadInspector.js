@@ -6,18 +6,18 @@ import Modal from './Modal';
 
 import { fetchSubscriptionWorkerDetail } from './graphql.queries';
 
-const LoadInspector = (props) => {
+const LoadInspector = props => {
   const { projectId, pollerId, onHide } = props;
   const options = {
     variables: {
       projectId: projectId,
       pollerId: pollerId,
     },
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-and-network'
   };
   const { loading, error, data } = useQuery(
     fetchSubscriptionWorkerDetail,
-    options
+    options,
   );
 
   if (loading) {

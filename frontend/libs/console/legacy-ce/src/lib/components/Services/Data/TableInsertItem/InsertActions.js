@@ -23,7 +23,6 @@ import { removeAll } from 'react-notification-system-redux';
 import { getNotificationDetails } from '../../Common/Notification';
 import { getTableConfiguration } from '../TableBrowseRows/utils';
 
-const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
 const I_ONGOING_REQ = 'InsertItem/I_ONGOING_REQ';
 const I_REQUEST_SUCCESS = 'InsertItem/I_REQUEST_SUCCESS';
@@ -98,8 +97,8 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     const columns = currentTableInfo.columns;
     let error = false;
     let errorMessage = '';
-    Object.keys(colValues).map((colName) => {
-      const colSchema = columns.find((x) => x.column_name === colName);
+    Object.keys(colValues).map(colName => {
+      const colSchema = columns.find(x => x.column_name === colName);
       const colType = colSchema.data_type;
       const colValue = colValues[colName];
 
@@ -146,7 +145,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         error: { message: 'Not valid JSON' },
       });
     }
-    const returning = columns.map((col) => col.column_name);
+    const returning = columns.map(col => col.column_name);
     if (!dataSource.generateInsertRequest) return;
     const {
       getInsertRequestBody,
@@ -203,7 +202,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     return dispatch(
       requestAction(url, options, I_REQUEST_SUCCESS, I_REQUEST_ERROR)
     ).then(
-      (data) => {
+      data => {
         const { affectedRows, returnedFields } = processInsertData(
           data,
           tableConfiguration,
@@ -232,7 +231,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         }
       },
 
-      (err) => {
+      err => {
         dispatch(removeAll());
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
@@ -261,7 +260,7 @@ const fetchEnumOptions = () => {
     };
     const url = Endpoints.query;
 
-    requests.forEach((request) => {
+    requests.forEach(request => {
       const req = getEnumOptionsQuery(
         request,
         currentSchema,
@@ -274,7 +273,7 @@ const fetchEnumOptions = () => {
           body: JSON.stringify(req),
         })
       ).then(
-        (data) =>
+        data =>
           dispatch({
             type: I_FETCH_ENUM_OPTIONS_SUCCESS,
             data: {
@@ -297,14 +296,6 @@ const insertReducer = (tableName, state, action) => {
     case I_RESET:
       return {
         clone: null,
-        ongoingRequest: false,
-        lastError: null,
-        lastSuccess: null,
-        enumOptions: null,
-      };
-    case I_SET_CLONE:
-      return {
-        clone: action.clone,
         ongoingRequest: false,
         lastError: null,
         lastSuccess: null,
@@ -360,4 +351,4 @@ const insertReducer = (tableName, state, action) => {
 };
 
 export default insertReducer;
-export { fetchEnumOptions, insertItem, I_SET_CLONE, I_RESET, Open, Close };
+export { fetchEnumOptions, insertItem, I_RESET, Open, Close };

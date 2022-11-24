@@ -5,7 +5,7 @@ import globals from '../Globals';
 const urlPrefix = globals.urlPrefix;
 const appPrefix = urlPrefix !== '/' ? urlPrefix + '/data' : '/data';
 
-const getValidUrl = (path) => {
+const getValidUrl = path => {
   return urlPrefix !== '/' ? urlPrefix + path : path;
 };
 

@@ -1,5 +1,5 @@
 import { RunSQLResponse } from '@/features/DataSource';
-import { Metadata } from '@/features/MetadataAPI';
+import { Metadata } from '@/features/hasura-metadata-types';
 import { rest } from 'msw';
 
 const metadata: Metadata = {

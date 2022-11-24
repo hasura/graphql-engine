@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import {
   FeatureFlagToast,
   useFeatureFlags,
@@ -56,7 +57,7 @@ const RelationshipsView = ({
   }, [tableName, currentSchema, dispatch]);
 
   const tableSchema = allSchemas.find(
-    (t) => t.table_name === tableName && t.table_schema === currentSchema
+    t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
   const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
@@ -67,7 +68,7 @@ const RelationshipsView = ({
     featureFlagsData &&
     featureFlagsData?.length > 0 &&
     featureFlagsData.find(
-      (featureFlag) =>
+      featureFlag =>
         featureFlag.id === availableFeatureFlagIds.relationshipTabTablesId
     )?.state?.enabled;
 
@@ -131,7 +132,7 @@ const RelationshipsView = ({
             </tr>
           </thead>
           <tbody>
-            {objArrRelList.map((rel) => {
+            {objArrRelList.map(rel => {
               const column1 = rel.objRel ? (
                 <RelationshipEditor
                   dispatch={dispatch}
@@ -166,7 +167,7 @@ const RelationshipsView = ({
   const remoteRelationshipsSection = () => {
     const existingRemoteRelationships =
       tableSchema?.remote_relationships?.filter(
-        (field) =>
+        field =>
           'remote_schema' in field.definition ||
           'to_remote_schema' in field.definition
       ) ?? [];
@@ -187,55 +188,57 @@ const RelationshipsView = ({
   return (
     <>
       <RightContainer>
-        <div className={`${styles.container} container-fluid`}>
-          <TableHeader
-            dispatch={dispatch}
-            table={tableSchema}
-            source={currentSource}
-            tabName="relationships"
-            migrationMode={migrationMode}
-            readOnlyMode={readOnlyMode}
-          />
-          <br />
-          <div className={`${styles.padd_left_remove} container-fluid`}>
-            <div
-              className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-10 col-md-10`}
-            >
-              <h4 className={styles.subheading_text}>
-                Table Relationships
-                <ToolTip message={'Relationships to tables / views'} />
-                &nbsp;
-                <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
-              </h4>
-              {addedRelationshipsView}
-              <div className={styles.activeEdit}>
-                <AddManualRelationship
-                  tableSchema={tableSchema}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  relAdd={manualRelAdd}
-                  dispatch={dispatch}
-                />
-              </div>
-            </div>
-            {isFeatureSupported(
-              'tables.relationships.remoteDbRelationships.hostSource'
-            ) ? (
+        <Analytics name="RelationshipsView" {...REDACT_EVERYTHING}>
+          <div className={`${styles.container} container-fluid`}>
+            <TableHeader
+              dispatch={dispatch}
+              table={tableSchema}
+              source={currentSource}
+              tabName="relationships"
+              migrationMode={migrationMode}
+              readOnlyMode={readOnlyMode}
+            />
+            <br />
+            <div className={`${styles.padd_left_remove} container-fluid`}>
               <div
-                className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+                className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-10 col-md-10`}
               >
-                <RemoteDbRelationships
-                  tableSchema={tableSchema}
-                  reduxDispatch={dispatch}
-                  currentSource={currentSource}
-                />
+                <h4 className={styles.subheading_text}>
+                  Table Relationships
+                  <ToolTip message={'Relationships to tables / views'} />
+                  &nbsp;
+                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                </h4>
+                {addedRelationshipsView}
+                <div className={styles.activeEdit}>
+                  <AddManualRelationship
+                    tableSchema={tableSchema}
+                    allSchemas={allSchemas}
+                    schemaList={schemaList}
+                    relAdd={manualRelAdd}
+                    dispatch={dispatch}
+                  />
+                </div>
               </div>
-            ) : null}
-            {isFeatureSupported('tables.relationships.track') &&
-              remoteRelationshipsSection()}
+              {isFeatureSupported(
+                'tables.relationships.remoteDbRelationships.hostSource'
+              ) ? (
+                <div
+                  className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+                >
+                  <RemoteDbRelationships
+                    tableSchema={tableSchema}
+                    reduxDispatch={dispatch}
+                    currentSource={currentSource}
+                  />
+                </div>
+              ) : null}
+              {isFeatureSupported('tables.relationships.track') &&
+                remoteRelationshipsSection()}
+            </div>
+            <div className={`${styles.fixed} hidden`}>{alert}</div>
           </div>
-          <div className={`${styles.fixed} hidden`}>{alert}</div>
-        </div>
+        </Analytics>
       </RightContainer>
       <FeatureFlagToast
         flagId={availableFeatureFlagIds.relationshipTabTablesId}
@@ -277,13 +280,13 @@ const mapStateToProps = (state, ownProps) => {
     serverVersion: state.main.serverVersion,
     allFunctions: nonTrackableFns?.concat(trackedFns ?? []) ?? [],
     schemaList: state.tables.schemaList,
-    remoteSchemas: getRemoteSchemasSelector(state).map((schema) => schema.name),
+    remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
     currentSource: state.tables.currentDataSource,
     ...state.tables.modify,
   };
 };
 
-const relationshipsViewConnector = (connect) =>
+const relationshipsViewConnector = connect =>
   connect(mapStateToProps)(RelationshipsView);
 
 export default relationshipsViewConnector;

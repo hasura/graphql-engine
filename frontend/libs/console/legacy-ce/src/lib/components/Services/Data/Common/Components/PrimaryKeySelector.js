@@ -16,7 +16,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       }
       return null;
     })
-    .filter((rc) => Boolean(rc));
+    .filter(rc => Boolean(rc));
 
   // map over the primary keys
   const pkEditors = () => {
@@ -24,7 +24,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       let removeIcon;
 
       // dispatch action for a column in PK state
-      const dispatchSet = (e) => {
+      const dispatchSet = e => {
         const newPks = [
           ...primaryKeys.slice(0, i),
           e.target.value,

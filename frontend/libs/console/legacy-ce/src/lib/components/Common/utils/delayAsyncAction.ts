@@ -3,7 +3,7 @@
 async function delayAsyncAction<T>(asyncAction: Promise<T>, delay = 300) {
   const [res] = await Promise.all([
     asyncAction,
-    new Promise((resolve) => setTimeout(resolve, delay)),
+    new Promise(resolve => setTimeout(resolve, delay)),
   ]);
 
   return res;

@@ -21,7 +21,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
   },
 } as ComponentMeta<typeof Select>;
 
-export const ApiPlayground: ComponentStory<typeof Select> = (args) => {
+export const ApiPlayground: ComponentStory<typeof Select> = args => {
   const validationSchema = z.object({});
 
   return (
@@ -152,6 +152,35 @@ StateWithDefaultValue.parameters = {
     description: {
       story: `Use \`<Form>\` options to set default value.`,
     },
+    source: { state: 'open' },
+  },
+};
+
+export const StateLoading: ComponentStory<typeof Select> = () => {
+  const options = [
+    { value: 'value0', label: 'Value 0' },
+    { value: 'value1', label: 'Value 1', loading: true },
+    { value: 'value2', label: 'Value 2' },
+  ];
+
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <Select
+          name="selectNames"
+          label="The select label"
+          options={options}
+          loading
+        />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
     source: { state: 'open' },
   },
 };

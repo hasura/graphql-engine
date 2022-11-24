@@ -44,7 +44,7 @@ const RolesHeader: React.FC<RolesHeaderProps> = ({
   return (
     <>
       {roles.length ? (
-        roles.map((role) => (
+        roles.map(role => (
           <Header
             content={role}
             selectable={selectable}
@@ -55,14 +55,14 @@ const RolesHeader: React.FC<RolesHeaderProps> = ({
                 icon={
                   <FaCopy className={styles.actionIcon} aria-hidden="true" />
                 }
-                onClick={(e) => onCopyClick(e, role)}
+                onClick={e => onCopyClick(e, role)}
                 title="Copy Permissions"
               />,
               <IconButton
                 icon={
                   <FaTrash className={styles.actionIcon} aria-hidden="true" />
                 }
-                onClick={(e) => onDeleteClick(e, role)}
+                onClick={e => onDeleteClick(e, role)}
                 title="Delete Role Permissions"
               />,
             ]}

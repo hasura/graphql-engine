@@ -42,7 +42,7 @@ const LeftSidebarSection = ({
   let itemList: LeftSidebarItem[] = [];
   if (searchText) {
     const secondaryResults: LeftSidebarItem[] = [];
-    items.forEach((a) => {
+    items.forEach(a => {
       if (a.name.startsWith(searchText)) {
         itemList.push(a);
       } else if (a.name.includes(searchText)) {
@@ -63,7 +63,7 @@ const LeftSidebarSection = ({
         </li>
       );
     } else {
-      childList = itemList.map((a) => {
+      childList = itemList.map(a => {
         let activeTableClass = '';
         if (currentItem && currentItem.name === a.name) {
           activeTableClass = styles.activeLink;

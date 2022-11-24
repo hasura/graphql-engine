@@ -144,8 +144,13 @@ export const RemoteDBRelationshipWidget = ({
   }
 
   return (
-    <Form schema={schema} onSubmit={submit} options={{ defaultValues }}>
-      {(options) => (
+    <Form
+      schema={schema}
+      onSubmit={submit}
+      options={{ defaultValues }}
+      className="p-4"
+    >
+      {options => (
         <>
           <div>
             <div className="w-full sm:w-6/12 mb-md">

@@ -356,7 +356,7 @@ export const getDownQueryComments = (
     const comment = [
       'Could not auto-generate a down migration.',
       'Please write an appropriate down migration for the SQL below:',
-      ...upqueries.map((i) => i.args.sql),
+      ...upqueries.map(i => i.args.sql),
       '',
     ]
       .join('\n')

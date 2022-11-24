@@ -17,11 +17,12 @@ export default {
     'Features/Remote Relationships/Components/Reference Remote Schema Selector',
   component: RefRsSelector,
   decorators: [
-    (StoryComponent) => (
+    StoryComponent => (
       <Form
         schema={z.any()}
-        onSubmit={(o) => console.log(o)}
+        onSubmit={o => console.log(o)}
         options={{ defaultValues }}
+        className="p-4"
       >
         {() => <StoryComponent />}
       </Form>
@@ -29,7 +30,7 @@ export default {
   ],
 } as Meta;
 
-export const Primary: Story<RefRsSelectorProps> = (args) => (
+export const Primary: Story<RefRsSelectorProps> = args => (
   <RefRsSelector {...args} />
 );
 Primary.args = {

@@ -15,7 +15,7 @@ export const IdleTimeout: React.VFC<ConnectionSettingsFormProps> = ({
       className={`form-control ${styles.connnection_settings_form_input}`}
       placeholder="180"
       value={connectionDBState.connectionSettings?.idle_timeout ?? undefined}
-      onChange={(e) =>
+      onChange={e =>
         connectionDBStateDispatch({
           type: 'UPDATE_IDLE_TIMEOUT',
           data: e.target.value,

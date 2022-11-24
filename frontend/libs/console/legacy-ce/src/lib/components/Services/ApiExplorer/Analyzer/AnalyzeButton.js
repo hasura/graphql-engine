@@ -5,6 +5,7 @@ import GraphiQL from 'graphiql';
 import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
 import { getGraphQLQueryPayload } from '../../../Common/utils/graphqlUtils';
+import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 
 export default class AnalyzeButton extends React.Component {
   constructor(props) {
@@ -31,7 +32,7 @@ export default class AnalyzeButton extends React.Component {
       if (validOperations.length) {
         options = (
           <ul>
-            {validOperations.map((operation) => {
+            {validOperations.map(operation => {
               return (
                 <li
                   key={operation.name ? operation.name.value : '*'}
@@ -99,11 +100,12 @@ export default class AnalyzeButton extends React.Component {
           ''
       );
     }
+    trackGraphiQlToolbarButtonClick('Analyze');
   };
   clearAnalyse = () => {
     this.setState({ isAnalysing: false, analyseQuery: '' });
   };
-  onRun = (operation) => {
+  onRun = operation => {
     let parseQuery = null;
     try {
       parseQuery = parse(this.props.query);
@@ -141,17 +143,17 @@ export default class AnalyzeButton extends React.Component {
       highlight: null,
     });
   };
-  _onOptionSelected = (operation) => {
+  _onOptionSelected = operation => {
     this.setState({ optionsOpen: false });
     this.onRun(operation.name && operation.name.value);
   };
 
-  _onOptionsOpen = (downEvent) => {
+  _onOptionsOpen = downEvent => {
     let initialPress = true;
     const downTarget = downEvent.target;
     this.setState({ highlight: null, optionsOpen: true });
 
-    let onMouseUp = (upEvent) => {
+    let onMouseUp = upEvent => {
       if (initialPress && upEvent.target === downTarget) {
         initialPress = false;
       } else {

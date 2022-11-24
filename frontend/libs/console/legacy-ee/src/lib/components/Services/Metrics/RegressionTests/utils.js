@@ -39,7 +39,7 @@ const CONTENT_FONT = '14px Gudea';
 
 export const PAGE_LIMIT = 10;
 
-export const transformMessage = (row) => {
+export const transformMessage = row => {
   if (row.status === SUCCESS_ENUM) {
     return 'Passed';
   } else if (row.status === FAILED_ENUM) {
@@ -57,7 +57,7 @@ export const transformMessage = (row) => {
 /**
  * @param {string} value
  */
-export const getTitle = (value) => {
+export const getTitle = value => {
   return capitalize(stripUnderScore(value));
 };
 
@@ -85,7 +85,7 @@ const getTextWidth = (text, font) => {
  */
 export const getColWidth = (header, contentRows = []) => {
   let maxContentWidth = 0;
-  contentRows.forEach((row) => {
+  contentRows.forEach(row => {
     if (row && row[header]) {
       const content = row[header];
       let contentString;
@@ -120,7 +120,7 @@ export const DataNotAvaliable = ({ children }) => (
   </div>
 );
 
-export const getTestRunStatusText = (runData) => {
+export const getTestRunStatusText = runData => {
   if (runData.status === IN_PROCESS_ENUM) {
     return 'Tests are queued';
   }
@@ -131,7 +131,7 @@ export const getTestRunStatusText = (runData) => {
   switch (runData.status) {
     case FAILED_ENUM:
       const errorsCount = runData.test_run_details.filter(
-        (d) => d.status === FAILED_ENUM
+        d => d.status === FAILED_ENUM
       ).length;
       return `Ran with ${errorsCount} ${
         errorsCount === 1 ? 'error' : 'errors'

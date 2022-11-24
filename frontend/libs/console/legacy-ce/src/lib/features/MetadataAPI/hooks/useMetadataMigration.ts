@@ -26,10 +26,10 @@ export function useMetadataMigration(
   >
 ) {
   const { mode } = useConsoleConfig();
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
   const queryClient = useQueryClient();
   return useMutation(
-    async (props) => {
+    async props => {
       try {
         const { query } = props;
         const body = query;

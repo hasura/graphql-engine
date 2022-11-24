@@ -43,7 +43,6 @@ import {
 } from './Actions';
 import './NotificationOverrides.css';
 import { clearPersistedGraphiQLHeaders } from '../../utils/localstorage';
-import { growthExperimentsClient } from '../../utils/growthExperimentsClient';
 
 import { moduleName, relativeModulePath } from '../Services/Metrics/constants';
 
@@ -152,7 +151,7 @@ class Main extends React.Component {
 
     if (
       prevHeaders.length !== currHeaders.length ||
-      prevHeaders.filter((hdr) => !currHeaders.includes(hdr)).length
+      prevHeaders.filter(hdr => !currHeaders.includes(hdr)).length
     ) {
       updateRequestHeaders(this.props);
     }
@@ -180,10 +179,12 @@ class Main extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps) {
-    const { [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility } =
-      this.props.featuresCompatibility;
-    const { [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility } =
-      nextProps.featuresCompatibility;
+    const {
+      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
+    } = this.props.featuresCompatibility;
+    const {
+      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
+    } = nextProps.featuresCompatibility;
 
     const { accessState } = nextProps;
 
@@ -250,7 +251,7 @@ class Main extends React.Component {
   };
 
   toggleDropDown = () => {
-    this.setState((prevState) => ({
+    this.setState(prevState => ({
       isDropdownOpen: !prevState.isDropdownOpen,
     }));
   };
@@ -575,11 +576,6 @@ class Main extends React.Component {
       return null;
     };
 
-    const isOnboardingWizardEnabled =
-      growthExperimentsClient.getAllExperimentConfig().find((e) => {
-        return e.experiment === 'console_onboarding_wizard_v1';
-      })?.status === 'enabled';
-
     return (
       <div className={styles.container}>
         <div className={styles.flexRow}>
@@ -646,7 +642,6 @@ class Main extends React.Component {
             {serverVersion &&
             accessState &&
             'hasDataAccess' in accessState &&
-            !isOnboardingWizardEnabled &&
             accessState.hasDataAccess ? (
               <Onboarding
                 dispatch={this.props.dispatch}
@@ -655,14 +650,14 @@ class Main extends React.Component {
               />
             ) : null}
           </div>
-          <OnboardingWizard growthExperimentsClient={growthExperimentsClient} />
+          <OnboardingWizard />
         </div>
       </div>
     );
   }
 }
 
-export const decodeJWT = (oAuthResponse) => {
+export const decodeJWT = oAuthResponse => {
   if ('id_token' in oAuthResponse) {
     const decoded = decodeToken(oAuthResponse.id_token);
     if (!decoded) {

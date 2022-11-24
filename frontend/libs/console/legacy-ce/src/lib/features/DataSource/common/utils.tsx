@@ -1,6 +1,6 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
-import { MetadataTable, Source, Table } from '@/features/MetadataAPI';
+import { MetadataTable, Source, Table } from '@/features/hasura-metadata-types';
 import { IntrospectedTable, TableColumn, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
 
@@ -30,7 +30,7 @@ export const adaptTableColumns = (
 ): TableColumn[] => {
   if (!result) return [];
 
-  return result.slice(1).map((row) => ({
+  return result.slice(1).map(row => ({
     name: row[0],
     dataType: row[1],
   }));
@@ -54,7 +54,7 @@ export const convertToTreeData = (
   const uniqueLevelValues = levelValues.filter(onlyUnique);
 
   return [
-    ...uniqueLevelValues.map((levelValue) => {
+    ...uniqueLevelValues.map(levelValue => {
       const { database, ...rest } = JSON.parse(name);
       // eslint-disable-next-line no-underscore-dangle
       const _key = JSON.stringify({
@@ -94,7 +94,7 @@ export const transformGraphqlResponse = ({
   sourceCustomization: Source['customization'];
   columns: string[];
 }): TableRow[] => {
-  return data.map((row) => {
+  return data.map(row => {
     const transformedRow = Object.entries(row).reduce((acc, [key, value]) => {
       const columnName =
         Object.entries(tableCustomization?.column_config ?? {}).find(

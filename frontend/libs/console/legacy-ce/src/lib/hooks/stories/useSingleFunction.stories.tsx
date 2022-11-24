@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof SingleFunction>;
 
-export const Playground: ComponentStory<typeof SingleFunction> = (args) => {
+export const Playground: ComponentStory<typeof SingleFunction> = args => {
   return <SingleFunction {...args} />;
 };
 

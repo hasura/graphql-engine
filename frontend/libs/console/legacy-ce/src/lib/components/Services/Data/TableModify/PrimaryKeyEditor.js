@@ -31,8 +31,8 @@ const PrimaryKeyEditor = ({
   }));
 
   // generate primary keys in the order respecting the column order
-  const orderedPks = tablePrimaryKeyColumns.map((pk) => {
-    return orderedCols.find((c) => c.name === pk).index;
+  const orderedPks = tablePrimaryKeyColumns.map(pk => {
+    return orderedCols.find(c => c.name === pk).index;
   });
 
   const pkConstraintName = tableSchema.primary_key
@@ -75,7 +75,7 @@ const PrimaryKeyEditor = ({
 
   // set PK edit state when editor is expanded
   const setPkEditState = () => {
-    dispatch(setPrimaryKeys([...orderedPks.map((pk) => pk.toString()), '']));
+    dispatch(setPrimaryKeys([...orderedPks.map(pk => pk.toString()), '']));
   };
 
   // reset PK edit state when the editor is collapsed

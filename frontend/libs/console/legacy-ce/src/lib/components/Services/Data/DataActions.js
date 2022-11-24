@@ -81,7 +81,7 @@ const SET_FILTER_TABLES = 'Data/SET_FILTER_TABLES';
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
 export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
-export const setAllRoles = (roles) => ({
+export const setAllRoles = roles => ({
   type: SET_ALL_ROLES,
   roles,
 });
@@ -98,12 +98,12 @@ export const mergeRemoteRelationshipsWithSchema = (
 ) => {
   return (dispatch, getState) => {
     const { allSchemas } = getState().tables;
-    const t = allSchemas.find((s) => {
+    const t = allSchemas.find(s => {
       return s.table_name === table.name && s.table_schema === table.schema;
     });
     if (!t) return;
     const newAllSchemas = allSchemas.filter(
-      (s) => !(s.table_name === table.name && s.table_schema === table.schema)
+      s => !(s.table_name === table.name && s.table_schema === table.schema)
     );
     newAllSchemas.push({
       ...t,
@@ -116,7 +116,7 @@ export const mergeRemoteRelationshipsWithSchema = (
   };
 };
 
-export const setDBConnectionDetails = (details) => {
+export const setDBConnectionDetails = details => {
   return {
     type: SET_DB_CONNECTION_ENV_VAR,
     data: details,
@@ -163,23 +163,22 @@ const loadSchema = (configOptions = {}) => {
 
     if (configOptions?.schemas) {
       allSchemas = allSchemas.filter(
-        (schemaInfo) =>
-          !configOptions.schemas.some(
-            (item) => item === schemaInfo.table_schema
-          )
+        schemaInfo =>
+          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
       );
     }
 
     if (configOptions?.tables) {
       allSchemas = allSchemas.filter(
-        (schemaInfo) =>
+        schemaInfo =>
           !configOptions.tables.some(
-            (item) =>
+            item =>
               item.schema === schemaInfo.table_schema &&
               item.name === schemaInfo.table_name
           )
       );
     }
+
     const body = {
       type: 'bulk',
       source,
@@ -220,12 +219,11 @@ const loadSchema = (configOptions = {}) => {
       body: JSON.stringify(body),
     };
 
-    return dispatch(exportMetadata()).then((state) => {
+    return dispatch(exportMetadata()).then(state => {
       const metadataTables = getTablesInfoSelector(state)({});
       return dispatch(requestAction(url, options)).then(
-        (data) => {
+        data => {
           if (!data || !data[0] || !data[0].result) return;
-
           let mergedData = [];
           switch (currentDriver) {
             case 'postgres':
@@ -263,7 +261,7 @@ const loadSchema = (configOptions = {}) => {
             allSchemas: consistentSchemas || maybeInconsistentSchemas,
           });
         },
-        (error) => {
+        error => {
           console.error('loadSchema error: ' + JSON.stringify(error));
           dispatch(
             showErrorNotification('DB schema loading failed', null, error)
@@ -293,7 +291,7 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   };
 
   return dispatch(requestAction(Endpoints.query, options)).then(
-    (data) => {
+    data => {
       if (data.result) {
         dispatch({
           type: SET_ADDITIONAL_COLUMNS_INFO,
@@ -301,7 +299,7 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
         });
       }
     },
-    (error) => {
+    error => {
       console.error(
         'Failed to load additional columns information ' + JSON.stringify(error)
       );
@@ -312,16 +310,16 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
 /**
  * @param {{schemas: string[], tables?: import('@/metadata/types').QualifiedTable[]}} [options=undefined]
  */
-const updateSchemaInfo = (options) => (dispatch, getState) => {
+const updateSchemaInfo = options => (dispatch, getState) => {
   if (!getState().tables.currentDataSource) return;
-  return dispatch(loadSchema(options)).then((data) => {
+  return dispatch(loadSchema(options)).then(data => {
     dispatch(fetchAdditionalColumnsInfo());
     dispatch(setUntrackedRelations());
     return data;
   });
 };
 
-const setConsistentSchema = (data) => ({
+const setConsistentSchema = data => ({
   type: SET_CONSISTENT_SCHEMA,
   data,
 });
@@ -355,7 +353,7 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
 
   if (driver === 'bigquery') {
     const schemaList = getState().metadata.metadataObject.sources.find(
-      (x) => x.name === source
+      x => x.name === source
     ).configuration.datasets;
     return updateSchemaList(dispatch, getState, schemaList);
   }
@@ -379,7 +377,7 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
   };
 
   return dispatch(requestAction(url, options)).then(
-    (data) => {
+    data => {
       const schemaList = data.result.reduce((acc, schema) => {
         if (schema[0] === 'schema_name') {
           return acc;
@@ -389,7 +387,7 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
 
       return updateSchemaList(dispatch, getState, schemaList);
     },
-    (error) => {
+    error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
       return error;
     }
@@ -439,7 +437,7 @@ const fetchFunctionInit =
     };
 
     return dispatch(requestAction(url, options)).then(
-      (data) => {
+      data => {
         let trackable = [];
         let nonTrackable = [];
         try {
@@ -451,7 +449,7 @@ const fetchFunctionInit =
         dispatch({ type: LOAD_FUNCTIONS, data: trackable });
         dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: nonTrackable });
       },
-      (error) => {
+      error => {
         console.error('Failed to fetch schema ' + JSON.stringify(error));
       }
     );
@@ -459,8 +457,8 @@ const fetchFunctionInit =
 
 const updateCurrentSchema =
   (schemaName, sourceName, redirect = true, schemaList = []) =>
-  (dispatch) => {
-    if (schemaList.length && !schemaList.find((s) => s === schemaName)) {
+  dispatch => {
+    if (schemaList.length && !schemaList.find(s => s === schemaName)) {
       schemaName = schemaList[0];
     }
 
@@ -495,7 +493,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
     body: JSON.stringify(query),
   };
   return dispatch(requestAction(url, options)).then(
-    (data) => {
+    data => {
       const schemaList = data.result.reduce((acc, schema) => {
         if (schema[0] === 'schema_name') {
           return acc;
@@ -508,7 +506,7 @@ const fetchSchemaList = () => (dispatch, getState) => {
       });
       return data;
     },
-    (error) => {
+    error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
       return error;
     }
@@ -527,8 +525,8 @@ export const getSchemaList =
       body: JSON.stringify(query),
     };
     return dispatch(requestAction(url, options)).then(
-      (data) => data,
-      (error) => {
+      data => data,
+      error => {
         console.error('Failed to fetch schema ' + JSON.stringify(error));
         return error;
       }
@@ -561,10 +559,10 @@ export const getDatabaseSchemasInfo =
           const resultString = result
             .slice(1)
             .reduce((acc, str) => acc + str, '');
-          JSON.parse(resultString).forEach((i) => {
+          JSON.parse(resultString).forEach(i => {
             if (
               !trackedTables.some(
-                (t) =>
+                t =>
                   t.table.name === i.table_name &&
                   t.table.schema === i.table_schema
               )
@@ -581,10 +579,10 @@ export const getDatabaseSchemasInfo =
         }
 
         if (sourceType === 'postgres') {
-          JSON.parse(result[1]).forEach((i) => {
+          JSON.parse(result[1]).forEach(i => {
             if (
               !trackedTables.some(
-                (t) =>
+                t =>
                   t.table.name === i.table_name &&
                   t.table.schema === i.table_schema
               )
@@ -602,7 +600,7 @@ export const getDatabaseSchemasInfo =
         }
         return schemasInfo;
       },
-      (error) => {
+      error => {
         console.error('Failed to fetch schemas info ' + JSON.stringify(error));
         return error;
       }
@@ -610,9 +608,9 @@ export const getDatabaseSchemasInfo =
   };
 
 export const getDatabaseTableTypeInfoForAllSources =
-  (schemaRequests) => (dispatch, getState) => {
+  schemaRequests => (dispatch, getState) => {
     if (!schemaRequests.length) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         resolve([]);
       });
     }
@@ -636,7 +634,7 @@ export const getDatabaseTableTypeInfoForAllSources =
       body: JSON.stringify(query),
     };
     return dispatch(requestAction(url, options)).then(
-      (results) => {
+      results => {
         const schemas = results.map(({ result }, index) => {
           if (!result.length > 1) {
             return {};
@@ -651,7 +649,7 @@ export const getDatabaseTableTypeInfoForAllSources =
             if (currentDriver === 'mssql') {
               res = JSON.parse(result.slice(1).join(''));
             } else if (currentDriver === 'bigquery') {
-              res = result.slice(1).map((t) => ({
+              res = result.slice(1).map(t => ({
                 table_name: t[0],
                 table_schema: t[1],
                 table_type: t[2],
@@ -663,10 +661,10 @@ export const getDatabaseTableTypeInfoForAllSources =
             res = [];
           }
 
-          res.forEach((i) => {
+          res.forEach(i => {
             if (
               !trackedTables.some(
-                (t) =>
+                t =>
                   t.table.name === i.table_name &&
                   t.table.schema === i.table_schema
               )
@@ -685,7 +683,7 @@ export const getDatabaseTableTypeInfoForAllSources =
         });
         let allSourceSchemas = {};
         if (schemas?.length > 0) {
-          schemas.forEach((item) => {
+          schemas.forEach(item => {
             allSourceSchemas[item.source] = item.schemaInfo;
           });
           const {
@@ -702,18 +700,18 @@ export const getDatabaseTableTypeInfoForAllSources =
         }
         return allSourceSchemas;
       },
-      (error) => {
+      error => {
         console.error('Failed to fetch schemas info ' + JSON.stringify(error));
         return error;
       }
     );
   };
 
-const setTable = (tableName) => ({ type: SET_TABLE, tableName });
+const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 /* **********Shared functions between table actions********* */
 
-const handleMigrationErrors = (title, errorMsg) => (dispatch) => {
+const handleMigrationErrors = (title, errorMsg) => dispatch => {
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
@@ -735,7 +733,7 @@ const handleMigrationErrors = (title, errorMsg) => (dispatch) => {
   }
 };
 
-export const handleOutOfDateMetadata = (dispatch) => {
+export const handleOutOfDateMetadata = dispatch => {
   return dispatch(
     showNotification(
       {
@@ -796,7 +794,7 @@ const makeMigrationCall = (
   const isRunSqlType =
     Array.isArray(upQueries) &&
     upQueries.length >= 0 &&
-    upQueries.some((query) => query?.type?.includes('run_sql') ?? false);
+    upQueries.some(query => query?.type?.includes('run_sql') ?? false);
 
   if (downQueries && downQueries.length === 0 && isRunSqlType) {
     downQueries = getDownQueryComments(upQueries);
@@ -833,7 +831,7 @@ const makeMigrationCall = (
     body: JSON.stringify(finalReqBody),
   };
 
-  const onSuccess = (data) => {
+  const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus());
@@ -891,7 +889,7 @@ const makeMigrationCall = (
     }
   };
 
-  const onError = (err) => {
+  const onError = err => {
     if (!isRetry) {
       const { dependencyError, sqlDependencyError } = getDependencyError(err);
       if (dependencyError) return retryMigration(dependencyError, errorMsg);
@@ -961,7 +959,7 @@ const fetchColumnTypeInfo = () => {
       body: JSON.stringify(reqQuery),
     };
     return dispatch(requestAction(url, options)).then(
-      (data) => {
+      data => {
         if (currentDriver === 'mssql') {
           return dispatch({
             type: FETCH_COLUMN_TYPE_INFO,
@@ -976,7 +974,7 @@ const fetchColumnTypeInfo = () => {
         const resultData = data[1].result.slice(1);
         const typeFuncsMap = {};
 
-        resultData.forEach((r) => {
+        resultData.forEach(r => {
           typeFuncsMap[r[1]] = r[0].split(',');
         });
         const columnDataTypeInfo = {
@@ -989,7 +987,7 @@ const fetchColumnTypeInfo = () => {
           data: columnDataTypeInfo,
         });
       },
-      (error) => {
+      error => {
         dispatch(
           showErrorNotification('Error fetching column types', null, error)
         );
@@ -1002,7 +1000,7 @@ const fetchColumnTypeInfo = () => {
   };
 };
 
-const fetchPartitionDetails = (table) => {
+const fetchPartitionDetails = table => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
     const currState = getState();
@@ -1020,9 +1018,9 @@ const fetchPartitionDetails = (table) => {
       body: JSON.stringify(query),
     };
     return dispatch(requestAction(url, options)).then(
-      (data) => {
+      data => {
         try {
-          const partitions = data.result.slice(1).map((row) => ({
+          const partitions = data.result.slice(1).map(row => ({
             parent_schema: row[0],
             parent_table: row[1],
             partition_name: row[2],
@@ -1035,7 +1033,7 @@ const fetchPartitionDetails = (table) => {
           console.log(err);
         }
       },
-      (error) => {
+      error => {
         dispatch(
           showErrorNotification(
             'Error fetching partition information',
@@ -1048,7 +1046,7 @@ const fetchPartitionDetails = (table) => {
   };
 };
 
-export const fetchTableIndexDetails = (tableInfo) => {
+export const fetchTableIndexDetails = tableInfo => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
     const currState = getState();
@@ -1067,7 +1065,7 @@ export const fetchTableIndexDetails = (tableInfo) => {
       body: JSON.stringify(query),
     };
     return dispatch(requestAction(url, options)).then(
-      (data) => {
+      data => {
         try {
           return JSON.parse(data?.result?.[1]?.[0] ?? '[]');
         } catch (err) {
@@ -1075,7 +1073,7 @@ export const fetchTableIndexDetails = (tableInfo) => {
           return [];
         }
       },
-      (error) => {
+      error => {
         dispatch(
           showErrorNotification(
             'Error fetching indexes information',
@@ -1142,7 +1140,7 @@ const dataReducer = (state = defaultState, action) => {
       const result = action.allSchemas.reduce((unique, o) => {
         if (
           !unique.some(
-            (obj) =>
+            obj =>
               obj.table_name === o.table_name &&
               obj.table_schema === o.table_schema
           )
@@ -1214,11 +1212,11 @@ const dataReducer = (state = defaultState, action) => {
       if (isEmpty(action.data)) return state;
       return {
         ...state,
-        allSchemas: state.allSchemas.map((schema) => {
+        allSchemas: state.allSchemas.map(schema => {
           if (!action.data[schema.table_name]) return schema;
           return {
             ...schema,
-            columns: schema.columns.map((column) => ({
+            columns: schema.columns.map(column => ({
               ...column,
               ...action.data[schema.table_name][column.column_name],
             })),

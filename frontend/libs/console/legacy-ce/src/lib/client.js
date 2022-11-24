@@ -9,14 +9,14 @@ import { Provider } from 'react-redux';
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 
-import { tracingTools } from './features/TracingTools';
+import { startTracing } from './features/Analytics';
 import { ReactQueryProvider } from './lib/reactQuery';
 
 import globals from './Globals';
 import { store } from './store';
 import getRoutes from './routes';
 
-tracingTools.sentry.startTracing(globals, window.__env);
+startTracing(globals, window.__env);
 
 const hashLinkScroll = () => {
   const { hash } = window.location;

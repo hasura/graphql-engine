@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import { Button } from '@/new-components/Button';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -47,7 +48,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
   };
 
   return (
-    <>
+    <Analytics name="RestDetails" {...REDACT_EVERYTHING}>
       <div className="px-md pt-md">
         <div className="">
           <BreadCrumb breadCrumbs={crumbs} />
@@ -85,7 +86,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
               Methods Available
             </h4>
             <div>
-              {badgeSort(endpointState.methods).map((method) => (
+              {badgeSort(endpointState.methods).map(method => (
                 <span className="pr-md" key={`badge-details-${method}`}>
                   <Badge type={`rest-${method}`} />
                 </span>
@@ -110,6 +111,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
               width="100%"
               mode="graphqlschema"
               readOnly
+              setOptions={{ useWorker: false }}
             />
           </div>
           <div className="h-full w-1/2 pl-xl">
@@ -121,7 +123,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
           </div>
         </div>
       </div>
-    </>
+    </Analytics>
   );
 };
 

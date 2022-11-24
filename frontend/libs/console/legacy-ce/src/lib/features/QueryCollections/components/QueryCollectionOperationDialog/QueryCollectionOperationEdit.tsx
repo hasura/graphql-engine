@@ -22,7 +22,7 @@ export const QueryCollectionOperationEdit = (
       title="Edit Operation"
       callToAction="Edit operation"
       isLoading={isLoading}
-      onSubmit={(values) => {
+      onSubmit={values => {
         if (values.option === 'write operation') {
           editOperationInQueryCollection(
             queryCollectionName,
@@ -32,7 +32,7 @@ export const QueryCollectionOperationEdit = (
               query: values.query,
             },
             {
-              onError: (e) => {
+              onError: e => {
                 fireNotification({
                   type: 'error',
                   title: 'Error',

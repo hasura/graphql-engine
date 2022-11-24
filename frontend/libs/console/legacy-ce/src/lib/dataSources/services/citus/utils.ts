@@ -492,9 +492,9 @@ const getDeleteRowRequestBody = ({
   const columnConfig = tableConfiguration?.column_config || {};
 
   const args = Object.keys(pkClause)
-    .map((key) => {
+    .map(key => {
       let value = (pkClause as Record<string, any>)[key];
-      const column = columnInfo.find((c) => c.column_name === key);
+      const column = columnInfo.find(c => c.column_name === key);
       const columnName = columnConfig[key]?.custom_name || key;
       value = getFormattedValue(column?.data_type_name || 'varchar', value);
       return `${columnName}: {_eq: ${value}}`;
@@ -559,9 +559,9 @@ const getBulkDeleteRowRequestBody = ({
   });
   const topLevelFields = pkClauses.map((pkClause, i) => {
     const args = Object.keys(pkClause)
-      .map((key) => {
+      .map(key => {
         let value = (pkClause as Record<string, any>)[key];
-        const column = columnInfo.find((c) => c.column_name === key);
+        const column = columnInfo.find(c => c.column_name === key);
         const columnName = columnConfig[key]?.custom_name || key;
         value = getFormattedValue(column?.data_type_name || 'varchar', value);
         return `${columnName}: {_eq: ${value}}`;
@@ -587,8 +587,8 @@ const processBulkDeleteRowData = (data: Record<string, any>) => {
 
     if (data.data) {
       const res = Object.keys(data.data)
-        .filter((key) => data.data[key])
-        .map((key) => data.data[key].affected_rows)
+        .filter(key => data.data[key])
+        .map(key => data.data[key].affected_rows)
         .reduce((a, b) => a + b, 0);
       return res;
     }

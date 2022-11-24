@@ -43,7 +43,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
     inheritedRole ? 'edit' : 'create'
   );
 
-  const defaultOptions = allRoles.map((role) => ({
+  const defaultOptions = allRoles.map(role => ({
     value: role,
     isChecked:
       mode === 'create'
@@ -60,7 +60,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
     const updatedMode = props.inheritedRole ? 'edit' : 'create';
     setMode(updatedMode);
     setOptions(
-      allRoles.map((role) => ({
+      allRoles.map(role => ({
         value: role,
         isChecked:
           updatedMode === 'create'
@@ -83,15 +83,12 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
   };
 
   const selectAll = () => {
-    const allOptions = allRoles.map((role) => ({
-      value: role,
-      isChecked: true,
-    }));
+    const allOptions = allRoles.map(role => ({ value: role, isChecked: true }));
     setOptions(allOptions);
   };
 
   const clearAll = () => {
-    const allOptions = allRoles.map((role) => ({
+    const allOptions = allRoles.map(role => ({
       value: role,
       isChecked: false,
     }));
@@ -101,7 +98,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
   const checkboxValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist();
     setOptions(
-      options.map((option) => {
+      options.map(option => {
         if (option.value !== e.target.value) return option;
         return { value: option.value, isChecked: !option.isChecked };
       })

@@ -91,7 +91,7 @@ export const metadataQueryTypes = [
   'get_catalog_state',
   'set_catalog_state',
   'set_table_customization',
-  'get_event_invocations',
+  'get_scheduled_event_invocations',
   'get_scheduled_events',
   'delete_scheduled_event',
   'create_function_permission',
@@ -513,8 +513,8 @@ export const generateCreateEventTriggerQuery = (
             columns: state.isAllColumnChecked
               ? '*'
               : state.operationColumns
-                  .filter((c) => !!c.enabled)
-                  .map((c) => c.name),
+                  .filter(c => !!c.enabled)
+                  .map(c => c.name),
           }
         : null,
       delete: state.operations.delete
@@ -842,7 +842,7 @@ export const getEventInvocationsLogByID = (
   type: SupportedEvents,
   event_id: string
 ) => ({
-  type: 'get_event_invocations',
+  type: 'get_scheduled_event_invocations',
   args: {
     type,
     event_id,
@@ -857,7 +857,7 @@ export const getEventInvocations = (
   triggerName?: string // is required for cron
 ) => {
   const query = {
-    type: 'get_event_invocations',
+    type: 'get_scheduled_event_invocations',
     args: {},
   };
 

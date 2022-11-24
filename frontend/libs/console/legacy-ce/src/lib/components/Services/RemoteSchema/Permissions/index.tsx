@@ -27,7 +27,7 @@ export type RSPContainerProps = {
   rspEnabled: boolean;
 };
 
-const RSP: React.FC<Props> = (props) => {
+const RSP: React.FC<Props> = props => {
   const { allRemoteSchemas, params, viewRemoteSchema, rspEnabled } = props;
   return (
     <RSPWrapper
@@ -35,7 +35,7 @@ const RSP: React.FC<Props> = (props) => {
       allRemoteSchemas={allRemoteSchemas}
       tabName="permissions"
       viewRemoteSchema={viewRemoteSchema}
-      permissionRenderer={(currentRemoteSchema) =>
+      permissionRenderer={currentRemoteSchema =>
         rspEnabled ? (
           <Permissions {...props} {...{ currentRemoteSchema }} />
         ) : (

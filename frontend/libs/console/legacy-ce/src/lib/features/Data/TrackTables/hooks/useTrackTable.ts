@@ -23,25 +23,28 @@ export const useTrackTable = (dataSourceName: string) => {
   const queryClient = useQueryClient();
 
   // wrapping in promise so outside consumers can have simpler api
-  const doMutation = (query: TrackingQuery) =>
-    new Promise((res, rej) => {
-      mutation.mutate(
-        {
-          query,
-        },
-        {
-          onSuccess: res,
-          onError: (err) => rej(err.message),
-        }
-      );
-    });
+  const doMutation = useCallback(
+    (query: TrackingQuery) =>
+      new Promise((res, rej) => {
+        mutation.mutate(
+          {
+            query,
+          },
+          {
+            onSuccess: res,
+            onError: err => rej(err.message),
+          }
+        );
+      }),
+    [mutation]
+  );
 
   const changeTableTracking = useCallback(
     (action: 'track' | 'untrack', tables: TrackableTable[]) => {
       if (!metadata) throw Error('useTrackTable: cannot export metadata');
 
       const driver = metadata.metadata.sources.find(
-        (source) => source.name === dataSourceName
+        source => source.name === dataSourceName
       );
       if (!metadata) throw Error(`useTrackTable metadata not found`);
 
@@ -92,7 +95,14 @@ export const useTrackTable = (dataSourceName: string) => {
           if (!unMounted) setLoading(false);
         });
     },
-    [metadata, mutation, queryClient, fireNotification, data]
+    [
+      metadata,
+      dataSourceName,
+      doMutation,
+      queryClient,
+      fireNotification,
+      unMounted,
+    ]
   );
 
   // track single

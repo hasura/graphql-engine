@@ -140,10 +140,10 @@ export const metadataReducer = (
       return {
         ...state,
         inconsistentObjects: action.data.filter(
-          (t) => t.type !== 'inherited role permission inconsistency'
+          t => t.type !== 'inherited role permission inconsistency'
         ),
         inconsistentInheritedRoles: action.data.filter(
-          (t) => t.type === 'inherited role permission inconsistency'
+          t => t.type === 'inherited role permission inconsistency'
         ),
         ongoingRequest: false,
       };
@@ -195,14 +195,14 @@ export const metadataReducer = (
       return {
         ...state,
         allowedQueries: [
-          ...state.allowedQueries.filter((q) => q.name !== action.data),
+          ...state.allowedQueries.filter(q => q.name !== action.data),
         ],
       };
     case 'Metadata/UPDATE_ALLOWED_QUERY':
       return {
         ...state,
         allowedQueries: [
-          ...state.allowedQueries.map((q) =>
+          ...state.allowedQueries.map(q =>
             q.name === action.data.queryName ? action.data.newQuery : q
           ),
         ],
@@ -216,14 +216,14 @@ export const metadataReducer = (
       return {
         ...state,
         inheritedRoles: [
-          ...state.inheritedRoles.filter((ir) => ir.role_name !== action.data),
+          ...state.inheritedRoles.filter(ir => ir.role_name !== action.data),
         ],
       };
     case 'Metadata/UPDATE_INHERITED_ROLE':
       return {
         ...state,
         inheritedRoles: [
-          ...state.inheritedRoles.map((ir) =>
+          ...state.inheritedRoles.map(ir =>
             ir.role_name === action.data.role_name ? action.data : ir
           ),
         ],

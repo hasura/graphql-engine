@@ -33,7 +33,7 @@ const ExportAllowList = ({ name, projectId, updateStatus, children }) => {
     projectId,
   };
 
-  const onError = (error) => {
+  const onError = error => {
     updateStatus(error.toString());
   };
   const { loading, data } = useQuery(exportAsAllowList, {

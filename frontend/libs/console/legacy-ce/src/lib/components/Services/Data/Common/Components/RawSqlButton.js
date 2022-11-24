@@ -3,10 +3,10 @@ import _push from '../../push';
 import { SET_SQL } from '../../RawSQL/Actions';
 import { Button } from '@/new-components/Button';
 
-const RawSqlButton = (props) => {
+const RawSqlButton = props => {
   const { dataTestId, sql, customStyles, dispatch, children } = props;
 
-  const handleClick = (e) => {
+  const handleClick = e => {
     e.preventDefault();
 
     dispatch(_push(`/data/sql`));

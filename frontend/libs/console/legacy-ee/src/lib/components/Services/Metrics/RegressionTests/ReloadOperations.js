@@ -14,7 +14,7 @@ import LoadingSpinner from '../Common/LoadingSpinner';
  *
  * @param {Props} props
  */
-export const ReloadOperations = (props) => {
+export const ReloadOperations = props => {
   const { networkStatus, projectName, refetch } = props;
   return (
     <Tooltip

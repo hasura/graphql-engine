@@ -30,7 +30,7 @@ export const useAddOperationsToQueryCollection = () => {
             }),
             args: [
               ...createAllowedQueriesIfNeeded(queryCollection, metadata),
-              ...queries.map((query) => ({
+              ...queries.map(query => ({
                 type: 'add_query_to_collection',
                 args: {
                   collection_name: queryCollection,

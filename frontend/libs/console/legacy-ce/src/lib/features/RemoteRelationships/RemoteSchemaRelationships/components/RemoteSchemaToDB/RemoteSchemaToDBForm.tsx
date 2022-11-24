@@ -130,8 +130,13 @@ export const RemoteSchemaToDbForm = ({
   };
 
   return (
-    <Form schema={schema} options={{ defaultValues: {} }} onSubmit={submit}>
-      {(options) => (
+    <Form
+      schema={schema}
+      options={{ defaultValues: {} }}
+      onSubmit={submit}
+      className="p-4"
+    >
+      {options => (
         <>
           <SetDefaults
             sourceRemoteSchema={sourceRemoteSchema}

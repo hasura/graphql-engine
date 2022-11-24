@@ -1,6 +1,6 @@
 import { globals } from '@hasura/console-oss';
 
-const stripTrailingSlash = (url) => url.replace(/\/$/, '');
+const stripTrailingSlash = url => url.replace(/\/$/, '');
 
 const getHasuraMetricsUrl = () =>
   window.__env.hasuraMetricsUrl ||

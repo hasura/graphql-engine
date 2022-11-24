@@ -31,7 +31,7 @@ const convertToMapping = (
   values: { type: string; custom_name: string }[]
 ): Record<string, string> => {
   const obj: Record<string, string> = {};
-  values.forEach((v) => {
+  values.forEach(v => {
     obj[v.type] = v.custom_name;
   });
   return obj;
@@ -111,7 +111,7 @@ const GraphQLCustomizationEdit = ({
   useEffect(() => {
     if (graphQLCustomization?.field_names)
       setFieldNames(
-        graphQLCustomization?.field_names.map((fieldName) => {
+        graphQLCustomization?.field_names.map(fieldName => {
           return {
             parentType: fieldName.parent_type,
             prefix: fieldName?.prefix === '' ? null : fieldName?.prefix,
@@ -163,7 +163,7 @@ const GraphQLCustomizationEdit = ({
                 placeholder="namespace_"
                 value={rootFieldNamespace || ''}
                 data-test="remote-schema-customization-root-field-input"
-                onChange={(e) =>
+                onChange={e =>
                   onChange({
                     ...graphQLCustomization,
                     root_fields_namespace: e.target.value || null,
@@ -184,7 +184,7 @@ const GraphQLCustomizationEdit = ({
                 placeholder="prefix_"
                 value={typeNames?.prefix || ''}
                 data-test="remote-schema-customization-type-name-prefix-input"
-                onChange={(e) =>
+                onChange={e =>
                   onChange({
                     ...graphQLCustomization,
                     type_names: {
@@ -206,7 +206,7 @@ const GraphQLCustomizationEdit = ({
                 placeholder="_suffix"
                 value={typeNames?.suffix || ''}
                 data-test="remote-schema-customization-type-name-suffix-input"
-                onChange={(e) =>
+                onChange={e =>
                   onChange({
                     ...graphQLCustomization,
                     type_names: {
@@ -228,7 +228,7 @@ const GraphQLCustomizationEdit = ({
           </div>
 
           <TypeMapping
-            onChange={(updatedMaps) =>
+            onChange={updatedMaps =>
               onChange({
                 ...graphQLCustomization,
                 type_names: {
@@ -237,7 +237,7 @@ const GraphQLCustomizationEdit = ({
                 },
               })
             }
-            types={types.map((v) => v.typeName)}
+            types={types.map(v => v.typeName)}
             typeMappings={typeNames?.mapping ?? []}
             label="type-name"
           />
@@ -249,14 +249,14 @@ const GraphQLCustomizationEdit = ({
             <FieldNames
               mode="edit"
               types={types.filter(
-                (x) =>
+                x =>
                   !fieldNames
-                    ?.filter((v) => v.parentType !== fm.parentType)
-                    .map((v) => v.parentType)
+                    ?.filter(v => v.parentType !== fm.parentType)
+                    .map(v => v.parentType)
                     .includes(x.typeName)
               )}
               fieldName={fm}
-              onChange={(updatedFieldName) =>
+              onChange={updatedFieldName =>
                 onChange({
                   ...graphQLCustomization,
                   field_names: graphQLCustomization.field_names?.map((x, j) => {
@@ -298,11 +298,10 @@ const GraphQLCustomizationEdit = ({
             <FieldNames
               mode="create"
               types={types.filter(
-                (x) =>
-                  !fieldNames?.map((v) => v.parentType).includes(x.typeName)
+                x => !fieldNames?.map(v => v.parentType).includes(x.typeName)
               )}
               fieldName={tempFieldName || {}}
-              onChange={(updatedFieldName) => {
+              onChange={updatedFieldName => {
                 setTempFieldName(updatedFieldName);
               }}
               onClose={() => {

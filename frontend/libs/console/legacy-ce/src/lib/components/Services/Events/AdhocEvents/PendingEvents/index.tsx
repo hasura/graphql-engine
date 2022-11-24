@@ -6,7 +6,7 @@ import PendingEvents from './PendingEvents';
 
 interface Props extends InjectedProps {}
 
-const PendingEventsContainer: React.FC<Props> = (props) => {
+const PendingEventsContainer: React.FC<Props> = props => {
   const { dispatch } = props;
   return (
     <AdhocEventContainer tabName="pending" dispatch={dispatch}>

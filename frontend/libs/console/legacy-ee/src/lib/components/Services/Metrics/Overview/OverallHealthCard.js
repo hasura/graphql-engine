@@ -12,8 +12,8 @@ const OverallHealthCard = () => {
   useEffect(() => {
     setLoading(true);
     fetch(url)
-      .then((res) => res.text())
-      .then((result) => {
+      .then(res => res.text())
+      .then(result => {
         setLoading(false);
 
         if (result === 'OK') {
@@ -22,7 +22,7 @@ const OverallHealthCard = () => {
           sethealthzStatus('Inconsistent');
         }
       })
-      .catch((error) => {
+      .catch(error => {
         setLoading(false);
         sethealthzStatus('Error');
         console.warn(error);

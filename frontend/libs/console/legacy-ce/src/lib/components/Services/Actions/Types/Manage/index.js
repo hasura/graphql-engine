@@ -1,7 +1,7 @@
 import Manage from './Main';
 import { customTypesSelector } from '../../../../../metadata/selector';
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     allTypes: customTypesSelector(state),
     readOnlyMode: state.main.readOnlyMode,
@@ -9,5 +9,5 @@ const mapStateToProps = (state) => {
   };
 };
 
-const connector = (connect) => connect(mapStateToProps)(Manage);
+const connector = connect => connect(mapStateToProps)(Manage);
 export default connector;

@@ -49,7 +49,7 @@ export const allOperators: OperatorDef[] = [
 ];
 
 export const getOperatorDefaultValue = (op: Operator) => {
-  const operator = allOperators.find((o) => o.operator === op);
+  const operator = allOperators.find(o => o.operator === op);
   return operator ? operator.default : '';
 };
 
@@ -72,7 +72,7 @@ export const parseFilter = (f: Filter): any => {
       break;
     case 'operator':
       return {
-        [f.key]: f.value.map((opFilter) => parseFilter(opFilter)),
+        [f.key]: f.value.map(opFilter => parseFilter(opFilter)),
       };
       break;
     default:

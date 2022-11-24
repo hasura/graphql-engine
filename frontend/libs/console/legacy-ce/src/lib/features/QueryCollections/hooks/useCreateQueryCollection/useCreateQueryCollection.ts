@@ -38,7 +38,7 @@ export const useCreateQueryCollection = () => {
                   },
                 }
               : undefined,
-          ].filter((op) => op),
+          ].filter(op => op),
         },
       },
       mutateOptions
@@ -54,7 +54,7 @@ export const createAllowedQueriesIfNeeded = (
 ) => {
   return queryCollection === 'allowed-queries' &&
     !metadata?.metadata?.query_collections?.find(
-      (q) => q.name === queryCollection
+      q => q.name === queryCollection
     )
     ? [
         {

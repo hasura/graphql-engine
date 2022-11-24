@@ -31,7 +31,7 @@ FunctionWrapper.propTypes = {
   children: PropTypes.node,
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     functionList: state.tables.postgresFunctions,
     functions: {
@@ -43,7 +43,7 @@ const mapStateToProps = (state) => {
   };
 };
 
-const functionWrapperConnector = (connect) =>
+const functionWrapperConnector = connect =>
   connect(mapStateToProps)(FunctionWrapper);
 
 export default functionWrapperConnector;

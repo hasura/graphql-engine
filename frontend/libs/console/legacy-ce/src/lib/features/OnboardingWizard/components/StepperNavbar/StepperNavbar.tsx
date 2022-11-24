@@ -37,7 +37,7 @@ export function StepperNavbar(props: StepperNavbarProps) {
     <nav>
       <ol className="border-t border-l border-r border-gray-300 rounded-t divide-y mb-0 divide-gray-300 md:flex md:divide-y-0 bg-white">
         {steps.map((stepDetails, index) => (
-          <li className="relative flex-grow md:flex">
+          <li key={stepDetails.text} className="relative flex-grow md:flex">
             <div className="group flex items-center w-full">
               <span className="px-md py-sm flex items-center">
                 <span

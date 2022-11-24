@@ -1,61 +1,144 @@
-import {
-  useMetadataMigration,
-  useMetadataPermissions,
-  useMetadataVersion,
-} from '@/features/MetadataAPI';
+import { useQueryClient } from 'react-query';
+import { AxiosInstance } from 'axios';
 
-import { AccessType, FormOutput, QueryType } from '../../types';
+import { useMetadataMigration } from '@/features/MetadataAPI';
+import { exportMetadata } from '@/features/DataSource';
+import { useHttpClient } from '@/features/Network';
+import { useFireNotification } from '@/new-components/Notifications';
+import { AccessType, QueryType } from '../../types';
 import { api } from '../../api';
-import { NewDataTarget } from '../../../PermissionsTab/types/types';
+import { isPermission, keyToPermission, PermissionsSchema } from '../../utils';
 
 export interface UseSubmitFormArgs {
-  dataTarget: NewDataTarget;
+  dataSourceName: string;
+  table: unknown;
   roleName: string;
   queryType: QueryType;
   accessType: AccessType;
 }
 
+interface ExistingPermissions {
+  role: string;
+  queryType: QueryType;
+  table: unknown;
+}
+
+interface GetAllPermissionsArgs {
+  dataSourceName: string;
+  httpClient: AxiosInstance;
+}
+
+const getAllPermissions = async ({
+  dataSourceName,
+  httpClient,
+}: GetAllPermissionsArgs) => {
+  const { metadata } = await exportMetadata({ httpClient });
+
+  // find current source
+  const currentMetadataSource = metadata?.sources?.find(
+    source => source.name === dataSourceName
+  );
+
+  return currentMetadataSource?.tables.reduce<ExistingPermissions[]>(
+    (acc, metadataTable) => {
+      Object.entries(metadataTable).forEach(([key, value]) => {
+        const props = { key, value };
+        if (isPermission(props)) {
+          props.value.forEach(permission => {
+            acc.push({
+              role: permission.role,
+              queryType: keyToPermission[props.key],
+              table: metadataTable.table,
+            });
+          });
+        }
+      });
+
+      return acc;
+    },
+    []
+  );
+};
+
 export const useSubmitForm = (args: UseSubmitFormArgs) => {
-  const { dataTarget, roleName, queryType, accessType } = args;
-  const {
-    data: resourceVersion,
-    isLoading: resourceVersionLoading,
-    isError: resourceVersionError,
-  } = useMetadataVersion();
+  const { dataSourceName, table, roleName, queryType, accessType } = args;
+
+  const queryClient = useQueryClient();
+  const httpClient = useHttpClient();
+
+  const { fireNotification } = useFireNotification();
 
   const mutate = useMetadataMigration();
 
-  const {
-    data: existingPermissions,
-    isLoading: existingPermissionsLoading,
-    isError: existingPermissionsError,
-  } = useMetadataPermissions(args.dataTarget.dataSource.database);
+  const submit = async (formData: PermissionsSchema) => {
+    const { metadata, resource_version } = await exportMetadata({ httpClient });
 
-  const submit = async (formData: FormOutput) => {
-    if (!resourceVersion) {
-      console.error('No resource version');
+    const metadataSource = metadata?.sources.find(
+      s => s.name === dataSourceName
+    );
+
+    if (!resource_version || !metadataSource) {
+      console.error('Something went wrong!');
       return;
     }
 
+    const existingPermissions = await getAllPermissions({
+      dataSourceName,
+      httpClient,
+    });
+
     const body = api.createInsertBody({
-      dataTarget,
+      dataSourceName,
+      driver: metadataSource.kind,
+      table,
       roleName,
       queryType,
       accessType,
-      resourceVersion,
+      resourceVersion: resource_version,
       formData,
       existingPermissions,
     });
 
-    await mutate.mutateAsync({
-      query: body,
-    });
+    await mutate.mutateAsync(
+      {
+        query: body,
+      },
+      {
+        onSuccess: () => {
+          fireNotification({
+            type: 'success',
+            title: 'Success!',
+            message: 'Permissions saved successfully!',
+          });
+        },
+        onError: err => {
+          fireNotification({
+            type: 'error',
+            title: 'Error!',
+            message:
+              err?.message ?? 'Something went wrong while saving permissions',
+          });
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries(['export_metadata', 'roles']);
+          queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionFormData',
+            JSON.stringify(table),
+            roleName,
+          ]);
+          queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionsTable',
+            JSON.stringify(table),
+          ]);
+        },
+      }
+    );
   };
 
-  const isLoading =
-    mutate.isLoading || resourceVersionLoading || existingPermissionsLoading;
-  const isError =
-    mutate.isError || resourceVersionError || existingPermissionsError;
+  const isLoading = mutate.isLoading;
+  const isError = mutate.isError;
 
   return {
     submit,

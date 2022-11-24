@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
@@ -23,16 +24,16 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     toggleErrorBanner(false);
   };
 
-  const resolveInconsistentInheritedRole = (inconsistentInheritedRoleObj) => {
+  const resolveInconsistentInheritedRole = inconsistentInheritedRoleObj => {
     const { table, source, permission_type } =
       inconsistentInheritedRoleObj.entity;
     const role = inconsistentInheritedRoleObj.name;
     const schema = metadata.metadataObject.sources
-      .find((s) => s.name === source)
-      .tables.find((t) => t.table.name === table).table.schema;
+      .find(s => s.name === source)
+      .tables.find(t => t.table.name === table).table.schema;
 
     const driver = metadata.metadataObject.sources.find(
-      (s) => s.name === source
+      s => s.name === source
     ).kind;
 
     /*
@@ -203,7 +204,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
 
   const content = () => {
     const isInconsistentRemoteSchemaPresent = metadata.inconsistentObjects.some(
-      (i) => i.type === 'remote_schema'
+      i => i.type === 'remote_schema'
     );
     if (
       metadata.inconsistentObjects.length === 0 &&
@@ -326,17 +327,19 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   return (
-    <div className="mb-md">
-      {banner()}
-      <div className="clear-both pl-md mt-md mb-md">
-        <h2 className="text-xl font-bold">Hasura Metadata Status</h2>
-        {content()}
+    <Analytics name="MetadataStatus" {...REDACT_EVERYTHING}>
+      <div className="mb-md">
+        {banner()}
+        <div className="clear-both pl-md mt-md mb-md">
+          <h2 className="text-xl font-bold">Hasura Metadata Status</h2>
+          {content()}
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.main,
     metadata: state.metadata,
@@ -344,6 +347,6 @@ const mapStateToProps = (state) => {
   };
 };
 
-const connector = (connect) => connect(mapStateToProps)(MetadataStatus);
+const connector = connect => connect(mapStateToProps)(MetadataStatus);
 
 export default connector;

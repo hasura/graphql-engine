@@ -17,9 +17,7 @@ FROM ${dataset}.INFORMATION_SCHEMA.TABLES
 const getIntrospectionSqlQuery = (
   datasets: BigQueryConfiguration['datasets']
 ) =>
-  datasets
-    .map((dataset) => getDatasetIntrospectQuery(dataset))
-    .join('union all');
+  datasets.map(dataset => getDatasetIntrospectQuery(dataset)).join('union all');
 
 export const getTrackableTables = async ({
   dataSourceName,

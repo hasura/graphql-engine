@@ -1,5 +1,10 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
@@ -25,7 +30,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   );
   const [shouldDerive, setShouldDerive] = React.useState(true);
 
-  const toggleDerivation = (e) => {
+  const toggleDerivation = e => {
     e.preventDefault();
     setShouldDerive(!shouldDerive);
   };
@@ -34,12 +39,12 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
     setLoading(true);
     setError(null);
     getAllCodegenFrameworks(dispatch)
-      .then((frameworks) => {
+      .then(frameworks => {
         setAllFrameworks(frameworks);
         selectFramework(frameworks[0].name);
         setLoading(false);
       })
-      .catch((e) => {
+      .catch(e => {
         console.error(e);
         setLoading(false);
         setError(e);
@@ -47,6 +52,10 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   };
 
   React.useEffect(init, []);
+
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Codegen', {
+    redactText: true,
+  });
 
   if (loading) {
     return <Spinner />;
@@ -64,7 +73,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   }
 
   const getFrameworkActions = () => {
-    const onChange = (e) => {
+    const onChange = e => {
       selectFramework(e.target.value);
     };
 
@@ -75,7 +84,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
           value={selectedFramework}
           onChange={onChange}
         >
-          {allFrameworks.map((f) => {
+          {allFrameworks.map(f => {
             return (
               <option key={f.name} value={f.name}>
                 {f.name}
@@ -102,7 +111,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
 
     const getStarterKitButton = () => {
       const selectedFrameworkMetadata = allFrameworks.find(
-        (f) => f.name === selectedFramework
+        f => f.name === selectedFramework
       );
       if (
         selectedFrameworkMetadata &&
@@ -172,24 +181,29 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   };
 
   return (
-    <div className="w-[600px]">
-      <Helmet>
-        <title data-heap-redact-text="true">{`Codegen - ${currentAction.name} - Actions | Hasura`}</title>
-      </Helmet>
-      {getFrameworkActions()}
-      <div className="mb-5">
-        <CodeTabs
-          framework={selectedFramework}
-          actionsSdl={getSdlComplete(allActions, allTypes)}
-          currentAction={currentAction}
-          shouldDerive={shouldDerive}
-          parentMutation={parentMutation}
-          dispatch={dispatch}
-        />
+    <Analytics name="ActionsCodegen" {...REDACT_EVERYTHING}>
+      <div className="w-[600px]">
+        <Helmet>
+          <title
+            {...titleAnalyticsAttributes}
+          >{`Codegen - ${currentAction.name} - Actions | Hasura`}</title>
+        </Helmet>
+
+        {getFrameworkActions()}
+        <div className="mb-5">
+          <CodeTabs
+            framework={selectedFramework}
+            actionsSdl={getSdlComplete(allActions, allTypes)}
+            currentAction={currentAction}
+            shouldDerive={shouldDerive}
+            parentMutation={parentMutation}
+            dispatch={dispatch}
+          />
+        </div>
+        <hr className="my-5" />
+        {getDerivationInfo()}
       </div>
-      <hr className="my-5" />
-      {getDerivationInfo()}
-    </div>
+    </Analytics>
   );
 };
 

@@ -17,8 +17,8 @@ export const useCheckRows = (data: TrackableTable[]) => {
     : 'determinate';
 
   const onCheck = (id: string) => {
-    setCheckedIds((prev) =>
-      produce(prev, (draft) => {
+    setCheckedIds(prev =>
+      produce(prev, draft => {
         if (draft.includes(id)) {
           const i = draft.indexOf(id);
           draft.splice(i, 1);
@@ -33,7 +33,7 @@ export const useCheckRows = (data: TrackableTable[]) => {
     if (allChecked) {
       setCheckedIds([]);
     } else {
-      setCheckedIds(data.map((item) => item.id));
+      setCheckedIds(data.map(item => item.id));
     }
   };
 

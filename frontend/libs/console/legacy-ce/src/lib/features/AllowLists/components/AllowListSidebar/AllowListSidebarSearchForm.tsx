@@ -30,16 +30,15 @@ const SearchInput: React.FC<AllowListSidebarSearchFormProps> = ({
   );
 };
 
-export const AllowListSidebarSearchForm: React.FC<
-  AllowListSidebarSearchFormProps
-> = ({ setSearch }) => {
-  return (
-    <Form
-      schema={schema}
-      onSubmit={() => {}}
-      className="pl-0 pr-0 !p-0 !bg-white"
-    >
-      {() => <SearchInput setSearch={setSearch} />}
-    </Form>
-  );
-};
+export const AllowListSidebarSearchForm: React.FC<AllowListSidebarSearchFormProps> =
+  ({ setSearch }) => {
+    return (
+      <Form
+        schema={schema}
+        onSubmit={() => {}}
+        className="pl-0 pr-0 !p-0 bg-transparent"
+      >
+        {() => <SearchInput setSearch={setSearch} />}
+      </Form>
+    );
+  };

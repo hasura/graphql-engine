@@ -7,14 +7,14 @@ import { getConfirmation } from '@/components/Common/utils/jsUtils';
 import { Driver } from '@/dataSources';
 import { FaPlusCircle } from 'react-icons/fa';
 import { NormalizedTable } from '@/dataSources/types';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { DataSourceDriver, getDataSourcePrefix } from '@/metadata/queryUtils';
 import TableHeader from '../../components/Services/Data/TableCommon/TableHeader';
 import { FeatureFlagFloatingButton } from '../FeatureFlags/components/FeatureFlagFloatingButton';
-import { DatabaseRelationshipsTable } from '../RelationshipsTable/DatabaseRelationshipsTable';
+import { DatabaseRelationshipsTable } from './components/DatabaseRelationshipsTable';
 import { allowedMetadataTypes, useMetadataMigration } from '../MetadataAPI';
 import { Form } from './components/Form/Form';
-import { Relationship } from '../RelationshipsTable/DatabaseRelationshipsTable/types';
+import { Relationship } from './components/DatabaseRelationshipsTable/types';
 
 const useFormState = (currentSource: string) => {
   const queryClient = useQueryClient();
@@ -230,6 +230,7 @@ export const DatabaseRelationshipsTab = ({
           }}
           onComplete={onComplete}
           driver={driver}
+          onClose={closeForm}
         />
       ) : null}
       <FeatureFlagFloatingButton />

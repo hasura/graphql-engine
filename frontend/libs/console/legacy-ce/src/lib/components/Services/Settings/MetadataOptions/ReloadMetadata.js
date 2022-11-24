@@ -21,13 +21,13 @@ class ReloadMetadata extends Component {
   }
 
   toggleShouldReloadRemoteSchemas = () => {
-    this.setState((state) => ({
+    this.setState(state => ({
       shouldReloadRemoteSchemas: !state.shouldReloadRemoteSchemas,
     }));
   };
 
   toggleShouldReloadAllSources = () => {
-    this.setState((state) => ({
+    this.setState(state => ({
       shouldReloadAllSources: !state.shouldReloadAllSources,
     }));
   };
@@ -41,7 +41,7 @@ class ReloadMetadata extends Component {
     const { isReloading, shouldReloadRemoteSchemas, shouldReloadAllSources } =
       this.state;
 
-    const reloadMetadataAndLoadInconsistentMetadata = (e) => {
+    const reloadMetadataAndLoadInconsistentMetadata = e => {
       e.preventDefault();
 
       this.setState({ isReloading: true });
@@ -54,7 +54,7 @@ class ReloadMetadata extends Component {
             dispatch(showSuccessNotification('Metadata reloaded'));
             this.setState({ isReloading: false });
           },
-          (err) => {
+          err => {
             dispatch(
               showErrorNotification('Error reloading metadata', null, err)
             );

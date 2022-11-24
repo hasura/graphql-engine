@@ -57,15 +57,15 @@ export const TableEditItemContainer = (
     dispatch(fetchEnumOptions());
   }, [tableName]);
 
-  const update = useAppSelector((store) => store.tables.update);
-  const allSchemas = useAppSelector((store) => store.tables.allSchemas);
-  const tablesView = useAppSelector((store) => store.tables.view);
-  const currentSchema = useAppSelector((store) => store.tables.currentSchema);
+  const update = useAppSelector(store => store.tables.update);
+  const allSchemas = useAppSelector(store => store.tables.allSchemas);
+  const tablesView = useAppSelector(store => store.tables.view);
+  const currentSchema = useAppSelector(store => store.tables.currentSchema);
   const currentDataSource = useAppSelector(
-    (store) => store.tables.currentDataSource
+    store => store.tables.currentDataSource
   );
-  const migrationMode = useAppSelector((store) => store.main.migrationMode);
-  const readOnlyMode = useAppSelector((store) => store.main.readOnlyMode);
+  const migrationMode = useAppSelector(store => store.main.migrationMode);
+  const readOnlyMode = useAppSelector(store => store.main.readOnlyMode);
 
   const { count } = tablesView;
   const {
@@ -80,7 +80,7 @@ export const TableEditItemContainer = (
     ongoingRequest,
   });
 
-  const onClickSave: React.MouseEventHandler = (e) => {
+  const onClickSave: React.MouseEventHandler = e => {
     e.preventDefault();
 
     const inputValues = Object.keys(values).reduce<

@@ -2,6 +2,7 @@ import React from 'react';
 import DateTimePicker from 'react-datetime';
 import { Moment } from 'moment';
 import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
 import { useAdhocEventAdd } from './state';
 import { Dispatch } from '../../../../../types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
@@ -79,6 +80,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
           value={payload}
           onChange={setState.payload}
           height="200px"
+          setOptions={{ useWorker: false }}
         />
       </FormSection>
       <CollapsibleToggle
@@ -116,15 +118,19 @@ const Add: React.FC<Props> = ({ dispatch }) => {
           />
         </FormSection>
       </CollapsibleToggle>
-      <Button
-        mode="primary"
-        onClick={save}
-        disabled={loading}
-        data-test="create-schedule-event"
-        data-trackid="events-tab-button-create-schedule-trigger"
+      <Analytics
+        name="events-tab-button-create-schedule-trigger"
+        passHtmlAttributesToChildren
       >
-        {loading ? 'Creating...' : 'Create scheduled event'}
-      </Button>
+        <Button
+          mode="primary"
+          onClick={save}
+          disabled={loading}
+          data-test="create-schedule-event"
+        >
+          {loading ? 'Creating...' : 'Create scheduled event'}
+        </Button>
+      </Analytics>
     </div>
   );
 };

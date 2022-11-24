@@ -196,7 +196,7 @@ WHERE
   getStatementTimeoutSql: (seconds: number) =>
     `SET SESSION MAX_EXECUTION_TIME=${seconds * 1000};`,
   isTimeoutError: () => false,
-  getViewDefinitionSql: (viewName) => `
+  getViewDefinitionSql: viewName => `
   SELECT  VIEW_DEFINITION
     FROM    INFORMATION_SCHEMA.VIEWS
     WHERE   TABLE_NAME = "${viewName}";

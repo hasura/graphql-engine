@@ -25,7 +25,7 @@ describe('getActionType', () => {
     },
   ];
 
-  tests.forEach((test) => {
+  tests.forEach(test => {
     describe(`when fieldName is ${test.fieldName}`, () => {
       it(`returns ${test.expected}`, () => {
         expect(getActionType(test.fieldName as CustomizationFieldName)).toBe(

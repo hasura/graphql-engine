@@ -85,9 +85,9 @@ const FieldNames = ({
         <label className="w-1/3">Parent Type</label>
         <div className="w-2/3">
           <SelectOne
-            options={types.map((v) => v.typeName)}
+            options={types.map(v => v.typeName)}
             value={fieldNameInput?.parentType}
-            onChange={(e) => {
+            onChange={e => {
               onChange({
                 ...fieldNameInput,
                 parentType: e.target.value,
@@ -106,7 +106,7 @@ const FieldNames = ({
             className={inputStyles}
             placeholder="prefix_"
             value={fieldNameInput?.prefix || ''}
-            onChange={(e) =>
+            onChange={e =>
               onChange({
                 ...fieldNameInput,
                 prefix: e.target.value || null,
@@ -125,7 +125,7 @@ const FieldNames = ({
             className={inputStyles}
             placeholder="_suffix"
             value={fieldNameInput?.suffix || ''}
-            onChange={(e) =>
+            onChange={e =>
               onChange({
                 ...fieldNameInput,
                 suffix: e.target.value || null,
@@ -140,11 +140,11 @@ const FieldNames = ({
         Remap Field Names {tooltip}
         <TypeMapping
           types={
-            types.find((x) => x.typeName === fieldNameInput?.parentType)
+            types.find(x => x.typeName === fieldNameInput?.parentType)
               ?.fields || []
           }
           typeMappings={fieldNameInput?.mapping || []}
-          onChange={(updatedMaps) =>
+          onChange={updatedMaps =>
             onChange({
               ...fieldNameInput,
               mapping: updatedMaps,

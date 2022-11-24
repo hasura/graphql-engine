@@ -27,8 +27,8 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
 
   const columnHelper = createColumnHelper<TableRow>();
 
-  const tableColumns = columns.map((column) =>
-    columnHelper.accessor((row) => row[column], {
+  const tableColumns = columns.map(column =>
+    columnHelper.accessor(row => row[column], {
       id: column,
       cell: (info: any) => info.getValue() ?? '',
       header: () => <span key={column}>{column}</span>,
@@ -87,7 +87,7 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
       </CardedTable.TableHead>
 
       <CardedTable.TableBody>
-        {ReactTable.getRowModel().rows.map((row) => (
+        {ReactTable.getRowModel().rows.map(row => (
           <CardedTable.TableBodyRow key={row.id}>
             {row.getVisibleCells().map((cell, i) => (
               <CardedTable.TableBodyCell key={i}>

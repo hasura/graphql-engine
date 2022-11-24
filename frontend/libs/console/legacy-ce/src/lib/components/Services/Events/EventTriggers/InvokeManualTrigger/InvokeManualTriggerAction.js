@@ -26,20 +26,20 @@ const invokeManualTrigger = (name, payload, source) => (dispatch, getState) => {
   };
 
   return dispatch(requestAction(url, options))
-    .then((data) => {
+    .then(data => {
       dispatch({ type: INVOKE_SUCCESS, data: data });
       return Promise.resolve(data);
     })
-    .catch((err) => {
+    .catch(err => {
       dispatch({ type: INVOKE_FAIL, data: err });
       return Promise.reject(err);
     });
 };
 
-const loadEventInvocations = (eventId, eventDataSource) => (dispatch) => {
-  const successCallback = (data) =>
+const loadEventInvocations = (eventId, eventDataSource) => dispatch => {
+  const successCallback = data =>
     dispatch({ type: FETCH_EVENT_STATUS_SUCCESS, data: data });
-  const errorCallback = (err) =>
+  const errorCallback = err =>
     dispatch({ type: FETCH_EVENT_STATUS_FAIL, data: err });
 
   dispatch({ type: FETCHING_EVENT_STATUS });

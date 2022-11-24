@@ -11,7 +11,7 @@ import {
   LS_KEYS,
 } from '../../../../utils/localStorage';
 
-export const setEndPointSectionIsOpen = (isOpen) => {
+export const setEndPointSectionIsOpen = isOpen => {
   setLSItem(LS_KEYS.apiExplorerEndpointSectionIsOpen, isOpen);
 };
 
@@ -23,7 +23,7 @@ export const getEndPointSectionIsOpen = () => {
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
-export const setHeadersSectionIsOpen = (isOpen) => {
+export const setHeadersSectionIsOpen = isOpen => {
   setLSItem(LS_KEYS.apiExplorerHeaderSectionIsOpen, isOpen);
 };
 
@@ -63,12 +63,12 @@ export const getPersistedAdminSecretHeaderWasAdded = () => {
   return lsValue ? lsValue === 'true' : false;
 };
 
-export const persistGraphiQLHeaders = (headers) => {
+export const persistGraphiQLHeaders = headers => {
   // filter empty headers
-  const validHeaders = headers.filter((h) => h.key);
+  const validHeaders = headers.filter(h => h.key);
 
   // remove admin-secret value
-  const maskedHeaders = validHeaders.map((h) => {
+  const maskedHeaders = validHeaders.map(h => {
     const maskedHeader = { ...h };
 
     if (h.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY) {
@@ -93,7 +93,7 @@ export const getPersistedGraphiQLHeaders = () => {
       headers = JSON.parse(headersString);
 
       // add admin-secret value
-      headers = headers.map((h) => {
+      headers = headers.map(h => {
         const unmaskedHeader = { ...h };
 
         if (h.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY) {
@@ -124,7 +124,7 @@ export const getDefaultGraphiqlHeaders = () => {
   return headers;
 };
 
-export const parseAuthHeader = (header) => {
+export const parseAuthHeader = header => {
   let isAuthHeader = false;
   let token = null;
 
@@ -140,7 +140,7 @@ export const parseAuthHeader = (header) => {
   return { isAuthHeader, token };
 };
 
-export const persistGraphiQLMode = (mode) => {
+export const persistGraphiQLMode = mode => {
   setLSItem(LS_KEYS.apiExplorerGraphiqlMode, mode);
 };
 

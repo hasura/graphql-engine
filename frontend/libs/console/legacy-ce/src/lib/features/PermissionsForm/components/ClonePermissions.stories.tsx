@@ -10,18 +10,19 @@ import {
 } from './ClonePermissions';
 
 export default {
-  title: 'Features/Permissions Form/Components/Clone Permissions',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Clone Permissions',
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}}>
+      <Form schema={z.any()} onSubmit={() => {}} className="p-4">
         {() => <StoryComponent />}
       </Form>
     ),
   ],
 } as Meta;
 
-export const Default: Story<ClonePermissionsSectionProps> = (args) => (
+export const Default: Story<ClonePermissionsSectionProps> = args => (
   <ClonePermissionsSection {...args} />
 );
 Default.args = {
@@ -34,7 +35,7 @@ Default.parameters = {
   chromatic: { disableSnapshot: true },
 };
 
-export const Showcase: Story<ClonePermissionsSectionProps> = (args) => (
+export const Showcase: Story<ClonePermissionsSectionProps> = args => (
   <ClonePermissionsSection {...args} />
 );
 Showcase.args = {

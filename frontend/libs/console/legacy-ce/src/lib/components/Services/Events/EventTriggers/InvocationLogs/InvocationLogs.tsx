@@ -16,7 +16,7 @@ import {
 
 interface Props extends EventsLogsInjectedProps {}
 
-const InvocationLogs: React.FC<Props> = (props) => {
+const InvocationLogs: React.FC<Props> = props => {
   const { dispatch, triggerName, currentTrigger, readOnlyMode } = props;
   const renderRows: FilterRenderProp = (
     rows,

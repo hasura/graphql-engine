@@ -24,8 +24,8 @@ export const useTreeData = () => {
         /**
          * NOTE: this filter prevents native drivers from being part of the new tree
          */
-        .filter((source) => !nativeDrivers.includes(source.kind))
-        .map(async (source) => {
+        .filter(source => !nativeDrivers.includes(source.kind))
+        .map(async source => {
           const tablesAsTree = await DataSource(
             httpClient
           ).getTablesWithHierarchy({ dataSourceName: source.name });

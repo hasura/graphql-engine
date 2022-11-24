@@ -44,7 +44,7 @@ export const Playground: Story = () => {
 
   return (
     <CardRadioGroup
-      onChange={(value) => setSelected(value)}
+      onChange={value => setSelected(value)}
       items={data}
       value={selected}
     />
@@ -56,7 +56,7 @@ export const PlaygroundWithTest: Story = () => {
 
   return (
     <CardRadioGroup
-      onChange={(value) => setSelected(value)}
+      onChange={value => setSelected(value)}
       items={data}
       value={selected}
     />

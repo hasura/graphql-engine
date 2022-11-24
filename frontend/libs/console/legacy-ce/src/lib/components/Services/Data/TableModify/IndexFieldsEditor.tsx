@@ -139,7 +139,7 @@ const CreateIndexForm: React.FC<CreateIndexProps> = ({
           )}
         </div>
         <TextInput
-          onChange={(e) => updateIndexName(e.target.value)}
+          onChange={e => updateIndexName(e.target.value)}
           value={indexState.index_name}
           id="index-name"
           placeholder="Input Name"
@@ -206,7 +206,7 @@ const CreateIndexForm: React.FC<CreateIndexProps> = ({
   </div>
 );
 
-const FieldsEditor: React.FC<IndexFieldsEditorProps> = (props) => {
+const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
   const { dispatch, currentTableInfo } = props;
   const [indexState, indexStateDispatch] = useReducer(
     indexStateReducer,
@@ -232,7 +232,7 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = (props) => {
     });
 
   const tableColumns = currentTableInfo.columns.map(
-    (column) => column.column_name
+    column => column.column_name
   );
   const tableColumnOptions = tableColumns.reduce(
     (acc: IndexColumnsSelect[], columnName) => [
@@ -254,7 +254,7 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = (props) => {
       indexStateDispatch({
         type: 'Indexes/UPDATE_INDEX_COLUMNS',
         data: Array.isArray(value)
-          ? value.map((val) => val.value).slice(0, 32)
+          ? value.map(val => val.value).slice(0, 32)
           : [(value as IndexColumnsSelect).value],
       });
     }
@@ -323,7 +323,7 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = (props) => {
     <>
       <div>
         {numberOfIndexes
-          ? indexes.sort(pkSortFn).map((indexInfo) => {
+          ? indexes.sort(pkSortFn).map(indexInfo => {
               const indexSql = indexInfo.index_definition_sql;
               return (
                 <div key={indexInfo.index_name} className="mb-sm">

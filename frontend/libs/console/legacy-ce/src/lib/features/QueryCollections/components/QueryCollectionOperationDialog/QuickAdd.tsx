@@ -134,7 +134,7 @@ export const QuickAdd = (props: QuickAddProps) => {
           },
         }}
         items={[
-          [...quickOperations, ...graphiqlQueries].map((operation) => (
+          [...quickOperations, ...graphiqlQueries].map(operation => (
             <div
               key={operation.name}
               onClick={() => onAdd(operation)}

@@ -12,7 +12,7 @@ const defaultState = {
   isInspecting: false,
 };
 
-const Inspect = (props) => {
+const Inspect = props => {
   const [inspectState, toggle] = useState(defaultState);
   const { isInspecting } = inspectState;
   const { pollerId, projectId } = props;

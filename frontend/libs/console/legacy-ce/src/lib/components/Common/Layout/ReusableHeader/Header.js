@@ -24,7 +24,7 @@ class Header extends React.Component {
     return parseInt(indexId, 10);
   }
   getTitle(val, k) {
-    return val.filter((v) => v.value === k);
+    return val.filter(v => v.value === k);
   }
   headerKeyChange(e) {
     const indexId = this.getIndex(e);

@@ -19,11 +19,12 @@ export default {
   component: RemoteDatabaseWidget,
   decorators: [
     ReactQueryDecorator(),
-    (StoryComponent) => (
+    StoryComponent => (
       <Form
         schema={z.any()}
-        onSubmit={(o) => console.log(o)}
+        onSubmit={o => console.log(o)}
         options={{ defaultValues }}
+        className="p-4"
       >
         {() => (
           <div>
@@ -39,7 +40,7 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story = (args) => <RemoteDatabaseWidget {...args} />;
+export const Primary: Story = args => <RemoteDatabaseWidget {...args} />;
 Primary.args = {};
 Primary.parameters = {
   // Disable chromatic snapshot for playground stories

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-const ConsoleLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const ConsoleLogo: React.FC<React.SVGProps<SVGSVGElement>> = props => (
   <svg
     id="prefix__Layer_1"
     x={0}

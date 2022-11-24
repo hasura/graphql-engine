@@ -21,7 +21,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
   },
 } as ComponentMeta<typeof Textarea>;
 
-export const ApiPlayground: ComponentStory<typeof Textarea> = (args) => {
+export const ApiPlayground: ComponentStory<typeof Textarea> = args => {
   const validationSchema = z.object({});
 
   return (
@@ -157,6 +157,24 @@ StateWithDefaultValue.parameters = {
     description: {
       story: `Use \`<Form>\` options to set default value.`,
     },
+    source: { state: 'open' },
+  },
+};
+
+export const StateLoading: ComponentStory<typeof Textarea> = () => {
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <Textarea name="textareaName" label="The textarea label" loading />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
     source: { state: 'open' },
   },
 };

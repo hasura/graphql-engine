@@ -16,8 +16,7 @@ const transformFilterCheckKeys =
   (table: QualifiedTable) =>
   (data: RunSQLResponse): CheckConstraint[] => {
     return transformCheckKeys(data).filter(
-      (key) =>
-        key.table_name === table.name && key.table_schema === table.schema
+      key => key.table_name === table.name && key.table_schema === table.schema
     );
   };
 

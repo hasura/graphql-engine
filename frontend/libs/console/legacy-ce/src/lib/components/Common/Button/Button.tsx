@@ -19,7 +19,7 @@ export interface ButtonProps extends React.ComponentProps<'button'> {
   color?: 'yellow' | 'red' | 'green' | 'gray' | 'white' | 'black';
 }
 
-const Button: React.FC<ButtonProps> = (props) => {
+const Button: React.FC<ButtonProps> = props => {
   const { children, onClick, size, color, className, type = 'button' } = props;
   let extendedClassName = `${className || ''} btn ${
     size ? `btn-${size} ` : 'button '

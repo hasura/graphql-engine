@@ -27,7 +27,7 @@ export const useRemoveOperationsFromQueryCollection = () => {
             ...(metadata?.resource_version && {
               resource_version: metadata.resource_version,
             }),
-            args: queries.map((query) => ({
+            args: queries.map(query => ({
               type: 'drop_query_from_collection',
               args: {
                 collection_name: queryCollection,

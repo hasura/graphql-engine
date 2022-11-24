@@ -15,7 +15,7 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleHandler = () => setIsOpen((prev) => !prev);
+  const toggleHandler = () => setIsOpen(prev => !prev);
 
   return (
     <div>

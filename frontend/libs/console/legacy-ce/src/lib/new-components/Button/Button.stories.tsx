@@ -18,14 +18,14 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="p-4 flex gap-5 items-center max-w-screen">{Story()}</div>
     ),
   ],
   component: Button,
 } as ComponentMeta<typeof Button>;
 
-export const ApiPlayground: ComponentStory<typeof Button> = (args) => (
+export const ApiPlayground: ComponentStory<typeof Button> = args => (
   <Button {...args} onClick={action('onClick')}>
     <span>The button children</span>
   </Button>

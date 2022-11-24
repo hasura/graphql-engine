@@ -23,7 +23,7 @@ const TableCell = ({
       <FaTable className="fill-current text-sm text-muted mr-1" title="Table" />
       {tableName}
       <span className="px-2">/</span>
-      {cols ? cols.map((i) => <ColumnCell columnName={i} />) : null}
+      {cols ? cols.map(i => <ColumnCell columnName={i} />) : null}
     </div>
   </>
 );

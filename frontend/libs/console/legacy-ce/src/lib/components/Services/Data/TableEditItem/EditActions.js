@@ -51,7 +51,7 @@ const editItem = (tableName, colValues) => {
       errorMessage = 'No fields modified';
     }
 
-    Object.keys(colValues).map((colName) => {
+    Object.keys(colValues).map(colName => {
       const colValue = colValues[colName];
 
       const column = getTableColumn(table, colName);
@@ -137,7 +137,7 @@ const editItem = (tableName, colValues) => {
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
     ).then(
-      (data) => {
+      data => {
         dispatch(
           showSuccessNotification(
             'Edited!',
@@ -146,7 +146,7 @@ const editItem = (tableName, colValues) => {
           )
         );
       },
-      (err) => {
+      err => {
         dispatch(showErrorNotification('Edit failed!', err.error, err));
       }
     );
@@ -174,7 +174,7 @@ const fetchEnumOptions = () => {
     };
     const url = Endpoints.query;
 
-    requests.forEach((request) => {
+    requests.forEach(request => {
       const req = getEnumOptionsQuery(
         request,
         currentSchema,
@@ -187,7 +187,7 @@ const fetchEnumOptions = () => {
           body: JSON.stringify(req),
         })
       ).then(
-        (data) =>
+        data =>
           dispatch({
             type: E_FETCH_ENUM_OPTIONS_SUCCESS,
             data: {

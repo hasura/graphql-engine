@@ -23,7 +23,7 @@ export default function useOnClickOutside(
     const listener = (event: PossibleEvent) => {
       // Do nothing if clicking ref's element or descendent elements
       const refsClicked = refs.filter(
-        (ref) => !ref.current || ref.current.contains(event.target as Node)
+        ref => !ref.current || ref.current.contains(event.target as Node)
       );
 
       if (refsClicked.length) {

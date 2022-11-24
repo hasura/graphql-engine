@@ -12,9 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof AllCheckConstraints>;
 
-export const Playground: ComponentStory<typeof AllCheckConstraints> = (
-  args
-) => {
+export const Playground: ComponentStory<typeof AllCheckConstraints> = args => {
   return <AllCheckConstraints {...args} />;
 };
 

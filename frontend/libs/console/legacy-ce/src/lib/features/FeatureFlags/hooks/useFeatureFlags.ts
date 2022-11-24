@@ -29,8 +29,8 @@ export const mergeFlagWithState = (
   flags: FeatureFlagDefinition[],
   state: FeatureFlagState[]
 ): FeatureFlagType[] => {
-  return flags.map((flag) => {
-    const flagState = state.find((f) => f.id === flag.id);
+  return flags.map(flag => {
+    const flagState = state.find(f => f.id === flag.id);
     return {
       ...flag,
       state: flagState ?? {

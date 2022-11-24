@@ -1,6 +1,6 @@
 import { SERVER_CONSOLE_MODE } from '@/constants';
 import Endpoints from '@/Endpoints';
-import { useQuery, UseQueryOptions } from 'react-query';
+import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import { useAppSelector } from '../store';
 import { Api } from './apiUtils';
 import { useConsoleConfig } from './useEnvVars';
@@ -12,8 +12,8 @@ export interface Config {
 
 export function useMigrationMode(
   queryOptions?: UseQueryOptions<{ migration_mode: boolean }, Error, boolean>
-) {
-  const headers = useAppSelector((s) => s.tables.dataHeaders);
+): UseQueryResult<boolean> {
+  const headers = useAppSelector(s => s.tables.dataHeaders);
   const migrationUrl = Endpoints.hasuractlMigrateSettings;
   const { mode } = useConsoleConfig();
   return useQuery({
@@ -28,7 +28,7 @@ export function useMigrationMode(
       });
     },
     ...queryOptions,
-    select: (d) => d.migration_mode,
+    select: d => d.migration_mode,
   });
 }
 
@@ -39,6 +39,6 @@ export function useReadOnlyMode(
     queryKey: 'readOnlyMode',
     queryFn: () => Promise.resolve({ readOnlyMode: false }),
     ...queryOptions,
-    select: (d) => d.readOnlyMode,
+    select: d => d.readOnlyMode,
   });
 }

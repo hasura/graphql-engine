@@ -4,11 +4,11 @@ import { action } from '@storybook/addon-actions';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta } from '@storybook/react';
+import { handlers } from '@/mocks/metadata.mock';
 
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
 import { QueryCollectionOperationAdd } from './QueryCollectionOperationAdd';
 import { QueryCollectionOperationEdit } from './QueryCollectionOperationEdit';
-import { handlers } from './mocks/handlers.mock';
 
 export default {
   title: 'Features/Query Collections/Query Collection Operation Dialog',
@@ -18,7 +18,7 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(1000),
+    msw: handlers({ delay: 500 }),
   },
 } as ComponentMeta<typeof QueryCollectionOperationDialog>;
 

@@ -39,7 +39,7 @@ export const SelectPermissionsRow: React.FC<Props> = ({
         text={description}
       />
       <div className="px-md flex">
-        {permissionFields?.map((permission) => {
+        {permissionFields?.map(permission => {
           const permissionCheckboxState = getPermissionCheckboxState({
             permission,
             hasEnabledAggregations,

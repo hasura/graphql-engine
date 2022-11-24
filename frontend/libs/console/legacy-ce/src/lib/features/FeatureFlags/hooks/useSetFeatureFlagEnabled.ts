@@ -17,7 +17,7 @@ export function useSetFeatureFlagEnabled() {
       if (isError || isLoading || !data) {
         throw new Error('Feature flags not loaded');
       }
-      const newFlags = data.map((item) => {
+      const newFlags = data.map(item => {
         if (item.id !== flagId) {
           return item;
         }

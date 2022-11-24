@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/new-components/Button';
 import { DropdownMenu } from '@/new-components/DropdownMenu';
 import { Operator, TableColumn } from '@/features/DataSource';
@@ -7,6 +7,7 @@ import { FaFileExport } from 'react-icons/fa';
 import { FilterRows } from '../Filter';
 import { SortRows } from '../Sort';
 import { FiltersAndSortFormValues } from '../types';
+import { getUrlQueryParams } from './LegacyRunQueryContainer';
 
 type LegacyRunQueryProps = {
   columns: TableColumn[];
@@ -16,26 +17,39 @@ type LegacyRunQueryProps = {
     formValues: FiltersAndSortFormValues
   ) => void;
   onSubmit: (values: FiltersAndSortFormValues) => void;
+  initialUserQuery?: FiltersAndSortFormValues;
+  uniqueTableName?: string;
 };
-
+const defaultQueryValues: FiltersAndSortFormValues = {
+  filter: [],
+  sort: [],
+};
 export const LegacyRunQuery = ({
   onExport,
   onSubmit,
   operators,
   columns,
+  initialUserQuery = defaultQueryValues,
+  uniqueTableName = '',
 }: LegacyRunQueryProps) => {
   const methods = useForm<FiltersAndSortFormValues>({
-    defaultValues: {
-      filter: [{}],
-      sort: [{}],
-    },
+    defaultValues: initialUserQuery,
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, reset } = methods;
+
+  useEffect(() => {
+    const queryParams = getUrlQueryParams();
+    if (queryParams.filter.length > 0 || queryParams.sort.length > 0) {
+      return;
+    }
+
+    reset(defaultQueryValues);
+  }, [uniqueTableName]);
 
   const exportItems = [
-    [<div onClick={handleSubmit((arg) => onExport('CSV', arg))}>CSV</div>],
-    [<div onClick={handleSubmit((arg) => onExport('JSON', arg))}>JSON</div>],
+    [<div onClick={handleSubmit(arg => onExport('CSV', arg))}>CSV</div>],
+    [<div onClick={handleSubmit(arg => onExport('JSON', arg))}>JSON</div>],
   ];
 
   return (
@@ -48,10 +62,15 @@ export const LegacyRunQuery = ({
                 columns={columns}
                 operators={operators}
                 name="filter"
+                initialFilters={initialUserQuery.filter}
               />
             </div>
             <div className="flex-grow w-1/2 pr-4">
-              <SortRows columns={columns} name="sort" />
+              <SortRows
+                columns={columns}
+                name="sort"
+                initialSorts={initialUserQuery.sort}
+              />
             </div>
           </div>
           <div className="flex mt-4">

@@ -10,7 +10,7 @@ import { HasuraLogoIcon } from '@/new-components/HasuraLogo';
     docs: { source: { type: 'code' } },
     chromatic: { disableSnapshot: true },
   }}
-  decorators={[(Story) => <div className={'p-4'}>{Story()}</div>]}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
   argTypes={{
     content: {
       table: {
@@ -49,7 +49,7 @@ import { HasuraLogoIcon } from '@/new-components/HasuraLogo';
   </Story>
 </Canvas>
 
-export const Template = (args) => <HasuraLogoIcon {...args} />;
+export const Template = args => <HasuraLogoIcon {...args} />;
 
 export const stories = {
   'Variant - Mode default': {

@@ -24,11 +24,11 @@ const generateWhereClause = (
 ) => {
   const whereCondtions: string[] = [];
 
-  options.schemas?.forEach((schemaName) => {
+  options.schemas?.forEach(schemaName => {
     whereCondtions.push(`(${sqlSchemaName}='${schemaName}')`);
   });
 
-  options.tables?.forEach((tableInfo) => {
+  options.tables?.forEach(tableInfo => {
     whereCondtions.push(
       `(${sqlSchemaName}='${tableInfo.schema}' and ${sqlTableName}='${tableInfo.name}')`
     );
@@ -261,12 +261,12 @@ export const getCreateTableQueries = (
   checkConstraints: any[],
   tableComment?: string
 ) => {
-  const currentCols = columns.filter((c) => c.name !== '');
+  const currentCols = columns.filter(c => c.name !== '');
   let hasUUIDDefault = false;
 
   const pKeys = primaryKeys
-    .filter((p) => p !== '')
-    .map((p) => currentCols[p as number].name);
+    .filter(p => p !== '')
+    .map(p => currentCols[p as number].name);
 
   const columnSpecificSql: any[] = [];
 
@@ -316,7 +316,7 @@ export const getCreateTableQueries = (
   // add primary key
   if (pKeys.length > 0) {
     tableDefSql += ', PRIMARY KEY (';
-    tableDefSql += pKeys.map((col) => `"${col}"`).join(',');
+    tableDefSql += pKeys.map(col => `"${col}"`).join(',');
     tableDefSql += ') ';
   }
 
@@ -368,7 +368,7 @@ export const getCreateTableQueries = (
   // add unique keys
   const numUniqueConstraints = uniqueKeys.length;
   if (numUniqueConstraints > 0) {
-    uniqueKeys.forEach((uk) => {
+    uniqueKeys.forEach(uk => {
       if (!uk.length) {
         return;
       }
@@ -380,7 +380,7 @@ export const getCreateTableQueries = (
 
   // add check constraints
   if (checkConstraints.length > 0) {
-    checkConstraints.forEach((constraint) => {
+    checkConstraints.forEach(constraint => {
       if (!constraint.name || !constraint.check) {
         return;
       }
@@ -399,7 +399,7 @@ export const getCreateTableQueries = (
   }
 
   if (columnSpecificSql.length) {
-    columnSpecificSql.forEach((csql) => {
+    columnSpecificSql.forEach(csql => {
       sqlCreateTable += csql.upSql;
     });
   }
@@ -767,10 +767,10 @@ export const checkSchemaModification = (sql: string) => {
   const sqlStatements = sql
     .toLowerCase()
     .split(';')
-    .map((sqlStr) => sqlStr.trim());
+    .map(sqlStr => sqlStr.trim());
 
   return sqlStatements.some(
-    (statement) =>
+    statement =>
       statement.startsWith('create ') ||
       statement.startsWith('alter ') ||
       statement.startsWith('drop ')
@@ -799,7 +799,7 @@ export const getCreatePkSql = ({
 }) => {
   return `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
-    primary key (${selectedPkColumns.map((pkc) => `"${pkc}"`).join(', ')});`;
+    primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
 };
 export const getAlterPkSql = ({
   schemaName,
@@ -817,7 +817,7 @@ ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
 
 ALTER TABLE "${schemaName}"."${tableName}"
     ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-    .map((pkc) => `"${pkc}"`)
+    .map(pkc => `"${pkc}"`)
     .join(', ')});
 COMMIT TRANSACTION;`;
 };
@@ -901,7 +901,7 @@ AND NOT(EXISTS (
 -- WHERE function_schema='${schemaName}'
 WHERE ${
     Array.isArray(schemaName)
-      ? `function_schema IN (${schemaName.map((s) => `'${s}'`).join(', ')})`
+      ? `function_schema IN (${schemaName.map(s => `'${s}'`).join(', ')})`
       : `function_schema='${schemaName}'`
   }
 ${functionName ? `AND function_name='${functionName}'` : ''}
@@ -1112,7 +1112,7 @@ export const getCreateIndexSql = (indexObj: {
   return `
   CREATE ${unique ? 'UNIQUE' : ''} INDEX "${indexName}" on
   "${table.schema}"."${table.name}" using ${indexType} (${columns
-    .map((c) => `"${c}"`)
+    .map(c => `"${c}"`)
     .join(', ')});
 `;
 };
@@ -1324,7 +1324,7 @@ FROM (
         join pg_catalog.pg_namespace n
         on n.oid = pgclass.relnamespace
         where
-        pgclass.relname in (${tables.map((t) => `'${t.name}'`).join(',')})
+        pgclass.relname in (${tables.map(t => `'${t.name}'`).join(',')})
 ) AS info;
 `;
 

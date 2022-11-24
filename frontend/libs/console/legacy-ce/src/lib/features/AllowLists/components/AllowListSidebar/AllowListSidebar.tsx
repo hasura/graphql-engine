@@ -13,7 +13,7 @@ interface AllowListSidebarProps {
   onQueryCollectionCreate: (name: string) => void;
 }
 
-export const AllowListSidebar: React.FC<AllowListSidebarProps> = (props) => {
+export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
   const {
     selectedCollectionQuery,
     buildQueryCollectionHref,

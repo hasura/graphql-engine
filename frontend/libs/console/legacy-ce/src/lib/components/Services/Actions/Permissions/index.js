@@ -1,7 +1,7 @@
 import Permissions from './Main';
 import { rolesSelector, actionsSelector } from '../../../../metadata/selector';
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.actions.permissions,
     allRoles: rolesSelector(state),
@@ -10,5 +10,5 @@ const mapStateToProps = (state) => {
   };
 };
 
-const connector = (connect) => connect(mapStateToProps)(Permissions);
+const connector = connect => connect(mapStateToProps)(Permissions);
 export default connector;

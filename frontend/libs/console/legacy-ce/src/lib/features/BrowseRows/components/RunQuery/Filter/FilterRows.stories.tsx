@@ -78,7 +78,7 @@ export const Primary: ComponentStory<typeof FilterRows> = () => {
           ],
         },
       }}
-      onSubmit={(data) => {
+      onSubmit={data => {
         console.log(data);
       }}
     >

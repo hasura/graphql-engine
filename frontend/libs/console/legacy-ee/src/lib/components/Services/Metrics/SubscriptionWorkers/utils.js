@@ -28,7 +28,7 @@ import {
 
 import moment from 'moment';
 
-export const retrieveDefaultDropdownOptions = (value) => {
+export const retrieveDefaultDropdownOptions = value => {
   switch (value) {
     case TIME_RANGE_SYMBOL:
       return timeRangeFilters;
@@ -69,7 +69,7 @@ export const createFilter = (type, value) => {
   };
 };
 
-export const checkIfEmptyReturnAppropriateValue = (n) => {
+export const checkIfEmptyReturnAppropriateValue = n => {
   if (n === ERROR_CODE_SYMBOL) {
     return EMPTY_ERROR_CODE_SYMBOL;
   }
@@ -85,7 +85,7 @@ export const checkIfEmptyReturnAppropriateValue = (n) => {
   return '';
 };
 
-export const getFilterNameFromEmptyValue = (n) => {
+export const getFilterNameFromEmptyValue = n => {
   if (n === EMPTY_ERROR_CODE_SYMBOL) {
     return ERROR_CODE_SYMBOL;
   }
@@ -101,26 +101,26 @@ export const getFilterNameFromEmptyValue = (n) => {
   return '';
 };
 
-export const getIfAliased = (c) => {
+export const getIfAliased = c => {
   if (c in aliasedColumns) {
     return aliasedColumns[c];
   }
   return c;
 };
 
-export const getActualIfAliased = (c) => {
+export const getActualIfAliased = c => {
   if (c in actualTypeToAlias) {
     return actualTypeToAlias[c];
   }
   return c;
 };
 
-const parseGroupByArrayType = (q) => {
+const parseGroupByArrayType = q => {
   const regex = /{(.*)}/m;
   return regex.exec(q);
 };
 
-const filterByType = (filters, type) => filters.filter((f) => f.type === type);
+const filterByType = (filters, type) => filters.filter(f => f.type === type);
 const indexOf = (list, predicateFn) => {
   let elementIndex = -1;
   list.forEach((l, index) => {
@@ -133,7 +133,7 @@ const indexOf = (list, predicateFn) => {
 
 const getJson = (list, key) => {
   const r = {};
-  list.forEach((l) => {
+  list.forEach(l => {
     if (typeof l[key] === 'string') {
       r[l[key]] = true;
     } else {
@@ -143,25 +143,25 @@ const getJson = (list, key) => {
   return r;
 };
 
-const stripUnderScore = (val) => {
+const stripUnderScore = val => {
   return val.split('_').join(' ');
 };
 
-const capitalize = (val) => {
+const capitalize = val => {
   return `${val.charAt(0).toUpperCase()}${val.slice(1)}`;
 };
 
-const curried = (sourceFn) => (type) => (value) => {
+const curried = sourceFn => type => value => {
   sourceFn(type, value);
 };
 
 /* Doing this to fix refreshing state on every miliseconds change */
-const removeSecondsMiliseconds = (d) => {
+const removeSecondsMiliseconds = d => {
   d.setSeconds(0, 0);
   return d;
 };
 
-const getTimeRangeValue = (symbol) => {
+const getTimeRangeValue = symbol => {
   const now = new Date();
   switch (symbol) {
     case TIME_RANGE_BY_HOUR:
@@ -185,7 +185,7 @@ const getTimeRangeValue = (symbol) => {
   }
 };
 
-const detectAdjective = (n) => {
+const detectAdjective = n => {
   if (n > 1) return 's';
   return '';
 };
@@ -199,7 +199,7 @@ const getSelectedValue = (selectedValues, defaultValue) => {
   return filteredElement;
 };
 
-const getSelectedFiltersCount = (selectedValues) => {
+const getSelectedFiltersCount = selectedValues => {
   let filteredElement = 'No filter applied';
 
   const totalSelectedValues = Object.keys(selectedValues);
@@ -212,7 +212,7 @@ const getSelectedFiltersCount = (selectedValues) => {
 };
 
 export const getValuesForEmptyMap = () => {
-  return Object.keys(NO_TITLE_MAP).map((m) => NO_TITLE_MAP[m]);
+  return Object.keys(NO_TITLE_MAP).map(m => NO_TITLE_MAP[m]);
 };
 
 export const getWhereClause = (filterMap, filters) => {
@@ -244,12 +244,12 @@ export const getWhereClause = (filterMap, filters) => {
 
     return {
       ...acc,
-      [f]: appliedFilters.map((e) => e.value),
+      [f]: appliedFilters.map(e => e.value),
     };
   }, {});
 };
 
-export const getSelectedLength = (o) => {
+export const getSelectedLength = o => {
   return Object.keys(o).length;
 };
 
@@ -286,7 +286,9 @@ export const getColWidth = (header, contentRows = []) => {
       let contentString;
       if (header === 'started') {
         contentString = moment(content).fromNow();
-      } else if (header === 'session_variables') {
+      } else if (
+        header === 'session_variables'
+      ) {
         contentString = Object.keys(content);
       } else if (content === null || content === undefined) {
         contentString = 'NULL';
@@ -311,7 +313,7 @@ export const getColWidth = (header, contentRows = []) => {
   return Math.min(MAX_WIDTH, Math.max(maxContentCellWidth, headerCellWidth));
 };
 
-const roundToTwo = (num) => {
+const roundToTwo = num => {
   return +(Math.round(num + 'e+2') + 'e-2');
 };
 
@@ -331,7 +333,7 @@ const arraysEqual = (a, b) => {
   return true;
 };
 
-const getTimeInterval = (symbol) => {
+const getTimeInterval = symbol => {
   switch (symbol) {
     case TIME_RANGE_BY_HOUR:
       return '5 minutes';
@@ -346,7 +348,7 @@ const getTimeInterval = (symbol) => {
   }
 };
 
-export const decodeError = (resp) => {
+export const decodeError = resp => {
   try {
     const respType = typeof resp;
     const decodedError = {
@@ -372,8 +374,8 @@ export const decodeError = (resp) => {
 /* eslint-disable no-unused-expressions */
 const sortHeaders = (headerRows, defaultHeaders) => {
   return headerRows.sort((a, b) => {
-    (defaultHeaders.findIndex((f) => f === a.accessor) || 999) -
-      (defaultHeaders.findIndex((f) => f === b.accessor) || 0);
+    (defaultHeaders.findIndex(f => f === a.accessor) || 999)
+    - (defaultHeaders.findIndex(f => f === b.accessor) || 0);
   });
 };
 /* eslint-enable no-unused-expressions */
@@ -394,5 +396,5 @@ export {
   roundToTwo,
   arraysEqual,
   getTimeInterval,
-  sortHeaders,
+  sortHeaders
 };

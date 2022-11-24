@@ -21,6 +21,7 @@ const Editor: React.FC<EditorProps> = ({ mode, editorRef, ...props }) => {
       tabSize={2}
       setOptions={{
         showLineNumbers: true,
+        useWorker: false,
       }}
       {...props}
     />

@@ -13,7 +13,7 @@ import inspectRow from '../images/usage.svg';
  *
  * @param {Props} props
  */
-export const InspectOperation = (props) => {
+export const InspectOperation = props => {
   const { name } = props;
 
   const getOperationUrl = () => {

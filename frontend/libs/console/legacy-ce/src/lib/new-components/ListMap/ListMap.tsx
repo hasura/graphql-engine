@@ -91,7 +91,7 @@ export const ListMap = (props: Props) => {
     if (onChange)
       onChange(
         items
-          .filter((item) => item.from && item.to)
+          .filter(item => item.from && item.to)
           .reduce(
             (resultMap, { from, to }) => ({ ...resultMap, [from]: to }),
             {}
@@ -101,7 +101,7 @@ export const ListMap = (props: Props) => {
     formContext?.setValue(
       name,
       items
-        .filter((item) => item.from && item.to)
+        .filter(item => item.from && item.to)
         .reduce((resultMap, { from, to }) => ({ ...resultMap, [from]: to }), {})
     );
   };
@@ -142,12 +142,12 @@ export const ListMap = (props: Props) => {
               <Select
                 options={[
                   ...source.options.filter(
-                    (op) => !localMaps.map((x) => x.from).includes(op)
+                    op => !localMaps.map(x => x.from).includes(op)
                   ),
                   from,
                 ].filter(Boolean)}
                 value={from}
-                onChange={(e) => {
+                onChange={e => {
                   updateLocalMaps(
                     localMaps.map((item, j) => {
                       if (i !== j) return item;
@@ -167,7 +167,7 @@ export const ListMap = (props: Props) => {
                 <Select
                   options={target.options ?? []}
                   value={to}
-                  onChange={(e) => {
+                  onChange={e => {
                     updateLocalMaps(
                       localMaps.map((item, j) => {
                         if (i !== j) return item;
@@ -183,7 +183,7 @@ export const ListMap = (props: Props) => {
                   type="text"
                   className="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                   value={to}
-                  onChange={(e) => {
+                  onChange={e => {
                     updateLocalMaps(
                       localMaps.map((item, j) => {
                         if (i !== j) return item;

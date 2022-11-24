@@ -21,7 +21,7 @@ export const useListRemoteSchemas = () => {
 
 export const useRemoteSchema = () => {
   const client = useQueryClient();
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   const [data, setData] = React.useState<GraphQLSchema>();
   const [isLoading, setIsLoading] = React.useState(false);

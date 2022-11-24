@@ -26,12 +26,12 @@ class ExportMetadata extends Component {
 
     const { dispatch } = this.props;
 
-    const handleExport = (e) => {
+    const handleExport = e => {
       e.preventDefault();
 
       this.setState({ isExporting: true });
 
-      const successCallback = (data) => {
+      const successCallback = data => {
         const fileName =
           'hasura_metadata_' + getCurrTimeForFileName() + '.json';
 
@@ -47,7 +47,7 @@ class ExportMetadata extends Component {
         );
       };
 
-      const errorCallback = (error) => {
+      const errorCallback = error => {
         this.setState({ isExporting: false });
 
         dispatch(showErrorNotification('Metadata export failed', null, error));

@@ -77,7 +77,7 @@ const DataSourceContainer = ({
       return;
     }
 
-    if (!dataSources.find((s) => s.name === source)) {
+    if (!dataSources.find(s => s.name === source)) {
       dispatch(_push('/data/manage'));
       dispatch(
         showErrorNotification(`Data source "${source}" doesn't exist`, null)

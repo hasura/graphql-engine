@@ -38,7 +38,7 @@ export const getETOperationColumns = (
   columnInfo: { columnName: string; columnType: string }[]
 ): ETOperationColumn[] => {
   if (columnInfo && isArray(columnInfo)) {
-    return columnInfo?.map((c) => {
+    return columnInfo?.map(c => {
       return {
         name: c.columnName,
         enabled:
@@ -53,12 +53,12 @@ export const getETOperationColumns = (
 export const findEventTrigger = (
   triggerName: string,
   allTriggers: EventTrigger[]
-) => allTriggers.find((t) => t.name === triggerName);
+) => allTriggers.find(t => t.name === triggerName);
 
 export const findScheduledTrigger = (
   triggerName: string,
   allTriggers: ScheduledTrigger[]
-) => allTriggers.find((t) => t.name === triggerName);
+) => allTriggers.find(t => t.name === triggerName);
 
 export const sanitiseRow = (column: string, row: Record<string, string>) => {
   if (column === 'created_at') {

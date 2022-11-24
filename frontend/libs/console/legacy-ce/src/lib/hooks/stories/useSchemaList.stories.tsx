@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof SchemaList>;
 
-export const Playground: ComponentStory<typeof SchemaList> = (args) => {
+export const Playground: ComponentStory<typeof SchemaList> = args => {
   return <SchemaList {...args} />;
 };
 

@@ -116,7 +116,7 @@ export const permanentWebSocketConn = (
       onError
     );
     return {
-      send: (message) => {
+      send: message => {
         conn.send(message);
       },
       close: () => {

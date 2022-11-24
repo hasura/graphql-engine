@@ -15,7 +15,7 @@ import { TIME_RANGE_SYMBOL } from '../constants';
 
 import styles from '../Metrics.module.scss';
 
-const UsageOverTime = (props) => {
+const UsageOverTime = props => {
   const defaultState = {
     now: new Date().toISOString(),
   };
@@ -37,12 +37,12 @@ const UsageOverTime = (props) => {
 
   const timeRangeFilter = filterByType(filters, TIME_RANGE_SYMBOL);
 
-  timeRangeFilter.forEach((e) => {
+  timeRangeFilter.forEach(e => {
     args.from_time = getTimeRangeValue(e.value);
     args.time_interval = getTimeInterval(e.value);
   });
 
-  timeRangeFilter.forEach((e) => {
+  timeRangeFilter.forEach(e => {
     if (typeof e.value === 'string') {
       args.from_time = getTimeRangeValue(e.value);
       args.time_interval = getTimeInterval(e.value);

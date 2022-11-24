@@ -32,7 +32,7 @@ const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
     dispatch(relSetColumns(relCols));
   };
 
-  const dispatchRemoveCol = (index) => {
+  const dispatchRemoveCol = index => {
     const newColMapping = [
       ...state.relColumns.slice(0, index),
       ...state.relColumns.slice(index + 1),
@@ -59,7 +59,7 @@ const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
             <select
               className={`form-control ${styles.select} ${styles.wd100Percent}`}
               value={colMap.column}
-              onChange={(e) => {
+              onChange={e => {
                 dispatchSetCols('column', e.target.value, index);
               }}
               data-test={`manual-relationship-lcol-${index}`}
@@ -71,7 +71,7 @@ const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
                   {'-- column --'}
                 </option>
               )}
-              {orderedColumns.map((oc) => (
+              {orderedColumns.map(oc => (
                 <option key={oc.name} value={oc.name}>
                   {oc.name}
                 </option>
@@ -82,7 +82,7 @@ const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
             <select
               className={`form-control ${styles.select} ${styles.wd100Percent}`}
               value={colMap.refColumn}
-              onChange={(e) => {
+              onChange={e => {
                 dispatchSetCols('refColumn', e.target.value, index);
               }}
               disabled={!state.relTable.name}
@@ -95,7 +95,7 @@ const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
                 </option>
               )}
               {query.isSuccess
-                ? getColumnNameArrayFromHookData(query.data).map((rcOpt) => (
+                ? getColumnNameArrayFromHookData(query.data).map(rcOpt => (
                     <option key={rcOpt} value={rcOpt}>
                       {rcOpt}
                     </option>
@@ -133,21 +133,21 @@ const ManualRelationshipSelector = ({
   const { data: driversList } = useMetadata(MetadataSelector.getAllDriversList);
 
   if (source) {
-    (source.tables ?? []).forEach((x) => {
+    (source.tables ?? []).forEach(x => {
       const { schema, dataset, name } = x.table;
       refTables[name] = schema ?? dataset;
     });
   }
 
-  const dispatchSetRelType = (event) => {
+  const dispatchSetRelType = event => {
     dispatch(relSetType(event.target.value));
   };
 
-  const dispatchSetRelName = (event) => {
+  const dispatchSetRelName = event => {
     dispatch(relSetName(event.target.value));
   };
 
-  const dispatchSetRefSource = (event) => {
+  const dispatchSetRefSource = event => {
     dispatch(relSetSource(event.target.value));
     dispatch(
       relSetTable({
@@ -158,7 +158,7 @@ const ManualRelationshipSelector = ({
     dispatch(relSetColumns([{ column: '', refColumn: '' }]));
   };
 
-  const dispatchSetRefTable = (event) => {
+  const dispatchSetRefTable = event => {
     dispatch(relSetDriver(source.kind));
     dispatch(
       relSetTable({
@@ -233,13 +233,13 @@ const ManualRelationshipSelector = ({
             driversList &&
               driversList
                 .filter(
-                  (s) =>
+                  s =>
                     currentSource !== s.source &&
                     getSupportedDrivers(
                       'tables.relationships.remoteDbRelationships.referenceSource'
                     ).includes(s.kind)
                 )
-                .map((s) => (
+                .map(s => (
                   <option key={s.source} value={s.source}>
                     {s.source}
                   </option>

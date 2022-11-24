@@ -1,6 +1,6 @@
 import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
 import { Feature, OrderBy, WhereClause } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { ColumnSort } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
@@ -88,24 +88,15 @@ export const DataGrid = (props: DataGridProps) => {
   if (rows === Feature.NotImplemented)
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
 
-  if (isError)
-    return (
-      <div className="my-4">
-        <IndicatorCard status="negative" headline="Something went wrong">
-          Unable to fetch GraphQL response for table
-        </IndicatorCard>
-      </div>
-    );
-
   return (
     <div>
       <DataTableOptions
         pagination={{
           goToNextPage: () => {
-            setPageIndex((currentPage) => currentPage + 1);
+            setPageIndex(currentPage => currentPage + 1);
           },
           goToPreviousPage: () => {
-            setPageIndex((currentPage) => currentPage - 1);
+            setPageIndex(currentPage => currentPage - 1);
           },
           isNextPageDisabled: (rows ?? []).length < pageSize,
           isPreviousPageDisabled: pageIndex <= 0,
@@ -120,10 +111,10 @@ export const DataGrid = (props: DataGridProps) => {
           orderByClauses,
           whereClauses,
           supportedOperators: tableColumnQuery?.supportedOperators ?? [],
-          removeWhereClause: (id) => {
+          removeWhereClause: id => {
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
           },
-          removeOrderByClause: (id) => {
+          removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
         }}
@@ -132,6 +123,12 @@ export const DataGrid = (props: DataGridProps) => {
       {isLoading ? (
         <div className="my-4">
           <Skeleton height={30} count={8} className="my-2" />
+        </div>
+      ) : isError ? (
+        <div className="my-4">
+          <IndicatorCard status="negative" headline="Something went wrong">
+            Unable to fetch GraphQL response for table
+          </IndicatorCard>
         </div>
       ) : (
         <ReactTableWrapper
@@ -150,10 +147,10 @@ export const DataGrid = (props: DataGridProps) => {
           }}
           table={table}
           dataSourceName={dataSourceName}
-          onSubmit={(data) => {
+          onSubmit={data => {
             const { filters, sorts } = data;
             setWhereClauses(
-              filters.map((filter) => {
+              filters.map(filter => {
                 return {
                   [filter.column]: {
                     [filter.operator]: filter.value ?? '',
@@ -164,7 +161,7 @@ export const DataGrid = (props: DataGridProps) => {
             setOrderClauses(sorts);
             setQueryDialogVisibility(false);
           }}
-          filters={whereClauses?.map((clause) => {
+          filters={whereClauses?.map(clause => {
             const [column, rest] = Object.entries(clause)[0];
             const [operator, value] = Object.entries(rest)[0];
             return { column, operator, value };

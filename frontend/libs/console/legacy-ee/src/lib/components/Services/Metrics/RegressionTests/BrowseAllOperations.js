@@ -23,7 +23,7 @@ import { InspectOperation } from './InspectOperation';
  *
  * @param {Props} props
  */
-export const BrowseAllOperations = (props) => {
+export const BrowseAllOperations = props => {
   const { projectId, testSuiteId, gotoTestSuite, projectName } = props;
 
   const [selectedNames, setSelectedNames] = useSelectable();
@@ -46,6 +46,7 @@ export const BrowseAllOperations = (props) => {
   useEffect(() => {
     refetch();
   }, [projectId]);
+
 
   const getCount = () => {
     return data.results_aggregate && data.results_aggregate.aggregate
@@ -70,7 +71,7 @@ export const BrowseAllOperations = (props) => {
         return { ...acc, [key]: resultsRow[key] };
       }, {});
 
-      const results = data.results.map((row) => ({
+      const results = data.results.map(row => ({
         ...row,
         session_variables:
           row.http_logs.length && row.http_logs[0].session_variables,
@@ -93,7 +94,7 @@ export const BrowseAllOperations = (props) => {
       });
 
       const onChangeAllSelection = () => {
-        const operationNames = data.results.map((o) => o.name) || [];
+        const operationNames = data.results.map(o => o.name) || [];
         if (selectedNames.length !== data.results.length) {
           setSelectedNames(operationNames);
         } else {
@@ -138,7 +139,7 @@ export const BrowseAllOperations = (props) => {
 
   const getRows = () => {
     if (data.results.length > 0) {
-      const results = data.results.map((row) => ({
+      const results = data.results.map(row => ({
         ...row,
         session_variables:
           row.http_logs.length && row.http_logs[0].session_variables,
@@ -147,7 +148,7 @@ export const BrowseAllOperations = (props) => {
       }));
       delete results.http_logs;
 
-      return results.map((row) => {
+      return results.map(row => {
         const newRow = {
           tableRowSelectAction: (
             <div className={styles.textCenter}>
@@ -223,7 +224,7 @@ export const BrowseAllOperations = (props) => {
           <AddNewOperations
             projectId={projectId}
             testSuiteId={testSuiteId}
-            operations={data.results.filter((o) =>
+            operations={data.results.filter(o =>
               selectedNames.includes(o.name)
             )}
             onComplete={() => {
@@ -244,7 +245,7 @@ export const BrowseAllOperations = (props) => {
             minRows={0}
             pageSize={pageLimit}
             pages={Math.ceil(getCount() / pageLimit)}
-            onPageChange={(page) => setOffset(page * pageLimit)}
+            onPageChange={page => setOffset(page * pageLimit)}
             onPageSizeChange={setPageLimit}
             page={Math.floor(offset / pageLimit)}
           />

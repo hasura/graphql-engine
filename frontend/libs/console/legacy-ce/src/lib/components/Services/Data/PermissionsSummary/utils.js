@@ -1,11 +1,11 @@
 import { getDefaultFilterType } from '../TablePermissions/utils';
 
-export const getAllRoles = (allTableSchemas) => {
+export const getAllRoles = allTableSchemas => {
   const _allRoles = [];
 
-  allTableSchemas.forEach((tableSchema) => {
+  allTableSchemas.forEach(tableSchema => {
     if (tableSchema.permissions) {
-      tableSchema.permissions.forEach((p) => {
+      tableSchema.permissions.forEach(p => {
         if (!_allRoles.includes(p.role_name)) {
           _allRoles.push(p.role_name);
         }
@@ -18,11 +18,11 @@ export const getAllRoles = (allTableSchemas) => {
   return _allRoles;
 };
 
-export const getTablePermissionsByRoles = (tableSchema) => {
+export const getTablePermissionsByRoles = tableSchema => {
   const tablePermissionsByRoles = {};
 
   tableSchema.permissions.forEach(
-    (p) => (tablePermissionsByRoles[p.role_name] = p.permissions)
+    p => (tablePermissionsByRoles[p.role_name] = p.permissions)
   );
 
   return tablePermissionsByRoles;
@@ -55,7 +55,7 @@ export const getPermissionColumnAccessSummary = (permission, tableFields) => {
     let noFields = true;
     let allFields = true;
 
-    Object.keys(tableFields).forEach((fieldType) => {
+    Object.keys(tableFields).forEach(fieldType => {
       const permissionFields = permission[fieldType] || [];
 
       noFields = noFields && !permissionFields.length;
@@ -78,7 +78,7 @@ export const getPermissionColumnAccessSummary = (permission, tableFields) => {
   return columnAccessStatus;
 };
 
-export const getPermissionRowAccessSummary = (filterString) => {
+export const getPermissionRowAccessSummary = filterString => {
   let rowAccessStatus;
 
   const noAccess = filterString === '';

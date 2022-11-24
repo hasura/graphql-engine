@@ -50,7 +50,7 @@ const createInitialHeaderState = (headers?: DataHeader[]) => {
   }
 
   return headers
-    .filter((header) => header.key.trim() !== '' || header.value.trim() !== '')
+    .filter(header => header.key.trim() !== '' || header.value.trim() !== '')
     .map((header, index) => ({ ...header, isActive: true, index }));
 };
 
@@ -59,10 +59,7 @@ const createInitialVariableState = (parsedVariables?: VariableData[]) => {
     return [];
   }
 
-  return parsedVariables.map((variableData) => ({
-    ...variableData,
-    value: '',
-  }));
+  return parsedVariables.map(variableData => ({ ...variableData, value: '' }));
 };
 
 const collectHeaders = (allHeaders: HeaderState[]) =>
@@ -97,7 +94,7 @@ const updateHeaderTextValues =
   };
 
 const getRequestMethod = (supportedMethods: AllowedRESTMethods[]) => {
-  const filteredMethods = supportedMethods.filter((method) => method !== 'GET');
+  const filteredMethods = supportedMethods.filter(method => method !== 'GET');
   if (!filteredMethods || !filteredMethods.length) {
     return 'GET';
   }
@@ -137,7 +134,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 
   const updateActiveStateForHeader = (index: number) => () => {
     const checkIsHeaderPresent = headerState.find(
-      (header) => header.index === index
+      header => header.index === index
     );
 
     if (!checkIsHeaderPresent) {
@@ -183,7 +180,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       return;
     }
     const urlQueryVariables = parsedEndpoint.filter(
-      (path) => path.type === 'variable'
+      path => path.type === 'variable'
     );
 
     const body = getRequestBody({
@@ -208,13 +205,13 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       method: requestMethod,
       body,
     })
-      .then((data) => {
+      .then(data => {
         progressDispatch({
           type: 'RequestLoadingState/SET_REQUEST_SUCCESS',
           data,
         });
       })
-      .catch((err) => {
+      .catch(err => {
         progressDispatch({
           type: 'RequestLoadingState/SET_REQUEST_ERRORED',
           data: err,

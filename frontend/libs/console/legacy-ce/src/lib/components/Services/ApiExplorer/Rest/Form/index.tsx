@@ -1,6 +1,7 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
 import { useIsUnmounted } from '@/components/Services/Data';
 import { Dispatch, ReduxState } from '@/types';
@@ -94,10 +95,10 @@ const useRestEndpointFormStateForEdition: RestEndpointFormStateHook = (
   const currentEndpoints = props?.metadataObject?.rest_endpoints ?? [];
   const currentCollections = props?.metadataObject?.query_collections;
   const currentRestEndpointEntry =
-    currentEndpoints.find((et) => et.name === currentPageName) ?? null;
+    currentEndpoints.find(et => et.name === currentPageName) ?? null;
   const currentEndpointQuery = currentCollections
-    ?.find((qce) => qce.name === allowedQueriesCollection)
-    ?.definition?.queries?.find((qc) => qc.name === currentPageName);
+    ?.find(qce => qce.name === allowedQueriesCollection)
+    ?.definition?.queries?.find(qc => qc.name === currentPageName);
 
   if (currentRestEndpointEntry && editEndpoint) {
     formState.name = currentRestEndpointEntry?.name;
@@ -163,13 +164,18 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
   const onCancelHandler = resetPageState;
 
   return (
-    <RestEndpointForm
-      mode={mode}
-      formState={formState}
-      loading={loading}
-      onSubmit={onSubmit}
-      onCancel={onCancelHandler}
-    />
+    <Analytics
+      name={mode === 'create' ? 'FormRestCreate' : 'FormRestEdit'}
+      {...REDACT_EVERYTHING}
+    >
+      <RestEndpointForm
+        mode={mode}
+        formState={formState}
+        loading={loading}
+        onSubmit={onSubmit}
+        onCancel={onCancelHandler}
+      />
+    </Analytics>
   );
 };
 

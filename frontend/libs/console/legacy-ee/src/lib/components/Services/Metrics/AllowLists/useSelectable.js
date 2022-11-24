@@ -7,9 +7,9 @@ const defaultState = {
 const useSelectable = () => {
   const [data, update] = useState(defaultState);
   const { items } = data;
-  const modifyState = (item) => {
+  const modifyState = item => {
     if (typeof item === 'object') {
-      update((s) => {
+      update(s => {
         return {
           ...s,
           items: [...item],
@@ -19,7 +19,7 @@ const useSelectable = () => {
     }
     const elementPos = items.indexOf(item);
     if (elementPos !== -1) {
-      update((s) => {
+      update(s => {
         return {
           ...s,
           items: [
@@ -30,7 +30,7 @@ const useSelectable = () => {
       });
       return;
     }
-    update((s) => {
+    update(s => {
       return {
         ...s,
         items: [...s.items, item],

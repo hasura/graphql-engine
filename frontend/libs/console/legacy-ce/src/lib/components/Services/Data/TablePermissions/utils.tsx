@@ -65,10 +65,10 @@ export const getFilterQueries = (
   filterType: FilterType
 ) => {
   const filterQueries: Record<string, DisplayQueryType[]> = {};
-  queryTypes.forEach((queryType) => {
+  queryTypes.forEach(queryType => {
     if (queryType === 'update') {
       const options = getOptionsForUpdate(filterType, query);
-      options.forEach((fType) => {
+      options.forEach(fType => {
         const filterString = getPermissionFilterString(
           permissionsState[queryType],
           queryType,
@@ -115,11 +115,11 @@ type FilterString = Partial<{ check: string; filter: string }>;
 export const replaceLegacyOperators = (filterString: FilterString) => {
   const newFilterString = { ...filterString };
 
-  allOperators.forEach((operator) => {
+  allOperators.forEach(operator => {
     const currentString = `"${operator}"`;
     const legacyString = `"${getLegacyOperator(operator)}"`;
 
-    UNSAFE_keys(newFilterString).forEach((key) => {
+    UNSAFE_keys(newFilterString).forEach(key => {
       newFilterString[key] = newFilterString[key]!.replace(
         new RegExp(escapeRegExp(legacyString), 'g'),
         currentString
@@ -189,7 +189,7 @@ export const getPermissionsIcon = (
   const checkColumns = query !== 'delete';
   const checkComputedFields = query === 'select';
 
-  if (!filterKeys.every((key) => JSON.stringify(permissions[key]) === '{}')) {
+  if (!filterKeys.every(key => JSON.stringify(permissions[key]) === '{}')) {
     return 'partialAccess';
   }
 
@@ -219,7 +219,7 @@ export const hasSelectPrimaryKey = (
   primaryKeys: string[],
   selectedColumns: string[]
 ) =>
-  primaryKeys?.every((primaryKeyColumn) =>
+  primaryKeys?.every(primaryKeyColumn =>
     selectedColumns?.includes(primaryKeyColumn)
   );
 
@@ -235,7 +235,7 @@ export const getPrimaryKeysFromTable = (
   state: State
 ): string[] => {
   const desiredSchema = schemas?.find(
-    (schema) => schema.table_name === state.permissionsState.table
+    schema => schema.table_name === state.permissionsState.table
   );
   return desiredSchema?.primary_key?.columns || [];
 };
@@ -261,7 +261,7 @@ export const getNewRootPermissionState = (
 ) => {
   if (!isQueryAllowed && currentPermissions?.includes(newPermission)) {
     return currentPermissions.filter(
-      (rootPermission) => rootPermission !== newPermission
+      rootPermission => rootPermission !== newPermission
     );
   }
   return currentPermissions;

@@ -1,7 +1,7 @@
 import defaultState from './state';
 
 const SET_TYPES = 'Actions/Rel/SET_INITIAL_TYPES';
-export const setTypes = (types) => ({ type: SET_TYPES, types });
+export const setTypes = types => ({ type: SET_TYPES, types });
 
 const reducer = (state = defaultState, action) => {
   switch (action.type) {

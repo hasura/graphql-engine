@@ -8,7 +8,7 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
     if ('schemas' in options) {
       datasets = options.schemas;
     } else {
-      datasets = options.tables.map((t) => t.schema) ?? [];
+      datasets = options.tables.map(t => t.schema) ?? [];
     }
 
     const query = (dataset: string) => `
@@ -32,7 +32,7 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
   `;
 
     return datasets
-      .map((dataset) => {
+      .map(dataset => {
         return query(dataset);
       })
       .join('union all');

@@ -6,7 +6,7 @@ import ProcessedEvents from './ProcessedEvents';
 
 interface Props extends InjectedProps {}
 
-const ProcessedEventsContainer: React.FC<Props> = (props) => {
+const ProcessedEventsContainer: React.FC<Props> = props => {
   const { dispatch } = props;
   return (
     <AdhocEventContainer tabName="processed" dispatch={dispatch}>

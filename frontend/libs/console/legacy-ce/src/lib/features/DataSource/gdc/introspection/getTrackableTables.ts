@@ -15,7 +15,7 @@ export const getTrackableTables = async (props: GetTrackableTablesProps) => {
       },
     });
 
-    const tables = result.map((table) => {
+    const tables = result.map(table => {
       /**
        * Ideally each table is suppososed to be GDCTable, but the server fix has not yet been merged to main.
        * Right now it returns string as a table.

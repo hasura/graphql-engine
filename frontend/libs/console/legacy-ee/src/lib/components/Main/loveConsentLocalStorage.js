@@ -3,11 +3,11 @@ const defaultState = {
   isDismissed: false,
 };
 
-const setLoveConsentState = (stateData) => {
+const setLoveConsentState = stateData => {
   window.localStorage.setItem(loveConsentState, JSON.stringify(stateData));
 };
 
-const getLoveConsentState = (stateData) => {
+const getLoveConsentState = stateData => {
   const s = window.localStorage.getItem(
     loveConsentState,
     JSON.stringify(stateData)

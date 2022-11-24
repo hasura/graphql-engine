@@ -129,7 +129,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
               min={0}
               className={`form-control ${styles.special_input}`}
               value={renderValue()}
-              onChange={(e) => onInputChange(limit, role)(e.target.value)}
+              onChange={e => onInputChange(limit, role)(e.target.value)}
               placeholder={isRateLimit ? 'Request Per Minute' : 'Limit'}
               disabled={isDisabled}
             />
@@ -144,7 +144,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                       className="legacy-input-fix"
                       checked={addUniqueParams}
                       disabled={isDisabled}
-                      onChange={() => setAddUniqueParams((pre) => !pre)}
+                      onChange={() => setAddUniqueParams(pre => !pre)}
                     />
                     <label htmlFor="additional_unique_param">
                       <b>Additional Unique Parameters</b>
@@ -194,7 +194,7 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
                     value={renderUniqueParamValue()}
                     disabled={!addUniqueParams || isDisabled}
                     placeholder="x-hasura-user-id, x-hasura-org"
-                    onChange={(e) => onUniqueParamsChange(role)(e.target.value)}
+                    onChange={e => onUniqueParamsChange(role)(e.target.value)}
                   />
                 )}
               </div>

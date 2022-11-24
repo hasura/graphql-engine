@@ -155,7 +155,7 @@ export const getLastArrayElement = (array: unknown[]) => {
 };
 
 export const arrayDiff = (arr1: unknown[], arr2: unknown[]) => {
-  return arr1.filter((v) => !arr2.includes(v));
+  return arr1.filter(v => !arr2.includes(v));
 };
 
 export const isStringArray = (str: string): boolean => {
@@ -197,7 +197,7 @@ export function getAllJsonPaths(
       handleSubJson(subJson, addPrefix(i.toString()));
     });
   } else if (isObject(json)) {
-    Object.keys(json).forEach((key) => {
+    Object.keys(json).forEach(key => {
       if (leafKeys.includes(key)) {
         paths.push({ [addPrefix(key)]: json[key] });
       } else {
@@ -359,10 +359,10 @@ export const downloadObjectAsCsvFile = (
 ) => {
   const titleRowString = Object.keys(rows[0]).join(',');
   const rowsString = rows
-    .map((e) =>
+    .map(e =>
       Object.values(e)
         .map(
-          (i) =>
+          i =>
             `"${
               typeof i === 'string' && isJsonString(i)
                 ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result in bad formatting

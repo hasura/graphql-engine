@@ -38,7 +38,7 @@ function AddRemoteSchemaRelationshipComponent({
 
 export const AddRemoteSchemaRelationship: ComponentStory<
   typeof AddRemoteSchemaRelationshipComponent
-> = (args) => {
+> = args => {
   return <AddRemoteSchemaRelationshipComponent {...args} />;
 };
 

@@ -28,7 +28,7 @@ export const PaginationWithOnlyNav = (props: PaginationWithOnlyNavProps) => {
         <select
           className={inputStyles}
           value={limit}
-          onChange={(e) => {
+          onChange={e => {
             e.persist();
             changePageSize(parseInt(e.target.value, 10) || 10);
           }}

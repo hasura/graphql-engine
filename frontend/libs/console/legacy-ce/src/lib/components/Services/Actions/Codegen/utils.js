@@ -22,15 +22,15 @@ import { getPersistedDerivedAction } from '../utils';
 import requestAction from '../../../../utils/requestAction';
 import requestActionPlain from '../../../../utils/requestActionPlain';
 
-export const getCodegenFilePath = (framework) => {
+export const getCodegenFilePath = framework => {
   return `${BASE_CODEGEN_PATH}/${framework}/actions-codegen.js`;
 };
 
-export const getStarterKitPath = (framework) => {
+export const getStarterKitPath = framework => {
   return `https://github.com/${CODEGEN_REPO}/tree/master/${framework}/starter-kit/`;
 };
 
-export const getStarterKitDownloadPath = (framework) => {
+export const getStarterKitDownloadPath = framework => {
   return `https://github.com/${CODEGEN_REPO}/raw/master/${framework}/${framework}.zip`;
 };
 export const getGlitchProjectURL = () => {
@@ -39,20 +39,20 @@ export const getGlitchProjectURL = () => {
 
 export const GLITCH_PROJECT_URL = '';
 
-export const getAllCodegenFrameworks = (dispatch) => {
+export const getAllCodegenFrameworks = dispatch => {
   return dispatch(requestAction(ALL_FRAMEWORKS_FILE_PATH, {}));
 };
 
 export const getCodegenFunc = (framework, dispatch) => {
   return dispatch(requestActionPlain(getCodegenFilePath(framework)))
-    .then((rawJsString) => {
+    .then(rawJsString => {
       const { codegen } = require('@graphql-codegen/core');
       const typescriptPlugin = require('@graphql-codegen/typescript');
       let codegenerator;
       eval(`${rawJsString}\ncodegenerator = templater;`);
       return codegenerator;
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };
@@ -65,7 +65,7 @@ export const getFrameworkCodegen = (
   dispatch
 ) => {
   return getCodegenFunc(framework, dispatch)
-    .then((codegenerator) => {
+    .then(codegenerator => {
       const derive = {
         operation: parentOperation,
         endpoint: endpoints.graphQLUrl,
@@ -73,7 +73,7 @@ export const getFrameworkCodegen = (
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
       return codegenFiles;
     })
-    .catch((e) => {
+    .catch(e => {
       console.error('unexpected error', e);
       throw e;
     });

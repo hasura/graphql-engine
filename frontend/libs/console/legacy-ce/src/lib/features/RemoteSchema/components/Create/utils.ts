@@ -55,7 +55,7 @@ export const transformFormData = (values: Schema) => {
         prefix: type_prefix,
         suffix: type_suffix,
       },
-      (value) => value.length > 0
+      value => value.length > 0
     );
 
   /* if Query root customization is present */
@@ -68,7 +68,7 @@ export const transformFormData = (values: Schema) => {
           prefix: query_root.prefix,
           suffix: query_root.suffix,
         },
-        (value) => value.length > 0
+        value => value.length > 0
       ),
     ];
   }
@@ -86,7 +86,7 @@ export const transformFormData = (values: Schema) => {
           prefix: mutation_root.prefix,
           suffix: mutation_root.suffix,
         },
-        (value) => value.length > 0
+        value => value.length > 0
       ),
     ];
   }
@@ -95,7 +95,7 @@ export const transformFormData = (values: Schema) => {
     [url.type === 'from_env' ? 'url_from_env' : 'url']: url.value,
     forward_client_headers,
     comment,
-    headers: headers.map((header) => {
+    headers: headers.map(header => {
       if (header.type === 'from_env')
         return { name: header.name, value_from_env: header.value };
       return { name: header.name, value: header.value };

@@ -20,7 +20,7 @@ export function useGetCronTriggers(
     args: {},
   };
 
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
   const queryFn = () => {
     return Api.post<{ cron_triggers: CronTriggerAPIResult[] }>({
       headers,
@@ -33,8 +33,8 @@ export function useGetCronTriggers(
     queryKey: 'cronTrigger',
     queryFn,
     ...queryOptions,
-    select: (data) => {
-      return data.cron_triggers.map((cron) => ({
+    select: data => {
+      return data.cron_triggers.map(cron => ({
         name: cron.name,
         payload: cron.payload,
         retry_conf: {

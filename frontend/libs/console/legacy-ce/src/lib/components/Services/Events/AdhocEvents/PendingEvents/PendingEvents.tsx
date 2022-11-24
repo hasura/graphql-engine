@@ -18,7 +18,7 @@ type Props = {
   dispatch: Dispatch;
 };
 
-const PendingEvents: React.FC<Props> = (props) => {
+const PendingEvents: React.FC<Props> = props => {
   const { dispatch } = props;
 
   const onCancelOneOffScheduledEvent = (

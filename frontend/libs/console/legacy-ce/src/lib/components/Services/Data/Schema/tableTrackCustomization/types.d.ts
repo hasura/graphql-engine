@@ -1,4 +1,4 @@
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTableConfig } from '@/features/hasura-metadata-types';
 import { Driver } from '@/dataSources';
 
 export type TrackingTableFormValues = {

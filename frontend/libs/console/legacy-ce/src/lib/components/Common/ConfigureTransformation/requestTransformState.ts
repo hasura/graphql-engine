@@ -46,6 +46,18 @@ import {
   defaultEventRequestBody,
   defaultEventRequestSampleInput,
   RequestTransformStateBody,
+  SET_RESPONSE_PAYLOAD_TRANSFORM,
+  SetResponsePayloadTransform,
+  ResponseTransformStateBody,
+  SET_RESPONSE_BODY,
+  SetResponseBody,
+  SET_RESPONSE_BODY_ERROR,
+  SetResponseBodyError,
+  ResponseTransformState,
+  ResponseTransformEvents,
+  SET_RESPONSE_TRANSFORM_STATE,
+  defaultActionResponseBody,
+  SetResponseTransformState,
 } from './stateDefaults';
 import { getSessionVarsFromLS, getEnvVarsFromLS } from './utils';
 
@@ -108,11 +120,25 @@ export const setRequestBody = (
   requestBody,
 });
 
+export const setResponseBody = (
+  responseBody: ResponseTransformStateBody
+): SetResponseBody => ({
+  type: SET_RESPONSE_BODY,
+  responseBody,
+});
+
 export const setRequestBodyError = (
   requestBodyError: string
 ): SetRequestBodyError => ({
   type: SET_REQUEST_BODY_ERROR,
   requestBodyError,
+});
+
+export const setResponseBodyError = (
+  responseBodyError: string
+): SetResponseBodyError => ({
+  type: SET_RESPONSE_BODY_ERROR,
+  responseBodyError,
 });
 
 export const setRequestSampleInput = (
@@ -150,10 +176,24 @@ export const setRequestPayloadTransform = (
   isRequestPayloadTransform,
 });
 
+export const setResponsePayloadTransform = (
+  isResponsePayloadTransform: boolean
+): SetResponsePayloadTransform => ({
+  type: SET_RESPONSE_PAYLOAD_TRANSFORM,
+  isResponsePayloadTransform,
+});
+
 export const setRequestTransformState = (
   newState: RequestTransformState
 ): SetRequestTransformState => ({
   type: SET_REQUEST_TRANSFORM_STATE,
+  newState,
+});
+
+export const setResponseTransformState = (
+  newState: ResponseTransformState
+): SetResponseTransformState => ({
+  type: SET_RESPONSE_TRANSFORM_STATE,
   newState,
 });
 
@@ -164,6 +204,10 @@ export const requestBodyActionState = {
   transformApplicationJson: 'transform' as RequestTransformBodyActions,
   transformFormUrlEncoded:
     'x_www_form_urlencoded' as RequestTransformBodyActions,
+};
+
+export const responseBodyActionState = {
+  transformApplicationJson: 'transform' as RequestTransformBodyActions,
 };
 
 export const requestTransformState: RequestTransformState = {
@@ -186,6 +230,15 @@ export const requestTransformState: RequestTransformState = {
   templatingEngine: 'Kriti',
 };
 
+export const responseTransformState: ResponseTransformState = {
+  version: currentVersion,
+  isResponsePayloadTransform: false,
+  responseSampleInput: '',
+  responseBody: { action: responseBodyActionState.transformApplicationJson },
+  responseBodyError: '',
+  templatingEngine: 'Kriti',
+};
+
 export const getActionRequestTransformDefaultState =
   (): RequestTransformState => {
     return {
@@ -200,6 +253,19 @@ export const getActionRequestTransformDefaultState =
         form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
       },
       requestSampleInput: defaultActionRequestSampleInput,
+    };
+  };
+
+export const getActionResponseTransformDefaultState =
+  (): ResponseTransformState => {
+    return {
+      ...responseTransformState,
+      responseBody: {
+        action: responseBodyActionState.transformApplicationJson,
+        template: defaultActionResponseBody,
+        form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
+      },
+      responseSampleInput: defaultActionRequestSampleInput,
     };
   };
 
@@ -304,6 +370,35 @@ export const requestTransformReducer = (
         isRequestPayloadTransform: action.isRequestPayloadTransform,
       };
     case SET_REQUEST_TRANSFORM_STATE:
+      return {
+        ...action.newState,
+      };
+    default:
+      return state;
+  }
+};
+
+export const responseTransformReducer = (
+  state = responseTransformState,
+  action: ResponseTransformEvents
+): ResponseTransformState => {
+  switch (action.type) {
+    case SET_RESPONSE_BODY:
+      return {
+        ...state,
+        responseBody: action.responseBody,
+      };
+    case SET_RESPONSE_BODY_ERROR:
+      return {
+        ...state,
+        responseBodyError: action.responseBodyError,
+      };
+    case SET_RESPONSE_PAYLOAD_TRANSFORM:
+      return {
+        ...state,
+        isResponsePayloadTransform: action.isResponsePayloadTransform,
+      };
+    case SET_RESPONSE_TRANSFORM_STATE:
       return {
         ...action.newState,
       };

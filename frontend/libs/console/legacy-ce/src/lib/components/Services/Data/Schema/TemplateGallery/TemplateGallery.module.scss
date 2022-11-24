@@ -1,3 +1,4 @@
+
 .table {
   width: 100%;
   background-color: white;
@@ -74,7 +75,7 @@
 
 .ace_custom_style {
   border: 1px solid #dddddd;
-  margin: 0.5em 0;
+  margin: .5em 0;
   background-color: #f8fafb;
   border-radius: 4px;
 }
@@ -84,7 +85,7 @@
   padding: 4px 8px;
   font-weight: 600;
   border-radius: 16px;
-  color: #6b7280;
+  color: #6B7280;
   border: 1px solid #d1d5db;
 }
 
@@ -115,7 +116,7 @@
   opacity: 0;
 }
 
-tr:hover .schema_gallery_button {
+tr:hover .schema_gallery_button{
   opacity: 1;
 }
 

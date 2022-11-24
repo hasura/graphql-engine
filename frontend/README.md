@@ -6,6 +6,9 @@ Visit the [Nx Documentation](https://nx.dev) to learn more about it.
 
 This `frontend` monorepo contains the Hasura Console, in all the possible modes.
 
+
+*Last import [2022-11-21](https://github.com/hasura/graphql-engine-mono/tree/a32ce3f167eb6bb5c48645a614288c043c252d26)*
+
 ## Nx Console
 
 It's highly recommended to install the Nx Console for [VSCode](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console), [IntelliJ](https://plugins.jetbrains.com/plugin/15101-nx-console-idea) or [Neovim](https://github.com/Equilibris/nx.nvim).

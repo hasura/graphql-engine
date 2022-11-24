@@ -37,7 +37,7 @@ export function useInstallMigration(
   onSuccessCb?: () => void,
   onErrorCb?: (errorMsg?: string) => void
 ): { performMigration: () => void } | { performMigration: undefined } {
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   // Fetch the migration to be applied from remote file, or return from react-query cache if present
   const {

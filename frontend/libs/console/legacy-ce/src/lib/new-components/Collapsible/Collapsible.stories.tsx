@@ -17,7 +17,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
       source: { type: 'code' },
     },
   },
-  decorators: [(Story) => <div className="p-4 w-full">{Story()}</div>],
+  decorators: [Story => <div className="p-4 w-full">{Story()}</div>],
   component: Collapsible,
 } as ComponentMeta<typeof Collapsible>;
 
@@ -30,7 +30,7 @@ const ChildrenExample = () => (
   </div>
 );
 
-export const ApiPlayground: ComponentStory<typeof Collapsible> = (args) => (
+export const ApiPlayground: ComponentStory<typeof Collapsible> = args => (
   <Collapsible {...args} />
 );
 ApiPlayground.storyName = '⚙️ API';
@@ -85,13 +85,12 @@ StateOpen.parameters = {
   },
 };
 
-export const TestingClickedInteraction: ComponentStory<
-  typeof Collapsible
-> = () => (
-  <Collapsible triggerChildren={<ChildrenExample />}>
-    <ChildrenExample />
-  </Collapsible>
-);
+export const TestingClickedInteraction: ComponentStory<typeof Collapsible> =
+  () => (
+    <Collapsible triggerChildren={<ChildrenExample />}>
+      <ChildrenExample />
+    </Collapsible>
+  );
 TestingClickedInteraction.storyName = '🧪 Testing - Clicked interaction';
 TestingClickedInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

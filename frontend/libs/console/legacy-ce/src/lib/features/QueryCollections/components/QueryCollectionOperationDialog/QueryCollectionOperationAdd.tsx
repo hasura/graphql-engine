@@ -20,13 +20,13 @@ export const QueryCollectionOperationAdd = (
       title="Add Operation"
       callToAction="Add Operation"
       isLoading={isLoading}
-      onSubmit={(values) => {
+      onSubmit={values => {
         if (values.option === 'write operation') {
           addOperationToQueryCollection(
             queryCollectionName,
             [{ name: values.name, query: values.query }],
             {
-              onError: (e) => {
+              onError: e => {
                 fireNotification({
                   type: 'error',
                   title: 'Error',
@@ -48,7 +48,7 @@ export const QueryCollectionOperationAdd = (
         }
 
         addOperationToQueryCollection(queryCollectionName, values.gqlFile, {
-          onError: (e) => {
+          onError: e => {
             fireNotification({
               type: 'error',
               title: 'Error',

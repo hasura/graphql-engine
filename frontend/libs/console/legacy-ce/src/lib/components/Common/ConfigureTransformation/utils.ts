@@ -12,10 +12,14 @@ import {
   RequestTransformState,
   RequestTransformStateBody,
   ResponseTransformState,
+  ResponseTransformStateBody,
 } from './stateDefaults';
 import { isEmpty, isJsonString } from '../utils/jsUtils';
 import { Nullable } from '../utils/tsUtils';
-import { requestBodyActionState } from './requestTransformState';
+import {
+  requestBodyActionState,
+  responseBodyActionState,
+} from './requestTransformState';
 
 export const getPairsObjFromArray = (
   pairs: KeyValuePair[]
@@ -85,7 +89,7 @@ export const getEnvVarsFromLS = () =>
 
 export const setEnvVarsToLS = (envVars: KeyValuePair[]) => {
   const validEnvVars = envVars.filter(
-    (e) => !isEmpty(e.name) && !isEmpty(e.value)
+    e => !isEmpty(e.name) && !isEmpty(e.value)
   );
   setLSItem(`${LS_KEYS.webhookTransformEnvVars}`, JSON.stringify(validEnvVars));
 };
@@ -177,12 +181,21 @@ export const getRequestTransformObject = (
 };
 
 export const getResponseTransformObject = (
-  transformState: ResponseTransformState
-): ResponseTranform => ({
-  version: 2,
-  body: getTransformBodyServer(transformState.requestBody),
-  template_engine: transformState.templatingEngine,
-});
+  responseTransformState: ResponseTransformState
+) => {
+  const isResponsePayloadTransform =
+    responseTransformState.isResponsePayloadTransform;
+
+  if (!isResponsePayloadTransform) return null;
+
+  const obj: ResponseTranform = {
+    version: 2,
+    body: getTransformBodyServer(responseTransformState.responseBody),
+    template_engine: responseTransformState.templatingEngine,
+  };
+
+  return obj;
+};
 
 const getErrorFromCode = (data: Record<string, any>) => {
   const errorCode = data.code ? data.code : '';
@@ -399,7 +412,7 @@ export const getAceCompleterFromString = (jsonString: string) => {
       }
       callback(
         null,
-        wordListArray.map((word) => {
+        wordListArray.map(word => {
           return {
             caption: word,
             value: word,
@@ -439,6 +452,15 @@ const getRequestTransformBody = (
   };
 };
 
+const getResponseTransformBody = (
+  responseTransform: ResponseTranform
+): ResponseTransformStateBody => {
+  return {
+    action: responseBodyActionState.transformApplicationJson,
+    template: responseTransform.body?.template ?? '',
+  };
+};
+
 export const getTransformState = (
   transform: RequestTransform,
   sampleInput: string
@@ -467,6 +489,17 @@ export const getTransformState = (
     !isEmpty(transform?.query_params),
   isRequestPayloadTransform: !!transform?.body,
   templatingEngine: transform?.template_engine ?? 'Kriti',
+});
+
+export const getResponseTransformState = (
+  responseTransform: ResponseTranform
+): ResponseTransformState => ({
+  version: responseTransform?.version,
+  templatingEngine: responseTransform?.template_engine ?? 'Kriti',
+  isResponsePayloadTransform: !!responseTransform?.body,
+  responseBody: getResponseTransformBody(responseTransform),
+  responseSampleInput: '',
+  responseBodyError: '',
 });
 
 export const capitaliseFirstLetter = (val: string) =>

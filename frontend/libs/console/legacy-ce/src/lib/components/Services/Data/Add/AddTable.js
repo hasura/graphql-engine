@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import { Button } from '@/new-components/Button';
 import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
@@ -125,12 +126,12 @@ class AddTable extends Component {
     });
   }
 
-  onTableNameChange = (e) => {
+  onTableNameChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableName(e.target.value));
   };
 
-  trimTableName = (tableName) => {
+  trimTableName = tableName => {
     const trimmedName = tableName ? tableName.trim() : tableName;
     const { dispatch } = this.props;
     if (tableName !== trimmedName) {
@@ -139,12 +140,12 @@ class AddTable extends Component {
     return trimmedName;
   };
 
-  onTableCommentChange = (e) => {
+  onTableCommentChange = e => {
     const { dispatch } = this.props;
     dispatch(setTableComment(e.target.value));
   };
 
-  onRemoveColumn = (i) => {
+  onRemoveColumn = i => {
     const { dispatch } = this.props;
     dispatch(removeColumn(i));
   };
@@ -185,7 +186,7 @@ class AddTable extends Component {
   };
 
   minPrimaryKeyCheck() {
-    return this.props.primaryKeys.filter((key) => key !== '').length > 0;
+    return this.props.primaryKeys.filter(key => key !== '').length > 0;
   }
 
   // check the validity and if invalid, notify
@@ -505,132 +506,134 @@ class AddTable extends Component {
     };
 
     return (
-      <div className="p-lg">
-        <Helmet title={`Add Table - Data | Hasura`} />
-        <div>
-          <h2 className="text-xl font-semibold mb-lg">Add a New Table</h2>
-        </div>
-
-        <div className="max-w-6xl">
-          <div className="w-full sm:w-6/12 mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Table Name
-            </h4>
-            <TableName onChange={this.onTableNameChange.bind(this)} />
-          </div>
-
-          <div className="w-full sm:w-6/12 mb-lg">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Table Comment
-            </h4>
-            <TableComment onChange={this.onTableCommentChange} />
-          </div>
-
-          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
-            Configure Fields
-          </h3>
-
-          <div className="w-full mb-lg">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Columns
-            </h4>
-            <TableColumns
-              uniqueKeys={uniqueKeys}
-              dataTypes={dataTypes}
-              columnDefaultFunctions={columnDefaultFunctions}
-              columnTypeCasts={columnTypeCasts}
-              columns={columns}
-              onRemoveColumn={this.onRemoveColumn}
-              onColumnChange={this.onColumnNameChange}
-              onColTypeChange={this.onColTypeChange}
-              onColNullableChange={this.onColNullableChange}
-              onColUniqueChange={this.onColUniqueChange}
-              setColDefaultValue={this.setColDefaultValue}
-            />
-            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
-              <FrequentlyUsedColumnSelector
-                onSelect={setFreqUsedColumn}
-                action={'add'}
-                dispatch={dispatch}
-                postgresVersion={postgresVersion}
-              />
-            ) : null}
-          </div>
-
-          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
-            Table Properties
-          </h3>
-
-          <div className="w-full sm:w-6/12 mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Primary Key
-              <ToolTip message={primaryKeyDescription} />
-            </h4>
-            <PrimaryKeySelector
-              primaryKeys={primaryKeys}
-              columns={columns}
-              setPk={setPk}
-              dispatch={dispatch}
-            />
-          </div>
-
-          <div className="w-full sm:w-8/12 mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Foreign Keys
-              <ToolTip message={foreignKeyDescription} />
-            </h4>
-            <ForeignKeyWrapper
-              allSchemas={allSchemas}
-              columns={columns}
-              currentSchema={currentSchema}
-              tableName={tableName}
-              foreignKeys={foreignKeys}
-              dispatch={dispatch}
-              setForeignKeys={setForeignKeys}
-              fkToggled={fkToggled}
-              schemaList={schemaList}
-            />
-          </div>
-
-          <div className="w-full sm:w-6/12 mb-md">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Unique Keys
-              <ToolTip message={uniqueKeyDescription} />
-            </h4>
-            <UniqueKeyWrapper
-              allSchemas={allSchemas}
-              columns={columns}
-              currentSchema={currentSchema}
-              tableName={tableName}
-              uniqueKeys={uniqueKeys}
-              dispatch={dispatch}
-              setUniqueKeys={setUniqueKeys}
-            />
-          </div>
-
-          <div className="w-full sm:w-6/12 mb-lg">
-            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Check Constraints
-              <ToolTip message={checkConstraintsDescription} />
-            </h4>
-            <CheckConstraints
-              constraints={checkConstraints}
-              dispatch={dispatch}
-            />
-          </div>
-
+      <Analytics name="AddTable" {...REDACT_EVERYTHING}>
+        <div className="p-lg">
+          <Helmet title={`Add Table - Data | Hasura`} />
           <div>
-            <Button
-              type="submit"
-              mode="primary"
-              data-test="table-create"
-              onClick={this.validateAndSubmit}
-            >
-              {getCreateBtnText()}
-            </Button>
+            <h2 className="text-xl font-semibold mb-lg">Add a New Table</h2>
+          </div>
+
+          <div className="max-w-6xl">
+            <div className="w-full sm:w-6/12 mb-md">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Table Name
+              </h4>
+              <TableName onChange={this.onTableNameChange.bind(this)} />
+            </div>
+
+            <div className="w-full sm:w-6/12 mb-lg">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Table Comment
+              </h4>
+              <TableComment onChange={this.onTableCommentChange} />
+            </div>
+
+            <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+              Configure Fields
+            </h3>
+
+            <div className="w-full mb-lg">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Columns
+              </h4>
+              <TableColumns
+                uniqueKeys={uniqueKeys}
+                dataTypes={dataTypes}
+                columnDefaultFunctions={columnDefaultFunctions}
+                columnTypeCasts={columnTypeCasts}
+                columns={columns}
+                onRemoveColumn={this.onRemoveColumn}
+                onColumnChange={this.onColumnNameChange}
+                onColTypeChange={this.onColTypeChange}
+                onColNullableChange={this.onColNullableChange}
+                onColUniqueChange={this.onColUniqueChange}
+                setColDefaultValue={this.setColDefaultValue}
+              />
+              {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+                <FrequentlyUsedColumnSelector
+                  onSelect={setFreqUsedColumn}
+                  action={'add'}
+                  dispatch={dispatch}
+                  postgresVersion={postgresVersion}
+                />
+              ) : null}
+            </div>
+
+            <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+              Table Properties
+            </h3>
+
+            <div className="w-full sm:w-6/12 mb-md">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Primary Key
+                <ToolTip message={primaryKeyDescription} />
+              </h4>
+              <PrimaryKeySelector
+                primaryKeys={primaryKeys}
+                columns={columns}
+                setPk={setPk}
+                dispatch={dispatch}
+              />
+            </div>
+
+            <div className="w-full sm:w-8/12 mb-md">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Foreign Keys
+                <ToolTip message={foreignKeyDescription} />
+              </h4>
+              <ForeignKeyWrapper
+                allSchemas={allSchemas}
+                columns={columns}
+                currentSchema={currentSchema}
+                tableName={tableName}
+                foreignKeys={foreignKeys}
+                dispatch={dispatch}
+                setForeignKeys={setForeignKeys}
+                fkToggled={fkToggled}
+                schemaList={schemaList}
+              />
+            </div>
+
+            <div className="w-full sm:w-6/12 mb-md">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Unique Keys
+                <ToolTip message={uniqueKeyDescription} />
+              </h4>
+              <UniqueKeyWrapper
+                allSchemas={allSchemas}
+                columns={columns}
+                currentSchema={currentSchema}
+                tableName={tableName}
+                uniqueKeys={uniqueKeys}
+                dispatch={dispatch}
+                setUniqueKeys={setUniqueKeys}
+              />
+            </div>
+
+            <div className="w-full sm:w-6/12 mb-lg">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Check Constraints
+                <ToolTip message={checkConstraintsDescription} />
+              </h4>
+              <CheckConstraints
+                constraints={checkConstraints}
+                dispatch={dispatch}
+              />
+            </div>
+
+            <div>
+              <Button
+                type="submit"
+                mode="primary"
+                data-test="table-create"
+                onClick={this.validateAndSubmit}
+              >
+                {getCreateBtnText()}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </Analytics>
     );
   }
 }
@@ -648,7 +651,7 @@ AddTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
   ...state.addTable.table,
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
@@ -660,6 +663,6 @@ const mapStateToProps = (state) => ({
   postgresVersion: state.main.postgresVersion,
 });
 
-const addTableConnector = (connect) => connect(mapStateToProps)(AddTable);
+const addTableConnector = connect => connect(mapStateToProps)(AddTable);
 
 export default addTableConnector;

@@ -62,19 +62,19 @@ export const TableProvider: React.FC = ({ children }) => {
     showForm,
     setShowForm,
     addReadOnlyRow(col: string) {
-      setReadOnlyRows((pre) => {
+      setReadOnlyRows(pre => {
         const next = new Set([...pre, col]);
         return Array.from(next);
       });
     },
     updateRowKey(val: string, index: number) {
-      setRowKeys((keys) => {
+      setRowKeys(keys => {
         keys[index] = val;
         return [...keys];
       });
     },
     updateData(key: string, payload: any[]) {
-      setData((pre) => {
+      setData(pre => {
         pre[key] = payload;
         return pre;
       });

@@ -1,5 +1,7 @@
-export * from './getTablesListAsTree';
-export * from './getTrackableTables';
-export * from './getTableColumns';
-export * from './getDatabaseConfiguration';
-export * from './getSupportedOperators';
+export { getDatabaseConfiguration } from './getDatabaseConfiguration';
+export { getSupportedOperators } from './getSupportedOperators';
+export { getTableColumns } from './getTableColumns';
+export { getTablesListAsTree } from './getTablesListAsTree';
+export { getTrackableTables } from './getTrackableTables';
+export { convertToTreeData } from './utils';
+export type { GetTableInfoResponse } from './getTableColumns';

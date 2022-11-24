@@ -88,7 +88,7 @@ const RemoteRelEditor: React.FC<Props> = ({
     table.computed_fields,
     allFunctions
   );
-  const scalarComputedFields = computedFields.scalar.filter((sc) => {
+  const scalarComputedFields = computedFields.scalar.filter(sc => {
     const cFn = getComputedFieldFunction(sc, allFunctions)?.input_arg_types;
     // Only the computed fields that do not require extra arguments other than the table row
     // are currenlty supported by the server https://github.com/hasura/graphql-engine/issues/7336
@@ -96,7 +96,7 @@ const RemoteRelEditor: React.FC<Props> = ({
   });
 
   const computedFieldsNames = scalarComputedFields.map(
-    (f) => f.computed_field_name
+    f => f.computed_field_name
   );
 
   return (
@@ -148,7 +148,7 @@ const RemoteRelEditor: React.FC<Props> = ({
                 {' '}
                 -- remote schema --
               </option>
-              {remoteSchemas.map((s) => {
+              {remoteSchemas.map(s => {
                 return (
                   <option key={s} value={s}>
                     {s}

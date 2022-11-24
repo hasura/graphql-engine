@@ -86,7 +86,7 @@ describe('API functions', () => {
         );
         const response = Api.get<typeof REST_BODY, Record<string, string>>(
           { url, headers },
-          (b) => b.object
+          b => b.object
         );
         await expect(response).resolves.toStrictEqual(REST_BODY.object);
       });
@@ -104,7 +104,7 @@ describe('API functions', () => {
     });
   });
   describe('error cases', () => {
-    [400, 401, 403, 404, 408, 500, 524].forEach((errorCode) => {
+    [400, 401, 403, 404, 408, 500, 524].forEach(errorCode => {
       describe(`when an error ${errorCode} occurs`, () => {
         describe('and the response is json', () => {
           it('should throw the correct error', async () => {
@@ -146,7 +146,7 @@ describe('API functions', () => {
             );
             const response = Api.get<{ invalid: string }, string>(
               { url, headers },
-              (d) => d.invalid
+              d => d.invalid
             );
             await expect(response).rejects.toStrictEqual(
               new Error(MOCK_ERROR_RESPONSE_STANDARD.message)

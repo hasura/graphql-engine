@@ -11,4 +11,4 @@ export function formatRoundNumber(input, precision = 0) {
   }).format(input);
 }
 
-export const secondToMillisecs = (input) => input * 1000;
+export const secondToMillisecs = input => input * 1000;

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -30,7 +31,7 @@ import RootFields from './RootFields';
 import FeatureDisabled from '../FeatureDisabled';
 import { inputStyles } from '../constants';
 
-const ModifyView = (props) => {
+const ModifyView = props => {
   const {
     viewDefSql,
     tableName,
@@ -105,7 +106,7 @@ const ModifyView = (props) => {
     const columnList = columns.map((c, i) => {
       const columnName = c.column_name;
 
-      const setCustomColumnName = (e) => {
+      const setCustomColumnName = e => {
         const value = e.target.value;
         setCustomColumnNames({
           ...customColumnNames,
@@ -148,7 +149,7 @@ const ModifyView = (props) => {
         );
       };
 
-      const saveFunc = (toggle) => {
+      const saveFunc = toggle => {
         dispatch(
           setViewCustomColumnNames(
             customColumnNames,
@@ -240,64 +241,66 @@ const ModifyView = (props) => {
 
   return (
     <RightContainer>
-      <div>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          tabName="modify"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-          source={currentSource}
-        />
-        <br />
-        <div className="w-full sm:w-6/12 mb-lg">
-          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-            View Comments
-          </h4>
-          <TableCommentEditor
-            tableComment={tableComment}
-            tableCommentEdit={tableCommentEdit}
-            tableType={tableType}
+      <Analytics name="ModifyTableView" {...REDACT_EVERYTHING}>
+        <div>
+          <TableHeader
             dispatch={dispatch}
+            table={tableSchema}
+            tabName="modify"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+            source={currentSource}
           />
+          <br />
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              View Comments
+            </h4>
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              tableType={tableType}
+              dispatch={dispatch}
+            />
+          </div>
+
+          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+            View Properties
+          </h3>
+
+          <ViewDefinitions
+            dispatch={dispatch}
+            sql={viewDefSql}
+            source={currentSource}
+          />
+
+          {getViewColumnsSection()}
+
+          {isFeatureSupported('tables.modify.computedFields') && (
+            <>
+              <div className="w-full sm:w-6/12 mb-md">
+                <ComputedFields tableSchema={tableSchema} />
+              </div>
+            </>
+          )}
+
+          {isFeatureSupported('tables.modify.customGqlRoot') && (
+            <>
+              <div className="w-full sm:w-6/12 mb-md">
+                <RootFields tableSchema={tableSchema} />
+              </div>
+            </>
+          )}
+
+          {untrackBtn}
+          {deleteBtn}
+          <br />
+          <br />
+          <div className="top-150 r-50 bottom-0 min-w-13 grid-cols-3">
+            {alert}
+          </div>
         </div>
-
-        <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
-          View Properties
-        </h3>
-
-        <ViewDefinitions
-          dispatch={dispatch}
-          sql={viewDefSql}
-          source={currentSource}
-        />
-
-        {getViewColumnsSection()}
-
-        {isFeatureSupported('tables.modify.computedFields') && (
-          <>
-            <div className="w-full sm:w-6/12 mb-md">
-              <ComputedFields tableSchema={tableSchema} />
-            </div>
-          </>
-        )}
-
-        {isFeatureSupported('tables.modify.customGqlRoot') && (
-          <>
-            <div className="w-full sm:w-6/12 mb-md">
-              <RootFields tableSchema={tableSchema} />
-            </div>
-          </>
-        )}
-
-        {untrackBtn}
-        {deleteBtn}
-        <br />
-        <br />
-        <div className="top-150 r-50 bottom-0 min-w-13 grid-cols-3">
-          {alert}
-        </div>
-      </div>
+      </Analytics>
     </RightContainer>
   );
 };
@@ -348,6 +351,6 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const modifyViewConnector = (connect) => connect(mapStateToProps)(ModifyView);
+const modifyViewConnector = connect => connect(mapStateToProps)(ModifyView);
 
 export default modifyViewConnector;

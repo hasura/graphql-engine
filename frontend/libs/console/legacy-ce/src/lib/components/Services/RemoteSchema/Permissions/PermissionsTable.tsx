@@ -91,7 +91,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
   };
 
   const getQueryTypes = (role: string, isNewRole: boolean) => {
-    return queryTypes.map((queryType) => {
+    return queryTypes.map(queryType => {
       const dispatchOpenEdit = () => () => {
         if (isNewRole && !!role) {
           setSchemaDefinition('');
@@ -157,12 +157,12 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
             if (
               remoteFields
                 .filter(
-                  (field) =>
+                  field =>
                     !field.name.startsWith('enum') &&
                     !field.name.startsWith('scalar')
                 )
-                .some((field) =>
-                  field.children?.some((element) => element.checked === false)
+                .some(field =>
+                  field.children?.some(element => element.checked === false)
                 )
             ) {
               permissionAccess = permissionsSymbols.partialAccess;
@@ -187,7 +187,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
   // form rolesList and permissions metadata associated with each role
   const roleList = ['admin', ...allRoles];
-  const rolePermissions: RolePermissions[] = roleList.map((r) => {
+  const rolePermissions: RolePermissions[] = roleList.map(r => {
     return {
       roleName: r,
       permTypes: getQueryTypes(r, false),

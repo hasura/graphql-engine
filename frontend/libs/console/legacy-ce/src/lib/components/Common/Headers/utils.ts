@@ -4,7 +4,7 @@ import { ServerHeader } from '../../../metadata/types';
 export const transformHeaders = (headers_?: HeaderClient[]) => {
   const headers = headers_ || [];
   return headers
-    .map((h) => {
+    .map(h => {
       const transformedHeader: ServerHeader = {
         name: h.name,
       };
@@ -15,7 +15,7 @@ export const transformHeaders = (headers_?: HeaderClient[]) => {
       }
       return transformedHeader;
     })
-    .filter((h) => !!h.name && (!!h.value || !!h.value_from_env));
+    .filter(h => !!h.name && (!!h.value || !!h.value_from_env));
 };
 
 export const addPlaceholderHeader = (newHeaders: HeaderClient[]) => {
@@ -32,7 +32,7 @@ export const addPlaceholderHeader = (newHeaders: HeaderClient[]) => {
 
 export const parseServerHeaders = (headers: ServerHeader[] = []) => {
   return addPlaceholderHeader(
-    headers.map((h) => {
+    headers.map(h => {
       const parsedHeader: HeaderClient = {
         name: h.name,
         value: h.value || '',

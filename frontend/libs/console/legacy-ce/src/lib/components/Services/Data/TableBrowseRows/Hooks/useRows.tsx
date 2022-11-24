@@ -1,5 +1,5 @@
 import { DataSource, OrderBy, WhereClause } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 
@@ -40,7 +40,7 @@ export const useRows = ({
         const result = await DataSource(httpClient).getTableRows({
           dataSourceName,
           table,
-          columns: columns ?? tableColumns.map((column) => column.name),
+          columns: columns ?? tableColumns.map(column => column.name),
           options,
         });
 

@@ -1,5 +1,10 @@
 import React from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -49,7 +54,7 @@ const Permissions = ({
     };
 
     const getPermissionsTableBody = () => {
-      const dispatchRoleNameChange = (e) => {
+      const dispatchRoleNameChange = e => {
         dispatch(permSetRoleName(e.target.value));
       };
 
@@ -63,7 +68,7 @@ const Permissions = ({
 
       // get root types for a given role
       const getQueryTypes = (role, isNewRole) => {
-        return queryTypes.map((queryType) => {
+        return queryTypes.map(queryType => {
           const dispatchOpenEdit = () => () => {
             if (isNewRole && !!role) {
               dispatch(permOpenEdit(role, isNewRole, true));
@@ -129,7 +134,7 @@ const Permissions = ({
 
       // form rolesList and permissions metadata associated with each role
       const _roleList = ['admin', ...allRoles];
-      const rolePermissions = _roleList.map((r) => {
+      const rolePermissions = _roleList.map(r => {
         return {
           roleName: r,
           permTypes: getQueryTypes(r, false),
@@ -163,23 +168,32 @@ const Permissions = ({
     );
   };
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'ActionPermissions',
+    { redactText: true }
+  );
+
   return (
-    <div>
-      <Helmet>
-        <title data-heap-redact-text="true">{`Permissions - ${currentAction.name} - Actions | Hasura`}</title>
-      </Helmet>
-      {getPermissionsTable()}
-      <div className={`${styles.add_mar_bottom}`}>
-        {!readOnlyMode && (
-          <PermissionEditor
-            permissionEdit={permissionEdit}
-            dispatch={dispatch}
-            isFetching={isFetching}
-            isEditing={isEditing}
-          />
-        )}
+    <Analytics name="ActionPermissions" {...REDACT_EVERYTHING}>
+      <div>
+        <Helmet>
+          <title
+            {...titleAnalyticsAttributes}
+          >{`Permissions - ${currentAction.name} - Actions | Hasura`}</title>
+        </Helmet>
+        {getPermissionsTable()}
+        <div className={`${styles.add_mar_bottom}`}>
+          {!readOnlyMode && (
+            <PermissionEditor
+              permissionEdit={permissionEdit}
+              dispatch={dispatch}
+              isFetching={isFetching}
+              isEditing={isEditing}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

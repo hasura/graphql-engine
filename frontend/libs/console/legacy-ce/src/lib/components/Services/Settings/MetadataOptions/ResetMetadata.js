@@ -15,7 +15,7 @@ class ResetMetadata extends Component {
   render() {
     const { dispatch } = this.props;
 
-    const handleReset = (e) => {
+    const handleReset = e => {
       e.preventDefault();
       const confirmMessage =
         'This will permanently reset the Hasura metadata related to your tables, remote schemas, actions and triggers';

@@ -10,7 +10,7 @@ type PreviewTableProps = {
 const PreviewTable: React.FC<PreviewTableProps> = ({ headings, children }) => (
   <table className="w-full border-collapse mb-md">
     <tr className="border-b border-gray-300">
-      {headings.map((heading) => (
+      {headings.map(heading => (
         <th className={heading?.className}>{heading.content}</th>
       ))}
     </tr>

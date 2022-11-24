@@ -5,7 +5,7 @@ import styles from '../../Metrics.module.scss';
 /* Filter component accepts a children prop,
  * Which is a MenuItem instance
  * */
-const FilterComponent = (props) => {
+const FilterComponent = props => {
   const { title, children } = props;
   return (
     <div className={styles.selectBox}>

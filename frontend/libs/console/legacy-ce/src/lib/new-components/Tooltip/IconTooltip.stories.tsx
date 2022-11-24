@@ -19,12 +19,12 @@ Default CSS display is \`inline\`, provided without padding and margin (displaye
     },
   },
   decorators: [
-    (Story) => <div className="p-16 w-full flex justify-center">{Story()}</div>,
+    Story => <div className="p-16 w-full flex justify-center">{Story()}</div>,
   ],
   component: IconTooltip,
 } as ComponentMeta<typeof IconTooltip>;
 
-export const ApiPlayground: ComponentStory<typeof IconTooltip> = (args) => (
+export const ApiPlayground: ComponentStory<typeof IconTooltip> = args => (
   <IconTooltip {...args} />
 );
 ApiPlayground.storyName = '⚙️ API';
@@ -65,9 +65,8 @@ TestingHoveredStyle.parameters = {
   },
 };
 
-export const TestingHoveredInteraction: ComponentStory<
-  typeof IconTooltip
-> = () => <IconTooltip message="The tooltip message" />;
+export const TestingHoveredInteraction: ComponentStory<typeof IconTooltip> =
+  () => <IconTooltip message="The tooltip message" />;
 TestingHoveredInteraction.storyName = '🧪 Testing - Hovered interaction';
 TestingHoveredInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

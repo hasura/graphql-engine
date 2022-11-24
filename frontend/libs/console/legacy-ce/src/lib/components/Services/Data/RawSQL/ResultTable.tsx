@@ -34,7 +34,7 @@ const getColCellContent = (rowColumnValue: ReactText) => {
 
 const getTableConfig = (headers: string[], rows: Array<string[]>) => {
   const dataMap: Record<string, any>[] = [];
-  const data = rows.map((i) => {
+  const data = rows.map(i => {
     const result: Record<string, any> = {};
     const resultMap: Record<string, any> = {};
     headers.forEach((hdr, hIndex) => {
@@ -44,7 +44,7 @@ const getTableConfig = (headers: string[], rows: Array<string[]>) => {
     dataMap.push(resultMap);
     return result;
   });
-  const columns = headers.map((i) => ({
+  const columns = headers.map(i => ({
     Header: i,
     accessor: i,
     minWidth: Math.ceil(getColWidth(i, dataMap)),

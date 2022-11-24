@@ -3,6 +3,7 @@ import { MdRefresh } from 'react-icons/md';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { HasuraLogoFull } from '@/new-components/HasuraLogo';
+import { Analytics } from '@/features/Analytics';
 import { NeonIcon } from './NeonIcon';
 
 const iconMap = {
@@ -51,24 +52,30 @@ export function NeonBanner(props: Props) {
           </div>
         </div>
         <div className="flex w-1/4 justify-end">
-          <Button
-            data-trackid="onboarding-wizard-neon-connect-db-button"
-            data-testid="onboarding-wizard-neon-connect-db-button"
-            mode={status.status === 'loading' ? 'default' : 'primary'}
-            isLoading={status.status === 'loading'}
-            loadingText={buttonText}
-            size="md"
-            icon={icon ? iconMap[icon] : undefined}
-            onClick={() => {
-              if (!isButtonDisabled) {
-                setStepperIndex(2);
-                onClickConnect();
-              }
-            }}
-            disabled={isButtonDisabled}
+          <Analytics
+            name="onboarding-wizard-neon-connect-db-button"
+            passHtmlAttributesToChildren
           >
-            <div className="text-black font-semibold text-md">{buttonText}</div>
-          </Button>
+            <Button
+              data-testid="onboarding-wizard-neon-connect-db-button"
+              mode={status.status === 'loading' ? 'default' : 'primary'}
+              isLoading={status.status === 'loading'}
+              loadingText={buttonText}
+              size="md"
+              icon={icon ? iconMap[icon] : undefined}
+              onClick={() => {
+                if (!isButtonDisabled) {
+                  setStepperIndex(2);
+                  onClickConnect();
+                }
+              }}
+              disabled={isButtonDisabled}
+            >
+              <div className="text-black font-semibold text-md">
+                {buttonText}
+              </div>
+            </Button>
+          </Analytics>
         </div>
       </div>
       {status.status === 'error' && (

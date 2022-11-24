@@ -26,7 +26,7 @@ export const CardRadioGroup = <T extends string = string>(
         isCardNumberLessThenThree ? `sm:grid-cols-2` : `sm:grid-cols-3`
       }`}
     >
-      {items.map((item) => {
+      {items.map(item => {
         const { value: iValue, title, body } = item;
         return (
           <div
@@ -69,7 +69,6 @@ export const CardRadioGroup = <T extends string = string>(
           </div>
         );
       })}
-      <br />
     </div>
   );
 };

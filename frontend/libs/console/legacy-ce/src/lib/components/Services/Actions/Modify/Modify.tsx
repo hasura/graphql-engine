@@ -4,9 +4,15 @@ import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import Endpoints from '@/Endpoints';
 import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
+import {
   parseValidateApiData,
   getValidateTransformOptions,
   getTransformState,
+  getResponseTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
 import { Button } from '@/new-components/Button';
 import requestAction from '@/utils/requestAction';
@@ -29,10 +35,16 @@ import {
   setRequestUrlTransform,
   setRequestPayloadTransform,
   setRequestTransformState,
+  responseTransformReducer,
+  getActionResponseTransformDefaultState,
+  setResponsePayloadTransform,
+  setResponseBody,
+  setResponseTransformState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
   KeyValuePair,
   RequestTransformStateBody,
+  ResponseTransformStateBody,
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import {
   RequestTransformContentType,
@@ -101,6 +113,11 @@ const ModifyAction: React.FC<ModifyProps> = ({
     getActionRequestTransformDefaultState()
   );
 
+  const [responseTransformState, responseTransformDispatch] = useReducer(
+    responseTransformReducer,
+    getActionResponseTransformDefaultState()
+  );
+
   // initialize action state
   const init = () => {
     const modifyState = getModifyState(currentAction, allTypes);
@@ -121,6 +138,16 @@ const ModifyAction: React.FC<ModifyProps> = ({
     } else {
       transformDispatch(
         setRequestTransformState(getActionRequestTransformDefaultState())
+      );
+    }
+    if (currentAction?.definition?.response_transform) {
+      const responseState = getResponseTransformState(
+        currentAction?.definition?.response_transform
+      );
+      responseTransformDispatch(setResponseTransformState(responseState));
+    } else {
+      responseTransformDispatch(
+        setResponseTransformState(getActionResponseTransformDefaultState())
       );
     }
   };
@@ -150,9 +177,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
   ) => {
     dispatch(setTypeDefinition(value, error as any, timer, ast));
   };
-
   const onSave = () => {
-    dispatch(saveAction(currentAction, transformState));
+    dispatch(saveAction(currentAction, transformState, responseTransformState));
   };
 
   const onDelete = () => {
@@ -238,6 +264,14 @@ const ModifyAction: React.FC<ModifyProps> = ({
 
   const requestPayloadTransformOnChange = (data: boolean) => {
     transformDispatch(setRequestPayloadTransform(data));
+  };
+
+  const responsePayloadTransformOnChange = (data: boolean) => {
+    responseTransformDispatch(setResponsePayloadTransform(data));
+  };
+
+  const responseBodyOnChange = (responseBody: ResponseTransformStateBody) => {
+    responseTransformDispatch(setResponseBody(responseBody));
   };
 
   useEffect(() => {
@@ -363,79 +397,91 @@ const ModifyAction: React.FC<ModifyProps> = ({
     }
   }
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('ModifyAction', {
+    redactText: true,
+  });
+
   return (
     <>
       <Helmet>
-        <title data-heap-redact-text="true">{`Modify Action - ${actionName} - Actions | Hasura`}</title>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Modify Action - ${actionName} - Actions | Hasura`}</title>
       </Helmet>
+      <Analytics name="ModifyAction" {...REDACT_EVERYTHING}>
+        <div className="w-full overflow-y-auto bg-gray-50">
+          <div className="max-w-6xl">
+            <ActionEditor
+              handler={handler}
+              execution={kind}
+              actionDefinition={actionDefinition}
+              typeDefinition={typeDefinition}
+              headers={headers}
+              forwardClientHeaders={forwardClientHeaders}
+              readOnlyMode={readOnlyMode}
+              timeout={timeout}
+              comment={comment}
+              actionType={actionType}
+              commentOnChange={commentOnChange}
+              handlerOnChange={handlerOnChange}
+              executionOnChange={executionOnChange}
+              timeoutOnChange={timeoutOnChange}
+              setHeaders={setHeaders}
+              toggleForwardClientHeaders={toggleForwardClientHeaders}
+              actionDefinitionOnChange={actionDefinitionOnChange}
+              typeDefinitionOnChange={typeDefinitionOnChange}
+            />
 
-      <div className="w-full overflow-y-auto bg-gray-50">
-        <div className="max-w-6xl">
-          <ActionEditor
-            handler={handler}
-            execution={kind}
-            actionDefinition={actionDefinition}
-            typeDefinition={typeDefinition}
-            headers={headers}
-            forwardClientHeaders={forwardClientHeaders}
-            readOnlyMode={readOnlyMode}
-            timeout={timeout}
-            comment={comment}
-            actionType={actionType}
-            commentOnChange={commentOnChange}
-            handlerOnChange={handlerOnChange}
-            executionOnChange={executionOnChange}
-            timeoutOnChange={timeoutOnChange}
-            setHeaders={setHeaders}
-            toggleForwardClientHeaders={toggleForwardClientHeaders}
-            actionDefinitionOnChange={actionDefinitionOnChange}
-            typeDefinitionOnChange={typeDefinitionOnChange}
-          />
+            <ConfigureTransformation
+              transformationType="action"
+              requestTransfromState={transformState}
+              responseTransformState={responseTransformState}
+              resetSampleInput={resetSampleInput}
+              envVarsOnChange={envVarsOnChange}
+              sessionVarsOnChange={sessionVarsOnChange}
+              requestMethodOnChange={requestMethodOnChange}
+              requestUrlOnChange={requestUrlOnChange}
+              requestQueryParamsOnChange={requestQueryParamsOnChange}
+              requestAddHeadersOnChange={requestAddHeadersOnChange}
+              requestBodyOnChange={requestBodyOnChange}
+              requestSampleInputOnChange={requestSampleInputOnChange}
+              requestContentTypeOnChange={requestContentTypeOnChange}
+              requestUrlTransformOnChange={requestUrlTransformOnChange}
+              requestPayloadTransformOnChange={requestPayloadTransformOnChange}
+              responsePayloadTransformOnChange={
+                responsePayloadTransformOnChange
+              }
+              responseBodyOnChange={responseBodyOnChange}
+            />
 
-          <ConfigureTransformation
-            transformationType="action"
-            state={transformState}
-            resetSampleInput={resetSampleInput}
-            envVarsOnChange={envVarsOnChange}
-            sessionVarsOnChange={sessionVarsOnChange}
-            requestMethodOnChange={requestMethodOnChange}
-            requestUrlOnChange={requestUrlOnChange}
-            requestQueryParamsOnChange={requestQueryParamsOnChange}
-            requestAddHeadersOnChange={requestAddHeadersOnChange}
-            requestBodyOnChange={requestBodyOnChange}
-            requestSampleInputOnChange={requestSampleInputOnChange}
-            requestContentTypeOnChange={requestContentTypeOnChange}
-            requestUrlTransformOnChange={requestUrlTransformOnChange}
-            requestPayloadTransformOnChange={requestPayloadTransformOnChange}
-          />
-
-          <div className="flex items-start mb-lg">
-            {!readOnlyMode && (
-              <>
-                <div className="mr-5">
+            <div className="flex items-start mb-lg">
+              {!readOnlyMode && (
+                <>
+                  <div className="mr-5">
+                    <Button
+                      mode="primary"
+                      onClick={onSave}
+                      disabled={!allowSave}
+                      data-test="save-modify-action-changes"
+                    >
+                      Save Action
+                    </Button>
+                  </div>
                   <Button
-                    mode="primary"
-                    onClick={onSave}
-                    disabled={!allowSave}
-                    data-test="save-modify-action-changes"
+                    mode="destructive"
+                    size="md"
+                    onClick={onDelete}
+                    disabled={isFetching}
+                    data-test="delete-action"
                   >
-                    Save Action
+                    Delete Action
                   </Button>
-                </div>
-                <Button
-                  mode="destructive"
-                  size="md"
-                  onClick={onDelete}
-                  disabled={isFetching}
-                  data-test="delete-action"
-                >
-                  Delete Action
-                </Button>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </Analytics>
     </>
   );
 };

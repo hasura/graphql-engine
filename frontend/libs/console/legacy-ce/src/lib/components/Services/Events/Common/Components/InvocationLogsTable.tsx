@@ -40,7 +40,7 @@ interface Props extends FilterTableProps {
   tableDef?: QualifiedTable;
   tableSource?: string;
 }
-const InvocationLogsTable: React.FC<Props> = (props) => {
+const InvocationLogsTable: React.FC<Props> = props => {
   const { rows, filterState, runQuery, columns, dispatch } = props;
   const [redeliveredEventId, setRedeliveredEventId] =
     React.useState<Nullable<string>>(null);
@@ -93,7 +93,7 @@ const InvocationLogsTable: React.FC<Props> = (props) => {
   let shouldSortColumn = true;
   const sortByColumn = (col: string) => {
     // Remove all the existing order_bys
-    const existingColSort = filterState.sorts.find((s) => s.column === col);
+    const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
       runQuery({
         sorts: [makeOrderBy(col, 'desc')],
@@ -131,7 +131,7 @@ const InvocationLogsTable: React.FC<Props> = (props) => {
         <>
           {columns.includes('redeliver') && (
             <RedliverEventButton
-              onClickHandler={(e) => {
+              onClickHandler={e => {
                 if (isRedelivering) {
                   return;
                 }
@@ -150,7 +150,7 @@ const InvocationLogsTable: React.FC<Props> = (props) => {
     },
   };
   const gridHeadings = [expanderActions];
-  sortedColumns.forEach((column) => {
+  sortedColumns.forEach(column => {
     if (column !== 'redeliver') {
       gridHeadings.push({
         Header: column,
@@ -158,7 +158,7 @@ const InvocationLogsTable: React.FC<Props> = (props) => {
       });
     }
   });
-  const rowsFormatted = rows.map((r) => {
+  const rowsFormatted = rows.map(r => {
     let formattedRow: any = {};
     Object.keys(r).forEach((col: string) => {
       formattedRow[col] = <div>{r[col]}</div>;
@@ -231,7 +231,7 @@ const InvocationLogsTable: React.FC<Props> = (props) => {
           rows={rows}
         />
       )}
-      SubComponent={(logRow) => {
+      SubComponent={logRow => {
         const finalIndex = logRow.index;
         const finalRow = rows[finalIndex];
         const currentPayload = JSON.stringify(finalRow?.request ?? {}, null, 4);

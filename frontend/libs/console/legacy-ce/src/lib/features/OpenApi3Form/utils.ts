@@ -1,6 +1,5 @@
 /* eslint-disable no-underscore-dangle */
 import get from 'lodash.get';
-// import pickBy from 'lodash.pickby';
 import { OpenApiSchema, OpenApiReference } from '@hasura/dc-api-types';
 import { z, ZodSchema } from 'zod';
 import pickBy from 'lodash.pickby';
@@ -25,10 +24,30 @@ export const getStringZodSchema = (schema: OpenApiSchema): ZodSchema => {
   return z.string().min(1, `${schema.title ?? 'value'} cannot be empty`);
 };
 
+export const getEnumZodSchema = (schema: OpenApiSchema): ZodSchema => {
+  const enumOptions = schema.enum ?? [];
+
+  const literals = enumOptions.map(enumValue => z.literal(enumValue));
+
+  return z
+    .union([z.literal('null'), ...literals] as any)
+    .transform((value, ctx) => {
+      if (value === 'null') return null;
+      if (value) return value;
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'value not part of the enum list',
+      });
+
+      return z.never;
+    });
+};
+
 export const getBooleanZodSchema = (schema: OpenApiSchema): ZodSchema => {
   if (schema.nullable === true) return z.boolean().optional();
 
-  return z.union([z.boolean(), z.undefined()]).transform((value) => {
+  return z.union([z.boolean(), z.undefined()]).transform(value => {
     return !!value;
   });
 };
@@ -53,6 +72,17 @@ export const getArrayZodSchema = (
     : items;
 
   /**
+   * Enum
+   */
+  if (itemSchema.type === 'string' && itemSchema.enum) {
+    /**
+     * No nullable case in enum, as mentioned in doc -
+     * Note that null must be explicitly included in the list of enum values. Using nullable: true alone is not enough here.
+     */
+    return getEnumZodSchema(schema);
+  }
+
+  /**
    * String Array
    */
   if (itemSchema.type === 'string') {
@@ -69,15 +99,13 @@ export const getArrayZodSchema = (
     if (schema.nullable === true)
       return z
         .string()
-        .transform((value) =>
-          value.split(',').map((val) => parseInt(val, 10) || '')
+        .transform(value =>
+          value.split(',').map(val => parseInt(val, 10) || '')
         )
         .optional();
     return z
       .string()
-      .transform((value) =>
-        value.split(',').map((val) => parseInt(val, 10) || '')
-      );
+      .transform(value => value.split(',').map(val => parseInt(val, 10) || ''));
   }
 
   if (itemSchema.type !== 'object')
@@ -103,6 +131,8 @@ export const transformSchemaToZodObject = (
   let zodSchema: ZodSchema = z.any();
 
   const type = schema.type;
+
+  if (type === 'string' && schema.enum) return getEnumZodSchema(schema);
 
   if (type === 'string') return getStringZodSchema(schema);
 
@@ -132,13 +162,15 @@ export const transformSchemaToZodObject = (
     if (itemSchema.type === 'number' || itemSchema.type === 'integer')
       zodSchema = z
         .string()
-        .transform((value) =>
-          value.split(',').map((val) => parseInt(val, 10) || '')
+        .transform(value =>
+          value.split(',').map(val => parseInt(val, 10) || '')
         );
 
     if (itemSchema.type === 'object') {
       if (schema.nullable === true)
-        return z.array(transformSchemaToZodObject(itemSchema, references));
+        return z
+          .array(transformSchemaToZodObject(itemSchema, references))
+          .optional();
 
       return z
         .array(transformSchemaToZodObject(itemSchema, references))
@@ -182,12 +214,12 @@ export const transformSchemaToZodObject = (
         }, {});
       zodSchema = z
         .object(schemas)
-        .transform((value) => pickBy(value, (d) => d !== ''));
+        .transform(value => pickBy(value, d => d !== ''));
     }
   }
 
   if (schema.oneOf) {
-    const schemas = schema.oneOf.map((oneOfProperty) => {
+    const schemas = schema.oneOf.map(oneOfProperty => {
       const oneOfPropertySchema = isReferenceObject(oneOfProperty)
         ? getReferenceObject(oneOfProperty.$ref, references)
         : oneOfProperty;

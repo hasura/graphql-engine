@@ -19,7 +19,7 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story<RemoteDBRelationshipWidgetProps> = (args) => (
+export const Primary: Story<RemoteDBRelationshipWidgetProps> = args => (
   <RemoteDBRelationshipWidget {...args} />
 );
 Primary.args = {
@@ -30,9 +30,8 @@ Primary.args = {
   },
 };
 
-export const WithExistingRelationship: Story<
-  RemoteDBRelationshipWidgetProps
-> = (args) => <RemoteDBRelationshipWidget {...args} />;
+export const WithExistingRelationship: Story<RemoteDBRelationshipWidgetProps> =
+  args => <RemoteDBRelationshipWidget {...args} />;
 WithExistingRelationship.args = {
   ...Primary.args,
   existingRelationshipName: 'AlbumToResident',
@@ -40,12 +39,10 @@ WithExistingRelationship.args = {
 
 let callbackResponse = {};
 
-export const PrimaryWithTest: Story<RemoteDBRelationshipWidgetProps> = (
-  args
-) => (
+export const PrimaryWithTest: Story<RemoteDBRelationshipWidgetProps> = args => (
   <RemoteDBRelationshipWidget
     {...args}
-    onComplete={(d) => {
+    onComplete={d => {
       callbackResponse = d;
     }}
   />
@@ -53,7 +50,7 @@ export const PrimaryWithTest: Story<RemoteDBRelationshipWidgetProps> = (
 PrimaryWithTest.args = { ...Primary.args };
 
 PrimaryWithTest.play = async ({ canvasElement }) => {
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
   const canvas = within(canvasElement);
 
   const submitButton = await canvas.findByText('Save Relationship');
@@ -94,23 +91,22 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   );
 };
 
-export const ExistingRelationshipWithTest: Story<
-  RemoteDBRelationshipWidgetProps
-> = (args) => (
-  <RemoteDBRelationshipWidget
-    {...args}
-    onComplete={(d) => {
-      callbackResponse = d;
-    }}
-  />
-);
+export const ExistingRelationshipWithTest: Story<RemoteDBRelationshipWidgetProps> =
+  args => (
+    <RemoteDBRelationshipWidget
+      {...args}
+      onComplete={d => {
+        callbackResponse = d;
+      }}
+    />
+  );
 ExistingRelationshipWithTest.args = {
   ...Primary.args,
   existingRelationshipName: 'AlbumToResident',
 };
 
 ExistingRelationshipWithTest.play = async ({ canvasElement }) => {
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
   const canvas = within(canvasElement);
   const submitButton = await canvas.findByText('Save Relationship');

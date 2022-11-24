@@ -31,7 +31,7 @@ const AddManualRelationship = ({
     getSchemaTables(allSchemas, relAdd.rSchema)
   );
   trackedSchemaTables.forEach(
-    (ts) => (refTables[ts.table_name] = getTableColumnNames(ts))
+    ts => (refTables[ts.table_name] = getTableColumnNames(ts))
   );
 
   const orderedSchemaList = schemaList.sort();
@@ -40,7 +40,7 @@ const AddManualRelationship = ({
     dispatch(resetManualRelationshipForm());
   };
 
-  const saveFk = (toggleEditor) => {
+  const saveFk = toggleEditor => {
     dispatch(addRelViewMigrate(tableSchema, toggleEditor));
   };
 

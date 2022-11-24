@@ -13,7 +13,7 @@ type Props = {
   dispatch: Dispatch;
 };
 
-const ProcessedEvents: React.FC<Props> = (props) => {
+const ProcessedEvents: React.FC<Props> = props => {
   const { dispatch } = props;
 
   const renderRows: FilterRenderProp = (

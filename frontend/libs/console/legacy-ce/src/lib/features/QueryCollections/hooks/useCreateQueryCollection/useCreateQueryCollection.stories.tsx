@@ -1,11 +1,11 @@
 import React from 'react';
+import { handlers } from '@/mocks/metadata.mock';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 import { Button } from '@/new-components/Button';
 
-import { handlers } from '../useQueryCollections/mocks/handlers.mock';
 import { useCreateQueryCollection } from './useCreateQueryCollection';
 import { useQueryCollections } from '../useQueryCollections';
 
@@ -50,7 +50,7 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
   argTypes: {
     collectionName: {

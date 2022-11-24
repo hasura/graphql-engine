@@ -51,8 +51,7 @@ const StatsPanel = ({
   const onFilterChange = (type, value) => {
     const isSingleSelect = singleSelectFilters.indexOf(type) !== -1;
     const nextState = nextFilterValue(filtersData, type, value, isSingleSelect);
-    const finalState =
-      nextState && nextState.length ? nextState : initialFiltersState;
+    const finalState = nextState && nextState.length ? nextState : initialFiltersState;
     updateFilter(finalState);
     if (onFilterChange && typeof onFilterChange === 'function') {
       onFilterChangeCb(finalState, groups);
@@ -72,7 +71,7 @@ const StatsPanel = ({
 
   const selectAll = (type, options, unSelect = false) => {
     const isSingleSelect = singleSelectFilters.indexOf(type) !== -1;
-    const filterValues = filtersData.map((val) => {
+    const filterValues = filtersData.map(val => {
       return val.value;
     });
     // Tracks all the options which are either unselected or selected depending upon what the action is (Select All or Unselect All resp.)
@@ -81,11 +80,11 @@ const StatsPanel = ({
     if (unSelect) {
       nextOptions = options;
     } else {
-      nextOptions = options.filter((val) => !filterValues.includes(val.title));
+      nextOptions = options.filter(val => !filterValues.includes(val.title));
     }
 
     const nextState = nextOptions
-      .filter((v) => v.title !== SELECT_ALL_NAME_DISPLAY)
+      .filter(v => v.title !== SELECT_ALL_NAME_DISPLAY)
       .reduce(
         (acc, v) => nextFilterValue(acc, type, v.title, isSingleSelect),
         filtersData
@@ -100,7 +99,7 @@ const StatsPanel = ({
    * Group by state modifier
    * */
 
-  const onGroupByChange = (value) => {
+  const onGroupByChange = value => {
     const nextGroup = nextGroupValue(groups, value);
     onGroupByChangeCb(nextGroup, filtersData);
     updateGroup(nextGroup);

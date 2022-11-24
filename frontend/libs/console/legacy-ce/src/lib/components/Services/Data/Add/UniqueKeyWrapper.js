@@ -20,7 +20,7 @@ const UniqueKeyWrapper = ({
     const isLast = numUniqueKeys === i + 1;
 
     const uniqueKeyConfig = getUkeyPkeyConfig(
-      uniqueKey.map((uk) => orderedColumns[uk].name)
+      uniqueKey.map(uk => orderedColumns[uk].name)
     );
 
     const expandedContent = () => {
@@ -55,11 +55,11 @@ const UniqueKeyWrapper = ({
       return getKeyDef(uniqueKeyConfig, '');
     };
 
-    const saveFunc = (toggle) => toggle();
+    const saveFunc = toggle => toggle();
 
     let removeFunc;
     if (!isLast) {
-      removeFunc = (toggle) => {
+      removeFunc = toggle => {
         toggle();
         dispatch(
           setUniqueKeys([...uniqueKeys.slice(0, i), ...uniqueKeys.slice(i + 1)])

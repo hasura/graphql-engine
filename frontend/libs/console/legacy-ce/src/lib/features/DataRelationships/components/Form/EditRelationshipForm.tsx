@@ -13,6 +13,7 @@ import {
 } from '@/features/DataSource';
 import { RemoteDBRelationshipWidget } from '../RemoteDBRelationshipWidget';
 import { LocalRelationshipWidget } from '../LocalDBRelationshipWidget';
+import { RenameRelationship } from '../RenameRelationship/RenameRelationship';
 
 type EditRelationshipFormProps = {
   driver: Driver;
@@ -27,6 +28,7 @@ type EditRelationshipFormProps = {
     message?: string;
     type: 'success' | 'error' | 'cancel';
   }) => void;
+  onClose?: () => void;
 };
 
 export const EditRelationshipForm = ({
@@ -34,6 +36,7 @@ export const EditRelationshipForm = ({
   driver,
   existingRelationship,
   onComplete,
+  onClose,
 }: EditRelationshipFormProps) => {
   const { data: relationship, isLoading } = useFindRelationship({
     dataSourceName: existingRelationship.mapping.from.source,
@@ -43,6 +46,20 @@ export const EditRelationshipForm = ({
   if (isLoading) return <>Loading...</>;
 
   if (!relationship) return <>Relationship Not found in metadata</>;
+
+  if (
+    existingRelationship.type === 'toLocalTableFk' ||
+    existingRelationship.type === 'toLocalTableManual' ||
+    existingRelationship.type === 'toSameTableFk'
+  ) {
+    return (
+      <RenameRelationship
+        relationship={existingRelationship}
+        onSuccess={onClose}
+        key={existingRelationship.name}
+      />
+    );
+  }
 
   if (isRemoteDBRelationship(relationship)) {
     return (
@@ -103,6 +120,7 @@ export const EditRelationshipForm = ({
       />
     );
   }
+
   return (
     <LocalRelationshipWidget
       key={relationship.name}

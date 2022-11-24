@@ -24,8 +24,8 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
   return (
     <div className={styles.padd_bottom_small}>
       <div
-        onClick={() => setIsOpen((prev) => !prev)}
-        onKeyDown={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen(prev => !prev)}
+        onKeyDown={() => setIsOpen(prev => !prev)}
         role="button"
         className={styles.padd_bottom_small}
       >
@@ -86,7 +86,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
   return (
     <div className={styles.treeNav}>
-      {Object.keys(itemsBySource).map((source) => (
+      {Object.keys(itemsBySource).map(source => (
         <CollapsibleItems
           source={source}
           items={itemsBySource[source]}

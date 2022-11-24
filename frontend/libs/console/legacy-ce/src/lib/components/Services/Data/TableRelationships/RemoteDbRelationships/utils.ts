@@ -31,5 +31,5 @@ export const parseDbToDbRemoteRel = (relationship: RemoteDBRelationship) => {
 };
 
 export const getColumnNameArrayFromHookData = (data: string[][]) => {
-  return data.slice(1).map((d) => d[3]);
+  return data.slice(1).map(d => d[3]);
 };

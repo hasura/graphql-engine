@@ -31,7 +31,7 @@ const REQUEST_SUCCESS = 'AddExistingTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'AddExistingTable/REQUEST_ERROR';
 
 const setDefaults = () => ({ type: SET_DEFAULTS });
-const setTableName = (value) => ({ type: SET_TABLENAME, value });
+const setTableName = value => ({ type: SET_TABLENAME, value });
 
 const addExistingTableSql = (name, customSchema, skipRouting = false) => {
   return (dispatch, getState) => {
@@ -72,7 +72,7 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(updateSchemaInfo()).then(() => {
         const newTable = getState().tables.allSchemas.find(
-          (t) => t.table_name === tableName && t.table_schema === currentSchema
+          t => t.table_name === tableName && t.table_schema === currentSchema
         );
         const isTableType = dataSource.isTable(newTable);
         const nextRoute =
@@ -96,7 +96,7 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
       });
       return;
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
       dispatch(setSidebarLoading(false));
     };
@@ -158,7 +158,7 @@ const addExistingFunction = (
       }
       dispatch(setSidebarLoading(false));
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
       dispatch(setSidebarLoading(false));
     };
@@ -178,7 +178,7 @@ const addExistingFunction = (
   };
 };
 
-const addAllUntrackedTablesSql = (tableList) => {
+const addAllUntrackedTablesSql = tableList => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
@@ -235,7 +235,7 @@ const addAllUntrackedTablesSql = (tableList) => {
       });
       return;
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 

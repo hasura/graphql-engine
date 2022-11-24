@@ -28,11 +28,11 @@ const CodeTabs = ({
       shouldDerive ? parentMutation : null,
       dispatch
     )
-      .then((codeFiles) => {
+      .then(codeFiles => {
         setCodegenFiles(codeFiles);
         setLoading(false);
       })
-      .catch((e) => {
+      .catch(e => {
         setError(e);
         setLoading(false);
       });
@@ -61,6 +61,7 @@ const CodeTabs = ({
       value: content.trim(),
       readOnly: true,
       mode: getLanguageModeFromExtension(getFileExtensionFromFilename(name)),
+      setOptions: { useWorker: false },
     };
     return (
       <Tab eventKey={name} title={name} key={name}>

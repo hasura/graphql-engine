@@ -62,14 +62,14 @@ export const QueryCollectionOperationDialog = (
         defaultValues,
       }}
     >
-      {(options) => {
+      {options => {
         return (
           <Dialog hasBackdrop title={title} onClose={onClose}>
             <>
               {title === 'Add Operation' ? (
                 <Tabs
                   value={tabValue}
-                  onValueChange={(value) => {
+                  onValueChange={value => {
                     handleTab();
                     options.setValue('option', value);
                   }}
@@ -87,7 +87,7 @@ export const QueryCollectionOperationDialog = (
                             label="Operation Name"
                           />
                           <QuickAdd
-                            onAdd={(operation) => {
+                            onAdd={operation => {
                               if (operation.name !== 'unnamed') {
                                 options.setValue('name', operation.name);
                               }

@@ -1,4 +1,5 @@
-import { Source, useMetadataMigration } from '@/features/MetadataAPI';
+import { Source } from '@/features/hasura-metadata-types';
+import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { useCallback } from 'react';
 
@@ -32,7 +33,7 @@ export const useReloadSource = (props?: UseReloadSource) => {
               customOnSuccess();
             }
           },
-          onError: (err) => {
+          onError: err => {
             fireNotification({
               title: 'Error!',
               message: JSON.stringify(err),

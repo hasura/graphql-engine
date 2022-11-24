@@ -10,6 +10,7 @@ import {
   RequestTransformContentType,
   RequestTransformTemplateEngine,
   RequestTransformBody,
+  ResponseTransformBody,
 } from '../../../metadata/types';
 import { Nullable } from '../utils/tsUtils';
 
@@ -39,6 +40,13 @@ export const SET_REQUEST_URL_TRANSFORM =
 export const SET_REQUEST_PAYLOAD_TRANSFORM =
   'RequestTransform/SET_REQUEST_PAYLOAD_TRANSFORM';
 export const SET_REQUEST_TRANSFORM_STATE =
+  'RequestTransform/SET_REQUEST_TRANSFORM_STATE';
+export const SET_RESPONSE_BODY = 'ResponseTransform/SET_RESPONSE_BODY';
+export const SET_RESPONSE_BODY_ERROR =
+  'ResponseTransform/SET_RESPONSE_BODY_ERROR';
+export const SET_RESPONSE_PAYLOAD_TRANSFORM =
+  'ResponseTransform/SET_RESPONSE_PAYLOAD_TRANSFORM';
+export const SET_RESPONSE_TRANSFORM_STATE =
   'RequestTransform/SET_REQUEST_TRANSFORM_STATE';
 
 export interface SetEnvVars extends ReduxAction {
@@ -86,9 +94,19 @@ export interface SetRequestBody extends ReduxAction {
   requestBody: RequestTransformStateBody;
 }
 
+export interface SetResponseBody extends ReduxAction {
+  type: typeof SET_RESPONSE_BODY;
+  responseBody: ResponseTransformStateBody;
+}
+
 export interface SetRequestBodyError extends ReduxAction {
   type: typeof SET_REQUEST_BODY_ERROR;
   requestBodyError: string;
+}
+
+export interface SetResponseBodyError extends ReduxAction {
+  type: typeof SET_RESPONSE_BODY_ERROR;
+  responseBodyError: string;
 }
 
 export interface SetRequestSampleInput extends ReduxAction {
@@ -116,9 +134,19 @@ export interface SetRequestPayloadTransform extends ReduxAction {
   isRequestPayloadTransform: boolean;
 }
 
+export interface SetResponsePayloadTransform extends ReduxAction {
+  type: typeof SET_RESPONSE_PAYLOAD_TRANSFORM;
+  isResponsePayloadTransform: boolean;
+}
+
 export interface SetRequestTransformState extends ReduxAction {
   type: typeof SET_REQUEST_TRANSFORM_STATE;
   newState: RequestTransformState;
+}
+
+export interface SetResponseTransformState extends ReduxAction {
+  type: typeof SET_RESPONSE_TRANSFORM_STATE;
+  newState: ResponseTransformState;
 }
 
 export type RequestTransformEvents =
@@ -138,6 +166,12 @@ export type RequestTransformEvents =
   | SetRequestUrlTransform
   | SetRequestPayloadTransform
   | SetRequestTransformState;
+
+export type ResponseTransformEvents =
+  | SetResponseBody
+  | SetResponseBodyError
+  | SetResponsePayloadTransform
+  | SetResponseTransformState;
 
 export type RequestTransformState = {
   version: 1 | 2;
@@ -161,12 +195,20 @@ export type RequestTransformState = {
 
 export type ResponseTransformState = {
   version: 1 | 2;
-  requestBody: RequestTransformStateBody;
   templatingEngine: RequestTransformTemplateEngine;
+  isResponsePayloadTransform: boolean;
+  responseSampleInput: string;
+  responseBody: ResponseTransformStateBody;
+  responseBodyError: string;
 };
 
 export type RequestTransformStateBody = Omit<
   RequestTransformBody,
+  'form_template'
+> & { form_template?: KeyValuePair[] };
+
+export type ResponseTransformStateBody = Omit<
+  ResponseTransformBody,
   'form_template'
 > & { form_template?: KeyValuePair[] };
 
@@ -197,6 +239,10 @@ export const defaultActionRequestBody = `{
     "name": {{$body.input.arg1.username}},
     "password": {{$body.input.arg1.password}}
   }
+}`;
+
+export const defaultActionResponseBody = `{
+  "response": {{$body}},
 }`;
 
 export const defaultEventRequestBody = `{

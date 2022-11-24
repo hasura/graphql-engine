@@ -15,7 +15,7 @@ export const Retries: React.VFC<ConnectionSettingsFormProps> = ({
       className={`form-control ${styles.connnection_settings_form_input}`}
       placeholder="1"
       value={connectionDBState.connectionSettings?.retries ?? undefined}
-      onChange={(e) =>
+      onChange={e =>
         connectionDBStateDispatch({
           type: 'UPDATE_RETRIES',
           data: e.target.value,
