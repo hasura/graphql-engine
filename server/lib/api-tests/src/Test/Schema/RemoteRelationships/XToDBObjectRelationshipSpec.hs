@@ -18,6 +18,7 @@ import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types qualified as Morpheus
 import Data.Typeable (Typeable)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
@@ -40,8 +41,8 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsRemoteServer]
-    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer]
+    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsCitus, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer, rhsCitus]
     contexts = NE.fromList $ combine <$> lhsFixtures <*> rhsFixtures
 
 -- | Combines a lhs and a rhs.
@@ -99,6 +100,18 @@ lhsPostgres tableName =
         [ Fixture.SetupAction
             { Fixture.setupAction = lhsPostgresSetup tableName testEnv,
               Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnv
+            }
+        ]
+    }
+
+lhsCitus :: LHSFixture
+lhsCitus tableName =
+  (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+    { Fixture.mkLocalTestEnvironment = lhsCitusMkLocalTestEnvironment,
+      Fixture.setupTeardown = \testEnv ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction = lhsCitusSetup tableName testEnv,
+              Fixture.teardownAction = \_ -> lhsCitusTeardown testEnv
             }
         ]
     }
@@ -161,6 +174,24 @@ rhsPostgres =
               [ Fixture.SetupAction
                   { Fixture.setupAction = rhsPostgresSetup testEnv,
                     Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
+                  }
+              ]
+          }
+   in (table, context)
+
+rhsCitus :: RHSFixture
+rhsCitus =
+  let table =
+        [yaml|
+      schema: hasura
+      name: album
+    |]
+      context =
+        (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          { Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = rhsCitusSetup testEnv,
+                    Fixture.teardownAction = \_ -> rhsCitusTeardown testEnv
                   }
               ]
           }
@@ -312,6 +343,75 @@ args:
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown (_testEnvironment, _) =
+  pure ()
+
+--------------------------------------------------------------------------------
+-- LHS Citus
+
+lhsCitusMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
+lhsCitusMkLocalTestEnvironment _ = pure Nothing
+
+lhsCitusSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup rhsTableName (testEnvironment, _) = do
+  let sourceName = "source"
+      sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: citus_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Citus.createTable testEnvironment track
+  Citus.insertTable testEnvironment track
+  Schema.trackTable Fixture.Citus sourceName track testEnvironment
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: bulk
+      args:
+      - type: citus_create_select_permission
+        args:
+          source: *sourceName
+          role: role1
+          table:
+            schema: *schemaName
+            name: track
+          permission:
+            columns: '*'
+            filter: {}
+      - type: citus_create_select_permission
+        args:
+          source: *sourceName
+          role: role2
+          table:
+            schema: *schemaName
+            name: track
+          permission:
+            columns: '*'
+            filter: {}
+      - type: citus_create_remote_relationship
+        args:
+          source: *sourceName
+          table:
+            schema: *schemaName
+            name: track
+          name: album
+          definition:
+            to_source:
+              source: target
+              table: *rhsTableName
+              relationship_type: object
+              field_mapping:
+                album_id: id
+    |]
+
+lhsCitusTeardown :: (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusTeardown (_testEnvironment, _) =
   pure ()
 
 --------------------------------------------------------------------------------
@@ -709,6 +809,68 @@ args:
 
 rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
 rhsPostgresTeardown (_testEnvironment, _) =
+  pure ()
+
+--------------------------------------------------------------------------------
+-- RHS Citus
+
+rhsCitusSetup :: (TestEnvironment, ()) -> IO ()
+rhsCitusSetup (testEnvironment, _) = do
+  let sourceName = "target"
+      sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
+
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: citus_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Citus.createTable testEnvironment album
+  Citus.insertTable testEnvironment album
+  Schema.trackTable Fixture.Citus sourceName album testEnvironment
+
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: bulk
+args:
+- type: citus_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: album
+    permission:
+      columns:
+        - title
+        - artist_id
+      filter:
+        artist_id:
+          _eq: x-hasura-artist-id
+- type: citus_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: album
+    permission:
+      columns: [id, title, artist_id]
+      filter:
+        artist_id:
+          _eq: x-hasura-artist-id
+      limit: 1
+      allow_aggregations: true
+  |]
+
+rhsCitusTeardown :: (TestEnvironment, ()) -> IO ()
+rhsCitusTeardown (_testEnvironment, _) =
   pure ()
 
 --------------------------------------------------------------------------------

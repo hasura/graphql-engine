@@ -7,6 +7,7 @@ module Harness.Backend.Citus
   ( livenessCheck,
     run_,
     defaultSourceMetadata,
+    defaultSourceConfiguration,
     createTable,
     insertTable,
     createDatabase,
@@ -42,7 +43,7 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (Citus), defaultSource)
+import Harness.Test.BackendType (BackendType (Citus), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
@@ -115,16 +116,20 @@ runInternal testEnvironment connectionString query = do
 -- | Metadata source information for the default Citus instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
-  let databaseUrl = citusConnectionString testEnvironment
-   in [interpolateYaml|
-        name: citus
-        kind: citus
-        tables: []
-        configuration:
-          connection_info:
-            database_url: #{databaseUrl}
-            pool_settings: {}
-     |]
+  [interpolateYaml|
+    name: #{ defaultSource Citus }
+    kind: #{ defaultBackendTypeString Citus }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnvironment }
+  |]
+
+defaultSourceConfiguration :: TestEnvironment -> Value
+defaultSourceConfiguration testEnvironment =
+  [interpolateYaml|
+    connection_info:
+      database_url: #{ citusConnectionString testEnvironment }
+      pool_settings: {}
+  |]
 
 -- | Serialize Table into a Citus-SQL statement, as needed, and execute it on the Citus backend
 createTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
@@ -147,7 +152,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
-  Schema.TInt -> "SERIAL"
+  Schema.TInt -> "INT"
   Schema.TStr -> "VARCHAR"
   Schema.TUTCTime -> "TIMESTAMP"
   Schema.TBool -> "BOOLEAN"

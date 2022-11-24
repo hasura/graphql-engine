@@ -17,6 +17,7 @@ import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
 import Data.Typeable (Typeable)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
@@ -47,6 +48,11 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
               { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsPostgresSetupAction testEnv]
+              },
+            (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+              { Fixture.mkLocalTestEnvironment = lhsCitusMkLocalTestEnvironment,
+                Fixture.setupTeardown = \(testEnv, _localEnv) ->
+                  [lhsCitusSetupAction testEnv]
               },
             (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
               { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
@@ -180,6 +186,64 @@ lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown (testEnvironment, _) = do
   let sourceName = "source"
   Schema.untrackTable Fixture.Postgres sourceName track testEnvironment
+
+--------------------------------------------------------------------------------
+-- LHS Citus
+
+lhsCitusSetupAction :: TestEnvironment -> Fixture.SetupAction
+lhsCitusSetupAction testEnv =
+  Fixture.SetupAction
+    (lhsCitusSetup (testEnv, Nothing))
+    (const $ lhsCitusTeardown (testEnv, Nothing))
+
+lhsCitusMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
+lhsCitusMkLocalTestEnvironment _ = pure Nothing
+
+lhsCitusSetup :: (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup (testEnvironment, _) = do
+  let sourceName = "source"
+      sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
+
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: citus_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Citus.createTable testEnvironment track
+  Citus.insertTable testEnvironment track
+  Schema.trackTable Fixture.Citus sourceName track testEnvironment
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+type: bulk
+args:
+- type: citus_create_remote_relationship
+  args:
+    source: source
+    table:
+      schema: *schemaName
+      name: track
+    name: album
+    definition:
+      to_remote_schema:
+        remote_schema: target
+        lhs_fields: [album_id]
+        remote_field:
+          album:
+            arguments:
+              album_id: $album_id
+  |]
+
+lhsCitusTeardown :: (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusTeardown (testEnvironment, _) = do
+  let sourceName = "source"
+  Schema.untrackTable Fixture.Citus sourceName track testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
