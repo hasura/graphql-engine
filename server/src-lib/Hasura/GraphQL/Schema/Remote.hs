@@ -395,7 +395,8 @@ remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directi
           ( Definition (G.unEnumValue enumName) enumDesc Nothing [] P.EnumValueInfo,
             G.VEnum enumName
           )
-   in fmap (Altered False,) $ P.enum (runMkTypename customizeTypename name) desc $ NE.fromList enumValDefns
+      customizedTypeName = runMkTypename customizeTypename name
+   in fmap (Altered (name /= customizedTypeName),) $ P.enum customizedTypeName desc $ NE.fromList enumValDefns
 
 -- | remoteInputObjectParser returns an input parser for a given 'G.InputObjectTypeDefinition'
 --
