@@ -1,0 +1,18 @@
+import Data.List
+
+:{
+fixtureReplMacro :: String -> IO String
+fixtureReplMacro module_ = do
+  return $ unlines
+    [ "import Harness.Test.Fixture",
+      "import Harness.Logging",
+      ":m + *SpecHook *" ++ module_,
+      "logger = Logger mempty",
+      "mode <- setupTestingMode",
+      "te <- setupTestEnvironment mode logger",
+      "te",
+      "putStrLn \"Now do: \\\"cleanup <- fixtureRepl <fixture name> te\\\"\""
+      ]
+:}
+
+:def fixtureRepl fixtureReplMacro
