@@ -26,10 +26,14 @@ module Harness.Test.Fixture
     combineOptions,
     defaultOptions,
     fixtureRepl,
+    combineFixtures,
+    LHSFixture,
+    RHSFixture,
   )
 where
 
 import Control.Monad.Managed (Managed, runManaged, with)
+import Data.Aeson (Value)
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
@@ -42,7 +46,8 @@ import Harness.Logging
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
+import Harness.Test.SetupAction qualified as SetupAction
+import Harness.TestEnvironment (Server, TestEnvironment (..), TestingMode (..), testLogHarness)
 import Hasura.Prelude hiding (log)
 import Test.Hspec
   ( ActionWith,
@@ -346,3 +351,42 @@ instance Show FixtureName where
 -- | Default function for 'mkLocalTestEnvironment' when there's no local testEnvironment.
 noLocalTestEnvironment :: TestEnvironment -> Managed ()
 noLocalTestEnvironment = const $ pure ()
+
+-- Each left-hand-side (LHS) fixture is responsible for setting up the remote relationship, and
+-- for tearing it down. Each lhs fixture is given the JSON representation for
+-- the table name on the RHS.
+type LHSFixture = Value -> Fixture (Maybe Server)
+
+-- Each right-hand-side (RHS) fixture is responsible for setting up the target table, and for
+-- returning the JSON representation of said table.
+type RHSFixture = (Value, Fixture ())
+
+-- | Combines a left-hand side (LHS) and right-hand side (RHS) fixtures.
+--
+-- The RHS is set up first, then the LHS can create the remote relationship.
+--
+-- Teardown is done in the reverse order.
+--
+-- The metadata is cleared befored each setup.
+combineFixtures :: LHSFixture -> RHSFixture -> Fixture (Maybe Server)
+combineFixtures lhs (tableName, rhs) =
+  (fixture $ Combine lhsName rhsName)
+    { mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
+      setupTeardown = \(testEnvironment, localTestEnvironment) ->
+        [SetupAction.clearMetadata testEnvironment]
+          <> rhsSetupTeardown (testEnvironment, ())
+          <> lhsSetupTeardown (testEnvironment, localTestEnvironment),
+      customOptions = combineOptions lhsOptions rhsOptions
+    }
+  where
+    Fixture
+      { name = lhsName,
+        mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
+        setupTeardown = lhsSetupTeardown,
+        customOptions = lhsOptions
+      } = lhs tableName
+    Fixture
+      { name = rhsName,
+        setupTeardown = rhsSetupTeardown,
+        customOptions = rhsOptions
+      } = rhs

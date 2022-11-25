@@ -41,10 +41,11 @@ module Harness.Test.Schema
     trackComputedField,
     untrackComputedField,
     runSQL,
+    addSource,
   )
 where
 
-import Data.Aeson ((.=))
+import Data.Aeson (Value, (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as K
 import Data.Time (UTCTime, defaultTimeLocale)
@@ -52,7 +53,7 @@ import Data.Time.Format (parseTimeOrError)
 import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType
 import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
@@ -590,3 +591,15 @@ args:
   cascade: false
   read_only: false
 |]
+
+addSource :: BackendType -> Text -> Value -> TestEnvironment -> IO ()
+addSource backend sourceName sourceConfig testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [interpolateYaml|
+      type: #{ backendType }_add_source
+      args:
+        name: #{ sourceName }
+        configuration: #{ sourceConfig }
+      |]

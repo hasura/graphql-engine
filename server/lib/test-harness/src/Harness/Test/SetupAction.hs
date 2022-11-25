@@ -1,9 +1,12 @@
 -- | `SetupAction` used in `Fixture` for defining test setup and teardown
 module Harness.Test.SetupAction
   ( SetupAction (..),
+    clearMetadata,
   )
 where
 
+import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 
 -- | a 'SetupAction' encodes how to setup and tear down a single piece of test
@@ -17,3 +20,10 @@ data SetupAction = forall a.
   { setupAction :: IO a,
     teardownAction :: Maybe a -> IO ()
   }
+
+clearMetadata :: TestEnvironment -> SetupAction
+clearMetadata testEnv =
+  SetupAction
+    { setupAction = GraphqlEngine.clearMetadata testEnv,
+      teardownAction = \_ -> GraphqlEngine.clearMetadata testEnv
+    }
