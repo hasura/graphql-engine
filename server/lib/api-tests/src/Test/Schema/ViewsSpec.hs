@@ -4,7 +4,9 @@ module Test.Schema.ViewsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Database.PG.Query.Pool (sql)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
@@ -27,6 +29,13 @@ spec =
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupPostgres testEnvironment,
                   setupMetadata Fixture.Postgres testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Citus.setupTablesAction schema testEnvironment,
+                  setupCitus testEnvironment,
+                  setupMetadata Fixture.Citus testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
@@ -93,52 +102,67 @@ tests opts = do
       actual `shouldBe` expected
 
 --------------------------------------------------------------------------------
+-- Shared setup
+
+createSQL :: Schema.SchemaName -> String
+createSQL schemaName =
+  let schemaNameString = T.unpack (Schema.unSchemaName schemaName)
+   in "CREATE OR REPLACE VIEW "
+        <> schemaNameString
+        <> ".author_view AS SELECT id, name FROM "
+        <> schemaNameString
+        <> ".author"
+
+dropSQL :: Schema.SchemaName -> String
+dropSQL schemaName =
+  let schemaNameString = T.unpack (Schema.unSchemaName schemaName)
+   in "DROP VIEW IF EXISTS " <> schemaNameString <> ".author_view"
+
+--------------------------------------------------------------------------------
 -- Postgres setup
 
 setupPostgres :: TestEnvironment -> Fixture.SetupAction
-setupPostgres testEnvironment =
+setupPostgres testEnvironment = do
+  let schemaName = Schema.getSchemaName testEnvironment
   Fixture.SetupAction
     { Fixture.setupAction =
-        Postgres.run_
-          testEnvironment
-          [sql|
-            CREATE OR REPLACE VIEW hasura.author_view
-            AS SELECT * FROM hasura.author
-          |],
+        Postgres.run_ testEnvironment (createSQL schemaName),
       Fixture.teardownAction = \_ ->
-        Postgres.run_
-          testEnvironment
-          [sql|
-            DROP VIEW IF EXISTS hasura.author_view
-          |]
+        Postgres.run_ testEnvironment (dropSQL schemaName)
+    }
+
+--------------------------------------------------------------------------------
+-- Citus setup
+
+setupCitus :: TestEnvironment -> Fixture.SetupAction
+setupCitus testEnvironment = do
+  let schemaName = Schema.getSchemaName testEnvironment
+  Fixture.SetupAction
+    { Fixture.setupAction =
+        Citus.run_ testEnvironment (createSQL schemaName),
+      Fixture.teardownAction = \_ ->
+        Citus.run_ testEnvironment (dropSQL schemaName)
     }
 
 --------------------------------------------------------------------------------
 -- Cockroach setup
 
 setupCockroach :: TestEnvironment -> Fixture.SetupAction
-setupCockroach testEnvironment =
+setupCockroach testEnvironment = do
+  let schemaName = Schema.getSchemaName testEnvironment
   Fixture.SetupAction
     { Fixture.setupAction =
-        Cockroach.run_
-          testEnvironment
-          [sql|
-            CREATE OR REPLACE VIEW hasura.author_view
-            AS SELECT id, name FROM hasura.author
-          |],
+        Cockroach.run_ testEnvironment (createSQL schemaName),
       Fixture.teardownAction = \_ ->
-        Cockroach.run_
-          testEnvironment
-          [sql|
-            DROP VIEW IF EXISTS hasura.author_view
-          |]
+        Cockroach.run_ testEnvironment (dropSQL schemaName)
     }
 
 --------------------------------------------------------------------------------
 -- Metadata
 
 setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backend testEnvironment =
+setupMetadata backend testEnvironment = do
+  let schemaName = Schema.getSchemaName testEnvironment
   Fixture.SetupAction
     { Fixture.setupAction =
         postMetadata_
