@@ -10,25 +10,25 @@ PANE_HEIGHT = $(shell tmux display -p "\#{pane_height}" || echo 30 )
 # this needs to make it into ghcid: https://github.com/biegunka/terminal-size/pull/16
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HSPEC_MATCH="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
 	else \
-  	HSPEC_MATCH="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main"; \
 	fi
 endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HSPEC_MATCH="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--setup ":set args $(2)" \
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
 	else \
-  	HSPEC_MATCH="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main" \
 			--setup ":set args $(2)"; \
 	fi
@@ -80,12 +80,6 @@ ghcid-test-bigquery: remove-tix-file
 ghcid-test-sqlserver: remove-tix-file
 	docker compose up -d --wait postgres sqlserver{,-healthcheck,-init}
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests,SQLServer)
-
-.PHONY: ghcid-test-mysql
-## ghcid-test-mysql: run tests for MySQL backend in ghcid
-ghcid-test-mysql: remove-tix-file
-	docker compose up -d --wait postgres mariadb
-	$(call run_ghcid_api_tests,api-tests:exe:api-tests,MySQL)
 
 .PHONY: ghcid-test-citus
 ## ghcid-test-citus: run tests for Citus backend in ghcid

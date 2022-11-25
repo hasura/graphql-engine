@@ -48,8 +48,15 @@ instance Show TestEnvironment where
 -- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
 -- practical consequences of this type.
 data TestingMode
-  = TestAllBackends
-  | TestNewPostgresVariant
+  = -- | run all tests, unfiltered
+    TestEverything
+  | -- | run only tests containing this BackendType (or a RemoteSchema, so
+    -- those aren't missed)
+    TestBackend BackendType
+  | -- | run "all the other tests"
+    TestNoBackends
+  | -- | test a Postgres-compatible using a custom connection string
+    TestNewPostgresVariant
       { postgresSourceUser :: String,
         postgresSourcePassword :: String,
         postgresSourceHost :: String,

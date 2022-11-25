@@ -4,28 +4,24 @@
 test-bigquery: remove-tix-file
 	docker compose up -d --wait postgres
 	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'BigQuery')
+		HASURA_TEST_BACKEND_TYPE=BigQuery \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for MS SQL Server backend
 test-sqlserver: remove-tix-file
 	docker compose up -d --wait postgres sqlserver-healthcheck
 	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'SQLServer')
-
-.PHONY: test-mysql
-## test-mysql: run tests for MySQL backend
-test-mysql: remove-tix-file
-	docker compose up -d --wait postgres mariadb
-	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'MySQL')
+		HASURA_TEST_BACKEND_TYPE=SQLServer \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
 test-citus: remove-tix-file
 	docker compose up -d --wait postgres citus
 	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'Citus')
+		HASURA_TEST_BACKEND_TYPE=Citus \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
@@ -33,14 +29,16 @@ test-data-connectors: remove-tix-file
 	docker compose build
 	docker compose up -d --wait postgres dc-reference-agent dc-sqlite-agent
 	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'DataConnector')
+		HASURA_TEST_BACKEND_TYPE=DataConnector \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-cockroach
 ## test-cockroach: run tests for Cockroach backend
 test-cockroach: remove-tix-file
 	docker compose up -d --wait postgres cockroach
 	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'Cockroach')
+		HASURA_TEST_BACKEND_TYPE=Cockroach \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-postgres
 ## test-postgres: run tests for Postgres backend
@@ -49,7 +47,16 @@ test-cockroach: remove-tix-file
 test-postgres: remove-tix-file
 	docker compose up -d --wait postgres cockroach citus
 	$(call stop_after, \
-		cabal run api-tests:exe:api-tests -- -m 'Postgres')
+		HASURA_TEST_BACKEND_TYPE=Postgres \
+		cabal run api-tests:exe:api-tests)
+
+.PHONY: test-no-backends
+## test-no-backends
+# the leftover tests with no particular backend, like Remote Schemas
+test-no-backends: start-backends remove-tix-file
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=None \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-backends
 ## test-backends: run tests for all backends

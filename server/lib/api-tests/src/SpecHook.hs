@@ -7,12 +7,14 @@ where
 
 import Control.Exception.Safe (bracket)
 import Data.Char qualified as Char
+import Data.List qualified as List
 import Data.Monoid (getLast)
 import Data.UUID.V4 (nextRandom)
 import Database.PostgreSQL.Simple.Options (Options (..), parseConnectionString)
 import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
+import Harness.Test.BackendType (BackendType (..))
 import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), stopServer)
 import Hasura.Prelude
 import System.Environment (lookupEnv)
@@ -21,17 +23,26 @@ import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)
 import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, modifyConfig)
 
 -- | Establish the mode in which we're running the tests. Currently, there are
--- two modes:
+-- four modes:
 --
--- * @TestAllBackends@, which runs all the tests for all backends against the
+-- * @TestEverything@, which runs all the tests for all backends against the
 --   credentials given in `Harness.Constants` from the `test-harness`.
+--
+-- * @TestBackend BackendType@, which only runs tests for the backend given
+-- in @HASURA_TEST_BACKEND_TYPE@,
+--
+-- * @TestNoBackends@, for "everything else" that slips through the net
 --
 -- * @TestNewPostgresVariant@, which runs the Postgres tests against the
 --   connection URI given in the @POSTGRES_VARIANT_URI@.
 setupTestingMode :: IO TestingMode
 setupTestingMode =
   lookupEnv "POSTGRES_VARIANT_URI" >>= \case
-    Nothing -> pure TestAllBackends
+    Nothing ->
+      lookupEnv "HASURA_TEST_BACKEND_TYPE" >>= \case
+        Nothing -> pure TestEverything
+        Just backendType ->
+          onNothing (parseBackendType backendType) (error $ "Did not recognise backend type " <> backendType)
     Just uri ->
       case parseConnectionString uri of
         Left reason ->
@@ -46,12 +57,24 @@ setupTestingMode =
                 postgresSourceInitialDatabase = fromMaybe Constants.postgresDb $ getLast (dbname options)
               }
 
+-- | which backend should we run tests for?
+parseBackendType :: String -> Maybe TestingMode
+parseBackendType backendType =
+  case Char.toUpper <$> backendType of
+    "POSTGRES" -> Just (TestBackend Postgres)
+    "CITUS" -> Just (TestBackend Citus)
+    "COCKROACH" -> Just (TestBackend Cockroach)
+    "SQLSERVER" -> Just (TestBackend SQLServer)
+    "BIGQUERY" -> Just (TestBackend BigQuery)
+    "DATACONNECTOR" -> Just (TestBackend (DataConnector "all")) -- currently we ignore the exact DataConnector identifier and run them all
+    "NONE" -> Just TestNoBackends
+    _ -> Nothing
+
 setupTestEnvironment :: TestingMode -> Logger -> IO TestEnvironment
 setupTestEnvironment testingMode logger = do
   murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
   mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
   server <- startServerThread ((,) <$> murlPrefix <*> mport)
-
   uniqueTestId <- nextRandom
   pure
     TestEnvironment
@@ -90,7 +113,11 @@ hook specs = do
 
   let shouldRunTest :: [String] -> Item x -> Bool
       shouldRunTest labels _ = case testingMode of
-        TestAllBackends -> True
+        TestEverything -> True
+        TestBackend (DataConnector _) ->
+          any (List.isInfixOf "DataConnector") labels
+        TestBackend backendType -> show backendType `elem` labels
+        TestNoBackends -> True -- this is for catching "everything else"
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 
   aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $

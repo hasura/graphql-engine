@@ -69,14 +69,6 @@ import System.Process.Typed
 defaultConnectInfo :: TestEnvironment -> Postgres.ConnectInfo
 defaultConnectInfo testEnvironment =
   case testingMode testEnvironment of
-    TestAllBackends ->
-      Postgres.ConnectInfo
-        { connectHost = Constants.postgresHost,
-          connectUser = Constants.postgresUser,
-          connectPort = Constants.postgresPort,
-          connectPassword = Constants.postgresPassword,
-          connectDatabase = Constants.postgresDb
-        }
     TestNewPostgresVariant {..} ->
       Postgres.ConnectInfo
         { connectHost = postgresSourceHost,
@@ -84,6 +76,14 @@ defaultConnectInfo testEnvironment =
           connectUser = postgresSourceUser,
           connectPassword = postgresSourcePassword,
           connectDatabase = postgresSourceInitialDatabase
+        }
+    _otherTestingMode ->
+      Postgres.ConnectInfo
+        { connectHost = Constants.postgresHost,
+          connectUser = Constants.postgresUser,
+          connectPort = Constants.postgresPort,
+          connectPassword = Constants.postgresPassword,
+          connectDatabase = Constants.postgresDb
         }
 
 -- | Create a connection string for whatever unique database has been generated

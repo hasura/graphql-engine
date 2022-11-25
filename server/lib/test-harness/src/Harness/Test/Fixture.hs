@@ -124,7 +124,16 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
         shouldRunIn fixtureName = \case
           TestNewPostgresVariant {} ->
             Postgres `elem` backendTypesForFixture fixtureName
-          TestAllBackends -> True
+          TestBackend (DataConnector _) ->
+            -- we run all these together so it's harder to miss tests
+            let isDataConnector = \case
+                  DataConnector _dc -> True
+                  _ -> False
+             in any isDataConnector (backendTypesForFixture fixtureName)
+          TestBackend backendType ->
+            backendType `elem` backendTypesForFixture fixtureName
+          TestNoBackends -> S.null (backendTypesForFixture fixtureName)
+          TestEverything -> True
 
     describe (show n) do
       flip aroundSomeWith (tests options) \test testEnvironment ->
