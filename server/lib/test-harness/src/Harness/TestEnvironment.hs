@@ -31,8 +31,6 @@ data TestEnvironment = TestEnvironment
     server :: Server,
     -- | shared function to log information from tests
     logger :: Logger,
-    -- | action to clean up logger
-    loggerCleanup :: IO (),
     -- | a uuid generated for each test suite used to generate a unique
     -- `SchemaName`
     uniqueTestId :: UUID,
@@ -58,6 +56,7 @@ data TestingMode
         postgresSourcePort :: Word16,
         postgresSourceInitialDatabase :: String
       }
+  deriving (Eq, Ord, Show)
 
 -- | Information about a server that we're working with.
 data Server = Server

@@ -38,11 +38,12 @@ import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
+import Harness.Logging
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
-import Hasura.Prelude
+import Hasura.Prelude hiding (log)
 import Test.Hspec
   ( ActionWith,
     SpecWith,
@@ -150,23 +151,10 @@ fixtureBracket
       liftIO $ testLogHarness globalTestEnvironment $ "Testing " <> show name <> "..."
       localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
       liftIO $ do
-        -- create a unique id to differentiate this set of tests
-        uniqueTestId <- nextRandom
-
-        let globalTestEnvWithUnique =
-              globalTestEnvironment
-                { backendType = case name of
-                    Backend db -> Just db
-                    _ -> Nothing,
-                  uniqueTestId = uniqueTestId
-                }
-
-        -- create databases we need for the tests
-        createDatabases name globalTestEnvWithUnique
-
+        globalTestEnvWithUnique <- setupUniqueGlobalTestEnvironment name globalTestEnvironment
         let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
 
-        cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
+        cleanup <- runSetupActions (logger globalTestEnvWithUnique) (setupTeardown testEnvironment)
 
         _ <-
           catchRethrow
@@ -213,16 +201,35 @@ dropDatabases fixtureName testEnvironment =
     )
     (backendTypesForFixture fixtureName)
 
+-- | Tests all run with unique schema names now, so we need to produce a test
+-- environment that points to a unique schema name.
+setupUniqueGlobalTestEnvironment :: FixtureName -> TestEnvironment -> IO TestEnvironment
+setupUniqueGlobalTestEnvironment name globalTestEnvironment = do
+  uniqueTestId <- nextRandom
+
+  let globalTestEnvWithUnique =
+        globalTestEnvironment
+          { backendType = case name of
+              Backend db -> Just db
+              _ -> Nothing,
+            uniqueTestId = uniqueTestId
+          }
+
+  createDatabases name globalTestEnvWithUnique
+  pure globalTestEnvWithUnique
+
 -- | A function that makes it easy to perform setup and teardown when
 -- debugging/developing tests within a repl.
 fixtureRepl ::
   Fixture a ->
   TestEnvironment ->
   IO (IO ())
-fixtureRepl Fixture {mkLocalTestEnvironment, setupTeardown} globalTestEnvironment = do
+fixtureRepl Fixture {name, mkLocalTestEnvironment, setupTeardown} globalTestEnvironment = do
   with (mkLocalTestEnvironment globalTestEnvironment) \localTestEnvironment -> do
-    let testEnvironment = (globalTestEnvironment, localTestEnvironment)
-    cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
+    globalTestEnvWithUnique <- setupUniqueGlobalTestEnvironment name globalTestEnvironment
+
+    let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
+    cleanup <- runSetupActions (logger globalTestEnvWithUnique) (setupTeardown testEnvironment)
     return cleanup
 
 -- | Run a list of SetupActions.
@@ -230,9 +237,11 @@ fixtureRepl Fixture {mkLocalTestEnvironment, setupTeardown} globalTestEnvironmen
 -- * If all setup steps complete, return an IO action that runs the teardown actions in reverse order.
 -- * If a setup step fails, the steps that were executed are torn down in reverse order.
 -- * Teardown always collects all the exceptions that are thrown.
-runSetupActions :: TestEnvironment -> [SetupAction] -> IO (IO ())
-runSetupActions testEnv acts = go acts []
+runSetupActions :: Logger -> [SetupAction] -> IO (IO ())
+runSetupActions logger acts = go acts []
   where
+    log = runLogger logger . LogHarness . T.pack
+
     go :: [SetupAction] -> [IO ()] -> IO (IO ())
     go actions cleanupAcc = case actions of
       [] -> return (rethrowAll cleanupAcc)
@@ -244,20 +253,20 @@ runSetupActions testEnv acts = go acts []
         -- commented out.
         case a of
           Left (exn :: SomeException) -> do
-            testLogHarness testEnv $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
+            log $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
             rethrowAll
               ( throwIO exn
-                  : ( testLogHarness testEnv ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
+                  : ( log ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
                         >> teardownAction Nothing
                     )
                   : cleanupAcc
               )
             return (return ())
           Right x -> do
-            testLogHarness testEnv $ "Setup for step " ++ show (length cleanupAcc) ++ " succeeded."
+            log $ "Setup for step " ++ show (length cleanupAcc) ++ " succeeded."
             go
               rest
-              ( ( testLogHarness testEnv ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
+              ( ( log ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
                     >> teardownAction (Just x)
                 )
                   : cleanupAcc

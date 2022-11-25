@@ -46,8 +46,8 @@ setupTestingMode =
                 postgresSourceInitialDatabase = fromMaybe Constants.postgresDb $ getLast (dbname options)
               }
 
-setupTestEnvironment :: TestingMode -> (Logger, IO ()) -> IO TestEnvironment
-setupTestEnvironment testingMode (logger, loggerCleanup) = do
+setupTestEnvironment :: TestingMode -> Logger -> IO TestEnvironment
+setupTestEnvironment testingMode logger = do
   murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
   mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
   server <- startServerThread ((,) <$> murlPrefix <*> mport)
@@ -59,7 +59,6 @@ setupTestEnvironment testingMode (logger, loggerCleanup) = do
         uniqueTestId = uniqueTestId,
         backendType = Nothing,
         logger = logger,
-        loggerCleanup = loggerCleanup,
         testingMode = testingMode
       }
 
@@ -82,7 +81,7 @@ setupLogType =
 hook :: SpecWith TestEnvironment -> Spec
 hook specs = do
   logType <- runIO setupLogType
-  (logger', cleanup) <- runIO $ FL.newFastLogger logType
+  (logger', _cleanup) <- runIO $ FL.newFastLogger logType
   let logger = flLogger logger'
 
   modifyConfig (addLoggingFormatter logger)
@@ -94,5 +93,5 @@ hook specs = do
         TestAllBackends -> True
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 
-  aroundAllWith (const . bracket (setupTestEnvironment testingMode (logger, cleanup)) teardownTestEnvironment) $
+  aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $
     mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
