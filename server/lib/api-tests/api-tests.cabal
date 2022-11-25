@@ -19,6 +19,7 @@ library
     NoImplicitPrelude
     OverloadedStrings
     PatternGuards
+    QuasiQuotes
     RecordWildCards
     ScopedTypeVariables
     TypeApplications
@@ -160,10 +161,13 @@ library
     Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
+    Test.Schema.TableRelationships.PortedSpec
     Test.Schema.ViewsSpec
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.RowUpdatesSpec
     Test.Subscriptions.StreamingSubscriptionsSpec
+    Test.PortedFromPytest.TestGraphQLQueryBasicCitus
+
 executable api-tests
   build-depends:
     , api-tests

@@ -103,6 +103,7 @@ library
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
+    Harness.PytestPortedCompat
     Harness.Quoter.Graphql
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
