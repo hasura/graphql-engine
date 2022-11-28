@@ -64,7 +64,7 @@ func (c *Config) LoadPluginListFromFS(indexDir string) (Plugins, error) {
 }
 
 // LoadPluginByName loads a plugins index file by its name. When plugin
-// file not found, it returns an error that can be checked with os.IsNotExist.
+// file not found, it returns an error that can be checked with stderrors.Is(err, fs.ErrNotExist)
 func (c *Config) LoadPluginByName(pluginName string) (*PluginVersions, error) {
 	var op errors.Op = "plugins.Config.LoadPluginByName"
 	c.Logger.Debugf("loading plugin %s", pluginName)
@@ -123,7 +123,7 @@ func (c *Config) LoadPlugins(files []string, pluginName ...string) Plugins {
 }
 
 // ReadPluginFromFile loads a file from the FS. When plugin file not found, it
-// returns an error that can be checked with os.IsNotExist.
+// returns an error that can be checked with stderrors.Is(err, fs.ErrNotExist).
 func (c *Config) ReadPluginFromFile(path string) (Plugin, error) {
 	var op errors.Op = "plugins.Config.ReadPluginFromFile"
 	f, err := os.Open(path)
