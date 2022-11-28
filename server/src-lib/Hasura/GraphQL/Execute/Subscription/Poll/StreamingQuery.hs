@@ -32,11 +32,12 @@ import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (SourceName, getNonNegativeInt)
+import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Refined (unrefine)
 import Text.Shakespeare.Text (st)
 
 {- Note [Streaming subscriptions rebuilding cohort map]
@@ -211,9 +212,13 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
     -- is because, unfortunately, the value returned by the above is
     -- {<rootFieldNameText>:[]} (notice the lack of spaces). So, instead
     -- we're templating according to the format postgres sends JSON responses.
-    emptyRespBS = txtToBs $ [st|{"#{rootFieldNameText}" : []}|]
+    emptyRespBS = Right $ txtToBs [st|{"#{rootFieldNameText}" : []}|]
+    -- Same as the above, but cockroach prefixes the responses with @\x1@ and does not
+    -- have a space between the key and the colon.
+    roachEmptyRespBS = Right $ "\x1" <> txtToBs [st|{"#{rootFieldNameText}": []}|]
 
-    isResponseEmpty = result == Right emptyRespBS
+    isResponseEmpty =
+      result == emptyRespBS || result == roachEmptyRespBS
 
     C.CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
 
@@ -221,7 +226,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
 
     pushResultToSubscribers subscribers =
       unless isResponseEmpty $
-        flip A.mapConcurrently_ subscribers $ \Subscriber {..} -> _sOnChangeCallback response
+        flip A.mapConcurrently_ subscribers $
+          \Subscriber {..} -> _sOnChangeCallback response
 
 -- | A single iteration of the streaming query polling loop. Invocations on the
 -- same mutable objects may race.
@@ -249,11 +255,11 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
       -- cohorts are broken down into batches specified by the batch size
-      let cohortBatches = chunksOf (getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
+      let cohortBatches = chunksOf (unrefine (unBatchSize batchSize)) cohortSnapshots
       -- associating every batch with their BatchId
       pure $ zip (BatchId <$> [1 ..]) cohortBatches
 
-    onJust testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
+    for_ testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
 
     -- concurrently process each batch and also get the processed cohort with the new updated cohort key
     batchesDetailsAndProcessedCohorts <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do

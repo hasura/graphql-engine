@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
-
+import os
 import pytest
 import queue
+import sqlalchemy
 import time
-import json
-import utils
+
+from context import EvtsWebhookServer, HGECtx
 from utils import *
-from validate import check_query, check_query_f, check_event, check_event_transformed, check_events
+from validate import check_query_f, check_event, check_event_transformed, check_events
 
 usefixtures = pytest.mark.usefixtures
 
@@ -132,6 +132,32 @@ class TestEventCreateAndResetNonDefaultSource:
     def test_create_reset_non_default_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset_non_default_source.yaml")
 
+        non_default_source_url = os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2')
+        assert non_default_source_url, 'HASURA_GRAPHQL_PG_SOURCE_URL_2 was not set'
+        non_default_source = sqlalchemy.create_engine(non_default_source_url)
+
+        with non_default_source.connect() as connection:
+            # Check that the event log table exists.
+            # This must be run against the source database.
+            result = connection.execute("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')")
+            row = result.first()
+            assert row == (True,), f'Result: {row!r}'
+
+            # We plan on clearing the metadata in code in the future, so this is not run as YAML input.
+            hge_ctx.v1metadataq({
+                "type": "clear_metadata",
+                "args": {}
+            })
+
+            # Check that the event log table has been dropped.
+            # This must be run against the source database.
+            result = connection.execute("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')")
+            row = result.first()
+            assert row == (False,), f'Result: {row!r}'
+
+            # Cleanup; will not be required in the future.
+            connection.execute("DROP TABLE IF EXISTS hge_tests.test_t1")
+
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/create_and_reset_non_default'
@@ -166,11 +192,11 @@ class TestEventCreateAndDeleteMSSQL:
 # - checks that we're processing with the concurrency and backpressure
 #   characteristics we expect
 # - ensures all events are successfully processed
-#
-# NOTE: this expects:
-#   HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
-#   HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE=100  (the default)
-@pytest.mark.backend('mssql','postgres')
+@pytest.mark.backend('mssql', 'postgres')
+# Set a known batch size for assertions.
+@pytest.mark.hge_env('HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE', str(100))
+# Set the HTTP pool size to trigger backpressure upon flooding.
+@pytest.mark.hge_env('HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE', str(8))
 @usefixtures("per_method_tests_db_state")
 class TestEventFloodPostgresMSSQL(object):
 
@@ -178,7 +204,7 @@ class TestEventFloodPostgresMSSQL(object):
     def dir(cls):
         return 'queries/event_triggers/flood'
 
-    def test_flood(self, hge_ctx, evts_webhook):
+    def test_flood(self, hge_ctx: HGECtx, evts_webhook: EvtsWebhookServer):
         table = {"schema": "hge_tests", "name": "test_flood"}
 
         # Trigger a bunch of events; hasura will begin processing but block on /block
@@ -241,7 +267,7 @@ class TestEventFloodPostgresMSSQL(object):
                 assert resp['result'][1][0] == 200
 
         # Rather than sleep arbitrarily, loop until assertions pass:
-        utils.until_asserts_pass(30, check_backpressure)
+        until_asserts_pass(30, check_backpressure)
         # ...then make sure we're truly stable:
         time.sleep(3)
         check_backpressure()
@@ -260,7 +286,7 @@ class TestEventFloodPostgresMSSQL(object):
         ns.sort()
         assert ns == list(payload)
 
-@usefixtures("per_class_tests_db_state")
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestEventDataFormat(object):
 
     @classmethod
@@ -425,11 +451,10 @@ class TestCreateEventQueryPostgresMSSQL(object):
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
 
-    def test_partitioned_table_basic_insert(self, hge_ctx, evts_webhook):
-        if (hge_ctx.backend == "postgres"):
-            if hge_ctx.pg_version < 110000:
+    def test_partitioned_table_basic_insert(self, pg_version, hge_ctx, evts_webhook):
+        if hge_ctx.backend == "postgres":
+            if pg_version < 11:
                 pytest.skip('Event triggers on partioned tables are not supported in Postgres versions < 11')
-                return
             hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
             table = { "schema":"hge_tests", "name": "measurement"}
 
@@ -523,7 +548,8 @@ class TestEventRetryConfPostgresMSSQL(object):
         except queue.Empty:
             pass
 
-@pytest.mark.backend('mssql','postgres')
+@pytest.mark.backend('mssql', 'postgres')
+@pytest.mark.hge_env('EVENT_WEBHOOK_HEADER', 'MyEnvValue')
 @usefixtures('per_method_tests_db_state')
 class TestEventHeadersPostgresMSSQL(object):
 

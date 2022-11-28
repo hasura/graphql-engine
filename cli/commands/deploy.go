@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/fsm"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/sirupsen/logrus"
@@ -30,19 +31,24 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura deploy --endpoint "<endpoint>"`,
 		SilenceUsage: false,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			if err := ec.Validate(); err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			op := genOpName(cmd, "RunE")
+			if err := opts.Run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
@@ -77,6 +83,7 @@ type DeployOptions struct {
 }
 
 func (opts *DeployOptions) Run() error {
+	var op errors.Op = "commands.DeployOptions.Run"
 	opts.EC.Config.DisableInteractive = true
 
 	context := &deployCtx{
@@ -88,20 +95,20 @@ func (opts *DeployOptions) Run() error {
 	if opts.EC.Config.Version <= cli.V2 {
 		configV2FSM := newConfigV2DeployFSM()
 		if err := configV2FSM.SendEvent(applyMigrations, context); err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		if configV2FSM.Current == failedOperation {
-			return fmt.Errorf("operation failed: %w", context.err)
+			return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 		}
 		return nil
 	}
 
 	configV3FSM := newConfigV3DeployFSM()
 	if err := configV3FSM.SendEvent(applyInitialMetadata, context); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	if configV3FSM.Current == failedOperation {
-		return fmt.Errorf("operation failed: %w", context.err)
+		return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 	}
 	return nil
 }

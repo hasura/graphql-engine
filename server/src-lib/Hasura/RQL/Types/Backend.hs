@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Backend
   )
 where
 
+import Autodocodec (HasCodec)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
 import Data.Kind (Type)
@@ -20,14 +21,16 @@ import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
-type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
+type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -82,12 +85,14 @@ class
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
+    Representable (HealthCheckTest b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
+    Ord (Column b),
     Data (TableName b),
-    Traversable (BooleanOperators b),
     FromJSON (BackendConfig b),
+    FromJSON (BackendInfo b),
     FromJSON (Column b),
     FromJSON (ConstraintName b),
     FromJSON (FunctionName b),
@@ -97,8 +102,15 @@ class
     FromJSON (ExtraTableMetadata b),
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
+    FromJSON (HealthCheckTest b),
     FromJSONKey (Column b),
+    HasCodec (BackendSourceKind b),
+    HasCodec (Column b),
+    HasCodec (FunctionName b),
+    HasCodec (SourceConnConfiguration b),
+    HasCodec (TableName b),
     ToJSON (BackendConfig b),
+    ToJSON (BackendInfo b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
     ToJSON (FunctionArgument b),
@@ -112,6 +124,7 @@ class
     ToJSON (ComputedFieldDefinition b),
     ToJSON (ComputedFieldImplicitArguments b),
     ToJSON (ComputedFieldReturn b),
+    ToJSON (HealthCheckTest b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -126,10 +139,9 @@ class
     ToErrorValue (ScalarType b),
     ToErrorValue (TableName b),
     ToErrorValue (ConstraintName b),
-    Cacheable (SourceConfig b),
-    Cacheable (BackendConfig b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
+    Typeable (Column b),
     Typeable b,
     HasTag b,
     -- constraints of function argument
@@ -140,10 +152,14 @@ class
     Eq (BackendConfig b),
     Show (BackendConfig b),
     Monoid (BackendConfig b),
+    Eq (BackendInfo b),
+    Show (BackendInfo b),
+    Monoid (BackendInfo b),
     Eq (CountType b),
     Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
+    Eq (SourceConfig b),
     -- Extension constraints.
     Eq (XNodesAgg b),
     Show (XNodesAgg b),
@@ -152,17 +168,26 @@ class
     Eq (XStreamingSubscription b),
     Show (XStreamingSubscription b),
     -- Intermediate Representations
+    Traversable (BooleanOperators b),
     Functor (BackendUpdate b),
     Foldable (BackendUpdate b),
     Traversable (BackendUpdate b),
     Functor (BackendInsert b),
     Foldable (BackendInsert b),
-    Traversable (BackendInsert b)
+    Traversable (BackendInsert b),
+    Functor (AggregationPredicates b),
+    Foldable (AggregationPredicates b),
+    Traversable (AggregationPredicates b)
   ) =>
   Backend (b :: BackendType)
   where
   -- types
+
+  -- | Backend configuration stored in metadata
   type BackendConfig b :: Type
+
+  -- | Runtime backend info derived from (possibly enriched) BackendConfig and stored in SchemaCache
+  type BackendInfo b :: Type
 
   -- | User facing connection configuration for a database.
   type SourceConnConfiguration b :: Type
@@ -194,7 +219,6 @@ class
   type ScalarValue b :: Type
   type ScalarType b :: Type
 
-  type BooleanOperators b :: Type -> Type
   type SQLExpression b :: Type
   type ComputedFieldDefinition b :: Type
 
@@ -215,6 +239,9 @@ class
   type FunctionArgument b :: Type
 
   -- | Function input argument expression
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
   type FunctionArgumentExp b :: Type -> Type
 
   -- | Computed field function argument values which are being implicitly inferred from table and/or session information
@@ -223,16 +250,57 @@ class
   -- | Computed field return information
   type ComputedFieldReturn b :: Type
 
+  -- | A config type for health check tests
+  type HealthCheckTest b :: Type
+
+  -- | A backend type can opt into supporting health checks by providing an
+  -- implementation that includes a default health check test, and a health
+  -- check test codec.
+  healthCheckImplementation :: Maybe (HealthCheckImplementation (HealthCheckTest b))
+  healthCheckImplementation = Nothing
+
+  -- | An Implementation for version checking when adding a source.
+  versionCheckImplementation :: SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation = const (pure $ Right ())
+
+  -- | A backend type can opt into providing an implementation for
+  -- fingerprinted pings to the source,
+  -- useful for attribution that the user is using Hasura
+  runPingSource :: (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
+  runPingSource _ _ _ = pure ()
+
   -- Backend-specific IR types
+
+  -- | Intermediate Representation of extensions to the shared set of boolean
+  -- operators on table fields.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type BooleanOperators b :: Type -> Type
+
+  -- | Intermediate Representation of aggregation predicates.
+  -- The default implementation makes aggregation predicates uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type AggregationPredicates b :: Type -> Type
+
+  type AggregationPredicates b = Const Void
 
   -- | Intermediate Representation of Update Mutations.
   -- The default implementation makes update expressions uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
   type BackendUpdate b :: Type -> Type
 
   type BackendUpdate b = Const Void
 
   -- | Intermediate Representation of Insert Mutations.
   -- The default implementation makes insert expressions uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
   type BackendInsert b :: Type -> Type
 
   type BackendInsert b = Const Void
@@ -250,6 +318,17 @@ class
   -- functions on types
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
+
+  -- | Custom aggregate operators supported by the backend.
+  -- Backends that support custom aggregate operators should
+  -- return a HashMap from operator name to a scalar type mapping.
+  -- In the scalar type mapping the key represents the input type for the operator
+  -- and the value represents the result type.
+  -- Backends that do not support custom aggregate operators can use the default implementation
+  -- which returns an empty map.
+  getCustomAggregateOperators :: SourceConfig b -> HashMap G.Name (HashMap (ScalarType b) (ScalarType b))
+  getCustomAggregateOperators = const mempty
+
   textToScalarValue :: Maybe Text -> ScalarValue b
   parseScalarValue :: ScalarType b -> Value -> Either QErr (ScalarValue b)
   scalarValueToJSON :: ScalarValue b -> Value
@@ -271,6 +350,9 @@ class
 
   -- Global naming convention
   namingConventionSupport :: SupportedNamingCase
+
+  -- Resize source pools based on the count of server replicas
+  resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

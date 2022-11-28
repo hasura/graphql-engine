@@ -28,6 +28,8 @@ module Hasura.Server.Logging
     emptyHttpLogMetadata,
     MetadataQueryLoggingMode (..),
     LoggingSettings (..),
+    SchemaSyncThreadType (..),
+    SchemaSyncLog (..),
   )
 where
 
@@ -381,6 +383,8 @@ data OperationLog = OperationLog
   { olRequestId :: !RequestId,
     olUserVars :: !(Maybe SessionVariables),
     olResponseSize :: !(Maybe Int64),
+    -- | Response size before compression
+    olUncompressedResponseSize :: !Int64,
     -- | Request IO wait time, i.e. time spent reading the full request from the socket.
     olRequestReadTime :: !(Maybe Seconds),
     -- | Service time, not including request IO wait time.
@@ -455,6 +459,8 @@ mkHttpAccessLogContext ::
   RequestId ->
   Wai.Request ->
   (BL.ByteString, Maybe Value) ->
+  -- | Size of response body, before compression
+  Int64 ->
   BL.ByteString ->
   Maybe (DiffTime, DiffTime) ->
   Maybe CompressionType ->
@@ -462,7 +468,7 @@ mkHttpAccessLogContext ::
   RequestMode ->
   Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog) ->
   HttpLogContext
-mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) res mTiming compressTypeM headers batching queryLogMetadata =
+mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncompressedResponseSize res mTiming compressTypeM headers batching queryLogMetadata =
   let http =
         HttpInfoLog
           { hlStatus = status,
@@ -478,6 +484,7 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) res mT
           { olRequestId = reqId,
             olUserVars = _uiSession <$> userInfoM,
             olResponseSize = respSize,
+            olUncompressedResponseSize = uncompressedResponseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olRequestMode = batching,
@@ -535,11 +542,13 @@ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq (reqBody, parsedReq
             hlCompression = compressTypeM,
             hlHeaders = headers
           }
+      responseSize = BL.length $ encode err
       op =
         OperationLog
           { olRequestId = reqId,
             olUserVars = _uiSession <$> userInfoM,
-            olResponseSize = Just $ BL.length $ encode err,
+            olResponseSize = Just responseSize,
+            olUncompressedResponseSize = responseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
@@ -583,7 +592,7 @@ logDeprecatedEnvVars logger env sources = do
   -- When a source named 'default' is present, it means that it is a migrated v2
   -- hasura project. In such cases log those environment variables that are moved
   -- to the metadata
-  onJust (HM.lookup SNDefault sources) $ \_defSource -> do
+  for_ (HM.lookup SNDefault sources) $ \_defSource -> do
     let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
     unless (null deprecated) $
       unLogger logger $
@@ -600,3 +609,32 @@ logDeprecatedEnvVars logger env sources = do
         SB.fromText $
           "The following environment variables are deprecated: "
             <> toText deprecated
+
+data SchemaSyncThreadType
+  = TTListener
+  | TTProcessor
+  | TTMetadataApi
+  deriving (Eq)
+
+instance Show SchemaSyncThreadType where
+  show TTListener = "listener"
+  show TTProcessor = "processor"
+  show TTMetadataApi = "metadata-api"
+
+data SchemaSyncLog = SchemaSyncLog
+  { sslLogLevel :: !LogLevel,
+    sslThreadType :: !SchemaSyncThreadType,
+    sslInfo :: !Value
+  }
+  deriving (Show, Eq)
+
+instance ToJSON SchemaSyncLog where
+  toJSON (SchemaSyncLog _ t info) =
+    object
+      [ "thread_type" .= show t,
+        "info" .= info
+      ]
+
+instance ToEngineLog SchemaSyncLog Hasura where
+  toEngineLog threadLog =
+    (sslLogLevel threadLog, ELTInternal ILTSchemaSync, toJSON threadLog)

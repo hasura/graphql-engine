@@ -17,22 +17,26 @@
       session_variables:
         myVariable: some value
       request_transform:
-        body: '{{ getSessionVariable "myVariable" }}'
+        body: '{{ getSessionVariable("myVariable") }}'
         template_engine: Kriti
 
 - description: Test Webhook Transform getSessionVariable function | non existant session variable
   url: /v1/metadata
   headers:
     X-Hasura-Role: admin
-  status: 200
+  status: 400
   response:
-    - error_code: Function Error
-      source_position:
-        end_column: 51
-        start_line: 0
-        end_line: 0
-        start_column: 23
-      message: Session variable "this_variable_doesnt_exist" not found
+    code: validation-failed
+    error: request transform validation failed
+    path: $.args
+    internal:
+      - error_code: Function Error
+        source_position:
+          end_column: 51
+          start_line: 0
+          end_line: 0
+          start_column: 23
+        message: Session variable "this_variable_doesnt_exist" not found
   query:
     type: test_webhook_transform
     args:
@@ -42,22 +46,26 @@
       session_variables:
         myVariable: some value
       request_transform:
-        body: '{{ getSessionVariable "this_variable_doesnt_exist" }}'
+        body: '{{ getSessionVariable("this_variable_doesnt_exist") }}'
         template_engine: Kriti
 
 - description: Test Webhook Transform function | wrong function name
   url: /v1/metadata
   headers:
     X-Hasura-Role: admin
-  status: 200
+  status: 400
   response:
-    - error_code: Function Error
-      source_position:
-        end_column: 15
-        start_line: 0
-        end_line: 0
-        start_column: 4
-      message: Function fooFunction is not defined.
+    code: validation-failed
+    error: request transform validation failed
+    path: $.args
+    internal:
+      - error_code: Name Error
+        message: Variable 'fooFunction' not in scope
+        source_position:
+          end_column: 29
+          end_line: 0
+          start_column: 4
+          start_line: 0
   query:
     type: test_webhook_transform
     args:
@@ -67,5 +75,5 @@
       session_variables:
         myVariable: some value
       request_transform:
-        body: '{{ fooFunction "myVariable" }}'
+        body: '{{ fooFunction("myVariable") }}'
         template_engine: Kriti

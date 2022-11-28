@@ -30,7 +30,7 @@ where
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON)
 import Data.Text.Encoding qualified as TE
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache as M
@@ -47,10 +47,10 @@ data RunSQLRes = RunSQLRes
 
 $(deriveJSON hasuraJSON ''RunSQLRes)
 
-instance Q.FromRes RunSQLRes where
-  fromRes (Q.ResultOkEmpty _) =
+instance PG.FromRes RunSQLRes where
+  fromRes (PG.ResultOkEmpty _) =
     return $ RunSQLRes "CommandOk" Null
-  fromRes (Q.ResultOkData res) = do
+  fromRes (PG.ResultOkData res) = do
     csvRows <- resToCSV res
     return $ RunSQLRes "TuplesOk" $ toJSON csvRows
     where

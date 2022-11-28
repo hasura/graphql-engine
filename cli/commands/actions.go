@@ -2,12 +2,13 @@ package commands
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/util"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,22 +21,23 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Manage Hasura actions",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			err = ec.Validate()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			if ec.Config.Version < cli.V2 {
-				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
+				return errors.E(op, "actions commands can be executed only when config version is greater than 1")
 			}
 
 			if ec.MetadataDir == "" {
-				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
+				return errors.E(op, "actions commands can be executed only when metadata_dir is set in config")
 			}
 			return nil
 		},
@@ -68,13 +70,14 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func getCodegenFrameworks() (allFrameworks []codegenFramework, err error) {
+	var op errors.Op = "commands.getCodegenFrameworks"
 	frameworkFileBytes, err := ioutil.ReadFile(filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName, "frameworks.json"))
 	if err != nil {
-		return
+		return allFrameworks, errors.E(op, err)
 	}
 	err = json.Unmarshal(frameworkFileBytes, &allFrameworks)
 	if err != nil {
-		return
+		return allFrameworks, errors.E(op, err)
 	}
-	return
+	return allFrameworks, nil
 }

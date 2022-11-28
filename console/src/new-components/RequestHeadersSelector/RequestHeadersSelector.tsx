@@ -33,6 +33,7 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
 
           {fields.map((field, index) => (
             <KeyValueHeader
+              key={field.id}
               fieldId={field.id}
               fieldName={name}
               rowIndex={index}
@@ -44,6 +45,7 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
       ) : null}
 
       <Button
+        data-testid="add-header"
         icon={<FaPlusCircle />}
         onClick={() => {
           append({

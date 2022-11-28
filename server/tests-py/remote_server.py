@@ -1,20 +1,30 @@
-#!/usr/bin/env python3
+import os
 import subprocess
-import time
+from typing import Optional
 
-class NodeGraphQL():
+import ports
 
-    def __init__(self, cmd):
+class NodeGraphQL:
+    def __init__(self, cmd: list[str], env: dict[str, str] = {}, port: Optional[int] = None):
         self.cmd = cmd
-        self.proc = None
+        self.env = env
+        self.port = port if port else ports.find_free_port()
+        self.proc: Optional[subprocess.Popen[bytes]] = None
 
     def start(self):
-        proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        time.sleep(1)
-        proc.poll()
-        if proc.returncode is not None:
-            raise Exception("It seems our node graphql test server stopped unexpectedly:\n" + proc.stdout.read().decode('utf-8'))
-        self.proc = proc
+        self.proc = subprocess.Popen(self.cmd, env={**os.environ, **self.env, 'PORT': str(self.port)})
+        try:
+            ports.wait_for_port(self.port, timeout = 3)
+        except:
+            self.proc.kill()
+            self.proc = None
+            raise
 
     def stop(self):
-        self.proc.terminate()
+        if self.proc:
+            self.proc.terminate()
+            self.proc = None
+
+    @property
+    def url(self):
+        return f'http://localhost:{self.port}'

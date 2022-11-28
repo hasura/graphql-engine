@@ -6,14 +6,12 @@ module Hasura.RQL.Types.SourceCustomization
     RootFieldsCustomization (..),
     mkCustomizedTypename,
     emptySourceCustomization,
+    emptySourceTypeCustomization,
     getSourceTypeCustomization,
-    getRootFieldsCustomization,
-    getRootFieldsCustomizer,
     SourceCustomization (..),
-    withSourceCustomization,
+    ResolvedSourceCustomization (..),
+    mkResolvedSourceCustomization,
     MkRootFieldName (..),
-    CustomizeRemoteFieldName (..),
-    withRemoteFieldNameCustomization,
 
     -- * Naming Convention specific
     applyEnumValueCase,
@@ -22,6 +20,7 @@ module Hasura.RQL.Types.SourceCustomization
     applyFieldNameCaseIdentifier,
     applyTypeNameCaseIdentifier,
     getNamingConvention,
+    getNamingCase,
     getTextFieldName,
     getTextTypeName,
 
@@ -38,9 +37,32 @@ module Hasura.RQL.Types.SourceCustomization
     mkDeleteField,
     mkDeleteByPkField,
     mkRelayConnectionField,
+
+    -- * Type name builders
+    mkMultiRowUpdateTypeName,
+    mkOnConflictTypeName,
+    mkTableConstraintTypeName,
+    mkTableAggregateTypeName,
+    mkFunctionArgsTypeName,
+    mkTableBoolExpTypeName,
+    mkTableTypeName,
+    mkTableInsertInputTypeName,
+    mkTableObjRelInsertInputTypeName,
+    mkTableArrRelInsertInputTypeName,
+    mkTableMutationResponseTypeName,
+    mkTableOrderByTypeName,
+    mkTableAggregateOrderByTypeName,
+    mkTableAggregateFieldTypeName,
+    mkTableAggOperatorTypeName,
+    mkTableSelectColumnTypeName,
+    mkTableUpdateColumnTypeName,
+    mkTableOperatorInputTypeName,
+    mkTablePkColumnsInputTypeName,
+    mkEnumTableTypeName,
   )
 where
 
+import Autodocodec (HasCodec (codec), named)
 import Control.Lens
 import Data.Aeson.Extended
 import Data.Has
@@ -52,7 +74,7 @@ import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
-import Hasura.Incremental.Internal.Dependency (Cacheable)
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
@@ -65,8 +87,6 @@ data RootFieldsCustomization = RootFieldsCustomization
     _rootfcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
-
-instance Cacheable RootFieldsCustomization
 
 instance ToJSON RootFieldsCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -83,8 +103,6 @@ data SourceTypeCustomization = SourceTypeCustomization
   }
   deriving (Eq, Show, Generic)
 
-instance Cacheable SourceTypeCustomization
-
 instance ToJSON SourceTypeCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
@@ -95,7 +113,7 @@ emptySourceTypeCustomization :: SourceTypeCustomization
 emptySourceTypeCustomization = SourceTypeCustomization Nothing Nothing
 
 mkCustomizedTypename :: Maybe SourceTypeCustomization -> NamingCase -> MkTypename
-mkCustomizedTypename stc tCase = MkTypename ((applyTypeNameCaseCust tCase) . (applyTypeCust stc tCase))
+mkCustomizedTypename stc tCase = MkTypename (applyTypeCust stc tCase)
 
 mkCustomizedFieldName :: Maybe RootFieldsCustomization -> NamingCase -> MkRootFieldName
 mkCustomizedFieldName rtc tCase = MkRootFieldName (applyFieldCust rtc tCase)
@@ -124,11 +142,7 @@ applyFieldNameCaseCust tCase name = case tCase of
 
 -- | returns field name according to the naming conventions as @Text@
 getTextFieldName :: NamingCase -> GQLNameIdentifier -> Text
-getTextFieldName tCase nameLst' = case tCase of
-  HasuraCase -> C.toSnakeT nameLst
-  GraphqlCase -> C.toCamelT nameLst
-  where
-    nameLst = C.identifierToList nameLst'
+getTextFieldName tCase name = G.unName $ applyFieldNameCaseIdentifier tCase name
 
 -- | applies naming convention and returns field name
 --
@@ -141,11 +155,7 @@ applyTypeNameCaseIdentifier tCase nameLst = case tCase of
 
 -- | returns type name according to the naming conventions as @Text@
 getTextTypeName :: NamingCase -> GQLNameIdentifier -> Text
-getTextTypeName tCase nameLst' = case tCase of
-  HasuraCase -> C.toSnakeT nameLst
-  GraphqlCase -> C.toPascalT nameLst
-  where
-    nameLst = C.identifierToList nameLst'
+getTextTypeName tCase name = G.unName $ applyTypeNameCaseIdentifier tCase name
 
 -- | applies naming convention and returns type name
 --
@@ -163,13 +173,13 @@ applyEnumValueCase tCase v = case tCase of
 
 -- | append/prepend the suffix/prefix in the graphql name
 applyPrefixSuffix :: Maybe G.Name -> Maybe G.Name -> NamingCase -> Bool -> G.Name -> G.Name
-applyPrefixSuffix Nothing Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [name]
-applyPrefixSuffix (Just prefix) Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [prefix, name]
-applyPrefixSuffix Nothing (Just suffix) tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [name, suffix]
-applyPrefixSuffix (Just prefix) (Just suffix) tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [prefix, name, suffix]
+applyPrefixSuffix Nothing Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [(name, C.CustomName)]
+applyPrefixSuffix (Just prefix) Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [(prefix, C.CustomName), (name, C.AutogeneratedName)]
+applyPrefixSuffix Nothing (Just suffix) tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [(name, C.CustomName), (suffix, C.CustomName)]
+applyPrefixSuffix (Just prefix) (Just suffix) tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [(prefix, C.CustomName), (name, C.AutogeneratedName), (suffix, C.CustomName)]
 
-concatPrefixSuffix :: NamingCase -> Bool -> NonEmpty G.Name -> G.Name
-concatPrefixSuffix (HasuraCase) _ neList = sconcat neList
+concatPrefixSuffix :: NamingCase -> Bool -> NonEmpty (G.Name, C.NameOrigin) -> G.Name
+concatPrefixSuffix (HasuraCase) _ neList = sconcat (fst <$> neList)
 concatPrefixSuffix (GraphqlCase) isTypeName neList =
   if isTypeName
     then C.toPascalG prefixSuffixGQLIdent
@@ -177,6 +187,7 @@ concatPrefixSuffix (GraphqlCase) isTypeName neList =
   where
     prefixSuffixGQLIdent = C.fromNonEmptyList neList
 
+-- | Source customization information as it appears in the metadata.
 data SourceCustomization = SourceCustomization
   { _scRootFields :: Maybe RootFieldsCustomization,
     _scTypeNames :: Maybe SourceTypeCustomization,
@@ -184,56 +195,45 @@ data SourceCustomization = SourceCustomization
   }
   deriving (Eq, Show, Generic)
 
-instance Cacheable SourceCustomization
-
 instance ToJSON SourceCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 instance FromJSON SourceCustomization where
   parseJSON = genericParseJSON hasuraJSON
 
+-- TODO: Write proper codec
+instance HasCodec SourceCustomization where
+  codec = named "SourceCustomization" placeholderCodecViaJSON
+
 emptySourceCustomization :: SourceCustomization
 emptySourceCustomization = SourceCustomization Nothing Nothing Nothing
-
-getRootFieldsCustomization :: SourceCustomization -> RootFieldsCustomization
-getRootFieldsCustomization = fromMaybe emptyRootFieldsCustomization . _scRootFields
 
 getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
 getNamingConvention :: SourceCustomization -> Maybe NamingCase -> NamingCase
-getNamingConvention sc defaultNC = defaultNC `seq` fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
+getNamingConvention sc defaultNC = fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
+
+-- | Source customization as it appears in the SchemaCache.
+data ResolvedSourceCustomization = ResolvedSourceCustomization
+  { _rscRootFields :: MkRootFieldName,
+    _rscTypeNames :: MkTypename,
+    _rscNamingConvention :: NamingCase,
+    _rscRootNamespace :: Maybe G.Name
+  }
+
+mkResolvedSourceCustomization :: SourceCustomization -> NamingCase -> ResolvedSourceCustomization
+mkResolvedSourceCustomization sourceCustomization namingConv =
+  ResolvedSourceCustomization
+    { _rscRootFields = mkCustomizedFieldName (_scRootFields sourceCustomization) namingConv,
+      _rscTypeNames = mkCustomizedTypename (_scTypeNames sourceCustomization) namingConv,
+      _rscNamingConvention = namingConv,
+      _rscRootNamespace = _rootfcNamespace =<< _scRootFields sourceCustomization
+    }
 
 -- | Function to apply root field name customizations.
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
   deriving (Semigroup, Monoid) via (Endo G.Name)
-
-getRootFieldsCustomizer ::
-  forall m.
-  (MonadError QErr m) =>
-  SourceCustomization ->
-  SupportedNamingCase ->
-  Maybe NamingCase ->
-  m MkRootFieldName
-getRootFieldsCustomizer sc@SourceCustomization {..} namingConventionSupport defaultNC = do
-  tCase <- getNamingCase sc namingConventionSupport defaultNC
-  pure $ mkCustomizedFieldName _scRootFields tCase
-
--- | Inject NamingCase, typename and root field name customizations from @SourceCustomization@ into
--- the environment.
-withSourceCustomization ::
-  forall m r a.
-  (MonadReader r m, Has MkTypename r, Has NamingCase r, MonadError QErr m) =>
-  SourceCustomization ->
-  SupportedNamingCase ->
-  Maybe NamingCase ->
-  m a ->
-  m a
-withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defaultNC m = do
-  tCase <- getNamingCase sc namingConventionSupport defaultNC
-  withTypenameCustomization (mkCustomizedTypename _scTypeNames tCase)
-    . withNamingCaseCustomization tCase
-    $ m
 
 getNamingCase ::
   forall m.
@@ -259,14 +259,6 @@ getNamingCase sc namingConventionSupport defaultNC = do
 withNamingCaseCustomization :: forall m r a. (MonadReader r m, Has NamingCase r) => NamingCase -> m a -> m a
 withNamingCaseCustomization = local . set hasLens
 
-newtype CustomizeRemoteFieldName = CustomizeRemoteFieldName
-  { runCustomizeRemoteFieldName :: G.Name -> G.Name -> G.Name
-  }
-  deriving (Semigroup, Monoid) via (G.Name -> Endo G.Name)
-
-withRemoteFieldNameCustomization :: forall m r a. (MonadReader r m, Has CustomizeRemoteFieldName r) => CustomizeRemoteFieldName -> m a -> m a
-withRemoteFieldNameCustomization = local . set hasLens
-
 -------------------------------------------------------------------------------
 -- Some helper functions to build the field names as an identifier
 
@@ -274,34 +266,95 @@ mkSelectField :: GQLNameIdentifier -> GQLNameIdentifier
 mkSelectField = id
 
 mkSelectAggregateField :: GQLNameIdentifier -> GQLNameIdentifier
-mkSelectAggregateField name = name <> C.fromName Name._aggregate
+mkSelectAggregateField name = name <> C.fromAutogeneratedName Name._aggregate
 
 mkSelectByPkField :: GQLNameIdentifier -> GQLNameIdentifier
-mkSelectByPkField name = name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
+mkSelectByPkField name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["by", "pk"])
 
 mkInsertField :: GQLNameIdentifier -> GQLNameIdentifier
-mkInsertField name = C.fromName Name._insert <> name
+mkInsertField name = C.fromAutogeneratedName Name._insert <> name
 
 mkInsertOneField :: GQLNameIdentifier -> GQLNameIdentifier
-mkInsertOneField name = C.fromName Name._insert <> name <> C.fromName Name._one
+mkInsertOneField name = C.fromAutogeneratedName Name._insert <> name <> C.fromAutogeneratedName Name._one
 
 mkUpdateField :: GQLNameIdentifier -> GQLNameIdentifier
-mkUpdateField name = C.fromName Name._update <> name
+mkUpdateField name = C.fromAutogeneratedName Name._update <> name
 
 mkUpdateByPkField :: GQLNameIdentifier -> GQLNameIdentifier
-mkUpdateByPkField name = C.fromName Name._update <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
+mkUpdateByPkField name = C.fromAutogeneratedName Name._update <> name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["by", "pk"])
 
 mkUpdateManyField :: GQLNameIdentifier -> GQLNameIdentifier
-mkUpdateManyField name = C.fromName Name._update <> name <> C.fromName Name._many
+mkUpdateManyField name = C.fromAutogeneratedName Name._update <> name <> C.fromAutogeneratedName Name._many
 
 mkDeleteField :: GQLNameIdentifier -> GQLNameIdentifier
-mkDeleteField name = C.fromName Name._delete <> name
+mkDeleteField name = C.fromAutogeneratedName Name._delete <> name
 
 mkDeleteByPkField :: GQLNameIdentifier -> GQLNameIdentifier
-mkDeleteByPkField name = C.fromName Name._delete <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
+mkDeleteByPkField name = C.fromAutogeneratedName Name._delete <> name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["by", "pk"])
 
 mkRelayConnectionField :: GQLNameIdentifier -> GQLNameIdentifier
-mkRelayConnectionField name = name <> C.fromName Name._connection
+mkRelayConnectionField name = name <> C.fromAutogeneratedName Name._connection
 
 mkSelectStreamField :: GQLNameIdentifier -> GQLNameIdentifier
-mkSelectStreamField name = name <> C.fromName Name._stream
+mkSelectStreamField name = name <> C.fromAutogeneratedName Name._stream
+
+mkMultiRowUpdateTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkMultiRowUpdateTypeName name = name <> C.fromAutogeneratedName $$(G.litName "updates")
+
+mkOnConflictTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkOnConflictTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["on", "conflict"])
+
+mkTableConstraintTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableConstraintTypeName name = name <> C.fromAutogeneratedName $$(G.litName "constraint")
+
+mkTableAggregateTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableAggregateTypeName name = name <> C.fromAutogeneratedName $$(G.litName "aggregate")
+
+mkTableAggregateFieldTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableAggregateFieldTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["aggregate", "fields"])
+
+mkFunctionArgsTypeName :: G.Name -> GQLNameIdentifier -> GQLNameIdentifier
+mkFunctionArgsTypeName computedFieldName tableName = C.fromAutogeneratedName computedFieldName <> tableName <> C.fromAutogeneratedName $$(G.litName "args")
+
+mkTableBoolExpTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableBoolExpTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["bool", "exp"])
+
+mkTableTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableTypeName = id
+
+mkTableInsertInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableInsertInputTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["insert", "input"])
+
+mkTableObjRelInsertInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableObjRelInsertInputTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["obj", "rel", "insert", "input"])
+
+mkTableArrRelInsertInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableArrRelInsertInputTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["arr", "rel", "insert", "input"])
+
+mkTableMutationResponseTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableMutationResponseTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["mutation", "response"])
+
+mkTableOrderByTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableOrderByTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["order", "by"])
+
+mkTableAggregateOrderByTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableAggregateOrderByTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["aggregate", "order", "by"])
+
+mkTableAggOperatorTypeName :: GQLNameIdentifier -> G.Name -> GQLNameIdentifier
+mkTableAggOperatorTypeName tableName operator = tableName <> C.fromAutogeneratedName operator <> C.fromAutogeneratedName $$(G.litName "fields")
+
+mkTableSelectColumnTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableSelectColumnTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["select", "column"])
+
+mkTableUpdateColumnTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTableUpdateColumnTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["update", "column"])
+
+mkTableOperatorInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier -> GQLNameIdentifier
+mkTableOperatorInputTypeName tableName operator = tableName <> operator <> C.fromAutogeneratedName $$(G.litName "input")
+
+mkTablePkColumnsInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkTablePkColumnsInputTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["pk", "columns", "input"])
+
+mkEnumTableTypeName :: GQLNameIdentifier -> Maybe G.Name -> GQLNameIdentifier
+mkEnumTableTypeName name (Just customName) = C.fromCustomName customName <> C.fromAutogeneratedName $$(G.litName "enum")
+mkEnumTableTypeName name Nothing = name <> C.fromAutogeneratedName $$(G.litName "enum")

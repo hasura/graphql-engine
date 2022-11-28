@@ -60,6 +60,7 @@ module Hasura.RQL.Types.Table
     sortCols,
     tableInfoName,
     getRolePermInfo,
+    tableArrayRelationships,
     tcCustomName,
     tcCustomRootFields,
     tcComment,
@@ -88,6 +89,20 @@ module Hasura.RQL.Types.Table
   )
 where
 
+import Autodocodec
+  ( HasCodec (codec),
+    dimapCodec,
+    disjointEitherCodec,
+    hashMapCodec,
+    nullCodec,
+    optionalFieldOrNullWith',
+    optionalFieldOrNullWithOmittedDefault',
+    optionalFieldWithDefault',
+    optionalFieldWithDefaultWith',
+    optionalFieldWithOmittedDefault',
+  )
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens hiding ((.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended
@@ -103,9 +118,9 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Max (..))
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types qualified as PG (PGDescription)
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -131,7 +146,27 @@ data CustomRootField = CustomRootField
 
 instance NFData CustomRootField
 
-instance Cacheable CustomRootField
+instance HasCodec CustomRootField where
+  codec =
+    dimapCodec dec enc $
+      disjointEitherCodec nullCodec $
+        disjointEitherCodec (codec @Text) nameAndComment
+    where
+      nameAndComment =
+        AC.object "CustomRootField" $
+          CustomRootField
+            <$> optionalFieldOrNullWith' "name" graphQLFieldNameCodec AC..= _crfName
+            <*> optionalFieldOrNullWithOmittedDefault' "comment" Automatic AC..= _crfComment
+
+      dec = \case
+        Left _ -> CustomRootField Nothing Automatic
+        Right (Left text) -> CustomRootField (G.mkName text) Automatic
+        Right (Right obj) -> obj
+
+      enc = \case
+        (CustomRootField Nothing Automatic) -> Left ()
+        (CustomRootField (Just name) Automatic) -> Right $ Left $ G.unName name
+        obj -> Right $ Right obj
 
 instance FromJSON CustomRootField where
   parseJSON = \case
@@ -172,7 +207,23 @@ data TableCustomRootFields = TableCustomRootFields
 
 instance NFData TableCustomRootFields
 
-instance Cacheable TableCustomRootFields
+instance HasCodec TableCustomRootFields where
+  codec =
+    AC.object "TableCustomRootFields" $
+      TableCustomRootFields
+        <$> field "select" AC..= _tcrfSelect
+        <*> field "select_by_pk" AC..= _tcrfSelectByPk
+        <*> field "select_aggregate" AC..= _tcrfSelectAggregate
+        <*> field "select_stream" AC..= _tcrfSelectStream
+        <*> field "insert" AC..= _tcrfInsert
+        <*> field "insert_one" AC..= _tcrfInsertOne
+        <*> field "update" AC..= _tcrfUpdate
+        <*> field "update_by_pk" AC..= _tcrfUpdateByPk
+        <*> field "update_many" AC..= _tcrfUpdateMany
+        <*> field "delete" AC..= _tcrfDelete
+        <*> field "delete_by_pk" AC..= _tcrfDeleteByPk
+    where
+      field name = optionalFieldWithOmittedDefault' name defaultCustomRootField
 
 instance ToJSON TableCustomRootFields where
   toJSON TableCustomRootFields {..} =
@@ -256,8 +307,6 @@ data FieldInfo (b :: BackendType)
 
 deriving instance Backend b => Eq (FieldInfo b)
 
-instance Backend b => Cacheable (FieldInfo b)
-
 instance Backend b => ToJSON (FieldInfo b) where
   toJSON =
     genericToJSON $
@@ -327,36 +376,26 @@ data InsPermInfo (b :: BackendType) = InsPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (InsPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (InsPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (PreSetColsPartial b)
   ) =>
   NFData (InsPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
-  ) =>
-  Cacheable (InsPermInfo b)
-
-instance
-  ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (InsPermInfo b)
   where
@@ -428,8 +467,8 @@ combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
       -- the select permissions exists.
       | selPermsCount == length booleanExpressions = Nothing
       | otherwise =
-        let nonNothingBoolExps = catMaybes $ toList booleanExpressions
-         in bool (Just $ BoolOr nonNothingBoolExps) Nothing $ null nonNothingBoolExps
+          let nonNothingBoolExps = catMaybes $ toList booleanExpressions
+           in bool (Just $ BoolOr nonNothingBoolExps) Nothing $ null nonNothingBoolExps
 
 data SelPermInfo (b :: BackendType) = SelPermInfo
   { -- | HashMap of accessible columns to the role, the `Column` may be mapped to
@@ -455,36 +494,29 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b),
+    Eq (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Eq (SelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b),
+    Show (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   Show (SelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   NFData (SelPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
-  ) =>
-  Cacheable (SelPermInfo b)
-
-instance
-  ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b),
+    ToJSON (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
   ToJSON (SelPermInfo b)
   where
@@ -503,36 +535,26 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (UpdPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (UpdPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b),
+    NFData (PreSetColsPartial b)
   ) =>
   NFData (UpdPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
-  ) =>
-  Cacheable (UpdPermInfo b)
-
-instance
-  ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (UpdPermInfo b)
   where
@@ -548,36 +570,25 @@ data DelPermInfo (b :: BackendType) = DelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b)),
-    Eq (FunctionArgumentExp b (PartialSQLExp b))
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (DelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b)),
-    Show (FunctionArgumentExp b (PartialSQLExp b))
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (DelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (AnnBoolExpPartialSQL b)
   ) =>
   NFData (DelPermInfo b)
 
 instance
   ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
-  ) =>
-  Cacheable (DelPermInfo b)
-
-instance
-  ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (DelPermInfo b)
   where
@@ -593,14 +604,19 @@ data RolePermInfo (b :: BackendType) = RolePermInfo
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b)),
-    NFData (FunctionArgumentExp b (PartialSQLExp b))
+    NFData (InsPermInfo b),
+    NFData (SelPermInfo b),
+    NFData (UpdPermInfo b),
+    NFData (DelPermInfo b)
   ) =>
   NFData (RolePermInfo b)
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (InsPermInfo b),
+    ToJSON (SelPermInfo b),
+    ToJSON (UpdPermInfo b),
+    ToJSON (DelPermInfo b)
   ) =>
   ToJSON (RolePermInfo b)
   where
@@ -666,8 +682,6 @@ data ViewInfo = ViewInfo
 
 instance NFData ViewInfo
 
-instance Cacheable ViewInfo
-
 $(deriveJSON hasuraJSON ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
@@ -682,7 +696,12 @@ data ColumnConfig = ColumnConfig
 
 instance NFData ColumnConfig
 
-instance Cacheable ColumnConfig
+instance HasCodec ColumnConfig where
+  codec =
+    AC.object "ColumnConfig" $
+      ColumnConfig
+        <$> optionalFieldOrNullWith' "custom_name" graphQLFieldNameCodec AC..= _ccfgCustomName
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _ccfgComment
 
 instance ToJSON ColumnConfig where
   toJSON ColumnConfig {..} =
@@ -724,13 +743,50 @@ deriving instance (Backend b) => Show (TableConfig b)
 
 instance (Backend b) => NFData (TableConfig b)
 
-instance (Backend b) => Cacheable (TableConfig b)
-
 $(makeLenses ''TableConfig)
 
 emptyTableConfig :: TableConfig b
 emptyTableConfig =
   TableConfig emptyCustomRootFields M.empty Nothing Automatic
+
+instance (Backend b) => HasCodec (TableConfig b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "TableConfig") $
+      TableConfig
+        <$> optionalFieldWithDefault' "custom_root_fields" emptyCustomRootFields AC..= _tcCustomRootFields
+        <*> columnConfigCodec AC..= _tcColumnConfig
+        <*> optionalFieldOrNullWith' "custom_name" graphQLFieldNameCodec AC..= _tcCustomName
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _tcComment
+    where
+      -- custom_column_names is a deprecated property that has been replaced by column_config.
+      -- We merge custom_column_names into column_config transparently to maintain backwards
+      -- compatibility (with both the metadata API and the metadata JSON saved in the HGE DB)
+      -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
+      --
+      -- This codec translates between a single column config value on the
+      -- Haskell side, and a pair of object properties on the JSON side that are
+      -- merged into the object codec above. When encoding the value for
+      -- @custom_column_names@ is derived from @_tcColumnConfig@. When decoding
+      -- values from @column_config@ and @custom_column_names@ are merged
+      -- produce one value for @_tcColumnConfig@.
+      columnConfigCodec =
+        dimapCodec dec enc $
+          (,)
+            <$> optionalFieldWithDefault' "column_config" M.empty AC..= fst
+            <*> optionalFieldWithDefaultWith' "custom_column_names" (hashMapCodec graphQLFieldNameCodec) M.empty AC..= snd
+
+      -- if @custom_column_names@ was given then merge its value during decoding
+      -- to get a complete value for _tcColumnConfig
+      dec (columnConfig, legacyCustomColumnNames) =
+        let legacyColumnConfig = (\name -> ColumnConfig (Just name) Automatic) <$> legacyCustomColumnNames
+         in M.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
+
+      -- encode value from _tcColumnConfig for @column_config@, and for the
+      -- legacy representation for @custom_column_names@.
+      enc columnConfig =
+        let outputColumnConfig = M.filter (/= mempty) columnConfig
+            legacyCustomColumnNames = mapMaybe _ccfgCustomName columnConfig
+         in (outputColumnConfig, legacyCustomColumnNames)
 
 instance (Backend b) => FromJSON (TableConfig b) where
   parseJSON = withObject "TableConfig" $ \obj -> do
@@ -780,8 +836,6 @@ instance Backend b => NFData (Constraint b)
 
 instance Backend b => Hashable (Constraint b)
 
-instance Backend b => Cacheable (Constraint b)
-
 instance Backend b => ToJSON (Constraint b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -800,9 +854,7 @@ deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
 
 instance (Backend b, NFData a) => NFData (PrimaryKey b a)
 
-instance (Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
-
-instance (Backend b, Cacheable a) => Cacheable (PrimaryKey b a)
+instance (Eq a, Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
 
 instance (Backend b, ToJSON a) => ToJSON (PrimaryKey b a) where
   toJSON = genericToJSON hasuraJSON
@@ -834,8 +886,6 @@ instance Backend b => NFData (UniqueConstraint b)
 
 instance Backend b => Hashable (UniqueConstraint b)
 
-instance Backend b => Cacheable (UniqueConstraint b)
-
 instance Backend b => ToJSON (UniqueConstraint b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -857,8 +907,6 @@ instance Backend b => NFData (ForeignKey b)
 
 instance Backend b => Hashable (ForeignKey b)
 
-instance Backend b => Cacheable (ForeignKey b)
-
 instance Backend b => ToJSON (ForeignKey b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -869,7 +917,7 @@ instance Backend b => FromJSON (ForeignKey b) where
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
   { _tciName :: TableName b,
-    _tciDescription :: Maybe PG.PGDescription, -- TODO make into type family?
+    _tciDescription :: Maybe Postgres.PGDescription, -- TODO make into type family?
     _tciFieldInfoMap :: FieldInfoMap field,
     _tciPrimaryKey :: Maybe (PrimaryKey b primaryKeyColumn),
     -- | Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
@@ -885,8 +933,6 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
 
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
 
-instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
-
 instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
 
@@ -897,7 +943,7 @@ type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
 tciUniqueOrPrimaryKeyConstraints ::
   forall b f.
-  (Eq (Column b), Hashable (Column b)) =>
+  Hashable (Column b) =>
   TableCoreInfoG b f (ColumnInfo b) ->
   Maybe (NonEmpty (UniqueConstraint b))
 tciUniqueOrPrimaryKeyConstraints info =
@@ -918,7 +964,10 @@ data TableInfo (b :: BackendType) = TableInfo
 
 instance
   ( Backend b,
-    ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+    ToJSON (EventTriggerInfoMap b),
+    ToJSON (RolePermInfo b),
+    ToJSON (RolePermInfoMap b),
+    ToJSON (TableCoreInfo b)
   ) =>
   ToJSON (TableInfo b)
   where
@@ -932,13 +981,16 @@ tiName = tiCoreInfo . tciName
 tableInfoName :: TableInfo b -> TableName b
 tableInfoName = view tiName
 
+tableArrayRelationships :: TableInfo b -> [RelInfo b]
+tableArrayRelationships ti = [rel | rel <- getRels . _tciFieldInfoMap . _tiCoreInfo $ ti, riType rel == ArrRel]
+
 getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
 getRolePermInfo role tableInfo
   | role == adminRoleName = _tiAdminRolePermInfo tableInfo
   | otherwise =
-    fromMaybe
-      (RolePermInfo Nothing Nothing Nothing Nothing)
-      (M.lookup role $ _tiRolePermInfoMap tableInfo)
+      fromMaybe
+        (RolePermInfo Nothing Nothing Nothing Nothing)
+        (M.lookup role $ _tiRolePermInfoMap tableInfo)
 
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 
@@ -952,7 +1004,7 @@ type TableEventTriggers b = M.HashMap (TableName b) [TriggerName]
 newtype ForeignKeyMetadata (b :: BackendType) = ForeignKeyMetadata
   { unForeignKeyMetadata :: ForeignKey b
   }
-  deriving (Show, Eq, NFData, Hashable, Cacheable)
+  deriving (Show, Eq, NFData, Hashable)
 
 instance Backend b => FromJSON (ForeignKeyMetadata b) where
   parseJSON = withObject "ForeignKeyMetadata" \o -> do
@@ -991,7 +1043,7 @@ data DBTableMetadata (b :: BackendType) = DBTableMetadata
     _ptmiUniqueConstraints :: HashSet (UniqueConstraint b),
     _ptmiForeignKeys :: HashSet (ForeignKeyMetadata b),
     _ptmiViewInfo :: Maybe ViewInfo,
-    _ptmiDescription :: Maybe PG.PGDescription,
+    _ptmiDescription :: Maybe Postgres.PGDescription,
     _ptmiExtraTableMetadata :: ExtraTableMetadata b
   }
   deriving (Generic)
@@ -1001,8 +1053,6 @@ deriving instance Backend b => Eq (DBTableMetadata b)
 deriving instance Backend b => Show (DBTableMetadata b)
 
 instance Backend b => NFData (DBTableMetadata b)
-
-instance Backend b => Cacheable (DBTableMetadata b)
 
 instance Backend b => FromJSON (DBTableMetadata b) where
   parseJSON = genericParseJSON hasuraJSON
@@ -1070,7 +1120,8 @@ askComputedFieldInfo ::
 askComputedFieldInfo fields computedField = do
   fieldInfo <-
     modifyErr ("computed field " <>) $
-      askFieldInfo fields $ fromComputedField computedField
+      askFieldInfo fields $
+        fromComputedField computedField
   case fieldInfo of
     (FIColumn _) -> throwErr "column"
     (FIRelationship _) -> throwErr "relationship"

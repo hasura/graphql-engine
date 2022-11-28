@@ -7,15 +7,16 @@ module Hasura.Base.Instances () where
 
 import Control.Monad.Fix
 import Data.Aeson qualified as J
+import Data.Fixed (Fixed (..))
 import Data.Functor.Product (Product (Pair))
-import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
-import Data.HashMap.Strict qualified as M
-import Data.HashSet qualified as S
+import "dependent-sum" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
+import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as UT
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Prelude
+import Language.Haskell.TH.Lift qualified as TH (deriveLift)
 import Language.Haskell.TH.Syntax qualified as TH
 import System.Cron.Parser qualified as C
 import System.Cron.Types qualified as C
@@ -63,14 +64,6 @@ instance NFData C.CronSchedule
 --------------------------------------------------------------------------------
 -- Template Haskell
 
-instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
-  lift m = [|M.fromList $(TH.lift $ M.toList m)|]
-  liftTyped = TH.unsafeTExpCoerce . TH.lift
-
-instance TH.Lift a => TH.Lift (S.HashSet a) where
-  lift s = [|S.fromList $(TH.lift $ S.toList s)|]
-  liftTyped = TH.unsafeTExpCoerce . TH.lift
-
 deriving instance TH.Lift TDFA.CompOption
 
 deriving instance TH.Lift TDFA.DoPa
@@ -81,11 +74,21 @@ deriving instance TH.Lift TDFA.Pattern
 
 deriving instance TH.Lift TDFA.PatternSet
 
+deriving instance TH.Lift (Fixed a)
+
 deriving instance TH.Lift TDFA.PatternSetCharacterClass
 
 deriving instance TH.Lift TDFA.PatternSetCollatingElement
 
 deriving instance TH.Lift TDFA.PatternSetEquivalenceClass
+
+$(TH.deriveLift ''DiffTime)
+
+$(TH.deriveLift ''NominalDiffTime)
+
+deriving instance TH.Lift Milliseconds
+
+deriving instance TH.Lift Seconds
 
 --------------------------------------------------------------------------------
 -- GADT
@@ -114,12 +117,12 @@ instance J.ToJSONKey Void
 --------------------------------------------------------------------------------
 -- Postgres
 
-instance Q.ToPrepArg C.CronSchedule where
-  toPrepVal = Q.toPrepVal . C.serializeCronSchedule
+instance PG.ToPrepArg C.CronSchedule where
+  toPrepVal = PG.toPrepVal . C.serializeCronSchedule
 
-instance Q.FromCol C.CronSchedule where
+instance PG.FromCol C.CronSchedule where
   fromCol bs =
-    case Q.fromCol bs of
+    case PG.fromCol bs of
       Left err -> Left err
       Right dbCron ->
         case C.parseCronSchedule dbCron of

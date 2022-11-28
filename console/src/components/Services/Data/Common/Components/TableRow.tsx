@@ -67,11 +67,11 @@ const getColumnInfo = (
 export interface TableRowProps {
   column: TableColumn;
   setRef: (
-    refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
+    refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'radioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: Record<string, any>;
-  index: number;
+  enumOptions: string[];
+  index: string;
   clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
@@ -88,13 +88,8 @@ export const TableRow: React.FC<TableRowProps> = ({
   clone,
   prevValue,
 }) => {
-  const {
-    colName,
-    isDisabled,
-    isNullable,
-    hasDefault,
-    columnValueType,
-  } = getColumnInfo(column, prevValue, clone);
+  const { colName, isDisabled, isNullable, hasDefault, columnValueType } =
+    getColumnInfo(column, prevValue, clone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -117,7 +112,7 @@ export const TableRow: React.FC<TableRowProps> = ({
 
   return (
     <div className="items-center flex pb-xs">
-      <div className="w-2/12 overflow-hidden overflow-ellipsis" title={colName}>
+      <div className="w-2/12 overflow-hidden text-ellipsis" title={colName}>
         {colName}
       </div>
       <div>
@@ -125,7 +120,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           type="radio"
           className={`${focusYellowRing} !m-0 !mr-sm `}
           ref={node => {
-            setRef('insertRadioNode', node);
+            setRef('radioNode', node);
           }}
           name={`${colName}-value`}
           defaultChecked={columnValueType === 'value'}
@@ -159,6 +154,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           defaultChecked={columnValueType === 'null'}
           name={`${colName}-value`}
           data-test={`null-value-radio-${index}`}
+          data-testid={`null-value-radio-${index}`}
         />
         <div>NULL</div>
       </div>

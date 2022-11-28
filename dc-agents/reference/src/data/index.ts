@@ -1,20 +1,20 @@
-import { SchemaResponse, TableName } from "../types"
-import { Config } from "../config";
+import { SchemaResponse, TableName } from "@hasura/dc-api-types"
+import { Casing, Config } from "../config";
 import xml2js from "xml2js"
 import fs from "fs"
 import stream from "stream"
 import zlib from "zlib"
 import { parseNumbers } from "xml2js/lib/processors";
-import { tableNameEquals } from "../util";
+import { mapObject, mapObjectValues, tableNameEquals, unreachable } from "../util";
 
 export type StaticData = {
   [tableName: string]: Record<string, string | number | boolean | null>[]
 }
 
-const streamToBuffer = async (stream : stream.Readable) : Promise<Buffer> => {
+const streamToBuffer = async (stream: stream.Readable): Promise<Buffer> => {
   const chunks = [];
   for await (const chunk of stream) {
-      chunks.push(Buffer.from(chunk));
+    chunks.push(Buffer.from(chunk));
   }
   return Buffer.concat(chunks);
 }
@@ -33,7 +33,7 @@ const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
 
 export const loadStaticData = async (): Promise<StaticData> => {
   const gzipReadStream = fs.createReadStream(__dirname + "/ChinookData.xml.gz");
-  const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => {});
+  const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => { });
   const xmlStr = (await streamToBuffer(unzipStream)).toString("utf16le");
   const xml = await xml2js.parseStringPromise(xmlStr, { explicitArray: false, emptyTag: () => null, valueProcessors: [parseNumbersInNumericColumns(schema)] });
   const data = xml.ChinookDataSet;
@@ -47,16 +47,53 @@ export const filterAvailableTables = (staticData: StaticData, config: Config): S
   );
 }
 
-export const getTable = (staticData: StaticData, config: Config) => (tableName: TableName): Record<string, string | number | boolean | null>[] | undefined => {
-  if (config.schema) {
-    return tableName.length === 2 && tableName[0] === config.schema
-      ? staticData[tableName[1]]
-      : undefined;
-  } else {
-    return tableName.length === 1
-      ? staticData[tableName[0]]
-      : undefined;
-  }
+export const getTable = (staticData: StaticData, config: Config): ((tableName: TableName) => Record<string, string | number | boolean | null>[] | undefined) => {
+  const cachedTransformedData: StaticData = {};
+
+  const lookupOriginalTable = (tableName: string): Record<string, string | number | boolean | null>[] => {
+    switch (config.table_name_casing) {
+      case "pascal_case":
+        return staticData[tableName];
+      case "lowercase":
+        const name = Object.keys(staticData).find(originalTableName => originalTableName.toLowerCase() === tableName);
+        if (name == undefined) throw new Error(`Unknown table name: ${tableName}`);
+        return staticData[name];
+      default:
+        return unreachable(config.table_name_casing);
+    }
+  };
+
+  const transformData = (tableData: Record<string, string | number | boolean | null>[]): Record<string, string | number | boolean | null>[] => {
+    switch (config.column_name_casing) {
+      case "pascal_case":
+        return tableData;
+      case "lowercase":
+        return tableData.map(row => mapObject(row, ([column, value]) => [column.toLowerCase(), value]));
+      default:
+        return unreachable(config.column_name_casing);
+    }
+  };
+
+  const lookupTable = (tableName: string): Record<string, string | number | boolean | null>[] => {
+    const cachedData = cachedTransformedData[tableName];
+    if (cachedData !== undefined)
+      return cachedData;
+
+    cachedTransformedData[tableName] = transformData(lookupOriginalTable(tableName));
+    return cachedTransformedData[tableName];
+  };
+
+  return (tableName) => {
+    if (config.schema) {
+      return tableName.length === 2 && tableName[0] === config.schema
+        ? lookupTable(tableName[1])
+        : undefined;
+    } else {
+      return tableName.length === 1
+        ? lookupTable(tableName[0])
+        : undefined;
+    }
+  };
 }
 
 const schema: SchemaResponse = {
@@ -83,6 +120,14 @@ const schema: SchemaResponse = {
     {
       name: ["Album"],
       primary_key: ["AlbumId"],
+      foreign_keys: {
+        "Artist": {
+          column_mapping: {
+            "ArtistId": "ArtistId"
+          },
+          foreign_table: ["Artist"],
+        }
+      },
       description: "Collection of music albums created by artists",
       columns: [
         {
@@ -108,6 +153,14 @@ const schema: SchemaResponse = {
     {
       name: ["Customer"],
       primary_key: ["CustomerId"],
+      foreign_keys: {
+        "CustomerSupportRep": {
+          column_mapping: {
+            "SupportRepId": "EmployeeId"
+          },
+          foreign_table: ["Employee"],
+        }
+      },
       description: "Collection of customers who can buy tracks",
       columns: [
         {
@@ -193,6 +246,14 @@ const schema: SchemaResponse = {
     {
       name: ["Employee"],
       primary_key: ["EmployeeId"],
+      foreign_keys: {
+        "EmployeeReportsTo": {
+          column_mapping: {
+            "ReportsTo": "EmployeeId"
+          },
+          foreign_table: ["Employee"],
+        }
+      },
       description: "Collection of employees who work for the business",
       columns: [
         {
@@ -227,13 +288,13 @@ const schema: SchemaResponse = {
         },
         {
           name: "BirthDate",
-          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          type: "DateTime",
           nullable: true,
           description: "The employee's birth date"
         },
         {
           name: "HireDate",
-          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          type: "DateTime",
           nullable: true,
           description: "The employee's hire date"
         },
@@ -309,6 +370,14 @@ const schema: SchemaResponse = {
     {
       name: ["Invoice"],
       primary_key: ["InvoiceId"],
+      foreign_keys: {
+        "InvoiceCustomer": {
+          column_mapping: {
+            "CustomerId": "CustomerId"
+          },
+          foreign_table: ["Customer"],
+        }
+      },
       description: "Collection of invoices of music purchases by a customer",
       columns: [
         {
@@ -325,7 +394,7 @@ const schema: SchemaResponse = {
         },
         {
           name: "InvoiceDate",
-          type: "string", // Ought to be DateTime but we don't have a type for this yet
+          type: "DateTime",
           nullable: false,
           description: "Date of the invoice"
         },
@@ -370,6 +439,20 @@ const schema: SchemaResponse = {
     {
       name: ["InvoiceLine"],
       primary_key: ["InvoiceLineId"],
+      foreign_keys: {
+        "Invoice": {
+          column_mapping: {
+            "InvoiceId": "InvoiceId"
+          },
+          foreign_table: ["Invoice"],
+        },
+        "Track": {
+          column_mapping: {
+            "TrackId": "TrackId"
+          },
+          foreign_table: ["Track"],
+        }
+      },
       description: "Collection of track purchasing line items of invoices",
       columns: [
         {
@@ -445,6 +528,20 @@ const schema: SchemaResponse = {
     {
       name: ["PlaylistTrack"],
       primary_key: ["PlaylistId", "TrackId"],
+      foreign_keys: {
+        "Playlist": {
+          column_mapping: {
+            "PlaylistId": "PlaylistId"
+          },
+          foreign_table: ["Playlist"],
+        },
+        "Track": {
+          column_mapping: {
+            "TrackId": "TrackId"
+          },
+          foreign_table: ["Track"],
+        }
+      },
       description: "Associations between playlists and tracks",
       columns: [
         {
@@ -464,6 +561,26 @@ const schema: SchemaResponse = {
     {
       name: ["Track"],
       primary_key: ["TrackId"],
+      foreign_keys: {
+        "Album": {
+          column_mapping: {
+            "AlbumId": "AlbumId"
+          },
+          foreign_table: ["Album"],
+        },
+        "Genre": {
+          column_mapping: {
+            "GenreId": "GenreId"
+          },
+          foreign_table: ["Genre"],
+        },
+        "MediaType": {
+          column_mapping: {
+            "MediaTypeId": "MediaTypeId"
+          },
+          foreign_table: ["MediaType"],
+        }
+      },
       description: "Collection of music tracks",
       columns: [
         {
@@ -525,7 +642,18 @@ const schema: SchemaResponse = {
   ]
 };
 
+const applyCasing = (casing: Casing) => (str: string): string => {
+  switch (casing) {
+    case "pascal_case": return str;
+    case "lowercase": return str.toLowerCase();
+    default: return unreachable(casing);
+  }
+}
+
 export const getSchema = (config: Config): SchemaResponse => {
+  const applyTableNameCasing = applyCasing(config.table_name_casing);
+  const applyColumnNameCasing = applyCasing(config.column_name_casing);
+
   const prefixSchemaToTableName = (tableName: TableName) =>
     config.schema
       ? [config.schema, ...tableName]
@@ -537,7 +665,19 @@ export const getSchema = (config: Config): SchemaResponse => {
 
   const prefixedTables = filteredTables.map(table => ({
     ...table,
-    name: prefixSchemaToTableName(table.name),
+    name: prefixSchemaToTableName(table.name.map(applyTableNameCasing)),
+    primary_key: table.primary_key?.map(applyColumnNameCasing),
+    foreign_keys: table.foreign_keys
+      ? mapObjectValues(table.foreign_keys, constraint => ({
+        ...constraint,
+        foreign_table: prefixSchemaToTableName(constraint.foreign_table.map(applyTableNameCasing)),
+        column_mapping: mapObject(constraint.column_mapping, ([outer, inner]) => [applyColumnNameCasing(outer), applyColumnNameCasing(inner)])
+      }))
+      : table.foreign_keys,
+    columns: table.columns.map(column => ({
+      ...column,
+      name: applyColumnNameCasing(column.name),
+    }))
   }));
 
   return {

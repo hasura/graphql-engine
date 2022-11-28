@@ -127,21 +127,29 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```json
 {
   "capabilities": {
-    "relationships": {}
+    "data_schema": {
+      "supports_primary_keys": true,
+      "supports_foreign_keys": true,
+      "column_nullability": "nullable_and_non_nullable"
+    },
+    "relationships": {},
+    "scalar_types": {
+      "DateTime": {"comparison_operators": {"DateTime": {"in_year": "Number"}}}
+    }
   },
-  "configSchemas": {
-    "configSchema": {
+  "config_schemas": {
+    "config_schema": {
       "type": "object",
       "nullable": false,
       "properties": {
-        "tables": { "$ref": "#/otherSchemas/Tables" }
+        "tables": { "$ref": "#/other_schemas/Tables" }
       }
     },
-    "otherSchemas": {
+    "other_schemas": {
       "Tables": {
         "description": "List of tables to make available in the schema and for querying",
         "type": "array",
-        "items": { "$ref": "#/otherSchemas/TableName" },
+        "items": { "$ref": "#/other_schemas/TableName" },
         "nullable": true
       },
       "TableName": {
@@ -153,13 +161,72 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 }
 ```
 
-The `capabilities` section describes the _capabilities_ of the service. Specifically, the service is capable of serving queries which involve relationships.
+The `capabilities` section describes the _capabilities_ of the service. This includes
+- `data_schema`: What sorts of features the agent supports when describing its data schema
+- `relationships`: whether or not the agent supports relationships
+- `scalar_types`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
 
-The `configSchema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `otherSchemas` object by name.
+The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
 
-`graphql-engine` will use the `configSchema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
+`graphql-engine` will use the `config_schema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
 
-### Schema and capabilities
+#### Data schema capabilities
+The agent can declare whether or not it supports primary keys or foreign keys by setting the `supports_primary_keys` and `supports_foreign_keys` properties under the `data_schema` object on capabilities. If it does not declare support, it is expected that it will not return any such primary/foreign keys in the schema it exposes on the `/schema` endpoint.
+
+If the agent only supports table columns that are always nullable, then it should set `column_nullability` to `"only_nullable"`. However, if it supports both nullable and non-nullable columns, then it should set `"nullable_and_non_nullable"`.
+
+#### Scalar type capabilities
+
+The agent is expected to support a default set of scalar types (`Number`, `String`, `Bool`) and a default set of [comparison operators](#filters) on these types.
+Agents may optionally declare support for their own custom scalar types, along with custom comparison operators and aggregate functions on those types.
+Hasura GraphQL Engine does not validate the JSON format for values of custom scalar types.
+It passes them through transparently to the agent when they are used as GraphQL input values and returns them transparently when they are produced by the agent.
+It is the agent's responsibility to validate the values provided as GraphQL inputs.
+
+Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema) and
+by adding scalar type declaration with the same name in the `graphql_schema` capabilities property.
+
+Custom comparison types can be defined by adding a `comparison_operators` property to the scalar type capabilities object.
+The `comparison_operators` property is an object where each key specifies a comparison operator name.
+The operator name must be a valid GraphQL name.
+The value associated with each key should be a string specifying the argument type, which must be a valid scalar type.
+
+Custom aggregate functions can be defined by adding an `aggregate_functions` property to the scalar type capabilities object.
+The `aggregate_functions` property must be an object mapping aggregate function names to their result types.
+Aggregate function names must be must be valid GraphQL names.
+Result types must be valid scalar types.
+
+Example:
+
+```yaml
+capabilities:
+  scalar_types:
+    DateTime:
+      comparison_operators:
+        in_year: Number
+      aggregate_functions:
+        max: 'DateTime'
+        min: 'DateTime'
+```
+
+This example declares a custom scalar type `DateTime`.
+The type supports a comparison operator `in_year`, which takes an argument of type `Number`.
+
+An example GraphQL query using the custom comparison operator might look like below:
+```graphql
+query MyQuery {
+  Employee(where: {BirthDate: {in_year: 1962}}) {
+    Name
+    BirthDate
+  }
+}
+```
+In this query we have an `Employee` field with a `BirthDate` property of type `DateTime`.
+The `in_year` custom comparison operator is being used to request all employees with a birth date in the year 1962.
+
+The example also defines two aggregate functions `min` and `max`, both of which have a result type of `DateTime`.
+
+### Schema
 
 The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `graphql-engine`. It returns the following JSON object:
 
@@ -250,17 +317,19 @@ and here is the resulting query request payload:
       "expressions": [],
       "type": "and"
     },
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "offset": null,
     "fields": {
       "ArtistId": {
         "type": "column",
-        "column": "ArtistId"
+        "column": "ArtistId",
+        "column_type": "number"
       },
       "Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     }
   }
@@ -277,7 +346,7 @@ Let's break down the request:
   - The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
   - The `order_by` field tells us that there is no particular ordering to use, and that we can return data in its natural order.
   - The `limit` and `offset` fields tell us that there is no pagination required.
-  - The `fields` field tells us that we ought to return two fields per row (`ArtistId` and `Name`), and that these fields should be fetched from the columns with the same names.
+  - The `fields` field tells us that we ought to return two fields per row (`ArtistId` and `Name`), and that these fields should be fetched from the columns with the same names. The scalar types of the columns are also denoted with `column_type`.
 
 #### Response Body Structure
 
@@ -313,14 +382,24 @@ The `where` field contains a recursive expression data structure which should be
 
 Each node of this recursive expression structure is tagged with a `type` property, which indicates the type of that node, and the node will contain one or more additional fields depending on that type. The valid expression types are enumerated below, along with these additional fields:
 
-| type            | Additional fields              | Description |
-|-----------------|--------------------------------|-------------|
-| `and`           | `expressions`                  | A conjunction of several subexpressions |
-| `or`            | `expressions`                  | A disjunction of several subexpressions |
-| `not`           | `expression`                   | The negation of a single subexpression |
-| `binary_op`     | `operator`, `column`, `value`  | Test the specified `column` against a single `value` using a particular binary comparison `operator` |
-| `binary_arr_op` | `operator`, `column`, `values` | Test the specified `column` against an array of `values` using a particular binary comparison `operator` |
-| `unary_op`      | `operator`, `column`           | Test the specified `column` against a particular unary comparison `operator` |
+| type            | Additional fields                            | Description |
+|-----------------|----------------------------------------------|-------------|
+| `and`           | `expressions`                                | A conjunction of several subexpressions |
+| `or`            | `expressions`                                | A disjunction of several subexpressions |
+| `not`           | `expression`                                 | The negation of a single subexpression |
+| `exists`        | `in_table`, `where`                          | Test if a row exists that matches the `where` subexpression in the specified table (`in_table`) |
+| `binary_op`     | `operator`, `column`, `value`                | Test the specified `column` against a single `value` using a particular binary comparison `operator` |
+| `binary_arr_op` | `operator`, `column`, `values`, `value_type` | Test the specified `column` against an array of `values` using a particular binary comparison `operator` where the type of each value is a `value_type` |
+| `unary_op`      | `operator`, `column`                         | Test the specified `column` against a particular unary comparison `operator` |
+
+The value of the `in_table` property of the `exists` expression is an object that describes which table to look for rows in. The object is tagged with a `type` property:
+
+| type        | Additional fields | Description |
+|-------------|---------------------------------|
+| `related`   | `relationship`    | The table is related to the current table via the relationship name specified in `relationship` (this means it should be joined to the current table via the relationship) |
+| `unrelated` | `table`           | The table specified by `table` is unrelated to the current table and therefore is not explicitly joined to the current table |
+
+The "current table" during expression evaluation is the table specified by the closest ancestor `exists` expression, or if there is no `exists` ancestor, it is the table involved in the Query that the whole `where` Expression is from.
 
 The available binary comparison operators that can be used against a single value in `binary_op` are:
 
@@ -351,7 +430,7 @@ Values (as used in `value` in `binary_op` and the `values` array in `binary_arr_
 | `scalar` | `value`           | A scalar `value` to compare against |
 | `column` | `column`          | A `column` in the current table being queried to compare against |
 
-Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, as well as a `path` to the table that contains the column. This path is an array of relationship names that starts from the table being queried (ie the table being queried by the query that this where expression is being specified in). An empty array means the column would be on the table being queried itself.
+Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, a `column_type` to denote the scalar type of the column, as well as optionally a `path` to the table that contains the column. If the `path` property is missing/null or an empty array, then the column is on the current table. However, if the path is `["$"]`, then the column is on the table involved in the Query that the whole `where` expression is from. At this point in time, these are the only valid values of `path`.
 
 Here is a simple example, which correponds to the predicate "`first_name` is John and `last_name` is Smith":
 
@@ -363,24 +442,26 @@ Here is a simple example, which correponds to the predicate "`first_name` is Joh
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "path": [],
-        "name": "first_name"
+        "name": "first_name",
+        "column_type": "string"
       },
       "value": {
         "type": "scalar",
-        "value": "John"
+        "value": "John",
+        "value_type": "string"
       }
     },
     {
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "path": [],
-        "name": "last_name"
+        "name": "last_name",
+        "column_type": "string"
       },
       "value": {
         "type": "scalar",
-        "value": "John"
+        "value": "John",
+        "value_type": "string"
       }
     }
   ]
@@ -391,46 +472,133 @@ Here's another example, which corresponds to the predicate "`first_name` is the 
 
 ```json
 {
-  "type": "and",
-  "expressions": [
-    {
+  "type": "binary_op",
+  "operator": "equal",
+  "column": {
+    "name": "first_name",
+    "column_type": "string"
+  },
+  "value": {
+    "type": "column",
+    "column": {
+      "name": "last_name",
+      "column_type": "string"
+    }
+  }
+}
+```
+
+In this example, a person table is filtered by whether or not that person has any children 18 years of age or older:
+
+```json
+{
+  "type": "exists",
+  "in_table": {
+    "type": "related",
+    "relationship": "children"
+  },
+  "where": {
+    "type": "binary_op",
+    "operator": "greater_than_or_equal",
+    "column": {
+      "name": "age",
+      "column_type": "number"
+    },
+    "value": {
+      "type": "scalar",
+      "value": 18,
+      "value_type": "number"
+    }
+  }
+}
+```
+
+In this example, a person table is filtered by whether or not that person has any children that have the same first name as them:
+
+```jsonc
+{
+  "type": "exists",
+  "in_table": {
+    "type": "related",
+    "relationship": "children"
+  },
+  "where": {
+    "type": "binary_op",
+    "operator": "equal",
+    "column": {
+      "name": "first_name", // This column refers to the child's name,
+      "column_type": "string"
+    },
+    "value": {
+      "type": "column",
+      "column": {
+        "path": ["$"],
+        "name": "first_name", // This column refers to the parent's name
+        "column_type": "string"
+      }
+    }
+  }
+}
+```
+
+Exists expressions can be nested, but the `["$"]` path always refers to the query table. So in this example, a person table is filtered by whether or not that person has any children that have any friends that have the same first name as the parent:
+
+```jsonc
+{
+  "type": "exists",
+  "in_table": {
+    "type": "related",
+    "relationship": "children"
+  },
+  "where": {
+    "type": "exists",
+    "in_table": {
+      "type": "related",
+      "relationship": "friends"
+    },
+    "where": {
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "path": [],
-        "name": "first_name"
+        "name": "first_name", // This column refers to the children's friend's name
+        "column_type": "string"
       },
       "value": {
         "type": "column",
         "column": {
-          "path": [],
-          "name": "last_name"
+          "path": ["$"],
+          "name": "first_name", // This column refers to the parent's name
+          "column_type": "string"
         }
       }
     }
-  ]
+  }
 }
 ```
 
-#### Ordering
-
-The `order_by` field specifies an array of zero-or-more _orderings_, each of which consists of a field to order records by, and an order which is either `asc` (ascending) or `desc` (descending).
-
-If there are multiple orderings specified then records should be ordered lexicographically, with earlier orderings taking precedence.
-
-For example, to order records principally by `last_name`, delegating to `first_name` in the case where two last names are equal, we would use the following `order_by` structure:
+In this example, a table is filtered by whether or not an unrelated administrators table contains an admin called "superuser". Note that this means if the administrators table contains the "superuser" admin, then all rows of the table are returned, but if not, no rows are returned.
 
 ```json
-[
-  {
-    "field": "last_name",
-    "order_type": "asc"
+{
+  "type": "exists",
+  "in_table": {
+    "type": "unrelated",
+    "table": ["administrators"]
   },
-  {
-    "field": "first_name",
-    "order_type": "asc"
+  "where": {
+    "type": "binary_op",
+    "operator": "equal",
+    "column": {
+      "name": "username",
+      "column_type": "string"
+    },
+    "value": {
+      "type": "scalar",
+      "value": "superuser",
+      "value_type": "string"
+    }
   }
-]
+}
 ```
 
 #### Relationships
@@ -483,7 +651,7 @@ This will generate the following JSON query if the agent supports relationships:
       "type": "and"
     },
     "offset": null,
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "fields": {
       "Albums": {
@@ -495,19 +663,21 @@ This will generate the following JSON query if the agent supports relationships:
             "type": "and"
           },
           "offset": null,
-          "order_by": [],
+          "order_by": null,
           "limit": null,
           "fields": {
             "Title": {
               "type": "column",
-              "column": "Title"
+              "column": "Title",
+              "column_type": "string"
             }
           }
         }
       },
       "Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     }
   }
@@ -526,12 +696,13 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
       "type": "and"
     },
     "offset": null,
-    "order_by": [],
+    "order_by": null,
     "limit": null,
     "fields": {
       "Title": {
         "type": "column",
-        "column": "Title"
+        "column": "Title",
+        "column_type": "string"
       }
     }
   }
@@ -652,7 +823,7 @@ POST /v1/metadata
 }
 ```
 
-Given this GraphQL query (where the `X-Hasura-Role` header is set to `user`):
+Given this GraphQL query (where the `X-Hasura-Role` session variable is set to `user`):
 
 ```graphql
 query getCustomer {
@@ -689,40 +860,53 @@ We would get the following query request JSON:
     "fields": {
       "Country": {
         "type": "column",
-        "column": "Country"
+        "column": "Country",
+        "column_type": "string"
       },
       "CustomerId": {
         "type": "column",
-        "column": "CustomerId"
+        "column": "CustomerId",
+        "column_type": "number"
       },
       "FirstName": {
         "type": "column",
-        "column": "FirstName"
+        "column": "FirstName",
+        "column_type": "string"
       },
       "LastName": {
         "type": "column",
-        "column": "LastName"
+        "column": "LastName",
+        "column_type": "string"
       },
       "SupportRepId": {
         "type": "column",
-        "column": "SupportRepId"
+        "column": "SupportRepId",
+        "column_type": "number"
       }
     },
     "where": {
       "type": "and",
       "expressions": [
         {
-          "type": "binary_op",
-          "operator": "equal",
-          "column": {
-            "path": ["SupportRep"],
-            "name": "Country"
+          "type": "exists",
+          "in_table": {
+            "type": "related",
+            "relationship": "SupportRep"
           },
-          "value": {
-            "type": "column",
+          "where": {
+            "type": "binary_op",
+            "operator": "equal",
             "column": {
-              "path": [],
-              "name": "Country"
+              "name": "Country",
+              "column_type": "string"
+            },
+            "value": {
+              "type": "column",
+              "column": {
+                "path": ["$"],
+                "name": "Country",
+                "column_type": "string"
+              }
             }
           }
         }
@@ -732,7 +916,164 @@ We would get the following query request JSON:
 }
 ```
 
-The key point of interest here is in the `where` field where we are comparing between columns. The first column's `path` is `["SupportRep"]` indicating that the `Country` column specified there is on the other side of the `Customer` table's `SupportRep` relationship (ie. to the `Employee` table). The related `Employee`'s `Country` column is being compared with `equal` to `Customer`'s `Country` column (as indicated by the `[]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship and if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Employee row's `Country`, then the `binary_op` evaluates to True and we don't filter out the row.
+The key point of interest here is in the `where` field where we are comparing between columns. Our first expression is an `exists` expression that specifies a row must exist in the table related to the `Customer` table by the `SupportRep` relationship (ie. the `Employee` table). These rows must match a subexpression that compares the related `Employee`'s `Country` column with `equal` to `Customer`'s `Country` column (as indicated by the `["$"]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship. Then if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Customer row's `Country` the `binary_op` would evaluate to True. This would mean a row exists, so the `exists` evaluates to true, and we don't filter out the Customer row.
+
+#### Filtering by Unrelated Tables
+It is possible to filter a table by a predicate evaluated against a completely unrelated table. This can happen in Hasura GraphQL Engine when configuring permissions on a table.
+
+In the following example, we are configuring HGE's metadata such that when the Customer table is queried by the employee role, the employee currently doing the query (as specified by the `X-Hasura-EmployeeId` session variable) must be an employee from the city of Calgary, otherwise no rows are returned.
+
+```json
+POST /v1/metadata
+
+{
+  "type": "replace_metadata",
+  "args": {
+    "metadata": {
+      "version": 3,
+      "backend_configs": {
+        "dataconnector": {
+          "reference": {
+            "uri": "http://localhost:8100/"
+          }
+        }
+      },
+      "sources": [
+        {
+          "name": "chinook",
+          "kind": "reference",
+          "tables": [
+            {
+              "table": ["Customer"],
+              "select_permissions": [
+                {
+                  "role": "employee",
+                  "permission": {
+                    "columns": [
+                      "CustomerId",
+                      "FirstName",
+                      "LastName",
+                      "Country",
+                      "SupportRepId"
+                    ],
+                    "filter": {
+                      "_exists": {
+                        "_table": ["Employee"],
+                        "_where": {
+                          "_and": [
+                            { "EmployeeId": { "_eq": "X-Hasura-EmployeeId" } },
+                            { "City": { "_eq": "Calgary" } }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": ["Employee"]
+            }
+          ],
+          "configuration": {}
+        }
+      ]
+    }
+  }
+}
+```
+
+Given this GraphQL query (where the `X-Hasura-Role` session variable is set to `employee`, and the `X-Hasura-EmployeeId` session variable is set to `2`):
+
+```graphql
+query getCustomer {
+  Customer {
+    CustomerId
+    FirstName
+    LastName
+    Country
+    SupportRepId
+  }
+}
+```
+
+We would get the following query request JSON:
+
+```json
+{
+  "table": ["Customer"],
+  "table_relationships": [],
+  "query": {
+    "fields": {
+      "Country": {
+        "type": "column",
+        "column": "Country",
+        "column_type": "string"
+      },
+      "CustomerId": {
+        "type": "column",
+        "column": "CustomerId",
+        "column_type": "number"
+      },
+      "FirstName": {
+        "type": "column",
+        "column": "FirstName",
+        "column_type": "string"
+      },
+      "LastName": {
+        "type": "column",
+        "column": "LastName",
+        "column_type": "string"
+      },
+      "SupportRepId": {
+        "type": "column",
+        "column": "SupportRepId",
+        "column_type": "number"
+      }
+    },
+    "where": {
+      "type": "exists",
+      "in_table": {
+        "type": "unrelated",
+        "table": ["Employee"]
+      },
+      "where": {
+        "type": "and",
+        "expressions": [
+          {
+            "type": "binary_op",
+            "operator": "equal",
+            "column": {
+              "name": "EmployeeId",
+              "column_type": "number"
+            },
+            "value": {
+              "type": "scalar",
+              "value": 2,
+              "value_type": "number"
+            }
+          },
+          {
+            "type": "binary_op",
+            "operator": "equal",
+            "column": {
+              "name": "City",
+              "column_type": "string"
+            },
+            "value": {
+              "type": "scalar",
+              "value": "Calgary",
+              "value_type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+The key part in this query is the `where` expression. The root expression in the where is an `exists` expression which specifies that at least one row must exist in the unrelated `["Employee"]` table that satisfies a subexpression. This subexpression asserts that the rows from the Employee table have both `EmployeeId` as `2` and `City` as `Calgary`. The columns referenced inside this subexpression don't have `path` properties, which means they refer the columns on the Employee table because that is the closest ancestor `exists` table.
 
 #### Aggregates
 HGE supports forming GraphQL queries that allow clients to aggregate over the data in their data sources. This type of query can be passed through to Data Connector agents as a part of the Query structure sent to `/query`.
@@ -861,23 +1202,26 @@ The `nodes` part of the query ends up as standard `fields` in the `Query`, and t
     "fields": {
       "nodes_ArtistId": {
         "type": "column",
-        "column": "ArtistId"
+        "column": "ArtistId",
+        "column_type": "number"
       },
       "nodes_Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     },
     "where": {
       "type": "binary_op",
       "operator": "greater_than",
       "column": {
-        "path": [],
-        "name": "Name"
+        "name": "Name",
+        "column_type": "string"
       },
       "value": {
         "type": "scalar",
-        "value": "Z"
+        "value": "Z",
+        "value_type": "string"
       }
     }
   },
@@ -949,7 +1293,8 @@ This would generate the following `QueryRequest`:
       },
       "Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     },
     "limit": 2,
@@ -983,11 +1328,197 @@ This would be expected to return the following response, with the rows from the 
 }
 ```
 
+#### Ordering
+
+The `order_by` field can either be null, which means no particular ordering is required, or an object with two properties:
+
+```json
+{
+  "relations": {},
+  "elements": [
+    {
+      "target_path": [],
+      "target": {
+        "type": "column",
+        "column": "last_name",
+        "column_type": "string"
+      },
+      "order_direction": "asc"
+    },
+    {
+      "target_path": [],
+      "target": {
+        "type": "column",
+        "column": "first_name",
+        "column_type": "string"
+      },
+      "order_direction": "desc"
+    }
+  ]
+}
+```
+
+The `elements` field specifies an array of one-or-more ordering elements. Each element represents a "target" to order, and a direction to order by. The direction can either be `asc` (ascending) or `desc` (descending). If there are multiple elements specified, then rows should be ordered with earlier elements in the array taking precedence. In the above example, rows are principally ordered by `last_name`, delegating to `first_name` in the case where two last names are equal.
+
+The order by element `target` is specified as an object, whose `type` property specifies a different sort of ordering target:
+
+| type | Additional fields | Description |
+|------|-------------------|-------------|
+| `column` | `column` | Sort by the `column` specified |
+| `star_count_aggregate` | - | Sort by the count of all rows on the related target table (a non-empty `target_path` will always be specified) |
+| `single_column_aggregate` | `function`, `column` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified) |
+
+The `target_path` property is a list of relationships to navigate before finding the `target` to sort on. This is how sorting on columns or aggregates on related tables is expressed. Note that aggregate-typed targets will never be found on the current table (ie. a `target_path` of `[]`) and are always applied to a related table.
+
+Here's an example of applying an ordering by a related table; the Album table is being queried and sorted by the Album's Artist's Name.
+
+```json
+{
+  "table": ["Album"],
+  "table_relationships": [
+    {
+      "source_table": ["Album"],
+      "relationships": {
+        "Artist": {
+          "target_table": ["Artist"],
+          "relationship_type": "object",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Title": { "type": "column", "column": "Title", "column_type": "string" }
+    },
+    "order_by": {
+      "relations": {
+        "Artist": {
+          "where": null,
+          "subrelations": {}
+        }
+      },
+      "elements": [
+        {
+          "target_path": ["Artist"],
+          "target": {
+            "type": "column",
+            "column": "Name"
+          },
+          "order_direction": "desc"
+        }
+      ]
+    }
+  }
+}
+```
+
+Note that the `target_path` specifies the relationship path of `["Artist"]`, and that this relationship is defined in the top-level `table_relationships`. The ordering element target column `Name` would therefore be found on the `Artist` table after joining to it from each `Album`. (See the [Relationships](#Relationships) section for more information about relationships.)
+
+The `relations` property of `order_by` will contain all the relations used in the order by, for the purpose of specifying filters that must be applied to the joined tables before using them for sorting. The `relations` property captures all `target_path`s used in the `order_by` in a recursive fashion, so for example, if the following `target_path`s were used in the `order_by`'s `elements`:
+
+* `["Artist", "Albums"]`
+* `["Artist"]`
+* `["Tracks"]`
+
+Then the value of the `relations` property would look like this:
+
+```json
+{
+  "Artist": {
+    "where": null,
+    "subrelations": {
+      "Albums": {
+        "where": null,
+        "subrelations": {}
+      }
+    }
+  },
+  "Tracks": {
+    "where": null,
+    "subrelations": {}
+  }
+}
+```
+
+The `where` properties may contain filtering expressions that must be applied to the joined table before using it for sorting. The filtering expressions are defined in the same manner as specified in the [Filters](#Filters) section of this document, where they are used on the `where` property of Queries.
+
+For example, here's a query that retrieves artists ordered descending by the count of all their albums where the album title is greater than 'T'.
+
+```json
+{
+  "table": ["Artist"],
+  "table_relationships": [
+    {
+      "source_table": ["Artist"],
+      "relationships": {
+        "Albums": {
+          "target_table": ["Album"],
+          "relationship_type": "array",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Name": { "type": "column", "column": "Name", "column_type": "string" }
+    },
+    "order_by": {
+      "relations": {
+        "Albums": {
+          "where": {
+            "type": "binary_op",
+            "operator": "greater_than",
+            "column": {
+              "name": "Title",
+              "column_type": "string"
+            },
+            "value": {
+              "type": "scalar",
+              "value": "T",
+              "value_type": "string"
+            }
+          },
+          "subrelations": {}
+        }
+      },
+      "elements": [
+        {
+          "target_path": ["Albums"],
+          "target": {
+            "type": "star_count_aggregate"
+          },
+          "order_direction": "desc"
+        }
+      ]
+    }
+  }
+}
+```
+
 #### Type Definitions
 
 The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/index.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
 
 ### Health endpoint
+
 Agents must expose a `/health` endpoint which must return a 204 No Content HTTP response code if the agent is up and running. This does not mean that the agent is able to connect to any data source it performs queries against, only that the agent is running and can accept requests, even if some of those requests might fail because a dependant service is unavailable.
 
 However, this endpoint can also be used to check whether the ability of the agent to talk to a particular data source is healthy. If the endpoint is sent the `X-Hasura-DataConnector-Config` and `X-Hasura-DataConnector-SourceName` headers, then the agent is expected to check that it can successfully talk to whatever data source is being specified by those headers. If it can do so, then it must return a 204 No Content response code.
+
+### Reporting Errors
+
+Any non-200 response code from an Agent (except for the `/health` endpoint) will be interpreted as an error. These should be handled gracefully by `graphql-engine` but provide limited details to users. If you wish to return structured error information to users you can return a status of `500`, or `400` from the `/capabilities`, `/schema`, and `/query` endpoints with the following JSON format:
+
+```
+{
+  "type": "uncaught-error",      // This may be extended to more types in future
+  "message": String,             // A plain-text message for display purposes
+  "details": Value               // An arbitrary JSON Value containing error details
+}
+```

@@ -76,7 +76,7 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
         "$st_crosses" -> ABackendSpecific <$> parseGeometryOp ASTCrosses
         "_st_touches" -> ABackendSpecific <$> parseGeometryOp ASTTouches
         "$st_touches" -> ABackendSpecific <$> parseGeometryOp ASTTouches
-        x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
       where
         colTy = columnReferenceType columnRef
 
@@ -102,9 +102,11 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
 
         guardType validTys =
           unless (isScalarColumnWhere (`elem` validTys) colTy) $
-            throwError $ buildMsg colTy validTys
+            throwError $
+              buildMsg colTy validTys
 
         buildMsg ty expTys =
           err400 UnexpectedPayload $
-            " is of type " <> ty <<> "; this operator works only on columns of type "
+            " is of type "
+              <> ty <<> "; this operator works only on columns of type "
               <> T.intercalate "/" (map dquote expTys)

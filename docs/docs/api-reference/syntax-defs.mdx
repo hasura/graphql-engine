@@ -87,11 +87,11 @@ keywords:
 
 ## PGConfiguration {#pgconfiguration}
 
-| Key             | Required | Schema                                                | Description                                                                                 |
-|-----------------|----------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| connection_info | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                        |
-| read_replicas   | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
-
+| Key               | Required | Schema                                                | Description                                                                                        |
+|-------------------|----------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| connection_info   | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                               |
+| read_replicas     | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)*        |
+| extensions_schema | false    | String                                                | Name of the schema where the graphql-engine will install database extensions (default: `public`)   |
 
 ## MsSQLConfiguration {#mssqlconfiguration}
 
@@ -145,13 +145,14 @@ keywords:
 
 ## PGPoolSettings {#pgpoolsettings}
 
-| Key                 | Required | Schema    | Description                                                                                                                                                                                                                                                       |
-|---------------------|----------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| max_connections     | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                                                                                                |
-| idle_timeout        | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                                                                                                       |
-| retries             | false    | `Integer` | Number of retries to perform (default: 1)                                                                                                                                                                                                                         |
-| pool_timeout        | false    | `Integer` | Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)                                                                                                                                                           |
-| connection_lifetime | false    | `Integer` | Time from connection creation after which the connection should be destroyed and a new one created. A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query results may not be reclaimed. (default: 600 sec) |
+| Key                   | Required | Schema    | Description                                                                                                                                                                                                                                                       |
+|-----------------------|----------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                                                                                                |
+| total_max_connections | false    | `Integer` | Maximum number of total connections to be maintained across any number of Hasura Cloud instances (default: 1000). Takes precedence over `max_connections` in Cloud projects. *(Only available in Hasura Cloud)*                                                   |
+| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                                                                                                       |
+| retries               | false    | `Integer` | Number of retries to perform (default: 1)                                                                                                                                                                                                                         |
+| pool_timeout          | false    | `Integer` | Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)                                                                                                                                                           |
+| connection_lifetime   | false    | `Integer` | Time from connection creation after which the connection should be destroyed and a new one created. A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query results may not be reclaimed. (default: 600 sec) |
 
 ## PGCertSettings {#pgcertsettings}
 
@@ -165,10 +166,11 @@ keywords:
 
 ## MsSQLPoolSettings {#mssqlpoolsettings}
 
-| Key             | Required | Schema    | Description                                                        |
-|-----------------|----------|-----------|--------------------------------------------------------------------|
-| max_connections | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50) |
-| idle_timeout    | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)        |
+| Key                   | Required | Schema    | Description                                                                                                                                                                            |
+|-----------------------|----------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                     |
+| total_max_connections | false    | `Integer` | Maximum number of total connections across any number of Hasura Cloud instances (default: 50). Takes precedence over `max_connections` in Cloud projects.  *(Only available in Cloud)* |
+| idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                            |
 
 ## PGColumnType {#pgcolumntype}
 
@@ -263,6 +265,7 @@ String
 | select           | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>` root field. Using a `String` customises the field name.              |
 | select_by_pk     | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>_by_pk` root field. Using a `String` customises the field name.        |
 | select_aggregate | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>_aggregate` root field. Using a `String` customises the field name.    |
+| select_stream    | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `<table-name>_stream` root field. Using a `String` customises the field name.       |
 | insert           | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `insert_<table-name>` root field. Using a `String` customises the field name.       |
 | insert_one       | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `insert_<table-name>_one` root field. Using a `String` customises the field name.   |
 | update           | false    | `String` \| [CustomRootField](#customrootfield) | Customise the `update_<table-name>` root field. Using a `String` customises the field name.       |
@@ -467,6 +470,12 @@ Supported in `v2.0.0-alpha.3` and above.
 |----------------|----------|----------------------------------|-----------------------------------------------------------|
 | remote_table   | true     | [TableName](#tablename)                      | The table to which the relationship has to be established |
 | column_mapping | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
+
+## ScheduledEventStatus {#scheduledEventStatus}
+
+```
+scheduled | locked | delivered | error | dead
+```
 
 ## BoolExp {#boolexp}
 
@@ -1416,7 +1425,7 @@ HGE provides the following functions that can be used in the template:
 |---------------|----------|---------------------|--------------------------------------------------------------------------------------------------------|
 | action        | true     | remove \| transform \| x_www_form_urlencoded | The action to perform on the request body.                                                             |
 | template      | false    | String              | The transformation template to be applied to the body. This is required if the action is *transform*.  |
-| form_template | false    | Object ([String](/databases/postgres/postgresql-types.mdx#string) : [String](/databases/postgres/postgresql-types.mdx#string))              | The key/value pairs to be used in a `x-www-url-formencoded` body. The values can be transfomation templates.  |
+| form_template | false    | Object ([String](/schema/postgres/postgresql-types.mdx#string) : [String](/schema/postgres/postgresql-types.mdx#string))              | The key/value pairs to be used in a `x-www-url-formencoded` body. The values can be transfomation templates.  |
 
 
 ## TemplateEngine {#templateengine}
@@ -1563,3 +1572,25 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | Key    | required | Schema  | Description                                    |
 |--------|----------|---------|------------------------------------------------|
 | enable | true     | String  | Apollo federation version (can be `"v1"` only) |
+
+## AutoEventTriggerCleanupConfig {#autoeventtriggercleanupconfig}
+
+| Key                   | required | Schema          | Description                                                           |
+|-----------------------|----------|-----------------|-----------------------------------------------------------------------|
+| schedule              | true     | Cron Expression | Cron expression at which the cleanup should be invoked.               |
+| clear_older_than      | true     | Integer         | Event logs retention period (in hours). 168 hours of retention period means that the logs older than 7 days will be removed. |
+| batch_size            | false    | Integer         | Maximum number of logs to delete in a single statement during the cleanup action. If there are more events to be cleaned than the `batch_size` then the cleanup action will execute multiple statements sequentially until all old event logs are cleared. Default 10000                 |
+| timeout               | false    | Integer         | Maximum time (in seconds) that a batch can take during the cleanup process. If a batch times out, the cleanup process is halted. Default: 60 |
+| clean_invocation_logs | false    | Bool            | Should corresponding invocation logs be cleaned. Default `false`      |
+| paused                | false    | Bool            | Is the auto-cleanup process paused. Default `false`                   |
+
+## TriggerLogCleanupSources {#triggerlogcleanupsources}
+| Key                   | required | Schema                               | Description                                                                            |
+|-----------------------|----------|--------------------------------------|----------------------------------------------------------------------------------------|
+| sources               | true     | `'*'` \| [[SourceName]](#sourcename) | Sources for which to update the cleaner status (or all sources when `'*'` is provided) |
+
+## EventTriggerQualifier {#eventtriggerqualifier}
+| Key                   | required | Schema                           | Description                                          |
+|-----------------------|----------|----------------------------------|------------------------------------------------------|
+| event_triggers        | true     |  [[TriggerName]](#triggername)   | List of trigger names                                |
+| source_name           | true     | [SourceName](#sourcename)        | Source to which the event triggers belong            |

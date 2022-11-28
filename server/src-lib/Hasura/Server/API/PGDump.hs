@@ -12,7 +12,7 @@ import Data.Char (isSpace)
 import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Conversions
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error qualified as RTE
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
@@ -37,7 +37,7 @@ instance FromJSON PGDumpReqBody where
 execPGDump ::
   (MonadError RTE.QErr m, MonadIO m) =>
   PGDumpReqBody ->
-  Q.ConnInfo ->
+  PG.ConnInfo ->
   m BL.ByteString
 execPGDump b ci = do
   eOutput <- liftIO $ try execProcess
@@ -54,23 +54,23 @@ execPGDump b ci = do
         ExitSuccess -> Right $ unUTF8 $ convertText (clean stdOut)
         ExitFailure _ -> Left $ toText stdErr
 
-    connString = T.unpack $ bsToTxt $ Q.pgConnString $ Q.ciDetails ci
+    connString = T.unpack $ bsToTxt $ PG.pgConnString $ PG.ciDetails ci
     opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
       | prbCleanOutput b =
-        unlines $ filter (not . shouldDropLine) (lines str)
+          unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 
     shouldDropLine line =
       -- delete empty lines
       all isSpace line
         -- delete comments
-        || "--" `L.isPrefixOf` line
+        || ("--" `L.isPrefixOf` line)
         -- delete front matter
-        || line `elem` preambleLines
+        || (line `elem` preambleLines)
         -- delete notify triggers
-        || eventTriggerRegex `TDFA.match` line
+        || (eventTriggerRegex `TDFA.match` line)
 
     preambleLines =
       [ "SET statement_timeout = 0;",

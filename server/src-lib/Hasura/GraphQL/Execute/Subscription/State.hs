@@ -48,11 +48,12 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
-import Hasura.RQL.Types.Common (SourceName, unNonNegativeDiffTime)
+import Hasura.RQL.Types.Common (SourceName)
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.Metrics.Gauge qualified as EKG.Gauge
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
@@ -192,18 +193,19 @@ addLiveQuery
 
     -- we can then attach a polling thread if it is new the livequery can only be
     -- cancelled after putTMVar
-    onJust pollerMaybe $ \poller -> do
+    for_ pollerMaybe $ \poller -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
         forever $ do
           pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook
-          sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
+          sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
       STM.atomically $ STM.putTMVar (_pIOState poller) pState
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
     liftIO $ Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
+    liftIO $ EKG.Gauge.inc $ smActiveLiveQueries serverMetrics
 
     pure $ SubscriberDetails handlerId cohortKey subscriberId
     where
@@ -281,18 +283,19 @@ addStreamSubscriptionQuery
 
     -- we can then attach a polling thread if it is new the subscription can only be
     -- cancelled after putTMVar
-    onJust handlerM $ \handler -> do
+    for_ handlerM $ \handler -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger $
         forever $ do
           pollStreamingQuery @b pollerId streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing
-          sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
+          sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
       STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
     liftIO $ Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
+    liftIO $ EKG.Gauge.inc $ smActiveStreamingSubscriptions serverMetrics
 
     pure $ SubscriberDetails handlerId (cohortKey, cohortCursorTVar) subscriberId
     where
@@ -331,6 +334,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   liftIO $ Prometheus.Gauge.dec $ pmActiveSubscriptions prometheusMetrics
+  liftIO $ EKG.Gauge.dec $ smActiveLiveQueries serverMetrics
   where
     lqMap = _ssLiveQueryMap lqState
 
@@ -389,6 +393,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   liftIO $ Prometheus.Gauge.dec $ pmActiveSubscriptions prometheusMetrics
+  liftIO $ EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
   where
     streamQMap = _ssStreamQueryMap subscriptionState
 

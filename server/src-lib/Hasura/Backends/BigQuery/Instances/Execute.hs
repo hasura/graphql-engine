@@ -210,7 +210,8 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     rowsArgument =
       UVParameter Nothing $
         ColumnValue (ColumnScalar BigQuery.StringScalarType) $
-          BigQuery.StringValue . LT.toStrict $ Aeson.encodeToLazyText lhs
+          BigQuery.StringValue . LT.toStrict $
+            Aeson.encodeToLazyText lhs
 
     recordSetDefinitionList =
       (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)

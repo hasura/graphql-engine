@@ -9,7 +9,7 @@ import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as DS
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -96,7 +96,8 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     throwNotUpdErr c = do
       roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $
-        "column " <> c <<> " is not updatable"
+        "column "
+          <> c <<> " is not updatable"
           <> " for role "
           <> roleName <<> "; its value is predefined in permission"
 
@@ -137,15 +138,18 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   -- convert the object to SQL set expression
   setItems <-
     withPathK "$set" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $
+        convSet prepValBldr
 
   incItems <-
     withPathK "$inc" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $
+        convInc prepValBldr
 
   mulItems <-
     withPathK "$mul" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $
+        convMul prepValBldr
 
   defItems <-
     withPathK "$default" $
@@ -202,11 +206,11 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 validateUpdateQuery ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   UpdateQuery ->
-  m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
@@ -228,6 +232,6 @@ runUpdate q = do
   userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateUpdateQuery q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
       . flip runReaderT emptyQueryTagsComment
       . execUpdateQuery strfyNum Nothing userInfo

@@ -3,8 +3,7 @@ import { FaBook, FaEdit, FaWrench } from 'react-icons/fa';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
-import { inputStyles } from '../constants';
+import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 
 const LeftSidebar = ({
   appPrefix,
@@ -21,18 +20,22 @@ const LeftSidebar = ({
       <input
         type="text"
         onChange={handleSearch}
-        className={inputStyles}
+        className="form-control"
         placeholder="search actions"
         data-test="search-actions"
       />
     );
   };
 
+  const findIfSubStringExists = (originalString, subString) => {
+    return originalString.toLowerCase().includes(subString.toLocaleLowerCase());
+  };
+
   const actionsList = useMemo(() => {
     if (!searchText) return actions;
 
     return actions.reduce((acc, action) => {
-      const idx = action.name.search(RegExp(searchText, 'i'));
+      const idx = findIfSubStringExists(action.name, searchText);
       if (idx === 0) return [action, ...acc];
       if (idx > 0) return [...acc, action];
       return acc;
@@ -95,6 +98,7 @@ const LeftSidebar = ({
       heading={`Actions (${actionsList.length})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Create'}
+      addTrackId="action-tab-button-add-actions-sidebar"
       addTestString={'actions-sidebar-add-table'}
       childListTestString={'actions-table-links'}
     >

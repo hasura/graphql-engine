@@ -1,6 +1,7 @@
-import { SchemaResponse, ScalarType, ColumnInfo, TableInfo } from "./types"
+import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
 import { Config } from "./config";
-import { connect } from './db';
+import { connect, SqlLogger } from './db';
+import { logDeep } from "./util";
 
 var sqliteParser = require('sqlite-parser');
 
@@ -12,51 +13,39 @@ type TableInfoInternal = {
   sql: string
 }
 
-/**
- *
- * @param ColumnInfoInternalype as per HGE DataConnector IR
- * @returns SQLite's corresponding column type
- *
- * Note: This defaults to "string" when a type is not anticipated
- *       in order to be as permissive as possible but logs when
- *       this happens.
- */
-function columnCast(ColumnInfoInternalype: string): ScalarType {
-  switch(ColumnInfoInternalype) {
-    case "string":
-    case "number":
-    case "bool":    return ColumnInfoInternalype as ScalarType;
+type Datatype = {
+  affinity: string, // Sqlite affinity, lowercased
+  variant: string, // Declared type, lowercased
+}
+
+function determineScalarType(datatype: Datatype): ScalarType {
+  switch (datatype.variant) {
+    case "bool": return "bool";
     case "boolean": return "bool";
-    case "numeric": return "number";
+    case "datetime": return "DateTime";
+  }
+  switch (datatype.affinity) {
     case "integer": return "number";
-    case "double":  return "number";
-    case "float":   return "number";
-    case "text":    return "string";
+    case "real": return "number";
+    case "numeric": return "number";
+    case "text": return "string";
     default:
-      console.log(`Unknown SQLite column type: ${ColumnInfoInternalype}. Interpreting as string.`)
+      console.log(`Unknown SQLite column type: ${datatype.variant} (affinity: ${datatype.affinity}). Interpreting as string.`);
       return "string";
   }
 }
 
-function getColumns(ast : Array<any>) : Array<ColumnInfo> {
+function getColumns(ast: any[]) : ColumnInfo[] {
   return ast.map(c => {
     return ({
       name: c.name,
-      type: columnCast(datatypeCast(c.datatype)),
+      type: determineScalarType(c.datatype),
       nullable: nullableCast(c.definition)
     })
   })
 }
 
-// Interpret the sqlite-parser datatype as a schema column response type.
-function datatypeCast(d: any): any {
-  switch(d.variant) {
-    case "datetime": return 'string';
-    default: return d.affinity;
-  }
-}
-
-function nullableCast(ds: Array<any>): boolean {
+function nullableCast(ds: any[]): boolean {
   for(var d of ds) {
     if(d.type === 'constraint' && d.variant == 'not null') {
       return false;
@@ -65,16 +54,20 @@ function nullableCast(ds: Array<any>): boolean {
   return true;
 }
 
-function formatTableInfo(info : TableInfoInternal): TableInfo {
+const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
   const ast = sqliteParser(info.sql);
   const ddl = ddlColumns(ast);
-  const pks = ddlPKs(ast);
-  const pk  = pks.length > 0 ? { primary_key: pks } : {};
+  const primaryKeys = ddlPKs(ast);
+  const foreignKeys = ddlFKs(config, ast);
+  const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
+  const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
+  const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
   // TODO: Should we include something for the description here?
   return {
-    name: [info.name],
-    ...pk,
+    name: tableName,
+    ...primaryKey,
+    ...foreignKey,
     description: info.sql,
     columns: getColumns(ddl)
   }
@@ -107,7 +100,7 @@ function includeTable(config: Config, table: TableInfoInternal): boolean {
  * @param ddl - The output of sqlite-parser
  * @returns - List of columns as present in the output of sqlite-parser.
  */
-function ddlColumns(ddl: any): Array<any> {
+function ddlColumns(ddl: any): any[] {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list when parsing DDL for table.");
   }
@@ -124,9 +117,70 @@ function ddlColumns(ddl: any): Array<any> {
   })
 }
 
-function ddlPKs(ddl: any): Array<any> {
+/**
+ * Example:
+ *
+ * foreign_keys: {
+ *   "ArtistId->Artist.ArtistId": {
+ *     column_mapping: {
+ *       "ArtistId": "ArtistId"
+ *     },
+ *     foreign_table: "Artist",
+ *   }
+ * }
+ *
+ * NOTE: We currently don't log if the structure of the DDL is unexpected, which could be the case for composite FKs, etc.
+ * NOTE: There could be multiple paths between tables.
+ * NOTE: Composite keys are not currently supported.
+ *
+ * @param ddl
+ * @returns [name, FK constraint definition][]
+ */
+function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
-    throw new Error("Encountered a non-statement or non-list when parsing DDL for table.");
+    throw new Error("Encountered a non-statement or non-list DDL for table.");
+  }
+  return ddl.statement.flatMap((t: any) => {
+    if(t.type !=  'statement' || t.variant != 'create' || t.format != 'table') {
+      return [];
+    }
+    return t.definition.flatMap((c: any) => {
+      if(c.type != 'definition' || c.variant != 'constraint'
+          || c.definition.length != 1 || c.definition[0].type != 'constraint' || c.definition[0].variant != 'foreign key') {
+        return [];
+      }
+      if(c.columns.length != 1) {
+        return [];
+      }
+
+      const definition = c.definition[0];
+      const sourceColumn = c.columns[0];
+
+      if(sourceColumn.type != 'identifier' || sourceColumn.variant != 'column') {
+        return [];
+      }
+
+      if(definition.references == null || definition.references.columns == null || definition.references.columns.length != 1) {
+        return [];
+      }
+
+      const destinationColumn = definition.references.columns[0];
+      const foreignTable = config.explicit_main_schema ? ["main", definition.references.name] : [definition.references.name];
+      return [[
+        `${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
+        { foreign_table: foreignTable,
+          column_mapping: {
+            [sourceColumn.name]: destinationColumn.name
+          }
+        }
+      ]];
+    });
+  })
+}
+
+function ddlPKs(ddl: any): string[] {
+  if(ddl.type != 'statement' || ddl.variant != 'list') {
+    throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
   return ddl.statement.flatMap((t: any) => {
     if(t.type !=  'statement' || t.variant != 'create' || t.format != 'table') {
@@ -148,12 +202,12 @@ function ddlPKs(ddl: any): Array<any> {
   })
 }
 
-export async function getSchema(config: Config): Promise<SchemaResponse> {
-  const db                                        = connect(config);
-  const [results, metadata]                       = await db.query("SELECT * from sqlite_schema");
-  const resultsT: Array<TableInfoInternal>        = results as unknown as Array<TableInfoInternal>;
-  const filtered: Array<TableInfoInternal>        = resultsT.filter(table => includeTable(config,table));
-  const result:   Array<TableInfo>                = filtered.map(formatTableInfo);
+export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<SchemaResponse> {
+  const db                            = connect(config, sqlLogger);
+  const [results, metadata]           = await db.query("SELECT * from sqlite_schema");
+  const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
+  const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
+  const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
 
   return {
     tables: result

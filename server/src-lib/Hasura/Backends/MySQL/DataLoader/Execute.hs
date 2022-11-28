@@ -230,7 +230,7 @@ getFinalRecordSet HeadAndTail {..} = do
           fmap
             ( OMap.filterWithKey
                 ( \(FieldName k) _ ->
-                    maybe True (elem k) (wantedFields headSet)
+                    all (elem k) (wantedFields headSet)
                 )
             )
             (rows tailSet)
@@ -365,7 +365,7 @@ joinArrayRows wantedFields fieldName leftRow rightRow =
             ( RecordOutputValue
                 . OMap.filterWithKey
                   ( \(DataLoaderPlan.FieldName k) _ ->
-                      maybe True (elem k) wantedFields
+                      all (elem k) wantedFields
                   )
             )
             rightRow
@@ -385,14 +385,14 @@ joinObjectRows ::
 joinObjectRows wantedFields fieldName leftRow rightRows
   | V.length rightRows /= 1 = Left . BrokenJoinInvariant . foldMap OMap.keys $ rightRows
   | otherwise =
-    let row = V.head rightRows
-     in pure $
-          OMap.insert
-            (DataLoaderPlan.FieldName fieldName)
-            ( RecordOutputValue
-                ( OMap.filterWithKey
-                    (\(DataLoaderPlan.FieldName k) _ -> maybe True (elem k) wantedFields)
-                    row
-                )
-            )
-            leftRow
+      let row = V.head rightRows
+       in pure $
+            OMap.insert
+              (DataLoaderPlan.FieldName fieldName)
+              ( RecordOutputValue
+                  ( OMap.filterWithKey
+                      (\(DataLoaderPlan.FieldName k) _ -> all (elem k) wantedFields)
+                      row
+                  )
+              )
+              leftRow

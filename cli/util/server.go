@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 
 	"github.com/sirupsen/logrus"
 )
@@ -99,17 +100,18 @@ func GetServerState(client *httpc.Client, endpoint string, hasMetadataV3 bool, l
 }
 
 func GetServerStatus(versionEndpoint string, httpClient *httpc.Client) (err error) {
+	var op errors.Op = "util.GetServerStatus"
 	req, err := http.NewRequest("GET", versionEndpoint, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create GET request to %s: %w", versionEndpoint, err)
+		return errors.E(op, fmt.Errorf("failed to create GET request to %s: %w", versionEndpoint, err))
 	}
 	var responseBs bytes.Buffer
 	resp, err := httpClient.Do(context.Background(), req, &responseBs)
 	if err != nil {
-		return fmt.Errorf("making http request failed: %w", err)
+		return errors.E(op, fmt.Errorf("making http request failed: %w", err))
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed: url: %s status code: %v status: %s \n%s", versionEndpoint, resp.StatusCode, resp.Status, responseBs.String())
+		return errors.E(op, fmt.Errorf("request failed: url: %s status code: %v status: %s \n%s", versionEndpoint, resp.StatusCode, resp.Status, responseBs.String()))
 	}
 	return nil
 }

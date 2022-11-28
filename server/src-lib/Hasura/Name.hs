@@ -195,6 +195,9 @@ __or = [G.name|_or|]
 _aggregate :: G.Name
 _aggregate = [G.name|aggregate|]
 
+_aggregate_bool_exp :: G.Name
+_aggregate_bool_exp = [G.name|aggregate_bool_exp|]
+
 _column :: G.Name
 _column = [G.name|column|]
 
@@ -606,3 +609,14 @@ __Entity = [G.name|_Entity|]
 
 __entities :: G.Name
 __entities = [G.name|_entities|]
+
+-- * Aggregation Predicates
+
+_arguments :: G.Name
+_arguments = [G.name|arguments|]
+
+_predicate :: G.Name
+_predicate = [G.name|predicate|]
+
+_filter :: G.Name
+_filter = [G.name|filter|]

@@ -28,7 +28,7 @@ continue to function.
 
 Group queries using query collections.
 
-Create/drop query collections and add/drop a query to a collection using
+Create/rename/drop query collections and add/drop a query to a collection using
 the following query types.
 
 ## create_query_collection {#schema-metadata-create-query-collection}
@@ -69,6 +69,31 @@ As the query collection is used in allowlists and REST endpoints, they are valid
 | name       | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)          | Name of the query collection |
 | definition | true     | [CollectionQuery](/api-reference/syntax-defs.mdx#collectionquery) array  | List of queries              |
 | comment    | false    | text                                                                                  | Optional comment             |
+
+## rename_query_collection {#schema-metadata-rename-query-collection}
+
+`rename_query_collection` is used to rename a collection
+
+```http
+POST /v1/query HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type" : "rename_query_collection",
+    "args": {
+         "name": "my_collection",
+         "new_name": "my_new_collection"
+     }
+}
+```
+
+### Args syntax {#schema-metadata-rename-query-collection-syntax}
+
+| Key        | Required | Schema                                                           | Description                                 |
+|------------|----------|------------------------------------------------------------------|---------------------------------------------|
+| name       | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)  | Name of the query collection to be replaced |
+| new_name   | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)  | New name of the query collection            |
 
 ## drop_query_collection {#schema-metadata-drop-query-collection}
 

@@ -41,7 +41,7 @@ addNonColumnFields ::
   forall b arr m.
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     ArrowKleisli m arr,
     MonadError QErr m,
     BackendMetadata b
@@ -50,7 +50,7 @@ addNonColumnFields ::
     SourceName,
     HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
     FieldInfoMap (ColumnInfo b),
-    RemoteSchemaMap,
+    PartiallyResolvedRemoteSchemaMap,
     DBFunctionsMetadata b,
     NonColumnTableInputs b
   )
@@ -162,7 +162,7 @@ addNonColumnFields =
         tellA
           -<
             Seq.singleton $
-              CIInconsistency $
+              Left $
                 ConflictingObjects
                   ("conflicting definitions for field " <>> fieldName)
                   [thisMetadata, thatMetadata]
@@ -170,33 +170,21 @@ addNonColumnFields =
 
     noCustomFieldConflicts = proc (columns, nonColumnFields) -> do
       let columnsByGQLName = mapFromL ciName $ M.elems columns
-      (|
-        Inc.keyed
-          ( \_ (fieldInfo, metadata) ->
-              (|
-                withRecordInconsistency
-                  ( do
-                      (|
-                        traverseA_
-                          ( \fieldGQLName -> case M.lookup fieldGQLName columnsByGQLName of
-                              -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
-                              -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
-                              -- more useful error message.
-                              Just columnInfo
-                                | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
-                                  throwA
-                                    -<
-                                      err400 AlreadyExists $
-                                        "field definition conflicts with custom field name for postgres column "
-                                          <>> ciColumn columnInfo
-                              _ -> returnA -< ()
-                          )
-                        |) (fieldInfoGraphQLNames fieldInfo)
-                      returnA -< (fieldInfo, metadata)
-                  )
-              |) metadata
-          )
-        |) nonColumnFields
+      interpretWriter
+        -< do
+          for nonColumnFields \(fieldInfo, metadata) -> withRecordInconsistencyM metadata do
+            for_ (fieldInfoGraphQLNames fieldInfo) \fieldGQLName ->
+              case M.lookup fieldGQLName columnsByGQLName of
+                -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
+                -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
+                -- more useful error message.
+                Just columnInfo
+                  | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
+                      throw400 AlreadyExists $
+                        "field definition conflicts with custom field name for postgres column "
+                          <>> ciColumn columnInfo
+                _ -> return ()
+            return (fieldInfo, metadata)
 
     noColumnConflicts = proc fields -> case fields of
       This columnInfo -> returnA -< FIColumn columnInfo
@@ -221,7 +209,7 @@ mkRelationshipMetadataObject relType (source, table, relDef) =
 
 buildObjectRelationship ::
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Backend b
   ) =>
   ( HashMap (TableName b) (HashSet (ForeignKey b)),
@@ -237,7 +225,7 @@ buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
 
 buildArrayRelationship ::
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Backend b
   ) =>
   ( HashMap (TableName b) (HashSet (ForeignKey b)),
@@ -253,7 +241,7 @@ buildArrayRelationship = proc (fkeysMap, (source, table, relDef)) -> do
 
 buildRelationship ::
   forall m b a.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     ToJSON a,
     Backend b
   ) =>
@@ -294,7 +282,7 @@ mkComputedFieldMetadataObject (source, table, ComputedFieldMetadata {..}) =
 
 buildComputedField ::
   forall b m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b
   ) =>
   HashSet (TableName b) ->
@@ -333,12 +321,12 @@ mkRemoteRelationshipMetadataObject (source, table, RemoteRelationship {..}) =
 -- dependencies on the remote relationship on the LHS entity are computed here
 buildRemoteRelationship ::
   forall b m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   M.HashMap FieldName (DBJoinField b) ->
-  RemoteSchemaMap ->
+  PartiallyResolvedRemoteSchemaMap ->
   (SourceName, TableName b, RemoteRelationship) ->
   m (Either QErr (Maybe (RemoteFieldInfo (DBJoinField b))))
 buildRemoteRelationship allSources allColumns remoteSchemaMap (source, table, rr@RemoteRelationship {..}) = runExceptT $ do
@@ -356,15 +344,14 @@ buildRemoteRelationship allSources allColumns remoteSchemaMap (source, table, rr
       let lhsDependencies =
             -- a direct dependency on the table on which this is defined
             SchemaDependency (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b table) DRTable
-            -- the relationship is also dependent on all the lhs
-            -- columns that are used in the join condition
-            :
-            flip map (M.elems $ _rfiLHS remoteField) \case
-              JoinColumn column _ ->
-                -- TODO: shouldn't this be DRColumn??
-                mkColDep @b DRRemoteRelationship source table column
-              JoinComputedField computedFieldInfo ->
-                mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
+              -- the relationship is also dependent on all the lhs
+              -- columns that are used in the join condition
+              : flip map (M.elems $ _rfiLHS remoteField) \case
+                JoinColumn column _ ->
+                  -- TODO: shouldn't this be DRColumn??
+                  mkColDep @b DRRemoteRelationship source table column
+                JoinComputedField computedFieldInfo ->
+                  mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
       -- Here is the essence of the function: construct dependencies on the RHS
       -- of the join condition.
       recordDependenciesM metadataObject schemaObj (lhsDependencies <> rhsDependencies)

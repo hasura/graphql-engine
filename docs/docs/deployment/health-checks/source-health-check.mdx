@@ -1,0 +1,123 @@
+---
+description: Hasura database source health check
+title: 'Cloud: Source health check'
+keywords:
+  - hasura
+  - cloud
+  - enterprise
+  - source health check
+  - source health
+sidebar_label: Source Health Check
+sidebar_position: 20
+sidebar_class_name: cloud-icon
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Source Health Check
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+
+## Overview
+
+Hasura enables users to check the health of connected data sources via the health check API.
+[API reference here](/api-reference/source-health.mdx).
+
+## Configuring source health check
+
+A health check configuration contains information that Hasura uses to determine the health state of a source. You
+can set the time interval for when Hasura will re-perform the check on the source.
+
+Currently, Hasura supports enabling health checks on Postgres and MS SQL Server databases. Support for other data
+sources will be added soon.
+
+Health check configurations for Postgres and SQL Server sources are identical and are as follows.
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Console support will be added soon.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can add _health check_ for a source by adding the config to the `/metadata/databases/database.yaml` file:
+
+```yaml {3-8}
+- name: <db-name>
+  kind: postgres
+  health_check:
+    test:
+      sql: SELECT 1
+    interval: 10
+    retries: 3
+    retry_interval: 5
+    timeout: 5
+  configuration:
+    connection_info:
+      database_url:
+        from_env: <DATABASE_URL_ENV>
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+```
+
+Apply the metadata by running:
+
+```yaml
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can add _health check_ for a database using the
+[pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) metadata API.
+
+```http {17-24}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type":"pg_add_source",
+  "args":{
+    "name":"<db_name>",
+    "replace_configuration":true,
+    "configuration":{
+      "connection_info":{
+        "database_url":{
+          "from_env":"<DATABASE_URL_ENV>"
+        }
+      }
+    },
+    "health_check": {
+      "test": {
+        "sql": "SELECT 1"
+      },
+      "interval": 300,
+      "timeout": 5,
+      "retries": 3,
+      "retry_interval": 5
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Reporting source health check
+
+### API
+
+Health check reports of sources can be obtained through a `GET` request from the
+`/healthz/sources` API, on demand. Learn more about the API [here](/api-reference/source-health.mdx).
+
+### Logging
+
+Hasura logs the health check status and other information via `health-check-log` type when enabled.
+Learn more about the health checks logs [here](/deployment/logging.mdx#health-check-log-structure).

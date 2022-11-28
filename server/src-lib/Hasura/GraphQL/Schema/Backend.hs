@@ -36,20 +36,18 @@ module Hasura.GraphQL.Schema.Backend
   )
 where
 
-import Data.Has
 import Data.Text.Casing (GQLNameIdentifier)
-import Hasura.Base.Error
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
-import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column hiding (EnumValueInfo)
+import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
@@ -57,7 +55,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.SQL.Backend
-import Hasura.Server.Types (StreamingSubscriptionsCtx)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Bag of constraints available to the methods of @BackendSchema@.
@@ -68,7 +65,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- modules.
 type MonadBuildSchema b r m n =
   ( BackendSchema b,
-    MonadBuildSchemaBase r m n
+    MonadBuildSourceSchema b r m n
   )
 
 -- | This type class is responsible for generating the schema of a backend.
@@ -98,12 +95,12 @@ class
   buildTableQueryAndSubscriptionFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
-    StreamingSubscriptionsCtx ->
     GQLNameIdentifier ->
-    m
+    SchemaT
+      r
+      m
       ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
         [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
         Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
@@ -111,29 +108,26 @@ class
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
     NESeq (ColumnInfo b) ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
     Scenario ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
   -- backed by @UPDATE@ statements on some table, as described in
@@ -145,62 +139,55 @@ class
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
     Scenario ->
-    -- | The source that the table lives in
-    SourceInfo b ->
     -- | The name of the table being acted on
     TableName b ->
     -- | table info
     TableInfo b ->
     -- | field display name
     GQLNameIdentifier ->
-    m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
     Scenario ->
-    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
-    m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
     NESeq (ColumnInfo b) ->
-    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
     MkRootFieldName ->
-    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    SchemaT r m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.
   mkRelationshipParser ::
     MonadBuildSchema b r m n =>
-    SourceInfo b ->
     RelInfo b ->
-    m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
-  mkRelationshipParser _ _ = pure Nothing
+    SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
+  mkRelationshipParser _ = pure Nothing
 
   -- backend extensions
   relayExtension :: Maybe (XRelay b)
@@ -209,10 +196,23 @@ class
 
   -- individual components
   columnParser ::
-    (MonadParse n, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+    MonadBuildSchema b r m n =>
     ColumnType b ->
     G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
-    m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+    SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+  enumParser ::
+    MonadBuildSchema b r m n =>
+    TableName b ->
+    NonEmpty (EnumValue, Column.EnumValueInfo) ->
+    Maybe G.Name ->
+    G.Nullability ->
+    SchemaT r m (Parser 'Both n (ScalarValue b))
+  possiblyNullable ::
+    MonadParse m =>
+    ScalarType b ->
+    G.Nullability ->
+    Parser 'Both m (ScalarValue b) ->
+    Parser 'Both m (ScalarValue b)
 
   -- | Parser for arguments on scalar fields in a selection set
   scalarSelectionArgumentsParser ::
@@ -228,7 +228,7 @@ class
   comparisonExps ::
     MonadBuildSchema b r m n =>
     ColumnType b ->
-    m (Parser 'Input n [ComparisonExp b])
+    SchemaT r m (Parser 'Input n [ComparisonExp b])
 
   -- | The input fields parser, for "count" aggregate field, yielding a function
   -- which generates @'CountType b' from optional "distinct" field value
@@ -242,11 +242,10 @@ class
   -- | Computed field parser
   computedField ::
     MonadBuildSchema b r m n =>
-    SourceInfo b ->
     ComputedFieldInfo b ->
     TableName b ->
     TableInfo b ->
-    m (Maybe (FieldParser n (AnnotatedField b)))
+    SchemaT r m (Maybe (FieldParser n (AnnotatedField b)))
 
 -- | The public interface for the schema of table queries exposed by a backend.
 --
@@ -261,38 +260,34 @@ class
 -- 'Hasura.GraphQL.Schema.Select'.
 class Backend b => BackendTableSelectSchema (b :: BackendType) where
   tableArguments ::
-    MonadBuildSchemaBase r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     TableInfo b ->
-    m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
+    SchemaT r m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   tableSelectionSet ::
-    MonadBuildSchemaBase r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     TableInfo b ->
-    m (Maybe (Parser 'Output n (AnnotatedFields b)))
+    SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 
   selectTable ::
-    MonadBuildSchemaBase r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     -- | table info
     TableInfo b ->
     -- | field display name
     G.Name ->
     -- | field description, if any
     Maybe G.Description ->
-    m (Maybe (FieldParser n (SelectExp b)))
+    SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 
   selectTableAggregate ::
-    MonadBuildSchemaBase r m n =>
-    SourceInfo b ->
+    MonadBuildSourceSchema b r m n =>
     -- | table info
     TableInfo b ->
     -- | field display name
     G.Name ->
     -- | field description, if any
     Maybe G.Description ->
-    m (Maybe (FieldParser n (AggSelectExp b)))
+    SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
@@ -340,7 +335,7 @@ type ComparisonExp b = OpExpG b (UnpreparedValue b)
 --
 -- * Pro: You can specify both shared and diverging behavior.
 -- * Pro: You can specify a lot of behavior implicitly, i.e. it's easy to write.
--- * Con: You can specify a lot of behavior implicitly, i.e. it's hard do
+-- * Con: You can specify a lot of behavior implicitly, i.e. it's hard to
 --   understand without tracing through implementations.
 -- * Con: You get a proliferation of type class methods and it's difficult to
 --   understand how they fit together.
@@ -355,7 +350,7 @@ type ComparisonExp b = OpExpG b (UnpreparedValue b)
 -- instead of other type class methods.
 --
 -- When we do this, the function call sites (which will often be in @instance
--- BackendSchema ...@) becomes the centralised place where we decide which behavior
+-- BackendSchema ...@) become the centralised places where we decide which behavior
 -- variation to follow.
 --
 -- When faced with answering the question of "what does this method do, and how does

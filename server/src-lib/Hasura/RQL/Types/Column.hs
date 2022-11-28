@@ -36,7 +36,6 @@ import Data.Aeson.TH
 import Data.HashMap.Strict qualified as M
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -46,12 +45,12 @@ import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype EnumValue = EnumValue {getEnumValue :: G.Name}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 
 newtype EnumValueInfo = EnumValueInfo
   { evComment :: Maybe Text
   }
-  deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable)
 
 $(deriveJSON hasuraJSON ''EnumValueInfo)
 
@@ -75,8 +74,6 @@ deriving instance (Backend b) => Ord (EnumReference b)
 instance (Backend b) => NFData (EnumReference b)
 
 instance (Backend b) => Hashable (EnumReference b)
-
-instance (Backend b) => Cacheable (EnumReference b)
 
 instance (Backend b) => FromJSON (EnumReference b) where
   parseJSON = genericParseJSON hasuraJSON
@@ -102,8 +99,6 @@ instance (Backend b) => NFData (ColumnType b)
 
 instance (Backend b) => Hashable (ColumnType b)
 
-instance (Backend b) => Cacheable (ColumnType b)
-
 instance (Backend b) => ToJSON (ColumnType b) where
   toJSON = genericToJSON $ defaultOptions {constructorTagModifier = drop 6}
 
@@ -125,9 +120,9 @@ data ColumnValue (b :: BackendType) = ColumnValue
     cvValue :: ScalarValue b
   }
 
-deriving instance (Backend b, Eq (ScalarValue b)) => Eq (ColumnValue b)
+deriving instance (Backend b) => Eq (ColumnValue b)
 
-deriving instance (Backend b, Show (ScalarValue b)) => Show (ColumnValue b)
+deriving instance (Backend b) => Show (ColumnValue b)
 
 isScalarColumnWhere :: (ScalarType b -> Bool) -> ColumnType b -> Bool
 isScalarColumnWhere f = \case
@@ -153,11 +148,12 @@ parseScalarValueColumnType columnType value = case columnType of
     where
       parseEnumValue :: Maybe G.Name -> m (ScalarValue b)
       parseEnumValue enumValueName = do
-        onJust enumValueName \evn -> do
+        for_ enumValueName \evn -> do
           let enums = map getEnumValue $ M.keys enumValues
           unless (evn `elem` enums) $
             throw400 UnexpectedPayload $
-              "expected one of the values " <> dquoteList enums
+              "expected one of the values "
+                <> dquoteList enums
                 <> " for type "
                 <> snakeCaseTableName @b tableName <<> ", given " <>> evn
         pure $ textToScalarValue @b $ G.unName <$> enumValueName
@@ -192,8 +188,6 @@ deriving instance Backend b => Show (RawColumnInfo b)
 
 instance Backend b => NFData (RawColumnInfo b)
 
-instance Backend b => Cacheable (RawColumnInfo b)
-
 instance Backend b => ToJSON (RawColumnInfo b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -214,9 +208,7 @@ data ColumnMutability = ColumnMutability
   { _cmIsInsertable :: Bool,
     _cmIsUpdatable :: Bool
   }
-  deriving (Eq, Generic, Show)
-
-instance Cacheable ColumnMutability
+  deriving (Eq, Ord, Generic, Show)
 
 instance NFData ColumnMutability
 
@@ -245,9 +237,9 @@ data ColumnInfo (b :: BackendType) = ColumnInfo
 
 deriving instance Backend b => Eq (ColumnInfo b)
 
-deriving instance Backend b => Show (ColumnInfo b)
+deriving instance Backend b => Ord (ColumnInfo b)
 
-instance Backend b => Cacheable (ColumnInfo b)
+deriving instance Backend b => Show (ColumnInfo b)
 
 instance Backend b => NFData (ColumnInfo b)
 

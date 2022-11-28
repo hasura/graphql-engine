@@ -44,7 +44,7 @@ or areas which could even be most of the engine.
 
 For example of unit tests, see [WKTSpec](./src-test/Hasura/SQL/WKTSpec.hs).
 
-For more information on integration tests, see its [README](./tests-hspec/README.md).
+For more information on integration tests, see its [README](./lib/api-tests/README.md).
 
 #### Adding property tests
 
@@ -237,7 +237,7 @@ However, this is usually the case in trivial cases where we only have one
 
 ### Writing integration tests
 
-Please refer to its [README](./server/tests-hspec/README.md) for specific details on how to
+Please refer to its [README](./server/lib/api-tests/README.md) for specific details on how to
 add new tests.
 
 ## Definitions

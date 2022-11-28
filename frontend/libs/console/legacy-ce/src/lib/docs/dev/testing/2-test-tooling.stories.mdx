@@ -1,0 +1,26 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Dev/Testing/2. Test Tooling" />
+
+# Test Tooling
+
+# Unit Tests
+
+Unit tests are written using [Jest Framework](https://jestjs.io/).
+
+- How to run tests locally: `$ npm run jest` or `$ npm run jest-watch` (for watch mode)
+- Unit testing is mostly applied on the utility functions.
+
+## E2E tests
+
+E2E Tests are written using [Cypress](https://www.cypress.io/).
+
+- How to run tests locally: `$ npm run cy:open`
+- Write your tests in the `cypress/e2e` directory.
+
+More info are available at the [Cypress' README](./../../../../cypress/README.md).]
+
+### Chromatic
+
+[Chromatic](https://www.chromatic.com/) is used for visual testing the stories.
+If you have a story you do not wish to snapshot in Chromatic, you can disable snapshotting with the [disableSnapshot](https://www.chromatic.com/docs/ignoring-elements#ignore-stories) story parameter.

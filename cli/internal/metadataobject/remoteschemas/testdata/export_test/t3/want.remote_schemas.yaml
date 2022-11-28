@@ -11,6 +11,9 @@
     - role: user
       definition:
         schema: |
+          schema {
+            query: Query
+          }
           type Continent {
             code: ID!
             countries: [Country!]!
@@ -29,19 +32,11 @@
             phone: String!
             states: [State!]!
           }
-          input CountryFilterInput {
-            code: StringQueryOperatorInput
-            continent: StringQueryOperatorInput
-            currency: StringQueryOperatorInput
-          }
           type Language {
             code: ID!
             name: String
             native: String
             rtl: Boolean!
-          }
-          input LanguageFilterInput {
-            code: StringQueryOperatorInput
           }
           type Query {
             continent(code: ID!): Continent
@@ -52,6 +47,14 @@
             code: String
             country: Country!
             name: String!
+          }
+          input CountryFilterInput {
+            code: StringQueryOperatorInput
+            continent: StringQueryOperatorInput
+            currency: StringQueryOperatorInput
+          }
+          input LanguageFilterInput {
+            code: StringQueryOperatorInput
           }
           input StringQueryOperatorInput {
             eq: String

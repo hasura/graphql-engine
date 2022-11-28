@@ -9,23 +9,30 @@ module Hasura.Backends.Postgres.Instances.Types
   )
 where
 
+import Autodocodec (HasCodec (codec))
 import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Kind (Type)
 import Data.Typeable
-import Hasura.Backends.Postgres.Connection qualified as PG
-import Hasura.Backends.Postgres.SQL.DML qualified as PG
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
-import Hasura.Backends.Postgres.SQL.Value qualified as PG
-import Hasura.Backends.Postgres.Types.BoolExp qualified as PG
+import Hasura.Backends.Postgres.Connection qualified as Postgres
+import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
+import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
+import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
+import Hasura.Backends.Postgres.Types.BoolExp qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata qualified as Citus
-import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
-import Hasura.Backends.Postgres.Types.Function qualified as PG
-import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
-import Hasura.Backends.Postgres.Types.Update qualified as PG
+import Hasura.Backends.Postgres.Types.ComputedField qualified as Postgres
+import Hasura.Backends.Postgres.Types.Function qualified as Postgres
+import Hasura.Backends.Postgres.Types.Insert qualified as Postgres (BackendInsert)
+import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.HealthCheck
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 
@@ -48,11 +55,22 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
+  versionCheckImpl :: SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl = const (pure $ Right ())
+
+  runPingSourceImpl :: (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
+  runPingSourceImpl _ _ _ = pure ()
+
 instance PostgresBackend 'Vanilla where
   type PgExtraTableMetadata 'Vanilla = ()
 
 instance PostgresBackend 'Citus where
   type PgExtraTableMetadata 'Citus = Citus.ExtraTableMetadata
+
+instance PostgresBackend 'Cockroach where
+  type PgExtraTableMetadata 'Cockroach = ()
+  versionCheckImpl = runCockroachVersionCheck
+  runPingSourceImpl = runCockroachDBPing
 
 ----------------------------------------------------------------
 -- Backend instance
@@ -61,37 +79,41 @@ instance
   ( HasTag ('Postgres pgKind),
     Typeable ('Postgres pgKind),
     PostgresBackend pgKind,
-    FromJSON (BackendSourceKind ('Postgres pgKind))
+    FromJSON (BackendSourceKind ('Postgres pgKind)),
+    HasCodec (BackendSourceKind ('Postgres pgKind))
   ) =>
   Backend ('Postgres pgKind)
   where
   type BackendConfig ('Postgres pgKind) = ()
-  type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
-  type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
-  type TableName ('Postgres pgKind) = PG.QualifiedTable
-  type FunctionName ('Postgres pgKind) = PG.QualifiedFunction
-  type FunctionArgument ('Postgres pgKind) = PG.FunctionArg
-  type RawFunctionInfo ('Postgres pgKind) = PG.PGRawFunctionInfo
-  type ConstraintName ('Postgres pgKind) = PG.ConstraintName
-  type BasicOrderType ('Postgres pgKind) = PG.OrderType
-  type NullsOrderType ('Postgres pgKind) = PG.NullsOrder
-  type CountType ('Postgres pgKind) = PG.CountType
-  type Column ('Postgres pgKind) = PG.PGCol
-  type ScalarValue ('Postgres pgKind) = PG.PGScalarValue
-  type ScalarType ('Postgres pgKind) = PG.PGScalarType
-  type BooleanOperators ('Postgres pgKind) = PG.BooleanOperators
-  type SQLExpression ('Postgres pgKind) = PG.SQLExp
-  type ComputedFieldDefinition ('Postgres pgKind) = PG.ComputedFieldDefinition
-  type ScalarSelectionArguments ('Postgres pgKind) = PG.ColumnOp
+  type BackendInfo ('Postgres pgKind) = ()
+  type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
+  type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
+  type TableName ('Postgres pgKind) = Postgres.QualifiedTable
+  type FunctionName ('Postgres pgKind) = Postgres.QualifiedFunction
+  type FunctionArgument ('Postgres pgKind) = Postgres.FunctionArg
+  type RawFunctionInfo ('Postgres pgKind) = Postgres.PGRawFunctionInfo
+  type ConstraintName ('Postgres pgKind) = Postgres.ConstraintName
+  type BasicOrderType ('Postgres pgKind) = Postgres.OrderType
+  type NullsOrderType ('Postgres pgKind) = Postgres.NullsOrder
+  type CountType ('Postgres pgKind) = Postgres.CountType
+  type Column ('Postgres pgKind) = Postgres.PGCol
+  type ScalarValue ('Postgres pgKind) = Postgres.PGScalarValue
+  type ScalarType ('Postgres pgKind) = Postgres.PGScalarType
+  type BooleanOperators ('Postgres pgKind) = Postgres.BooleanOperators
+  type SQLExpression ('Postgres pgKind) = Postgres.SQLExp
+  type ComputedFieldDefinition ('Postgres pgKind) = Postgres.ComputedFieldDefinition
+  type ScalarSelectionArguments ('Postgres pgKind) = Postgres.ColumnOp
 
-  type FunctionArgumentExp ('Postgres pgKind) = PG.ArgumentExp
-  type ComputedFieldImplicitArguments ('Postgres pgKind) = PG.ComputedFieldImplicitArguments
-  type ComputedFieldReturn ('Postgres pgKind) = PG.ComputedFieldReturn
+  type FunctionArgumentExp ('Postgres pgKind) = Postgres.ArgumentExp
+  type ComputedFieldImplicitArguments ('Postgres pgKind) = Postgres.ComputedFieldImplicitArguments
+  type ComputedFieldReturn ('Postgres pgKind) = Postgres.ComputedFieldReturn
 
-  type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate pgKind
+  type BackendUpdate ('Postgres pgKind) = Postgres.BackendUpdate pgKind
+
+  type AggregationPredicates ('Postgres pgKind) = Agg.AggregationPredicatesImplementation ('Postgres pgKind)
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
-  type BackendInsert ('Postgres pgKind) = PG.BackendInsert pgKind
+  type BackendInsert ('Postgres pgKind) = Postgres.BackendInsert pgKind
 
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable
@@ -99,22 +121,34 @@ instance
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
-  isComparableType = PG.isComparableType
-  isNumType = PG.isNumType
-  textToScalarValue = PG.textToScalarValue
-  parseScalarValue ty val = runAesonParser (PG.parsePGValue ty) val
-  scalarValueToJSON = PG.pgScalarValueToJson
-  functionToTable = fmap (PG.TableName . PG.getFunctionTxt)
-  tableToFunction = fmap (PG.FunctionName . PG.getTableTxt)
-  computedFieldFunction = PG._cfdFunction
+  type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
+  healthCheckImplementation =
+    Just $
+      HealthCheckImplementation
+        { _hciDefaultTest = defaultHealthCheckTestSql,
+          _hciTestCodec = codec
+        }
+
+  versionCheckImplementation = versionCheckImpl @pgKind
+  runPingSource = runPingSourceImpl @pgKind
+  isComparableType = Postgres.isComparableType
+  isNumType = Postgres.isNumType
+  textToScalarValue = Postgres.textToScalarValue
+  parseScalarValue ty val = runAesonParser (Postgres.parsePGValue ty) val
+  scalarValueToJSON = Postgres.pgScalarValueToJson
+  functionToTable = fmap (Postgres.TableName . Postgres.getFunctionTxt)
+  tableToFunction = fmap (Postgres.FunctionName . Postgres.getTableTxt)
+  computedFieldFunction = Postgres._cfdFunction
   computedFieldReturnType = \case
-    PG.CFRScalar scalarType -> ReturnsScalar scalarType
-    PG.CFRSetofTable table -> ReturnsTable table
-  fromComputedFieldImplicitArguments = PG.fromComputedFieldImplicitArguments
+    Postgres.CFRScalar scalarType -> ReturnsScalar scalarType
+    Postgres.CFRSetofTable table -> ReturnsTable table
+  fromComputedFieldImplicitArguments = Postgres.fromComputedFieldImplicitArguments
 
-  tableGraphQLName = PG.qualifiedObjectToName
-  functionGraphQLName = PG.qualifiedObjectToName
+  tableGraphQLName = Postgres.qualifiedObjectToName
+  functionGraphQLName = Postgres.qualifiedObjectToName
 
-  snakeCaseTableName = PG.snakeCaseQualifiedObject
-  getTableIdentifier = PG.getIdentifierQualifiedObject
-  namingConventionSupport = PG.namingConventionSupport
+  snakeCaseTableName = Postgres.snakeCaseQualifiedObject
+  getTableIdentifier = Postgres.getIdentifierQualifiedObject
+  namingConventionSupport = Postgres.namingConventionSupport
+
+  resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)

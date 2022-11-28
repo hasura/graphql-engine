@@ -47,7 +47,7 @@ newtype CreateObjRel b = CreateObjRel {unCreateObjRel :: WithTable b (ObjRelDef 
 
 runCreateRelationship ::
   forall m b a.
-  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, Backend b, BackendMetadata b) =>
+  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) =>
   RelType ->
   WithTable b (RelDef a) ->
   m EncJSON
@@ -55,7 +55,7 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
   tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
-  onJust (Map.lookup (fromRel relName) tableFields) $
+  for_ (Map.lookup (fromRel relName) tableFields) $
     const $
       throw400 AlreadyExists $
         "field with name " <> relName <<> " already exists in table " <>> tableName
@@ -221,7 +221,7 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
           <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
   pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) remoteTable False io, dependencies)
   where
-    reverseMap :: Eq y => Hashable y => HashMap x y -> HashMap y x
+    reverseMap :: Hashable y => HashMap x y -> HashMap y x
     reverseMap = Map.fromList . fmap swap . Map.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns
@@ -310,10 +310,10 @@ purgeRelDep ::
   m (TableMetadata b -> TableMetadata b)
 purgeRelDep (SOSourceObj _ exists)
   | Just (SOITableObj _ (TOPerm rn pt)) <- AB.unpackAnyBackend @b exists =
-    pure $ dropPermissionInMetadata rn pt
+      pure $ dropPermissionInMetadata rn pt
 purgeRelDep d =
   throw500 $
-    "unexpected dependency of relationship : "
+    "unexpected dependency of relationship: "
       <> reportSchemaObj d
 
 --------------------------------------------------------------------------------

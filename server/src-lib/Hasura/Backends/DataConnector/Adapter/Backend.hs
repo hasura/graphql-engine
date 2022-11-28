@@ -1,29 +1,32 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..)) where
+module Hasura.Backends.DataConnector.Adapter.Backend
+  ( CustomBooleanOperator (..),
+    columnTypeToScalarType,
+  )
+where
 
-import Data.Aeson qualified as J (ToJSON (..), Value)
+import Data.Aeson qualified as J
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
+import Data.Aeson.Types qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
-import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
-import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
-import Hasura.Backends.DataConnector.IR.Function qualified as IR.F
-import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
-import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
-import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
-import Hasura.Backends.DataConnector.IR.Table as IR.T
+import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
-import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.Column (ColumnType (..))
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
+import Witch qualified
 
 -- | An alias for '()' indicating that a particular associated type has not yet
 -- been implemented for the 'DataConnector' backend.
@@ -36,26 +39,27 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Unimplemented = ()
 
 instance Backend 'DataConnector where
-  type BackendConfig 'DataConnector = Adapter.DataConnectorBackendConfig
-  type SourceConfig 'DataConnector = Adapter.SourceConfig
-  type SourceConnConfiguration 'DataConnector = Adapter.ConnSourceConfig
+  type BackendConfig 'DataConnector = InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions
+  type BackendInfo 'DataConnector = HashMap DC.DataConnectorName DC.DataConnectorInfo
+  type SourceConfig 'DataConnector = DC.SourceConfig
+  type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
 
-  type TableName 'DataConnector = IR.T.Name
-  type FunctionName 'DataConnector = IR.F.Name
+  type TableName 'DataConnector = DC.TableName
+  type FunctionName 'DataConnector = DC.FunctionName
   type RawFunctionInfo 'DataConnector = XDisable
   type FunctionArgument 'DataConnector = XDisable
-  type ConstraintName 'DataConnector = Unimplemented
-  type BasicOrderType 'DataConnector = IR.O.OrderType
+  type ConstraintName 'DataConnector = DC.ConstraintName
+  type BasicOrderType 'DataConnector = DC.OrderDirection
   type NullsOrderType 'DataConnector = Unimplemented
-  type CountType 'DataConnector = IR.A.CountAggregate
-  type Column 'DataConnector = IR.C.Name
-  type ScalarValue 'DataConnector = IR.S.V.Value
-  type ScalarType 'DataConnector = IR.S.T.Type
+  type CountType 'DataConnector = DC.CountAggregate
+  type Column 'DataConnector = DC.ColumnName
+  type ScalarValue 'DataConnector = J.Value
+  type ScalarType 'DataConnector = DC.ScalarType
 
   -- This does not actually have to be the full IR Expression, in fact it is only
   -- required to represent literals, so we use a special type for that.
   -- The 'SQLExpression' type family should be removed in a future refactor
-  type SQLExpression 'DataConnector = IR.S.V.Literal
+  type SQLExpression 'DataConnector = DC.Literal
   type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = CustomBooleanOperator
   type ExtraTableMetadata 'DataConnector = Unimplemented
@@ -70,21 +74,37 @@ instance Backend 'DataConnector where
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
 
+  type HealthCheckTest 'DataConnector = Void
+
   isComparableType :: ScalarType 'DataConnector -> Bool
   isComparableType = \case
-    IR.S.T.Number -> True
-    IR.S.T.String -> True
-    IR.S.T.Bool -> False
+    DC.NumberTy -> True
+    DC.StringTy -> True
+    DC.BoolTy -> False
+    DC.CustomTy _ -> False
 
   isNumType :: ScalarType 'DataConnector -> Bool
-  isNumType IR.S.T.Number = True
+  isNumType DC.NumberTy = True
   isNumType _ = False
+
+  getCustomAggregateOperators :: Adapter.SourceConfig -> HashMap G.Name (HashMap DC.ScalarType DC.ScalarType)
+  getCustomAggregateOperators Adapter.SourceConfig {..} =
+    HashMap.foldrWithKey insertOps mempty scalarTypesCapabilities
+    where
+      scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
+      insertOps typeName API.ScalarTypeCapabilities {..} m =
+        HashMap.foldrWithKey insertOp m $
+          API.unAggregateFunctions _stcAggregateFunctions
+        where
+          insertOp funtionName resultTypeName =
+            HashMap.insertWith HashMap.union funtionName $
+              HashMap.singleton (Witch.from typeName) (Witch.from resultTypeName)
 
   textToScalarValue :: Maybe Text -> ScalarValue 'DataConnector
   textToScalarValue = error "textToScalarValue: not implemented for the Data Connector backend."
 
   parseScalarValue :: ScalarType 'DataConnector -> J.Value -> Either QErr (ScalarValue 'DataConnector)
-  parseScalarValue type' value = runAesonParser (IR.S.V.parseValue type') value
+  parseScalarValue type' value = runAesonParser (parseValue type') value
 
   scalarValueToJSON :: ScalarValue 'DataConnector -> J.Value
   scalarValueToJSON = error "scalarValueToJSON: not implemented for the Data Connector backend."
@@ -115,15 +135,24 @@ instance Backend 'DataConnector where
   functionGraphQLName = error "functionGraphQLName: not implemented for the Data Connector backend."
 
   snakeCaseTableName :: TableName 'DataConnector -> Text
-  snakeCaseTableName = Text.intercalate "_" . NonEmpty.toList . IR.T.unName
+  snakeCaseTableName = Text.intercalate "_" . NonEmpty.toList . DC.unTableName
 
   getTableIdentifier :: TableName 'DataConnector -> Either QErr C.GQLNameIdentifier
-  getTableIdentifier name@(IR.T.Name (prefix :| suffixes)) = do
-    (C.Identifier <$> G.mkName prefix <*> traverse G.mkNameSuffix suffixes)
-      `onNothing` throw400 ValidationFailed ("TableName " <> name <<> " is not a valid GraphQL identifier")
+  getTableIdentifier name@(DC.TableName (prefix :| suffixes)) =
+    let identifier = do
+          namePrefix <- G.mkName prefix
+          nameSuffixes <- traverse G.mkNameSuffix suffixes
+          pure $ C.fromAutogeneratedTuple (namePrefix, nameSuffixes)
+     in identifier
+          `onNothing` throw400 ValidationFailed ("TableName " <> name <<> " is not a valid GraphQL identifier")
 
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
+
+  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO ()
+  resizeSourcePools _sourceConfig _serverReplicas =
+    -- Data connectors do not have concept of connection pools
+    pure ()
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
@@ -135,7 +164,21 @@ instance NFData a => NFData (CustomBooleanOperator a)
 
 instance Hashable a => Hashable (CustomBooleanOperator a)
 
-instance Cacheable a => Cacheable (CustomBooleanOperator a)
-
 instance J.ToJSON a => ToJSONKeyValue (CustomBooleanOperator a) where
   toJSONKeyValue CustomBooleanOperator {..} = (fromText _cboName, J.toJSON _cboRHS)
+
+parseValue :: DC.ScalarType -> J.Value -> J.Parser J.Value
+parseValue type' val =
+  case (type', val) of
+    (_, J.Null) -> pure J.Null
+    (DC.StringTy, value) -> J.String <$> J.parseJSON value
+    (DC.BoolTy, value) -> J.Bool <$> J.parseJSON value
+    (DC.NumberTy, value) -> J.Number <$> J.parseJSON value
+    -- For custom scalar types we don't know what subset of JSON values
+    -- they accept, so we just accept any value.
+    (DC.CustomTy _, value) -> pure value
+
+columnTypeToScalarType :: ColumnType 'DataConnector -> DC.ScalarType
+columnTypeToScalarType = \case
+  ColumnScalar scalarType -> scalarType
+  ColumnEnumReference _ -> DC.StringTy

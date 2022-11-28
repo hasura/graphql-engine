@@ -1,16 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from http import HTTPStatus
-import graphene
 import copy
-from webserver import RequestHandler, WebServer, MkHandlers, Response
 from enum import Enum
+import graphene
+import http.server
+from http import HTTPStatus
 import time
-import ssl
 import sys
-from graphql import GraphQLError
+from typing import Callable, NamedTuple, Optional, Union
+from urllib.parse import urlparse
 
-HGE_URLS=[]
+import fixtures.tls
+from graphql import GraphQLError
+from webserver import MkHandlers, RequestHandler, Response
+
+
+DEFAULT_PORT = 5000
+
+
+class Context(NamedTuple):
+    hge_urls: Optional[list[str]]
+
 
 def mkJSONResp(graphql_result, extensions={}):
     return Response(HTTPStatus.OK, {**graphql_result.to_dict(), **extensions},
@@ -733,7 +743,7 @@ class EchoGraphQL(RequestHandler):
     def post(self, req):
         if not req.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = echo_schema.execute(req.json['query'])
+        res = echo_schema.execute(req.json['query'], variables=req.json.get('variables',None))
         resp_dict = res.to_dict()
         types_list = resp_dict.get('data',{}).get('__schema',{}).get('types', None)
         #Hack around enum default_value serialization issue: https://github.com/graphql-python/graphql-core/issues/166
@@ -746,21 +756,42 @@ class EchoGraphQL(RequestHandler):
                     {'Content-Type': 'application/json'})
 
 
+def header_test_expected_headers(hge_urls: Optional[list[str]]) -> dict[str, Union[list[str], Callable[[list[str]], bool]]]:
+    return {
+        'authorization': ['Bearer abcdef'],
+        'content-type': ['application/json'],
+        'x-hasura-role': ['user'],
+        'x-hasura-test': ['abcd'],
+        'x-hasura-user-id': ['abcd1234'],
+        'x-forwarded-host': lambda headers: all(header in hge_urls for header in headers) if hge_urls else True,
+        'x-forwarded-user-agent': lambda headers: all(header.startswith('python-requests/') for header in headers),
+    }
+
+def header_test_expected_headers_str(hge_urls: Optional[list[str]]):
+    expected_headers = header_test_expected_headers(hge_urls)
+    return '\n'.join(f'{name}: {value}' for name, value in {
+        'authorization': repr(expected_headers['authorization']),
+        'content-type': repr(expected_headers['content-type']),
+        'x-hasura-role': repr(expected_headers['x-hasura-role']),
+        'x-hasura-test': repr(expected_headers['x-hasura-test']),
+        'x-hasura-user-id': repr(expected_headers['x-hasura-user-id']),
+        'x-forwarded-host': f'one of {hge_urls!r}' if hge_urls else 'ignored',
+        'x-forwarded-user-agent': 'starts with "python-requests"',
+    }.items())
+
 class HeaderTest(graphene.ObjectType):
     wassup = graphene.String(arg=graphene.String(default_value='world'))
 
     def resolve_wassup(self, info, arg):
-        headers = info.context
-        hosts = list(map(lambda o: urlparse(o).netloc, HGE_URLS))
-        if not (headers.get_all('x-hasura-test') == ['abcd'] and
-                headers.get_all('x-hasura-role') == ['user'] and
-                headers.get_all('x-hasura-user-id') == ['abcd1234'] and
-                headers.get_all('content-type') == ['application/json'] and
-                headers.get_all('Authorization') == ['Bearer abcdef'] and
-                len(headers.get_all('x-forwarded-host')) == 1 and
-                all(host in headers.get_all('x-forwarded-host') for host in hosts) and
-                headers.get_all('x-forwarded-user-agent')[0].startswith('python-requests')):
-            raise Exception('headers dont match. Received: ' + str(headers))
+        hge_urls = info.context.context.hge_urls
+        actual_headers = info.context.headers
+        for header_name, expected_header_values in header_test_expected_headers(hge_urls).items():
+            actual_header_values: list[str] = actual_headers.get_all(header_name)
+            if callable(expected_header_values):
+                if not expected_header_values(actual_header_values):
+                    raise Exception(f'Header {header_name} doesn\'t match.\n\nActual headers:\n{actual_headers}Expected headers:\n{header_test_expected_headers_str(hge_urls)}')
+            elif expected_header_values != actual_header_values:
+                raise Exception(f'Header {header_name} doesn\'t match: {expected_header_values} != {actual_header_values}\n\nActual headers:\n{actual_headers}Expected headers:\n{header_test_expected_headers_str(hge_urls)}')
 
         return "Hello " + arg
 
@@ -773,8 +804,7 @@ class HeaderTestGraphQL(RequestHandler):
     def post(self, request):
         if not request.json:
             return Response(HTTPStatus.BAD_REQUEST)
-        res = header_test_schema.execute(request.json['query'],
-                                         context=request.headers)
+        res = header_test_schema.execute(request.json['query'], context=request)
         return mkJSONResp(res)
 
 
@@ -846,61 +876,55 @@ class JsonScalarGraphQL(RequestHandler):
         res = json_schema.execute(request.json['query'])
         return mkJSONResp(res)
 
-handlers = MkHandlers({
-    '/hello': HelloWorldHandler,
-    '/hello-graphql': HelloGraphQL,
-    '/hello-echo-request-graphql': HelloGraphQLEchoRequest,
-    '/hello-graphql-extensions': HelloGraphQLExtensions,
-    '/user-graphql': UserGraphQL,
-    '/country-graphql': CountryGraphQL,
-    '/character-iface-graphql' : CharacterInterfaceGraphQL,
-    '/iface-graphql-err-empty-field-list' : InterfaceGraphQLErrEmptyFieldList,
-    '/iface-graphql-err-unknown-iface' : InterfaceGraphQLErrUnknownInterface,
-    '/iface-graphql-err-missing-field' : InterfaceGraphQLErrMissingField,
-    '/iface-graphql-err-wrong-field-type' : InterfaceGraphQLErrWrongFieldType,
-    '/iface-graphql-err-missing-arg' : InterfaceGraphQLErrMissingArg,
-    '/iface-graphql-err-wrong-arg-type' : InterfaceGraphQLErrWrongArgType,
-    '/iface-graphql-err-extra-non-null-arg' : InterfaceGraphQLErrExtraNonNullArg,
-    '/union-graphql' : UnionGraphQL,
-    '/union-graphql-err-unknown-types' : UnionGraphQLSchemaErrUnknownTypes,
-    '/union-graphql-err-subtype-iface' : UnionGraphQLSchemaErrSubTypeInterface,
-    '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
-    '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
-    '/default-value-echo-graphql' : EchoGraphQL,
-    '/person-graphql': PersonGraphQL,
-    '/header-graphql': HeaderTestGraphQL,
-    '/messages-graphql' : MessagesGraphQL,
-    '/auth-graphql': SampleAuthGraphQL,
-    '/json-scalar-graphql': JsonScalarGraphQL,
-    '/big': BigGraphQL
-})
+def handlers(context):
+    return MkHandlers({
+        '/hello': HelloWorldHandler,
+        '/hello-graphql': HelloGraphQL,
+        '/hello-echo-request-graphql': HelloGraphQLEchoRequest,
+        '/hello-graphql-extensions': HelloGraphQLExtensions,
+        '/user-graphql': UserGraphQL,
+        '/country-graphql': CountryGraphQL,
+        '/character-iface-graphql' : CharacterInterfaceGraphQL,
+        '/iface-graphql-err-empty-field-list' : InterfaceGraphQLErrEmptyFieldList,
+        '/iface-graphql-err-unknown-iface' : InterfaceGraphQLErrUnknownInterface,
+        '/iface-graphql-err-missing-field' : InterfaceGraphQLErrMissingField,
+        '/iface-graphql-err-wrong-field-type' : InterfaceGraphQLErrWrongFieldType,
+        '/iface-graphql-err-missing-arg' : InterfaceGraphQLErrMissingArg,
+        '/iface-graphql-err-wrong-arg-type' : InterfaceGraphQLErrWrongArgType,
+        '/iface-graphql-err-extra-non-null-arg' : InterfaceGraphQLErrExtraNonNullArg,
+        '/union-graphql' : UnionGraphQL,
+        '/union-graphql-err-unknown-types' : UnionGraphQLSchemaErrUnknownTypes,
+        '/union-graphql-err-subtype-iface' : UnionGraphQLSchemaErrSubTypeInterface,
+        '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
+        '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
+        '/default-value-echo-graphql' : EchoGraphQL,
+        '/person-graphql': PersonGraphQL,
+        '/header-graphql': HeaderTestGraphQL,
+        '/messages-graphql' : MessagesGraphQL,
+        '/auth-graphql': SampleAuthGraphQL,
+        '/json-scalar-graphql': JsonScalarGraphQL,
+        '/big': BigGraphQL
+    }, context)
 
 
-def create_server(host='127.0.0.1', port=5000):
-    return WebServer((host, port), handlers)
+def create_server(
+    server_address: tuple[str, int],
+    tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration] = None,
+    hge_urls: Optional[list[str]] = None,
+):
+    context = Context([urlparse(url).netloc for url in hge_urls] if hge_urls else None)
+    server = http.server.HTTPServer(server_address, handlers(context))
+    if tls_ca_configuration:
+        server = tls_ca_configuration.configure(server, fixtures.tls.TLSTrust.SECURE)
+    return server
 
 def stop_server(server):
     server.shutdown()
     server.server_close()
 
-def set_hge_urls(hge_urls = []):
-    global HGE_URLS
-    HGE_URLS=hge_urls
-
 if __name__ == '__main__':
-    port = None
-    certfile = None
-    s = None
-    if len(sys.argv) == 4: # usage - python3 graphql-server.py <port> <certfile> <keyfile>
-        port_ = int(sys.argv[1])
-        certfile_ = sys.argv[2]
-        keyfile_ = sys.argv[3]
-        s = create_server(port = port_)
-        s.socket = ssl.wrap_socket( s.socket,
-                                    certfile=certfile_,
-                                    keyfile=keyfile_,
-                                    server_side=True,
-                                    ssl_version=ssl.PROTOCOL_SSLv23)
-    else:
-        s = create_server()
-    s.serve_forever()
+    port = DEFAULT_PORT
+    if len(sys.argv) >= 2:
+        port = int(sys.argv[1])
+    server = create_server(server_address=('localhost', port))
+    server.serve_forever()

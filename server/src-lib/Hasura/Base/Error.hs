@@ -20,6 +20,7 @@ module Hasura.Base.Error
     internalError,
     QErrM,
     throw400,
+    throw400WithDetail,
     throw404,
     throw405,
     throw409,
@@ -59,7 +60,7 @@ import Data.Parser.JSONPath (encodeJSONPath)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TL
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Network.HTTP.Types qualified as HTTP
 
@@ -243,24 +244,24 @@ encodeQErr True = toJSON
 encodeQErr _ = noInternalQErrEnc
 
 -- Postgres Connection Errors
-instance Q.FromPGConnErr QErr where
+instance PG.FromPGConnErr QErr where
   fromPGConnErr c
-    | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
-      let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
-       in e {qeInternal = Just $ ExtraInternal $ toJSON c}
-    | "root certificate file" `T.isInfixOf` (Q.getConnErr c) =
-      err500 PostgresError "root certificate error"
-    | "certificate file" `T.isInfixOf` (Q.getConnErr c) =
-      err500 PostgresError "certificate error"
-    | "private key file" `T.isInfixOf` (Q.getConnErr c) =
-      err500 PostgresError "private-key error"
+    | "too many clients" `T.isInfixOf` (PG.getConnErr c) =
+        let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
+         in e {qeInternal = Just $ ExtraInternal $ toJSON c}
+    | "root certificate file" `T.isInfixOf` (PG.getConnErr c) =
+        err500 PostgresError "root certificate error"
+    | "certificate file" `T.isInfixOf` (PG.getConnErr c) =
+        err500 PostgresError "certificate error"
+    | "private key file" `T.isInfixOf` (PG.getConnErr c) =
+        err500 PostgresError "private-key error"
   fromPGConnErr c =
     (err500 PostgresError "connection error")
       { qeInternal = Just $ ExtraInternal $ toJSON c
       }
 
 -- Postgres Transaction error
-instance Q.FromPGTxErr QErr where
+instance PG.FromPGTxErr QErr where
   fromPGTxErr txe =
     (err500 PostgresError "postgres tx error")
       { qeInternal = Just $ ExtraInternal $ toJSON txe
@@ -291,6 +292,10 @@ type QErrM m = (MonadError QErr m)
 
 throw400 :: (QErrM m) => Code -> Text -> m a
 throw400 c t = throwError $ err400 c t
+
+throw400WithDetail :: (QErrM m) => Code -> Text -> Value -> m a
+throw400WithDetail c t detail =
+  throwError $ (err400 c t) {qeInternal = Just $ ExtraInternal detail}
 
 throw404 :: (QErrM m) => Text -> m a
 throw404 t = throwError $ err404 NotFound t

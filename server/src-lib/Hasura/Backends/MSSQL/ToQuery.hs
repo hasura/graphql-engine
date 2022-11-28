@@ -84,7 +84,8 @@ fromExpression :: Expression -> Printer
 fromExpression =
   \case
     CastExpression e t dataLength ->
-      "CAST(" <+> fromExpression e
+      "CAST("
+        <+> fromExpression e
         <+> " AS "
         <+> fromString (T.unpack $ scalarTypeDBName dataLength t)
         <+> ")"
@@ -127,7 +128,9 @@ fromExpression =
     FunctionApplicationExpression funAppExp -> fromFunctionApplicationExpression funAppExp
     ListExpression xs -> SepByPrinter ", " $ fromExpression <$> xs
     STOpExpression op e str ->
-      "(" <+> fromExpression e <+> ")."
+      "("
+        <+> fromExpression e
+        <+> ")."
         <+> fromString (show op)
         <+> "("
         <+> fromExpression str
@@ -149,7 +152,8 @@ fromMethodApplicationExpression ex methodAppExp =
   where
     fromApp :: Text -> [Expression] -> Printer
     fromApp method args =
-      fromExpression ex <+> "."
+      fromExpression ex
+        <+> "."
         <+> fromString (T.unpack method)
         <+> "("
         <+> SeqPrinter (map fromExpression args)
@@ -311,9 +315,9 @@ fromMergeOn MergeOn {..} =
   where
     onExpression
       | null mergeOnColumns =
-        falsePrinter
+          falsePrinter
       | otherwise =
-        (fromExpression . AndExpression) (map matchColumn mergeOnColumns)
+          (fromExpression . AndExpression) (map matchColumn mergeOnColumns)
 
     matchColumn :: ColumnName -> Expression
     matchColumn ColumnName {..} =
@@ -684,7 +688,7 @@ fromWhere =
   \case
     Where expressions
       | Just whereExp <- collapseWhere (AndExpression expressions) ->
-        "WHERE " <+> IndentPrinter 6 (fromExpression whereExp)
+          "WHERE " <+> IndentPrinter 6 (fromExpression whereExp)
       | otherwise -> ""
 
 -- | Drop useless examples like this from the output:
@@ -746,7 +750,8 @@ fromJsonFieldSpec =
     StringField name mPath -> fromNameText name <+> " NVARCHAR(MAX)" <+> quote mPath
     JsonField name mPath -> fromJsonFieldSpec (StringField name mPath) <+> " AS JSON"
     ScalarField fieldType fieldLength name mPath ->
-      fromNameText name <+> " "
+      fromNameText name
+        <+> " "
         <+> fromString (T.unpack $ scalarTypeDBName fieldLength fieldType)
         <+> quote mPath
   where

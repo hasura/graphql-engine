@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
     runCreateScheduledEvent,
     runDeleteScheduledEvent,
     runGetScheduledEvents,
-    runGetEventInvocations,
+    runGetScheduledEventInvocations,
     populateInitialCronTriggerEvents,
     runGetCronTriggers,
   )
@@ -195,25 +195,23 @@ runGetScheduledEvents gse = do
     SECron name -> checkExists name
   encJFromJValue <$> fetchScheduledEvents gse
 
-runGetEventInvocations ::
+runGetScheduledEventInvocations ::
   ( CacheRM m,
     MonadMetadataStorageQueryAPI m
   ) =>
-  GetEventInvocations ->
+  GetScheduledEventInvocations ->
   m EncJSON
-runGetEventInvocations GetEventInvocations {..} = do
+runGetScheduledEventInvocations getEventInvocations@GetScheduledEventInvocations {..} = do
   case _geiInvocationsBy of
     GIBEventId _ _ -> pure ()
     GIBEvent event -> case event of
       SEOneOff -> pure ()
       SECron name -> checkExists name
-  WithTotalCount count invocations <- fetchInvocations _geiInvocationsBy _geiPagination
+  WithOptionalTotalCount countMaybe invocations <- fetchScheduledEventInvocations getEventInvocations
   pure $
     encJFromJValue $
-      J.object
-        [ "invocations" J..= invocations,
-          "count" J..= count
-        ]
+      J.object $
+        ("invocations" J..= invocations) : (maybe mempty (\count -> ["count" J..= count]) countMaybe)
 
 -- | Metadata API handler to retrieve all the cron triggers from the metadata
 runGetCronTriggers :: MetadataM m => m EncJSON

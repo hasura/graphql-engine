@@ -23,11 +23,13 @@ import Data.Aeson
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.DDL.Source
-  ( ToMetadataFetchQuery,
+  ( FetchFunctionMetadata,
+    FetchTableMetadata,
+    ToMetadataFetchQuery,
     fetchFunctionMetadata,
     fetchTableMetadata,
   )
@@ -67,7 +69,7 @@ data RunSQL = RunSQL
     rSource :: SourceName,
     rCascade :: Bool,
     rCheckMetadataConsistency :: Maybe Bool,
-    rTxAccessMode :: Q.TxAccess
+    rTxAccessMode :: PG.TxAccess
   }
   deriving (Show, Eq)
 
@@ -78,7 +80,7 @@ instance FromJSON RunSQL where
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
-    let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
+    let rTxAccessMode = if isReadOnly then PG.ReadOnly else PG.ReadWrite
     pure RunSQL {..}
 
 instance ToJSON RunSQL where
@@ -90,8 +92,8 @@ instance ToJSON RunSQL where
         "check_metadata_consistency" .= rCheckMetadataConsistency,
         "read_only"
           .= case rTxAccessMode of
-            Q.ReadOnly -> True
-            Q.ReadWrite -> False
+            PG.ReadOnly -> True
+            PG.ReadWrite -> False
       ]
 
 -- | Check for known schema-mutating keywords in the raw SQL text.
@@ -100,8 +102,8 @@ instance ToJSON RunSQL where
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
 isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
   case rTxAccessMode of
-    Q.ReadOnly -> False
-    Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+    PG.ReadOnly -> False
+    PG.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
   where
     containsDDLKeyword =
       TDFA.match
@@ -140,14 +142,20 @@ the metadata check as well. -}
 -- | Fetch metadata of tracked tables/functions and build @'TableMeta'/@'FunctionMeta'
 -- to calculate diff later in @'withMetadataCheck'.
 fetchTablesFunctionsMetadata ::
-  (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m) =>
+  forall pgKind m.
+  ( ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
+    BackendMetadata ('Postgres pgKind),
+    MonadTx m
+  ) =>
   TableCache ('Postgres pgKind) ->
   [TableName ('Postgres pgKind)] ->
-  [FunctionName ('Postgres pgKind)] ->
+  HS.HashSet (FunctionName ('Postgres pgKind)) ->
   m ([TableMeta ('Postgres pgKind)], [FunctionMeta ('Postgres pgKind)])
 fetchTablesFunctionsMetadata tableCache tables functions = do
   tableMetaInfos <- fetchTableMetadata tables
-  functionMetaInfos <- fetchFunctionMetadata functions
+  functionMetaInfos <- fetchFunctionMetadata @pgKind functions
   pure (buildTableMeta tableMetaInfos functionMetaInfos, buildFunctionMeta functionMetaInfos)
   where
     buildTableMeta tableMetaInfos functionMetaInfos =
@@ -172,6 +180,8 @@ runRunSQL ::
   forall (pgKind :: PostgresKind) m.
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
     CacheRWM m,
     HasServerConfigCtx m,
     MetadataM m,
@@ -200,7 +210,7 @@ runRunSQL q@RunSQL {..} = do
   where
     execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+      fmap (encJFromJValue @RunSQLRes) . liftTx . PG.multiQE rawSqlErrHandler . PG.fromText
       where
         rawSqlErrHandler txe =
           (err400 PostgresError "query execution failed") {qeInternal = Just $ ExtraInternal $ toJSON txe}
@@ -213,6 +223,8 @@ withMetadataCheck ::
   forall (pgKind :: PostgresKind) a m.
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
     CacheRWM m,
     HasServerConfigCtx m,
     MetadataM m,
@@ -222,8 +234,8 @@ withMetadataCheck ::
   ) =>
   SourceName ->
   Bool ->
-  Q.TxAccess ->
-  Q.TxET QErr m a ->
+  PG.TxAccess ->
+  PG.TxET QErr m a ->
   m a
 withMetadataCheck source cascade txAccess runSQLQuery = do
   SourceInfo _ tableCache functionCache sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
@@ -263,6 +275,8 @@ runTxWithMetadataCheck ::
   forall m a (pgKind :: PostgresKind).
   ( BackendMetadata ('Postgres pgKind),
     ToMetadataFetchQuery pgKind,
+    FetchTableMetadata pgKind,
+    FetchFunctionMetadata pgKind,
     CacheRWM m,
     MonadIO m,
     MonadBaseControl IO m,
@@ -270,11 +284,11 @@ runTxWithMetadataCheck ::
   ) =>
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
-  Q.TxAccess ->
+  PG.TxAccess ->
   TableCache ('Postgres pgKind) ->
   FunctionCache ('Postgres pgKind) ->
   Bool ->
-  Q.TxET QErr m a ->
+  PG.TxET QErr m a ->
   m (a, MetadataModifier)
 runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx =
   liftEitherM $
@@ -284,8 +298,8 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
 
         -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
         let tableNames = M.keys tableCache
-            computedFieldFunctions = concatMap getComputedFieldFunctions (M.elems tableCache)
-            functionNames = M.keys functionCache <> computedFieldFunctions
+            computedFieldFunctions = HS.fromList $ concatMap getComputedFieldFunctions (M.elems tableCache)
+            functionNames = M.keysSet functionCache <> computedFieldFunctions
         (preTxTablesMeta, preTxFunctionsMeta) <- fetchTablesFunctionsMetadata tableCache tableNames functionNames
 
         -- Since the @'tx' may alter table/function names we use the OIDs of underlying tables
@@ -377,7 +391,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
       flip mapMaybe deps \case
         SOSourceObj _ objectID
           | Just (SOIFunction qf) <- AB.unpackAnyBackend @('Postgres pgKind) objectID ->
-            Just qf
+              Just qf
         _ -> Nothing
 
 -- | Fetch list of tables and functions with provided oids
@@ -385,12 +399,12 @@ fetchTablesFunctionsFromOids ::
   (MonadIO m) =>
   [OID] ->
   [OID] ->
-  Q.TxET QErr m ([TableName ('Postgres pgKind)], [FunctionName ('Postgres pgKind)])
+  PG.TxET QErr m ([TableName ('Postgres pgKind)], HS.HashSet (FunctionName ('Postgres pgKind)))
 fetchTablesFunctionsFromOids tableOids functionOids =
-  ((Q.getAltJ *** Q.getAltJ) . Q.getRow)
-    <$> Q.withQE
+  ((PG.getViaJSON *** PG.getViaJSON) . PG.getRow)
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     SELECT
       COALESCE(
         ( SELECT
@@ -430,7 +444,7 @@ fetchTablesFunctionsFromOids tableOids functionOids =
         '[]'
       ) AS "functions"
   |]
-      (Q.AltJ $ map mkOidObject tableOids, Q.AltJ $ map mkOidObject functionOids)
+      (PG.ViaJSON $ map mkOidObject tableOids, PG.ViaJSON $ map mkOidObject functionOids)
       True
   where
     mkOidObject oid = object ["oid" .= oid]

@@ -28,7 +28,10 @@ the server, where you don't care about concurrent requests and where the work
 is CPU-bound (because in the future reporting will highlight stable metrics
 like CPU mutator time and allocations).
 
-**This is currently a WIP and not surfaced in reports** 
+Because of the overhead of timing things in bash you probably don't want to
+rely on the wallclock latency numbers for queries that are faster than 100 ms.
+These numbers may also be noisier since we're running single-threaded and so
+taking fewer samples.
 
 ### bench.sh
 
@@ -45,7 +48,7 @@ poorly and give useless output on a laptop with few cores.
 
 ### fabfile.py
 
-This is the core of the CI functionality. It's possibile to run this locally
+This is the core of the CI functionality. It's possible to run this locally
 but you'll need credentials (see `.circleci/config.yaml`). In general this can
 be ignored.
 
@@ -54,7 +57,7 @@ be ignored.
 ## Interpreting benchmark results
 
 - **bytes_alloc_per_req should be very stable** but of course doesn't measure,
-  e.g. whether we're generating efficient SQL 
+  e.g. whether we're generating efficient SQL
 
 - **min latency is often stable**, especially when we have many (>5,000) samples; a
   regression here may mean a change to the code is influencing performance
@@ -71,7 +74,7 @@ be ignored.
   versions.
 
 - If **Memory Residency** has changed:
-  - `live_bytes` is just the total size of heap objects after GC, and is quite 
+  - `live_bytes` is just the total size of heap objects after GC, and is quite
     deterministic; `mem_in_use` is closer to what users experience in their nice graphs
   - does the regression show up in `huge_schema`? If not maybe a function was
     turned into a CAF. Small, constant memory usage increases are probably not
@@ -82,6 +85,11 @@ be ignored.
 
     https://well-typed.com/blog/2021/01/fragmentation-deeper-look/
     https://well-typed.com/blog/2021/03/memory-return/
+
+- If optimizing or tuning the output/compression codepath:
+  - `chinook`.`*_small_result` and `simple_query_*` queries are average wrt
+    response body size (according to cloud data)
+  - ...and `chinook`.`full_introspection` is ~P95
 
 ## Adding a new benchmark and reviewing
 
@@ -102,11 +110,13 @@ follow the pattern from `chinook`. The process looks like:
   close to the throughput limit; experiment locally to find an appropriate
   upper bounds for load.
 
-- set `preAllocatedVUs` juar high enough so that K6 doesn't have to allocate
+- set `preAllocatedVUs` value high enough so that K6 doesn't have to allocate
   VUs during test, and you see no `dropped_iterations` reported
 
-- look for `✓ no error in body` in K6 output to make sure your query is correct
-  (assuming you're not benchmarking error handling)
+- First set `discardResponseBodies: false`, look for `✓ no error in body` in K6
+  output to make sure your query is correct (assuming you're not benchmarking
+  error handling). Then set `discardResponseBodies: true` so that we're not 
+  measuring any processing (like body decompression) performed by K6.
 
 - document the purpose of the benchmark. e.g. "large response bodies at high
   throughput", or "complex joins with conditions on a table with a lot of data,

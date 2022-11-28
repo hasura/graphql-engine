@@ -5,8 +5,10 @@ module Hasura.RQL.DDL.Webhook.Transform.Body
   ( -- * Body Transformations
     Body (..),
     TransformFn (..),
+    TransformCtx (..),
     BodyTransformFn (..),
     foldFormEncoded,
+    validateBodyTransformFn,
   )
 where
 
@@ -22,15 +24,16 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation)
 import Data.Validation qualified as V
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    Template (..),
+  ( Template (..),
     TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate,
+  )
+import Hasura.RQL.DDL.Webhook.Transform.Request
+  ( RequestTransformCtx,
     runRequestTemplateTransform,
     runUnescapedRequestTemplateTransform',
     validateRequestTemplateTransform',
@@ -51,11 +54,13 @@ instance Transform Body where
   -- instances, so 'BodyTransformFn' is defined separately from this wrapper.
   newtype TransformFn Body = BodyTransformFn_ BodyTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
+
+  newtype TransformCtx Body = TransformCtx RequestTransformCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyBodyTransformFn' is defined separately.
-  transform (BodyTransformFn_ fn) = applyBodyTransformFn fn
+  transform (BodyTransformFn_ fn) (TransformCtx reqCtx) = applyBodyTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateBodyTransformFn' is defined
@@ -72,7 +77,7 @@ data BodyTransformFn
     -- transformations to each field with a matching 'Text' key.
     ModifyAsFormURLEncoded (M.HashMap Text UnescapedTemplate)
   deriving stock (Eq, Generic, Show)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 -- | Provide an implementation for the transformations defined by
 -- 'BodyTransformFn'.

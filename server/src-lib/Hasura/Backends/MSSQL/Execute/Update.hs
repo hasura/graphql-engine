@@ -103,5 +103,5 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
   Tx.unitQueryE defaultMSSQLTxErrorHandler (toQueryFlat (dropTempTableQuery tempTableNameUpdated) `withQueryTags` queryTags)
   -- Raise an exception if the check condition is not met
   unless (checkConditionInt == (0 :: Int)) $
-    throw400 PermissionError "check constraint of an update permission has failed"
+    throw400 PermissionError "check constraint of an insert/update permission has failed"
   pure $ encJFromText responseText

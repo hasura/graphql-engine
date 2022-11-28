@@ -74,7 +74,7 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
-		connectionString, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
+		connectionString, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
 
 		// clone template project directory as test project directory
 		copyTestConfigV3Project(projectDirectory)

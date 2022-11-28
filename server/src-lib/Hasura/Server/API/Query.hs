@@ -33,7 +33,6 @@ import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
-import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DML.Count
@@ -49,11 +48,11 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Server.Utils
@@ -66,7 +65,7 @@ data RQLQueryV1
   = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
   | RQTrackTable !(TrackTable ('Postgres 'Vanilla))
   | RQUntrackTable !(UntrackTable ('Postgres 'Vanilla))
-  | RQSetTableIsEnum !SetTableIsEnum
+  | RQSetTableIsEnum !(SetTableIsEnum ('Postgres 'Vanilla))
   | RQSetTableCustomization !(SetTableCustomization ('Postgres 'Vanilla))
   | RQTrackFunction !(TrackFunction ('Postgres 'Vanilla))
   | RQUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
@@ -114,6 +113,7 @@ data RQLQueryV1
   | RQCreateScheduledEvent !CreateScheduledEvent
   | -- query collections, allow list related
     RQCreateQueryCollection !CreateCollection
+  | RQRenameQueryCollection !RenameCollection
   | RQDropQueryCollection !DropCollection
   | RQAddQueryToCollection !AddQueryToCollection
   | RQDropQueryFromCollection !DropQueryFromCollection
@@ -180,7 +180,8 @@ runQuery ::
     MonadBaseControl IO m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -195,11 +196,20 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
+  let exportsMetadata = \case
+        RQV1 (RQExportMetadata _) -> True
+        _ -> False
+      metadataDefaults =
+        if (exportsMetadata query)
+          then emptyMetadataDefaults
+          else _sccMetadataDefaults serverConfigCtx
+
   (metadata, currentResourceVersion) <- fetchMetadata
   result <-
     runReaderT (runQueryM env query) logger & \x -> do
       ((js, meta), rsc, ci) <-
-        x & runMetadataT metadata
+        x
+          & runMetadataT metadata metadataDefaults
           & runCacheRWT sc
           & peelRun runCtx
           & runExceptT
@@ -275,6 +285,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQDeleteCronTrigger _ -> True
   RQCreateScheduledEvent _ -> False
   RQCreateQueryCollection _ -> True
+  RQRenameQueryCollection _ -> True
   RQDropQueryCollection _ -> True
   RQAddQueryToCollection _ -> True
   RQDropQueryFromCollection _ -> True
@@ -351,6 +362,7 @@ queryModifiesUserDB (RQV1 qi) = case qi of
   RQDeleteCronTrigger _ -> False
   RQCreateScheduledEvent _ -> False
   RQCreateQueryCollection _ -> False
+  RQRenameQueryCollection _ -> False
   RQDropQueryCollection _ -> False
   RQAddQueryToCollection _ -> False
   RQDropQueryFromCollection _ -> False
@@ -390,7 +402,8 @@ runQueryM ::
     MonadMetadataStorageQueryAPI m,
     MonadQueryTags m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   RQLQuery ->
@@ -446,6 +459,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQDeleteCronTrigger q -> runDeleteCronTrigger q
       RQCreateScheduledEvent q -> runCreateScheduledEvent q
       RQCreateQueryCollection q -> runCreateCollection q
+      RQRenameQueryCollection q -> runRenameCollection q
       RQDropQueryCollection q -> runDropCollection q
       RQAddQueryToCollection q -> runAddQueryToCollection q
       RQDropQueryFromCollection q -> runDropQueryFromCollection q
@@ -522,6 +536,7 @@ requiresAdmin = \case
     RQDeleteCronTrigger _ -> True
     RQCreateScheduledEvent _ -> True
     RQCreateQueryCollection _ -> True
+    RQRenameQueryCollection _ -> True
     RQDropQueryCollection _ -> True
     RQAddQueryToCollection _ -> True
     RQDropQueryFromCollection _ -> True

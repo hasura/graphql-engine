@@ -13,11 +13,10 @@ module Hasura.Tracing
     noReporter,
     HasReporter (..),
     TracingMetadata,
-    extractHttpContext,
+    extractB3HttpContext,
     tracedHttpRequest,
     injectEventContext,
     extractEventContext,
-    word64ToHex,
   )
 where
 
@@ -27,15 +26,21 @@ import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Aeson.Lens qualified as JL
-import Data.Binary qualified as Bin
-import Data.ByteString.Base16 qualified as Hex
-import Data.ByteString.Lazy qualified as BL
+import Data.ByteString.Char8 qualified as Char8
 import Data.String (fromString)
 import Hasura.Prelude
+import Hasura.Tracing.TraceId
+  ( SpanId,
+    TraceId,
+    randomSpanId,
+    randomTraceId,
+    spanIdFromHex,
+    spanIdToHex,
+    traceIdFromHex,
+    traceIdToHex,
+  )
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
-import System.Random qualified as Rand
-import Web.HttpApiData qualified as HTTP
 
 -- | Any additional human-readable key-value pairs relevant
 -- to the execution of a block of code.
@@ -58,8 +63,9 @@ newtype Reporter = Reporter
 noReporter :: Reporter
 noReporter = Reporter \_ _ -> fmap fst
 
--- | A type class for monads which support some
--- way to report execution traces.
+-- | A type class for monads which support some way to report execution traces.
+--
+-- See @instance Tracing.HasReporter (AppM impl)@ in @HasuraPro.App@.
 class Monad m => HasReporter m where
   -- | Get the current tracer
   askReporter :: m Reporter
@@ -76,9 +82,10 @@ instance HasReporter m => HasReporter (ExceptT e m) where
 -- the active span within that trace, and the span's parent,
 -- unless the current span is the root.
 data TraceContext = TraceContext
-  { tcCurrentTrace :: !Word64,
-    tcCurrentSpan :: !Word64,
-    tcCurrentParent :: !(Maybe Word64)
+  { -- | TODO what is this exactly? The topmost span id?
+    tcCurrentTrace :: !TraceId,
+    tcCurrentSpan :: !SpanId,
+    tcCurrentParent :: !(Maybe SpanId)
   }
 
 -- | The 'TraceT' monad transformer adds the ability to keep track of
@@ -130,8 +137,8 @@ runTraceTWithReporter :: MonadIO m => Reporter -> Text -> TraceT m a -> m a
 runTraceTWithReporter rep name tma = do
   ctx <-
     TraceContext
-      <$> liftIO Rand.randomIO
-      <*> liftIO Rand.randomIO
+      <$> liftIO randomTraceId
+      <*> liftIO randomSpanId
       <*> pure Nothing
   runTraceTWith ctx rep name tma
 
@@ -188,8 +195,10 @@ interpTraceT f (TraceT rwma) = do
 -- | If the underlying monad can report trace data, then 'TraceT' will
 -- collect it and hand it off to that reporter.
 instance MonadIO m => MonadTrace (TraceT m) where
+  -- Note: this implementation is so awkward because we don't want to give the
+  -- derived MonadReader/Writer instances to TraceT
   trace name ma = TraceT . ReaderT $ \(ctx, rep) -> do
-    spanId <- liftIO (Rand.randomIO :: IO Word64)
+    spanId <- liftIO randomSpanId
     let subCtx =
           ctx
             { tcCurrentSpan = spanId,
@@ -221,62 +230,65 @@ instance MonadTrace m => MonadTrace (ExceptT e m) where
   currentReporter = lift currentReporter
   attachMetadata = lift . attachMetadata
 
--- | Encode Word64 to 16 character hex string
-word64ToHex :: Word64 -> Text
-word64ToHex randNum = bsToTxt $ Hex.encode numInBytes
-  where
-    numInBytes = BL.toStrict (Bin.encode randNum)
-
--- | Decode 16 character hex string to Word64
-hexToWord64 :: Text -> Maybe Word64
-hexToWord64 randText = do
-  case Hex.decode $ txtToBs randText of
-    Left _ -> Nothing
-    Right decoded -> Just $ Bin.decode $ BL.fromStrict decoded
-
 -- | Inject the trace context as a set of HTTP headers.
-injectHttpContext :: TraceContext -> [HTTP.Header]
-injectHttpContext TraceContext {..} =
-  ("X-B3-TraceId", txtToBs $ word64ToHex tcCurrentTrace) :
-  ("X-B3-SpanId", txtToBs $ word64ToHex tcCurrentSpan) :
-    [ ("X-B3-ParentSpanId", txtToBs $ word64ToHex parentID)
-      | parentID <- maybeToList tcCurrentParent
-    ]
+injectB3HttpContext :: TraceContext -> [HTTP.Header]
+injectB3HttpContext TraceContext {..} =
+  ("X-B3-TraceId", traceIdToHex tcCurrentTrace)
+    : ("X-B3-SpanId", spanIdToHex tcCurrentSpan)
+    : [ ("X-B3-ParentSpanId", spanIdToHex parentID)
+        | parentID <- maybeToList tcCurrentParent
+      ]
 
 -- | Extract the trace and parent span headers from a HTTP request
 -- and create a new 'TraceContext'. The new context will contain
 -- a fresh span ID, and the provided span ID will be assigned as
 -- the immediate parent span.
-extractHttpContext :: [HTTP.Header] -> IO (Maybe TraceContext)
-extractHttpContext hdrs = do
-  freshSpanId <- liftIO Rand.randomIO
+extractB3HttpContext :: [HTTP.Header] -> IO (Maybe TraceContext)
+extractB3HttpContext hdrs = do
+  freshSpanId <- liftIO randomSpanId
+  -- B3 TraceIds can have a length of either 64 bits (16 hex chars) or 128 bits
+  -- (32 hex chars). For 64-bit TraceIds, we pad them with zeros on the left to
+  -- make them 128 bits long.
+  let traceId =
+        lookup "X-B3-TraceId" hdrs >>= \rawTraceId ->
+          if
+              | Char8.length rawTraceId == 32 ->
+                  traceIdFromHex rawTraceId
+              | Char8.length rawTraceId == 16 ->
+                  traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
+              | otherwise ->
+                  Nothing
   pure $
     TraceContext
-      <$> (hexToWord64 =<< HTTP.parseHeaderMaybe =<< lookup "X-B3-TraceId" hdrs)
+      <$> traceId
       <*> pure freshSpanId
-      <*> pure (hexToWord64 =<< HTTP.parseHeaderMaybe =<< lookup "X-B3-SpanId" hdrs)
+      <*> pure (spanIdFromHex =<< lookup "X-B3-SpanId" hdrs)
 
 -- | Inject the trace context as a JSON value, appropriate for
 -- storing in (e.g.) an event trigger payload.
 injectEventContext :: TraceContext -> J.Value
 injectEventContext TraceContext {..} =
   J.object
-    [ "trace_id" J..= word64ToHex tcCurrentTrace,
-      "span_id" J..= word64ToHex tcCurrentSpan
+    [ "trace_id" J..= bsToTxt (traceIdToHex tcCurrentTrace),
+      "span_id" J..= bsToTxt (spanIdToHex tcCurrentSpan)
     ]
 
 -- | Extract a trace context from an event trigger payload.
 extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
-  freshSpanId <- liftIO Rand.randomIO
+  freshSpanId <- randomSpanId
   pure $
     TraceContext
-      <$> (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String)
+      <$> (traceIdFromHex . txtToBs =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String)
       <*> pure freshSpanId
-      <*> pure (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String)
+      <*> pure (spanIdFromHex . txtToBs =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String)
 
 -- | Perform HTTP request which supports Trace headers using a
 -- HTTP.Request value
+--
+-- TODO REFACTOR:
+--   - inline 'HTTP.performRequest' so that we can be sure a trace is always logged
+--   - Inline 'try' here since we always use that at call sites
 tracedHttpRequest ::
   MonadTrace m =>
   -- | http request that needs to be made
@@ -291,4 +303,4 @@ tracedHttpRequest req f = do
     let reqBytes = HTTP.getReqSize req
     attachMetadata [("request_body_bytes", fromString (show reqBytes))]
     ctx <- currentContext
-    f $ over HTTP.headers (injectHttpContext ctx <>) req
+    f $ over HTTP.headers (injectB3HttpContext ctx <>) req

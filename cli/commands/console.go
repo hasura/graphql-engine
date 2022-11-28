@@ -5,13 +5,13 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/pkg/console"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -43,22 +43,27 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura console --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			if err := ec.Validate(); err != nil {
-				return err
+				return errors.E(op, err)
 			}
-			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
+			if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			if cmd.Flags().Changed("api-host") {
 				var err error
 				opts.APIHost, err = url.ParseRequestURI(apiHost)
 				if err != nil {
-					return fmt.Errorf("expected a valid url for --api-host, parsing error: %w", err)
+					return errors.E(op, fmt.Errorf("expected a valid url for --api-host, parsing error: %w", err))
 				}
 			} else {
 				opts.APIHost = &url.URL{
@@ -66,7 +71,10 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 					Host:   opts.Address,
 				}
 			}
-			return opts.Run()
+			if err := opts.Run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 	f := consoleCmd.Flags()
@@ -118,13 +126,14 @@ type ConsoleOptions struct {
 }
 
 func (o *ConsoleOptions) Run() error {
+	var op errors.Op = "commands.ConsoleOptions.Run"
 	if o.EC.Version == nil {
-		return errors.New("cannot validate version, object is nil")
+		return errors.E(op, "cannot validate version, object is nil")
 	}
 
 	apiServer, err := console.NewAPIServer(o.APIHost.Host, o.APIPort, o.EC)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	// Setup console server
@@ -159,7 +168,7 @@ func (o *ConsoleOptions) Run() error {
 		"urlPrefix":            "/console",
 	})
 	if err != nil {
-		return errors.Wrap(err, "error serving console")
+		return errors.E(op, fmt.Errorf("error serving console: %w", err))
 	}
 	consoleServer := console.NewConsoleServer(&console.NewConsoleServerOpts{
 		Logger:           o.EC.Logger,
@@ -188,5 +197,8 @@ func (o *ConsoleOptions) Run() error {
 		SignalChanAPIServer:     o.APIServerInterruptSignal,
 	}
 
-	return console.Serve(serveOpts)
+	if err := console.Serve(serveOpts); err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }

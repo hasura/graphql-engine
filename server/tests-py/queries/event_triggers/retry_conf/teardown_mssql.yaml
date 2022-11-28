@@ -1,0 +1,15 @@
+type: bulk
+args:
+
+- type: mssql_delete_event_trigger
+  args:
+    source: mssql
+    name: t1_retry
+- type: mssql_delete_event_trigger
+  args:
+    source: mssql
+    name: t2_timeout_short
+- type: mssql_delete_event_trigger
+  args:
+    source: mssql
+    name: t3_timeout_long

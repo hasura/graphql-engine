@@ -4,20 +4,22 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-
+import { useBasename } from 'history';
 import { Provider } from 'react-redux';
-
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
-import { useBasename } from 'history';
-import { ReactQueryProvider } from './lib/reactQuery';
+
 import './theme/tailwind.css';
 import './theme/legacy-boostrap.css';
 
-import getRoutes from './routes';
+import { startTracing } from './features/Analytics';
+import { ReactQueryProvider } from './lib/reactQuery';
 
 import globals from './Globals';
 import { store } from './store';
+import getRoutes from './routes';
+
+startTracing(globals, window.__env);
 
 const hashLinkScroll = () => {
   const { hash } = window.location;

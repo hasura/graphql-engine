@@ -157,11 +157,11 @@ echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 # something you normally use under nix.
 if command -v pyenv >/dev/null; then
   # Use the latest version of Python installed with `pyenv`.
-  # Ensure that it is at least v3.6, so that format strings are supported.
-  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 { print $1 }' | tail -n1)"
+  # Ensure that it is at least v3.9, so that generic types are fully supported.
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.9 { print $1 }' | tail -n1)"
   if [[ -z "$v" ]]; then
     # shellcheck disable=SC2016
-    echo_error 'Please `pyenv install` a version of python >= 3.6 so we can use it'
+    echo_error 'Please `pyenv install` a version of python >= 3.9 so we can use it'
     exit 2
   fi
   echo_pretty "Pyenv found. Using Python version: $v"
@@ -470,10 +470,14 @@ elif [ "$MODE" = "test" ]; then
 
   # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
-  export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
-  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
-  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
-  export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
+  export EVENT_WEBHOOK_HANDLER="http://localhost:5592"
+  export ACTION_WEBHOOK_HANDLER="http://localhost:5593"
+  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://localhost:5594"
+  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://localhost:5000"
+  export GRAPHQL_SERVICE_HANDLER="http://localhost:4001"
+  export GRAPHQL_SERVICE_1="http://localhost:4020"
+  export GRAPHQL_SERVICE_2="http://localhost:4021"
+  export GRAPHQL_SERVICE_3="http://localhost:4022"
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     # It's better UX to build first (possibly failing) before trying to launch
@@ -558,23 +562,15 @@ elif [ "$MODE" = "test" ]; then
     make "$PY_VENV"
     source "${PY_VENV}/bin/activate"
 
-    cd "$TEST_DIR"
+    # Install node.js test dependencies
+    make "${TEST_DIR}/node_modules"
 
-    ## Install misc test dependencies:
-    if [ ! -d "node_modules" ]; then
-      npm_config_loglevel=error npm install remote_schemas/nodejs/
-    else
-      echo_pretty "It looks like node dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"${TEST_DIR}/node_modules\""
-    fi
+    cd "$TEST_DIR"
 
     # TODO MAYBE: fix deprecation warnings, make them an error
     if ! pytest \
-          -W ignore::DeprecationWarning \
           --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT \
           --pg-urls "$PG_DB_URL" \
-          --durations=20 \
           --assert=plain \
           "${PYTEST_ARGS[@]}"
     then

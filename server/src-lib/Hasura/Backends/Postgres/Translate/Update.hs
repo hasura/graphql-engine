@@ -48,6 +48,7 @@ mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo 
               upWhere =
                 Just
                   . S.WhereFrag
+                  . S.simplifyBoolExp
                   . toSQLBoolExp (S.QualTable tn)
                   $ andAnnBoolExps permFltr wc,
               upRet =
@@ -71,7 +72,10 @@ mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo 
                   S.SetExp $ map (expandOperator columnsInfo) (Map.toList mruExpression),
                 upFrom = Nothing,
                 upWhere =
-                  Just . S.WhereFrag $ toSQLBoolExp (S.QualTable tn) mruWhere,
+                  Just
+                    . S.WhereFrag
+                    . S.simplifyBoolExp
+                    $ toSQLBoolExp (S.QualTable tn) mruWhere,
                 upRet =
                   Just $
                     S.RetExp

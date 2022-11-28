@@ -25,6 +25,13 @@ or modifications to the upstream code.
 REST Connectors modify the default HTTP request made by an action to adapt to your webhook's expected format by adding
 suitable transforms.
 
+:::info Note
+
+General information about the templating used in REST Connectors can be found in the
+[Kriti templating](/api-reference/kriti-templating.mdx) section of the documentation.
+
+:::
+
 :::tip Supported from
 
 REST Connectors are supported in Hasura GraphQL Engine versions `v2.1.0` and above
@@ -135,6 +142,13 @@ The context variables available in transforms are:
 | $base_url          | Original configured webhook handler URL |
 | $session_variables | Session variables                       |
 
+In addition to these variables, the following functions are available in addition to the standard
+[Basic Functions](/api-reference/kriti-templating.mdx#kriti-function-reference):
+
+| Context variable           | Value                                                 |
+| -------------------------- | ----------------------------------------------------- |
+| `getSessionVariable(NAME)` | Look up a session variable by name (case-insensitive) |
+
 #### Console sample context {#action-transforms-sample-context}
 
 The console allows you to preview your transforms while configuring them. To avoid exposing sensitive information on the
@@ -168,7 +182,7 @@ REST Connectors allow you to add different transforms to the default HTTP reques
 
 You can transform your:
 
-<TOCInline toc={toc} filterTOC={(tocTree) => tocTree[2].children} />
+<TOCInline toc={toc} filterTOC={'action-transform-types'} />
 
 ### Request Method
 
@@ -271,7 +285,7 @@ You can use the [context variables](#action-transform-context-variables) to cons
 
 You can also provide query params to add to the URL.
 
-You can use the [Kriti templating language](https://github.com/hasura/kriti-lang) to construct any string values here.
+You can use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -369,6 +383,16 @@ X-Hasura-Role: admin
 Note that you must use the `escapeUri` function to urlencode templated values. For example, if you have to use session
 variables in the URL and those may contain non-ASCII values, then you should provide the template URL as
 `{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}`
+
+:::
+
+:::info Optional query params
+
+Query params with key/value pairs which evaluate to `null` are ignored by Hasura while performing the HTTP API call.
+Hasura considers such query params optional.
+
+For example, consider a query param value with template `{{$session_variables?['x-hasura-user-id']}}`. If the variable
+`x-hasura-user-id` is absent in the session variables, then the query param will be omitted from the HTTP API call.
 
 :::
 
@@ -704,6 +728,98 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
+### Response Body
+
+You can transform the default body of your HTTP API response by configuring a response transform template. This can
+be used to match the output types defined in your Action with your HTTP API.
+
+:::info Note
+
+Response transforms are applicable only for JSON responses.
+
+:::
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+In the `Configure REST Connectors` section, click on `Add Response Transform`:
+
+<Thumbnail
+  src="/img/actions/transform-response_actions_2.13.png"
+  alt="response transform method"
+  width="800px"
+/>
+
+Hit `Create Action` to apply your changes.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Update the `actions.yaml` file inside the `metadata` directory and add a [response_transform][responsetransformation]
+field to the Action:
+
+```yaml {6-9}
+- name: create_user
+  definition:
+    kind: synchronous
+    handler: https://action.my_app.com/create-user
+  timeout: 60
+  response_transform:
+    template_engine: Kriti
+    version: 2
+    body: '{"action": "transform", "template": "{\n  \"test\":{{$body.input.arg1.id}}\n}"}'
+```
+
+Apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+REST Connectors can be configured for Actions using the [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs by adding a [response_transform][responsetransformation] field to
+the args:
+
+```http {24-29}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type":"create_action",
+  "args":{
+    "name":"create_user",
+    "definition":{
+      "kind":"synchronous",
+      "arguments":[
+        {
+          "name":"username",
+          "type":"String!"
+        },
+        {
+          "name":"email",
+          "type":"String!"
+        }
+      ],
+      "output_type":"User",
+      "handler":"{{ACTION_BASE_URL}}",
+      "timeout":60,
+      "response_transform": {
+        "template_engine": "Kriti",
+        "version": 2,
+        "body": {"action": "transform", "template": "{\n  \"test\":{{$body.input.arg1.id}}\n}"},
+        "comment": "Custom action to create user"
+      }
+    }
+  }
+}
+```
+</TabItem>
+</Tabs>
+
 ## Example
 
 Let's integrate Auth0's management API to update the profile of a user:
@@ -765,3 +881,4 @@ The transform is given by:
 [metadata-create-action]: /api-reference/metadata-api/actions.mdx#metadata-create-action
 [metadata-update-action]: /api-reference/metadata-api/actions.mdx#metadata-update-action
 [requesttransformation]: /api-reference/syntax-defs.mdx#requesttransformation
+[responsetransformation]: /api-reference/syntax-defs.mdx#responsetransformation

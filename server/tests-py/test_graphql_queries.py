@@ -1,11 +1,12 @@
-import pytest
-from validate import assert_response_code, check_query_f, check_query, get_conf_f
-from context import PytestConf
-
 import json
-import textwrap
+import os
+import pytest
 import ruamel.yaml as yaml
+import textwrap
 import warnings
+
+from context import PytestConf
+from validate import assert_response_code, check_query_f, get_conf_f
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -489,7 +490,7 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
         return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphqlQueryPermissions:
 
     def test_user_select_unpublished_articles(self, hge_ctx, transport):
@@ -760,7 +761,7 @@ class TestGraphQLQueryBoolExpJsonB:
         return 'queries/graphql_query/boolexp/jsonb'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphQLQueryBoolExpPostGIS:
 
     def test_query_using_point(self, hge_ctx, transport):
@@ -792,7 +793,7 @@ class TestGraphQLQueryBoolExpPostGIS:
         return 'queries/graphql_query/boolexp/postgis'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphQLQueryBoolExpRaster:
 
     def test_query_st_intersects_geom_nband(self, hge_ctx, transport):
@@ -984,7 +985,7 @@ class TestGraphQLQueryEnums:
         check_query_f(hge_ctx, self.dir() + '/select_where_enum_eq_without_enum_table_visibility.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestGraphQLQueryComputedFields:
     @classmethod
     def dir(cls):
@@ -1030,12 +1031,10 @@ class TestGraphQLQueryCaching:
     def test_introspection(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-unauthorized-role"),
-    reason="--test-unauthorized-role missing"
-)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestUnauthorizedRolePermission:
     @classmethod
     def dir(cls):
@@ -1044,12 +1043,10 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-unauthorized-role"),
-    reason="--test-unauthorized-role missing"
-)
 @pytest.mark.parametrize('transport', ['http'])
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestFallbackUnauthorizedRoleCookie:
     @classmethod
     def dir(cls):
@@ -1302,10 +1299,10 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
 )
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_function_permission_fixtures
+@pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestGraphQLQueryFunctionPermissions:
-    # These tests are skipped unless the test-suite is run with '--test-function-permissions'
-
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions/permissions/'
@@ -1394,35 +1391,6 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
 
     def test_select_spatial_mssql_types_where_st_within_geojson(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_geojson_mssql.yaml', transport)
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/boolexp/spatial'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.backend('bigquery')
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpSpatialBigquery:
-    def test_select_spatial_bigquery_types(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_equals(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_contains(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_intersects(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_within(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_d_within(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_d_within_bigquery.yaml', transport)
-
-    def test_select_spatial_bigquery_types_where_st_touches(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_bigquery.yaml', transport)
 
     @classmethod
     def dir(cls):

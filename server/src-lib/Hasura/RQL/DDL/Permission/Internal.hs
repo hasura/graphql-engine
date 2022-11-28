@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.Server.Utils
 import Hasura.Session
@@ -56,14 +57,16 @@ assertPermDefined ::
   TableInfo backend ->
   m ()
 assertPermDefined role pt tableInfo =
-  unless (maybe False (permissionIsDefined pt) rpi) $
+  unless (any (permissionIsDefined pt) rpi) $
     throw400 PermissionDenied $
-      "'" <> tshow pt <> "'"
+      "'"
+        <> tshow pt
+        <> "'"
         <> " permission on "
         <> tableInfoName tableInfo
-        <<> " for role "
+          <<> " for role "
         <> role
-        <<> " does not exist"
+          <<> " does not exist"
   where
     rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
 
@@ -78,7 +81,11 @@ data CreatePermP1Res a = CreatePermP1Res
   deriving (Show, Eq)
 
 procBoolExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->

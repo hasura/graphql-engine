@@ -1,5 +1,6 @@
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
+    experimentalFeatureKey,
     InstanceId (..),
     generateInstanceId,
     MetadataDbId (..),
@@ -13,19 +14,21 @@ module Hasura.Server.Types
     pgToDbVersion,
     RequestId (..),
     ServerConfigCtx (..),
-    StreamingSubscriptionsCtx (..),
     HasServerConfigCtx (..),
+    askMetadataDefaults,
     getRequestId,
   )
 where
 
 import Data.Aeson
 import Data.HashSet qualified as Set
-import Database.PG.Query qualified as Q
+import Data.Text (intercalate, unpack)
+import Database.PG.Query qualified as PG
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Prelude
+import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -58,13 +61,13 @@ pgToDbVersion = DbVersion . tshow . unPGVersion
 
 -- | A uuid of the postgres metadata db.
 newtype MetadataDbId = MetadataDbId {getMetadataDbId :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
+  deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 
 mdDbIdToDbUid :: MetadataDbId -> DbUid
 mdDbIdToDbUid = DbUid . getMetadataDbId
 
 newtype InstanceId = InstanceId {getInstanceId :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
+  deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 
 -- | Generate an 'InstanceId' from a 'UUID'
 generateInstanceId :: IO InstanceId
@@ -76,26 +79,42 @@ data ExperimentalFeature
   | EFNamingConventions
   | EFStreamingSubscriptions
   | EFApolloFederation
-  deriving (Show, Eq, Generic)
+  | EFHideUpdateManyFields
+  | EFBigQueryStringNumericInput
+  | EFHideAggregationPredicates
+  | EFHideStreamFields
+  deriving (Bounded, Enum, Eq, Generic, Show)
+
+experimentalFeatureKey :: ExperimentalFeature -> Text
+experimentalFeatureKey = \case
+  EFInheritedRoles -> "inherited_roles"
+  EFOptimizePermissionFilters -> "optimize_permission_filters"
+  EFNamingConventions -> "naming_convention"
+  EFStreamingSubscriptions -> "streaming_subscriptions"
+  EFApolloFederation -> "apollo_federation"
+  EFHideUpdateManyFields -> "hide_update_many_fields"
+  EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
+  EFHideAggregationPredicates -> "hide_aggregation_predicates"
+  EFHideStreamFields -> "hide_stream_fields"
 
 instance Hashable ExperimentalFeature
 
 instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
-    "inherited_roles" -> pure EFInheritedRoles
-    "optimize_permission_filters" -> pure EFOptimizePermissionFilters
-    "naming_convention" -> pure EFNamingConventions
-    "streaming_subscriptions" -> pure EFStreamingSubscriptions
-    "apollo_federation" -> pure EFApolloFederation
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_convention, streaming_subscriptions or apollo_federation"
+    k | Just (_, ef) <- find ((== k) . fst) experimentalFeatures -> return $ ef
+    _ ->
+      fail $
+        "ExperimentalFeature can only be one of these values: "
+          <> unpack (intercalate "," (map fst experimentalFeatures))
+    where
+      experimentalFeatures :: [(Text, ExperimentalFeature)]
+      experimentalFeatures =
+        [ (experimentalFeatureKey ef, ef)
+          | ef <- [minBound .. maxBound]
+        ]
 
 instance ToJSON ExperimentalFeature where
-  toJSON = \case
-    EFInheritedRoles -> "inherited_roles"
-    EFOptimizePermissionFilters -> "optimize_permission_filters"
-    EFNamingConventions -> "naming_convention"
-    EFStreamingSubscriptions -> "streaming_subscriptions"
-    EFApolloFederation -> "apollo_federation"
+  toJSON = toJSON . experimentalFeatureKey
 
 data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
   deriving (Show, Eq)
@@ -107,9 +126,6 @@ instance FromJSON (MaintenanceMode ()) where
 
 instance ToJSON (MaintenanceMode ()) where
   toJSON = Bool . (== MaintenanceModeEnabled ())
-
-data StreamingSubscriptionsCtx = StreamingSubscriptionsEnabled | StreamingSubscriptionsDisabled
-  deriving (Show, Eq)
 
 -- | See Note [ReadOnly Mode]
 data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
@@ -130,9 +146,15 @@ data ServerConfigCtx = ServerConfigCtx
     _sccEventingMode :: EventingMode,
     _sccReadOnlyMode :: ReadOnlyMode,
     -- | stores global default naming convention
-    _sccDefaultNamingConvention :: Maybe NamingCase
+    _sccDefaultNamingConvention :: Maybe NamingCase,
+    _sccMetadataDefaults :: MetadataDefaults
   }
   deriving (Show, Eq)
+
+askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
+askMetadataDefaults = do
+  ServerConfigCtx {_sccMetadataDefaults} <- askServerConfigCtx
+  pure _sccMetadataDefaults
 
 class (Monad m) => HasServerConfigCtx m where
   askServerConfigCtx :: m ServerConfigCtx

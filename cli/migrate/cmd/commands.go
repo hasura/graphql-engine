@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
-	"github.com/pkg/errors"
 )
 
 /*
@@ -48,9 +48,10 @@ func (c *CreateOptions) SetSQLUp(data string) error {
 }
 
 func (c *CreateOptions) SetSQLUpFromFile(filePath string) error {
+	var op errors.Op = "cmd.CreateOptions.SetSQLUpFromFile"
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	c.SQLUp = data
@@ -63,22 +64,23 @@ func (c *CreateOptions) SetSQLDown(data string) error {
 }
 
 func (c *CreateOptions) Create() error {
+	var op errors.Op = "cmd.CreateOptions.Create"
 	path := filepath.Join(c.Directory, fmt.Sprintf("%s_%s", c.Version, c.Name))
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	// Check if data has been set in one of the files
 	if c.SQLUp == nil && c.SQLDown == nil {
-		return errors.New("none of the files has been set with data")
+		return errors.E(op, "none of the files has been set with data")
 	}
 
 	if c.SQLUp != nil {
 		// Create SQLUp
 		err = createFile(filepath.Join(path, "up.sql"), c.SQLUp)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 	}
 
@@ -86,28 +88,33 @@ func (c *CreateOptions) Create() error {
 		// Create SQLDown
 		err = createFile(filepath.Join(path, "down.sql"), c.SQLDown)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 	}
 	return nil
 }
 
 func (c *CreateOptions) Delete() error {
+	var op errors.Op = "cmd.CreateOptions.Delete"
 	files, err := ioutil.ReadDir(c.Directory)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	for _, fi := range files {
 		if strings.HasPrefix(fi.Name(), fmt.Sprintf("%s_", c.Version)) {
 			if fi.IsDir() {
 				path := filepath.Join(c.Directory, fi.Name())
-				return deleteFile(path)
+				err := deleteFile(path)
+				if err != nil {
+					return errors.E(op, err)
+				}
+				return nil
 			}
 			path := filepath.Join(c.Directory, fi.Name())
 			err := deleteFile(path)
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 		}
 	}
@@ -115,16 +122,21 @@ func (c *CreateOptions) Delete() error {
 }
 
 func (c *CreateOptions) MoveToDir(destDir string) error {
+	var op errors.Op = "cmd.CreateOptions.MoveToDir"
 	files, err := ioutil.ReadDir(c.Directory)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	for _, fi := range files {
 		if strings.HasPrefix(fi.Name(), fmt.Sprintf("%s_", c.Version)) {
 			if fi.IsDir() {
 				path := filepath.Join(c.Directory, fi.Name())
-				return os.Rename(path, filepath.Join(destDir, fi.Name()))
+				err = os.Rename(path, filepath.Join(destDir, fi.Name()))
+				if err != nil {
+					return errors.E(op, err)
+				}
+				return nil
 			}
 		}
 	}
@@ -132,48 +144,72 @@ func (c *CreateOptions) MoveToDir(destDir string) error {
 }
 
 func createFile(fname string, data []byte) error {
+	var op errors.Op = "cmd.createFile"
 	file, err := os.Create(fname)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	defer file.Close()
 
 	_, err = file.Write(data)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
 func deleteFile(fname string) error {
-	return os.RemoveAll(fname)
+	var op errors.Op = "cmd.deleteFile"
+	err := os.RemoveAll(fname)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 func GotoCmd(m *migrate.Migrate, v uint64, direction string) error {
-	return m.Migrate(v, direction)
+	var op errors.Op = "cmd.GotoCmd"
+	err := m.Migrate(v, direction)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 func UpCmd(m *migrate.Migrate, limit int64) error {
+	var op errors.Op = "cmd.UpCmd"
+	var err error
 	if limit >= 0 {
-		return m.Steps(limit)
+		err = m.Steps(limit)
 	} else {
-		return m.Up()
+		err = m.Up()
 	}
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 func DownCmd(m *migrate.Migrate, limit int64) error {
+	var op errors.Op = "cmd.DownCmd"
+	var err error
 	if limit >= 0 {
-		return m.Steps(-limit)
+		err = m.Steps(-limit)
 	} else {
-		return m.Down()
+		err = m.Down()
 	}
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 func SquashCmd(m *migrate.Migrate, from uint64, to int64, version int64, name, directory string) (versions []int64, err error) {
+	var op errors.Op = "cmd.SquashCmd"
 	versions, upSql, downSql, err := m.Squash(from, to)
 	if err != nil {
-		return
+		return versions, errors.E(op, err)
 	}
 
 	createOptions := New(version, name, directory)
@@ -182,12 +218,16 @@ func SquashCmd(m *migrate.Migrate, from uint64, to int64, version int64, name, d
 
 	err = createOptions.Create()
 	if err != nil {
-		return versions, fmt.Errorf("cannot create migration: %w", err)
+		return versions, errors.E(op, fmt.Errorf("cannot create migration: %w", err))
 	}
-
-	return
+	return versions, nil
 }
 
 func GotoVersionCmd(m *migrate.Migrate, gotoVersion int64) error {
-	return m.GotoVersion(gotoVersion)
+	var op errors.Op = "cmd.GotoVersionCmd"
+	err := m.GotoVersion(gotoVersion)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }

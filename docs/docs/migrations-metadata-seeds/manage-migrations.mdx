@@ -47,8 +47,12 @@ Migrations are saved in a series or "versions" of Unix nanosecond timestamped di
 Usually Migrations are created step-by-step whenever you make a change to our database schema on the Console served by
 the Hasura CLI.
 
-:::info Note Only changes to the database schema made using the Console served by the Hasura CLI will be tracked with
-Migrations. Changes made using the Console served by the Hasura Server itself at `/console` will not be tracked. :::
+:::info Note
+
+Only changes to the database schema made using the Console served by the Hasura CLI will be tracked with
+Migrations. Changes made using the Console served by the Hasura Server itself at `/console` will not be tracked.
+
+:::
 
 ### Create an initial Migration with the current database schema
 
@@ -81,7 +85,7 @@ Edit the file and add your migration actions. For the file format and instructio
 to [migration file format](#migrations-file-format).
 
 The corresponding Hasura metadata changes, if any, can be made directly in the appropriate metadata file in the
-/metadata directory, refer to [metadata format](/metadata-format.mdx).
+/metadata directory, refer to [metadata format](/migrations-metadata-seeds/manage-migrations.mdx).
 
 Apply the metadata and migrations:
 
@@ -217,7 +221,7 @@ using this tool.
 
 Hasura CLI contains a tool called `squash` in order to merge multiple migrations into one. This is useful in order to
 improve maintainability of your migrations files and to ensure you can go back to a particular version easily. It's most
-useful when you care working on a feature and there have been multiple changes made to the database schemas during
+useful when you are working on a feature and there have been multiple changes made to the database schemas during
 development leading to multiple Migration files created. With `squash` you can merge these into one directory in order
 to merge the feature into your main branch with one clean and easily understandable Migration.
 

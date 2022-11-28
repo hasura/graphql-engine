@@ -20,7 +20,7 @@ module Hasura.Incremental
     Select (Selector),
     selectD,
     selectKeyD,
-    Cacheable (..),
+    selectMaybeD,
     Accesses,
 
     -- * Cache invalidation
@@ -42,7 +42,7 @@ import Hasura.Prelude
 -- count, so depending on an 'InvalidationKey' provides a mechanism to force portions of the build
 -- process to be reexecuted by calling 'invalidate' before running the build.
 newtype InvalidationKey = InvalidationKey Int
-  deriving (Show, Eq, Cacheable)
+  deriving (Show, Eq, Ord)
 
 initialInvalidationKey :: InvalidationKey
 initialInvalidationKey = InvalidationKey 0

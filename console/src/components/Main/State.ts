@@ -1,9 +1,5 @@
 import { ConsoleNotification } from './ConsoleNotification';
 import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Heroku/types';
-import {
-  StateType as OnboardingSampleDBStateType,
-  initState as onboardingSampleDBState,
-} from '../Services/Data/DataSources/SampleDatabase/ReduxState';
 
 export type CloudProjectInfo = {
   name: string;
@@ -50,6 +46,7 @@ export interface MainState {
       version: string;
       is_function_permissions_inferred: boolean;
       is_admin_secret_set: boolean;
+      default_naming_convention: string;
       is_auth_hook_set: boolean;
       is_remote_schema_permissions_enabled: boolean;
       is_jwt_set: boolean;
@@ -58,6 +55,7 @@ export interface MainState {
         claims_namespace: string;
         claims_format: string;
       };
+      is_prometheus_metrics_enabled: boolean;
     };
     error: Error | null;
     isFetching: boolean;
@@ -70,7 +68,6 @@ export interface MainState {
   };
   cloud: {
     project?: CloudProjectInfo;
-    onboardingSampleDB: OnboardingSampleDBStateType;
   };
 }
 
@@ -96,11 +93,13 @@ const defaultState: MainState = {
       is_auth_hook_set: false,
       is_remote_schema_permissions_enabled: false,
       experimental_features: [],
+      default_naming_convention: '',
       is_jwt_set: false,
       jwt: {
         claims_namespace: '',
         claims_format: '',
       },
+      is_prometheus_metrics_enabled: true,
     },
     error: null,
     isFetching: false,
@@ -113,7 +112,6 @@ const defaultState: MainState = {
   },
   cloud: {
     project: undefined,
-    onboardingSampleDB: onboardingSampleDBState,
   },
 };
 

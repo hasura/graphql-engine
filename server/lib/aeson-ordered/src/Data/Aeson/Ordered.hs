@@ -280,7 +280,7 @@ value = do
     C_n -> A8.string "null" $> Null
     _
       | w >= 48 && w <= 57 || w == 45 ->
-        Number <$> A8.scientific
+          Number <$> A8.scientific
       | otherwise -> fail "not a valid json value"
 {-# INLINE value #-}
 

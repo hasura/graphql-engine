@@ -8,7 +8,9 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -17,17 +19,17 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	ErrIsAlreadyInstalled  = errors.New("can't install, plugin is already installed")
-	ErrIsNotInstalled      = errors.New("plugin is not installed")
-	ErrIsAlreadyUpgraded   = errors.New("can't upgrade, the newest version is already installed")
-	ErrVersionNotAvailable = errors.New("plugin version is not available")
+	ErrIsAlreadyInstalled  = fmt.Errorf("can't install, plugin is already installed")
+	ErrIsNotInstalled      = fmt.Errorf("plugin is not installed")
+	ErrIsAlreadyUpgraded   = fmt.Errorf("can't upgrade, the newest version is already installed")
+	ErrVersionNotAvailable = fmt.Errorf("plugin version is not available")
 )
 
 // IndexBranchRef - branch to be used for index
@@ -65,27 +67,33 @@ func New(base string) *Config {
 
 // Prepare makes sure that the plugins directory is initialized
 func (c *Config) Prepare() error {
-	return errors.Wrap(ensureDirs(c.Paths.BasePath(),
+	var op errors.Op = "plugins.Config.Prepare"
+	err := ensureDirs(c.Paths.BasePath(),
 		c.Paths.DownloadPath(),
 		c.Paths.InstallPath(),
 		c.Paths.BinPath(),
 		c.Paths.InstallReceiptsPath(),
-	), "unable to create plugin directories")
+	)
+	if err != nil {
+		return errors.E(op, fmt.Errorf("unable to create plugin directories: %w", err))
+	}
+	return nil
 }
 
 // ListInstalledPlugins returns a list of all install plugins in a
 // name:version format based on the install receipts at the specified dir.
 func (c *Config) ListInstalledPlugins() (map[string]string, error) {
+	var op errors.Op = "plugins.Config.ListInstalledPlugins"
 	receiptsDir := c.Paths.InstallReceiptsPath()
 	matches, err := filepath.Glob(filepath.Join(receiptsDir, "*"+paths.ManifestExtension))
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to grab receipts directory (%s) for manifests", receiptsDir)
+		return nil, errors.E(op, fmt.Errorf("failed to grab receipts directory (%s) for manifests: %w", receiptsDir, err))
 	}
 	installed := make(map[string]string)
 	for _, m := range matches {
 		r, err := c.LoadManifest(m)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse plugin install receipt %s", m)
+			return nil, errors.E(op, fmt.Errorf("failed to parse plugin install receipt %s: %w", m, err))
 		}
 		installed[r.Name] = r.Version
 	}
@@ -93,42 +101,48 @@ func (c *Config) ListInstalledPlugins() (map[string]string, error) {
 }
 
 func (c *Config) ListPlugins() (Plugins, error) {
-	return c.LoadPluginListFromFS(c.Paths.IndexPluginsPath())
+	var op errors.Op = "plugins.Config.ListPlugins"
+	plugins, err := c.LoadPluginListFromFS(c.Paths.IndexPluginsPath())
+	if err != nil {
+		return plugins, errors.E(op, err)
+	}
+	return plugins, nil
 }
 
 func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
+	var op errors.Op = "plugins.Config.GetPlugin"
 	var plugin Plugin
 	var err error
 	if opts.ManifestFile == "" {
 		// Load the plugin index by name
 		ps, err := c.LoadPluginByName(pluginName)
 		if err != nil {
-			if os.IsNotExist(err) {
-				return plugin, errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
+			if stderrors.Is(err, fs.ErrNotExist) {
+				return plugin, errors.E(op, fmt.Errorf("plugin %q does not exist in the plugin index", pluginName))
 			}
-			return plugin, errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
+			return plugin, errors.E(op, fmt.Errorf("failed to load plugin %q from the index: %w", pluginName, err))
 		}
 
 		// Load the installed manifest
 		pluginReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(pluginName))
-		if err != nil && !os.IsNotExist(err) {
-			return plugin, errors.Wrap(err, "failed to look up plugin receipt")
+		if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
+			return plugin, errors.E(op, fmt.Errorf("failed to look up plugin receipt: %w", err))
 		}
 
 		if opts.Version != nil {
 			if pluginReceipt.Version == opts.Version.Original() {
-				return plugin, ErrIsAlreadyInstalled
+				return plugin, errors.E(op, ErrIsAlreadyInstalled)
 			}
 			// check if version is available
 			ver := ps.Index.Search(opts.Version)
 			if ver != nil {
 				plugin = ps.Versions[ver]
 			} else {
-				return plugin, ErrVersionNotAvailable
+				return plugin, errors.E(op, ErrVersionNotAvailable)
 			}
 		} else {
 			if err == nil {
-				return plugin, ErrIsAlreadyInstalled
+				return plugin, errors.E(op, ErrIsAlreadyInstalled)
 			}
 			// get the latest version
 			latestVersion := ps.Index[len(ps.Index)-1]
@@ -137,55 +151,64 @@ func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 	} else {
 		plugin, err = c.ReadPluginFromFile(opts.ManifestFile)
 		if err != nil {
-			return plugin, errors.Wrap(err, "failed to load plugin manifest from file")
+			return plugin, errors.E(op, fmt.Errorf("failed to load plugin manifest from file: %w", err))
 		}
 		if plugin.Name != pluginName {
-			return plugin, fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, opts.ManifestFile)
+			return plugin, errors.E(op, fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, opts.ManifestFile))
 		}
 	}
 	return plugin, nil
 }
 
 func (c *Config) Install(plugin Plugin) error {
+	var op errors.Op = "plugins.Config.Install"
 	// Find available installation platform
 	platform, ok, err := MatchPlatform(plugin.Platforms)
 	if err != nil {
-		return errors.Wrap(err, "failed trying to find a matching platform in plugin spec")
+		return errors.E(op, fmt.Errorf("failed trying to find a matching platform in plugin spec: %w", err))
 	}
 	if !ok {
-		return errors.Errorf("plugin %q does not offer installation for this platform", plugin.Name)
+		return errors.E(op, fmt.Errorf("plugin %q does not offer installation for this platform", plugin.Name))
 	}
 	if err := c.installPlugin(plugin, platform); err != nil {
-		return errors.Wrap(err, "install failed")
+		return errors.E(op, fmt.Errorf("install failed: %w", err))
 	}
 	err = c.StoreManifest(plugin, c.Paths.PluginInstallReceiptPath(plugin.Name))
-	return errors.Wrap(err, "installation receipt could not be stored, uninstall may fail")
+	if err != nil {
+		return errors.E(op, fmt.Errorf("installation receipt could not be stored, uninstall may fail: %w", err))
+	}
+	return nil
 }
 
 // Uninstall will uninstall a plugin.
 func (c *Config) Uninstall(name string) error {
+	var op errors.Op = "plugins.Config.Uninstall"
 	if _, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(name)); err != nil {
-		if os.IsNotExist(err) {
-			return ErrIsNotInstalled
+		if stderrors.Is(err, fs.ErrNotExist) {
+			return errors.E(op, ErrIsNotInstalled)
 		}
-		return errors.Wrapf(err, "failed to look up install receipt for plugin %q", name)
+		return errors.E(op, fmt.Errorf("failed to look up install receipt for plugin %q: %w", name, err))
 	}
 
 	symlinkPath := filepath.Join(c.Paths.BinPath(), PluginNameToBin(name, IsWindows()))
 	if err := removeLink(symlinkPath); err != nil {
-		return errors.Wrap(err, "could not uninstall symlink of plugin")
+		return errors.E(op, fmt.Errorf("could not uninstall symlink of plugin: %w", err))
 	}
 
 	pluginInstallPath := c.Paths.PluginInstallPath(name)
 	if err := os.RemoveAll(pluginInstallPath); err != nil {
-		return errors.Wrapf(err, "could not remove plugin directory %q", pluginInstallPath)
+		return errors.E(op, fmt.Errorf("could not remove plugin directory %q: %w", pluginInstallPath, err))
 	}
 	pluginReceiptPath := c.Paths.PluginInstallReceiptPath(name)
 	err := os.Remove(pluginReceiptPath)
-	return errors.Wrapf(err, "could not remove plugin receipt %q", pluginReceiptPath)
+	if err != nil {
+		return errors.E(op, fmt.Errorf("could not remove plugin receipt %q: %w", pluginReceiptPath, err))
+	}
+	return nil
 }
 
 func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
+	var op errors.Op = "plugins.Config.installPlugin"
 	downloadStagingDir := filepath.Join(c.Paths.DownloadPath(), plugin.Name)
 	installDir := c.Paths.PluginVersionInstallPath(plugin.Name, plugin.Version)
 	binDir := c.Paths.BinPath()
@@ -195,7 +218,7 @@ func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
 	if err != nil {
 		// Download and extract
 		if err := os.MkdirAll(downloadStagingDir, 0755); err != nil {
-			return errors.Wrapf(err, "could not create staging dir %q", downloadStagingDir)
+			return errors.E(op, fmt.Errorf("could not create staging dir %q: %w", downloadStagingDir, err))
 		}
 		defer func() {
 			c.Logger.Debugf("Deleting the download staging directory %s", downloadStagingDir)
@@ -205,39 +228,46 @@ func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
 		}()
 
 		if err := downloadAndExtract(downloadStagingDir, platform.URI, platform.Sha256); err != nil {
-			return errors.Wrap(err, "failed to unpack into staging dir")
+			return errors.E(op, fmt.Errorf("failed to unpack into staging dir: %w", err))
 		}
 
 		if err := moveToInstallDir(downloadStagingDir, installDir, platform.Files); err != nil {
-			return errors.Wrap(err, "failed while moving files to the installation directory")
+			return errors.E(op, fmt.Errorf("failed while moving files to the installation directory: %w", err))
 		}
 	}
 
 	subPathAbs, err := filepath.Abs(installDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get the absolute fullPath of %q", installDir)
+		return errors.E(op, fmt.Errorf("failed to get the absolute fullPath of %q: %w", installDir, err))
 	}
 	fullPath := filepath.Join(installDir, filepath.FromSlash(platform.Bin))
 	pathAbs, err := filepath.Abs(fullPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get the absolute fullPath of %q", fullPath)
+		return errors.E(op, fmt.Errorf("failed to get the absolute fullPath of %q: %w", fullPath, err))
 	}
 	if _, ok := IsSubPath(subPathAbs, pathAbs); !ok {
-		return errors.Wrapf(err, "the fullPath %q does not extend the sub-fullPath %q", fullPath, installDir)
+		if err != nil {
+			return errors.E(op, fmt.Errorf("the fullPath %q does not extend the sub-fullPath %q: %w", fullPath, installDir, err))
+		}
+		return nil
 	}
 	err = createOrUpdateLink(binDir, fullPath, plugin.Name)
-	return errors.Wrap(err, "failed to link installed plugin")
+	if err != nil {
+		return errors.E(op, fmt.Errorf("failed to link installed plugin: %w", err))
+	}
+	return nil
 }
 
 // Upgrade will reinstall and delete the old plugin. The operation tries
 // to not get the plugin dir in a bad state if it fails during the process.
 func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, error) {
+	var op errors.Op = "plugins.Config.Upgrade"
 	ps, err := c.LoadPluginByName(pluginName)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return Plugin{}, errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
+		if stderrors.Is(err, fs.ErrNotExist) {
+			return Plugin{}, errors.E(op, fmt.Errorf("plugin %q does not exist in the plugin index", pluginName))
 		}
-		return Plugin{}, errors.Wrapf(err, "failed to load the plugin manifest for plugin %s", pluginName)
+		return Plugin{}, errors.E(op, fmt.Errorf("failed to load the plugin manifest for plugin %s: %w", pluginName, err))
 	}
 
 	// get the latest version
@@ -247,7 +277,7 @@ func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, er
 		if ver != nil {
 			plugin = ps.Versions[ver]
 		} else {
-			return Plugin{}, ErrVersionNotAvailable
+			return Plugin{}, errors.E(op, ErrVersionNotAvailable)
 		}
 	} else {
 		latestVersion := ps.Index[len(ps.Index)-1]
@@ -256,7 +286,7 @@ func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, er
 
 	installReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(plugin.Name))
 	if err != nil {
-		return plugin, errors.Wrapf(err, "failed to load install receipt for plugin %q", plugin.Name)
+		return plugin, errors.E(op, fmt.Errorf("failed to load install receipt for plugin %q: %w", plugin.Name, err))
 	}
 
 	if installReceipt.ParsedVersion == nil {
@@ -267,42 +297,56 @@ func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, er
 	// Find available installation platform
 	platform, ok, err := MatchPlatform(plugin.Platforms)
 	if err != nil {
-		return plugin, errors.Wrap(err, "failed trying to find a matching platform in plugin spec")
+		return plugin, errors.E(op, fmt.Errorf("failed trying to find a matching platform in plugin spec: %w", err))
 	}
 	if !ok {
-		return plugin, errors.Errorf("plugin %q does not offer installation for this platform (%s)",
-			plugin.Name, fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+		return plugin, errors.E(op, fmt.Errorf("plugin %q does not offer installation for this platform (%s)",
+			plugin.Name, fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)))
 	}
 
 	// See if it's a newer version
 	if installReceipt.ParsedVersion != nil {
 		if !installReceipt.ParsedVersion.LessThan(plugin.ParsedVersion) || installReceipt.ParsedVersion.Equal(plugin.ParsedVersion) {
-			return plugin, ErrIsAlreadyUpgraded
+			return plugin, errors.E(op, ErrIsAlreadyUpgraded)
 		}
 	}
 
 	if err = c.StoreManifest(plugin, c.Paths.PluginInstallReceiptPath(plugin.Name)); err != nil {
-		return plugin, errors.Wrap(err, "installation receipt could not be stored, uninstall may fail")
+		return plugin, errors.E(op, fmt.Errorf("installation receipt could not be stored, uninstall may fail: %w", err))
 	}
 
 	// Re-Install
 	if err := c.installPlugin(plugin, platform); err != nil {
-		return plugin, errors.Wrap(err, "failed to install new version")
+		return plugin, errors.E(op, fmt.Errorf("failed to install new version: %w", err))
 	}
 
 	// Clean old installations
-	return plugin, os.RemoveAll(c.Paths.PluginVersionInstallPath(plugin.Name, installReceipt.Version))
+	err = os.RemoveAll(c.Paths.PluginVersionInstallPath(plugin.Name, installReceipt.Version))
+	if err != nil {
+		return plugin, errors.E(op, err)
+	}
+	return plugin, nil
 }
 
 func (c *Config) LoadManifest(path string) (Plugin, error) {
-	return c.ReadPluginFromFile(path)
+	var op errors.Op = "plugins.Config.LoadManifest"
+	plugin, err := c.ReadPluginFromFile(path)
+	if err != nil {
+		return plugin, errors.E(op, err)
+	}
+	return plugin, nil
 }
 
 func (c *Config) StoreManifest(plugin Plugin, dest string) error {
+	var op errors.Op = "plugins.Config.StoreManifest"
 	yamlBytes, err := yaml.Marshal(plugin)
 	if err != nil {
-		return errors.Wrapf(err, "convert to yaml")
+		return errors.E(op, fmt.Errorf("convert to yaml: %w", err))
 	}
 	err = ioutil.WriteFile(dest, yamlBytes, 0644)
-	return errors.Wrapf(err, "write plugin receipt %q", dest)
+	if err != nil {
+		return errors.E(op, fmt.Errorf("write plugin receipt %q: %w", dest, err))
+	}
+	return nil
+
 }

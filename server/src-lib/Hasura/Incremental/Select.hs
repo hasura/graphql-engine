@@ -1,9 +1,11 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
 module Hasura.Incremental.Select
   ( Select (..),
     ConstS (..),
     selectKey,
+    FMapS (..),
     FieldS (..),
     UniqueS,
     newUniqueS,
@@ -49,13 +51,38 @@ class (GCompare (Selector a)) => Select a where
   default select :: Selector a ~ FieldS a => Selector a b -> a -> b
   select (FieldS (_ :: Proxy s)) = getField @s
 
-instance (Eq k, Ord k, Hashable k) => Select (HashMap k v) where
+instance (Ord k, Hashable k) => Select (HashMap k v) where
   type Selector (HashMap k v) = ConstS k (Maybe v)
   select (ConstS k) = M.lookup k
 
 instance (GCompare k) => Select (DM.DMap k f) where
   type Selector (DM.DMap k f) = DMapS k f
   select (DMapS k) = DM.lookup k
+
+newtype FMap f x = FMap {unFMap :: f x}
+  deriving (Functor)
+
+data FMapS f a b where
+  FMapS :: Selector a b -> FMapS f a (f b)
+
+instance Select a => GEq (FMapS f a) where
+  FMapS sel1 `geq` FMapS sel2 =
+    case sel1 `geq` sel2 of
+      Just Refl -> Just Refl
+      Nothing -> Nothing
+
+instance Select a => GCompare (FMapS f a) where
+  gcompare (FMapS sel1) (FMapS sel2) =
+    case gcompare sel1 sel2 of
+      GLT -> GLT
+      GEQ -> GEQ
+      GGT -> GGT
+
+instance (Functor f, Select a) => Select (FMap f a) where
+  type Selector (FMap f a) = FMapS f a
+  select (FMapS s) = unFMap . fmap (select s)
+
+deriving via FMap Maybe a instance Select a => Select (Maybe a)
 
 -- | The constant selector, which is useful for representing selectors into data structures where
 -- all fields have the same type. Matching on a value of type @'ConstS' k a b@ causes @a@ and @b@ to

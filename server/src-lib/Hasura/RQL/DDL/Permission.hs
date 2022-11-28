@@ -52,10 +52,10 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
-import Hasura.Server.Types (StreamingSubscriptionsCtx (..))
 import Hasura.Session
 
 {- Note [Backend only permissions]
@@ -149,7 +149,7 @@ For example:
 ------------
 We've a table "user" tracked by hasura and a role "public"
 
-* If the update permission for the table "user" is marked as backend_only then the
+\* If the update permission for the table "user" is marked as backend_only then the
   GQL context for that table will look like:
 
     {"public": (["insert_user","delete_user"], ["update_user"])}
@@ -158,7 +158,7 @@ We've a table "user" tracked by hasura and a role "public"
   by default on the frontend client. And the 'update_user' opertaion is only visible
   when the `x-hasura-use-backend-only-permissions` request header is present.
 
-* If there is no backend_only permissions defined on the role then the GQL context
+\* If there is no backend_only permissions defined on the role then the GQL context
   looks like:
 
     {"public": (["insert_user","delete_user", "update_user"], [])}
@@ -213,16 +213,19 @@ addPermissionToMetadata permDef = case _pdPermission permDef of
   DelPerm' _ -> tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
 
 buildPermInfo ::
-  (BackendMetadata b, QErrM m, TableCoreInfoRM b m) =>
+  ( BackendMetadata b,
+    QErrM m,
+    TableCoreInfoRM b m,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   RoleName ->
-  StreamingSubscriptionsCtx ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildPermInfo x1 x2 x3 roleName streamingSubscriptionsCtx = \case
-  SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName streamingSubscriptionsCtx p
+buildPermInfo x1 x2 x3 roleName = \case
+  SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName p
   InsPerm' p -> buildInsPermInfo x1 x2 x3 p
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
@@ -292,7 +295,11 @@ runDropPerm permType (DropPerm source table role) = do
 
 buildInsPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -311,8 +318,9 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
           ci <- askColInfo fieldInfoMap col ""
           unless (_cmIsInsertable $ ciMutability ci) $
             throw500
-              ( "Column " <> col
-                  <<> " is not insertable and so cannot have insert permissions defined"
+              ( "Column "
+                  <> col
+                    <<> " is not insertable and so cannot have insert permissions defined"
               )
 
     let fltrHeaders = getDependentHeaders checkCond
@@ -335,25 +343,25 @@ validateAllowedRootFields ::
   SourceName ->
   TableName b ->
   RoleName ->
-  StreamingSubscriptionsCtx ->
   SelPerm b ->
   m (AllowedRootFields QueryRootFieldType, AllowedRootFields SubscriptionRootFieldType)
-validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {..} = do
+validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
   tableCoreInfo <- lookupTableCoreInfo @b tableName >>= (`onNothing` (throw500 $ "unexpected: table not found " <>> tableName))
 
   -- validate the query_root_fields and subscription_root_fields values
   let needToValidatePrimaryKeyRootField =
-        QRFTSelectByPk `rootFieldNeedsValidation` spAllowedQueryRootFields
-          || SRFTSelectByPk `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+        QRFTSelectByPk
+          `rootFieldNeedsValidation` spAllowedQueryRootFields
+          || SRFTSelectByPk
+          `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
       needToValidateAggregationRootField =
-        QRFTSelectAggregate `rootFieldNeedsValidation` spAllowedQueryRootFields
-          || SRFTSelectAggregate `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
-      needToValidateStreamingRootField =
-        SRFTSelectStream `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+        QRFTSelectAggregate
+          `rootFieldNeedsValidation` spAllowedQueryRootFields
+          || SRFTSelectAggregate
+          `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
 
   when needToValidatePrimaryKeyRootField $ validatePrimaryKeyRootField tableCoreInfo
   when needToValidateAggregationRootField $ validateAggregationRootField
-  when needToValidateStreamingRootField $ validateStreamingRootField
 
   pure (spAllowedQueryRootFields, spAllowedSubscriptionRootFields)
   where
@@ -366,9 +374,10 @@ validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {.
         "The \"select_by_pk\" field cannot be included in the query_root_fields or subscription_root_fields"
           <> " because the role "
           <> roleName
-          <<> " does not have access to the primary key of the table "
+            <<> " does not have access to the primary key of the table "
           <> tableName
-          <<> " in the source " <>> sourceName
+            <<> " in the source "
+            <>> sourceName
     validatePrimaryKeyRootField TableCoreInfo {..} =
       case _tciPrimaryKey of
         Nothing -> pkValidationError
@@ -386,28 +395,26 @@ validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {.
           "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
             <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
 
-    validateStreamingRootField =
-      unless (streamSubsCtx == StreamingSubscriptionsEnabled) $
-        throw400 ValidationFailed $
-          "The \"select_stream\" root field can only be included in the query_root_fields or "
-            <> " the subscription_root_fields when streaming subscriptions is enabled"
-
 buildSelPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   RoleName ->
-  StreamingSubscriptionsCtx ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withPathK "permission" $ do
+buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permission" $ do
   let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
 
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
-      procBoolExp source tableName fieldInfoMap $ spFilter sp
+      procBoolExp source tableName fieldInfoMap $
+        spFilter sp
 
   -- check if the columns exist
   void $
@@ -424,15 +431,17 @@ buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withP
           ReturnsScalar _ -> pure fieldName
           ReturnsTable returnTable ->
             throw400 NotSupported $
-              "select permissions on computed field " <> fieldName
-                <<> " are auto-derived from the permissions on its returning table "
+              "select permissions on computed field "
+                <> fieldName
+                  <<> " are auto-derived from the permissions on its returning table "
                 <> returnTable
-                <<> " and cannot be specified manually"
+                  <<> " and cannot be specified manually"
           ReturnsOthers -> pure fieldName
 
   let deps =
-        mkParentDep @b source tableName :
-        boolExpDeps ++ map (mkColDep @b DRUntyped source tableName) pgCols
+        mkParentDep @b source tableName
+          : boolExpDeps
+          ++ map (mkColDep @b DRUntyped source tableName) pgCols
           ++ map (mkComputedFieldDep @b DRUntyped source tableName) validComputedFields
       spiRequiredHeaders = getDependentHeaders $ spFilter sp
       spiLimit = spLimit sp
@@ -445,7 +454,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withP
       spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
-    validateAllowedRootFields source tableName roleName streamSubsCtx sp
+    validateAllowedRootFields source tableName roleName sp
 
   return (SelPermInfo {..}, deps)
   where
@@ -455,7 +464,11 @@ buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withP
 
 buildUpdPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -480,8 +493,9 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
         ci <- askColInfo fieldInfoMap updCol ""
         unless (_cmIsUpdatable $ ciMutability ci) $
           throw500
-            ( "Column " <> updCol
-                <<> " is not updatable and so cannot have update permissions defined"
+            ( "Column "
+                <> updCol
+                  <<> " is not updatable and so cannot have update permissions defined"
             )
 
   let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
@@ -498,7 +512,11 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
 
 buildDelPermInfo ::
   forall b m.
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->

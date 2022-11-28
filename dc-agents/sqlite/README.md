@@ -9,10 +9,11 @@ The SQLite agent currently supports the following capabilities:
 
 * [x] GraphQL Schema
 * [x] GraphQL Queries
-* [ ] GraphQL Mutations
 * [x] Relationships
 * [x] Aggregations
-* [ ] Exposing Foreign-Key Information
+* [x] Prometheus Metrics
+* [x] Exposing Foreign-Key Information
+* [ ] Mutations
 * [ ] Subscriptions
 * [ ] Streaming Subscriptions
 
@@ -25,6 +26,7 @@ Note: You are able to get detailed metadata about the agent's capabilities by
 * SQLite `>= 3.38.0` or compiled in JSON support
     * Required for the json_group_array() and json_group_object() aggregate SQL functions
     * https://www.sqlite.org/json1.html#jgrouparray
+* Note: NPM is used for the [TS Types for the DC-API protocol](https://www.npmjs.com/package/@hasura/dc-api-types)
 
 ## Build & Run
 
@@ -40,28 +42,6 @@ Or a simple dev-loop via `entr`:
 echo src/**/*.ts | xargs -n1 echo | DB_READONLY=y entr -r npm run start
 ```
 
-## Options / Environment Variables
-
-* ENV: `PORT=[INT]` - Port for agent to listen on. 8100 by default.
-* ENV: `PERMISSIVE_CORS={1|true|yes}` - Allows all requests - Useful for testing with SwaggerUI. Turn off on production.
-* ENV: `DB_CREATE={1|true|yes}` - Allows new databases to be created, not permitted by default.
-* ENV: `DB_READONLY={1|true|yes}` - Makes databases readonly, they are read-write by default.
-* ENV: `DB_ALLOW_LIST=DB1[,DB2]*` - Restrict what databases can be connected to.
-* ENV: `DB_PRIVATECACHE` - Keep caches between connections private. Shared by default.
-* ENV: `DEBUGGING_TAGS` - Outputs xml style tags in query comments for deugging purposes.
-
-## Agent usage
-
-The agent is configured as per the configuration schema.
-
-The only required field is `db` which specifies a local sqlite database to use.
-
-The schema is exposed via introspection, but you can limit which tables are referenced by
-
-* Explicitly enumerating them via the `tables` field, or
-* Toggling the `include_sqlite_meta_tables` to include or exclude sqlite meta tables.
-
-
 ## Docker Build & Run
 
 ```
@@ -70,6 +50,44 @@ The schema is exposed via introspection, but you can limit which tables are refe
 ```
 
 You will want to mount a volume with your database(s) so that they can be referenced in configuration.
+
+## Options / Environment Variables
+
+Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `yes`, or omitted and default to `false`.
+
+| ENV Variable Name | Format | Default | Info |
+| --- | --- | --- | --- |
+| `PORT` | `INT` | `8100` | Port for agent to listen on. |
+| `PERMISSIVE_CORS` | `{FLAG}` | `false` | Allows all requests - Useful for testing with SwaggerUI. Turn off on production. |
+| `DB_CREATE` | `{FLAG}` | `false` | Allows new databases to be created. |
+| `DB_READONLY` | `{FLAG}` | `false` | Makes databases readonly. |
+| `DB_ALLOW_LIST` | `DB1[,DB2]*` | Any Allowed | Restrict what databases can be connected to. |
+| `DB_PRIVATECACHE` | `{FLAG}` | Shared | Keep caches between connections private. |
+| `DEBUGGING_TAGS` | `{FLAG}` | `false` | Outputs xml style tags in query comments for deugging purposes. |
+| `PRETTY_PRINT_LOGS` | `{FLAG}` | `false` | Uses `pino-pretty` to pretty print request logs |
+| `LOG_LEVEL` | `fatal` \| `error` \| `info` \| `debug` \| `trace` \| `silent` | `info` | The minimum log level to output |
+| `METRICS` | `{FLAG}` | `false` | Enables a `/metrics` prometheus metrics endpoint.
+| `QUERY_LENGTH_LIMIT` | `INT` | `Infinity` | Puts a limit on the length of generated SQL before execution. |
+
+## Agent usage
+
+The agent is configured as per the configuration schema. The valid configuration properties are:
+
+| Property | Type | Default |
+| -------- | ---- | ------- |
+| `db` | `string` | |
+| `tables` | `string[]` | `null` |
+| `include_sqlite_meta_tables` | `boolean` | `false` |
+| `explicit_main_schema` | `boolean` | `false `
+
+The only required property is `db` which specifies a local sqlite database to use.
+
+The schema is exposed via introspection, but you can limit which tables are referenced by
+
+* Explicitly enumerating them via the `tables` property, or
+* Toggling the `include_sqlite_meta_tables` to include or exclude sqlite meta tables.
+
+The `explicit_main_schema` field can be set to opt into exposing tables by their fully qualified names (ie `["main", "MyTable"]` instead of just `["MyTable"]`).
 
 ## Dataset
 
@@ -82,13 +100,14 @@ The dataset used for testing the reference agent is sourced from:
 Run:
 
 ```sh
-cabal run graphql-engine:test:tests-dc-api -- test --agent-base-url http://localhost:8100 --agent-config '{"db": "db.chinook2.sqlite"}'
+cabal run dc-api:test:tests-dc-api -- test --agent-base-url http://localhost:8100 --agent-config '{"db": "db.chinook2.sqlite"}'
 ```
 
 From the HGE repo.
 
 ## TODO
 
+* [x] Prometheus metrics hosted at `/metrics`
 * [ ] Pull reference types from a package rather than checked-in files
 * [x] Health Check
 * [x] DB Specific Health Checks
@@ -121,30 +140,3 @@ From the HGE repo.
 * [x] ORDER clause in aggregates breaks SQLite parser for some reason
 * [x] Check that looped exist check doesn't cause name conflicts
 * [ ] `NOT EXISTS IS NULL` != `EXISTS IS NOT NULL`, Example:
-    sqlite> create table test(testid string);
-    sqlite> .schema
-    CREATE TABLE test(testid string);
-    sqlite> select 1 where exists(select * from test where testid is null);
-    sqlite> select 1 where exists(select * from test where testid is not null);
-    sqlite> select 1 where not exists(select * from test where testid is null);
-    1
-    sqlite> select 1 where not exists(select * from test where testid is not null);
-    1
-    sqlite> insert into test(testid) values('foo');
-    sqlite> insert into test(testid) values(NULL);
-    sqlite> select * from test;
-    foo
-
-    sqlite> select 1 where exists(select * from test where testid is null);
-    1
-    sqlite> select 1 where exists(select * from test where testid is not null);
-    1
-    sqlite> select 1 where not exists(select * from test where testid is null);
-    sqlite> select 1 where exists(select * from test where testid is not null);
-    1
-
-# Known Bugs
-
-## Tricky Aggregates may have logic bug
-
-Replicate by running the agent test-suite.

@@ -34,7 +34,6 @@ Available options are documented in `scripts/parse-pytest-backend`:
 - bigquery (see section below)
 - citus
 - mssql
-- mysql
 
 #### Filtering tests
 
@@ -118,7 +117,7 @@ some of the tests are executed.
 
 5. Optionally, add more sources to test against:
 
-   If the tests include more sources (e.g., by using `-k MSSQL or MySQL`), then you can use the following commands to add sources to your running graphql instance:
+   If the tests include more sources (e.g., by using `-k MSSQL`), then you can use the following commands to add sources to your running graphql instance:
 
    ```
    # Add a Postgres source
@@ -276,7 +275,7 @@ The current convention is to indicate the backend(s) tests can be run against in
 
 This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
 
-The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
+The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MSSQL" --backend mssql` to run all MSSQL tests.
 
 Note that `--backend` does not interact with the selection of tests. You will generally have to combine `--backend` with `-k`.
 

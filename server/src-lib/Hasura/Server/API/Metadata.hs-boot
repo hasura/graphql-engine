@@ -5,6 +5,7 @@ where
 
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Permission
@@ -14,19 +15,22 @@ import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
+import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend
 
 data RQLMetadataV1
@@ -35,13 +39,17 @@ data RQLMetadataV1
   | RMDropSource DropSource
   | RMRenameSource !RenameSource
   | RMUpdateSource !(AnyBackend UpdateSource)
+  | RMListSourceKinds !ListSourceKinds
+  | RMGetSourceKindCapabilities !GetSourceKindCapabilities
+  | RMGetSourceTables !GetSourceTables
+  | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
   | -- Tables (PG-specific)
-    RMPgSetTableIsEnum !SetTableIsEnum
+    RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
   | -- Tables permissions
     RMCreateInsertPermission !(AnyBackend (CreatePerm InsPerm))
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
@@ -77,6 +85,9 @@ data RQLMetadataV1
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
+  | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
+  | RMResumeEventTriggerCleanup !TriggerLogCleanupToggleConfig
+  | RMPauseEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
   | RMUpdateRemoteSchema !AddRemoteSchemaQuery
@@ -96,7 +107,7 @@ data RQLMetadataV1
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
-  | RMGetEventInvocations !GetEventInvocations
+  | RMGetScheduledEventInvocations !GetScheduledEventInvocations
   | RMGetCronTriggers
   | -- Actions
     RMCreateAction !(Unvalidated CreateAction)
@@ -106,6 +117,7 @@ data RQLMetadataV1
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
     RMCreateQueryCollection !CreateCollection
+  | RMRenameQueryCollection !RenameCollection
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
@@ -115,6 +127,9 @@ data RQLMetadataV1
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint
+  | -- GraphQL Data Connectors
+    RMDCAddAgent !DCAddAgent
+  | RMDCDeleteAgent !DCDeleteAgent
   | -- Custom types
     RMSetCustomTypes !CustomTypes
   | -- Api limits
@@ -140,6 +155,9 @@ data RQLMetadataV1
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
   | -- QueryTags
     RMSetQueryTagsConfig !SetQueryTagsConfig
+  | -- OpenTelemetry
+    RMSetOpenTelemetryConfig !OpenTelemetryConfig
+  | RMSetOpenTelemetryStatus !OtelStatus
   | -- Debug
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState

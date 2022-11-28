@@ -11,6 +11,6 @@ response:
   internal:
     query: "SOME RANDOM INVALID QUERY;\n"
   path: $
-  error: Syntax error or access violation. [Microsoft][ODBC Driver 17 for SQL Server][SQL
+  error: Syntax error or access violation. [Microsoft][ODBC Driver 18 for SQL Server][SQL
     Server]Incorrect syntax near the keyword 'SOME'.
   code: bad-request

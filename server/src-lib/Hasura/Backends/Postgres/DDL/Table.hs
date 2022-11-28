@@ -16,7 +16,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.Types
@@ -109,7 +109,9 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
                   value NE.:| [] -> "value " <> value <<> " is not a valid GraphQL enum value name"
                   value2 NE.:| [value1] -> "values " <> value1 <<> " and " <> value2 <<> pluralString
                   lastValue NE.:| otherValues ->
-                    "values " <> commaSeparated (reverse otherValues) <> ", and "
+                    "values "
+                      <> commaSeparated (reverse otherValues)
+                      <> ", and "
                       <> lastValue <<> pluralString
              in "the " <> valuesString
           EnumTableNonTextualCommentColumn colInfo -> typeMismatch "comment column" colInfo PGText
@@ -121,7 +123,10 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
               <> ")"
           where
             typeMismatch description colInfo expected =
-              "the table’s " <> description <> " (" <> rciName colInfo <<> ") must have type "
+              "the table’s "
+                <> description
+                <> " ("
+                <> rciName colInfo <<> ") must have type "
                 <> expected <<> ", not type " <>> rciType colInfo
 
 fetchEnumValuesFromDb ::
@@ -135,13 +140,13 @@ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
   let nullExtr = Extractor SENull Nothing
       commentExtr = maybe nullExtr (mkExtr . rciName) maybeCommentColumn
       query =
-        Q.fromBuilder $
+        PG.fromBuilder $
           toSQL
             mkSelect
               { selFrom = Just $ mkSimpleFromExp tableName,
                 selExtr = [mkExtr (rciName primaryKeyColumn), commentExtr]
               }
-  rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+  rawEnumValues <- liftTx $ PG.withQE defaultTxErrorHandler query () True
   when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
   let enumValues = flip map rawEnumValues $
         \(enumValueText, comment) ->

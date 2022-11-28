@@ -180,17 +180,19 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   forall n m origin a.
-  (MonadError ErrorMessage n, MonadParse m, Eq origin, Hashable origin, ToErrorValue origin) =>
+  (MonadError ErrorMessage n, MonadParse m, Hashable origin, ToErrorValue origin) =>
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
   n (Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
-safeSelectionSet name description fields
-  | null duplicates = pure $ selectionSetObject name description fields []
-  | otherwise =
-    throwError $ case description of
-      Nothing -> "found duplicate fields in selection set: " <> duplicatesList
-      Just (Description d) -> "found duplicate fields in selection set for " <> toErrorMessage d <> ": " <> duplicatesList
+{-# INLINE safeSelectionSet #-}
+safeSelectionSet name description fields =
+  case duplicatesList of
+    [] -> pure $ selectionSetObject name description fields []
+    -- singular
+    [duplicate] -> throwError $ "Encountered conflicting definitions in the selection set for " <> toErrorValue name <> " for field " <> duplicate <> ". Fields must not be defined more than once across all sources."
+    -- plural
+    printedDuplicates -> throwError $ "Encountered conflicting definitions in the selection set for " <> toErrorValue name <> " for fields: " <> toErrorValue printedDuplicates <> ". Fields must not be defined more than once across all sources."
   where
     namesOrigins :: HashMap Name [Maybe origin]
     namesOrigins = M.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields
@@ -202,10 +204,10 @@ safeSelectionSet name description fields
        in if
               | null origins -> toErrorValue fieldName
               | any Maybe.isNothing originsM ->
-                toErrorValue fieldName <> " (generated for " <> toErrorValue origins <> " and of unknown origin)"
+                  toErrorValue fieldName <> " defined in " <> toErrorValue origins <> " and of unknown origin"
               | otherwise ->
-                toErrorValue fieldName <> " (generated for " <> toErrorValue origins <> ")"
-    duplicatesList = toErrorValue $ printEntry <$> M.toList duplicates
+                  toErrorValue fieldName <> " defined in " <> toErrorValue origins
+    duplicatesList = printEntry <$> M.toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].
@@ -223,12 +225,14 @@ selectionSetObject ::
   -- see Note [The interfaces story] in Hasura.GraphQL.Parser.Schema.
   [Parser origin 'Output m b] ->
   Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
+{-# INLINE selectionSetObject #-}
 selectionSetObject name description parsers implementsInterfaces =
   Parser
     { pType =
         TNamed Nullable $
           Definition name description Nothing [] $
-            TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
+            TIObject $
+              ObjectInfo (map fDefinition parsers) interfaces,
       pParser = \input -> withKey (Key "selectionSet") do
         -- Not all fields have a selection set, but if they have one, it
         -- must contain at least one field. The GraphQL parser returns a
@@ -241,7 +245,8 @@ selectionSetObject name description parsers implementsInterfaces =
         -- this field needs a selection set, and if none was provided,
         -- we must fail.
         when (null input) $
-          parseError $ "missing selection set for " <> toErrorValue name
+          parseError $
+            "missing selection set for " <> toErrorValue name
 
         -- TODO(PDV) This probably accepts invalid queries, namely queries that use
         -- type names that do not exist.
@@ -250,13 +255,14 @@ selectionSetObject name description parsers implementsInterfaces =
           parsedValue <-
             if
                 | _fName == $$(litName "__typename") ->
-                  pure $ SelectTypename $ getName name
+                    pure $ SelectTypename $ getName name
                 | Just parser <- M.lookup _fName parserMap ->
-                  withKey (Key (K.fromText (unName _fName))) $
-                    SelectField <$> parser selectionField
+                    withKey (Key (K.fromText (unName _fName))) $
+                      SelectField <$> parser selectionField
                 | otherwise ->
-                  withKey (Key (K.fromText (unName _fName))) $
-                    parseError $ "field " <> toErrorValue _fName <> " not found in type: " <> toErrorValue name
+                    withKey (Key (K.fromText (unName _fName))) $
+                      parseError $
+                        "field " <> toErrorValue _fName <> " not found in type: " <> toErrorValue name
           _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
           -- insert processing of custom directives here
           pure parsedValue
@@ -279,12 +285,14 @@ selectionSetInterface ::
   -- Note [The interfaces story] in Hasura.GraphQL.Parser.Schema for details.
   t (Parser origin 'Output n b) ->
   Parser origin 'Output n (t b)
+{-# INLINE selectionSetInterface #-}
 selectionSetInterface name description fields objectImplementations =
   Parser
     { pType =
         TNamed Nullable $
           Definition name description Nothing [] $
-            TIInterface $ InterfaceInfo (map fDefinition fields) objects,
+            TIInterface $
+              InterfaceInfo (map fDefinition fields) objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
       -- Note: This is somewhat suboptimal, since it parses a query against every
       -- possible object implementing this interface, possibly duplicating work for
@@ -306,12 +314,14 @@ selectionSetUnion ::
   -- | The member object types.
   t (Parser origin 'Output n b) ->
   Parser origin 'Output n (t b)
+{-# INLINE selectionSetUnion #-}
 selectionSetUnion name description objectImplementations =
   Parser
     { pType =
         TNamed Nullable $
           Definition name description Nothing [] $
-            TIUnion $ UnionInfo objects,
+            TIUnion $
+              UnionInfo objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
   where
@@ -332,6 +342,7 @@ selection ::
   -- | type of the result
   Parser origin 'Both m b ->
   FieldParser origin m a
+{-# INLINE selection #-}
 selection name description argumentsParser resultParser =
   rawSelection name description argumentsParser resultParser
     <&> \(_alias, _args, a) -> a
@@ -347,6 +358,7 @@ rawSelection ::
   Parser origin 'Both m b ->
   -- | alias provided (if any), and the arguments
   FieldParser origin m (Maybe Name, HashMap Name (Value Variable), a)
+{-# INLINE rawSelection #-}
 rawSelection name description argumentsParser resultParser =
   FieldParser
     { fDefinition =
@@ -359,7 +371,8 @@ rawSelection name description argumentsParser resultParser =
         -- handles parsing the fields it cares about
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
+            parseError $
+              toErrorValue name <> " has no argument named " <> toErrorValue argumentName
         fmap (_fAlias,_fArguments,) $ withKey (Key "args") $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
     }
   where
@@ -389,6 +402,7 @@ subselection ::
   -- | parser for the subselection set
   Parser origin 'Output m b ->
   FieldParser origin m (a, b)
+{-# INLINE subselection #-}
 subselection name description argumentsParser bodyParser =
   rawSubselection name description argumentsParser bodyParser
     <&> \(_alias, _args, a, b) -> (a, b)
@@ -403,6 +417,7 @@ rawSubselection ::
   -- | parser for the subselection set
   Parser origin 'Output m b ->
   FieldParser origin m (Maybe Name, HashMap Name (Value Variable), a, b)
+{-# INLINE rawSubselection #-}
 rawSubselection name description argumentsParser bodyParser =
   FieldParser
     { fDefinition =
@@ -413,8 +428,10 @@ rawSubselection name description argumentsParser bodyParser =
         -- handles parsing the fields it cares about
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
-        (_fAlias,_fArguments,,) <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+            parseError $
+              toErrorValue name <> " has no argument named " <> toErrorValue argumentName
+        (_fAlias,_fArguments,,)
+          <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
           <*> pParser bodyParser _fSelectionSet
     }
   where
@@ -428,6 +445,7 @@ selection_ ::
   -- | type of the result
   Parser origin 'Both m a ->
   FieldParser origin m ()
+{-# INLINE selection_ #-}
 selection_ name description = selection name description (pure ())
 
 -- | A shorthand for a 'subselection' that takes no arguments.
@@ -438,5 +456,6 @@ subselection_ ::
   -- | parser for the subselection set
   Parser origin 'Output m a ->
   FieldParser origin m a
+{-# INLINE subselection_ #-}
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser

@@ -26,10 +26,10 @@ HTTPS using [Let's Encrypt](https://letsencrypt.org/).
 ### Step 1: Create a Hasura One-click Droplet
 
 Click the button below to create a new Hasura GraphQL engine Droplet through the DigitalOcean Marketplace. For first
-time users, the link also contains a referral code with gives you $100 over days. A $5 droplet is good enough to support
+time users, the link also contains a referral code which gives you $100 over days. A $5 droplet is good enough to support
 most workloads. (`Ctrl+Click` to open in a new tab)
 
-[<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" className="no-shadow" width="300" alt="do_create_droplet_button" />](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs)
+[<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" className="no-shadow" width="300" alt="do_create_droplet_button" />](https://marketplace.digitalocean.com/apps/hasura-graphql?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs)
 
 ### Step 2: Open console
 
@@ -157,7 +157,7 @@ HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
 ### Step 4: Update the container
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 That's it. Visit the console at `http://<your_droplet_ip>/console` and it should prompt for the admin secret key.
@@ -212,7 +212,7 @@ vim Caddyfile
 ### Step 5: Restart the container
 
 ```bash
-docker-compose restart caddy
+docker compose restart caddy
 ```
 
 Go to `https://<your_domain>/console` to visit the Hasura console.
@@ -251,7 +251,7 @@ graphql-engine:
 ### Step 4: Restart the container
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Using DigitalOcean Managed Postgres Database {#do-managed-pg-db}
@@ -355,7 +355,7 @@ cd /etc/hasura
 To checks logs for any container, use the following command:
 
 ```bash
-docker-compose logs <container_name>
+docker compose logs <container_name>
 ```
 
 Where `<container_name>` is one of `graphql-engine`, `postgres` or `caddy`.

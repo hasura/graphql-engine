@@ -46,8 +46,9 @@ import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
-import Type.Reflection (Typeable, typeRep, (:~:) (..))
+import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
 import Witherable (catMaybes)
+import Prelude
 
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
@@ -101,7 +102,7 @@ customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 -- Example use:
 --
 --     dMap <- parseDirectives customDirectives (DLExecutable EDLQUERY) directives
---     withDirective dMap cached $ onJust \_ -> tagAsCached
+--     withDirective dMap cached $ for_ \_ -> tagAsCached
 parseDirectives ::
   forall origin m.
   MonadParse m =>
@@ -109,6 +110,7 @@ parseDirectives ::
   G.DirectiveLocation ->
   [G.Directive Variable] ->
   m DirectiveMap
+{-# INLINE parseDirectives #-}
 parseDirectives directiveParsers location givenDirectives = do
   result <-
     catMaybes <$> for givenDirectives \directive -> do
@@ -119,7 +121,8 @@ parseDirectives directiveParsers location givenDirectives = do
           L.find (\di -> diName di == name) (allDirectives @m)
       -- check that it is allowed at the current location
       unless (location `elem` diLocations) $
-        parseError $ "directive " <> toErrorValue name <> " is not allowed on " <> humanReadable location
+        parseError $
+          "directive " <> toErrorValue name <> " is not allowed on " <> humanReadable location
       -- if we are expecting to parse it now, create a dmap entry
       case L.find (\d -> diName (dDefinition d) == name) directiveParsers of
         Nothing -> pure Nothing
@@ -129,7 +132,8 @@ parseDirectives directiveParsers location givenDirectives = do
   -- check that the result does not contain duplicates
   let dups = duplicates $ fst <$> result
   unless (null dups) $
-    parseError $ "the following directives are used more than once: " <> toErrorValue dups
+    parseError $
+      "the following directives are used more than once: " <> toErrorValue dups
   pure $ DM.fromList $ snd <$> result
   where
     humanReadable = \case
@@ -254,7 +258,7 @@ instance GEq DirectiveKey where
     (DirectiveKey name2 :: DirectiveKey a2)
       | name1 == name2,
         Just Refl <- eqT @a1 @a2 =
-        Just Refl
+          Just Refl
       | otherwise = Nothing
 
 instance GCompare DirectiveKey where
@@ -275,6 +279,7 @@ mkDirective ::
   [G.DirectiveLocation] ->
   InputFieldsParser origin m a ->
   Directive origin m
+{-# INLINE mkDirective #-}
 mkDirective name description advertised location argsParser =
   Directive
     { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
@@ -282,7 +287,8 @@ mkDirective name description advertised location argsParser =
       dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
         for_ (M.keys arguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
+            parseError $
+              toErrorValue name <> " has no argument named " <> toErrorValue argumentName
         withKey (Key $ K.fromText "args") $ ifParser argsParser $ GraphQLValue <$> arguments
     }
   where

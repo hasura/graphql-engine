@@ -1,6 +1,10 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags'; // Run time flag
+import {
   FaDatabase,
   FaFolder,
   FaFolderOpen,
@@ -10,14 +14,13 @@ import {
 import { Key } from 'antd/lib/table/interface';
 import { Link } from 'react-router';
 import './custom.css';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import {
   getFunctionModifyRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { GDCTree } from './GDCTree/GDCTree';
-import { GDCSource } from './GDCTree/types';
 
 type SourceItemsTypes =
   | 'database'
@@ -52,9 +55,9 @@ const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
   const caseSensitiveResults: SourceItem[] = [];
   const caseAgnosticResults: SourceItem[] = [];
   itemList.forEach(item => {
-    if (item.name.search(searchQuery) > -1) {
+    if (item.name.includes(searchQuery)) {
       caseSensitiveResults.push(item);
-    } else if (item.name.toLowerCase().search(searchQuery.toLowerCase()) > -1) {
+    } else if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       caseAgnosticResults.push(item);
     }
   });
@@ -405,7 +408,11 @@ const TreeView: React.FC<TreeViewProps> = ({
     onDatabaseChange(dataSource);
   };
 
-  if (items.length === 0) {
+  const { enabled: isGDCTreeViewEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
+
+  if (items.length === 0 && !isGDCTreeViewEnabled) {
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
@@ -433,6 +440,7 @@ const TreeView: React.FC<TreeViewProps> = ({
       </li>
     );
   }
+
   return (
     <div className={styles.treeNav}>
       {items.map((item, key) => (
@@ -448,8 +456,11 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
-
-      <GDCTree<GDCSource> onSelect={gdcItemClick} />
+      {isGDCTreeViewEnabled ? (
+        <div id="tree-container" className="inline-block">
+          <GDCTree onSelect={gdcItemClick} />
+        </div>
+      ) : null}
     </div>
   );
 };

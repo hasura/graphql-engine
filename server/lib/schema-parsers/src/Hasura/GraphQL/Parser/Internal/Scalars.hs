@@ -18,6 +18,7 @@ module Hasura.GraphQL.Parser.Internal.Scalars
     scientific,
     -- internal
     jsonScalar,
+    mkScalar,
   )
 where
 
@@ -124,10 +125,10 @@ bigInt = mkScalar GName._Int \case
   JSONValue (A.Number n) -> scientificToInteger n
   GraphQLValue (VString s)
     | Right (i, "") <- decimal s ->
-      pure i
+        pure i
   JSONValue (A.String s)
     | Right (i, "") <- decimal s ->
-      pure i
+        pure i
   v -> typeMismatch GName._Int "a 32-bit integer, or a 64-bit integer represented as a string" v
 
 -- | Parser for 'Scientific'. Certain backends like BigQuery support
@@ -158,6 +159,7 @@ jsonScalar name description =
 --------------------------------------------------------------------------------
 -- Local helpers
 
+-- | Creates a custom scalar, exposed in the schema with the given name.
 mkScalar ::
   MonadParse m =>
   Name ->

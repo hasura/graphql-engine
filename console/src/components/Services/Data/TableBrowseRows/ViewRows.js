@@ -11,6 +11,7 @@ import {
   FaSort,
   FaTrash,
 } from 'react-icons/fa';
+import clsx from 'clsx';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
@@ -30,24 +31,25 @@ import {
   vCollapseRow,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
+import { Button } from '@/new-components/Button';
+
+import { LegacyRunQueryContainer } from '@/features/BrowseRows';
+import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
+
 import {
   setOrderCol,
   setOrderType,
   removeOrder,
   runQuery,
   setOffset,
-  setLimit,
   addOrder,
 } from './FilterActions';
 
 import _push from '../push';
 import { ordinalColSort } from '../utils';
-import FilterQuery from './FilterQuery';
 import Spinner from '../../../Common/Spinner/Spinner';
-import Button from '../../../Common/Button/Button';
 
-import { E_SET_EDITITEM } from './EditActions';
-import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
+import { E_SET_EDITITEM } from '../TableEditItem/EditActions';
 import {
   getTableInsertRowRoute,
   getTableEditRowRoute,
@@ -58,45 +60,51 @@ import {
   dataSource,
   getTableCustomColumnName,
   isFeatureSupported,
+  currentDriver,
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  persistColumnCollapseChange,
   getPersistedCollapsedColumns,
-  persistColumnOrderChange,
   getPersistedColumnsOrder,
-  persistPageSizeChange,
+  persistColumnCollapseChange,
+  persistColumnOrderChange,
+  setPersistedPageSize,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
-import { inputStyles } from '../constants';
+import { push } from 'react-router-redux';
+import globals from '@/Globals';
 
 const ViewRows = props => {
   const {
-    curTableName,
-    currentSchema,
-    curQuery,
-    curFilter,
-    curRows,
-    curPath = [],
-    parentTableName,
-    curDepth,
     activePath,
-    schemas,
+    count,
+    curDepth,
+    curFilter,
+    curPath = [],
+    curQuery,
+    currentSchema,
+    currentSource,
+    curRows,
+    curTableName,
     dispatch,
-    ongoingRequest,
+    expandedRow,
+    filtersAndSort,
     isProgressing,
+    isView,
     lastError,
     lastSuccess,
-    isView,
-    count,
-    expandedRow,
     manualTriggers = [],
-    location,
+    onChangePageSize,
+    ongoingRequest,
+    onRunQuery,
+    parentTableName,
     readOnlyMode,
+    schemas,
     shouldHidePagination,
-    currentSource,
     useCustomPagination,
+    paginationUserQuery,
   } = props;
+
   const [invokedRow, setInvokedRow] = useState(null);
   const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -156,7 +164,7 @@ const ViewRows = props => {
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 152,
+      width: 182,
     });
 
     _gridHeadings.push({
@@ -319,18 +327,16 @@ const ViewRows = props => {
 
           return (
             <Button
+              size="sm"
+              icon={icon}
               className="mr-1"
-              color="white"
-              size="xs"
+              title={message()}
+              disabled={disabled || !featureSupported}
               onClick={
                 disabled || !featureSupported ? disabledOnClick : handleClick
               }
-              title={message()}
               data-test={`row-${type}-button-${rowIndex}`}
-              disabled={disabled || !featureSupported}
-            >
-              {icon}
-            </Button>
+            />
           );
         };
 
@@ -414,16 +420,19 @@ const ViewRows = props => {
           const cloneIcon = <FaClone />;
 
           const handleCloneClick = () => {
-            dispatch({ type: I_SET_CLONE, clone: row });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableInsertRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableInsertRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+                state: { row },
+              })
             );
           };
 
@@ -448,9 +457,8 @@ const ViewRows = props => {
               content: (
                 <div>
                   <Button
+                    size="sm"
                     className="mr-1"
-                    color="white"
-                    size="xs"
                     data-test={`run_manual_trigger_${m.name}`}
                     onClick={() => invokeTrigger(m.name, rowIndex)}
                   >
@@ -723,44 +731,6 @@ const ViewRows = props => {
     disableBulkSelect
   );
 
-  const getFilterQuery = () => {
-    let _filterQuery = null;
-
-    if (!isSingleRow) {
-      if (curRelName === activePath[curDepth] || curDepth === 0) {
-        // Rendering only if this is the activePath or this is the root
-
-        let wheres = [{ '': { '': '' } }];
-        if ('where' in curFilter && '$and' in curFilter.where) {
-          wheres = [...curFilter.where.$and];
-        }
-
-        let orderBy = [{ column: '', type: 'asc', nulls: 'last' }];
-        if ('order_by' in curFilter) {
-          orderBy = [...curFilter.order_by];
-        }
-
-        const offset = 'offset' in curFilter ? curFilter.offset : 0;
-
-        _filterQuery = (
-          <FilterQuery
-            curQuery={curQuery}
-            whereAnd={wheres}
-            tableSchema={tableSchema}
-            orderBy={orderBy}
-            dispatch={dispatch}
-            count={count}
-            tableName={curTableName}
-            offset={offset}
-            urlQuery={location && location.query}
-          />
-        );
-      }
-    }
-
-    return _filterQuery;
-  };
-
   const getSelectedRowsSection = () => {
     const handleDeleteItems = () => {
       const pkClauses = selectedRows.map(row =>
@@ -777,14 +747,13 @@ const ViewRows = props => {
         <div className="flex mb-sm">
           <b className="pr-xs">Selected:</b>
           {selectedRows.length}
-          <button
-            className="ml-xs text-base bg-white border rounded-sm border-gray-400 px-1"
+          <Button
+            icon={<FaTrash />}
             title="Delete selected rows"
-            onClick={handleDeleteItems}
+            className="ml-xs text-base bg-white border rounded-sm border-gray-400 px-1"
             data-test="bulk-delete"
-          >
-            <FaTrash />
-          </button>
+            onClick={handleDeleteItems}
+          />
         </div>
       );
     }
@@ -803,20 +772,23 @@ const ViewRows = props => {
       }
     });
 
-    const childTabs = childQueries.map((q, i) => {
+    const childTabs = childQueries.map(q => {
       const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
       return (
-        <li key={i} className={isActive} role="presentation">
-          <a
-            href="#"
+        <div>
+          <Button
+            className={clsx(
+              'mr-2',
+              isActive === 'active' ? 'border-4' : 'border-white'
+            )}
             onClick={e => {
               e.preventDefault();
               dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });
             }}
           >
             {[...activePath.slice(0, 1), ...curPath, q.name].join('.')}
-          </a>
-        </li>
+          </Button>
+        </div>
       );
     });
 
@@ -867,7 +839,7 @@ const ViewRows = props => {
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul>{childTabs}</ul>
+          <div className="flex">{childTabs}</div>
           {childViewRows}
         </div>
       );
@@ -979,74 +951,32 @@ const ViewRows = props => {
 
     const handlePageChange = page => {
       if (curFilter.offset !== page * curFilter.limit) {
-        dispatch(setOffset(page * curFilter.limit));
-        dispatch(runQuery(tableSchema));
         setSelectedRows([]);
       }
     };
 
     const handlePageSizeChange = size => {
-      if (curFilter.size !== size) {
-        dispatch(setLimit(size));
-        dispatch(setOffset(0));
-        dispatch(runQuery(tableSchema));
+      if (curFilter.limit !== size) {
         setSelectedRows([]);
-        persistPageSizeChange(size);
+        onChangePageSize(size);
+        setPersistedPageSize(size);
       }
-    };
-
-    const PaginationWithOnlyNav = () => {
-      const newPage = curFilter.offset / curFilter.limit;
-      return (
-        <div className="flex ml-sm mr-sm justify-around">
-          <div>
-            <button
-              className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
-              onClick={() => handlePageChange(newPage - 1)}
-              disabled={curFilter.offset === 0}
-              data-test="custom-pagination-prev"
-            >
-              prev
-            </button>
-          </div>
-          <div className="w-1/3">
-            <select
-              className={inputStyles}
-              value={curFilter.limit}
-              onChange={e => {
-                e.persist();
-                handlePageSizeChange(parseInt(e.target.value, 10) || 10);
-              }}
-              data-test="pagination-select"
-            >
-              <option disabled value="">
-                --
-              </option>
-              <option value={5}>5 rows</option>
-              <option value={10}>10 rows</option>
-              <option value={20}>20 rows</option>
-              <option value={25}>25 rows</option>
-              <option value={50}>50 rows</option>
-              <option value={100}>100 rows</option>
-            </select>
-          </div>
-          <div>
-            <button
-              className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
-              onClick={() => handlePageChange(newPage + 1)}
-              disabled={curRows.length === 0}
-              data-test="custom-pagination-next"
-            >
-              next
-            </button>
-          </div>
-        </div>
-      );
     };
 
     const paginationProps = {};
     if (useCustomPagination) {
-      paginationProps.PaginationComponent = PaginationWithOnlyNav;
+      paginationProps.PaginationComponent = () => (
+        <PaginationWithOnlyNavContainer
+          limit={curFilter.limit}
+          offset={curFilter.offset}
+          onChangePage={handlePageChange}
+          onChangePageSize={handlePageSizeChange}
+          pageSize={curFilter.limit}
+          rows={curRows}
+          tableSchema={tableSchema}
+          userQuery={paginationUserQuery}
+        />
+      );
     }
 
     return (
@@ -1060,7 +990,6 @@ const ViewRows = props => {
         minRows={0}
         getTheadThProps={getTheadThProps}
         getResizerProps={getResizerProps}
-        showPagination={!isSingleRow}
         pageSize={curFilter.limit}
         pages={Math.ceil(count / curFilter.limit)}
         onPageChange={handlePageChange}
@@ -1090,9 +1019,28 @@ const ViewRows = props => {
     isVisible = true;
   }
 
+  const isFilterSectionVisible =
+    !isSingleRow && (curRelName === activePath[curDepth] || curDepth === 0);
+
+  const schemaKey = currentDriver === 'bigquery' ? 'dataset' : 'schema';
+
   return (
     <div className={isVisible ? '' : 'hide '}>
-      {getFilterQuery()}
+      {isFilterSectionVisible && (
+        <div className="mt-4">
+          <LegacyRunQueryContainer
+            dataSourceName={currentSource}
+            table={{
+              [schemaKey]: tableSchema.table_schema,
+              name: curTableName,
+            }}
+            initialFiltersAndSort={filtersAndSort}
+            onRunQuery={newUserQuery => {
+              onRunQuery(newUserQuery);
+            }}
+          />
+        </div>
+      )}
       <div className="w-fit ml-0 mt-md">
         {getSelectedRowsSection()}
         <div>

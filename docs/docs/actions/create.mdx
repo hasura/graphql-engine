@@ -82,7 +82,7 @@ There is no setup required for defining actions via the [actions metadata API](/
 Let's start with a mutation that accepts a username and password, and returns an access token. We'll call this mutation
 `login`.
 
-<TOCInline toc={toc} filterTOC={(tocTree) => tocTree[2].children} />
+<TOCInline toc={toc} filterTOC={'mutation-type-action'} />
 
 ### Step 1: Define your mutation and associated types
 
@@ -275,7 +275,7 @@ e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE
 :::info Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the handler endpoint. See
-[this page](/guides/docker-networking.mdx) for Docker networking.
+[this page](/deployment/deployment-guides/docker.mdx#docker-networking) for Docker networking.
 
 :::
 
@@ -327,7 +327,7 @@ And that's it. You have extended your Hasura schema with a new mutation.
 
 Let's start with a basic query that accepts a list of numbers and returns their sum. We'll call this query `addNumbers`.
 
-<TOCInline toc={toc} filterTOC={(tocTree) => tocTree[3].children} />
+<TOCInline toc={toc} filterTOC={'query-type-action'} />
 
 ### Step 1: Define your query and associated types
 
@@ -447,6 +447,16 @@ The above definition means:
 - It accepts an argument called `numbers` which is a list of integers.
 - It returns an output type called `AddResult`.
 - `AddResult` is a simple object type with a field called `sum` of type integer.
+
+You can also use Type Generator feature to generate the types for your action:
+
+<Thumbnail
+  src="/img/actions/type-generator.png"
+  alt="Console action create"
+  width="800px"
+/>
+
+Insert JSON samples for the request and the response, click "Insert Types" and Hasura generates the GraphQL types for you.
 
 ### Step 2: Create the action handler
 

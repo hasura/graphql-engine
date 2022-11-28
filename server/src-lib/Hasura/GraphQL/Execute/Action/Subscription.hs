@@ -79,6 +79,7 @@ asyncActionSubscriptionsProcessor subsState = forever do
                       removeAsyncActionLiveQuery subsState opId
                     Just newLqId ->
                       addAsyncActionLiveQuery subsState opId actionIds onError $
-                        LAAQOnSourceDB $ LiveAsyncActionQueryOnSource newLqId actionLogMap lqRestarter
+                        LAAQOnSourceDB $
+                          LiveAsyncActionQueryOnSource newLqId actionLogMap lqRestarter
   -- Sleep for a second
   liftIO $ C.sleep $ seconds 1

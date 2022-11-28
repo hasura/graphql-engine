@@ -57,6 +57,14 @@ anonymous user role in Hasura.
   className='no-shadow'
 />
 
+:::info Note
+
+In development, if you're testing your logged-in users' access and aren't utilizing authenticated tokens, you must
+include the `X-Hasura-Admin-Secret` header. You can
+[learn more about this here](/auth/authentication/index.mdx#admin-secret-header).
+
+:::
+
 ## Managers of an organisation in a multi-tenant app
 
 Suppose you have a multi-tenant application where managers of a particular organisation can see all of the data that

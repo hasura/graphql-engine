@@ -8,24 +8,28 @@ keywords:
   - existing database
   - guide
   - yugabyte
-sidebar_position: 8
+sidebar_position: 20
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Cloud: Using Hasura Cloud with a Yugabyte Postgres database <HeadingIcon icon={`cloud`} size={36} />
+# Using Hasura Cloud with a Yugabyte Postgres Database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
 ## Introduction
 
-This guide explains how to connect a new or existing Yugabyte Postgres database to a Hasura Cloud project.
+This guide explains how to connect a new or existing Yugabyte Postgres database to a Hasura Cloud project. If you're
+exploring Yugabyte Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
+out their [docs](https://docs.yugabyte.com/preview/migrate/migrate-steps/) before continuing below.
 
-## Step 0: Sign up or log in to Hasura Cloud
+## Step 1: Sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 1: Create a Hasura Cloud project {#create-hasura-project-yugabyte}
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-yugabyte}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -39,7 +43,7 @@ On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connec
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 2: Create a Postgres DB on Yugabyte (skip if you have an existing DB) {#create-pg-db-yugabyte}
+## Step 3: Create a Postgres DB on Yugabyte (skip if you have an existing DB) {#create-pg-db-yugabyte}
 
 Log into the [Yugabyte Cloud dashboard](https://cloud.yugabyte.com/login).
 
@@ -70,7 +74,7 @@ Download your credentials and then click `Create Cluster`.
   width='1000px'
 />
 
-## Step 3: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura Cloud
 
 From the cluster's dashboard, click `Add IP Allow List`:
 
@@ -98,7 +102,7 @@ Enter the Hasura IP address that you copied:
 
 Then click `Save`.
 
-## Step 4: Construct the database connection URL {#construct-db-url-yugabyte}
+## Step 5: Construct the database connection URL {#construct-db-url-yugabyte}
 
 The structure of the database connection URL looks as follows:
 
@@ -122,10 +126,10 @@ Click the `Optimize for Hasura Cloud` checkbox and then copy your connection str
   width='1000px'
 />
 
-## Step 5: Finish connecting the database
+## Step 6: Finish connecting the database
 
 Back on the Hasura Console, enter the database URL that we just copied and replace the `<DB USER>` and `<DB PASSWORD>`
-with the information from your credentials downloaded in [step 2](#create-pg-db-yugabyte):
+with the information from your credentials downloaded in [step 3](#create-pg-db-yugabyte):
 
 <Thumbnail src='/img/cloud-dbs/yugabyte/yb-step-3i.png' alt='Database setup' width='600px' />
 
@@ -145,10 +149,18 @@ Voilà. You are ready to start developing.
 ## Next steps
 
 You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura. If you're completely
+new to Yugabyte and want to learn more, check out
+[this tutorial](https://hasura.io/learn/database/yugabyte/introduction/) from our Learn site.
 
 You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
 [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
 [custom domains](/projects/domains.mdx)).
 
 <Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+
+:::info Note
+
+For more information on which Postgres features we support, check out [this page](/databases/index.mdx#feature-support)!
+
+:::

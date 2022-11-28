@@ -50,10 +50,13 @@ renameRelP2 source qt newRN relInfo = withNewInconsistentObjsCheck $ do
     Nothing -> return ()
     Just _ ->
       throw400 AlreadyExists $
-        "cannot rename relationship " <> oldRN
-          <<> " to " <> newRN
-          <<> " in table " <> qt
-          <<> " as a column/relationship with the name already exists"
+        "cannot rename relationship "
+          <> oldRN
+            <<> " to "
+          <> newRN
+            <<> " in table "
+          <> qt
+            <<> " as a column/relationship with the name already exists"
   -- update metadata
   execWriterT $ renameRelationshipInMetadata @b source qt oldRN (riType relInfo) newRN
   where

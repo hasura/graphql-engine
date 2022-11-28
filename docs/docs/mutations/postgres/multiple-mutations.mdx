@@ -16,14 +16,19 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 ## Execution
 
-If multiple mutations are part of the same request, they are executed
-**sequentially** in a single **transaction**. If any of the mutations
-fail, all the executed mutations will be rolled back.
+If multiple mutations are part of the same request, they are executed **sequentially** in a single **transaction**. If
+any of the mutations fail, all the executed mutations will be rolled back.
+
+:::info Note
+
+In requests where a [Remote Schema](/remote-schemas/index.mdx) or [Action](/actions/index.mdx) is present, and a
+mutation fails, rollback is not possible. Any mutations executed before the failed mutation will still succeed.
+
+:::
 
 ## Run multiple top level mutations in the same request
 
-**Example:** Delete all `article` objects written by an author and
-update the `author` object:
+**Example:** Delete all `article` objects written by an author and update the `author` object:
 
 <GraphiQLIDE
   query={`mutation reset_author {
@@ -46,7 +51,7 @@ update the `author` object:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "delete_article": {
       "affected_rows": 2
@@ -66,11 +71,10 @@ response={`{
 
 ## Insert an object and a nested object in the same mutation
 
-If you are trying to insert multiple objects which have relationships
-between them, you can use nested inserts.
+If you are trying to insert multiple objects which have relationships between them, you can use nested inserts.
 
-**Example:** Insert a new `article` object with its `author` and return
-the inserted article object with its author in the response:
+**Example:** Insert a new `article` object with its `author` and return the inserted article object with its author in
+the response:
 
 <GraphiQLIDE
   query={`mutation insert_article {
@@ -98,7 +102,7 @@ the inserted article object with its author in the response:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "insert_article": {
       "affected_rows": 2,

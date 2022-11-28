@@ -34,7 +34,12 @@
 -- performed by "Hasura.GraphQL.Execute.Resolve", but for fragment definitions
 -- rather than variables.
 module Hasura.GraphQL.Execute.Inline
-  ( inlineSelectionSet,
+  ( InlineMT,
+    InlineM,
+    inlineSelectionSet,
+    inlineField,
+    runInlineMT,
+    runInlineM,
   )
 where
 
@@ -74,6 +79,34 @@ type MonadInline m =
     MonadState InlineState m
   )
 
+type InlineMT m a = MonadError QErr m => (StateT InlineState (ReaderT InlineEnv m)) a
+
+type InlineM a = InlineMT (Except QErr) a
+
+{-# INLINE runInlineMT #-}
+runInlineMT ::
+  forall m a.
+  (MonadError QErr m) =>
+  HashMap Name FragmentDefinition ->
+  InlineMT m a ->
+  m a
+runInlineMT uniqueFragmentDefinitions =
+  flip
+    runReaderT
+    InlineEnv
+      { _ieFragmentDefinitions = uniqueFragmentDefinitions,
+        _ieFragmentStack = []
+      }
+    . flip evalStateT InlineState {_isFragmentCache = mempty}
+
+{-# INLINE runInlineM #-}
+runInlineM ::
+  forall a.
+  HashMap Name FragmentDefinition ->
+  InlineM a ->
+  Either QErr a
+runInlineM fragments = runExcept . runInlineMT fragments
+
 -- | Inlines all fragment spreads in a 'SelectionSet'; see the module
 -- documentation for "Hasura.GraphQL.Execute.Inline" for details.
 inlineSelectionSet ::
@@ -106,6 +139,8 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
                 Set.toList $
                   Set.difference definedFragmentNames usedFragmentNames
           )
+  -- The below code is a manual inlining of 'runInlineMT', as appearently the
+  -- inlining optimization does not trigger, even with the INLINE pragma.
   traverse inlineSelection selectionSet
     & flip evalStateT InlineState {_isFragmentCache = mempty}
     & flip
@@ -128,17 +163,20 @@ inlineSelection ::
   MonadInline m =>
   Selection FragmentSpread Name ->
   m (Selection NoFragments Name)
-inlineSelection (SelectionField field@Field {_fSelectionSet}) =
-  withPathK "selectionSet" $
-    withPathK (unName $ _fName field) $ do
-      selectionSet <- traverse inlineSelection _fSelectionSet
-      pure $! SelectionField field {_fSelectionSet = selectionSet}
+inlineSelection (SelectionField field) =
+  withPathK "selectionSet" $ SelectionField <$> inlineField field
 inlineSelection (SelectionFragmentSpread spread) =
   withPathK "selectionSet" $
     SelectionInlineFragment <$> inlineFragmentSpread spread
 inlineSelection (SelectionInlineFragment fragment@InlineFragment {_ifSelectionSet}) = do
   selectionSet <- traverse inlineSelection _ifSelectionSet
   pure $! SelectionInlineFragment fragment {_ifSelectionSet = selectionSet}
+
+{-# INLINE inlineField #-}
+inlineField :: MonadInline m => Field FragmentSpread Name -> m (Field NoFragments Name)
+inlineField field@(Field {_fSelectionSet}) = withPathK (unName $ _fName field) $ do
+  selectionSet <- traverse inlineSelection _fSelectionSet
+  pure $! field {_fSelectionSet = selectionSet}
 
 inlineFragmentSpread ::
   MonadInline m =>
@@ -151,39 +189,39 @@ inlineFragmentSpread FragmentSpread {_fsName, _fsDirectives} = do
   if
       -- If we’ve already inlined this fragment, no need to process it again.
       | Just fragment <- Map.lookup _fsName _isFragmentCache ->
-        pure $! addSpreadDirectives fragment
+          pure $! addSpreadDirectives fragment
       -- Fragment cycles are always illegal; see
       -- http://spec.graphql.org/June2018/#sec-Fragment-spreads-must-not-form-cycles
       | (fragmentCycle, _ : _) <- break (== _fsName) _ieFragmentStack ->
-        throw400 ValidationFailed $
-          "the fragment definition(s) "
-            <> englishList "and" (toTxt <$> (_fsName :| reverse fragmentCycle))
-            <> " form a cycle"
+          throw400 ValidationFailed $
+            "the fragment definition(s) "
+              <> englishList "and" (toTxt <$> (_fsName :| reverse fragmentCycle))
+              <> " form a cycle"
       -- We didn’t hit the fragment cache, so look up the definition and convert
       -- it to an inline fragment.
       | Just FragmentDefinition {_fdTypeCondition, _fdSelectionSet} <-
           Map.lookup _fsName _ieFragmentDefinitions -> withPathK (unName _fsName) $ do
-        selectionSet <-
-          locally ieFragmentStack (_fsName :) $
-            traverse inlineSelection _fdSelectionSet
+          selectionSet <-
+            locally ieFragmentStack (_fsName :) $
+              traverse inlineSelection _fdSelectionSet
 
-        let fragment =
-              InlineFragment
-                { _ifTypeCondition = Just _fdTypeCondition,
-                  -- As far as I can tell, the GraphQL spec says that directives
-                  -- on the fragment definition do NOT apply to the fields in its
-                  -- selection set.
-                  _ifDirectives = [],
-                  _ifSelectionSet = selectionSet
-                }
-        modify' $ over isFragmentCache $ Map.insert _fsName fragment
-        pure $! addSpreadDirectives fragment
+          let fragment =
+                InlineFragment
+                  { _ifTypeCondition = Just _fdTypeCondition,
+                    -- As far as I can tell, the GraphQL spec says that directives
+                    -- on the fragment definition do NOT apply to the fields in its
+                    -- selection set.
+                    _ifDirectives = [],
+                    _ifSelectionSet = selectionSet
+                  }
+          modify' $ over isFragmentCache $ Map.insert _fsName fragment
+          pure $! addSpreadDirectives fragment
 
       -- If we get here, the fragment name is unbound; raise an error.
       -- http://spec.graphql.org/June2018/#sec-Fragment-spread-target-defined
       | otherwise ->
-        throw400 ValidationFailed $
-          "reference to undefined fragment " <>> _fsName
+          throw400 ValidationFailed $
+            "reference to undefined fragment " <>> _fsName
   where
     addSpreadDirectives fragment =
       fragment {_ifDirectives = _ifDirectives fragment ++ _fsDirectives}

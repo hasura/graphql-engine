@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"sync"
 	"text/tabwriter"
@@ -280,7 +281,8 @@ func (m *Migrate) calculateStatus() (err error) {
 func (m *Migrate) readStatusFromSource() (err error) {
 	firstVersion, err := m.sourceDrv.First()
 	if err != nil {
-		if _, ok := err.(*os.PathError); ok {
+		var pathErr *os.PathError
+		if errors.As(err, &pathErr) {
 			return nil
 		}
 		return err
@@ -769,7 +771,7 @@ func (m *Migrate) squashUp(from uint64, to int64, ret chan<- interface{}) {
 		// earlier in the first iteration we knew what version to operate on
 		// but here we have to find the next version
 		next, err := m.sourceDrv.Next(currentVersion)
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			// no limit, but no migrations applied?
 			if count == 0 {
 				ret <- ErrNoChange
@@ -837,7 +839,7 @@ func (m *Migrate) squashDown(v1 uint64, v2 int64, ret chan<- interface{}) {
 		}
 
 		prev, err := m.sourceDrv.Prev(from)
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			migr, err := m.newMigration(from, -1)
 			if err != nil {
 				ret <- err
@@ -936,7 +938,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{},
 		}
 
 		prev, err := m.sourceDrv.Prev(version)
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			migr, err := m.newMigration(version, -1)
 			if err != nil {
 				ret <- err
@@ -1046,7 +1048,7 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}, bar *pb.ProgressBa
 
 		// apply next migration
 		next, err := m.sourceDrv.Next(suint64(from))
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			// no limit, but no migrations applied?
 			if limit == -1 && count == 0 {
 				ret <- ErrNoChange
@@ -1366,9 +1368,9 @@ func (m *Migrate) versionUpExists(version uint64) error {
 			defer up.Close()
 		}
 
-		if os.IsExist(err) {
+		if errors.Is(err, fs.ErrExist) {
 			return nil
-		} else if !os.IsNotExist(err) {
+		} else if !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
 	}
@@ -1379,9 +1381,9 @@ func (m *Migrate) versionUpExists(version uint64) error {
 			defer up.Close()
 		}
 
-		if os.IsExist(err) {
+		if errors.Is(err, fs.ErrExist) {
 			return nil
-		} else if !os.IsNotExist(err) {
+		} else if !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
 	}
@@ -1404,9 +1406,9 @@ func (m *Migrate) versionDownExists(version uint64) error {
 			defer up.Close()
 		}
 
-		if os.IsExist(err) {
+		if errors.Is(err, fs.ErrExist) {
 			return nil
-		} else if !os.IsNotExist(err) {
+		} else if !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
 	}
@@ -1417,9 +1419,9 @@ func (m *Migrate) versionDownExists(version uint64) error {
 			defer up.Close()
 		}
 
-		if os.IsExist(err) {
+		if errors.Is(err, fs.ErrExist) {
 			return nil
-		} else if !os.IsNotExist(err) {
+		} else if !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
 	}
@@ -1435,7 +1437,7 @@ func (m *Migrate) newMigration(version uint64, targetVersion int64) (*Migration,
 
 	if targetVersion >= int64(version) {
 		r, identifier, fileName, err := m.sourceDrv.ReadUp(version)
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			// create "empty" migration
 			migr, err = NewMigration(nil, "", version, targetVersion, "sql", "")
 			if err != nil {
@@ -1455,7 +1457,7 @@ func (m *Migrate) newMigration(version uint64, targetVersion int64) (*Migration,
 
 	} else {
 		r, identifier, fileName, err := m.sourceDrv.ReadDown(version)
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			// create "empty" migration
 			migr, err = NewMigration(nil, "", version, targetVersion, "sql", "")
 			if err != nil {
@@ -1772,7 +1774,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 			prev := new(database.MigrationVersion)
 			// Check if any prev version available in source
 			prev.Version, err = m.sourceDrv.Prev(suint64(from))
-			if os.IsNotExist(err) && to == -1 {
+			if errors.Is(err, fs.ErrNotExist) && to == -1 {
 				migr, err := m.newMigration(suint64(from), -1)
 				if err != nil {
 					ret <- err

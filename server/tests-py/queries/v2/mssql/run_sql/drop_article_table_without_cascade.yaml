@@ -9,6 +9,6 @@ query:
       DROP TABLE [article];
 response:
   path: $
-  error: 'cannot drop due to the following dependent objects : relationship author.articles
+  error: 'cannot drop due to the following dependent objects: relationship author.articles
     in source "mssql"'
   code: dependency-error

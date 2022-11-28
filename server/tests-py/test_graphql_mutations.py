@@ -1,6 +1,6 @@
 import pytest
+
 from validate import check_query_f, check_query, get_conf_f
-from conftest import use_function_permission_fixtures
 
 
 # Marking all tests in this module that server upgrade tests can be run
@@ -13,18 +13,6 @@ use_mutation_fixtures = usefixtures(
     'per_class_db_schema_for_mutation_tests',
     'per_method_db_data_for_mutation_tests'
 )
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@use_mutation_fixtures
-class TestGraphQLInsertWithTransport:
-
-    def test_inserts_author_article(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_article.yaml", transport)
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/insert/basic"
-
 
 @use_mutation_fixtures
 class TestGraphQLInsert:
@@ -95,12 +83,10 @@ class TestGraphQLInsertIdentityColumn:
                 'sql': 'DROP TABLE table_identity_column'
             }
         }
-        if hge_ctx.pg_version >= 100000:
-            hge_ctx.v1q(setup_q)
-            yield
-            hge_ctx.v1q(teardown_q)
-        else:
-            pytest.skip("Identity columns are not supported in Postgres version < 10")
+
+        hge_ctx.v1q(setup_q)
+        yield
+        hge_ctx.v1q(teardown_q)
 
     # https://github.com/hasura/graphql-engine/issues/7557
     def test_insert_into_identity_column(self, hge_ctx):
@@ -241,7 +227,7 @@ class TestGraphqlInsertPermission:
         check_query_admin_secret(hge_ctx, self.dir() + "/user_with_no_backend_privilege.yaml")
 
     def test_backend_user_no_admin_secret_fail(self, hge_ctx):
-        if hge_ctx.hge_key and (hge_ctx.hge_jwt_key or hge_ctx.hge_webhook):
+        if hge_ctx.hge_key and (hge_ctx.hge_jwt_key or hge_ctx.webhook):
             check_query_f(hge_ctx, self.dir() + "/backend_user_no_admin_secret_fail.yaml")
         else:
             pytest.skip("authorization not configured, skipping the test")
@@ -290,6 +276,7 @@ class TestGraphqlInsertNullPrefixedColumnOnConflict:
 
 
 @use_mutation_fixtures
+@usefixtures('postgis')
 class TestGraphqlInsertGeoJson:
 
     def test_insert_point_landmark(self, hge_ctx):
@@ -414,6 +401,7 @@ class TestGraphqlInsertViews:
 
 
 @use_mutation_fixtures
+@usefixtures('postgis')
 class TestGraphqlUpdateBasic:
 
     def test_set_author_name(self, hge_ctx):
@@ -434,12 +422,6 @@ class TestGraphqlUpdateBasic:
 
     def test_column_in_multiple_operators(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
-
-    def test_author_by_pk(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_by_pk.yaml")
-
-    def test_author_by_pk_null(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_by_pk_null.yaml")
 
     def test_numerics_inc(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/numerics_inc.yaml")
@@ -570,6 +552,7 @@ class TestGraphqlUpdatePermissionsMSSQL:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
+@usefixtures('postgis')
 class TestGraphqlDeleteBasic:
 
     def test_article_delete(self, hge_ctx, transport):
@@ -584,19 +567,13 @@ class TestGraphqlDeleteBasic:
     def test_author_returning_empty_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles.yaml", transport)
 
-    def test_article_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk.yaml", transport)
-
-    def test_article_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk_null.yaml", transport)
-
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
 
 @pytest.mark.backend('mssql')
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_method_tests_db_state')
+@usefixtures('per_method_tests_db_state', 'postgis')
 class TestGraphqlDeleteBasicMSSQL:
 
     def test_article_delete(self, hge_ctx, transport):
@@ -611,15 +588,8 @@ class TestGraphqlDeleteBasicMSSQL:
     def test_author_returning_empty_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles_mssql.yaml", transport)
 
-    def test_article_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk.yaml", transport)
-
-    def test_article_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk_null.yaml", transport)
-
     def test_test_types_delete(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/test_types_mssql.yaml", transport)
-
 
     @classmethod
     def dir(cls):
@@ -793,7 +763,9 @@ class TestGraphQLMutateEnums:
 
 # Tracking VOLATILE SQL functions as mutations, or queries (#1514)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_function_permission_fixtures
+@use_mutation_fixtures
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestGraphQLMutationFunctions:
     @classmethod
     def dir(cls):

@@ -1,0 +1,49 @@
+---
+# Source: hge-pro/templates/redis-service.yaml
+apiVersion: v1
+kind: Service       
+metadata:
+  name: hge-pro-redis
+  labels:            
+    app: hge-pro-redis
+spec:
+  ports:
+  - port: 6379       
+    targetPort: 6379
+  selector:          
+    app: hge-pro-redis
+---
+# Source: hge-pro/templates/redis-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hge-pro-redis
+  labels:
+    app: hge-pro-redis       
+spec:
+  selector:
+    matchLabels:     
+      app: hge-pro-redis      
+  replicas: 1       
+  template:          
+    metadata:
+      labels:        
+        app: hge-pro-redis
+    spec: 
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001          
+      containers:
+      - name: hge-pro-redis
+        args:
+        - --dir
+        - $(DATA_DIR)
+        - --appendonly
+        - "yes"        
+        env:
+        - name: DATA_DIR
+          value: /tmp      
+        image: 'docker.io/redis:5'
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6379

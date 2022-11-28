@@ -3,7 +3,6 @@
 module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions,
     mkPermissionMetadataObject,
-    mkRemoteSchemaPermissionMetadataObject,
     orderRoles,
     OrderedRoles,
     _unOrderedRoles,
@@ -31,7 +30,6 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal
   ( CheckPermission (..),
@@ -43,12 +41,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types
-  ( ExperimentalFeature (..),
-    HasServerConfigCtx (..),
-    ServerConfigCtx (_sccExperimentalFeatures),
-    StreamingSubscriptionsCtx (..),
-  )
 import Hasura.Session
 
 {- Note: [Inherited roles architecture for read queries]
@@ -117,8 +109,6 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
 newtype OrderedRoles = OrderedRoles {_unOrderedRoles :: [Role]}
   deriving (Eq, Generic)
 
-instance Inc.Cacheable OrderedRoles
-
 -- | 'orderRoles' is used to order the roles, in such a way that given
 --   a role R with n parent roles - PR1, PR2 .. PRn, then the 'orderRoles'
 --   function will order the roles in such a way that all the parent roles
@@ -161,8 +151,8 @@ orderRoles allRoles = do
 -- | `resolveCheckPermission` is a helper function which will convert the indermediate
 --    type `CheckPermission` to its original type. It will record any metadata inconsistencies, if exists.
 resolveCheckPermission ::
-  forall m p.
-  (MonadWriter (Seq CollectedInfo) m) =>
+  forall m p md.
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
   CheckPermission p ->
   RoleName ->
   InconsistentRoleEntity ->
@@ -172,7 +162,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPInconsistent -> do
       let inconsistentObj =
             -- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`
-            CIInconsistency $
+            Left $
               ConflictingInheritedPermission roleName inconsistentEntity
       tell $ Seq.singleton inconsistentObj
       pure Nothing
@@ -181,7 +171,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
 
 resolveCheckTablePermission ::
   forall b perm m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b
   ) =>
   CheckPermission perm ->
@@ -205,10 +195,9 @@ buildTablePermissions ::
     Inc.ArrowDistribute arr,
     Inc.ArrowCache m arr,
     MonadError QErr m,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     BackendMetadata b,
-    HasServerConfigCtx m,
-    Inc.Cacheable (Proxy b)
+    GetAggregationPredicatesDeps b
   ) =>
   ( Proxy b,
     SourceName,
@@ -287,16 +276,9 @@ mkPermissionMetadataObject source table permDef =
       definition = toJSON $ WithTable @b source table permDef
    in MetadataObject objectId definition
 
-mkRemoteSchemaPermissionMetadataObject ::
-  AddRemoteSchemaPermission ->
-  MetadataObject
-mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermission rsName roleName defn _) =
-  let objectId = MORemoteSchemaPermissions rsName roleName
-   in MetadataObject objectId $ toJSON defn
-
 withPermission ::
   forall bknd a b c s arr.
-  (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, BackendMetadata bknd) =>
+  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr, BackendMetadata bknd) =>
   WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b ->
   ( a,
     ((SourceName, TableName bknd, PermDef bknd c, Proxy bknd), s)
@@ -328,13 +310,11 @@ withPermission f = proc (e, ((source, table, permDef, _proxy), s)) -> do
 buildPermission ::
   forall b a arr m.
   ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
-    Inc.Cacheable (a b),
-    Inc.Cacheable (Proxy b),
     MonadError QErr m,
-    HasServerConfigCtx m,
-    BackendMetadata b
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
   ) =>
   ( Proxy b,
     Inc.Dependency (TableCoreCache b),
@@ -344,41 +324,31 @@ buildPermission ::
     Maybe (PermDef b a)
   )
     `arr` Maybe (PermInfo a b)
-buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) ->
-  do
-    (|
-      traverseA
-        ( \permission ->
-            (|
-              withPermission
-                ( do
-                    bindErrorA
-                      -<
-                        when (_pdRole permission == adminRoleName) $
-                          throw400 ConstraintViolation "cannot define permission for admin role"
-                    experimentalFeatures <- bindA -< fmap _sccExperimentalFeatures askServerConfigCtx
-                    let streamingSubscriptionCtx =
-                          if EFStreamingSubscriptions `elem` experimentalFeatures
-                            then StreamingSubscriptionsEnabled
-                            else StreamingSubscriptionsDisabled
-                    (info, dependencies) <-
-                      liftEitherA <<< Inc.bindDepend
-                        -<
-                          runExceptT $
-                            runTableCoreCacheRT
-                              ( buildPermInfo
-                                  source
-                                  table
-                                  tableFields
-                                  (_pdRole permission)
-                                  streamingSubscriptionCtx
-                                  (_pdPermission permission)
-                              )
-                              (source, tableCache)
-                    tellA -< Seq.fromList dependencies
-                    returnA -< info
-                )
-            |) (source, table, permission, proxy)
-        )
-      |) maybePermission
-    >-> (\info -> join info >- returnA)
+buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) -> do
+  case maybePermission of
+    Nothing -> returnA -< Nothing
+    Just permission -> do
+      (|
+        withPermission
+          ( do
+              bindErrorA
+                -<
+                  when (_pdRole permission == adminRoleName) $
+                    throw400 ConstraintViolation "cannot define permission for admin role"
+              (info, dependencies) <-
+                liftEitherA <<< Inc.bindDepend
+                  -<
+                    runExceptT $
+                      runTableCoreCacheRT
+                        ( buildPermInfo
+                            source
+                            table
+                            tableFields
+                            (_pdRole permission)
+                            (_pdPermission permission)
+                        )
+                        tableCache
+              tellA -< Seq.fromList dependencies
+              returnA -< info
+          )
+        |) (source, table, permission, proxy)

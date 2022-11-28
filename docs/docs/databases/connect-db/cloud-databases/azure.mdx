@@ -8,24 +8,29 @@ keywords:
   - guide
   - azure
 sidebar_label: Azure Postgres
-sidebar_position: 4
+sidebar_position: 8
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Cloud: Using Hasura Cloud with an Azure Postgres database <HeadingIcon icon={`cloud`} size={36} />
+# Using Hasura Cloud with an Azure Postgres Database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
 ## Introduction
 
-This guide explains how to connect a new or existing Azure Postgres database to a Hasura Cloud project.
+This guide explains how to connect a new or existing Azure Postgres database to a Hasura Cloud project. If you're
+exploring Azure Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check out
+their [docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-postgresql-azure-postgresql-online-portal) before
+continuing below.
 
-## Step 0: Sign up or log in to Hasura Cloud
+## Step 1: Sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 1: Create a Hasura Cloud project {#create-hasura-project-azure}
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-azure}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -39,7 +44,7 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 2: Create a Postgres DB on Azure (skip if you have an existing DB)
+## Step 3: Create a Postgres DB on Azure (skip if you have an existing DB)
 
 Log into the [Azure portal](https://portal.azure.com).
 
@@ -76,7 +81,7 @@ console. Hasura v2.x works fine with JIT enabled.
 
 :::
 
-## Step 3: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura Cloud
 
 On the database dashboard, click on `Connection security` under `Settings` on the left navigation bar.
 
@@ -92,7 +97,7 @@ Add the Hasura IP address that you copied:
 
 Then click `Save` on the top left.
 
-## Step 4: Construct the database connection URL {#get-db-url-azure}
+## Step 5: Construct the database connection URL {#get-db-url-azure}
 
 The structure of the database connection URL looks as follows:
 
@@ -115,9 +120,9 @@ On the database dashboard, click on `Overview`:
 - `postgres-port`: The default port for Postgres is `5432`.
 - `db`: The DB is `postgres` by default unless otherwise specified.
 
-## Step 5: Finish connecting the database
+## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter the database URL that we retrieved in [step 4](#get-db-url-azure):
+Back on Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-azure):
 
 <Thumbnail src='/img/cloud-dbs/azure/azure-complete.png' alt='Database setup' width='600px' />
 
@@ -146,3 +151,9 @@ You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
 [custom domains](/projects/domains.mdx#manage-project-domains)).
 
 <Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+
+:::info Note
+
+For more information on which Postgres features we support, check out [this page](/databases/index.mdx#feature-support)!
+
+:::

@@ -4,12 +4,13 @@ module Hasura.SQL.Types
   ( ToSQL (..),
     toSQLTxt,
     CollectableType (..),
+    ExtensionsSchema (..),
   )
 where
 
+import Autodocodec (Autodocodec (..), HasCodec (codec), dimapCodec, named, textCodec)
 import Data.Aeson
 import Data.Aeson.TH
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Text.Builder qualified as TB
 
@@ -43,8 +44,6 @@ instance (NFData a) => NFData (CollectableType a)
 
 instance (Hashable a) => Hashable (CollectableType a)
 
-instance (Cacheable a) => Cacheable (CollectableType a)
-
 $(deriveJSON defaultOptions {constructorTagModifier = drop 6} ''CollectableType)
 
 instance (ToSQL a) => ToSQL (CollectableType a) where
@@ -52,3 +51,11 @@ instance (ToSQL a) => ToSQL (CollectableType a) where
     CollectableTypeScalar ty -> toSQL ty
     -- typename array is an sql standard way of declaring types
     CollectableTypeArray ty -> toSQL ty <> " array"
+
+-- | The name of the schema in which the graphql-engine will install database extensions.
+newtype ExtensionsSchema = ExtensionsSchema {_unExtensionsSchema :: Text}
+  deriving (Show, Eq, Hashable, NFData)
+  deriving (FromJSON, ToJSON) via (Autodocodec ExtensionsSchema)
+
+instance HasCodec ExtensionsSchema where
+  codec = named "ExtensionsSchema" $ dimapCodec ExtensionsSchema _unExtensionsSchema textCodec

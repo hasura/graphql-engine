@@ -1,0 +1,5 @@
+import Prelude
+
+:def source readFile
+
+:source ghci/fixtureRepl.ghci

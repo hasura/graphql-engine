@@ -8,6 +8,9 @@ module Hasura.RQL.Types.QueryCollection
     ccName,
     ccDefinition,
     ccComment,
+    RenameCollection (..),
+    rcName,
+    rcNewName,
     AddQueryToCollection (..),
     DropQueryFromCollection (..),
     DropCollection (..),
@@ -27,8 +30,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
-import Hasura.Incremental (Cacheable)
+import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -41,21 +43,21 @@ newtype CollectionName = CollectionName {unCollectionName :: NonEmptyText}
       ToJSON,
       ToJSONKey,
       FromJSON,
-      Q.FromCol,
-      Q.ToPrepArg,
+      PG.FromCol,
+      PG.ToPrepArg,
       ToTxt,
       Generic
     )
 
 newtype QueryName = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic)
 
 newtype GQLQuery = GQLQuery {unGQLQuery :: G.ExecutableDocument G.Name}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, FromJSON, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, FromJSON)
 
 newtype GQLQueryWithText
   = GQLQueryWithText (Text, GQLQuery)
-  deriving (Show, Eq, Ord, NFData, Generic, Cacheable, Hashable)
+  deriving (Show, Eq, Ord, NFData, Generic, Hashable)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t,) <$> parseJSON v
@@ -74,11 +76,9 @@ data ListedQuery = ListedQuery
   { _lqName :: QueryName,
     _lqQuery :: GQLQueryWithText
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData ListedQuery
-
-instance Cacheable ListedQuery
 
 instance Hashable ListedQuery
 
@@ -86,7 +86,7 @@ $(deriveJSON hasuraJSON ''ListedQuery)
 
 newtype CollectionDef = CollectionDef
   {_cdQueries :: [ListedQuery]}
-  deriving (Show, Eq, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Generic, NFData)
 
 $(deriveJSON hasuraJSON ''CollectionDef)
 $(makeLenses ''CollectionDef)
@@ -103,6 +103,15 @@ $(makeLenses ''CreateCollection)
 
 collectionQueries :: CreateCollection -> [G.ExecutableDocument G.Name]
 collectionQueries = map (unGQLQuery . getGQLQuery . _lqQuery) . _cdQueries . _ccDefinition
+
+data RenameCollection = RenameCollection
+  { _rcName :: CollectionName,
+    _rcNewName :: CollectionName
+  }
+  deriving (Show, Eq, Generic)
+
+$(deriveJSON hasuraJSON ''RenameCollection)
+$(makeLenses ''RenameCollection)
 
 data DropCollection = DropCollection
   { _dcCollection :: CollectionName,

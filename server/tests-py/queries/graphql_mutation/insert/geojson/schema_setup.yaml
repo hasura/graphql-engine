@@ -5,14 +5,6 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE EXTENSION IF NOT EXISTS postgis;
-      DO $$
-      BEGIN
-        IF PostGIS_lib_version() ~ '^3.*' THEN
-          CREATE EXTENSION IF NOT EXISTS postgis_raster;
-        END IF;
-      END$$;
-      CREATE EXTENSION IF NOT EXISTS postgis_topology;
       CREATE TABLE drone_3d_location (
         drone_id INTEGER PRIMARY KEY,
         location GEOGRAPHY(Pointz)

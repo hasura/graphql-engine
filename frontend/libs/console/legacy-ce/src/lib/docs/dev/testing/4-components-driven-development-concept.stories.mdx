@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Dev/Testing/4. Components-Driven Development - The Concept" />
+
+# Components-Driven Development - The Concept
+
+## Purpose
+
+Outline the ['golden path'](https://engineering.atspotify.com/2020/08/17/how-we-use-golden-paths-to-solve-fragmentation-in-our-software-ecosystem/) for creating a new feature or component in the console ui.
+Provide step by step instructions for how to create and test a new feature or component.
+Describe in detail how we approach building UIs at Hasura using Test driven development.
+
+Shouldn't be considered 'set in stone', comments, criticism etc. are welcome.
+
+## Audience
+
+- Someone creating a new component or feature for the first time.
+- Also should be useful point of reference for everyone else.
+- Therefore, contains step by step and could seem overly exhaustive, but designed to be thorough in included every step of the development process.
+
+## Overall Philosophy
+
+- **Component Driven Design** - build up stories from small components into larger composed components and pages, each with simulated states and data mocked using `msw`
+- **Stories are tests** - Use stories as main tests (isolate components and write stories to simulate as many states as feasible)
+- **Use unit tests sparingly** Only use testing library to verify difficult to reach states - don't overuse
+- **Automate visual testing workflow** - Chromatic to automate visual testing process (pick up regressions etc).
+- **Limit user-flow testing** - Limit user-flow testing (cypress) sparingly and only to test key user flows

@@ -84,7 +84,8 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
                 req'' =
-                  req & set HTTP.method "POST"
+                  req
+                    & set HTTP.method "POST"
                     & set HTTP.headers (addDefaultHeaders [contentType])
                     & set HTTP.body (Just $ J.encode $ object ["headers" J..= headersPayload, "request" J..= reqs])
             HTTP.performRequest req'' manager
@@ -113,17 +114,17 @@ mkUserInfoFromResp ::
   m (UserInfo, Maybe UTCTime, [HTTP.Header])
 mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
   | statusCode == HTTP.status200 =
-    case eitherDecode respBody of
-      Left e -> do
-        logError
-        throw500 $ "Invalid response from authorization hook: " <> T.pack e
-      Right rawHeaders -> getUserInfoFromHdrs rawHeaders respHdrs
+      case eitherDecode respBody of
+        Left e -> do
+          logError
+          throw500 $ "Invalid response from authorization hook: " <> T.pack e
+        Right rawHeaders -> getUserInfoFromHdrs rawHeaders respHdrs
   | statusCode == HTTP.status401 = do
-    logError
-    throw401 "Authentication hook unauthorized this request"
+      logError
+      throw401 "Authentication hook unauthorized this request"
   | otherwise = do
-    logError
-    throw500 "Invalid response from authorization hook"
+      logError
+      throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders responseHdrs = do
       userInfo <-

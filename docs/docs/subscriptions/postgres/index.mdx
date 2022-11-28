@@ -18,6 +18,12 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of [queries](/queries/postgres/index.mdx) hold
 true for subscriptions as well.
 
+:::info Postgres Compatibility
+
+Hasura works with most [Postgres compatible flavours](/databases/postgres/index.mdx#postgres-compatible-flavors).
+
+:::
+
 :::info Caveat
 
 Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field) which allows
@@ -41,7 +47,7 @@ different from a live query as it sends individual rows at a time and not the en
 
 See more details [here](/subscriptions/postgres/streaming/index.mdx).
 
-### Live query vs Streaming subscriptions
+### Live query vs streaming subscriptions
 
 Suppose we need to display the messages of a group chat on a page, this can be done either via live queries or streaming
 subscriptions. Let's see how they can be used and how they differ from each other.

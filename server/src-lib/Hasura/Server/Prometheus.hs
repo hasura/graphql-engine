@@ -4,6 +4,7 @@
 module Hasura.Server.Prometheus
   ( PrometheusMetrics (..),
     GraphQLRequestMetrics (..),
+    EventTriggerMetrics (..),
     makeDummyPrometheusMetrics,
     ConnectionsGauge,
     Connections (..),
@@ -32,7 +33,8 @@ import System.Metrics.Prometheus.Histogram qualified as Histogram
 data PrometheusMetrics = PrometheusMetrics
   { pmConnections :: ConnectionsGauge,
     pmActiveSubscriptions :: Gauge,
-    pmGraphQLRequestMetrics :: GraphQLRequestMetrics
+    pmGraphQLRequestMetrics :: GraphQLRequestMetrics,
+    pmEventTriggerMetrics :: EventTriggerMetrics
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -45,6 +47,13 @@ data GraphQLRequestMetrics = GraphQLRequestMetrics
     gqlExecutionTimeSecondsMutation :: Histogram
   }
 
+data EventTriggerMetrics = EventTriggerMetrics
+  { eventTriggerHTTPWorkers :: Gauge,
+    eventQueueTimeSeconds :: Histogram,
+    eventsFetchTimePerBatch :: Histogram,
+    eventWebhookProcessingTime :: Histogram
+  }
+
 -- | Create dummy mutable references without associating them to a metrics
 -- store.
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
@@ -52,6 +61,7 @@ makeDummyPrometheusMetrics = do
   pmConnections <- newConnectionsGauge
   pmActiveSubscriptions <- Gauge.new
   pmGraphQLRequestMetrics <- makeDummyGraphQLRequestMetrics
+  pmEventTriggerMetrics <- makeDummyEventTriggerMetrics
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -64,6 +74,14 @@ makeDummyGraphQLRequestMetrics = do
   gqlExecutionTimeSecondsQuery <- Histogram.new []
   gqlExecutionTimeSecondsMutation <- Histogram.new []
   pure GraphQLRequestMetrics {..}
+
+makeDummyEventTriggerMetrics :: IO EventTriggerMetrics
+makeDummyEventTriggerMetrics = do
+  eventTriggerHTTPWorkers <- Gauge.new
+  eventQueueTimeSeconds <- Histogram.new []
+  eventsFetchTimePerBatch <- Histogram.new []
+  eventWebhookProcessingTime <- Histogram.new []
+  pure EventTriggerMetrics {..}
 
 --------------------------------------------------------------------------------
 

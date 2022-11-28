@@ -13,6 +13,7 @@ import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.Aeson.Types (parseEither)
 import Data.Either (isLeft, isRight)
+import Data.Either.Combinators (fromRight')
 import Data.FileEmbed (makeRelativeToProject, strToExp)
 import Hasura.Metadata.DTO.Metadata (MetadataDTO (..))
 import Hasura.Metadata.DTO.MetadataV1 (MetadataV1 (..))
@@ -20,8 +21,9 @@ import Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..))
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray (PlaceholderArray))
 import Hasura.Prelude
-import Hasura.RQL.Types.Metadata (Metadata, metadataToDTO)
+import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults, metadataToDTO, overrideMetadataDefaults)
 import Test.Hspec
+import Test.Hspec.Expectations.Json (shouldBeJson)
 
 spec :: Spec
 spec = describe "MetadataDTO" $ do
@@ -53,6 +55,17 @@ spec = describe "MetadataDTO" $ do
       let actual = eitherDecode input :: Either String MetadataDTO
       actual `shouldBe` Right expected
 
+    it "works with defaults" $ do
+      let emptyJSON = "{\"version\": 3, \"sources\": []}"
+      let defaultJSON = "{\"backend_configs\": {\"dataconnector\": {\"sqlite\": {\"uri\": \"http://localhost:8100\"}}}}"
+      let parsed = do
+            emptyMD <- eitherDecode emptyJSON :: Either String Metadata
+            defaults <- eitherDecode defaultJSON :: Either String MetadataDefaults
+            pure (emptyMD, defaults)
+      case parsed of
+        Left e -> fail $ "Expected defaults to parse: " <> show e
+        Right (e, d) -> overrideMetadataDefaults e d `shouldNotBe` e
+
     it "fails parsing v3 on version mismatch" $ do
       let input = "{\"version\": 3, \"tables\": [] }"
       let actual = eitherDecode input :: Either String MetadataDTO
@@ -69,26 +82,24 @@ spec = describe "MetadataDTO" $ do
       let actual = eitherDecode input :: Either String MetadataDTO
       actual `shouldSatisfy` isLeft
 
-  beforeAll getMetadataFixture $ do
-    describe "v3" $ do
-      it "deserializes and re-serializes equivalently to Metadata" $ \metadataFixture -> do
-        let dto = parseEither parseJSON =<< metadataFixture :: Either String MetadataDTO
-        let fromDto = toJSON <$> dto
-        fromDto `shouldSatisfy` isRight
-        fromDto `shouldBe` metadataFixture
+    beforeAll getMetadataFixture $ do
+      describe "v3" $ do
+        it "deserializes and re-serializes equivalently to Metadata" $ \(MetadataFixture {..}) -> do
+          let dto = parseEither (parseJSON @MetadataDTO) _mfJSON
+          let fromDto = toJSON <$> dto
+          fromDto `shouldSatisfy` isRight
+          (fromRight' fromDto) `shouldBeJson` _mfJSON
 
-      it "converts metadata to DTO to JSON to metadata" $ \metadataFixture -> do
-        let origMetadata = parseEither (parseJSON @Metadata) =<< metadataFixture
-        let dto = metadataToDTO <$> origMetadata
-        let json = toJSON <$> dto
-        let metadata = parseEither (parseJSON @Metadata) =<< json
-        metadata `shouldSatisfy` isRight
-        metadata `shouldBe` origMetadata
+        it "converts metadata to DTO to JSON to metadata" $ \(MetadataFixture {..}) -> do
+          let dto = metadataToDTO $ _mfMetadata
+          let json = toJSON dto
+          let metadata = parseEither (parseJSON @Metadata) json
+          metadata `shouldBe` (Right _mfMetadata)
 
 emptyMetadataV3 :: MetadataV3
 emptyMetadataV3 =
   MetadataV3
-    { metaV3Sources = PlaceholderArray mempty,
+    { metaV3Sources = mempty,
       metaV3RemoteSchemas = Nothing,
       metaV3QueryCollections = Nothing,
       metaV3Allowlist = Nothing,
@@ -101,7 +112,8 @@ emptyMetadataV3 =
       metaV3InheritedRoles = Nothing,
       metaV3GraphqlSchemaIntrospection = Nothing,
       metaV3Network = Nothing,
-      metaV3BackendConfigs = Nothing
+      metaV3BackendConfigs = Nothing,
+      metaV3OpenTelemetryConfig = Nothing
     }
 
 emptyMetadataV2 :: MetadataV2
@@ -125,10 +137,14 @@ emptyMetadataV1 =
       metaV1Tables = PlaceholderArray mempty
     }
 
-getMetadataFixture :: IO (Either String Value)
+data MetadataFixture = MetadataFixture {_mfMetadata :: Metadata, _mfJSON :: Value}
+
+getMetadataFixture :: IO MetadataFixture
 getMetadataFixture = do
   let filePath = $(strToExp =<< makeRelativeToProject "../cli/internal/metadatautil/testdata/json/t2/metadata.json")
-  -- Round-trip fixture data through the server's old serialization so that we
-  -- will get consistent results on the next round-trip.
-  metadata <- eitherDecodeFileStrict' filePath :: IO (Either String Metadata)
-  return $ toJSON <$> metadata
+  -- Instead of returning loaded JSON as-is, run it through Metadata parsing so
+  -- that its format is up-to-date with the current state of the Metadata
+  -- structure.
+  json <- eitherDecodeFileStrict' @Value filePath
+  let metadata = parseEither (parseJSON @Metadata) =<< json
+  return $ fromRight' $ MetadataFixture <$> metadata <*> json

@@ -1,23 +1,8 @@
-import json
-import threading
-from urllib.parse import urlparse
-
-import websocket
 import pytest
-from validate import check_query
-from context import PytestConf
 
-if not PytestConf.config.getoption("--hge-webhook"):
-    pytest.skip("--hge-webhook flag is missing, skipping tests", allow_module_level=True)
-
-if not PytestConf.config.getoption("--test-auth-webhook-header"):
-    pytest.skip("--test-auth-webhook-header flag is missing, skipping tests", allow_module_level=True)
-
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('auth_hook', 'per_class_tests_db_state')
+@pytest.mark.admin_secret
 class TestWebhookHeaderCookie(object):
-    '''
-        To run the test, run an instance of the auth_webhook server using `python3 auth_webhook_server.py`
-    '''
     @classmethod
     def dir(cls):
         return 'webhook/insecure'
@@ -46,7 +31,7 @@ class TestWebhookHeaderCookie(object):
         print("Status Code: ", code)
         print("Response: ", resp)
         print("Headers: ", respHeaders)
-        
+
         assert 'Set-Cookie' in respHeaders
         assert respHeaders['Set-Cookie'] == "__Host-id=1; Secure; Path=/; Domain=example.com"
 
@@ -75,7 +60,7 @@ class TestWebhookHeaderCookie(object):
         print("Status Code: ", code)
         print("Response: ", resp)
         print("Headers: ", respHeaders)
-        
+
         assert 'Set-Cookie' in respHeaders
 
         # In python, multiple headers with the same key are concatenated with a comma and

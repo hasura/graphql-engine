@@ -8,6 +8,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 )
@@ -23,6 +24,7 @@ type projectMigrationsStatus struct {
 }
 
 func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) ([]databaseMigration, error) {
+	var op errors.Op = "migrate.projectMigrationsStatus.Status"
 	var migrateStatus []databaseMigration
 	for _, opt := range opts {
 		opt(p)
@@ -31,7 +33,7 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 		metadataOps := cli.GetCommonMetadataOps(p.ec)
 		sources, err := metadatautil.GetSourcesAndKindStrict(metadataOps.ExportMetadata)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(op, err)
 		}
 		for _, source := range sources {
 			opts := commands.MigrateStatusOptions{
@@ -43,7 +45,7 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 			}
 			status, err := opts.RunOnSource()
 			if err != nil {
-				return nil, err
+				return nil, errors.E(op, err)
 			}
 			migrateStatus = append(
 				migrateStatus,
@@ -58,13 +60,14 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 }
 
 func (p *projectMigrationsStatus) StatusJSON(opts ...ProjectMigrationStatusOption) (io.Reader, error) {
+	var op errors.Op = "migrate.projectMigrationsStatus.StatusJSON"
 	d, err := p.Status(opts...)
 	b := new(bytes.Buffer)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	if err := json.NewEncoder(b).Encode(d); err != nil {
-		return nil, fmt.Errorf("error encoding migration status as json: %w", err)
+		return nil, errors.E(op, fmt.Errorf("error encoding migration status as json: %w", err))
 	}
 	return b, nil
 }

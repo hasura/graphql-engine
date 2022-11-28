@@ -54,14 +54,12 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.Postgres.Instances.Types ()
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
@@ -80,7 +78,7 @@ import Text.Builder qualified as T
 -- Hasura.RQL.DDL.RemoteSchema.Permission.GraphQLType; it should perhaps be
 -- renamed, made internal to this module, or removed altogether?
 newtype GraphQLType = GraphQLType {unGraphQLType :: G.GType}
-  deriving (Show, Eq, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Generic, NFData)
 
 instance J.ToJSON GraphQLType where
   toJSON = J.toJSON . T.run . GPrint.graphQLType . unGraphQLType
@@ -118,8 +116,6 @@ data CustomTypes = CustomTypes
 
 instance NFData CustomTypes
 
-instance Cacheable CustomTypes
-
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes [] [] [] []
 
@@ -135,10 +131,8 @@ data InputObjectTypeDefinition = InputObjectTypeDefinition
 
 instance NFData InputObjectTypeDefinition
 
-instance Cacheable InputObjectTypeDefinition
-
 newtype InputObjectTypeName = InputObjectTypeName {unInputObjectTypeName :: G.Name}
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
 
 data InputObjectFieldDefinition = InputObjectFieldDefinition
   { _iofdName :: InputObjectFieldName,
@@ -150,10 +144,8 @@ data InputObjectFieldDefinition = InputObjectFieldDefinition
 
 instance NFData InputObjectFieldDefinition
 
-instance Cacheable InputObjectFieldDefinition
-
 newtype InputObjectFieldName = InputObjectFieldName {unInputObjectFieldName :: G.Name}
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
 
 --------------------------------------------------------------------------------
 -- Custom objects
@@ -168,10 +160,8 @@ data ObjectTypeDefinition = ObjectTypeDefinition
 
 instance NFData ObjectTypeDefinition
 
-instance Cacheable ObjectTypeDefinition
-
 newtype ObjectTypeName = ObjectTypeName {unObjectTypeName :: G.Name}
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
 
 data ObjectFieldDefinition field = ObjectFieldDefinition
   { _ofdName :: ObjectFieldName,
@@ -187,10 +177,8 @@ data ObjectFieldDefinition field = ObjectFieldDefinition
 
 instance (NFData field) => NFData (ObjectFieldDefinition field)
 
-instance (Cacheable field) => Cacheable (ObjectFieldDefinition field)
-
 newtype ObjectFieldName = ObjectFieldName {unObjectFieldName :: G.Name}
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData)
 
 --------------------------------------------------------------------------------
 -- Custom scalars
@@ -202,8 +190,6 @@ data ScalarTypeDefinition = ScalarTypeDefinition
   deriving (Show, Eq, Generic)
 
 instance NFData ScalarTypeDefinition
-
-instance Cacheable ScalarTypeDefinition
 
 defaultGraphQLScalars :: HashMap G.Name ScalarTypeDefinition
 defaultGraphQLScalars = Map.fromList . map (\name -> (name, ScalarTypeDefinition name Nothing)) $ Set.toList GName.builtInScalars
@@ -220,10 +206,8 @@ data EnumTypeDefinition = EnumTypeDefinition
 
 instance NFData EnumTypeDefinition
 
-instance Cacheable EnumTypeDefinition
-
 newtype EnumTypeName = EnumTypeName {unEnumTypeName :: G.Name}
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
 
 data EnumValueDefinition = EnumValueDefinition
   { _evdValue :: G.EnumValue,
@@ -233,8 +217,6 @@ data EnumValueDefinition = EnumValueDefinition
   deriving (Show, Eq, Generic)
 
 instance NFData EnumValueDefinition
-
-instance Cacheable EnumValueDefinition
 
 --------------------------------------------------------------------------------
 -- Relationships
@@ -249,14 +231,12 @@ data TypeRelationshipDefinition = TypeRelationshipDefinition
     -- are performed, then we can replace this PG-specific code with the new and
     -- fancy generalized remote relationship code.
     _trdSource :: SourceName,
-    _trdRemoteTable :: PG.QualifiedTable,
-    _trdFieldMapping :: HashMap ObjectFieldName PG.PGCol
+    _trdRemoteTable :: Postgres.QualifiedTable,
+    _trdFieldMapping :: HashMap ObjectFieldName Postgres.PGCol
   }
   deriving (Show, Eq, Generic)
 
 instance NFData TypeRelationshipDefinition
-
-instance Cacheable TypeRelationshipDefinition
 
 instance J.FromJSON TypeRelationshipDefinition where
   parseJSON = J.withObject "TypeRelationshipDefinition" $ \o ->
@@ -269,7 +249,7 @@ instance J.FromJSON TypeRelationshipDefinition where
 
 -- | TODO: deduplicate this in favour of RelName
 newtype RelationshipName = RelationshipName {unRelationshipName :: G.Name}
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
 
 --------------------------------------------------------------------------------
 -- Schema cache
@@ -329,7 +309,6 @@ data AnnotatedTypeRelationship = AnnotatedTypeRelationship
     _atrType :: RelType,
     _atrSource :: SourceName,
     _atrSourceConfig :: SourceConfig ('Postgres 'Vanilla),
-    _atrSourceCustomization :: SourceTypeCustomization,
     -- TODO: see comment in 'TypeRelationship'
     _atrTableInfo :: TableInfo ('Postgres 'Vanilla),
     _atrFieldMapping :: HashMap ObjectFieldName (ColumnInfo ('Postgres 'Vanilla))

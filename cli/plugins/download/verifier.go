@@ -18,10 +18,11 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"io"
 
-	"github.com/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 // Verifier can check a reader against it's correctness.
@@ -47,8 +48,9 @@ func NewSha256Verifier(hashed string) Verifier {
 }
 
 func (v sha256Verifier) Verify() error {
+	var op errors.Op = "download.sha256Verifier.Verify"
 	if bytes.Equal(v.wantedHash, v.Sum(nil)) {
 		return nil
 	}
-	return errors.Errorf("checksum does not match, want: %x, got %x", v.wantedHash, v.Sum(nil))
+	return errors.E(op, fmt.Errorf("checksum does not match, want: %x, got %x", v.wantedHash, v.Sum(nil)))
 }
