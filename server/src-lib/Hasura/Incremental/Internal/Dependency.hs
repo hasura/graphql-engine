@@ -44,8 +44,8 @@ selectD k (Dependency dk a) = Dependency (DependencyChild k dk) (select k a)
 selectKeyD :: (Select a, Selector a ~ ConstS k v) => k -> Dependency a -> Dependency v
 selectKeyD = selectD . ConstS
 
-selectMaybeD :: Monoid a => (Dependency (Maybe a)) -> Dependency a
-selectMaybeD = selectKeyD ()
+selectMaybeD :: Select a => Selector a b -> Dependency (Maybe a) -> Dependency (Maybe b)
+selectMaybeD = selectD . FMapS
 
 -- | Tracks whether a 'Dependency' is a “root” dependency created by 'newDependency' or a “child”
 -- dependency created from an existing dependency using 'selectD'.

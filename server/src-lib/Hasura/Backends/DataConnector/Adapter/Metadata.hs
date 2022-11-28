@@ -27,6 +27,7 @@ import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runA
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
 import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw400WithDetail, throw500, withPathK)
 import Hasura.Incremental qualified as Inc
+import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
@@ -80,7 +81,7 @@ resolveBackendInfo' ::
     HasHttpManagerM m
   ) =>
   Logger Hasura ->
-  (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+  (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
 resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
@@ -99,11 +100,11 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         MonadIO m,
         HasHttpManagerM m
       ) =>
-      (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
+      (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
     getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (invalidationKeys, dataConnectorName, dataConnectorOptions) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
       httpMgr <- bindA -< askHttpManager
-      Inc.dependOn -< Inc.selectKeyD dataConnectorName invalidationKeys
+      Inc.dependOn -< Inc.selectMaybeD (Inc.ConstS dataConnectorName) invalidationKeys
       (|
         withRecordInconsistency
           ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr

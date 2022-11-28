@@ -440,9 +440,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       (BackendConfigWrapper b, Inc.Dependency (BackendMap BackendInvalidationKeysWrapper)) `arr` BackendCache
     resolveBackendInfo' = proc (backendConfigWrapper, backendInvalidationMap) -> do
       let backendInvalidationKeys =
-            Inc.selectD #unBackendInvalidationKeysWrapper $
-              Inc.selectMaybeD $
-                BackendMap.lookupD @b backendInvalidationMap
+            Inc.selectMaybeD #unBackendInvalidationKeysWrapper $
+              BackendMap.lookupD @b backendInvalidationMap
       backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
