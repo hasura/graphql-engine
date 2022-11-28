@@ -66,7 +66,6 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
       MonadTrans,
       MonadState (DS.Seq PG.PrepArg),
       MonadError e,
-      SourceM,
       TableCoreInfoRM b,
       TableInfoRM b,
       CacheRM,

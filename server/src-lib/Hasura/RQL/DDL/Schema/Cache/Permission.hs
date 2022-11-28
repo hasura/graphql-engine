@@ -347,7 +347,7 @@ buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields,
                             (_pdRole permission)
                             (_pdPermission permission)
                         )
-                        (source, tableCache)
+                        tableCache
               tellA -< Seq.fromList dependencies
               returnA -< info
           )

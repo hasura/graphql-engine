@@ -229,7 +229,6 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       MonadReader r,
       MonadError e,
       MonadTx,
-      SourceM,
       TableCoreInfoRM b,
       CacheRM,
       CacheRWM,

@@ -125,7 +125,7 @@ validateCountQ ::
 validateCountQ query = do
   let source = cqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
