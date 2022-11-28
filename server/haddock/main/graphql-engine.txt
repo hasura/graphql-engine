@@ -18531,28 +18531,23 @@ SchemaCache :: SourceCache -> ActionCache -> RemoteSchemaMap -> InlinedAllowlist
 [scSourcePingConfig] :: SchemaCache -> SourcePingCache
 [scOpenTelemetryConfig] :: SchemaCache -> OpenTelemetryInfo
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
-class (Monad m) => SourceM m
-askCurrentSource :: SourceM m => m SourceName
-newtype SourceT m a
-SourceT :: (SourceName -> m a) -> SourceT m a
-[runSourceT] :: SourceT m a -> SourceName -> m a
 
 -- | A more limited version of <a>CacheRM</a> that is used when building
 --   the schema cache, since the entire schema cache has not been built
 --   yet.
-class (SourceM m) => TableCoreInfoRM b m
+class Monad m => TableCoreInfoRM b m
 lookupTableCoreInfo :: TableCoreInfoRM b m => TableName b -> m (Maybe (TableCoreInfo b))
 newtype TableCoreCacheRT b m a
-TableCoreCacheRT :: ((SourceName, Dependency (TableCoreCache b)) -> m a) -> TableCoreCacheRT b m a
-[runTableCoreCacheRT] :: TableCoreCacheRT b m a -> (SourceName, Dependency (TableCoreCache b)) -> m a
+TableCoreCacheRT :: (Dependency (TableCoreCache b) -> m a) -> TableCoreCacheRT b m a
+[runTableCoreCacheRT] :: TableCoreCacheRT b m a -> Dependency (TableCoreCache b) -> m a
 
 -- | All our RQL DML queries operate over a single source. This typeclass
 --   facilitates that.
 class (TableCoreInfoRM b m) => TableInfoRM b m
 lookupTableInfo :: TableInfoRM b m => TableName b -> m (Maybe (TableInfo b))
 newtype TableCacheRT b m a
-TableCacheRT :: ((SourceName, TableCache b) -> m a) -> TableCacheRT b m a
-[runTableCacheRT] :: TableCacheRT b m a -> (SourceName, TableCache b) -> m a
+TableCacheRT :: (TableCache b -> m a) -> TableCacheRT b m a
+[runTableCacheRT] :: TableCacheRT b m a -> TableCache b -> m a
 class (Monad m) => CacheRM m
 askSchemaCache :: CacheRM m => m SchemaCache
 getDependentObjs :: SchemaCache -> SchemaObjId -> [SchemaObjId]
@@ -18580,7 +18575,7 @@ getOpExpDeps :: forall b. Backend b => [OpExpG b (PartialSQLExp b)] -> BoolExpM 
 
 -- | Asking for a table's fields info without explicit
 --   <tt><a>SourceName</a> argument. The source name is implicitly inferred
---   from </tt><a>SourceM</a> via @<a>TableCoreInfoRM</a>.
+--   from </tt><tt>SourceM</tt> via @<a>TableCoreInfoRM</a>.
 askFieldInfoMapSource :: (QErrM m, Backend b, TableCoreInfoRM b m) => TableName b -> m (FieldInfoMap (FieldInfo b))
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.SchemaCache.SchemaCacheVer
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCache.SchemaCacheVer
@@ -18598,6 +18593,8 @@ instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.Types.SchemaCache.TableC
 instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
 instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
 instance Control.Monad.Trans.Class.MonadTrans (Hasura.RQL.Types.SchemaCache.TableCacheRT b)
+instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
+instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance Hasura.Backends.Postgres.Connection.MonadTx.MonadTx m => Hasura.Backends.Postgres.Connection.MonadTx.MonadTx (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance Control.Monad.Writer.Class.MonadWriter w m => Control.Monad.Writer.Class.MonadWriter w (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance Control.Monad.State.Class.MonadState s m => Control.Monad.State.Class.MonadState s (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
@@ -18606,47 +18603,27 @@ instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Has
 instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
-instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.Types.SchemaCache.SourceT
-instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance Hasura.Backends.Postgres.Connection.MonadTx.MonadTx m => Hasura.Backends.Postgres.Connection.MonadTx.MonadTx (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance Control.Monad.Writer.Class.MonadWriter w m => Control.Monad.Writer.Class.MonadWriter w (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance Control.Monad.State.Class.MonadState s m => Control.Monad.State.Class.MonadState s (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.RQL.Types.SchemaCache.SourceT m)
-instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.Types.SchemaCache.SourceT m)
 instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.Backend.BackendInfo b) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.Types.SchemaCache.BackendInfoWrapper b)
 instance GHC.Base.Semigroup (Hasura.RQL.Types.Backend.BackendInfo b) => GHC.Base.Semigroup (Hasura.RQL.Types.SchemaCache.BackendInfoWrapper b)
 instance GHC.Base.Monoid (Hasura.RQL.Types.Backend.BackendInfo b) => GHC.Base.Monoid (Hasura.RQL.Types.SchemaCache.BackendInfoWrapper b)
-instance GHC.Base.Monad m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.RQL.Types.SchemaCache.SourceT m)
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Control.Monad.Trans.State.Strict.StateT s m)
 instance (GHC.Base.Monoid w, Hasura.RQL.Types.SchemaCache.CacheRM m) => Hasura.RQL.Types.SchemaCache.CacheRM (Control.Monad.Trans.Writer.Strict.WriterT w m)
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.Tracing.TraceT m)
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Database.PG.Query.Transaction.TxET Hasura.Base.Error.QErr m)
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Database.MSSQL.Transaction.TxET e m)
-instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
-instance GHC.Base.Monad m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance (GHC.Base.Monad m, Hasura.RQL.Types.Backend.Backend b) => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance (GHC.Base.Monad m, Hasura.RQL.Types.Backend.Backend b) => Hasura.RQL.Types.SchemaCache.TableInfoRM b (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
-instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServerConfigCtx (Hasura.RQL.Types.SchemaCache.TableCacheRT b m)
 instance Hasura.RQL.Types.SchemaCache.TableInfoRM b m => Hasura.RQL.Types.SchemaCache.TableInfoRM b (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.RQL.Types.SchemaCache.TableInfoRM b m => Hasura.RQL.Types.SchemaCache.TableInfoRM b (Control.Monad.Trans.State.Strict.StateT s m)
 instance (GHC.Base.Monoid w, Hasura.RQL.Types.SchemaCache.TableInfoRM b m) => Hasura.RQL.Types.SchemaCache.TableInfoRM b (Control.Monad.Trans.Writer.Strict.WriterT w m)
 instance Hasura.RQL.Types.SchemaCache.TableInfoRM b m => Hasura.RQL.Types.SchemaCache.TableInfoRM b (Hasura.Tracing.TraceT m)
 instance Control.Monad.Reader.Class.MonadReader r m => Control.Monad.Reader.Class.MonadReader r (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
-instance GHC.Base.Monad m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
 instance (Hasura.Incremental.Internal.Cache.MonadDepend m, Hasura.RQL.Types.Backend.Backend b) => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
 instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Control.Monad.Trans.State.Strict.StateT s m)
 instance (GHC.Base.Monoid w, Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m) => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Control.Monad.Trans.Writer.Strict.WriterT w m)
 instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.Tracing.TraceT m)
-instance Hasura.RQL.Types.SchemaCache.SourceM m => Hasura.RQL.Types.SchemaCache.SourceM (Control.Monad.Trans.Reader.ReaderT r m)
-instance Hasura.RQL.Types.SchemaCache.SourceM m => Hasura.RQL.Types.SchemaCache.SourceM (Control.Monad.Trans.State.Strict.StateT s m)
-instance (GHC.Base.Monoid w, Hasura.RQL.Types.SchemaCache.SourceM m) => Hasura.RQL.Types.SchemaCache.SourceM (Control.Monad.Trans.Writer.Strict.WriterT w m)
-instance Hasura.RQL.Types.SchemaCache.SourceM m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.Tracing.TraceT m)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCache.SchemaCache
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCache.CronTriggerInfo
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCache.MetadataResourceVersion
@@ -18751,7 +18728,6 @@ instance Control.Monad.Morph.MFunctor Hasura.RQL.Types.SchemaCache.Build.Metadat
 instance Hasura.RQL.Types.SchemaCache.Build.CacheRWM m => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
-instance Hasura.RQL.Types.SchemaCache.SourceM m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Hasura.Backends.Postgres.Connection.MonadTx.MonadTx m => Hasura.Backends.Postgres.Connection.MonadTx.MonadTx (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Control.Monad.Reader.Class.MonadReader r m => Control.Monad.Reader.Class.MonadReader r (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
@@ -22038,7 +22014,6 @@ instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.DML.
 instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.DML.Internal.DMLP1T m)
 instance Hasura.RQL.Types.SchemaCache.TableInfoRM b m => Hasura.RQL.Types.SchemaCache.TableInfoRM b (Hasura.RQL.DML.Internal.DMLP1T m)
 instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.RQL.DML.Internal.DMLP1T m)
-instance Hasura.RQL.Types.SchemaCache.SourceM m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.RQL.DML.Internal.DMLP1T m)
 instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.DML.Internal.DMLP1T m)
 instance GHC.Base.Monad m => Control.Monad.State.Class.MonadState (Data.Sequence.Internal.Seq Database.PG.Query.Connection.PrepArg) (Hasura.RQL.DML.Internal.DMLP1T m)
 instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.DML.Internal.DMLP1T
@@ -22409,21 +22384,21 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqCleanupConfig :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe Text)
-cetqWebhook :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe InputWebhook)
-cetqUpdate :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe (SubscribeOpSpec b_aBSYf))
-cetqTable :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (TableName b_aBSYf)
-cetqSource :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) SourceName
-cetqRetryConf :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe RequestTransform)
-cetqReplace :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) Bool
-cetqName :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) TriggerName
-cetqInsert :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe (SubscribeOpSpec b_aBSYf))
-cetqHeaders :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe Bool)
-cetqDelete :: forall b_aBSYf. Lens' (CreateEventTriggerQuery b_aBSYf) (Maybe (SubscribeOpSpec b_aBSYf))
+cteqCleanupConfig :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe Text)
+cetqWebhook :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe InputWebhook)
+cetqUpdate :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe (SubscribeOpSpec b_aBR7W))
+cetqTable :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (TableName b_aBR7W)
+cetqSource :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) SourceName
+cetqRetryConf :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe RequestTransform)
+cetqReplace :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) Bool
+cetqName :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) TriggerName
+cetqInsert :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe (SubscribeOpSpec b_aBR7W))
+cetqHeaders :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe Bool)
+cetqDelete :: forall b_aBR7W. Lens' (CreateEventTriggerQuery b_aBR7W) (Maybe (SubscribeOpSpec b_aBR7W))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
