@@ -12,6 +12,7 @@ module Test.Schema.TableRelationships.ObjectRelationshipsSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
@@ -38,13 +39,15 @@ spec = do
     )
     $ tests Postgres
 
-  -- Fixture.run
-  --   [ (Fixture.fixture $ Fixture.Backend Fixture.Citus)
-  --       { Fixture.setupTeardown = \(testEnv, _) ->
-  --           [Citus.setupTablesAction schema testEnv]
-  --       }
-  --   ]
-  --   $ tests Citus
+  Fixture.run
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Citus.setupTablesAction schema testEnv]
+            }
+        ]
+    )
+    $ tests Citus
 
   Fixture.run
     ( NE.fromList
