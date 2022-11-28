@@ -154,6 +154,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           defaultChecked={columnValueType === 'null'}
           name={`${colName}-value`}
           data-test={`null-value-radio-${index}`}
+          data-testid={`null-value-radio-${index}`}
         />
         <div>NULL</div>
       </div>

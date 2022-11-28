@@ -64,16 +64,8 @@ export const DataTableRowItem = ({
   const onFocus = (e: React.FocusEvent<HTMLInputElement, Element>) => {
     const textValue = e.target.value;
     if (isEmpty(textValue)) {
-      const radioToSelectWhenEmpty = hasDefault
-        ? refs?.current.defaultNode
-        : refs?.current.nullNode;
-
       if (refs?.current?.radioNode) {
         refs.current.radioNode.checked = false;
-      }
-
-      if (radioToSelectWhenEmpty) {
-        radioToSelectWhenEmpty.checked = true;
       }
     }
   };
