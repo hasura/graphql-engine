@@ -64,10 +64,17 @@ data InputFieldsParser origin m a = InputFieldsParser
   { ifDefinitions :: [Definition origin (InputFieldInfo origin)],
     ifParser :: HashMap Name (InputValue Variable) -> m a
   }
-  deriving (Functor)
+
+-- Note: this is just derived Functor instance, but by hand so we can inline
+-- which reduces huge_schema schema memory by 3% at time of writing
+instance (Functor m) => Functor (InputFieldsParser origin m) where
+  {-# INLINE fmap #-}
+  fmap f = \(InputFieldsParser d p) -> InputFieldsParser d (fmap (fmap f) p)
 
 instance Applicative m => Applicative (InputFieldsParser origin m) where
+  {-# INLINE pure #-}
   pure v = InputFieldsParser [] (const $ pure v)
+  {-# INLINE (<*>) #-}
   a <*> b =
     InputFieldsParser
       (ifDefinitions a <> ifDefinitions b)
