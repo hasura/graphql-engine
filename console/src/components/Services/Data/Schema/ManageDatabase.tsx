@@ -381,7 +381,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   }, [queryResponse.isSuccess, queryResponse.data]);
 
   const showAccelerateProjectSection =
-    !showCheckLatencyButton && !checkHighLatencySources(latencyCheckData);
+    isCloudConsole(globals) &&
+    !showCheckLatencyButton &&
+    !checkHighLatencySources(latencyCheckData);
 
   return (
     <RightContainer>
