@@ -32,7 +32,7 @@ export const CardRadioGroup = <T extends string = string>(
           <div
             className={clsx(
               'bg-white shadow-sm rounded p-md border border-gray-300 flex',
-              disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+              disabled ? 'cursor-not-allowed bg-gray-200' : 'cursor-pointer',
               value === iValue && 'ring-2 ring-yellow-200 border-yellow-400'
             )}
             key={iValue}
@@ -46,7 +46,7 @@ export const CardRadioGroup = <T extends string = string>(
                 x-model="relationType"
                 className={clsx(
                   'rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400',
-                  disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                  disabled ? 'cursor-not-allowed bg-gray-200' : 'cursor-pointer'
                 )}
                 onChange={() => onChange(iValue)}
                 checked={value === iValue}
