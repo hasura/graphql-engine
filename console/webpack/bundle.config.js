@@ -105,6 +105,12 @@ const webpackConfiguration = {
       ...commonConfig.assetsRules,
     ],
   },
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   resolve: {
     modules: ['src', 'node_modules'],
     extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
