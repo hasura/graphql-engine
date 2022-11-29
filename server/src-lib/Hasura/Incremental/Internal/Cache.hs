@@ -4,8 +4,6 @@
 
 module Hasura.Incremental.Internal.Cache
   ( ArrowCache (..),
-    DependT,
-    MonadDepend (..),
   )
 where
 
@@ -41,10 +39,6 @@ class (ArrowKleisli m arr) => ArrowCache m arr | arr -> m where
   -- only a portion of the value, use 'selectD' or 'selectKeyD' before passing it to 'dependOn'.
   dependOn :: (Eq a) => arr (Dependency a) a
 
-  -- | Run a monadic sub-computation with the ability to access dependencies; see 'MonadDepend' for
-  -- more details.
-  bindDepend :: arr (DependT m a) a
-
 instance (ArrowChoice arr, ArrowCache m arr) => ArrowCache m (ErrorA e arr) where
   cache (ErrorA f) = ErrorA (cache f)
   {-# INLINE cache #-}
@@ -52,8 +46,6 @@ instance (ArrowChoice arr, ArrowCache m arr) => ArrowCache m (ErrorA e arr) wher
   {-# INLINE newDependency #-}
   dependOn = liftA dependOn
   {-# INLINE dependOn #-}
-  bindDepend = liftA bindDepend
-  {-# INLINE bindDepend #-}
 
 instance (Monoid w, ArrowCache m arr) => ArrowCache m (WriterA w arr) where
   cache (WriterA f) = WriterA (cache f)
@@ -62,8 +54,6 @@ instance (Monoid w, ArrowCache m arr) => ArrowCache m (WriterA w arr) where
   {-# INLINE newDependency #-}
   dependOn = liftA dependOn
   {-# INLINE dependOn #-}
-  bindDepend = liftA bindDepend
-  {-# INLINE bindDepend #-}
 
 instance (MonadUnique m) => ArrowCache m (Rule m) where
   cache ::
@@ -91,19 +81,3 @@ instance (MonadUnique m) => ArrowCache m (Rule m) where
   {-# INLINEABLE newDependency #-}
 
   dependOn = Rule \s (Dependency key v) k -> (k $! recordAccess key AccessedAll s) v dependOn
-
-  bindDepend = Rule \s m k -> runStateT (unDependT m) s >>= \(v, s') -> k s' v bindDepend
-
--- | A restricted, monadic variant of 'ArrowCache' that can only read dependencies, not create new
--- ones or add local caching. This serves as a limited adapter between arrow and monadic code.
-class (Monad m) => MonadDepend m where
-  dependOnM :: Eq a => Dependency a -> m a
-
-instance (MonadDepend m) => MonadDepend (ExceptT e m) where
-  dependOnM = lift . dependOnM
-
-newtype DependT m a = DependT {unDependT :: StateT Accesses m a}
-  deriving (Functor, Applicative, Monad, MonadTrans, MonadError e)
-
-instance (Monad m) => MonadDepend (DependT m) where
-  dependOnM (Dependency key v) = DependT (modify' (recordAccess key AccessedAll) $> v)

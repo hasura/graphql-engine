@@ -86,6 +86,7 @@ class
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
     Representable (HealthCheckTest b),
+    Eq (RawFunctionInfo b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),

@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
+import Control.Arrow.Interpret
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
@@ -464,7 +465,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
           backendInfos <- resolveBackendCache -< (backendInvalidationMap, backendConfigs')
           returnA -< backendInfo <> backendInfos
 
-    getSourceConfigIfNeeded ::
+    tryGetSourceConfig ::
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
@@ -481,7 +482,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         BackendInfo b
       )
         `arr` Maybe (SourceConfig b)
-    getSourceConfigIfNeeded = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendInfo) -> do
+    tryGetSourceConfig = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendInfo) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
       httpMgr <- bindA -< askHttpManager
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
@@ -491,7 +492,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
           )
         |) metadataObj
 
-    resolveSourceIfNeeded ::
+    tryResolveSource ::
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
@@ -506,11 +507,11 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
         BackendInfoAndSourceMetadata b
       )
         `arr` Maybe (ResolvedSource b)
-    resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, BackendInfoAndSourceMetadata {..}) -> do
+    tryResolveSource = Inc.cache proc (invalidationKeys, BackendInfoAndSourceMetadata {..}) -> do
       let sourceName = _smName _bcasmSourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
 
-      maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendInfo)
+      maybeSourceConfig <- tryGetSourceConfig @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendInfo)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
         Just sourceConfig ->
@@ -587,8 +588,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
     buildSource ::
       forall b arr m.
       ( ArrowChoice arr,
-        Inc.ArrowDistribute arr,
-        Inc.ArrowCache m arr,
+        ArrowKleisli m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         HasServerConfigCtx m,
         MonadError QErr m,
@@ -616,30 +616,30 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
       tableCoreInfos :: HashMap (TableName b) (TableCoreInfo b) <-
-        (|
-          Inc.keyed
-            ( \_ (tableRawInfo, nonColumnInput) -> do
-                let columns = _tciFieldInfoMap tableRawInfo
-                allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields -< (allSources, sourceName, tablesRawInfo, columns, remoteSchemaMap, dbFunctions, nonColumnInput)
-                returnA -< (tableRawInfo {_tciFieldInfoMap = allFields})
-            )
-          |) (tablesRawInfo `alignTableMap` nonColumnsByTable)
-
-      tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
+        interpretWriter
+          -< for (tablesRawInfo `alignTableMap` nonColumnsByTable) \(tableRawInfo, nonColumnInput) -> do
+            let columns = _tciFieldInfoMap tableRawInfo
+            allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields allSources sourceName tablesRawInfo columns remoteSchemaMap dbFunctions nonColumnInput
+            pure $ tableRawInfo {_tciFieldInfoMap = allFields}
 
       -- permissions
-      tableCache <-
-        (|
-          Inc.keyed
-            ( \_ ((tableCoreInfo, permissionInputs), eventTriggerInfos) -> do
+      result <-
+        interpretWriter
+          -< runExceptT $
+            for
+              (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
+              \((tableCoreInfo, permissionInputs), eventTriggerInfos) -> do
                 let tableFields = _tciFieldInfoMap tableCoreInfo
                 permissionInfos <-
                   buildTablePermissions
-                    -<
-                      (Proxy :: Proxy b, sourceName, tableCoreInfosDep, tableFields, permissionInputs, orderedRoles)
-                returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
-            )
-          |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
+                    sourceName
+                    tableCoreInfos
+                    tableFields
+                    permissionInputs
+                    orderedRoles
+                pure $ TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
+      -- Generate a non-recoverable error when inherited roles were not ordered in a way that allows for building permissions to succeed
+      tableCache <- bindA -< liftEither result
 
       -- not forcing the evaluation here results in a measurable negative impact
       -- on memory residency as measured by our benchmark
@@ -655,9 +655,11 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
 
       -- sql functions
       functionCacheMaybes <-
-        (|
-          Inc.keyed
-            ( \_ (FunctionMetadata qf config functionPermissions comment) -> do
+        interpretWriter
+          -< for
+            (OMap.elems functions)
+            \case
+              FunctionMetadata qf config functionPermissions comment -> do
                 let systemDefined = SystemDefined False
                     definition = toJSON $ TrackFunction @b qf
                     metadataObject =
@@ -672,24 +674,17 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                         AB.mkAnyBackend $
                           SOIFunction @b qf
                     addFunctionContext e = "in function " <> qf <<> ": " <> e
-                (|
-                  withRecordInconsistency
-                    ( do
-                        (functionInfo, dep) <-
-                          bindErrorA
-                            -< modifyErr addFunctionContext do
-                              let funcDefs = fromMaybe [] $ M.lookup qf dbFunctions
-                                  metadataPermissions = mapFromL _fpmRole functionPermissions
-                                  permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                              rawfunctionInfo <- handleMultipleFunctions @b qf funcDefs
-                              buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
-                        recordDependencies -< (metadataObject, schemaObject, [dep])
-                        returnA -< functionInfo
-                    )
-                  |) metadataObject
-            )
-          |) (mapFromL _fmFunction (OMap.elems functions))
-      let functionCache = catMaybes functionCacheMaybes
+                withRecordInconsistencyM metadataObject $ do
+                  (functionInfo, dep) <-
+                    modifyErr addFunctionContext do
+                      let funcDefs = fromMaybe [] $ M.lookup qf dbFunctions
+                          metadataPermissions = mapFromL _fpmRole functionPermissions
+                          permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
+                      rawfunctionInfo <- handleMultipleFunctions @b qf funcDefs
+                      buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
+                  recordDependenciesM metadataObject schemaObject [dep]
+                  pure functionInfo
+      let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
       returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig resolvedCustomization
 
@@ -764,7 +759,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                       let sourceMetadata = _bcasmSourceMetadata backendInfoAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
-                      maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, backendInfoAndSourceMetadata)
+                      maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, backendInfoAndSourceMetadata)
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing
                         Just (source :: ResolvedSource b) -> do
@@ -835,7 +830,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                       let PartiallyResolvedSource sourceMetadata resolvedSource tablesInfo eventTriggers = partiallyResolvedSource
                           ResolvedSource sourceConfig _sourceCustomization tablesMeta functionsMeta scalars = resolvedSource
                       so <-
-                        buildSource
+                        Inc.cache buildSource
                           -<
                             ( allResolvedSources,
                               sourceMetadata,
@@ -1072,64 +1067,60 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                   CatalogUpdate (Just sources) -> if source `elem` sources then RETRecreate else RETDoNothing
           (|
             withRecordInconsistency
-              ( (|
-                  modifyErrA
-                    ( do
-                        (info, dependencies) <- bindErrorA -< buildEventTriggerInfo @b env source table eventTriggerConf
-                        serverConfigCtx <- bindA -< askServerConfigCtx
-                        let isCatalogUpdate =
-                              case buildReason of
-                                CatalogUpdate _ -> True
-                                CatalogSync -> False
-                            tableColumns = M.elems $ _tciFieldInfoMap tableInfo
-                        if ( _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
-                               && _sccReadOnlyMode serverConfigCtx == ReadOnlyModeDisabled
-                           )
-                          then do
-                            bindA
-                              -<
-                                when (reloadMetadataRecreateEventTrigger == RETRecreate) $
-                                  -- This is the case when the user sets `recreate_event_triggers`
-                                  -- to `true` in `reload_metadata`, in this case, we recreate
-                                  -- the SQL trigger by force, even if it may not be necessary
-                                  liftEitherM $
-                                    createTableEventTrigger
-                                      @b
-                                      serverConfigCtx
-                                      sourceConfig
-                                      table
-                                      tableColumns
-                                      triggerName
-                                      (etcDefinition eventTriggerConf)
-                                      (_tciPrimaryKey tableInfo)
-                            if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
-                              then do
-                                recreateTriggerIfNeeded
-                                  -<
-                                    ( table,
-                                      tableColumns,
-                                      triggerName,
-                                      etcDefinition eventTriggerConf,
-                                      sourceConfig,
-                                      (_tciPrimaryKey tableInfo)
-                                    )
-                                -- We check if the SQL triggers for the event triggers
-                                -- are present. If any SQL triggers are missing, those are
-                                -- created.
-                                bindA
-                                  -<
-                                    createMissingSQLTriggers
-                                      sourceConfig
-                                      table
-                                      (tableColumns, _tciPrimaryKey tableInfo)
-                                      triggerName
-                                      (etcDefinition eventTriggerConf)
-                              else bindA -< pure ()
-                          else bindA -< pure ()
-                        recordDependencies -< (metadataObject, schemaObjectId, dependencies)
-                        returnA -< info
-                    )
-                |) (addTableContext @b table . addTriggerContext)
+              ( do
+                  (info, dependencies) <- bindErrorA -< modifyErr (addTableContext @b table . addTriggerContext) $ buildEventTriggerInfo @b env source table eventTriggerConf
+                  serverConfigCtx <- bindA -< askServerConfigCtx
+                  let isCatalogUpdate =
+                        case buildReason of
+                          CatalogUpdate _ -> True
+                          CatalogSync -> False
+                      tableColumns = M.elems $ _tciFieldInfoMap tableInfo
+                  if ( _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
+                         && _sccReadOnlyMode serverConfigCtx == ReadOnlyModeDisabled
+                     )
+                    then do
+                      bindA
+                        -<
+                          when (reloadMetadataRecreateEventTrigger == RETRecreate) $
+                            -- This is the case when the user sets `recreate_event_triggers`
+                            -- to `true` in `reload_metadata`, in this case, we recreate
+                            -- the SQL trigger by force, even if it may not be necessary
+                            liftEitherM $
+                              createTableEventTrigger
+                                @b
+                                serverConfigCtx
+                                sourceConfig
+                                table
+                                tableColumns
+                                triggerName
+                                (etcDefinition eventTriggerConf)
+                                (_tciPrimaryKey tableInfo)
+                      if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
+                        then do
+                          recreateTriggerIfNeeded
+                            -<
+                              ( table,
+                                tableColumns,
+                                triggerName,
+                                etcDefinition eventTriggerConf,
+                                sourceConfig,
+                                (_tciPrimaryKey tableInfo)
+                              )
+                          -- We check if the SQL triggers for the event triggers
+                          -- are present. If any SQL triggers are missing, those are
+                          -- created.
+                          bindA
+                            -<
+                              createMissingSQLTriggers
+                                sourceConfig
+                                table
+                                (tableColumns, _tciPrimaryKey tableInfo)
+                                triggerName
+                                (etcDefinition eventTriggerConf)
+                        else returnA -< ()
+                    else returnA -< ()
+                  recordDependencies -< (metadataObject, schemaObjectId, dependencies)
+                  returnA -< info
               )
             |) metadataObject
 

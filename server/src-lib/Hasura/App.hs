@@ -403,9 +403,9 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
 
   -- An interval of 0 indicates that no schema sync is required
   case soSchemaPollInterval of
-    Skip -> unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" "Schema sync disabled"
+    Skip -> unLogger logger $ mkGenericLog @Text LevelInfo "schema-sync" "Schema sync disabled"
     Interval interval -> do
-      unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show interval)
+      unLogger logger $ mkGenericLog @String LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show interval)
       void $ startSchemaSyncListenerThread logger metadataDbPool instanceId interval metaVersionRef
 
   schemaCacheRef <- initialiseSchemaCacheRef serverMetrics rebuildableSchemaCache
@@ -606,7 +606,7 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
       shutdownHandler closeSocket =
         LA.link =<< LA.async do
           waitForShutdown $ _scShutdownLatch serveCtx
-          unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+          unLogger logger $ mkGenericLog @Text LevelInfo "server" "gracefully shutting down server"
           closeSocket
 
   finishTime <- liftIO Clock.getCurrentTime
@@ -785,7 +785,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
 
       startScheduledEventsPollerThread logger lockedEventsCtx cacheRef
     EventingDisabled ->
-      unLogger logger $ mkGenericStrLog LevelInfo "server" "starting in eventing disabled mode"
+      unLogger logger $ mkGenericLog @Text LevelInfo "server" "starting in eventing disabled mode"
 
   -- start a background thread to check for updates
   _updateThread <-
@@ -797,7 +797,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
   _sourcePingPoller <-
     C.forkManagedT "sourcePingPoller" logger $ do
       let pingLog =
-            unLogger logger . mkGenericStrLog LevelInfo "sources-ping"
+            unLogger logger . mkGenericLog @String LevelInfo "sources-ping"
       liftIO
         ( runPingSources
             pingLog
@@ -808,7 +808,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
   _telemetryThread <-
     if soEnableTelemetry
       then do
-        lift . unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+        lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
 
         dbUid <-
           runMetadataStorageT getMetadataDbUid
@@ -836,9 +836,9 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
         Left err -> qeCode err == ConcurrentUpdate
 
     prepareScheduledEvents (Logger logger) = do
-      liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
+      liftIO $ logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
       res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ runMetadataStorageT unlockAllLockedScheduledEvents)
-      onLeft res (\err -> logger $ mkGenericStrLog LevelError "scheduled_triggers" (show $ qeError err))
+      onLeft res (\err -> logger $ mkGenericLog @String LevelError "scheduled_triggers" (show $ qeError err))
 
     getProcessingScheduledEventsCount :: LockedEventsCtx -> IO Int
     getProcessingScheduledEventsCount LockedEventsCtx {..} = do
@@ -919,7 +919,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
           if (processingEventsCount == 0)
             then
               logger $
-                mkGenericStrLog LevelInfo (T.pack actionType) $
+                mkGenericLog @Text LevelInfo (T.pack actionType) $
                   "All in-flight events have finished processing"
             else unless (processingEventsCount == 0) $ do
               C.sleep (5) -- sleep for 5 seconds and then repeat
@@ -941,7 +941,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
                 (length <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
                 (unrefine soGracefulShutdownTimeout)
-        unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+        unLogger logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
         void
           $ C.forkManagedTWithGracefulShutdown
             "processEventQueue"
@@ -1234,7 +1234,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
 
     consoleTmplt = $(makeRelativeToProject "src-rsr/console.html" >>= M.embedSingleTemplate)
 
-telemetryNotice :: String
+telemetryNotice :: Text
 telemetryNotice =
   "Help us improve Hasura! The graphql-engine server collects anonymized "
     <> "usage stats which allows us to keep improving Hasura at warp speed. "

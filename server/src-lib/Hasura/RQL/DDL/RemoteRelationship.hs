@@ -301,6 +301,7 @@ data PartiallyResolvedSource b = PartiallyResolvedSource
     _tableCoreInfoMap :: HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
     _eventTriggerInfoMap :: HashMap (TableName b) (EventTriggerInfoMap b)
   }
+  deriving (Eq)
 
 -- | Builds the schema cache representation of a remote relationship
 -- TODO: this is not actually called by the remote relationship DDL API and is only used as part of

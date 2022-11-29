@@ -120,11 +120,6 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.Incremental
-  ( Dependency,
-    MonadDepend (..),
-    selectKeyD,
-  )
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
@@ -548,19 +543,19 @@ instance (Monoid w, TableCoreInfoRM b m) => TableCoreInfoRM b (WriterT w m) wher
 instance (TableCoreInfoRM b m) => TableCoreInfoRM b (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
-newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: Dependency (TableCoreCache b) -> m a}
+newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: TableCoreCache b -> m a}
   deriving
     (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
-    via (ReaderT (Dependency (TableCoreCache b)) m)
-  deriving (MonadTrans) via (ReaderT (Dependency (TableCoreCache b)))
+    via (ReaderT (TableCoreCache b) m)
+  deriving (MonadTrans) via (ReaderT (TableCoreCache b))
 
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT b m) where
   ask = lift ask
   local f m = TableCoreCacheRT (local f . runTableCoreCacheRT m)
 
-instance (MonadDepend m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
+instance (Monad m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCoreCacheRT (dependOnM . selectKeyD tableName)
+    TableCoreCacheRT (pure . M.lookup tableName)
 
 -- | All our RQL DML queries operate over a single source. This typeclass facilitates that.
 class (TableCoreInfoRM b m) => TableInfoRM b m where
