@@ -7,6 +7,7 @@ module Test.Subscriptions.DerivedDataSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Database.PG.Query.Pool (sql)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
@@ -30,6 +31,13 @@ spec =
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupPostgres testEnvironment,
                   setupMetadata Fixture.Postgres testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Citus.setupTablesAction schema testEnvironment,
+                  setupCitus testEnvironment,
+                  setupMetadata Fixture.Citus testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
@@ -223,6 +231,18 @@ setupPostgres testEnvironment =
         Postgres.run_ testEnvironment setupViewSQL,
       Fixture.teardownAction = \_ ->
         Postgres.run_ testEnvironment teardownViewSQL
+    }
+
+--------------------------------------------------------------------------------
+-- Citus setup
+
+setupCitus :: TestEnvironment -> Fixture.SetupAction
+setupCitus testEnvironment =
+  Fixture.SetupAction
+    { Fixture.setupAction =
+        Citus.run_ testEnvironment setupViewSQL,
+      Fixture.teardownAction = \_ ->
+        Citus.run_ testEnvironment teardownViewSQL
     }
 
 --------------------------------------------------------------------------------
