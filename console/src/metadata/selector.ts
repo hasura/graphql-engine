@@ -85,6 +85,11 @@ const getActions = createSelector(
   metadata => metadata?.actions || []
 );
 
+const getAllowList = createSelector(
+  getMetadata,
+  metadata => metadata?.allowlist || []
+);
+
 type PermKeys = Pick<
   TableEntry,
   | 'update_permissions'
@@ -99,8 +104,14 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTablesFromAllSources, getActions, getRemoteSchemas, getSecuritySettings],
-  (tables, actions, remoteSchemas, securitySettings) => {
+  [
+    getTablesFromAllSources,
+    getActions,
+    getRemoteSchemas,
+    getSecuritySettings,
+    getAllowList,
+  ],
+  (tables, actions, remoteSchemas, securitySettings, allowlists) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
       permKeys.forEach(key =>
@@ -114,6 +125,11 @@ export const rolesSelector = createSelector(
     );
     remoteSchemas?.forEach(remoteSchema => {
       remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
+    });
+    allowlists?.forEach(allowlist => {
+      if (allowlist?.scope?.global === false) {
+        allowlist?.scope?.roles?.forEach(role => roleNames.push(role));
+      }
     });
 
     Object.entries(securitySettings.api_limits ?? {}).forEach(
