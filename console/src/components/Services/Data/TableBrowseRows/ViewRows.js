@@ -16,6 +16,7 @@ import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
 } from '../../../Common/TableCommon/DragFoldTable';
+import { vMakeTableRequests, vSetLimit } from './ViewActions';
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
@@ -792,15 +793,17 @@ const ViewRows = props => {
       );
     });
 
-    const childViewRows = childQueries.map((cq, i) => {
+    const childViewRows = childQueries.map((childQuery, i) => {
       // Render child only if data is available
-      if (curRows[0] && curRows[0][cq.name]) {
-        const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
+      if (curRows[0] && curRows[0][childQuery.name]) {
+        const rel = tableSchema.relationships.find(
+          r => r.rel_name === childQuery.name
+        );
 
         if (rel) {
           const isObjectRel = rel.rel_type === 'object';
 
-          let childRows = curRows[0][cq.name];
+          let childRows = curRows[0][childQuery.name];
           if (isObjectRel) {
             childRows = [childRows];
           }
@@ -808,26 +811,46 @@ const ViewRows = props => {
 
           const childTable = findTable(schemas, childTableDef);
 
+          const onChangePageSizeNested = newPageSize => {
+            dispatch(vSetLimit(newPageSize, [...curPath, rel.rel_name]));
+            dispatch(vMakeTableRequests());
+          };
+
+          const nestedPaginationUserQuery = {
+            where: { $and: childQuery?.where?.$and || [] },
+            order_by: childQuery?.order_by || [],
+          };
+
+          const limit = childQuery.limit || curFilter.limit;
+          const filter = {
+            ...curFilter,
+            limit,
+          };
+
           return (
             <ViewRows
               key={i}
-              curTableName={childTable.table_name}
-              currentSchema={childTable.table_schema}
-              curQuery={cq}
-              curFilter={curFilter}
-              curPath={[...curPath, rel.rel_name]}
-              curRows={childRows}
-              parentTableName={curTableName}
               activePath={activePath}
-              ongoingRequest={ongoingRequest}
-              lastError={lastError}
-              lastSuccess={lastSuccess}
-              schemas={schemas}
               curDepth={curDepth + 1}
+              curFilter={filter}
+              curPath={[...curPath, rel.rel_name]}
+              curQuery={childQuery}
+              currentSchema={childTable.table_schema}
+              currentSource={currentSource}
+              curRows={childRows}
+              curTableName={childTable.table_name}
               dispatch={dispatch}
               expandedRow={expandedRow}
+              lastError={lastError}
+              lastSuccess={lastSuccess}
+              onChangePageSize={onChangePageSizeNested}
+              ongoingRequest={ongoingRequest}
+              onRunQuery={() => null}
+              paginationUserQuery={nestedPaginationUserQuery}
+              parentTableName={curTableName}
               readOnlyMode={readOnlyMode}
-              currentSource={currentSource}
+              schemas={schemas}
+              useCustomPagination
             />
           );
         }

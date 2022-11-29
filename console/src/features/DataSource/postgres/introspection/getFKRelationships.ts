@@ -17,7 +17,6 @@ const adaptFkRelationships = (
   // schema: string
 ): TableFkRelationships[] => {
   if (!result) return [];
-  console.log('>>>', result);
   const adaptedResult: TableFkRelationships[] = result.slice(1).map(row => {
     const sourceTable: PostgresTable = getTable(row[0]);
     const targetTable: PostgresTable = getTable(row[2]);
