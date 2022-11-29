@@ -36,7 +36,7 @@ import Hasura.RQL.Types.Action
   )
 import Hasura.RQL.Types.Allowlist (AllowlistEntry (..), MetadataAllowlist)
 import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
-import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.Backend (Backend, defaultTriggerOnReplication)
 import Hasura.RQL.Types.Column (ColumnValues)
 import Hasura.RQL.Types.Common (Comment, MetricsConfig, RemoteRelationshipG (..), commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes
@@ -328,21 +328,26 @@ sourcesToOrdJSONList sources =
               ]
                 <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-          eventTriggerConfToOrdJSON :: Backend b => EventTriggerConf b -> AO.Value
-          eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform cleanupConfig) =
-            AO.object $
-              [ ("name", AO.toOrdered name),
-                ("definition", AO.toOrdered definition),
-                ("retry_conf", AO.toOrdered retryConf)
-              ]
-                <> catMaybes
-                  [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
-                    maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
-                    headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
-                    fmap (("request_transform",) . AO.toOrdered) reqTransform,
-                    fmap (("response_transform",) . AO.toOrdered) respTransform,
-                    maybeAnyToMaybeOrdPair "cleanup_config" AO.toOrdered cleanupConfig
+          eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
+          eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform cleanupConfig triggerOnReplication) =
+            let triggerOnReplicationMaybe =
+                  if triggerOnReplication == defaultTriggerOnReplication @b
+                    then Nothing
+                    else Just triggerOnReplication
+             in AO.object $
+                  [ ("name", AO.toOrdered name),
+                    ("definition", AO.toOrdered definition),
+                    ("retry_conf", AO.toOrdered retryConf)
                   ]
+                    <> catMaybes
+                      [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
+                        maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
+                        headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
+                        fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                        fmap (("response_transform",) . AO.toOrdered) respTransform,
+                        maybeAnyToMaybeOrdPair "cleanup_config" AO.toOrdered cleanupConfig,
+                        maybeAnyToMaybeOrdPair "trigger_on_replication" AO.toOrdered triggerOnReplicationMaybe
+                      ]
 
     functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
     functionMetadataToOrdJSON FunctionMetadata {..} =

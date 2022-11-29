@@ -263,9 +263,8 @@ withMetadataCheck source cascade txAccess runSQLQuery = do
           forM_ (M.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
             let table = _tciName coreInfo
                 columns = getCols $ _tciFieldInfoMap coreInfo
-            forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
-              let opsDefinition = etiOpsDef eti
-              flip runReaderT serverConfigCtx $ mkAllTriggersQ triggerName table columns opsDefinition
+            forM_ (M.toList eventTriggers) $ \(triggerName, EventTriggerInfo {etiOpsDef, etiTriggerOnReplication}) -> do
+              flip runReaderT serverConfigCtx $ mkAllTriggersQ triggerName table etiTriggerOnReplication columns etiOpsDef
 
 -- | @'runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx' checks for
 -- changes in GraphQL Engine metadata when a @'tx' is executed on the database alters Postgres

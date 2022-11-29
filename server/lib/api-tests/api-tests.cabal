@@ -88,15 +88,17 @@ library
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
-    Test.EventTriggers.MSSQL.EventTiggersUniqueNameSpec
+    Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
+    Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
     Test.EventTriggers.PG.EventTriggersRecreationSpec
     Test.EventTriggers.PG.EventTriggersReplaceMetadataCleanupSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
+    Test.EventTriggers.PG.EventTriggersForReplicationSpec
     Test.Harness.Quoter.YamlSpec
     Test.HelloWorldSpec
     Test.Mutations.Delete.AllSpec

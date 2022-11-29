@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.EventTrigger
   ( SubscribeOpSpec (..),
@@ -37,6 +38,7 @@ module Hasura.RQL.Types.EventTrigger
 where
 
 import Data.Aeson
+import Data.Aeson.Extended ((.=?))
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as M
 import Data.List.NonEmpty qualified as NE
@@ -48,7 +50,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..))
+import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..), TriggerOnReplication (..))
 import Hasura.RQL.Types.Eventing
 import Hasura.SQL.Backend
 import System.Cron (CronSchedule)
@@ -334,15 +336,44 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
     etcHeaders :: Maybe [HeaderConf],
     etcRequestTransform :: Maybe RequestTransform,
     etcResponseTransform :: Maybe MetadataResponseTransform,
-    etcCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
+    etcCleanupConfig :: Maybe AutoTriggerLogCleanupConfig,
+    etcTriggerOnReplication :: TriggerOnReplication
   }
   deriving (Show, Eq, Generic)
 
 instance Backend b => FromJSON (EventTriggerConf b) where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+  parseJSON = withObject "EventTriggerConf" \o -> do
+    name <- o .: "name"
+    definition <- o .: "definition"
+    webhook <- o .:? "webhook"
+    webhookFromEnv <- o .:? "webhook_from_env"
+    retryConf <- o .: "retry_conf"
+    headers <- o .:? "headers"
+    requestTransform <- o .:? "request_transform"
+    responseTransform <- o .:? "response_transform"
+    cleanupConfig <- o .:? "cleanup_config"
+    triggerOnReplication <- o .:? "trigger_on_replication" .!= defaultTriggerOnReplication @b
+    return $ EventTriggerConf name definition webhook webhookFromEnv retryConf headers requestTransform responseTransform cleanupConfig triggerOnReplication
 
 instance Backend b => ToJSON (EventTriggerConf b) where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers requestTransform responseTransform cleanupConfig triggerOnReplication) =
+    object $
+      [ "name" .= name,
+        "definition" .= definition,
+        "retry_conf" .= retryConf
+      ]
+        <> catMaybes
+          [ "webhook" .=? webhook,
+            "webhook_from_env" .=? webhookFromEnv,
+            "headers" .=? headers,
+            "request_transform" .=? requestTransform,
+            "response_transform" .=? responseTransform,
+            "cleanup_config" .=? cleanupConfig,
+            "trigger_on_replication"
+              .=? if triggerOnReplication == defaultTriggerOnReplication @b
+                then Nothing
+                else Just triggerOnReplication
+          ]
 
 updateCleanupConfig :: Maybe AutoTriggerLogCleanupConfig -> EventTriggerConf b -> EventTriggerConf b
 updateCleanupConfig cleanupConfig etConf = etConf {etcCleanupConfig = cleanupConfig}
@@ -413,7 +444,8 @@ data EventTriggerInfo (b :: BackendType) = EventTriggerInfo
     etiHeaders :: [EventHeaderInfo],
     etiRequestTransform :: Maybe RequestTransform,
     etiResponseTransform :: Maybe MetadataResponseTransform,
-    etiCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
+    etiCleanupConfig :: Maybe AutoTriggerLogCleanupConfig,
+    etiTriggerOnReplication :: TriggerOnReplication
   }
   deriving (Generic, Eq)
 

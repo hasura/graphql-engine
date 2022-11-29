@@ -44,6 +44,7 @@ module Hasura.RQL.Types.Common
     RemoteRelationshipG (..),
     rrDefinition,
     rrName,
+    TriggerOnReplication (..),
   )
 where
 
@@ -630,6 +631,25 @@ instance NFData ApolloFederationConfig
 
 isApolloFedV1enabled :: Maybe ApolloFederationConfig -> Bool
 isApolloFedV1enabled = isJust
+
+-- | Type to indicate if the SQL trigger should be enabled
+--   when data is inserted into a table through replication.
+data TriggerOnReplication
+  = TOREnableTrigger
+  | TORDisableTrigger
+  deriving (Show, Eq, Generic)
+
+instance NFData TriggerOnReplication
+
+instance FromJSON TriggerOnReplication where
+  parseJSON = withBool "TriggerOnReplication" $ \case
+    True -> pure TOREnableTrigger
+    False -> pure TORDisableTrigger
+
+instance ToJSON TriggerOnReplication where
+  toJSON = \case
+    TOREnableTrigger -> Bool True
+    TORDisableTrigger -> Bool False
 
 --------------------------------------------------------------------------------
 -- metadata

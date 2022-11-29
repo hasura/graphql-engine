@@ -216,13 +216,14 @@ createTableEventTrigger ::
   TableName ->
   [ColumnInfo 'MSSQL] ->
   TriggerName ->
+  TriggerOnReplication ->
   TriggerOpsDef 'MSSQL ->
   Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL)) ->
   m (Either QErr ())
-createTableEventTrigger _serverConfigCtx sourceConfig table columns triggerName opsDefinition primaryKeyMaybe = do
+createTableEventTrigger _serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition primaryKeyMaybe = do
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
-      mkAllTriggersQ triggerName table columns opsDefinition primaryKeyMaybe
+      mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition primaryKeyMaybe
 
 createMissingSQLTriggers ::
   ( MonadIO m,
@@ -233,22 +234,29 @@ createMissingSQLTriggers ::
   TableName ->
   ([ColumnInfo 'MSSQL], Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL))) ->
   TriggerName ->
+  TriggerOnReplication ->
   TriggerOpsDef 'MSSQL ->
   m ()
-createMissingSQLTriggers sourceConfig table@(TableName tableNameText (SchemaName schemaText)) (allCols, primaryKeyMaybe) triggerName opsDefinition = do
-  liftEitherM $
-    runMSSQLSourceWriteTx sourceConfig $ do
-      for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
-      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
-      for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
-  where
-    doesSQLTriggerExist op opSpec = do
-      let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
-      doesOpTriggerExist <-
-        liftMSSQLTx $
-          singleRowQueryE
-            HGE.defaultMSSQLTxErrorHandler
-            [ODBC.sql|
+createMissingSQLTriggers
+  sourceConfig
+  table@(TableName tableNameText (SchemaName schemaText))
+  (allCols, primaryKeyMaybe)
+  triggerName
+  triggerOnReplication
+  opsDefinition = do
+    liftEitherM $
+      runMSSQLSourceWriteTx sourceConfig $ do
+        for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
+        for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
+        for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
+    where
+      doesSQLTriggerExist op opSpec = do
+        let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
+        doesOpTriggerExist <-
+          liftMSSQLTx $
+            singleRowQueryE
+              HGE.defaultMSSQLTxErrorHandler
+              [ODBC.sql|
                SELECT CASE WHEN EXISTS
                  ( SELECT 1
                    FROM sys.triggers tr
@@ -260,12 +268,12 @@ createMissingSQLTriggers sourceConfig table@(TableName tableNameText (SchemaName
                ELSE CAST(0 AS BIT)
                END;
              |]
-      unless doesOpTriggerExist $ do
-        case op of
-          INSERT -> mkInsertTriggerQ triggerName table allCols opSpec
-          UPDATE -> mkUpdateTriggerQ triggerName table allCols primaryKeyMaybe opSpec
-          DELETE -> mkDeleteTriggerQ triggerName table allCols opSpec
-          MANUAL -> pure ()
+        unless doesOpTriggerExist $ do
+          case op of
+            INSERT -> mkInsertTriggerQ triggerName table allCols triggerOnReplication opSpec
+            UPDATE -> mkUpdateTriggerQ triggerName table allCols triggerOnReplication primaryKeyMaybe opSpec
+            DELETE -> mkDeleteTriggerQ triggerName table allCols triggerOnReplication opSpec
+            MANUAL -> pure ()
 
 unlockEventsInSource ::
   MonadIO m =>
@@ -517,9 +525,9 @@ checkEventTx eventId = do
       HGE.defaultMSSQLTxErrorHandler
       [ODBC.sql|
         SELECT
-          CAST(CASE 
+          CAST(CASE
                   WHEN (l.locked IS NOT NULL AND l.locked >= DATEADD(MINUTE, -30, SYSDATETIMEOFFSET())) THEN 1 ELSE 0
-              END 
+              END
           AS bit)
         FROM hdb_catalog.event_log l
         WHERE l.id = $eId
@@ -633,14 +641,15 @@ mkAllTriggersQ ::
   MonadMSSQLTx m =>
   TriggerName ->
   TableName ->
+  TriggerOnReplication ->
   [ColumnInfo 'MSSQL] ->
   TriggerOpsDef 'MSSQL ->
   Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL)) ->
   m ()
-mkAllTriggersQ triggerName tableName allCols fullSpec primaryKey = do
-  for_ (tdInsert fullSpec) (mkInsertTriggerQ triggerName tableName allCols)
-  for_ (tdDelete fullSpec) (mkDeleteTriggerQ triggerName tableName allCols)
-  for_ (tdUpdate fullSpec) (mkUpdateTriggerQ triggerName tableName allCols primaryKey)
+mkAllTriggersQ triggerName tableName triggerOnReplication allCols fullSpec primaryKey = do
+  for_ (tdInsert fullSpec) (mkInsertTriggerQ triggerName tableName allCols triggerOnReplication)
+  for_ (tdDelete fullSpec) (mkDeleteTriggerQ triggerName tableName allCols triggerOnReplication)
+  for_ (tdUpdate fullSpec) (mkUpdateTriggerQ triggerName tableName allCols triggerOnReplication primaryKey)
 
 getApplicableColumns :: [ColumnInfo 'MSSQL] -> SubscribeColumns 'MSSQL -> [ColumnInfo 'MSSQL]
 getApplicableColumns allColumnInfos = \case
@@ -670,40 +679,43 @@ mkInsertTriggerQ ::
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
+  TriggerOnReplication ->
   SubscribeOpSpec 'MSSQL ->
   m ()
-mkInsertTriggerQ triggerName table allCols subOpSpec@(SubscribeOpSpec _listenCols deliveryCols) = do
+mkInsertTriggerQ triggerName table allCols triggerOnReplication subOpSpec@(SubscribeOpSpec _listenCols deliveryCols) = do
   checkSpatialDataTypeColumns allCols subOpSpec
   liftMSSQLTx $ do
     unitQueryE HGE.defaultMSSQLTxErrorHandler $
       rawUnescapedText . LT.toStrict $ do
         let deliveryColumns = getApplicableColumns allCols $ fromMaybe SubCStar deliveryCols
-        mkInsertTriggerQuery table triggerName deliveryColumns
+        mkInsertTriggerQuery table triggerName deliveryColumns triggerOnReplication
 
 mkDeleteTriggerQ ::
   MonadMSSQLTx m =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
+  TriggerOnReplication ->
   SubscribeOpSpec 'MSSQL ->
   m ()
-mkDeleteTriggerQ triggerName table allCols subOpSpec@(SubscribeOpSpec _listenCols deliveryCols) = do
+mkDeleteTriggerQ triggerName table allCols triggerOnReplication subOpSpec@(SubscribeOpSpec _listenCols deliveryCols) = do
   checkSpatialDataTypeColumns allCols subOpSpec
   liftMSSQLTx $ do
     unitQueryE HGE.defaultMSSQLTxErrorHandler $
       rawUnescapedText . LT.toStrict $ do
         let deliveryColumns = getApplicableColumns allCols $ fromMaybe SubCStar deliveryCols
-        mkDeleteTriggerQuery table triggerName deliveryColumns
+        mkDeleteTriggerQuery table triggerName deliveryColumns triggerOnReplication
 
 mkUpdateTriggerQ ::
   MonadMSSQLTx m =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
+  TriggerOnReplication ->
   Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL)) ->
   SubscribeOpSpec 'MSSQL ->
   m ()
-mkUpdateTriggerQ triggerName table allCols primaryKeyMaybe subOpSpec@(SubscribeOpSpec listenCols deliveryCols) = do
+mkUpdateTriggerQ triggerName table allCols triggerOnReplication primaryKeyMaybe subOpSpec@(SubscribeOpSpec listenCols deliveryCols) = do
   checkSpatialDataTypeColumns allCols subOpSpec
   liftMSSQLTx $ do
     primaryKey <- onNothing primaryKeyMaybe (throw400 NotSupported "Update event triggers for MS-SQL sources are only supported on tables with primary keys")
@@ -711,7 +723,7 @@ mkUpdateTriggerQ triggerName table allCols primaryKeyMaybe subOpSpec@(SubscribeO
         listenColumns = getApplicableColumns allCols listenCols
     unitQueryE HGE.defaultMSSQLTxErrorHandler $
       rawUnescapedText . LT.toStrict $
-        mkUpdateTriggerQuery table triggerName listenColumns deliveryColumns primaryKey
+        mkUpdateTriggerQuery table triggerName listenColumns deliveryColumns primaryKey triggerOnReplication
 
 -- Create alias for columns
 -- eg: If colPrefixMaybe is defined then 'inserted.id as payload.data.old.id'
@@ -747,22 +759,24 @@ generateColumnTriggerAlias op colPrefixMaybe colInfo =
 qualifyTableName :: TableName -> Text
 qualifyTableName = toTxt . toQueryFlat . fromTableName
 
-mkInsertTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> LT.Text
-mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns =
+mkInsertTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
+mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
   let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger INSERT schema triggerName
       triggerNameText = triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
       operation = tshow INSERT
+      replicationClause :: String = if triggerOnReplication /= TOREnableTrigger then "NOT FOR REPLICATION" else ""
       deliveryColsSQLExpression :: Text =
         commaSeparated $ map (unSQLFragment . generateColumnTriggerAlias NEW Nothing) columns
    in $(makeRelativeToProject "src-rsr/mssql/mssql_insert_trigger.sql.shakespeare" >>= ST.stextFile)
 
-mkDeleteTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> LT.Text
-mkDeleteTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns =
+mkDeleteTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
+mkDeleteTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
   let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger DELETE schema triggerName
       triggerNameText = triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
       operation = tshow DELETE
+      replicationClause :: String = if triggerOnReplication /= TOREnableTrigger then "NOT FOR REPLICATION" else ""
       deliveryColsSQLExpression :: Text = commaSeparated $ map (unSQLFragment . generateColumnTriggerAlias OLD Nothing) columns
    in $(makeRelativeToProject "src-rsr/mssql/mssql_delete_trigger.sql.shakespeare" >>= ST.stextFile)
 
@@ -841,17 +855,19 @@ The spec for MSSQL UPDATE Event Trigger is as follows:
     b. If the updated primary key is not equal to any of the already present primary key
        in the table then, 'data.old' is NULL and only 'data.new' is constructed.
 -}
-mkUpdateTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> [ColumnInfo 'MSSQL] -> PrimaryKey 'MSSQL (ColumnInfo 'MSSQL) -> LT.Text
+mkUpdateTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> [ColumnInfo 'MSSQL] -> PrimaryKey 'MSSQL (ColumnInfo 'MSSQL) -> TriggerOnReplication -> LT.Text
 mkUpdateTriggerQuery
   table@(TableName tableName schema@(SchemaName schemaName))
   triggerName
   listenColumns
   deliveryColumns
-  primaryKey =
+  primaryKey
+  triggerOnReplication =
     let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger UPDATE schema triggerName
         triggerNameText = triggerNameToTxt triggerName
         qualifiedTableName = qualifyTableName table
         operation = tshow UPDATE
+        replicationClause :: String = if triggerOnReplication /= TOREnableTrigger then "NOT FOR REPLICATION" else ""
 
         oldDeliveryColsSQLExp :: Text = commaSeparated $ map (unSQLFragment . generateColumnTriggerAlias OLD (Just "DELETED")) deliveryColumns
         newDeliveryColsSQLExp :: Text = commaSeparated $ map (unSQLFragment . generateColumnTriggerAlias NEW (Just "INSERTED")) deliveryColumns
@@ -939,9 +955,9 @@ selectLastCleanupScheduledTimestamp triggerNames =
       HGE.defaultMSSQLTxErrorHandler
       ( rawUnescapedText
           [ST.st|
-          SELECT trigger_name, count(1), max(scheduled_at) 
-          FROM hdb_catalog.hdb_event_log_cleanups 
-          WHERE status='scheduled' AND trigger_name = 
+          SELECT trigger_name, count(1), max(scheduled_at)
+          FROM hdb_catalog.hdb_event_log_cleanups
+          WHERE status='scheduled' AND trigger_name =
             ANY(SELECT n from  (VALUES #{triggerNamesValues}) AS X(n))
           GROUP BY trigger_name;
         |]
@@ -993,7 +1009,7 @@ getCleanupEventsForDeletionTx = do
         ( rawUnescapedText
             [ST.st|
             SELECT CAST(id AS nvarchar(36)) FROM hdb_catalog.hdb_event_log_cleanups
-            WHERE status = 'scheduled' AND scheduled_at < CURRENT_TIMESTAMP AND id NOT IN 
+            WHERE status = 'scheduled' AND scheduled_at < CURRENT_TIMESTAMP AND id NOT IN
               (SELECT n from  (VALUES #{cleanupIDsSQLValue}) AS X(n));
           |]
         )
@@ -1106,7 +1122,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
           [ST.st|
           UPDATE hdb_catalog.event_log
           SET locked = CURRENT_TIMESTAMP
-          WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id)) 
+          WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id))
               AND locked IS NULL
           |]
       --  Based on the config either delete the corresponding invocation logs or set trigger_name

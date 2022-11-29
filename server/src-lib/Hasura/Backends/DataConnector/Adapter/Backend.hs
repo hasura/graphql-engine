@@ -154,6 +154,8 @@ instance Backend 'DataConnector where
     -- Data connectors do not have concept of connection pools
     pure ()
 
+  defaultTriggerOnReplication = error "Event triggers is not implemented for the data connector backend."
+
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
     _cboRHS :: Maybe (Either (RootOrCurrentColumn 'DataConnector) a) -- TODO turn Either into a specific type

@@ -1052,6 +1052,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       where
         buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
+              triggerOnReplication = etcTriggerOnReplication eventTriggerConf
               metadataObject = mkEventTriggerMetadataObject @b (metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)
               schemaObjectId =
                 SOSourceObj source $
@@ -1093,6 +1094,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                                 table
                                 tableColumns
                                 triggerName
+                                triggerOnReplication
                                 (etcDefinition eventTriggerConf)
                                 (_tciPrimaryKey tableInfo)
                       if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
@@ -1102,6 +1104,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                               ( table,
                                 tableColumns,
                                 triggerName,
+                                triggerOnReplication,
                                 etcDefinition eventTriggerConf,
                                 sourceConfig,
                                 (_tciPrimaryKey tableInfo)
@@ -1116,6 +1119,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                                 table
                                 (tableColumns, _tciPrimaryKey tableInfo)
                                 triggerName
+                                triggerOnReplication
                                 (etcDefinition eventTriggerConf)
                         else returnA -< ()
                     else returnA -< ()
@@ -1133,6 +1137,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
               ( tableName,
                 tableColumns,
                 triggerName,
+                triggerOnReplication,
                 triggerDefinition,
                 sourceConfig,
                 primaryKey
@@ -1148,6 +1153,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                       tableName
                       tableColumns
                       triggerName
+                      triggerOnReplication
                       triggerDefinition
                       primaryKey
 

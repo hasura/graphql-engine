@@ -22,7 +22,7 @@ import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
@@ -354,6 +354,9 @@ class
 
   -- Resize source pools based on the count of server replicas
   resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
+
+  -- Default behaviour of SQL triggers on logically replicated database
+  defaultTriggerOnReplication :: TriggerOnReplication
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

@@ -2,7 +2,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Test that only event triggers with unique names are allowed
-module Test.EventTriggers.MSSQL.EventTiggersUniqueNameSpec (spec) where
+module Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
 import Data.Aeson (Value (..))

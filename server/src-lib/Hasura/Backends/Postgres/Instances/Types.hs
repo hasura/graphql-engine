@@ -30,7 +30,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Common (SourceName, TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.SQL.Backend
@@ -152,3 +152,5 @@ instance
   namingConventionSupport = Postgres.namingConventionSupport
 
   resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)
+
+  defaultTriggerOnReplication = TORDisableTrigger

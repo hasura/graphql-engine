@@ -97,8 +97,16 @@ X-Hasura-Role: admin
 | request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                                          | Attaches a Request Transformation to the Event Trigger.                 |
 | response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                                        | Attaches a Request Transformation to the Event Trigger.                 |
 | cleanup_config            | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                                          | Cleanup config for the auto cleanup process (EE/Cloud only).            |
+| trigger_on_replication    | false    | Boolean                                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication        |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
+
+:::info Note
+
+The default value of the `trigger_on_replication` parameter for Postgres sources will be `false`, which means that the
+trigger will not fire during logical replication of data.
+
+:::
 
 ## pg_delete_event_trigger {#metadata-pg-delete-event-trigger}
 
@@ -257,8 +265,16 @@ X-Hasura-Role: admin
 | request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                                          | Attaches a Request Transformation to the Event Trigger.                 |
 | response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                                        | Attaches a Request Transformation to the Event Trigger.                 |
 | cleanup_config            | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                                          | Cleanup config for the auto cleanup process (EE/Cloud only).            |
+| trigger_on_replication    | false    | Boolean                                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication        |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
+
+:::info Note
+
+The default value of the `trigger_on_replication` parameter for MSSQL sources will be `true`, which means that the
+trigger will be fired during logical replication of data.
+
+:::
 
 ## mssql_delete_event_trigger {#metadata-mssql-delete-event-trigger}
 
@@ -406,7 +422,7 @@ X-Hasura-Role: admin
 ## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition/Cloud</div>
- 
+
 -
 `pause_event_trigger_cleanups` is used to pause the log cleaner for event
 triggers which already have a cleaner installed.
