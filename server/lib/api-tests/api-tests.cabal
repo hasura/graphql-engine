@@ -111,6 +111,7 @@ library
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Upsert.OnConflictSpec
+    Test.PortedFromPytest.TestGraphQLQueryBasicCitus
     Test.Queries.AggregationSpec
     Test.Queries.DistinctSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
@@ -168,7 +169,7 @@ library
     Test.Subscriptions.DerivedDataSpec
     Test.Subscriptions.RowUpdatesSpec
     Test.Subscriptions.StreamingSubscriptionsSpec
-    Test.PortedFromPytest.TestGraphQLQueryBasicCitus
+    Test.Webhook.WebhookTransformSpec
 
 executable api-tests
   build-depends:

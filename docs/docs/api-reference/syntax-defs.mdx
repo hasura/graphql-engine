@@ -1342,7 +1342,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 | url             | false    | String                                       | Change the request URL to this value.                                                                                                              |
 | body            | false    | [BodyTransform](#bodytransform) \| String    | A template script for transforming the request body.                                                                                               |
 | content_type    | false    | String                                       | Replace the Content-Type with this value. Default: "application/json" *(valid only for version 1)* |
-| query_params    | false    | Object (String : String)                     | Replace the query params on the URL with this value.                                                                                               |
+| query_params    | false    | Object (String : String) \| String           | Replace the query params on the URL with this value. You can specify a dictionary of key/value pairs which is converted into a query string or directly give a query string.                                                                                               |
 | request_headers | false    | [TransformHeaders](#transformheaders)        | Request Header Transformation.                                                                                                                     |
 | template_engine | false    | [TemplateEngine](#templateengine)            | Template language to be used for this transformation. Default: "Kriti"                                                                             |
 

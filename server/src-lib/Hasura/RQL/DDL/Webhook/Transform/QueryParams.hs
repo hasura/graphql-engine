@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Hasura.RQL.DDL.Webhook.Transform.QueryParams
   ( -- * Query transformations
@@ -29,6 +30,7 @@ import Hasura.RQL.DDL.Webhook.Transform.Request
     validateRequestUnescapedTemplateTransform',
   )
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.HTTP.Types.URI (parseQuery)
 
 -------------------------------------------------------------------------------
 
@@ -61,10 +63,11 @@ instance Transform QueryParams where
     validateQueryParamsTransformFn engine fn
 
 -- | The defunctionalized transformation 'QueryParams'
-newtype QueryParamsTransformFn
+data QueryParamsTransformFn
   = AddOrReplace [(UnescapedTemplate, Maybe UnescapedTemplate)]
+  | ParamTemplate UnescapedTemplate
+  deriving (NFData)
   deriving stock (Eq, Generic, Show)
-  deriving newtype (NFData)
 
 -- | Provide an implementation for the transformations defined by
 -- 'QueryParamsTransformFn'.
@@ -91,6 +94,9 @@ applyQueryParamsTransformFn fn context _oldQueryParams = case fn of
             then Nothing
             else Just (key, value)
     pure $ QueryParams (catMaybes queryParams)
+  ParamTemplate template -> do
+    resolvedValue <- liftEither . V.toEither $ runUnescapedRequestTemplateTransform' context template
+    pure $ QueryParams (parseQuery resolvedValue)
 
 -- | Validate that the provided 'QueryParamsTransformFn' is correct in the
 -- context of a particular 'TemplatingEngine'.
@@ -112,10 +118,16 @@ validateQueryParamsTransformFn engine = \case
       -- NOTE: There's a bug in `ApplicativeDo` which infers a `Monad`
       -- constraint on this block if it doens't end with `pure ()`
       pure ()
+  ParamTemplate template -> do
+    validateRequestUnescapedTemplateTransform' engine template
+    pure ()
 {-# ANN validateQueryParamsTransformFn ("HLint: ignore Redundant pure" :: String) #-}
 
 instance J.ToJSON QueryParamsTransformFn where
   toJSON (AddOrReplace addOrReplace) = J.toJSON $ M.fromList addOrReplace
+  toJSON (ParamTemplate template) = J.toJSON template
 
 instance J.FromJSON QueryParamsTransformFn where
-  parseJSON v = AddOrReplace . M.toList <$> J.parseJSON v
+  parseJSON xs@(J.Object _) = AddOrReplace . M.toList <$> J.parseJSON xs
+  parseJSON xs@(J.String _) = ParamTemplate <$> J.parseJSON xs
+  parseJSON _ = fail "Invalid query parameter"
