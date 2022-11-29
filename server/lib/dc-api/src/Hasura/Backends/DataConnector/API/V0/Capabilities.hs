@@ -12,6 +12,11 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ColumnNullability (..),
     QueryCapabilities (..),
     MutationCapabilities (..),
+    InsertCapabilities (..),
+    UpdateCapabilities (..),
+    DeleteCapabilities (..),
+    AtomicitySupportLevel (..),
+    ReturningCapabilities (..),
     SubscriptionCapabilities (..),
     ComparisonOperators (..),
     AggregateFunctions (..),
@@ -142,13 +147,91 @@ instance HasCodec QueryCapabilities where
   codec =
     object "QueryCapabilities" $ pure QueryCapabilities
 
-data MutationCapabilities = MutationCapabilities {}
+data MutationCapabilities = MutationCapabilities
+  { _mcInsertCapabilities :: Maybe InsertCapabilities,
+    _mcUpdateCapabilities :: Maybe UpdateCapabilities,
+    _mcDeleteCapabilities :: Maybe DeleteCapabilities,
+    _mcAtomicitySupportLevel :: Maybe AtomicitySupportLevel,
+    _mcReturningCapabilities :: Maybe ReturningCapabilities
+  }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec MutationCapabilities
 
 instance HasCodec MutationCapabilities where
-  codec = object "MutationCapabilities" $ pure MutationCapabilities
+  codec =
+    object "MutationCapabilities" $
+      MutationCapabilities
+        <$> optionalField "insert" "Whether or not the agent supports insert mutations" .= _mcInsertCapabilities
+        <*> optionalField "update" "Whether or not the agent supports update mutations" .= _mcUpdateCapabilities
+        <*> optionalField "delete" "Whether or not the agent supports delete mutations" .= _mcDeleteCapabilities
+        <*> optionalField "atomicity_support_level" "What level of transactional atomicity does the agent support for mutations" .= _mcAtomicitySupportLevel
+        <*> optionalField "returning" "Whether or not the agent supports returning the mutation-affected rows" .= _mcReturningCapabilities
+
+data InsertCapabilities = InsertCapabilities
+  { _icSupportsNestedInserts :: Bool
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec InsertCapabilities
+
+instance HasCodec InsertCapabilities where
+  codec =
+    object "InsertCapabilities" $
+      InsertCapabilities
+        <$> optionalFieldWithDefault "supports_nested_inserts" False "Whether or not nested inserts to related tables are supported" .= _icSupportsNestedInserts
+
+data UpdateCapabilities = UpdateCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UpdateCapabilities
+
+instance HasCodec UpdateCapabilities where
+  codec =
+    object "UpdateCapabilities" $ pure UpdateCapabilities
+
+data DeleteCapabilities = DeleteCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DeleteCapabilities
+
+instance HasCodec DeleteCapabilities where
+  codec =
+    object "DeleteCapabilities" $ pure DeleteCapabilities
+
+data AtomicitySupportLevel
+  = RowAtomicity
+  | SingleOperationAtomicity
+  | HomogeneousOperationsAtomicity
+  | HeterogeneousOperationsAtomicity
+  deriving stock (Eq, Ord, Show, Generic, Data, Enum, Bounded)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec AtomicitySupportLevel
+
+instance HasCodec AtomicitySupportLevel where
+  codec =
+    named "AtomicitySupportLevel" $
+      stringConstCodec
+        [ (RowAtomicity, "row"),
+          (SingleOperationAtomicity, "single_operation"),
+          (HomogeneousOperationsAtomicity, "homogeneous_operations"),
+          (HeterogeneousOperationsAtomicity, "heterogeneous_operations")
+        ]
+        <??> [ "Describes the level of transactional atomicity the agent supports for mutation operations.",
+               "'row': If multiple rows are affected in a single operation but one fails, only the failed row's changes will be reverted",
+               "'single_operation': If multiple rows are affected in a single operation but one fails, all affected rows in the operation will be reverted",
+               "'homogeneous_operations': If multiple operations of only the same type exist in the one mutation request, a failure in one will result in all changes being reverted",
+               "'heterogeneous_operations': If multiple operations of any type exist in the one mutation request, a failure in one will result in all changes being reverted"
+             ]
+
+data ReturningCapabilities = ReturningCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ReturningCapabilities
+
+instance HasCodec ReturningCapabilities where
+  codec =
+    object "ReturningCapabilities" $ pure ReturningCapabilities
 
 data SubscriptionCapabilities = SubscriptionCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)

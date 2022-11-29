@@ -111,12 +111,13 @@ The entry point to the reference agent application is a Fastify HTTP server. Raw
 
 - `GET /capabilities`, which returns the capabilities of the agent and a schema that describes the type of the configuration expected to be sent on the `X-Hasura-DataConnector-Config` header
 - `GET /schema`, which returns information about the provided _data schema_, its tables and their columns
-- `POST /query`, which receives a query structure to be executed, encoded as the JSON request body, and returns JSON conforming to the schema described by the `/schema` endpoint, and contining the requested fields.
+- `POST /query`, which receives a query structure to be executed, encoded as the JSON request body, and returns JSON containing the requested fields. The query will be over the data schema described by the `/schema` endpoint.
 - `GET /health`, which can be used to either check if the agent is running, or if a particular data source is healthy
+- `POST /mutation`, which receives a request to mutate (ie change) data described by the `/schema` endpoint.
 
-The `/schema` and `/query` endpoints require the request to have the `X-Hasura-DataConnector-Config` header set. That header contains configuration information that agent can use to configure itself. For example, the header could contain a connection string to the database, if the agent requires a connection string to know how to connect to a specific database. The header must be a JSON object, but the specific properties that are required are up to the agent to define.
+The `/schema`, `/query` and `/mutation` endpoints require the request to have the `X-Hasura-DataConnector-Config` header set. That header contains configuration information that agent can use to configure itself. For example, the header could contain a connection string to the database, if the agent requires a connection string to know how to connect to a specific database. The header must be a JSON object, but the specific properties that are required are up to the agent to define.
 
-The `/schema` and `/query` endpoints also require the request to have the `X-Hasura-DataConnector-SourceName` header set. This header contains the name of the data source configured in HGE that will be querying the agent. This can be used by the agent to maintain things like connection pools and configuration maps on a per-source basis.
+The `/schema`, `/query` and `/mutation` endpoints also require the request to have the `X-Hasura-DataConnector-SourceName` header set. This header contains the name of the data source configured in HGE that will be querying the agent. This can be used by the agent to maintain things like connection pools and configuration maps on a per-source basis.
 
 We'll look at the implementation of each of the endpoints in turn.
 
@@ -225,6 +226,37 @@ In this query we have an `Employee` field with a `BirthDate` property of type `D
 The `in_year` custom comparison operator is being used to request all employees with a birth date in the year 1962.
 
 The example also defines two aggregate functions `min` and `max`, both of which have a result type of `DateTime`.
+
+### Mutations capabilities
+The agent can declare whether it supports mutations (ie. changing data) against its data source. If it supports mutations, it needs to declare a `mutations` capability with agent-specific values for the following properties:
+
+```json
+{
+  "capabilities": {
+    "mutations": {
+      "insert": {
+        "supports_nested_inserts": true
+      },
+      "update": {},
+      "delete": {},
+      "atomicity_support_level": "heterogeneous_operations",
+      "returning": {}
+    }
+  }
+}
+```
+
+The agent is able to specify whether or not it supports inserts, updates and deletes separately. For inserts, it can specify whether it supports nested inserts, where the user can insert related rows nested inside the one row insert.
+
+It also should specify its supported level of transactional atomicity when performing mutations. It can choose between the following levels:
+- `row`: If multiple rows are affected in a single operation but one fails, only the failed row's changes will be reverted. For example, if one mutation operation inserts four rows, but one row fails, the other three rows will still be inserted, and the failed one will not.
+- `single_operation`: If multiple rows are affected in a single operation but one fails, all affected rows in the operation will be reverted. For example, if one mutation operation inserts four rows, but one row fails, none of the rows will be inserted.
+- `homogeneous_operations`: If multiple operations of only the same type exist in the one mutation request, a failure in one will result in all changes being reverted. For example, if one mutation request contains two insert operations, one to Table A and one to Table B, and Table B's insert fails, no rows will have been inserted into either Table A nor B.
+- `heterogeneous_operations`: If multiple operations of any type exist in the one mutation request, a failure in one will result in all changes being reverted. For example, if one mutation request contains three operations, one to insert some rows, one to update some rows, and one to delete some rows, and the deletion fails, all changes (inserts, updates and deletes) will be reverted.
+
+The preference would be to support the highest level of atomicity possible (ie `heteregeneous_operations` is preferred over `row`). It is also possible to omit the property, which would imply no atomicity at all (failures cannot be rolled back whatsoever).
+
+The agent can also specify whether or not it supports `returning` data from mutations. This refers to the ability to return the data that was mutated by mutation operations (for example, the updated rows in an update, or the deleted rows in a delete).
 
 ### Schema
 
@@ -1517,8 +1549,588 @@ Any non-200 response code from an Agent (except for the `/health` endpoint) will
 
 ```
 {
-  "type": "uncaught-error",      // This may be extended to more types in future
-  "message": String,             // A plain-text message for display purposes
-  "details": Value               // An arbitrary JSON Value containing error details
+  "type": String,    // A specific error type, see below
+  "message": String, // A plain-text message for display purposes
+  "details": Value   // An arbitrary JSON Value containing error details
 }
 ```
+
+The available error types are:
+* `mutation-constraint-violation`: For when a mutation request fails because the mutation causes a violation of data constraints (for example, primary key constraint) in the data source
+* `mutation-permission-check-failure`: For when a permissions check fails during a mutation and the mutation is rejected
+* `uncaught-error`: For all other errors
+
+### Mutations
+The `POST /mutation` endpoint is invoked when the user issues a mutation GraphQL request to `graphql-engine`, assuming the agent has declared itself capable of mutations in its capabilities. The basic structure of a mutation request is as follows:
+
+```jsonc
+{
+  "table_relationships": [], // Any relationships between tables are described in here in the same manner as in queries
+  "operations": [ // A mutation request can contain multiple mutation operations
+    {
+      "type": "insert", // Also: "update" and "delete"
+      "returning_fields": { // The fields to return for every affected row
+        "ArtistId": {
+          "type": "column",
+          "column": "ArtistId",
+          "column_type": "number"
+        }
+      },
+      ... // Other operation type-specific properties, detailed below
+    }
+  ]
+}
+```
+
+There are three types of mutation operations: `insert`, `update` and `delete`. A request can involve multiple mutation operations, potentially of differing types. A mutation operation can specify `returning_fields` which are the fields that are expected to be returned in the response for each row affected by the mutation operation.
+
+The response to a mutation request takes this basic structure:
+
+```jsonc
+{
+  "operation_results": [ // There will be a result object per operation, returned here in the same order as in the request
+    {
+      "affected_rows": 1, // The number of rows affected by the mutation operation
+      "returning": [ // The rows that were affected; each row object contains the fields requested in `returning_fields`
+        {
+          "FieldName": "FieldValue"
+        }
+      ]
+    }
+  ]
+}
+```
+
+If any mutation operation causes an error, for example, if a mutation violates a constraint such as a primary key or a foreign key constraint in an RDBMS, then an error should be returned as a response in the same manner as described in the [Reporting Errors](#reporting-errors) section. Changes should be rolled back to the extent described by the `atomicity_level` declared by in the agent's [mutation capabilities](#mutations-capabilities). The error type should be `mutation_constraint_violation` and the HTTP response code should be 400. For example:
+
+```json
+{
+  "type": "mutation-constraint-violation",
+  "message": "Violation of PRIMARY KEY constraint PK_Artist. Cannot insert duplicate key in table Artist. The duplicate key value is (1).", // Can be any helpfully descriptive error message
+  "details": { // Any helpful structured error information, the below is just an example
+    "constraint_name": "PK_Artist",
+    "table": ["Artist"],
+    "key_value": 1
+  }
+}
+```
+
+If a mutation fails because it fails a permissions check (eg a `post-insert-check`), then the error code that should be used is `mutation-permission-check-failure`.
+
+#### Insert Operations
+
+Here's an example GraphQL mutation that inserts two artists:
+
+```graphql
+mutation InsertArtists {
+  insert_Artist(objects: [
+    {ArtistId: 300, Name: "Taylor Swift"},
+    {ArtistId: 301, Name: "Phil Collins"}
+  ]) {
+    affected_rows
+    returning {
+      ArtistId
+      Name
+    }
+  }
+}
+```
+
+This would result in a mutation request like this:
+
+```json
+{
+  "table_relationships": [],
+  "insert_schema": [
+    {
+      "table": ["Artist"],
+      "fields": {
+        "ArtistId": {
+          "type": "column",
+          "column": "ArtistId",
+          "column_type": "number"
+        },
+        "Name": {
+          "type": "column",
+          "column": "Name",
+          "column_type": "string"
+        }
+      }
+    }
+  ],
+  "operations": [
+    {
+      "type": "insert",
+      "table": ["Artist"],
+      "rows": [
+        [
+          {
+            "ArtistId": 300,
+            "Name": "Taylor Swift"
+          },
+          {
+            "ArtistId": 301,
+            "Name": "Phil Collins"
+          }
+        ]
+      ],
+      "post_insert_check": {
+        "type": "and",
+        "expressions": []
+      },
+      "returning_fields": {
+        "ArtistId": {
+          "type": "column",
+          "column": "ArtistId",
+          "column_type": "number"
+        },
+        "Name": {
+          "type": "column",
+          "column": "Name",
+          "column_type": "string"
+        }
+      }
+    }
+  ]
+}
+```
+
+The first thing to notice is the `insert_schema` property at the mutation request level. This contains the definition of the fields that will be used inside any insert operation in this request on a per-table basis. The schema for the row data to insert is placed here, separate to the row data itself, in order to reduce the amount of duplicate data that would exist were it inlined into the row data structures themselves.
+
+So, because in this request we are inserting into the Artist table, we have the definition of what "ArtistId" and "Name" properties mean when they are found in the rows to insert for the Artist table. In this case, both fields are columns (`"type": "column"`) with their names (`column`) and types (`column_type`) specified.
+
+Next, let's break the `insert`-typed operation's properties down:
+* `table`: specifies the table we're inserting rows into
+* `rows`: An array of rows to insert. Each row is an object with properties, where what the properties correspond to (eg. column values) is defined by the `insert_schema`.
+* `post_insert_check`: The post-insert check is an expression (in the same format as `Query`'s `where` property) that all inserted rows must match otherwise their insertion must be reverted. This expression comes from `graphql-engine`'s permissions system. The reason that it is a "post-insert" check is because it can involve joins via relationships to other tables and potentially data that is only available post-insert such as computed columns. If the agent knows it can compute the result of such a check without actually performing an insert, it is free to do so, but it must produce a result that is indistinguishable from that which was done post-insert. If the post-insert check fails, the mutation request should fail with an error using the error code `mutation-permission-check-failure`.
+* `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the insert (ie. all inserted rows).
+
+The result of this request would be the following response:
+
+```json
+{
+  "operation_results": [
+    {
+      "affected_rows": 2,
+      "returning": [
+        {
+          "ArtistId": 300,
+          "Name": "Taylor Swift"
+        },
+        {
+          "ArtistId": 301,
+          "Name": "Phil Collins"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Notice that the two affected rows in `returning` are the two that we inserted.
+
+#### Nested Insert Operations
+If a user wishes to insert multiple related rows in one go, they can issue a nested insert GraphQL query:
+
+```graphql
+mutation InsertAlbum {
+  insert_Album(objects: [
+    {
+      AlbumId: 400,
+      Title: "Fearless",
+      Artist: {
+        data: {
+          ArtistId: 300,
+          Name: "Taylor Swift"
+        }
+      },
+      Tracks: {
+        data: [
+          { TrackId: 4000, Name: "Fearless" },
+          { TrackId: 4001, Name: "Fifteen" }
+        ]
+      }
+    }
+  ]) {
+    affected_rows
+    returning {
+      AlbumId
+      Title
+      Artist {
+        ArtistId
+        Name
+      }
+      Tracks {
+        TrackId
+        Name
+      }
+    }
+  }
+}
+```
+
+This would result in the following request:
+
+```json
+{
+  "table_relationships": [
+    {
+      "source_table": ["Album"],
+      "relationships": {
+        "Artist": {
+          "target_table": ["Artist"],
+          "relationship_type": "object",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        },
+        "Tracks": {
+          "target_table": ["Track"],
+          "relationship_type": "array",
+          "column_mapping": {
+            "AlbumId": "AlbumId"
+          }
+        }
+      }
+    }
+  ],
+  "insert_schema": [
+    {
+      "table": ["Album"],
+      "fields": {
+        "AlbumId": {
+          "type": "column",
+          "column": "AlbumId",
+          "column_type": "number"
+        },
+        "Title": {
+          "type": "column",
+          "column": "Title",
+          "column_type": "string"
+        },
+        "Artist": {
+          "type": "object_relation",
+          "relationship": "Artist",
+          "insert_order": "before_parent"
+        },
+        "Tracks": {
+          "type": "array_relation",
+          "relationship": "Tracks"
+        },
+      }
+    },
+    {
+      "table": ["Artist"],
+      "fields": {
+        "ArtistId": {
+          "type": "column",
+          "column": "ArtistId",
+          "column_type": "number"
+        },
+        "Name": {
+          "type": "column",
+          "column": "Name",
+          "column_type": "string"
+        }
+      }
+    },
+    {
+      "table": ["Track"],
+      "fields": {
+        "TrackId": {
+          "type": "column",
+          "column": "TrackId",
+          "column_type": "number"
+        },
+        "Name": {
+          "type": "column",
+          "column": "Name",
+          "column_type": "string"
+        }
+      }
+    }
+  ],
+  "operations": [
+    {
+      "type": "insert",
+      "table": ["Album"],
+      "rows": [
+        [
+          {
+            "AlbumId": 400,
+            "Title": "Fearless",
+            "Artist": {
+              "ArtistId": 300,
+              "Name": "Taylor Swift"
+            },
+            "Tracks": [
+              {
+                "TrackId": 4000,
+                "Name": "Fearless"
+              },
+              {
+                "TrackId": 4001,
+                "Name": "Fifteen"
+              }
+            ]
+          }
+        ]
+      ],
+      "post_insert_check": {
+        "type": "and",
+        "expressions": []
+      },
+      "returning_fields": {
+        "AlbumId": {
+          "type": "column",
+          "column": "AlbumId",
+          "column_type": "number"
+        },
+        "Title": {
+          "type": "column",
+          "column": "Title",
+          "column_type": "string"
+        },
+        "Artist": {
+          "type": "relationship",
+          "relationship": "Artist",
+          "query": {
+            "fields": {
+              "ArtistId": {
+                "type": "column",
+                "column": "ArtistId",
+                "column_type": "number"
+              },
+              "Name": {
+                "type": "column",
+                "column": "Name",
+                "column_type": "string"
+              }
+            }
+          }
+        },
+        "Tracks": {
+          "type": "relationship",
+          "relationship": "Tracks",
+          "query": {
+            "fields": {
+              "TrackId": {
+                "type": "column",
+                "column": "TrackId",
+                "column_type": "number"
+              },
+              "Name": {
+                "type": "column",
+                "column": "Name",
+                "column_type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+Note that there are two new types of fields in the `insert_schema` in this query to capture the nested inserts:
+* `object_relation`: This captures a nested insert across an object relationship. In this case, we're inserting the related Artist row.
+  * `relationship`: The name of the relationship across which to insert the related row. The information about this relationship can be looked up in `table_relationships`.
+  * `insert_order`: This can be either `before_parent` or `after_parent` and indicates whether or not the related row needs to be inserted before the parent row or after it.
+* `array_relation`: This captures a nested insert across an array relationship. In this case, we're inserting the related Tracks rows.
+  * `relationship`: The name of the relationship across which to insert the related rows. The information about this relationship can be looked up in `table_relationships`.
+
+The agent is expected to set the necessary values of foreign key columns itself when inserting all the rows. In this example, the agent would:
+* First insert the Artist.
+* Then insert the Album, using the Artist.ArtistId primary key column for the Album.ArtistId foreign key column.
+* Then insert the two Track rows, using the Album.AlbumId primary key column for the Track.AlbumId foreign key column.
+
+This is particularly important where the value of primary keys are not known until they are generated in the database itself and cannot be provided by the user.
+
+Note that in `returning_fields` we have used fields of type `relationship` to navigate relationships in the returned affected rows. This works in the same way as in Queries.
+
+The response to this mutation request would be:
+
+```json
+{
+  "operation_results": [
+    {
+      "affected_rows": 4,
+      "returning": [
+        {
+          "AlbumId": 400,
+          "Title": "Fearless",
+          "Artist": {
+            "rows": [
+              {
+                "ArtistId": 300,
+                "Name": "Taylor Swift"
+              }
+            ]
+          },
+          "Tracks": {
+            "rows": [
+              {
+                "TrackId": 4000,
+                "Name": "Fearless"
+              },
+              {
+                "ArtistId": 4001,
+                "Name": "Fifteen"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Note that relationship fields are returned in the response in the same fashion as they are in a Query response; ie. inside a nested object with `rows` and `aggregates` (if specified) properties.
+
+#### Update Operations
+Here's an example of a mutation that updates a Track row:
+
+```graphql
+mutation UpdateTrack {
+  update_Track(
+    where: { TrackId: { _eq: 1 } },
+    _inc: { Milliseconds: 100 },
+    _set: { UnitPrice: 2.50 }
+    ) {
+    affected_rows
+    returning {
+      TrackId
+      Milliseconds
+    }
+  }
+}
+```
+
+This would get translated into a mutation request like so:
+
+```json
+{
+  "table_relationships": [],
+  "operations": [
+    {
+      "type": "update",
+      "table": ["Track"],
+      "where": {
+        "type": "binary_op",
+        "operator": "equal",
+        "column": {
+          "name": "TrackId",
+          "column_type": "number"
+        },
+        "value": {
+          "type": "scalar",
+          "value": 1,
+          "value_type": "number"
+        }
+      },
+      "updates": [
+        {
+          "type": "increment",
+          "column": "Milliseconds",
+          "value": 100,
+          "value_type": "number"
+        },
+        {
+          "type": "set",
+          "column": "UnitPrice",
+          "value": 2.50,
+          "value_type": "number"
+        }
+      ],
+      "post_update_check": {
+        "type": "and",
+        "expressions": []
+      },
+      "returning_fields": {
+        "TrackId": {
+          "type": "column",
+          "column": "TrackId",
+          "column_type": "number"
+        },
+        "Name": {
+          "type": "column",
+          "column": "Milliseconds",
+          "column_type": "number"
+        }
+      }
+    }
+  ]
+}
+```
+
+Breaking down the properties in the `update`-typed mutation operation:
+* `table`: specifies the table we're updating rows in
+* `where`: An expression (same as the expression in a Query's `where` property) that is used to select the matching rows to update
+* `updates`: An array of `RowUpdate` objects that describe the individual updates to be applied to each row that matches the expression in `where`. There are two types of `RowUpdate`s:
+  * `increment` - This increments the specified column by the specified amount
+  * `set` - This sets the specified column to the specified value
+* `post_update_check`: The post-update check is an expression (in the same format as `Query`'s `where` property) that all updated rows must match otherwise the changes made must be reverted. This expression comes from `graphql-engine`'s permissions system. The reason that it is a "post-update" check is because it operates on the post-update data (such as the results of increment updates), can involve joins via relationships to other tables, and can potentially involve data that is only available post-insert such as computed columns. If the agent knows it can compute the result of such a check without actually performing an update, it is free to do so, but it must produce a result that is indistinguishable from that which was done post-update. If the post-update check fails, the mutation request should fail with an error using the error code `mutation-permission-check-failure`.
+* `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the update (ie. all updated rows).
+
+Update operations return responses that are the same as insert operations, except the affected rows in `returning` are naturally the updated rows instead.
+
+
+#### Delete Operations
+Here's an example of a mutation that deletes a Track row:
+
+```graphql
+mutation UpdateTrack {
+  delete_Track(
+    where: { TrackId: { _eq: 1 } },
+    ) {
+    affected_rows
+    returning {
+      TrackId
+      Milliseconds
+    }
+  }
+}
+```
+
+This would cause a mutation request to be send that looks like this:
+
+```json
+{
+  "table_relationships": [],
+  "operations": [
+    {
+      "type": "delete",
+      "table": ["Track"],
+      "where": {
+        "type": "binary_op",
+        "operator": "equal",
+        "column": {
+          "name": "TrackId",
+          "column_type": "number"
+        },
+        "value": {
+          "type": "scalar",
+          "value": 1,
+          "value_type": "number"
+        }
+      },
+      "returning_fields": {
+        "TrackId": {
+          "type": "column",
+          "column": "TrackId",
+          "column_type": "number"
+        }
+      }
+    }
+  ]
+}
+```
+
+Breaking down the properties in the `delete`-typed mutation operation:
+* `table`: specifies the table we're deleting rows from
+* `where`: An expression (same as the expression in a Query's `where` property) that is used to select the matching rows to delete
+* `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the deletion (ie. all deleted rows).
+
+Delete operations return responses that are the same as insert and update operations, except the affected rows in `returning` are the deleted rows instead.

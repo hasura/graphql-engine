@@ -1096,6 +1096,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec
     Hasura.Backends.DataConnector.API.V0.ExpressionSpec
+    Hasura.Backends.DataConnector.API.V0.MutationsSpec
     Hasura.Backends.DataConnector.API.V0.OrderBySpec
     Hasura.Backends.DataConnector.API.V0.QuerySpec
     Hasura.Backends.DataConnector.API.V0.RelationshipsSpec

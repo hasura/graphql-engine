@@ -571,6 +571,10 @@ mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ 
 explainHandler :: API.SourceName -> API.Config -> API.QueryRequest -> Handler API.ExplainResponse
 explainHandler _sourceName _queryConfig _query = pure $ API.ExplainResponse [] ""
 
+-- Returns an empty mutation response for now
+mutationsHandler :: API.SourceName -> API.Config -> API.MutationRequest -> Handler (Union API.MutationResponses)
+mutationsHandler _ _ _ = pure . inject . SOP.I $ API.MutationResponse []
+
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
@@ -586,6 +590,7 @@ dcMockableServer mcfg mquery mQueryConfig =
     :<|> mockSchemaHandler mcfg mQueryConfig
     :<|> mockQueryHandler mcfg mquery mQueryConfig
     :<|> explainHandler
+    :<|> mutationsHandler
     :<|> healthcheckHandler
     :<|> metricsHandler
     :<|> rawHandler

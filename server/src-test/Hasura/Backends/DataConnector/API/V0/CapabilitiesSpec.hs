@@ -58,7 +58,28 @@ genQueryCapabilities :: MonadGen m => m QueryCapabilities
 genQueryCapabilities = pure QueryCapabilities
 
 genMutationCapabilities :: MonadGen m => m MutationCapabilities
-genMutationCapabilities = pure MutationCapabilities {}
+genMutationCapabilities =
+  MutationCapabilities
+    <$> Gen.maybe genInsertCapabilities
+    <*> Gen.maybe genUpdateCapabilities
+    <*> Gen.maybe genDeleteCapabilities
+    <*> Gen.maybe genAtomicitySupportLevel
+    <*> Gen.maybe genReturningCapabilities
+
+genInsertCapabilities :: MonadGen m => m InsertCapabilities
+genInsertCapabilities = InsertCapabilities <$> Gen.bool
+
+genUpdateCapabilities :: MonadGen m => m UpdateCapabilities
+genUpdateCapabilities = pure UpdateCapabilities
+
+genDeleteCapabilities :: MonadGen m => m DeleteCapabilities
+genDeleteCapabilities = pure DeleteCapabilities
+
+genAtomicitySupportLevel :: MonadGen m => m AtomicitySupportLevel
+genAtomicitySupportLevel = Gen.enumBounded
+
+genReturningCapabilities :: MonadGen m => m ReturningCapabilities
+genReturningCapabilities = pure ReturningCapabilities
 
 genSubscriptionCapabilities :: MonadGen m => m SubscriptionCapabilities
 genSubscriptionCapabilities = pure SubscriptionCapabilities {}
