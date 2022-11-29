@@ -1,5 +1,4 @@
 import { testMode } from '../../../helpers/common';
-import { waitForPostCreationRequests } from '../query/utils/requests/waitForPostCreationRequests';
 
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
 import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
@@ -176,7 +175,9 @@ if (testMode !== 'cli') {
         cy.get('@payloadTransformRequestBody')
           .wait(500)
           .clearConsoleTextarea()
+          .wait(100)
           .clearConsoleTextarea()
+          .wait(100)
           .type(
             `{
             "userInfo": {
@@ -209,7 +210,9 @@ if (testMode !== 'cli') {
         cy.get('@responseTransformResponseBody')
           .wait(500)
           .clearConsoleTextarea()
+          .wait(100)
           .clearConsoleTextarea()
+          .wait(100)
           .type(
             `{
             "userInfo": {
@@ -224,7 +227,6 @@ if (testMode !== 'cli') {
             { force: true, delay: 1, parseSpecialCharSequences: false }
           );
       });
-
 
       // --------------------
       cy.log('**--- Click the Create button**');
@@ -252,7 +254,6 @@ if (testMode !== 'cli') {
 
       // // --------------------
       cy.log('**--- Wait all the requests to be settled**');
-      waitForPostCreationRequests();
 
       // cy.get('[data-cy="Change Request Options"]').within(() => {
       //   // --------------------
@@ -303,7 +304,7 @@ if (testMode !== 'cli') {
       // --------------------
       cy.log('**--- Set the prompt value**');
       cy.window().then(win => cy.stub(win, 'prompt').returns('login'));
-      
+
       cy.log('**--- Click the Delete button**');
       cy.getBySel('delete-action').click();
 

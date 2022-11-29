@@ -8,8 +8,8 @@ import { RequestTransformStateBody } from '../stateDefaults';
 
 type TemplateEditorProps = {
   requestBody: RequestTransformStateBody;
-  requestBodyError: string;
-  requestSampleInput: string;
+  requestBodyError?: string;
+  requestSampleInput?: string;
   requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   height?: string;
   width?: string;
@@ -43,8 +43,9 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   }, [requestBodyError]);
 
   useEffect(() => {
-    const sampleInputWordCompleter =
-      getAceCompleterFromString(requestSampleInput);
+    const sampleInputWordCompleter = getAceCompleterFromString(
+      requestSampleInput || ''
+    );
     if (
       editorRef?.current?.editor?.completers &&
       Array.isArray(editorRef?.current?.editor?.completers)
