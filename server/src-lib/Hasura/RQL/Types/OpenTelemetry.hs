@@ -27,6 +27,7 @@ module Hasura.RQL.Types.OpenTelemetry
     OtelExporterInfo,
     parseOtelExporterConfig,
     getOtelExporterTracesBaseRequest,
+    getOtelExporterResourceAttributes,
     OtelBatchSpanProcessorInfo,
     parseOtelBatchSpanProcessorConfig,
     getMaxExportBatchSize,
@@ -36,7 +37,7 @@ module Hasura.RQL.Types.OpenTelemetry
 where
 
 import Control.Lens.TH (makeLenses)
-import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:?), (.=))
+import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Bifunctor (first)
 import Data.Environment (Environment)
@@ -138,7 +139,10 @@ data OtelExporterConfig = OtelExporterConfig
     -- | The transport protocol
     _oecProtocol :: OtlpProtocol,
     -- | Key-value pairs to be used as headers to send with an export request.
-    _oecHeaders :: [HeaderConf]
+    _oecHeaders :: [HeaderConf],
+    -- | Attributes to send as the resource attributes of an export request. We
+    -- currently only support string-valued attributes.
+    _oecResourceAttributes :: [NameValue]
   }
   deriving stock (Eq, Show)
 
@@ -150,15 +154,18 @@ instance FromJSON OtelExporterConfig where
       o .:? "protocol" .!= defaultOtelExporterProtocol
     _oecHeaders <-
       o .:? "headers" .!= defaultOtelExporterHeaders
+    _oecResourceAttributes <-
+      o .:? "resource_attributes" .!= defaultOtelExporterResourceAttributes
     pure OtelExporterConfig {..}
 
 instance ToJSON OtelExporterConfig where
-  toJSON (OtelExporterConfig otlpTracesEndpoint protocol headers) =
+  toJSON (OtelExporterConfig otlpTracesEndpoint protocol headers resourceAttributes) =
     Aeson.object $
       catMaybes
         [ ("otlp_traces_endpoint" .=) <$> otlpTracesEndpoint,
           Just $ "protocol" .= protocol,
-          Just $ "headers" .= headers
+          Just $ "headers" .= headers,
+          Just $ "resource_attributes" .= resourceAttributes
         ]
 
 defaultOtelExporterConfig :: OtelExporterConfig
@@ -166,7 +173,8 @@ defaultOtelExporterConfig =
   OtelExporterConfig
     { _oecTracesEndpoint = defaultOtelExporterTracesEndpoint,
       _oecProtocol = defaultOtelExporterProtocol,
-      _oecHeaders = defaultOtelExporterHeaders
+      _oecHeaders = defaultOtelExporterHeaders,
+      _oecResourceAttributes = defaultOtelExporterResourceAttributes
     }
 
 -- | Possible protocol to use with OTLP. Currently, only http/protobuf is
@@ -188,6 +196,23 @@ instance ToJSON OtlpProtocol where
   toJSON = \case
     OtlpProtocolHttpProtobuf -> Aeson.String "http/protobuf"
 
+-- Internal helper type for JSON lists of key-value pairs
+data NameValue = NameValue
+  { nv_name :: Text,
+    nv_value :: Text
+  }
+  deriving stock (Eq, Show)
+
+instance ToJSON NameValue where
+  toJSON (NameValue {nv_name, nv_value}) =
+    Aeson.object ["name" .= nv_name, "value" .= nv_value]
+
+instance FromJSON NameValue where
+  parseJSON = Aeson.withObject "name-value pair" $ \o -> do
+    nv_name <- o .: "name"
+    nv_value <- o .: "value"
+    pure NameValue {..}
+
 defaultOtelExporterTracesEndpoint :: Maybe Text
 defaultOtelExporterTracesEndpoint = Nothing
 
@@ -196,6 +221,9 @@ defaultOtelExporterProtocol = OtlpProtocolHttpProtobuf
 
 defaultOtelExporterHeaders :: [HeaderConf]
 defaultOtelExporterHeaders = []
+
+defaultOtelExporterResourceAttributes :: [NameValue]
+defaultOtelExporterResourceAttributes = []
 
 -- https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor
 newtype OtelBatchSpanProcessorConfig = OtelBatchSpanProcessorConfig
@@ -246,10 +274,13 @@ emptyOpenTelemetryInfo =
       _otiBatchSpanProcessor = Nothing
     }
 
-newtype OtelExporterInfo = OtelExporterInfo
+data OtelExporterInfo = OtelExporterInfo
   { -- | HTTP 'Request' containing (1) the target URL to which the exporter is
     -- going to send spans, and (2) the user-specified request headers.
-    _oteleiTracesBaseRequest :: Request
+    _oteleiTracesBaseRequest :: Request,
+    -- | Attributes to send as the resource attributes of an export request. We
+    -- currently only support string-valued attributes.
+    _oteleiResourceAttributes :: [(Text, Text)]
   }
 
 -- Smart constructor
@@ -270,11 +301,18 @@ parseOtelExporterConfig env OtelExporterConfig {..} = do
   pure
     OtelExporterInfo
       { _oteleiTracesBaseRequest =
-          uriRequest {requestHeaders = headers ++ requestHeaders uriRequest}
+          uriRequest {requestHeaders = headers ++ requestHeaders uriRequest},
+        _oteleiResourceAttributes =
+          map
+            (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
+            _oecResourceAttributes
       }
 
 getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Request
 getOtelExporterTracesBaseRequest = _oteleiTracesBaseRequest
+
+getOtelExporterResourceAttributes :: OtelExporterInfo -> [(Text, Text)]
+getOtelExporterResourceAttributes = _oteleiResourceAttributes
 
 data OtelBatchSpanProcessorInfo = OtelBatchSpanProcessorInfo
   { -- | The maximum batch size of every export. It must be smaller or equal to
