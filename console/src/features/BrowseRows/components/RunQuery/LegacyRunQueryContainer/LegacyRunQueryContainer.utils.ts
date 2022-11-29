@@ -24,11 +24,11 @@ const convertValue = (
   if (Array.isArray(value)) {
     return value;
   }
-
   if (tableColumnType === 'integer') {
-    return parseInt(value, 10);
+    const parsed = parseInt(value, 10);
+    if (!isNaN(parsed)) return parsed;
+    return value;
   }
-
   if (tableColumnType === 'boolean') {
     if (typeof value === 'string') {
       return value === 'true';
@@ -54,7 +54,6 @@ export const adaptFormValuesToQuery = (
       if (filter.operator === '$in' || filter.operator === '$nin') {
         partialValue = convertArray(filter.value);
       }
-
       const value = !columnDataType
         ? filter.value
         : convertValue(partialValue, columnDataType.dataType);
@@ -122,7 +121,9 @@ export const setUrlParams = (
   });
 };
 
-const parseArray = (val: string | number | boolean | string[] | number[]) => {
+const parseArray = (
+  val: string | number | boolean | string[] | number[] | null
+) => {
   if (Array.isArray(val)) return val;
   if (typeof val === 'string') {
     try {
@@ -249,7 +250,7 @@ export const convertUserQueryToFiltersAndSortFormValues = (
       return {
         column: columnName,
         operator,
-        value: value.toString(),
+        value: String(value),
       };
     }
   );

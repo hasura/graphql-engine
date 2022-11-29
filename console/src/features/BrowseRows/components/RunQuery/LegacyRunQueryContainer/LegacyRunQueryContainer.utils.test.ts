@@ -134,6 +134,45 @@ describe('adaptFormValuesToQuery', () => {
   });
 });
 
+it('does not try to parse non-integer values on integer field types', () => {
+  const input: FiltersAndSortFormValues = {
+    filters: [
+      { column: 'text', operator: '$eq', value: 'aaaa' },
+      { column: 'id', operator: '$eq', value: '1' },
+    ],
+    sorts: [],
+  };
+  const expected: UserQuery = {
+    where: {
+      $and: [
+        {
+          text: {
+            $eq: 'aaaa',
+          },
+        },
+        {
+          id: {
+            $eq: 1,
+          },
+        },
+      ],
+    },
+    order_by: [],
+  };
+
+  const columnDataTypes: TableColumn[] = [
+    {
+      name: 'id',
+      dataType: 'integer',
+    },
+    {
+      name: 'text',
+      dataType: 'integer',
+    },
+  ];
+  expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
+});
+
 describe('filterValidUserQuery', () => {
   it('removes empty and conditions', () => {
     const userQuery: UserQuery = {
@@ -212,6 +251,35 @@ describe('convertUserQueryToFiltersAndSortFormValues', () => {
           type: 'desc',
         },
       ],
+    };
+
+    expect(convertUserQueryToFiltersAndSortFormValues(userQuery)).toEqual(
+      expected
+    );
+  });
+
+  it('return nullish values as strings', () => {
+    const userQuery: UserQuery = {
+      where: {
+        $and: [
+          {
+            id: {
+              $gt: null,
+            },
+          },
+        ],
+      },
+      order_by: [],
+    };
+    const expected: FiltersAndSortFormValues = {
+      filters: [
+        {
+          column: 'id',
+          operator: '$gt',
+          value: 'null',
+        },
+      ],
+      sorts: [],
     };
 
     expect(convertUserQueryToFiltersAndSortFormValues(userQuery)).toEqual(
