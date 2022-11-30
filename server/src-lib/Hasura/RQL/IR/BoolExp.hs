@@ -47,6 +47,7 @@ module Hasura.RQL.IR.BoolExp
   )
 where
 
+import Autodocodec (Codec (CommentCodec), HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, named, valueCodec)
 import Control.Lens.Plated
 import Control.Lens.TH
 import Data.Aeson.Extended
@@ -54,9 +55,11 @@ import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
+import Data.Aeson.Types (parseEither)
 import Data.HashMap.Strict qualified as M
 import Data.Monoid
 import Data.Text.Extended
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -195,6 +198,23 @@ instance ToJSONKeyValue ColExp where
 -- uses 'ColExp' as the term in GBoolExp.
 newtype BoolExp (b :: BackendType) = BoolExp {unBoolExp :: GBoolExp b ColExp}
   deriving newtype (Show, Eq, Generic, NFData, ToJSON, FromJSON)
+
+-- TODO: This implementation delegates to Aeson instances for encoding and
+-- decoding GBoolExp. To accurately represent GBoolExp with a codec we will need
+-- Autodocodec to gain support for expressing an object type with "additional
+-- properties" for fields.
+instance Backend b => HasCodec (BoolExp b) where
+  codec = CommentCodec doc $ named (codecNamePrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
+    where
+      jsonCodec :: JSONCodec (GBoolExp b ColExp)
+      jsonCodec = bimapCodec (parseEither parseJSON) toJSON valueCodec
+      doc =
+        "Recursive object type with keys \"_and\", \"_or\", \"_not\", \"_exists\", or \"<field name>\". "
+          <> "Values for \"_and\" and \"_or\" are arrays of nested expressions. "
+          <> "A value for \"_not\" is a single nested expression. "
+          <> "A value for \"_exists\" is an object with \"table\" and \"where\" properties where \"table\" is a table name, "
+          <> "and \"where\" is another BoolExp expression. "
+          <> "All other properties represent fields where the property name represents a column name, and the value represents a row value."
 
 $(makeWrapped ''BoolExp)
 
