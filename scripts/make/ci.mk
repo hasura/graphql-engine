@@ -9,3 +9,8 @@ pipeline-build:
 ## pipeline-format: run go fmt on all the Go files in .buildkite
 pipeline-format:
 	cd .buildkite && gofmt -l -w -s .
+
+.PHONY: pipeline-shellcheck
+## pipeline-shellcheck: run shellcheck on all CI scripts in .buildkite/scripts
+pipeline-shellcheck:
+	shellcheck .buildkite/scripts/{.,**}/*.sh -P .buildkite/scripts
