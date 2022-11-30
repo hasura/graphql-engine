@@ -8,7 +8,7 @@ module Hasura.RQL.Types.SchemaCache.Build
   ( MetadataDependency (..),
     recordInconsistency,
     recordInconsistencyM,
-    recordInconsistencies,
+    recordInconsistenciesM,
     recordDependencies,
     recordDependenciesM,
     withRecordInconsistency,
@@ -65,8 +65,27 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
--- ----------------------------------------------------------------------------
--- types used during schema cache construction
+-- * Inconsistencies
+
+recordInconsistency ::
+  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, MetadataObject), Text) `arr` ()
+recordInconsistency = proc ((val, mo), reason) ->
+  tellA -< Seq.singleton $ Left $ InconsistentObject reason val mo
+
+recordInconsistencyM ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => Maybe Value -> MetadataObject -> Text -> m ()
+recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
+
+recordInconsistenciesM ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [MetadataObject] -> Text -> m ()
+recordInconsistenciesM metadataObjects reason = recordInconsistenciesM' ((Nothing,) <$> metadataObjects) reason
+
+recordInconsistenciesM' ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [(Maybe Value, MetadataObject)] -> Text -> m ()
+recordInconsistenciesM' metadataObjects reason =
+  tell $ Seq.fromList $ map (Left . uncurry (InconsistentObject reason)) metadataObjects
+
+-- * Dependencies
 
 data MetadataDependency
   = MetadataDependency
@@ -75,28 +94,6 @@ data MetadataDependency
       SchemaObjId
       SchemaDependency
   deriving (Eq)
-
-recordInconsistency ::
-  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, MetadataObject), Text) `arr` ()
-recordInconsistency = first (arr (: [])) >>> recordInconsistencies'
-
-recordInconsistencyM ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => Maybe Value -> MetadataObject -> Text -> m ()
-recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
-
-recordInconsistencies ::
-  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ([MetadataObject], Text) `arr` ()
-recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
-
-recordInconsistenciesM' ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [(Maybe Value, MetadataObject)] -> Text -> m ()
-recordInconsistenciesM' metadataObjects reason =
-  tell $ Seq.fromList $ map (Left . uncurry (InconsistentObject reason)) metadataObjects
-
-recordInconsistencies' ::
-  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
-recordInconsistencies' = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (Left . uncurry (InconsistentObject reason)) metadataObjects
 
 recordDependencies ::
   (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
@@ -112,6 +109,8 @@ recordDependenciesM ::
   m ()
 recordDependenciesM metadataObject schemaObjectId dependencies = do
   tell $ Seq.fromList $ map (Right . MetadataDependency metadataObject schemaObjectId) dependencies
+
+-- * Helpers
 
 -- | Monadic version of 'withRecordInconsistency'
 withRecordInconsistencyM ::

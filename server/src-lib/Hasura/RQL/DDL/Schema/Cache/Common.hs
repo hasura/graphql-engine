@@ -29,6 +29,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boRoles,
     boSources,
     buildInfoMap,
+    buildInfoMapM,
     buildInfoMapPreservingMetadata,
     buildInfoMapPreservingMetadataM,
     initialInvalidationKeys,
@@ -322,7 +323,26 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
   returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 
--- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
+buildInfoMapM ::
+  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (a -> m (Maybe b)) ->
+  [a] ->
+  m (HashMap k b)
+buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
+  let groupedInfos = M.groupOn extractKey infos
+  infoMapMaybes <- for groupedInfos \duplicateInfos -> do
+    infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
+    case infoMaybe of
+      Nothing -> pure Nothing
+      Just info -> do
+        buildInfo info
+  pure $ catMaybes infoMapMaybes
+
+-- | Like 'buildInfoMap', but includes each processed info’s associated 'MetadataObject' in the result.
 -- This is useful if the results will be further processed, and the 'MetadataObject' is still needed
 -- to mark the object inconsistent.
 buildInfoMapPreservingMetadata ::
@@ -343,9 +363,6 @@ buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
       returnA -< result <&> (,mkMetadataObject info)
 {-# INLINEABLE buildInfoMapPreservingMetadata #-}
 
--- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
--- This is useful if the results will be further processed, and the 'MetadataObject' is still needed
--- to mark the object inconsistent.
 buildInfoMapPreservingMetadataM ::
   ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
     Hashable k
@@ -355,16 +372,12 @@ buildInfoMapPreservingMetadataM ::
   (a -> m (Maybe b)) ->
   [a] ->
   m (HashMap k (b, MetadataObject))
-buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo infos = do
-  let groupedInfos = M.groupOn extractKey infos
-  infoMapMaybes <- for groupedInfos \duplicateInfos -> do
-    infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
-    case infoMaybe of
-      Nothing -> pure Nothing
-      Just info -> do
-        result <- buildInfo info
-        pure $ result <&> (,mkMetadataObject info)
-  pure $ catMaybes infoMapMaybes
+buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
+  buildInfoMapM extractKey mkMetadataObject buildInfoPreserving
+  where
+    buildInfoPreserving info = do
+      result <- buildInfo info
+      pure $ result <&> (,mkMetadataObject info)
 
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
