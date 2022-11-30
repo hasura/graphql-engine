@@ -18397,7 +18397,7 @@ initialResourceVersion :: MetadataResourceVersion
 mkParentDep :: forall b. Backend b => SourceName -> TableName b -> SchemaDependency
 mkColDep :: forall b. Backend b => DependencyReason -> SourceName -> TableName b -> Column b -> SchemaDependency
 mkComputedFieldDep :: forall b. Backend b => DependencyReason -> SourceName -> TableName b -> ComputedFieldName -> SchemaDependency
-type WithDeps a = (a, [SchemaDependency])
+type WithDeps a = (a, Seq SchemaDependency)
 type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo Name)
 type RemoteSchemaCtx = RemoteSchemaCtxG (RemoteFieldInfo Name)
 type RemoteSchemaMap = HashMap RemoteSchemaName RemoteSchemaCtx
@@ -18666,8 +18666,8 @@ recordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => 
 recordInconsistenciesM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => [MetadataObject] -> Text -> m ()
 data MetadataDependency
 MetadataDependency :: MetadataObject -> SchemaObjId -> SchemaDependency -> MetadataDependency
-recordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr => (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
-recordDependenciesM :: MonadWriter (Seq (Either im MetadataDependency)) m => MetadataObject -> SchemaObjId -> [SchemaDependency] -> m ()
+recordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr => (MetadataObject, SchemaObjId, Seq SchemaDependency) `arr` ()
+recordDependenciesM :: MonadWriter (Seq (Either im MetadataDependency)) m => MetadataObject -> SchemaObjId -> Seq SchemaDependency -> m ()
 
 -- | Monadic version of <a>withRecordInconsistency</a>
 withRecordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => MetadataObject -> ExceptT QErr m a -> m (Maybe a)
@@ -18943,7 +18943,7 @@ runDropInheritedRole :: (MonadError QErr m, CacheRWM m, MetadataM m) => DropInhe
 --   all the parent roles of an inherited role exists and report the
 --   dependencies of the inherited role which will be the list of the
 --   parent roles
-resolveInheritedRole :: MonadError QErr m => HashSet RoleName -> InheritedRole -> m (Role, [SchemaDependency])
+resolveInheritedRole :: MonadError QErr m => HashSet RoleName -> InheritedRole -> m (Role, Seq SchemaDependency)
 
 module Hasura.GraphQL.Schema.Common
 
@@ -21426,7 +21426,7 @@ permissionIsDefined :: PermType -> RolePermInfo backend -> Bool
 assertPermDefined :: (Backend backend, MonadError QErr m) => RoleName -> PermType -> TableInfo backend -> m ()
 newtype CreatePerm a b
 CreatePerm :: WithTable b (PermDef b a) -> CreatePerm a b
-procBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> TableName b -> FieldInfoMap (FieldInfo b) -> BoolExp b -> m (AnnBoolExpPartialSQL b, [SchemaDependency])
+procBoolExp :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b, GetAggregationPredicatesDeps b) => SourceName -> TableName b -> FieldInfoMap (FieldInfo b) -> BoolExp b -> m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
 getDepHeadersFromVal :: Value -> [Text]
 getDependentHeaders :: BoolExp b -> HashSet Text
 data DropPerm b
@@ -21509,8 +21509,8 @@ newtype CreateObjRel b
 CreateObjRel :: WithTable b (ObjRelDef b) -> CreateObjRel b
 [unCreateObjRel] :: CreateObjRel b -> WithTable b (ObjRelDef b)
 runCreateRelationship :: forall m b a. (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) => RelType -> WithTable b (RelDef a) -> m EncJSON
-objRelP2Setup :: forall b m. (QErrM m, Backend b) => SourceName -> TableName b -> HashMap (TableName b) (HashSet (ForeignKey b)) -> RelDef (ObjRelUsing b) -> m (RelInfo b, [SchemaDependency])
-arrRelP2Setup :: forall b m. (QErrM m, Backend b) => HashMap (TableName b) (HashSet (ForeignKey b)) -> SourceName -> TableName b -> ArrRelDef b -> m (RelInfo b, [SchemaDependency])
+objRelP2Setup :: forall b m. (QErrM m, Backend b) => SourceName -> TableName b -> HashMap (TableName b) (HashSet (ForeignKey b)) -> RelDef (ObjRelUsing b) -> m (RelInfo b, Seq SchemaDependency)
+arrRelP2Setup :: forall b m. (QErrM m, Backend b) => HashMap (TableName b) (HashSet (ForeignKey b)) -> SourceName -> TableName b -> ArrRelDef b -> m (RelInfo b, Seq SchemaDependency)
 data DropRel b
 runDropRel :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => DropRel b -> m EncJSON
 data SetRelComment b
@@ -22403,22 +22403,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) TriggerOnReplication
-cteqCleanupConfig :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe Text)
-cetqWebhook :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe InputWebhook)
-cetqUpdate :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe (SubscribeOpSpec b_aBWF3))
-cetqTable :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (TableName b_aBWF3)
-cetqSource :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) SourceName
-cetqRetryConf :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe RequestTransform)
-cetqReplace :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) Bool
-cetqName :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) TriggerName
-cetqInsert :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe (SubscribeOpSpec b_aBWF3))
-cetqHeaders :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe Bool)
-cetqDelete :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe (SubscribeOpSpec b_aBWF3))
+cteqTriggerOnReplication :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) TriggerOnReplication
+cteqCleanupConfig :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe Text)
+cetqWebhook :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe InputWebhook)
+cetqUpdate :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe (SubscribeOpSpec b_aBWNd))
+cetqTable :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (TableName b_aBWNd)
+cetqSource :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) SourceName
+cetqRetryConf :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe RequestTransform)
+cetqReplace :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) Bool
+cetqName :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) TriggerName
+cetqInsert :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe (SubscribeOpSpec b_aBWNd))
+cetqHeaders :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe Bool)
+cetqDelete :: forall b_aBWNd. Lens' (CreateEventTriggerQuery b_aBWNd) (Maybe (SubscribeOpSpec b_aBWNd))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -22435,7 +22435,7 @@ runInvokeEventTrigger :: forall b m. (MonadIO m, QErrM m, CacheRM m, MetadataM m
 getTabInfoFromSchemaCache :: (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (TableInfo b)
 getHeaderInfosFromConf :: QErrM m => Environment -> [HeaderConf] -> m [EventHeaderInfo]
 getWebhookInfoFromConf :: QErrM m => Environment -> WebhookConf -> m WebhookConfInfo
-buildEventTriggerInfo :: forall b m. (Backend b, QErrM m) => Environment -> SourceName -> TableName b -> EventTriggerConf b -> m (EventTriggerInfo b, [SchemaDependency])
+buildEventTriggerInfo :: forall b m. (Backend b, QErrM m) => Environment -> SourceName -> TableName b -> EventTriggerConf b -> m (EventTriggerInfo b, Seq SchemaDependency)
 getTriggersMap :: SourceMetadata b -> InsOrdHashMap TriggerName (EventTriggerConf b)
 getTriggerNames :: SourceMetadata b -> HashSet TriggerName
 getTableNameFromTrigger :: forall b m. (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (TableName b)
@@ -22821,7 +22821,7 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.TelemetryHttpErr
 --   collect as many errors as possible and then report all those errors at
 --   one go to the user.
 module Hasura.RemoteSchema.SchemaCache.Permission
-resolveRoleBasedRemoteSchema :: MonadError QErr m => RoleName -> RemoteSchemaName -> IntrospectionResult -> SchemaDocument -> m (IntrospectionResult, [SchemaDependency])
+resolveRoleBasedRemoteSchema :: MonadError QErr m => RoleName -> RemoteSchemaName -> IntrospectionResult -> SchemaDocument -> m (IntrospectionResult, SchemaDependency)
 instance GHC.Classes.Eq Hasura.RemoteSchema.SchemaCache.Permission.FieldDefinitionType
 instance GHC.Show.Show Hasura.RemoteSchema.SchemaCache.Permission.FieldDefinitionType
 instance GHC.Classes.Eq Hasura.RemoteSchema.SchemaCache.Permission.ArgumentDefinitionType
@@ -23281,7 +23281,7 @@ PartiallyResolvedSource :: SourceMetadata b -> ResolvedSource b -> HashMap (Tabl
 --   this is not actually called by the remote relationship DDL API and is
 --   only used as part of the schema cache process. Should this be moved
 --   elsewhere?
-buildRemoteFieldInfo :: QErrM m => LHSIdentifier -> HashMap FieldName lhsJoinField -> RemoteRelationship -> HashMap SourceName (AnyBackend PartiallyResolvedSource) -> PartiallyResolvedRemoteSchemaMap -> m (RemoteFieldInfo lhsJoinField, [SchemaDependency])
+buildRemoteFieldInfo :: QErrM m => LHSIdentifier -> HashMap FieldName lhsJoinField -> RemoteRelationship -> HashMap SourceName (AnyBackend PartiallyResolvedSource) -> PartiallyResolvedRemoteSchemaMap -> m (RemoteFieldInfo lhsJoinField, Seq SchemaDependency)
 getRemoteSchemaEntityJoinColumns :: MonadError QErr m => RemoteSchemaName -> RemoteSchemaIntrospection -> Name -> m (HashMap FieldName Name)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.RemoteRelationship.PartiallyResolvedSource b)
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.RemoteRelationship.DeleteRemoteSchemaRemoteRelationship
