@@ -52,6 +52,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
@@ -456,7 +457,7 @@ buildEventTriggerInfo ::
   SourceName ->
   TableName b ->
   EventTriggerConf b ->
-  m (EventTriggerInfo b, [SchemaDependency])
+  m (EventTriggerInfo b, Seq SchemaDependency)
 buildEventTriggerInfo
   env
   source
@@ -498,7 +499,7 @@ buildEventTriggerInfo
                   SOITable @b tableName
             )
             DRParent
-    pure (eTrigInfo, tabDep : getTrigDefDeps @b source tableName def)
+    pure (eTrigInfo, tabDep Seq.:<| getTrigDefDeps @b source tableName def)
 
 getTrigDefDeps ::
   forall b.
@@ -506,14 +507,15 @@ getTrigDefDeps ::
   SourceName ->
   TableName b ->
   TriggerOpsDef b ->
-  [SchemaDependency]
+  Seq SchemaDependency
 getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $
-    catMaybes
-      [ subsOpSpecDeps <$> mIns,
-        subsOpSpecDeps <$> mUpd,
-        subsOpSpecDeps <$> mDel
-      ]
+    Seq.fromList
+      <$> catMaybes
+        [ subsOpSpecDeps <$> mIns,
+          subsOpSpecDeps <$> mUpd,
+          subsOpSpecDeps <$> mDel
+        ]
   where
     subsOpSpecDeps :: SubscribeOpSpec b -> [SchemaDependency]
     subsOpSpecDeps os =

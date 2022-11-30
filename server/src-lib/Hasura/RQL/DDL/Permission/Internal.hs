@@ -17,6 +17,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -90,12 +91,12 @@ procBoolExp ::
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   BoolExp b ->
-  m (AnnBoolExpPartialSQL b, [SchemaDependency])
+  m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
 procBoolExp source tn fieldInfoMap be = do
   let rhsParser = BoolExpRHSParser parseCollectableType PSESession
   abe <- annBoolExp rhsParser tn fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
-  return (abe, deps)
+  return (abe, Seq.fromList deps)
 
 getDepHeadersFromVal :: Value -> [Text]
 getDepHeadersFromVal val = case val of

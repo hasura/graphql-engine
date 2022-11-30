@@ -97,18 +97,18 @@ data MetadataDependency
 
 recordDependencies ::
   (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
-  (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
+  (MetadataObject, SchemaObjId, Seq SchemaDependency) `arr` ()
 recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
-  tellA -< Seq.fromList $ map (Right . MetadataDependency metadataObject schemaObjectId) dependencies
+  tellA -< Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
 
 recordDependenciesM ::
   (MonadWriter (Seq (Either im MetadataDependency)) m) =>
   MetadataObject ->
   SchemaObjId ->
-  [SchemaDependency] ->
+  Seq SchemaDependency ->
   m ()
 recordDependenciesM metadataObject schemaObjectId dependencies = do
-  tell $ Seq.fromList $ map (Right . MetadataDependency metadataObject schemaObjectId) dependencies
+  tell $ Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
 
 -- * Helpers
 

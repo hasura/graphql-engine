@@ -204,7 +204,7 @@ mkComputedFieldDep reason s tn computedField =
     . SOITableObj @b tn
     $ TOComputedField computedField
 
-type WithDeps a = (a, [SchemaDependency])
+type WithDeps a = (a, Seq SchemaDependency)
 
 type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo G.Name)
 

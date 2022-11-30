@@ -207,7 +207,7 @@ buildRelationship ::
   ) =>
   SourceName ->
   TableName b ->
-  (RelDef a -> Either QErr (RelInfo b, [SchemaDependency])) ->
+  (RelDef a -> Either QErr (RelInfo b, Seq SchemaDependency)) ->
   RelType ->
   RelDef a ->
   m (Maybe (RelInfo b))
@@ -320,5 +320,5 @@ buildRemoteRelationship allSources allColumns remoteSchemaMap source table rr@Re
                   mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
       -- Here is the essence of the function: construct dependencies on the RHS
       -- of the join condition.
-      recordDependenciesM metadataObject schemaObj (lhsDependencies <> rhsDependencies)
+      recordDependenciesM metadataObject schemaObj (Seq.fromList lhsDependencies <> rhsDependencies)
       return remoteField

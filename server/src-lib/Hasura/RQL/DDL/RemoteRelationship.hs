@@ -26,6 +26,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Sequence qualified as Seq
 import Data.Text.Extended ((<<>), (<>>))
 import Hasura.Base.Error
   ( Code (NotExists, NotFound, NotSupported, RemoteSchemaError),
@@ -322,7 +323,7 @@ buildRemoteFieldInfo ::
   --   1. schema cache representation of the remote relationships
   --   2. the dependencies on the RHS of the join. The dependencies
   --      on the LHS entities has to be handled by the calling function
-  m (RemoteFieldInfo lhsJoinField, [SchemaDependency])
+  m (RemoteFieldInfo lhsJoinField, Seq SchemaDependency)
 buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSources remoteSchemaMap =
   case _rrDefinition of
     RelationshipToSource ToSourceRelationshipDef {..} -> do
@@ -364,7 +365,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
                     )
                     DRRemoteRelationship
             requiredLHSJoinFields = fmap (\(srcField, _, _) -> srcField) $ Map.fromList columnMapping
-        pure (RemoteFieldInfo requiredLHSJoinFields $ RFISource $ AB.mkAnyBackend @b' rsri, rhsDependencies)
+        pure (RemoteFieldInfo requiredLHSJoinFields $ RFISource $ AB.mkAnyBackend @b' rsri, Seq.fromList rhsDependencies)
     RelationshipToSchema _ remoteRelationship@ToSchemaRelationshipDef {..} -> do
       RemoteSchemaCtx {..} <-
         onNothing (Map.lookup _trrdRemoteSchema remoteSchemaMap) $
@@ -373,8 +374,8 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
       (requiredLHSJoinFields, remoteField) <-
         validateToSchemaRelationship remoteRelationship lhsIdentifier _rrName (_rscInfo, _rscIntroOriginal) lhsJoinFields
           `onLeft` (throw400 RemoteSchemaError . errorToText)
-      let rhsDependencies = [SchemaDependency (SORemoteSchema _trrdRemoteSchema) DRRemoteSchema]
-      pure (RemoteFieldInfo requiredLHSJoinFields $ RFISchema remoteField, rhsDependencies)
+      let rhsDependency = SchemaDependency (SORemoteSchema _trrdRemoteSchema) DRRemoteSchema
+      pure (RemoteFieldInfo requiredLHSJoinFields $ RFISchema remoteField, Seq.singleton $ rhsDependency)
 
 getRemoteSchemaEntityJoinColumns ::
   (MonadError QErr m) =>

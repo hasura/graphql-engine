@@ -278,7 +278,7 @@ withRecordDependencies ::
   arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
   (result, dependencies) <- runWriterA f -< (e, s)
-  recordDependencies -< (metadataObject, schemaObjectId, toList dependencies)
+  recordDependencies -< (metadataObject, schemaObjectId, dependencies)
   returnA -< result
 {-# INLINEABLE withRecordDependencies #-}
 

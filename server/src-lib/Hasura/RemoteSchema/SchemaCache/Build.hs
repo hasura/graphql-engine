@@ -146,11 +146,11 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
       (|
         withRecordInconsistency
           ( do
-              (resolvedSchemaIntrospection, dependencies) <-
+              (resolvedSchemaIntrospection, dependency) <-
                 liftEitherA <<< bindA
                   -<
                     runExceptT $ modifyErr addPermContext $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
-              recordDependencies -< (metadataObject, schemaObject, dependencies)
+              recordDependencies -< (metadataObject, schemaObject, pure dependency)
               returnA -< resolvedSchemaIntrospection
           )
         |) metadataObject

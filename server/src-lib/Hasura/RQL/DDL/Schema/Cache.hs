@@ -32,6 +32,7 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Proxy
+import Data.Sequence qualified as Seq
 import Data.Set qualified as S
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -680,7 +681,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                 withRecordInconsistencyM metadataObject $ modifyErr addFunctionContext do
                   rawfunctionInfo <- handleMultipleFunctions @b qf funcDefs
                   (functionInfo, dep) <- buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
-                  recordDependenciesM metadataObject schemaObject [dep]
+                  recordDependenciesM metadataObject schemaObject (Seq.singleton dep)
                   pure functionInfo
       let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
@@ -1198,14 +1199,14 @@ buildRemoteSchemaRemoteRelationship allSources remoteSchemaMap remoteSchema remo
       addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
       -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,
       -- so the dependencies on the remote relationship on the LHS entity have to be computed here
-      lhsDependencies =
+      lhsDependency =
         -- a direct dependency on the remote schema on which this is defined
-        [SchemaDependency (SORemoteSchema remoteSchema) DRRemoteRelationship]
+        SchemaDependency (SORemoteSchema remoteSchema) DRRemoteRelationship
   withRecordInconsistencyM metadataObject $ modifyErr addRemoteRelationshipContext do
     allowedLHSJoinFields <- getRemoteSchemaEntityJoinColumns remoteSchema remoteSchemaIntrospection typeName
     (remoteField, rhsDependencies) <-
       buildRemoteFieldInfo (remoteSchemaToLHSIdentifier remoteSchema) allowedLHSJoinFields rr allSources remoteSchemaMap
-    recordDependenciesM metadataObject schemaObj (lhsDependencies <> rhsDependencies)
+    recordDependenciesM metadataObject schemaObj (lhsDependency Seq.:<| rhsDependencies)
     pure remoteField
 
 data BackendInfoAndSourceMetadata b = BackendInfoAndSourceMetadata
