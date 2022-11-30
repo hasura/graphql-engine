@@ -2,9 +2,11 @@
 module Harness.Test.SetupAction
   ( SetupAction (..),
     clearMetadata,
+    permitTeardownFail,
   )
 where
 
+import Control.Exception.Safe (catchAny)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
@@ -26,4 +28,11 @@ clearMetadata testEnv =
   SetupAction
     { setupAction = GraphqlEngine.clearMetadata testEnv,
       teardownAction = \_ -> GraphqlEngine.clearMetadata testEnv
+    }
+
+permitTeardownFail :: SetupAction -> SetupAction
+permitTeardownFail SetupAction {teardownAction = ta, setupAction = sa} =
+  SetupAction
+    { setupAction = sa,
+      teardownAction = (\a -> ta a `catchAny` \_ -> return ())
     }

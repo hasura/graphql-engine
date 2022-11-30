@@ -47,7 +47,7 @@ import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
-import Harness.TestEnvironment (Server, TestEnvironment (..), TestingMode (..), testLogHarness)
+import Harness.TestEnvironment (Server, TestEnvironment (..), TestingMode (..), testLogMessage)
 import Hasura.Prelude hiding (log)
 import Test.Hspec
   ( ActionWith,
@@ -162,7 +162,7 @@ fixtureBracket
   globalTestEnvironment =
     mask \restore -> runManaged do
       -- log DB of test
-      liftIO $ testLogHarness globalTestEnvironment $ "Testing " <> show name <> "..."
+      liftIO $ testLogMessage globalTestEnvironment $ LogFixtureTestStart (tshow name)
       localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
       liftIO $ do
         globalTestEnvWithUnique <- setupUniqueGlobalTestEnvironment name globalTestEnvironment
@@ -254,7 +254,8 @@ fixtureRepl Fixture {name, mkLocalTestEnvironment, setupTeardown} globalTestEnvi
 runSetupActions :: Logger -> [SetupAction] -> IO (IO ())
 runSetupActions logger acts = go acts []
   where
-    log = runLogger logger . LogHarness . T.pack
+    log :: forall a. LoggableMessage a => a -> IO ()
+    log = runLogger logger
 
     go :: [SetupAction] -> [IO ()] -> IO (IO ())
     go actions cleanupAcc = case actions of
@@ -267,20 +268,20 @@ runSetupActions logger acts = go acts []
         -- commented out.
         case a of
           Left (exn :: SomeException) -> do
-            log $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
+            log $ LogFixtureSetupFailed (length cleanupAcc)
             rethrowAll
               ( throwIO exn
-                  : ( log ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
+                  : ( log (LogFixtureTeardownFailed (length cleanupAcc))
                         >> teardownAction Nothing
                     )
                   : cleanupAcc
               )
             return (return ())
           Right x -> do
-            log $ "Setup for step " ++ show (length cleanupAcc) ++ " succeeded."
+            log $ LogFixtureSetupSucceeded (length cleanupAcc)
             go
               rest
-              ( ( log ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
+              ( ( log (LogFixtureTeardownSucceeded (length cleanupAcc))
                     >> teardownAction (Just x)
                 )
                   : cleanupAcc

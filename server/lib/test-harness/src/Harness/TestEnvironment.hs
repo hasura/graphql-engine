@@ -98,6 +98,7 @@ testLogMessage testEnv = runLogger (logger testEnv)
 
 -- | Log an unstructured trace string. Should only be used directly in specs,
 -- not in the Harness modules.
+{-# ANN testLogTrace ("HLINT: ignore" :: String) #-}
 testLogTrace :: TraceString a => TestEnvironment -> a -> IO ()
 testLogTrace testEnv =
   testLogMessage testEnv . logTrace

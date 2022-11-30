@@ -15,7 +15,6 @@ module Harness.Backend.Sqlserver
     dropTable,
     untrackTable,
     setupTablesAction,
-    setupTablesActionDiscardingTeardownErrors,
     setupPermissionsAction,
   )
 where
@@ -32,13 +31,14 @@ import Database.ODBC.SQLServer qualified as Sqlserver
 import Harness.Constants qualified as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (SQLServer), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
+import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -74,14 +74,7 @@ runWithInitialDb_ testEnvironment =
 -- result. Just checks for errors.
 runInternal :: HasCallStack => TestEnvironment -> Text -> String -> IO ()
 runInternal testEnvironment connectionString query' = do
-  testLogHarness
-    testEnvironment
-    ( "Executing with connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query'
-    )
+  testLogMessage testEnvironment $ LogDBQuery connectionString (T.pack query')
   catch
     ( bracket
         (Sqlserver.connect connectionString)
@@ -279,7 +272,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     [i|DROP DATABASE #{dbName}|]
-    `catch` \(ex :: SomeException) -> testLogHarness testEnvironment ("Failed to drop the database: " <> show ex)
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -329,12 +322,6 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -> SetupAction
-setupTablesActionDiscardingTeardownErrors ts env =
-  SetupAction
-    (setup ts (env, ()))
-    (const $ teardown ts (env, ()) `catchAny` \ex -> testLogHarness env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =

@@ -20,7 +20,6 @@ module Harness.Backend.Postgres
     trackTable,
     untrackTable,
     setupTablesAction,
-    setupTablesActionDiscardingTeardownErrors,
     setupPermissionsAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
@@ -41,12 +40,14 @@ import Data.ByteString.Char8 qualified as S8
 import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
@@ -58,7 +59,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
+import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -137,14 +138,7 @@ run_ testEnvironment =
 -- On error, print something useful for debugging.
 runInternal :: HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Executing connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -174,14 +168,7 @@ queryWithInitialDb testEnvironment =
 -- On error, print something useful for debugging.
 queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
 queryInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Querying connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -394,7 +381,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(ex :: SomeException) -> testLogHarness testEnvironment ("Failed to drop the database: " <> show ex)
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -443,12 +430,6 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -> SetupAction
-setupTablesActionDiscardingTeardownErrors ts env =
-  SetupAction
-    (setup ts (env, ()))
-    (const $ teardown ts (env, ()) `catchAny` \ex -> testLogHarness env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =
