@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | All tests related to computed fields
-module Test.Schema.ComputedFieldsSpec (spec) where
+module Test.Schema.ComputedFields.TableSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T

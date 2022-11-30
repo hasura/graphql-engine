@@ -48,6 +48,7 @@ library
     , postgres-options
     , safe-exceptions
     , split
+    , string-interpolate
     , sop-core
     , test-harness
     , text
@@ -143,7 +144,8 @@ library
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.Schema.ComputedFieldsSpec
+    Test.Schema.ComputedFields.TableSpec
+    Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ConflictsSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
