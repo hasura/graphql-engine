@@ -48,6 +48,7 @@ import GHC.Generics
 import Hasura.Base.Error (Code (InvalidParams), QErr, err400)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Headers
+import Language.Haskell.TH.Syntax (Lift)
 import Network.HTTP.Client (Request (requestHeaders), requestFromURI)
 import Network.URI (parseURI)
 
@@ -322,6 +323,7 @@ data OtelBatchSpanProcessorInfo = OtelBatchSpanProcessorInfo
     -- dropped. Default 2048.
     _obspiMaxQueueSize :: Int
   }
+  deriving (Lift)
 
 -- Smart constructor. Consistent with defaults.
 parseOtelBatchSpanProcessorConfig ::
