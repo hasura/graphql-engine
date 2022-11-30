@@ -3,17 +3,18 @@ import { Api } from '@/hooks/apiUtils';
 import { print, DocumentNode } from 'graphql/language';
 
 export const controlPlaneClient = (
-  endpoint: string = endpoints.luxDataGraphql
+  endpoint: string = endpoints.luxDataGraphql,
+  headers = {
+    'content-type': 'application/json',
+    'hasura-client-name': 'hasura-console',
+  }
 ) => {
   const query = <
     ResponseType = Record<string, any>,
     VariablesType = Record<string, any>
   >(
     queryDoc: DocumentNode,
-    variables: VariablesType,
-    headers: Record<string, string> = {
-      'content-type': 'application/json',
-    }
+    variables: VariablesType
   ): Promise<ResponseType> => {
     return Api.post<ResponseType>({
       url: endpoint,

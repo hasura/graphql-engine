@@ -339,10 +339,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
 
   const [fireLatencyRequest, setFireLatencyRequest] = useState(false);
 
-  const queryResponse = useCheckDatabaseLatency(
-    fireLatencyRequest,
-    dataHeaders
-  );
+  const queryResponse = useCheckDatabaseLatency(fireLatencyRequest);
 
   const checkDatabaseLatency = () => {
     setFireLatencyRequest(true);

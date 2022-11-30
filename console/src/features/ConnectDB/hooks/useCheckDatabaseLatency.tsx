@@ -49,10 +49,7 @@ type LatencyJobResponse = {
 
 const client = controlPlaneClient();
 
-const useCheckDatabaseLatencyRequest = (
-  isEnabled: boolean,
-  headers?: Record<string, string>
-) => {
+const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
   return useQuery({
     queryKey: ['latencyCheckJobSetup'],
     queryFn: async () => {
@@ -62,45 +59,41 @@ const useCheckDatabaseLatencyRequest = (
         return undefined;
       }
 
-      return client.query<LatencyActionResponse>(
-        fetchDatabaseLatencyJobId,
-        {
-          project_id: projectId,
-        },
-        headers
-      );
+      return client.query<LatencyActionResponse>(fetchDatabaseLatencyJobId, {
+        project_id: projectId,
+      });
     },
     enabled: isEnabled,
   });
 };
 
-export const useCheckDatabaseLatency = (
-  isEnabled: boolean,
-  headers?: Record<string, string>
-) => {
-  const { data: jobIdResponse, isSuccess } = useCheckDatabaseLatencyRequest(
-    isEnabled,
-    headers
-  );
+export const useCheckDatabaseLatency = (isEnabled: boolean) => {
+  const { data: jobIdResponse, isSuccess } =
+    useCheckDatabaseLatencyRequest(isEnabled);
   const projectId = getProjectId(globals);
 
   return useQuery({
     queryKey: [
       'latencyCheckJobSetup',
-      jobIdResponse?.data.checkDBLatency.db_latency_job_id,
+      jobIdResponse?.data?.checkDBLatency?.db_latency_job_id,
     ],
     queryFn: async () => {
       const dateStartRequest = new Date();
 
-      if (!jobIdResponse?.data.checkDBLatency.db_latency_job_id) {
+      const jobId = jobIdResponse?.data?.checkDBLatency?.db_latency_job_id;
+
+      if (!jobId) {
         throw Error('Job ID was not found');
       }
 
       const jobStatusResponse = await client.query<LatencyJobResponse>(
         fetchInfoFromJobId,
-        { id: jobIdResponse?.data.checkDBLatency.db_latency_job_id },
-        headers
+        { id: jobId }
       );
+
+      if (!jobStatusResponse?.data?.jobs_by_pk?.status) {
+        throw Error(`status for job ${jobId} not available`);
+      }
 
       if (jobStatusResponse.data.jobs_by_pk.status === 'failed') {
         const failedTaskEvent =
@@ -110,12 +103,12 @@ export const useCheckDatabaseLatency = (
         return failedTaskEvent?.error;
       } else if (jobStatusResponse.data.jobs_by_pk.status === 'running') {
         throw Error(
-          `the job(${jobIdResponse?.data.checkDBLatency.db_latency_job_id}) is still running, will refetch to get the latest latency data`
+          `the job(${jobId}) is still running, will refetch to get the latest latency data`
         );
       }
 
       const successTaskEvent =
-        jobStatusResponse.data.jobs_by_pk.tasks[0].task_events.find(
+        jobStatusResponse?.data?.jobs_by_pk?.tasks?.[0]?.task_events?.find(
           taskEvent => taskEvent.event_type === 'success'
         );
 
@@ -125,16 +118,12 @@ export const useCheckDatabaseLatency = (
 
       const dateDiff = new Date().getTime() - dateStartRequest.getTime();
 
-      await client.query(
-        insertInfoIntoDBLatencyQuery,
-        {
-          jobId: jobIdResponse.data.checkDBLatency.db_latency_job_id,
-          projectId,
-          isLatencyDisplayed: true,
-          datasDifferenceInMilliseconds: dateDiff,
-        },
-        headers
-      );
+      await client.query(insertInfoIntoDBLatencyQuery, {
+        jobId,
+        projectId,
+        isLatencyDisplayed: true,
+        datasDifferenceInMilliseconds: dateDiff,
+      });
 
       return successTaskEvent;
     },
