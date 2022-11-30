@@ -19,7 +19,7 @@
     };
 
     nixpkgs = {
-      url = github:NixOS/nixpkgs;
+       url = github:NixOS/nixpkgs/nixos-22.11;
     };
   };
 
