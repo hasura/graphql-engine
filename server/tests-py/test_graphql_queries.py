@@ -210,43 +210,6 @@ class TestGraphQLQueryBasicPostgres:
         return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.backend('citus')
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBasicCitus:
-    def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter_citus.yaml", transport)
-
-    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
-    def test_select_query_user_col_change(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_citus.yaml")
-
-    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
-    def test_select_query_person_citext(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_person_citext.yaml", transport)
-
-    # relationships test cases described at
-    # https://github.com/hasura/graphql-engine-mono/blob/vamshi/rfc/citus-support/rfcs/citus-support.md
-    def test_select_relationships_distributed(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_distributed.yaml", transport)
-
-    def test_select_relationships_reference(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_reference.yaml", transport)
-
-    def test_select_functions(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_functions.yaml", transport)
-
-    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
-        resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
-        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/citus'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.backend('citus', 'postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryFragmentsPostgresCitus:
