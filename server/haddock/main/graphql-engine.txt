@@ -18661,11 +18661,11 @@ buildOpenAPI :: (MonadError QErr m, MonadFix m) => SchemaCache -> m OpenApi
 --   from metadata information stored in the <tt>hdb_catalog</tt> schema in
 --   Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
-data MetadataDependency
-MetadataDependency :: MetadataObject -> SchemaObjId -> SchemaDependency -> MetadataDependency
 recordInconsistency :: ArrowWriter (Seq (Either InconsistentMetadata md)) arr => ((Maybe Value, MetadataObject), Text) `arr` ()
 recordInconsistencyM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => Maybe Value -> MetadataObject -> Text -> m ()
-recordInconsistencies :: ArrowWriter (Seq (Either InconsistentMetadata md)) arr => ([MetadataObject], Text) `arr` ()
+recordInconsistenciesM :: MonadWriter (Seq (Either InconsistentMetadata md)) m => [MetadataObject] -> Text -> m ()
+data MetadataDependency
+MetadataDependency :: MetadataObject -> SchemaObjId -> SchemaDependency -> MetadataDependency
 recordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr => (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
 recordDependenciesM :: MonadWriter (Seq (Either im MetadataDependency)) m => MetadataObject -> SchemaObjId -> [SchemaDependency] -> m ()
 
@@ -22403,22 +22403,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) TriggerOnReplication
-cteqCleanupConfig :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe Text)
-cetqWebhook :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe InputWebhook)
-cetqUpdate :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe (SubscribeOpSpec b_aBWL2))
-cetqTable :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (TableName b_aBWL2)
-cetqSource :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) SourceName
-cetqRetryConf :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe RequestTransform)
-cetqReplace :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) Bool
-cetqName :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) TriggerName
-cetqInsert :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe (SubscribeOpSpec b_aBWL2))
-cetqHeaders :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe Bool)
-cetqDelete :: forall b_aBWL2. Lens' (CreateEventTriggerQuery b_aBWL2) (Maybe (SubscribeOpSpec b_aBWL2))
+cteqTriggerOnReplication :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) TriggerOnReplication
+cteqCleanupConfig :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe Text)
+cetqWebhook :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe InputWebhook)
+cetqUpdate :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe (SubscribeOpSpec b_aBWF3))
+cetqTable :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (TableName b_aBWF3)
+cetqSource :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) SourceName
+cetqRetryConf :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe RequestTransform)
+cetqReplace :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) Bool
+cetqName :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) TriggerName
+cetqInsert :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe (SubscribeOpSpec b_aBWF3))
+cetqHeaders :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe Bool)
+cetqDelete :: forall b_aBWF3. Lens' (CreateEventTriggerQuery b_aBWF3) (Maybe (SubscribeOpSpec b_aBWF3))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -23015,17 +23015,13 @@ withRecordDependencies :: ArrowWriter (Seq (Either im MetadataDependency)) arr =
 -- | Processes a list of catalog metadata into a map of processed
 --   information, marking any duplicate entries inconsistent.
 buildInfoMap :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k b
+buildInfoMapM :: (MonadWriter (Seq (Either InconsistentMetadata md)) m, Hashable k) => (a -> k) -> (a -> MetadataObject) -> (a -> m (Maybe b)) -> [a] -> m (HashMap k b)
 
--- | Like <tt>buildInfo</tt>, but includes each processed info’s associated
---   <a>MetadataObject</a> in the result. This is useful if the results
---   will be further processed, and the <a>MetadataObject</a> is still
---   needed to mark the object inconsistent.
+-- | Like <a>buildInfoMap</a>, but includes each processed info’s
+--   associated <a>MetadataObject</a> in the result. This is useful if the
+--   results will be further processed, and the <a>MetadataObject</a> is
+--   still needed to mark the object inconsistent.
 buildInfoMapPreservingMetadata :: (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr, Hashable k) => (a -> k) -> (a -> MetadataObject) -> ((e, a) `arr` Maybe b) -> (e, [a]) `arr` HashMap k (b, MetadataObject)
-
--- | Like <tt>buildInfo</tt>, but includes each processed info’s associated
---   <a>MetadataObject</a> in the result. This is useful if the results
---   will be further processed, and the <a>MetadataObject</a> is still
---   needed to mark the object inconsistent.
 buildInfoMapPreservingMetadataM :: (MonadWriter (Seq (Either InconsistentMetadata md)) m, Hashable k) => (a -> k) -> (a -> MetadataObject) -> (a -> m (Maybe b)) -> [a] -> m (HashMap k (b, MetadataObject))
 addTableContext :: Backend b => TableName b -> Text -> Text
 instance Control.Monad.Unique.MonadUnique Hasura.RQL.DDL.Schema.Cache.Common.CacheBuild
