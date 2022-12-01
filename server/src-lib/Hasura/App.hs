@@ -270,15 +270,14 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
 
 -- | Context required for the 'serve' CLI command.
 data ServeCtx = ServeCtx
-  { _scHttpManager :: !HTTP.Manager,
-    _scInstanceId :: !InstanceId,
-    _scLoggers :: !Loggers,
-    _scEnabledLogTypes :: !(HashSet (EngineLogType Hasura)),
-    _scMetadataDbPool :: !PG.PGPool,
-    _scShutdownLatch :: !ShutdownLatch,
-    _scSchemaCache :: !RebuildableSchemaCache,
-    _scSchemaCacheRef :: !SchemaCacheRef,
-    _scMetaVersionRef :: !(STM.TMVar MetadataResourceVersion)
+  { _scHttpManager :: HTTP.Manager,
+    _scInstanceId :: InstanceId,
+    _scLoggers :: Loggers,
+    _scEnabledLogTypes :: HashSet (EngineLogType Hasura),
+    _scMetadataDbPool :: PG.PGPool,
+    _scShutdownLatch :: ShutdownLatch,
+    _scSchemaCacheRef :: SchemaCacheRef,
+    _scMetaVersionRef :: STM.TMVar MetadataResourceVersion
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -420,7 +419,6 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
       soEnabledLogTypes
       metadataDbPool
       latch
-      rebuildableSchemaCache
       schemaCacheRef
       metaVersionRef
 
@@ -926,9 +924,10 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
               waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
 
     startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
+      schemaCache <- liftIO $ getSchemaCache cacheRef
       let maxEventThreads = unrefine soEventsHttpPoolSize
           fetchInterval = milliseconds $ unrefine soEventsFetchInterval
-          allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+          allSources = HM.elems $ scSources schemaCache
 
       unless (unrefine soEventsFetchBatchSize == 0 || fetchInterval == 0) $ do
         -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
