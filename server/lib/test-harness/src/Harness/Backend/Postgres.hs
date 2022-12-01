@@ -37,13 +37,16 @@ import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as S8
+import Data.Monoid (Last, getLast)
 import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Extended (commaSeparated)
+import Data.Text.Lazy qualified as TL
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
+import Database.PostgreSQL.Simple.Options (Options (..))
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -62,22 +65,33 @@ import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+import Text.Pretty.Simple (pShow)
 
 -- | The default connection information based on the 'TestingMode'. The
 -- interesting thing here is the database: in both modes, we specify an
 -- /initial/ database (returned by this function), which we use only as a way
 -- to create other databases for testing.
-defaultConnectInfo :: TestEnvironment -> Postgres.ConnectInfo
+defaultConnectInfo :: HasCallStack => TestEnvironment -> Postgres.ConnectInfo
 defaultConnectInfo testEnvironment =
   case testingMode testEnvironment of
-    TestNewPostgresVariant {..} ->
-      Postgres.ConnectInfo
-        { connectHost = postgresSourceHost,
-          connectPort = postgresSourcePort,
-          connectUser = postgresSourceUser,
-          connectPassword = postgresSourcePassword,
-          connectDatabase = postgresSourceInitialDatabase
-        }
+    TestNewPostgresVariant opts@Options {..} ->
+      let getComponent :: forall a. String -> Last a -> a
+          getComponent component =
+            fromMaybe
+              ( error $
+                  unlines
+                    [ "Postgres URI is missing its " <> component <> " component.",
+                      "Postgres options: " <> TL.unpack (pShow opts)
+                    ]
+              )
+              . getLast
+       in Postgres.ConnectInfo
+            { connectUser = getComponent "user" user,
+              connectPassword = getComponent "password" password,
+              connectHost = getComponent "host" $ hostaddr <> host,
+              connectPort = fromIntegral . getComponent "port" $ port,
+              connectDatabase = getComponent "dbname" $ dbname
+            }
     _otherTestingMode ->
       Postgres.ConnectInfo
         { connectHost = Constants.postgresHost,

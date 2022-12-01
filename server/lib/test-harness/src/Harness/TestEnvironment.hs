@@ -20,6 +20,7 @@ import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
 import Data.UUID (UUID)
 import Data.Word
+import Database.PostgreSQL.Simple.Options (Options)
 import Harness.Logging.Messages
 import Harness.Test.BackendType
 import Hasura.Prelude
@@ -56,13 +57,7 @@ data TestingMode
   | -- | run "all the other tests"
     TestNoBackends
   | -- | test a Postgres-compatible using a custom connection string
-    TestNewPostgresVariant
-      { postgresSourceUser :: String,
-        postgresSourcePassword :: String,
-        postgresSourceHost :: String,
-        postgresSourcePort :: Word16,
-        postgresSourceInitialDatabase :: String
-      }
+    TestNewPostgresVariant Options
   deriving (Eq, Ord, Show)
 
 -- | Information about a server that we're working with.

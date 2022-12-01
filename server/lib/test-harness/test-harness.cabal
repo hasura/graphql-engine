@@ -36,6 +36,7 @@ library
     , parsec
     , pg-client
     , postgresql-simple
+    , postgres-options
     , pretty-simple
     , refined
     , resourcet

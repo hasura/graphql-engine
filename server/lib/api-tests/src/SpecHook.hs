@@ -2,22 +2,26 @@ module SpecHook
   ( hook,
     setupTestEnvironment,
     teardownTestEnvironment,
+    setupGlobalConfig,
+    setupLogType,
   )
 where
 
-import Control.Exception.Safe (bracket)
 import Data.Char qualified as Char
+import Data.IORef
 import Data.List qualified as List
 import Data.Monoid (getLast)
 import Data.UUID.V4 (nextRandom)
-import Database.PostgreSQL.Simple.Options (Options (..), parseConnectionString)
+import Database.PostgreSQL.Simple.Options qualified as Options
 import Harness.Constants qualified as Constants
+import Harness.Exceptions (HasCallStack, bracket)
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Test.BackendType (BackendType (..))
 import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), stopServer)
 import Hasura.Prelude
-import System.Environment (lookupEnv)
+import System.Environment (getEnvironment, lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
 import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)
 import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, modifyConfig)
@@ -35,27 +39,20 @@ import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, m
 --
 -- * @TestNewPostgresVariant@, which runs the Postgres tests against the
 --   connection URI given in the @POSTGRES_VARIANT_URI@.
-setupTestingMode :: IO TestingMode
-setupTestingMode =
-  lookupEnv "POSTGRES_VARIANT_URI" >>= \case
+lookupTestingMode :: [(String, String)] -> Either String TestingMode
+lookupTestingMode env =
+  case lookup "POSTGRES_VARIANT_URI" env of
     Nothing ->
-      lookupEnv "HASURA_TEST_BACKEND_TYPE" >>= \case
-        Nothing -> pure TestEverything
+      case lookup "HASURA_TEST_BACKEND_TYPE" env of
+        Nothing -> Right TestEverything
         Just backendType ->
-          onNothing (parseBackendType backendType) (error $ "Did not recognise backend type " <> backendType)
+          maybe (Left $ "Did not recognise backend type " <> backendType) Right (parseBackendType backendType)
     Just uri ->
-      case parseConnectionString uri of
+      case Options.parseConnectionString uri of
         Left reason ->
-          error $ "Parsing variant URI failed: " ++ reason
+          Left $ "Parsing variant URI failed: " ++ reason
         Right options ->
-          pure
-            TestNewPostgresVariant
-              { postgresSourceUser = fromMaybe Constants.postgresUser $ getLast (user options),
-                postgresSourcePassword = fromMaybe Constants.postgresPassword $ getLast (password options),
-                postgresSourceHost = fromMaybe Constants.postgresHost $ getLast (hostaddr options <> host options),
-                postgresSourcePort = maybe Constants.defaultPostgresPort fromIntegral $ getLast (port options),
-                postgresSourceInitialDatabase = fromMaybe Constants.postgresDb $ getLast (dbname options)
-              }
+          Right $ TestNewPostgresVariant options
 
 -- | which backend should we run tests for?
 parseBackendType :: String -> Maybe TestingMode
@@ -90,26 +87,33 @@ teardownTestEnvironment TestEnvironment {..} = do
   stopServer server
 
 -- | allow setting log output type
-setupLogType :: IO (FL.LogType' FL.LogStr)
-setupLogType =
+setupLogType :: IO FL.LogType
+setupLogType = do
+  env <- getEnvironment
   let defaultLogType = FL.LogFileNoRotate "tests-hspec.log" 1024
-   in lookupEnv "HASURA_TEST_LOGTYPE" >>= \case
-        Nothing -> pure defaultLogType
-        Just str ->
-          case Char.toUpper <$> str of
-            "STDOUT" -> pure (FL.LogStdout 64)
-            "STDERR" -> pure (FL.LogStderr 64)
-            _ -> pure defaultLogType
+  pure case lookup "HASURA_TEST_LOGTYPE" env of
+    Nothing -> defaultLogType
+    Just str ->
+      case Char.toUpper <$> str of
+        "STDOUT" -> FL.LogStdout 64
+        "STDERR" -> FL.LogStderr 64
+        _ -> defaultLogType
 
-hook :: SpecWith TestEnvironment -> Spec
+hook :: HasCallStack => SpecWith TestEnvironment -> Spec
 hook specs = do
-  logType <- runIO setupLogType
+  (testingMode, logType) <-
+    runIO $
+      readIORef globalConfigRef `onNothingM` do
+        logType <- setupLogType
+        environment <- getEnvironment
+        testingMode <- lookupTestingMode environment `onLeft` error
+        setupGlobalConfig testingMode logType
+        pure (testingMode, logType)
+
   (logger', _cleanup) <- runIO $ FL.newFastLogger logType
   let logger = flLogger logger'
 
   modifyConfig (addLoggingFormatter logger)
-
-  testingMode <- runIO setupTestingMode
 
   let shouldRunTest :: [String] -> Item x -> Bool
       shouldRunTest labels _ = case testingMode of
@@ -122,3 +126,11 @@ hook specs = do
 
   aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $
     mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
+
+{-# NOINLINE globalConfigRef #-}
+globalConfigRef :: IORef (Maybe (TestingMode, FL.LogType))
+globalConfigRef = unsafePerformIO $ newIORef Nothing
+
+setupGlobalConfig :: TestingMode -> FL.LogType -> IO ()
+setupGlobalConfig testingMode logType =
+  writeIORef globalConfigRef $ Just (testingMode, logType)

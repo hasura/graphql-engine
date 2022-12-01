@@ -1,7 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-
-module Main (main) where
+module Hasura.FeatureMatrix (render, parseLogs, extractFeatures, renderFeatureMatrix) where
 
 import Control.Applicative
 import Control.Monad.Except
@@ -9,7 +6,7 @@ import Control.Monad.State
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Attoparsec.ByteString as Atto
-import Data.ByteString (ByteString, interact)
+import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
 import Data.Foldable
 import Data.Map.Strict (Map)
@@ -67,17 +64,12 @@ data HspecEventItemDone = HspecEventItemDone
 -}
 
 instance FromJSON HspecEventItemDone where
-  parseJSON =
-    withObject
-      "Hspec Event ItemDone"
-      ( \o -> do
-          let tags = parseMaybe (\o -> (,) <$> o .: "type" <*> o .: "event_tag") o
-          unless
-            (tags == Just ("Hspec Event" :: Text, "ItemDone" :: Text))
-            (fail "Not a Hspec Event ItemDone")
-
-          HspecEventItemDone <$> o .: "groups" <*> o .: "item" <*> o .: "requirement"
-      )
+  parseJSON = withObject "Hspec Event ItemDone" \o -> do
+    let tags = parseMaybe (\o' -> (,) <$> o' .: "type" <*> o' .: "event_tag") o
+    unless
+      (tags == Just ("Hspec Event" :: Text, "ItemDone" :: Text))
+      (fail "Not a Hspec Event ItemDone")
+    HspecEventItemDone <$> o .: "groups" <*> o .: "item" <*> o .: "requirement"
 
 data HspecItem = HspecItem
   { hiResult :: HspecItemResult
@@ -105,9 +97,9 @@ instance FromJSON HspecItemResult where
             _ -> fail $ "Unknown result type: " ++ result
       )
 
-main :: IO ()
-main = interact \stdIn ->
-  let parsedLogs = parseLogs stdIn
+render :: ByteString -> ByteString
+render input =
+  let parsedLogs = parseLogs input
       features = runExcept . flip execStateT mempty . traverse extractFeatures <$> parsedLogs
    in renderFeatureMatrix features
 

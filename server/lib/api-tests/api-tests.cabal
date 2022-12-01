@@ -1,11 +1,14 @@
 cabal-version: 2.2
 name: api-tests
 version: 1.0.0
-
+build-type: Simple
+copyright: Hasura Inc.
+extra-source-files: README.md
 
 library
   build-tool-depends: hspec-discover:hspec-discover
   hs-source-dirs: src
+  default-language: GHC2021
 
   default-extensions:
     BlockArguments
@@ -24,7 +27,6 @@ library
     ScopedTypeVariables
     TypeApplications
     TypeFamilies
-
 
   build-depends:
     , HUnit
@@ -179,7 +181,6 @@ executable api-tests
     , api-tests
     , base
     , hspec
-  default-language: Haskell2010
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
@@ -189,26 +190,29 @@ executable api-tests
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
+  default-language: GHC2021
   hs-source-dirs: test-runner
   main-is: Main.hs
 
-executable render-feature-matrix
+library feature-matrix
   build-depends:
+    , base
     , aeson
     , attoparsec
-    , base
     , bytestring
     , containers
     , lucid2
     , mtl
     , text
 
+  default-language: GHC2021
   default-extensions:
     BlockArguments
     DataKinds
     DeriveGeneric
     DerivingStrategies
     ImportQualifiedPost
+    LambdaCase
     MultiWayIf
     NamedFieldPuns
     NoImplicitPrelude
@@ -219,12 +223,83 @@ executable render-feature-matrix
     TypeApplications
     TypeFamilies
 
-  hs-source-dirs: src-render-feature-matrix
-  default-language: Haskell2010
+  hs-source-dirs: src-feature-matrix
+
+  exposed-modules:
+      Hasura.FeatureMatrix
+
+  ghc-options:
+    -Wall
+    -Werror
+
+executable render-feature-matrix
+  build-depends:
+    , base
+    , feature-matrix
+    , bytestring
+
+  default-language: GHC2021
+  default-extensions:
+    BlockArguments
+    DataKinds
+    DeriveGeneric
+    DerivingStrategies
+    ImportQualifiedPost
+    LambdaCase
+    MultiWayIf
+    NamedFieldPuns
+    NoImplicitPrelude
+    OverloadedStrings
+    PatternGuards
+    RecordWildCards
+    ScopedTypeVariables
+    TypeApplications
+    TypeFamilies
+
+  hs-source-dirs: app-render-feature-matrix
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
+    -Wall
+    -Werror
+    -threaded
+    -rtsopts "-with-rtsopts=-N"
+
+  main-is: Main.hs
+
+executable produce-feature-matrix
+  build-depends:
+    , api-tests
+    , base
+    , bytestring
+    , directory
+    , fast-logger
+    , feature-matrix
+    , filepath
+    , hasura-prelude
+    , hspec
+    , optparse-generic
+    , postgres-options
+    , stm
+    , test-harness
+
+  default-language: GHC2021
+  default-extensions:
+    BlockArguments
+    DataKinds
+    LambdaCase
+    NoImplicitPrelude
+    OverloadedStrings
+    ExplicitNamespaces
+    OverloadedRecordDot
+
+  hs-source-dirs: app-produce-feature-matrix
+
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options:
+    -O0
     -Wall
     -Werror
     -threaded
