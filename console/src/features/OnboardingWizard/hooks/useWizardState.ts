@@ -13,9 +13,9 @@ export type WizardState =
 export function useWizardState() {
   useEffect(() => {
     trackCustomEvent({
-      location: 'console/onboarding wizard',
-      action: 'land on onboarding wizard',
-      object: '',
+      location: 'Console',
+      action: 'Load',
+      object: 'Onboarding Wizard',
     });
   }, []);
 
