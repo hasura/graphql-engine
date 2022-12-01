@@ -33,9 +33,9 @@ const App = ({
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
     trackCustomEvent({
-      action: 'console load',
-      location: 'console',
-      object: '',
+      location: 'Console',
+      action: 'Load',
+      object: 'App',
     });
   }, []);
   const telemetryShown = React.useRef(false);
