@@ -26151,7 +26151,7 @@ initGlobalCtx :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (M
 
 -- | Context required for the <tt>serve</tt> CLI command.
 data ServeCtx
-ServeCtx :: !Manager -> !InstanceId -> !Loggers -> !HashSet (EngineLogType Hasura) -> !PGPool -> !ShutdownLatch -> !RebuildableSchemaCache -> !SchemaCacheRef -> !TMVar MetadataResourceVersion -> ServeCtx
+ServeCtx :: Manager -> InstanceId -> Loggers -> HashSet (EngineLogType Hasura) -> PGPool -> ShutdownLatch -> SchemaCacheRef -> TMVar MetadataResourceVersion -> ServeCtx
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger TODO
 --   (from master): better naming?
