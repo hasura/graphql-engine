@@ -375,11 +375,14 @@ trackComputedField ::
   Table ->
   String ->
   String ->
+  Aeson.Value ->
+  Aeson.Value ->
   TestEnvironment ->
   IO ()
-trackComputedField backend source Table {tableName} functionName asFieldName testEnvironment = do
+trackComputedField backend source Table {tableName} functionName asFieldName argumentMapping returnTable testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = getSchemaName testEnvironment
+      schemaKey = schemaKeyword backend
       requestType = backendType <> "_add_computed_field"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -389,15 +392,17 @@ args:
   source: *source
   comment: null
   table:
-    schema: *schema
+    *schemaKey: *schema
     name: *tableName
   name: *asFieldName
   definition:
     function:
-      schema: *schema
+      *schemaKey: *schema
       name: *functionName
     table_argument: null
     session_argument: null
+    argument_mapping: *argumentMapping
+    return_table: *returnTable
 |]
 
 -- | Unified untrack computed field
@@ -405,6 +410,7 @@ untrackComputedField :: HasCallStack => BackendType -> String -> Table -> String
 untrackComputedField backend source Table {tableName} fieldName testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = getSchemaName testEnvironment
+      schemaKey = schemaKeyword backend
   let requestType = backendType <> "_drop_computed_field"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -413,7 +419,7 @@ type: *requestType
 args:
   source: *source
   table:
-    schema: *schema
+    *schemaKey: *schema
     name: *tableName
   name: *fieldName
 |]

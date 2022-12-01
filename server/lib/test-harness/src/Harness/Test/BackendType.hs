@@ -132,6 +132,8 @@ defaultBackendServerUrl = \case
   DataConnectorSqlite -> Just "http://localhost:65007"
   DataConnector _ -> Nothing
 
+-- workaround until we support schema/dataset keys generically
+-- https://hasurahq.atlassian.net/browse/NDAT-332
 schemaKeyword :: BackendType -> Key
 schemaKeyword = \case
   Postgres -> "schema"

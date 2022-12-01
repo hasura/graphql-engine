@@ -74,6 +74,7 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
+    Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
     Test.Databases.Postgres.JsonbSpec
@@ -92,17 +93,17 @@ library
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
-    Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
-    Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
+    Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
+    Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTriggers.PG.EventTriggersForReplicationSpec
     Test.EventTriggers.PG.EventTriggersRecreationSpec
     Test.EventTriggers.PG.EventTriggersReplaceMetadataCleanupSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
-    Test.EventTriggers.PG.EventTriggersForReplicationSpec
     Test.Harness.Quoter.YamlSpec
     Test.HelloWorldSpec
     Test.Mutations.Delete.AllSpec
@@ -147,8 +148,8 @@ library
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.Schema.ComputedFields.TableSpec
     Test.Schema.ComputedFields.ScalarSpec
+    Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec
     Test.Schema.CustomFieldNames.MutationSpec
     Test.Schema.CustomFieldNames.QuerySpec
@@ -158,7 +159,6 @@ library
     Test.Schema.DefaultValues.DefaultValuesSpec
     Test.Schema.DefaultValues.OnConflictSpec
     Test.Schema.EnumsSpec
-    Test.Schema.RemoteSchemaCustomizationSpec
     Test.Schema.RemoteRelationships.FromRemoteSchemaSpec
     Test.Schema.RemoteRelationships.MetadataAPI.ClearMetadataSpec
     Test.Schema.RemoteRelationships.MetadataAPI.Common
@@ -167,6 +167,7 @@ library
     Test.Schema.RemoteRelationships.XToDBArrayRelationshipSpec
     Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec
     Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
+    Test.Schema.RemoteSchemaCustomizationSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.TableRelationships.PortedSpec

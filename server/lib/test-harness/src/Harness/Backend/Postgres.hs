@@ -35,6 +35,7 @@ where
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
+import Data.Aeson qualified as Aeson
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as S8
 import Data.Monoid (Last, getLast)
@@ -485,6 +486,8 @@ setupComputedFieldAction table functionName asFieldName env =
         table
         functionName
         asFieldName
+        Aeson.Null
+        Aeson.Null
         env
     )
     ( \_ ->

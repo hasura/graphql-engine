@@ -69,7 +69,8 @@ authorTable =
 
 -- ** Setup and teardown
 
--- | SQL
+-- * SQL
+
 authorFullNameSQL :: SchemaName -> String
 authorFullNameSQL schemaName =
   [i|
@@ -78,6 +79,8 @@ authorFullNameSQL schemaName =
       SELECT author_row.first_name || ' ' || author_row.last_name
       $$ LANGUAGE sql STABLE;
   |]
+
+-- * Setup
 
 setupFunction :: TestEnvironment -> [Fixture.SetupAction]
 setupFunction testEnv =
