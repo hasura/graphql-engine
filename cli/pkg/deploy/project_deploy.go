@@ -36,6 +36,12 @@ func WithEndpoint(endpoint string) ProjectDeployOption {
 	}
 }
 
+func WithCliExtPath(path string) ProjectDeployOption {
+	return func(d *ProjectDeploy) {
+		d.ec.CliExtSourceBinPath = path
+	}
+}
+
 func NewProjectDeploy(projectDirectory string, opts ...ProjectDeployOption) (*ProjectDeploy, error) {
 	var op errors.Op = "deploy.NewProjectDeploy"
 	ec := cli.NewExecutionContext()
