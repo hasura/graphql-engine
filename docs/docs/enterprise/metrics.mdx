@@ -107,6 +107,15 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
     <td>Gauge</td>
     <td>none</td>
   </tr>
+  <tr>
+    <td>hasura_postgres_connections</td>
+    <td>Current number of active PostgreSQL connections</td>
+    <td>Gauge</td>
+    <td>&#8226; "source_name": name of the database<br/>
+      &#8226; "conn_info": connection url string (password omitted) or name of the connection url environment variable<br/>
+      &#8226; "role": primary|replica
+    </td>
+  </tr>
 
 </table>
 
