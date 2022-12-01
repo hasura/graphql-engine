@@ -175,9 +175,9 @@ if (testMode !== 'cli') {
         cy.get('@payloadTransformRequestBody')
           .wait(500)
           .clearConsoleTextarea()
-          .wait(100)
+          .wait(1000) // Work around the fact that this test fails in CI but not locally
           .clearConsoleTextarea()
-          .wait(100)
+          .wait(1000) // Work around the fact that this test fails in CI but not locally
           .type(
             `{
             "userInfo": {
