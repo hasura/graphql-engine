@@ -27,11 +27,12 @@ spec = do
       (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse Nothing Nothing)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
   describe "ScalarTypesCapabilities" $ do
-    testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton StringTy (ScalarTypeCapabilities mempty mempty))) [aesonQQ|{"string": {}}|]
+    testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton StringTy (ScalarTypeCapabilities mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
     jsonOpenApiProperties genScalarTypesCapabilities
   describe "ScalarTypeCapabilities" $ do
     let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], CustomTy "DateTime")]
     let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], CustomTy "DateTime")]
+    let graphQLType = Just GraphQLString
     let json =
           [aesonQQ|{
       "comparison_operators": {
@@ -39,9 +40,10 @@ spec = do
       },
       "aggregate_functions": {
         "max": "DateTime"
-      }
+      },
+      "graphql_type": "String"
     }|]
-    testToFromJSONToSchema (ScalarTypeCapabilities comparisonOperators aggregateFunctions) json
+    testToFromJSONToSchema (ScalarTypeCapabilities comparisonOperators aggregateFunctions graphQLType) json
 
 genDataSchemaCapabilities :: MonadGen m => m DataSchemaCapabilities
 genDataSchemaCapabilities =
@@ -92,11 +94,15 @@ genAggregateFunctions :: (MonadGen m, GenBase m ~ Identity) => m AggregateFuncti
 genAggregateFunctions =
   AggregateFunctions <$> genHashMap (genGName defaultRange) genScalarType defaultRange
 
+genGraphQLType :: MonadGen m => m GraphQLType
+genGraphQLType = Gen.enumBounded
+
 genScalarTypeCapabilities :: (MonadGen m, GenBase m ~ Identity) => m ScalarTypeCapabilities
 genScalarTypeCapabilities =
   ScalarTypeCapabilities
     <$> genComparisonOperators
     <*> genAggregateFunctions
+    <*> Gen.maybe genGraphQLType
 
 genScalarTypesCapabilities :: (MonadGen m, GenBase m ~ Identity) => m ScalarTypesCapabilities
 genScalarTypesCapabilities =

@@ -20,6 +20,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     SubscriptionCapabilities (..),
     ComparisonOperators (..),
     AggregateFunctions (..),
+    GraphQLType (..),
     ScalarTypeCapabilities (..),
     ScalarTypesCapabilities (..),
     RelationshipCapabilities (..),
@@ -34,6 +35,7 @@ where
 
 import Autodocodec
 import Autodocodec.OpenAPI ()
+import Control.Applicative ((<|>))
 import Control.DeepSeq (NFData)
 import Control.Monad ((<=<))
 import Data.Aeson (FromJSON, ToJSON)
@@ -49,6 +51,7 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import Data.Maybe (mapMaybe)
+import Data.Monoid (Last (..))
 import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject, OpenApiString), Referenced (..), Schema (..), ToSchema (..), declareSchemaRef)
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -263,7 +266,7 @@ instance HasCodec ComparisonOperators where
       dimapCodec ComparisonOperators unComparisonOperators (hashMapCodec codec)
         <??> [ "A map from comparison operator names to their argument types.",
                "Operator and argument type names must be valid GraphQL names.",
-               "Result type names must be defined scalar types - either builtin or declared in ScalarTypesCapabilities."
+               "Result type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities."
              ]
 
 newtype AggregateFunctions = AggregateFunctions
@@ -280,28 +283,66 @@ instance HasCodec AggregateFunctions where
       dimapCodec AggregateFunctions unAggregateFunctions (hashMapCodec codec)
         <??> [ "A map from aggregate function names to their result types.",
                "Function and result type names must be valid GraphQL names.",
-               "Result type names must be defined scalar types - either builtin or declared in ScalarTypesCapabilities."
+               "Result type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities."
              ]
+
+data GraphQLType
+  = GraphQLInt
+  | GraphQLFloat
+  | GraphQLString
+  | GraphQLBoolean
+  | GraphQLID
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec GraphQLType
+
+instance HasCodec GraphQLType where
+  codec =
+    named "GraphQLType" $
+      stringConstCodec
+        [ (GraphQLInt, "Int"),
+          (GraphQLFloat, "Float"),
+          (GraphQLString, "String"),
+          (GraphQLBoolean, "Boolean"),
+          (GraphQLID, "ID")
+        ]
 
 data ScalarTypeCapabilities = ScalarTypeCapabilities
   { _stcComparisonOperators :: ComparisonOperators,
-    _stcAggregateFunctions :: AggregateFunctions
+    _stcAggregateFunctions :: AggregateFunctions,
+    _stcGraphQLType :: Maybe GraphQLType
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ScalarTypeCapabilities
+
+instance Semigroup ScalarTypeCapabilities where
+  a <> b =
+    ScalarTypeCapabilities
+      { _stcComparisonOperators = _stcComparisonOperators a <> _stcComparisonOperators b,
+        _stcAggregateFunctions = _stcAggregateFunctions a <> _stcAggregateFunctions b,
+        _stcGraphQLType = _stcGraphQLType b <|> _stcGraphQLType a
+      }
+
+instance Monoid ScalarTypeCapabilities where
+  mempty = ScalarTypeCapabilities mempty mempty Nothing
 
 instance HasCodec ScalarTypeCapabilities where
   codec =
     object
       "ScalarTypeCapabilities"
       ( ScalarTypeCapabilities
-          <$> optionalFieldWithOmittedDefault' "comparison_operators" mempty .= _stcComparisonOperators
-          <*> optionalFieldWithOmittedDefault' "aggregate_functions" mempty .= _stcAggregateFunctions
+          <$> optionalFieldWithOmittedDefault' "comparison_operators" mempty
+            .= _stcComparisonOperators
+          <*> optionalFieldWithOmittedDefault' "aggregate_functions" mempty
+            .= _stcAggregateFunctions
+          <*> optionalField' "graphql_type"
+            .= _stcGraphQLType
       )
       <??> [ "Capabilities of a scalar type.",
              "comparison_operators: The comparison operators supported by the scalar type.",
-             "aggregate_functions: The aggregate functions supported by the scalar type."
+             "aggregate_functions: The aggregate functions supported by the scalar type.",
+             "graphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted."
            ]
 
 newtype ScalarTypesCapabilities = ScalarTypesCapabilities
@@ -309,8 +350,13 @@ newtype ScalarTypesCapabilities = ScalarTypesCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
-  deriving newtype (Semigroup, Monoid)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ScalarTypesCapabilities
+
+instance Semigroup ScalarTypesCapabilities where
+  ScalarTypesCapabilities a <> ScalarTypesCapabilities b = ScalarTypesCapabilities $ HashMap.unionWith (<>) a b
+
+instance Monoid ScalarTypesCapabilities where
+  mempty = ScalarTypesCapabilities mempty
 
 instance HasCodec ScalarTypesCapabilities where
   codec =
@@ -330,7 +376,8 @@ instance HasCodec ComparisonCapabilities where
   codec =
     object "ComparisonCapabilities" $
       ComparisonCapabilities
-        <$> optionalFieldOrNull "subquery" "The agent supports comparisons that involve tables other than the one being queried" .= _ccSubqueryComparisonCapabilities
+        <$> optionalFieldOrNull "subquery" "The agent supports comparisons that involve tables other than the one being queried"
+          .= _ccSubqueryComparisonCapabilities
 
 data SubqueryComparisonCapabilities = SubqueryComparisonCapabilities
   {_ctccSupportsRelations :: Bool}
@@ -342,7 +389,8 @@ instance HasCodec SubqueryComparisonCapabilities where
   codec =
     object "SubqueryComparisonCapabilities" $
       SubqueryComparisonCapabilities
-        <$> optionalFieldWithOmittedDefault "supports_relations" False "Does the agent support comparisons that involve related tables (ie. joins)?" .= _ctccSupportsRelations
+        <$> optionalFieldWithOmittedDefault "supports_relations" False "Does the agent support comparisons that involve related tables (ie. joins)?"
+          .= _ctccSupportsRelations
 
 data MetricsCapabilities = MetricsCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)

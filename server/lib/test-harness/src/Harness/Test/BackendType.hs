@@ -96,10 +96,12 @@ defaultBackendCapabilities = \case
             aggregate_functions:
               max: DateTime
               min: DateTime
+            graphql_type: String
           string:
             aggregate_functions:
               longest: string
               shortest: string
+            graphql_type: String
     |]
   _ -> Nothing
 

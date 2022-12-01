@@ -84,6 +84,7 @@ library
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.CustomScalarsSpec
     Test.DataConnector.MockAgent.ErrorSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec

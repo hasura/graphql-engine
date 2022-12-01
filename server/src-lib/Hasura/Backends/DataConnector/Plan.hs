@@ -11,6 +11,7 @@ where
 import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
+import Data.Aeson.Types qualified as J
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
@@ -437,21 +438,42 @@ mkPlan session (SourceConfig {}) ir = do
       case varType of
         CollectableTypeScalar scalarType ->
           case scalarType of
+            -- Special case for string: uses literal session variable value rather than trying to parse a JSON string
             StringTy -> pure . ValueLiteral scalarType $ J.String varValue
-            NumberTy -> parseValue (ValueLiteral scalarType . J.Number) "number value"
-            BoolTy -> parseValue (ValueLiteral scalarType . J.Bool) "boolean value"
-            CustomTy customTypeName -> parseValue (ValueLiteral scalarType) (customTypeName <> " JSON value")
+            NumberTy -> parseBuiltinValue (ValueLiteral scalarType . J.Number) "number value"
+            BoolTy -> parseBuiltinValue (ValueLiteral scalarType . J.Bool) "boolean value"
+            CustomTy customTypeName _ -> parseCustomValue scalarType (customTypeName <> " JSON value")
         CollectableTypeArray scalarType ->
           case scalarType of
-            StringTy -> parseValue (ArrayLiteral scalarType . fmap J.String) "JSON array of strings"
-            NumberTy -> parseValue (ArrayLiteral scalarType . fmap J.Number) "JSON array of numbers"
-            BoolTy -> parseValue (ArrayLiteral scalarType . fmap J.Bool) "JSON array of booleans"
-            CustomTy customTypeName -> parseValue (ArrayLiteral scalarType) ("JSON array of " <> customTypeName <> " JSON values")
+            StringTy -> parseBuiltinValue (ArrayLiteral scalarType . fmap J.String) "JSON array of strings"
+            NumberTy -> parseBuiltinValue (ArrayLiteral scalarType . fmap J.Number) "JSON array of numbers"
+            BoolTy -> parseBuiltinValue (ArrayLiteral scalarType . fmap J.Bool) "JSON array of booleans"
+            CustomTy customTypeName _ -> parseCustomArray scalarType ("JSON array of " <> customTypeName <> " JSON values")
       where
-        parseValue :: J.FromJSON a => (a -> Literal) -> Text -> m Literal
-        parseValue toLiteral description =
+        parseBuiltinValue :: J.FromJSON a => (a -> Literal) -> Text -> m Literal
+        parseBuiltinValue =
+          parseValue' J.parseJSON
+
+        parseCustomValue :: ScalarType -> Text -> m Literal
+        parseCustomValue scalarType description =
+          case scalarType of
+            CustomTy _ (Just GraphQLString) ->
+              -- Special case for string: uses literal session variable value rather than trying to parse a JSON string
+              pure . ValueLiteral scalarType $ J.String varValue
+            _ ->
+              parseValue' (parseValue scalarType) (ValueLiteral scalarType) description
+
+        parseCustomArray :: ScalarType -> Text -> m Literal
+        parseCustomArray scalarType =
+          parseValue' parser (ArrayLiteral scalarType)
+          where
+            parser :: (J.Value -> J.Parser [J.Value])
+            parser = J.withArray "array of JSON values" (fmap toList . traverse (parseValue scalarType))
+
+        parseValue' :: (J.Value -> J.Parser a) -> (a -> Literal) -> Text -> m Literal
+        parseValue' parser toLiteral description =
           toLiteral
-            <$> J.eitherDecodeStrict' valValueBS
+            <$> (J.eitherDecodeStrict' valValueBS >>= J.parseEither parser)
             `onLeft` (\err -> throw400 ParseFailed ("Expected " <> description <> " for session variable " <> varName <<> ". " <> T.pack err))
 
         valValueBS :: BS.ByteString

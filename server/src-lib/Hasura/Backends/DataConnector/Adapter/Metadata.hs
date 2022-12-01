@@ -195,7 +195,7 @@ resolveDatabaseMetadata' ::
   DC.SourceConfig ->
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'DataConnector))
-resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {..}}) customization =
+resolveDatabaseMetadata' _ sc@DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} customization =
   -- We need agents to provide the foreign key contraints inside 'API.SchemaResponse'
   let foreignKeys = fmap API._tiForeignKeys _srTables
       tables = Map.fromList $ do
@@ -210,7 +210,7 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
                       RQL.T.C.RawColumnInfo
                         { rciName = Witch.from _ciName,
                           rciPosition = 1,
-                          rciType = Witch.from _ciType,
+                          rciType = DC.mkScalarType _scCapabilities _ciType,
                           rciIsNullable = _ciNullable,
                           rciDescription = fmap GQL.Description _ciDescription,
                           -- TODO: Add Column Mutability to the 'TableInfo'

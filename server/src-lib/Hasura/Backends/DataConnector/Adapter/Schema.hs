@@ -10,6 +10,7 @@ import Data.Aeson qualified as J
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
+import Data.Scientific (fromFloatDigits)
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.API qualified as API
@@ -37,7 +38,6 @@ import Hasura.RQL.Types.SourceCustomization qualified as RQL
 import Hasura.RQL.Types.Table qualified as RQL
 import Hasura.SQL.Backend (BackendType (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
-import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -105,11 +105,17 @@ columnParser' columnType nullability = case columnType of
           DC.StringTy -> pure $ J.String <$> P.string
           DC.NumberTy -> pure $ J.Number <$> P.scientific
           DC.BoolTy -> pure $ J.Bool <$> P.boolean
-          DC.CustomTy name -> do
+          DC.CustomTy name graphQLType -> do
             gqlName <-
               GQL.mkName name
                 `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
-            pure $ P.jsonScalar gqlName (Just "A custom scalar type")
+            pure $ case graphQLType of
+              Nothing -> P.jsonScalar gqlName (Just "A custom scalar type")
+              Just DC.GraphQLInt -> (J.Number . fromIntegral) <$> P.namedInt gqlName
+              Just DC.GraphQLFloat -> (J.Number . fromFloatDigits) <$> P.namedFloat gqlName
+              Just DC.GraphQLString -> J.String <$> P.namedString gqlName
+              Just DC.GraphQLBoolean -> J.Bool <$> P.namedBoolean gqlName
+              Just DC.GraphQLID -> J.String <$> P.namedIdentifier gqlName
   RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
     case nonEmpty (Map.toList enumValues) of
       Just enumValuesList ->
@@ -203,10 +209,10 @@ comparisonExps' columnType = do
       GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
     mkCustomOperators sourceInfo tCase collapseIfNull typeName = do
       let capabilities = sourceInfo ^. RQL.siConfiguration . DC.scCapabilities
-      case Map.lookup (Witch.from $ DC.fromGQLType typeName) (API.unScalarTypesCapabilities $ API._cScalarTypes capabilities) of
+      case Map.lookup (DC.fromGQLType typeName) (API.unScalarTypesCapabilities $ API._cScalarTypes capabilities) of
         Nothing -> pure []
         Just API.ScalarTypeCapabilities {..} -> do
-          traverse (mkCustomOperator tCase collapseIfNull) $ Map.toList $ fmap Witch.from $ API.unComparisonOperators $ _stcComparisonOperators
+          traverse (mkCustomOperator tCase collapseIfNull) $ Map.toList $ fmap (DC.mkScalarType capabilities) $ API.unComparisonOperators $ _stcComparisonOperators
 
     mkCustomOperator ::
       NamingCase ->

@@ -40,6 +40,7 @@ export type { ExplainCapabilities } from './models/ExplainCapabilities';
 export type { ExplainResponse } from './models/ExplainResponse';
 export type { Expression } from './models/Expression';
 export type { Field } from './models/Field';
+export type { GraphQLType } from './models/GraphQLType';
 export type { IncrementColumnRowUpdate } from './models/IncrementColumnRowUpdate';
 export type { InsertCapabilities } from './models/InsertCapabilities';
 export type { InsertFieldSchema } from './models/InsertFieldSchema';

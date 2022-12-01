@@ -9,14 +9,16 @@ const dateTimeCapabilities: ScalarTypeCapabilities = {
   aggregate_functions: {
     max: 'DateTime',
     min: 'DateTime'
-  }
+  },
+  graphql_type: 'String'
 }
 
 const stringCapabilities: ScalarTypeCapabilities = {
   aggregate_functions: {
     longest: 'string',
     shortest: 'string'
-  }
+  },
+  graphql_type: 'String'
 }
 
 const scalarTypes: ScalarTypesCapabilities = {

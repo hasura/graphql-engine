@@ -180,12 +180,9 @@ If the agent only supports table columns that are always nullable, then it shoul
 
 The agent is expected to support a default set of scalar types (`Number`, `String`, `Bool`) and a default set of [comparison operators](#filters) on these types.
 Agents may optionally declare support for their own custom scalar types, along with custom comparison operators and aggregate functions on those types.
-Hasura GraphQL Engine does not validate the JSON format for values of custom scalar types.
-It passes them through transparently to the agent when they are used as GraphQL input values and returns them transparently when they are produced by the agent.
-It is the agent's responsibility to validate the values provided as GraphQL inputs.
+The agent may optionally specify how to parse values of custom scalar types by associating them with one of the built-in GraphQL types (`Int`, `Float`, `String`, `Boolean` or `ID`)
 
-Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema) and
-by adding scalar type declaration with the same name in the `graphql_schema` capabilities property.
+Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema).
 
 Custom comparison types can be defined by adding a `comparison_operators` property to the scalar type capabilities object.
 The `comparison_operators` property is an object where each key specifies a comparison operator name.
@@ -197,6 +194,8 @@ The `aggregate_functions` property must be an object mapping aggregate function 
 Aggregate function names must be must be valid GraphQL names.
 Result types must be valid scalar types.
 
+The `graphql_type` property can be used to tell Hasura GraphQL Engine to parse values of the custom scalar type as though they were one of the built-in GraphQL scalar types `Int`, `Float`, `String`, `Boolean`, or `ID`.
+
 Example:
 
 ```yaml
@@ -206,11 +205,12 @@ capabilities:
       comparison_operators:
         in_year: Number
       aggregate_functions:
-        max: 'DateTime'
-        min: 'DateTime'
+        max: DateTime
+        min: DateTime
+      graphql_type: String
 ```
 
-This example declares a custom scalar type `DateTime`.
+This example declares a custom scalar type `DateTime` which should be parsed as though it were a GraphQL `String`.
 The type supports a comparison operator `in_year`, which takes an argument of type `Number`.
 
 An example GraphQL query using the custom comparison operator might look like below:

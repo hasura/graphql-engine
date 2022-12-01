@@ -28,6 +28,7 @@ import Control.Concurrent.Async qualified as Async
 import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.Mock.Server
+import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
@@ -168,7 +169,7 @@ defaultTestCase TestCaseRequired {..} =
 -- | Test runner for the Mock Agent. 'runMockedTest' sets the mocked
 -- value in the agent, fires a GQL request, then asserts on the
 -- expected response and 'API.Query' value.
-runTest :: Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
+runTest :: HasCallStack => Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
 runTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
   -- Set the Agent with the 'MockConfig'
   I.writeIORef maeConfig _given
