@@ -6,6 +6,7 @@ import Control.Concurrent.STM.TQueue (flushTQueue, newTQueueIO, writeTQueue)
 import Data.ByteString qualified as BS (ByteString, intercalate, writeFile)
 import Data.Char (toLower)
 import Database.PostgreSQL.Simple.Options qualified as Options
+import Harness.Exceptions
 import Harness.TestEnvironment qualified as TestEnvironment
 import Hasura.FeatureMatrix qualified as FeatureMatrix
 import Hasura.Prelude
@@ -14,7 +15,9 @@ import Spec qualified
 import SpecHook qualified
 import System.Directory qualified as Directory
 import System.Environment qualified as Environment
+import System.Exit (exitFailure)
 import System.FilePath qualified as FilePath
+import System.IO (hPutStrLn, stderr)
 import System.Log.FastLogger as FL
 import Test.Hspec qualified as Hspec
 
@@ -22,9 +25,10 @@ main :: IO ()
 main = do
   (options, hspecArgs) <- getOptionsAndHspecArgs
   checkFileAndDirectory options
-  logs <- runSuite options.connectionString hspecArgs
+  (logs, isSuccess) <- runSuite options.connectionString hspecArgs
   BS.writeFile options.output $ FeatureMatrix.render logs
   putStrLn $ "Feature matrix output has been written to: file://" <> options.output
+  unless isSuccess exitFailure
 
 -- * Handle arguments
 
@@ -92,8 +96,8 @@ splitOnHspec = \case
 
 -- | Run test suite with the connection string and hspec arguments
 --   return the logs from the suite, to be used for rendering the
---   feature matrix.
-runSuite :: String -> [String] -> IO BS.ByteString
+--   feature matrix, and whether the run was successful.
+runSuite :: String -> [String] -> IO (BS.ByteString, Bool)
 runSuite uri hspecArgs = do
   Environment.withArgs hspecArgs $ do
     -- write the logs to this queue
@@ -104,9 +108,12 @@ runSuite uri hspecArgs = do
       (TestEnvironment.TestNewPostgresVariant postgresOptions)
       (FL.LogCallback (atomically . writeTQueue queue) (pure ()))
     -- run the tests
-    Hspec.hspec Spec.spec
+    isSuccess <- catch
+      (Hspec.hspec Spec.spec $> True)
+      \(SomeException e) -> hPutStrLn stderr (displayException e) $> False
     -- fetch the logs
-    BS.intercalate "\n" . map FL.fromLogStr <$> atomically (flushTQueue queue)
+    logs <- BS.intercalate "\n" . map FL.fromLogStr <$> atomically (flushTQueue queue)
+    pure (logs, isSuccess)
 
 -- * Utils
 

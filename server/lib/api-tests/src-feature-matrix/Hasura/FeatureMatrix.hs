@@ -16,6 +16,7 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as T
 import Lucid
+import Text.RawString.QQ (r)
 import Prelude hiding (interact)
 
 type FeatureName = Text
@@ -109,7 +110,7 @@ parseLogs = noPartial . Atto.parse (json `sepBy` (string "\n") <* (option () (vo
 noPartial :: Atto.Result a -> Atto.Result a
 noPartial (Partial c) = c "" -- You signal Attoparsec that you're done by
 -- giving an empty string to partial results. A bit weird...
-noPartial r = r
+noPartial result = result
 
 extractFeatures :: Value -> (StateT Features (Except Text)) ()
 extractFeatures v = do
@@ -171,7 +172,26 @@ renderFeatureMatrix =
     reportHead :: Html () -> Html ()
     reportHead content =
       doctypehtml_ do
-        head_ (title_ reportTitle)
+        head_ do
+          meta_ [charset_ "utf-8"]
+          title_ reportTitle
+          style_
+            [r|
+              body {
+                max-width: 900px;
+                margin: auto;
+                font-family: sans-serif;
+              }
+              h1 { text-align: center; }
+              table {
+                width: 70%;
+                margin: auto;
+                font-size: 20px;
+              }
+              td { padding: 5px; padding-left: 15px; padding-right: 15px; }
+              tr { border-bottom: 1px solid #dadada; }
+              tr:hover { background-color: #eee; }
+            |]
         body_ content
 
     reportTitle = "Feature Matrix Compatibility Report"
@@ -179,7 +199,7 @@ renderFeatureMatrix =
     featureRow :: (FeatureName, [TestRun]) -> Html ()
     featureRow (name, runs) = tr_ $ do
       td_ (toHtml name)
-      td_ [title_ (runNames runs)] (toHtml $ runsStatus runs)
+      td_ [style_ "text-align: right", title_ (runNames runs)] (toHtml $ runsStatus runs)
 
     -- Construct a sensible list of indications of which tests have been run.
     runNames :: [TestRun] -> Text
@@ -198,5 +218,5 @@ renderFeatureMatrix =
 
     runsStatus :: [TestRun] -> Text
     runsStatus runs
-      | all testRunPassed runs = "☑️ "
-      | otherwise = "☒"
+      | all testRunPassed runs = "✅"
+      | otherwise = "❌"

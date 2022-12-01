@@ -197,13 +197,14 @@ executable api-tests
 
 library feature-matrix
   build-depends:
-    , base
     , aeson
     , attoparsec
+    , base
     , bytestring
     , containers
     , lucid2
     , mtl
+    , raw-strings-qq
     , text
 
   default-language: GHC2021
@@ -219,6 +220,7 @@ library feature-matrix
     NoImplicitPrelude
     OverloadedStrings
     PatternGuards
+    QuasiQuotes
     RecordWildCards
     ScopedTypeVariables
     TypeApplications
