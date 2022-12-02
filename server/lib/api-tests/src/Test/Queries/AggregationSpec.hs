@@ -21,7 +21,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, backendType)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -59,12 +59,7 @@ spec = do
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.skipTests = Just "SQL Server currently rounds the average - we think this is a bug. Ref https://hasurahq.atlassian.net/browse/NDAT-335"
-                    }
+                ]
             }
         ]
     )
@@ -117,6 +112,13 @@ tests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
+          -- SQL Server returns int type when the input is of int type, which is different than the rest.
+          -- https://learn.microsoft.com/en-us/sql/t-sql/functions/avg-transact-sql?view=sql-server-ver16#return-types
+          avgResult :: String
+          avgResult
+            | backendType testEnvironment == Just Fixture.SQLServer = "3"
+            | otherwise = "3.25"
+
       let expected :: Value
           expected =
             [interpolateYaml|
@@ -127,7 +129,7 @@ tests opts = do
                     sum:
                       rating: 13
                     avg:
-                      rating: 3.25
+                      rating: #{avgResult}
                     max:
                       rating: 5
             |]
