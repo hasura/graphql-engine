@@ -1,0 +1,45 @@
+---
+description: Hasura Pro CLI authentication
+keywords:
+  - hasura
+  - docs
+  - command line interface
+  - cli
+  - authentication
+sidebar_label: Installing / Uninstalling
+sidebar_position: 2
+---
+
+# Installing / Uninstalling the Hasura Pro CLI
+
+## Installing the Hasura Pro CLI plugin
+
+The Hasura Pro CLI is distributed as a plugin to the [Hasura CLI](/hasura-cli/index.mdx).
+
+:::warning Note
+
+The Hasura Pro CLI is currently not available on M1 Macs.
+
+:::
+
+- Follow the instructions [here](/hasura-cli/install-hasura-cli.mdx) to install the Hasura CLI
+
+- Then execute the following command to install the Hasura Pro CLI plugin:
+
+  ```bash
+  hasura plugins install pro
+  ```
+
+- You can verify the installation by executing the `help` command:
+
+  ```bash
+  hasura pro --help
+  ```
+
+## Uninstalling the Hasura Pro CLI plugin
+
+To uninstall the Hasura Pro CLI plugin, use the `uninstall` command:
+
+```bash
+hasura plugins uninstall pro
+```
