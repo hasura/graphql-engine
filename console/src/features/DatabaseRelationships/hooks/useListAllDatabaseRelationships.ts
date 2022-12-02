@@ -6,7 +6,7 @@ import {
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
-import { useMetadata, MetadataSelector } from '@/features/hasura-metadata-api';
+import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
 import { LocalRelationship, Relationship } from '../types';
 import {
   adaptLocalArrayRelationshipWithFkConstraint,
@@ -46,7 +46,7 @@ export const useListAllDatabaseRelationships = ({
   table: Table;
 }) => {
   const { data: metadataTable, isFetching: isMetadataPending } = useMetadata(
-    MetadataSelector.findMetadataTable(dataSourceName, table)
+    MetadataSelectors.findTable(dataSourceName, table)
   );
 
   const { data: fkConstraints, isFetching: isDALIntrospectionPending } =

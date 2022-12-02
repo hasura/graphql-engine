@@ -1,5 +1,5 @@
 import { Metadata, Table } from '@/features/hasura-metadata-types';
-import { areTablesEqual } from './utils';
+import * as utils from './utils';
 
 /* 
 
@@ -18,33 +18,16 @@ const { isLoading, data: remote_schemas } = useMetadata(getRemoteSchema('foobar'
 
 */
 
-const getMetadataSources = () => (m?: Metadata) => {
-  return m?.metadata.sources;
-};
+export const getSources = () => (m: Metadata) => m?.metadata.sources;
 
-const findMetadataSource = (dataSourceName?: string) => (m?: Metadata) => {
-  return m?.metadata.sources.find(s => s.name === dataSourceName);
-};
+export const findSource = (dataSourceName: string) => (m: Metadata) =>
+  utils.findMetadataSource(dataSourceName, m);
 
-const getMetadataTables = (dataSourceName: string) => (m?: Metadata) => {
-  return findMetadataSource(dataSourceName)(m)?.tables;
-};
+export const getTables = (dataSourceName: string) => (m: Metadata) =>
+  utils.findMetadataSource(dataSourceName, m)?.tables;
 
-const findMetadataTable =
-  (dataSourceName: string, table: Table) => (m?: Metadata) => {
-    return findMetadataSource(dataSourceName)(m)?.tables.find(t =>
-      areTablesEqual(t.table, table)
-    );
-  };
+export const findTable =
+  (dataSourceName: string, table: Table) => (m: Metadata) =>
+    utils.findMetadataTable(dataSourceName, table, m);
 
-const getMetadataResourceVersion = () => (m?: Metadata) => {
-  return m?.resource_version;
-};
-
-export const MetadataSelector = {
-  getMetadataSources,
-  findMetadataSource,
-  getMetadataTables,
-  findMetadataTable,
-  getMetadataResourceVersion,
-};
+export const resourceVersion = () => (m: Metadata) => m?.resource_version;

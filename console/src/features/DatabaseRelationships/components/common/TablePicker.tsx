@@ -4,7 +4,7 @@ import React from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { FaDatabase, FaTable } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
-import { useMetadata, MetadataSelector } from '@/features/hasura-metadata-api';
+import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
 import { getTableDisplayName } from '../../utils/helpers';
 
 type InputOptions = {
@@ -36,12 +36,10 @@ export const TablePicker = (props: TablePickerProps) => {
   });
 
   const { data: metadataTables } = useMetadata(
-    MetadataSelector.getMetadataTables(currentDataSourceName ?? '')
+    MetadataSelectors.getTables(currentDataSourceName ?? '')
   );
 
-  const { data: metadataSources } = useMetadata(
-    MetadataSelector.getMetadataSources()
-  );
+  const { data: metadataSources } = useMetadata(MetadataSelectors.getSources());
 
   if (!metadataSources) return <Skeleton count={5} height={20} />;
 

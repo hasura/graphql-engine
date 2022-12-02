@@ -1,5 +1,5 @@
-import { MetadataSelector, useMetadata } from '@/features/hasura-metadata-api';
-import { Metadata, Table } from '@/features/hasura-metadata-types';
+import { MetadataUtils, useMetadata } from '@/features/hasura-metadata-api';
+import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Nullable } from '@/types';
@@ -16,20 +16,13 @@ export interface TableCommentsProps extends ModifyTableProps {
   table: Table;
 }
 
-/**
- * Metadata selector to get table comment
- */
-const getTableComment =
-  (dataSourceName: string, table: Table) => (m: Metadata) => {
-    return MetadataSelector.findMetadataTable(dataSourceName, table)(m)
-      ?.configuration?.comment;
-  };
-
 export const TableComments: React.VFC<TableCommentsProps> = props => {
   const { dataSourceName, table } = props;
 
   const { isLoading, data: savedComment } = useMetadata(
-    getTableComment(dataSourceName, table)
+    m =>
+      MetadataUtils.findMetadataTable(dataSourceName, table, m)?.configuration
+        ?.comment
   );
 
   const [comment, setComment] = React.useState<Nullable<string>>(null);
