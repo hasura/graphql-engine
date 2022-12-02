@@ -18,6 +18,7 @@ module Harness.Backend.BigQuery
   )
 where
 
+import Control.Concurrent.Async (concurrently_)
 import Control.Concurrent.Extended
 import Data.List qualified as List
 import Data.String
@@ -243,14 +244,10 @@ setup tables' (testEnvironment, _) = do
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown (reverse -> tables) (testEnvironment, _) = do
+teardown _ (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
-  finally
-    -- Teardown relationships first
-    ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships BigQuery table testEnvironment
-    )
-    -- remove test dataset
+  concurrently_
+    (GraphqlEngine.setSources testEnvironment mempty Nothing)
     (removeDataset schemaName)
 
 setupTablesAction :: HasCallStack => [Schema.Table] -> TestEnvironment -> SetupAction
