@@ -20,6 +20,7 @@ import fixtures.postgres
 import fixtures.tls
 import ports
 import webhook
+import PortToHaskell
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -166,6 +167,13 @@ This option may result in test failures if the schema has to change between the 
         default=False,
         required=False,
         help="Run testcases with a read-only database source"
+    )
+    parser.addoption(
+        "--port-to-haskell",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Rather than running tests, generate .hs modules into the api-tests suite"
     )
 
 
@@ -684,6 +692,11 @@ def per_class_tests_db_state(request, hge_ctx):
     the `/v1/query` endpoint, to setup using the `/v1/metadata` (metadata setup)
     and `/v2/query` (DB setup), set the `setup_metadata_api_version` to "v2"
     """
+    hge_ctx.request = request
+
+    if PytestConf.config.getoption("--port-to-haskell"):
+      request.addfinalizer(PortToHaskell.write_tests_to_port)
+
     yield from db_state_context(request, hge_ctx)
 
 @pytest.fixture(scope='function')
@@ -931,41 +944,59 @@ def setup_and_teardown(
     pre_setup_file, post_teardown_file,
     skip_setup=False, skip_teardown=False
 ):
-    def v2q_f(f):
-        if os.path.isfile(f):
-            try:
-                hge_ctx.v2q_f(f)
-            except AssertionError:
-                try:
-                    run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
-                except:
-                    pass
-                raise
-    def metadataq_f(f):
-        if os.path.isfile(f):
-            try:
-                hge_ctx.v1metadataq_f(f)
-            except AssertionError:
-                try:
-                    # drop the sql setup, if the metadata calls fail
-                    run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-                    run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
-                except:
-                    pass
-                raise
-    def pre_post_metadataq_f(f):
-        if os.path.isfile(f):
-            hge_ctx.v1metadataq_f(f)
-    if not skip_setup:
-        run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
-        run_on_elem_or_list(v2q_f, sql_schema_setup_file)
-        run_on_elem_or_list(metadataq_f, setup_files)
-    yield
-    # Teardown anyway if any of the tests have failed
-    if request.session.testsfailed > 0 or not skip_teardown:
-        run_on_elem_or_list(metadataq_f, teardown_files)
-        run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-        run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+    if PytestConf.config.getoption("--port-to-haskell"):
+      backend = hge_ctx.backend.title()
+      hs_test = PortToHaskell.with_test(request.cls.__qualname__)
+
+      def appendSetupIfExists(name, url):
+          def curried(f):
+              if os.path.isfile(f):
+                  with open(f, 'r') as content:
+                      hs_test.add_setup(backend, PortToHaskell.Setup(name, f, url, content.read()))
+          return curried
+
+      run_on_elem_or_list(appendSetupIfExists("pre_setup", "/v1/metadata"), pre_setup_file)
+      run_on_elem_or_list(appendSetupIfExists("schema_setup", "/v2/query"), sql_schema_setup_file)
+      run_on_elem_or_list(appendSetupIfExists("setup_metadata", "/v1/metadata"), setup_files)
+
+      yield
+
+    else:
+      def v2q_f(f):
+          if os.path.isfile(f):
+              try:
+                  hge_ctx.v2q_f(f)
+              except AssertionError:
+                  try:
+                      run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+                  except:
+                      pass
+                  raise
+      def metadataq_f(f):
+          if os.path.isfile(f):
+              try:
+                  hge_ctx.v1metadataq_f(f)
+              except AssertionError:
+                  try:
+                      # drop the sql setup, if the metadata calls fail
+                      run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+                      run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+                  except:
+                      pass
+                  raise
+      def pre_post_metadataq_f(f):
+          if os.path.isfile(f):
+              hge_ctx.v1metadataq_f(f)
+      if not skip_setup:
+          run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
+          run_on_elem_or_list(v2q_f, sql_schema_setup_file)
+          run_on_elem_or_list(metadataq_f, setup_files)
+      yield
+      # Teardown anyway if any of the tests have failed
+      if request.session.testsfailed > 0 or not skip_teardown:
+          run_on_elem_or_list(metadataq_f, teardown_files)
+          run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+          run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):
