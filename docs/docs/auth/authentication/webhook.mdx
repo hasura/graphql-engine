@@ -146,7 +146,31 @@ All values should be `String`. They will be converted to the right type automati
 
 :::
 
-There is no default timeout on the resulting connection. You can optionally add one; to do so, you need to return
+:::info Note
+
+If the `Set-Cookie` HTTP headers are set by the auth webhook, they are forwarded by the GraphQL Engine as response
+headers for both GET/POST request methods.
+
+:::
+
+#### Failure
+
+If you want to deny the GraphQL request, return a `401 Unauthorized` exception.
+
+```http
+HTTP/1.1 401 Unauthorized
+```
+
+:::info Note
+
+Anything other than a `200` or `401` response from webhook makes the server raise a `500 Internal Server Error`
+exception.
+
+:::
+
+### Refreshing Websocket Connections
+
+There is no default timeout on authorized websocket connection. You can optionally add one; to do so, you need to return
 either:
 
 - a `Cache-Control` variable, modeled on the
@@ -183,23 +207,9 @@ Content-Type: application/json
 
 :::info Note
 
-If the <em>Set-Cookie</em> headers are set by the auth webhook, they are forwarded by the GraphQL Engine as response
-headers for both GET/POST request methods.
-
-:::
-
-#### Failure
-
-If you want to deny the GraphQL request, return a `401 Unauthorized` exception.
-
-```http
-HTTP/1.1 401 Unauthorized
-```
-
-:::info Note
-
-Anything other than a `200` or `401` response from webhook makes the server raise a `500 Internal Server Error`
-exception.
+For websockets, if the `Cache-Control` or `Expires` fields are present in the response
+then a new request to the auth-webhook is made after the time specified in those
+fields and a new websocket connection is established.
 
 :::
 
