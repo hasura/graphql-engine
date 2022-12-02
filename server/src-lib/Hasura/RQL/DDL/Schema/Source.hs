@@ -36,6 +36,7 @@ import Data.Aeson qualified as Aeson
 import Data.Aeson.Extended
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH
+import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -45,6 +46,7 @@ import Data.Text.Extended qualified as Text.E
 import Hasura.Backends.DataConnector.API (errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (getConfigSchemaResponse, transformConnSourceConfig, validateConfiguration)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
 import Hasura.Base.Error
@@ -339,16 +341,18 @@ instance FromJSON GetSourceTables where
 -- | Fetch a list of tables for the request data source. Currently
 -- this is only supported for Data Connectors.
 runGetSourceTables ::
-  ( Has (L.Logger L.Hasura) r,
+  ( CacheRM m,
+    Has (L.Logger L.Hasura) r,
     HTTP.Manager.HasHttpManagerM m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m
   ) =>
+  Env.Environment ->
   GetSourceTables ->
   m EncJSON
-runGetSourceTables GetSourceTables {..} = do
+runGetSourceTables env GetSourceTables {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
@@ -364,7 +368,6 @@ runGetSourceTables GetSourceTables {..} = do
         logger :: L.Logger L.Hasura <- asks getter
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
-            apiConfig = DC.Types.value _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- do
           let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
@@ -372,10 +375,14 @@ runGetSourceTables GetSourceTables {..} = do
             (InsOrdHashMap.lookup dcName =<< backendConfig)
             (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
+        transformedConfig <- transformConnSourceConfig _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        configSchemaResponse <- getConfigSchemaResponse dcName
+        validateConfiguration _gstSourceName dcName configSchemaResponse transformedConfig
+
         schemaResponse <-
           Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
+            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) transformedConfig
 
         let fullyQualifiedTableNames = fmap API._tiName $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue fullyQualifiedTableNames

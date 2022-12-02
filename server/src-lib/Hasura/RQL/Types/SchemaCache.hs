@@ -104,6 +104,7 @@ module Hasura.RQL.Types.SchemaCache
     getOpExpDeps,
     BackendInfoWrapper (..),
     BackendCache,
+    getBackendInfo,
   )
 where
 
@@ -149,7 +150,8 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.SQL.BackendMap
+import Hasura.SQL.BackendMap (BackendMap)
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Hasura.Server.Types
 import Hasura.Session
@@ -464,6 +466,9 @@ deriving newtype instance (Semigroup (BackendInfo b)) => Semigroup (BackendInfoW
 deriving newtype instance (Monoid (BackendInfo b)) => Monoid (BackendInfoWrapper b)
 
 type BackendCache = BackendMap BackendInfoWrapper
+
+getBackendInfo :: forall b m. (CacheRM m, HasTag b) => m (Maybe (BackendInfo b))
+getBackendInfo = askSchemaCache <&> fmap unBackendInfoWrapper . BackendMap.lookup @b . scBackendCache
 
 -------------------------------------------------------------------------------
 

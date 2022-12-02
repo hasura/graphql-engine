@@ -15,13 +15,12 @@ import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig, validateConfiguration)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
@@ -145,12 +144,10 @@ resolveSourceConfig'
   backendInfo
   env
   manager = runExceptT do
-    DC.DataConnectorInfo {DC._dciOptions = DC.DataConnectorOptions {..}, ..} <-
-      Map.lookup dataConnectorName backendInfo
-        `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
+    DC.DataConnectorInfo {..} <- getDataConnectorInfo dataConnectorName backendInfo
+    let DC.DataConnectorOptions {_dcoUri} = _dciOptions
 
     transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
-
     validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
 
     schemaResponseU <-
@@ -174,20 +171,10 @@ resolveSourceConfig'
           _scDataConnectorName = dataConnectorName
         }
 
-validateConfiguration ::
-  MonadError QErr m =>
-  SourceName ->
-  DC.DataConnectorName ->
-  API.ConfigSchemaResponse ->
-  API.Config ->
-  m ()
-validateConfiguration sourceName dataConnectorName configSchema config = do
-  let errors = API.validateConfigAgainstConfigSchema configSchema config
-  unless (null errors) $
-    let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
-     in throw400
-          DataConnectorError
-          ("Configuration for source " <> sourceName <<> " is not valid based on the configuration schema declared by the " <> dataConnectorName <<> " data connector agent. Errors:\n" <> errorsText)
+getDataConnectorInfo :: (MonadError QErr m) => DC.DataConnectorName -> HashMap DC.DataConnectorName DC.DataConnectorInfo -> m DC.DataConnectorInfo
+getDataConnectorInfo dataConnectorName backendInfo =
+  onNothing (Map.lookup dataConnectorName backendInfo) $
+    throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
 resolveDatabaseMetadata' ::
   Applicative m =>
