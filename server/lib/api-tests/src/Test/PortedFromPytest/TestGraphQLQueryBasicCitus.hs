@@ -12,7 +12,7 @@ import Harness.PytestPortedCompat (compatSetup)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec
@@ -300,7 +300,7 @@ fixture_Citus =
         ]
     }
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runSingleSetup (NE.fromList [fixture_Citus]) tests
 
 tests :: Fixture.Options -> SpecWith TestEnvironment

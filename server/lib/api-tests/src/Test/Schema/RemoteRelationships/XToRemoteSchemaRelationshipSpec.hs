@@ -29,7 +29,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -37,7 +37,7 @@ import Test.Hspec (SpecWith, describe, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
     contexts =

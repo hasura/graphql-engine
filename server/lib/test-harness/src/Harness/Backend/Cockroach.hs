@@ -81,7 +81,7 @@ runWithInitialDb_ testEnvironment =
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (Constants.cockroachConnectionString testEnvironment)
+  runInternal testEnvironment (Constants.cockroachConnectionString (uniqueTestId testEnvironment))
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
@@ -119,9 +119,10 @@ defaultSourceMetadata testEnvironment =
 
 defaultSourceConfiguration :: TestEnvironment -> Value
 defaultSourceConfiguration testEnvironment =
-  [interpolateYaml|
+  let databaseUrl = cockroachConnectionString (uniqueTestId testEnvironment)
+   in [interpolateYaml|
     connection_info:
-      database_url: #{ cockroachConnectionString testEnvironment }
+      database_url: #{ databaseUrl }
       pool_settings: {}
   |]
 

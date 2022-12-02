@@ -5,6 +5,6 @@ import Harness.TestEnvironment
 import Test.Hspec
 import Test.PortedFromPytest.TestGraphQLQueryBasicCitus qualified
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   describe "TestGraphQLQueryBasicCitus" Test.PortedFromPytest.TestGraphQLQueryBasicCitus.spec

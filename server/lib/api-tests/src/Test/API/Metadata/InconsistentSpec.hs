@@ -15,7 +15,7 @@ import Harness.Yaml qualified as Yaml
 import Hasura.Prelude
 import Test.Hspec
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList

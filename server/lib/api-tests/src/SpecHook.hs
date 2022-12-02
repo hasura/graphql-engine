@@ -18,7 +18,7 @@ import Harness.Exceptions (HasCallStack, bracket)
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), stopServer)
 import Hasura.Prelude
 import System.Environment (getEnvironment, lookupEnv)
 import System.IO.Unsafe (unsafePerformIO)
@@ -67,24 +67,20 @@ parseBackendType backendType =
     "NONE" -> Just TestNoBackends
     _ -> Nothing
 
-setupTestEnvironment :: TestingMode -> Logger -> IO TestEnvironment
+setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
 setupTestEnvironment testingMode logger = do
-  murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
-  mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
-  server <- startServerThread ((,) <$> murlPrefix <*> mport)
-  uniqueTestId <- nextRandom
+  server <- startServerThread
+
   pure
-    TestEnvironment
-      { server = server,
-        uniqueTestId = uniqueTestId,
-        backendType = Nothing,
-        logger = logger,
-        testingMode = testingMode
+    GlobalTestEnvironment
+      { logger = logger,
+        testingMode = testingMode,
+        server = server
       }
 
-teardownTestEnvironment :: TestEnvironment -> IO ()
-teardownTestEnvironment TestEnvironment {..} = do
-  stopServer server
+-- | tear down the shared server
+teardownTestEnvironment :: GlobalTestEnvironment -> IO ()
+teardownTestEnvironment (GlobalTestEnvironment {server}) = stopServer server
 
 -- | allow setting log output type
 setupLogType :: IO FL.LogType
@@ -99,7 +95,7 @@ setupLogType = do
         "STDERR" -> FL.LogStderr 64
         _ -> defaultLogType
 
-hook :: HasCallStack => SpecWith TestEnvironment -> Spec
+hook :: HasCallStack => SpecWith GlobalTestEnvironment -> Spec
 hook specs = do
   (testingMode, logType) <-
     runIO $

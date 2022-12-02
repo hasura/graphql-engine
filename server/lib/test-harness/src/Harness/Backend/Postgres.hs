@@ -63,7 +63,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogMessage)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
 import Text.Pretty.Simple (pShow)
@@ -72,9 +72,9 @@ import Text.Pretty.Simple (pShow)
 -- interesting thing here is the database: in both modes, we specify an
 -- /initial/ database (returned by this function), which we use only as a way
 -- to create other databases for testing.
-defaultConnectInfo :: HasCallStack => TestEnvironment -> Postgres.ConnectInfo
-defaultConnectInfo testEnvironment =
-  case testingMode testEnvironment of
+defaultConnectInfo :: HasCallStack => GlobalTestEnvironment -> Postgres.ConnectInfo
+defaultConnectInfo globalTestEnvironment =
+  case testingMode globalTestEnvironment of
     TestNewPostgresVariant opts@Options {..} ->
       let getComponent :: forall a. String -> Last a -> a
           getComponent component =
@@ -107,13 +107,14 @@ defaultConnectInfo testEnvironment =
 makeFreshDbConnectionString :: TestEnvironment -> S8.ByteString
 makeFreshDbConnectionString testEnvironment =
   Postgres.postgreSQLConnectionString
-    (defaultConnectInfo testEnvironment)
+    (defaultConnectInfo (globalEnvironment testEnvironment))
       { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
       }
 
 metadataLivenessCheck :: HasCallStack => IO ()
 metadataLivenessCheck =
-  doLivenessCheck (fromString postgresqlMetadataConnectionString)
+  doLivenessCheck $
+    fromString postgresqlMetadataConnectionString
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
@@ -138,22 +139,22 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
-runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
-runWithInitialDb_ testEnvironment =
-  runInternal testEnvironment $
-    Postgres.postgreSQLConnectionString (defaultConnectInfo testEnvironment)
+runWithInitialDb_ :: HasCallStack => GlobalTestEnvironment -> String -> IO ()
+runWithInitialDb_ globalTestEnvironment =
+  runInternal globalTestEnvironment $
+    Postgres.postgreSQLConnectionString (defaultConnectInfo globalTestEnvironment)
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
+  runInternal (globalEnvironment testEnvironment) (makeFreshDbConnectionString testEnvironment)
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO ()
-runInternal testEnvironment connectionString query = do
-  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
+runInternal :: HasCallStack => GlobalTestEnvironment -> S8.ByteString -> String -> IO ()
+runInternal globalTestEnvironment connectionString query = do
+  runLogger (logger globalTestEnvironment) $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -372,16 +373,20 @@ untrackTable testEnvironment table =
 createDatabase :: TestEnvironment -> IO ()
 createDatabase testEnvironment = do
   runWithInitialDb_
-    testEnvironment
+    (globalEnvironment testEnvironment)
     ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
   createSchema testEnvironment
+
+dropDatabase :: TestEnvironment -> IO ()
+dropDatabase testEnvironment = do
+  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+  dropDatabaseInternal dbName testEnvironment
 
 -- | we drop databases at the end of test runs so we don't need to do DB clean
 -- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
 -- < 13 in CI so instead we boot all the active users then drop as normal.
-dropDatabase :: TestEnvironment -> IO ()
-dropDatabase testEnvironment = do
-  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+dropDatabaseInternal :: String -> TestEnvironment -> IO ()
+dropDatabaseInternal dbName testEnvironment = do
   void $
     queryWithInitialDb @(Postgres.Only Bool)
       testEnvironment
@@ -394,7 +399,7 @@ dropDatabase testEnvironment = do
 
   -- if this fails, don't make the test fail
   runWithInitialDb_
-    testEnvironment
+    (globalEnvironment testEnvironment)
     ("DROP DATABASE " <> dbName <> ";")
     `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 

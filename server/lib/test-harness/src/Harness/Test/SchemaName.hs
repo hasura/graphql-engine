@@ -3,11 +3,9 @@
 module Harness.Test.SchemaName (SchemaName (..), getSchemaName) where
 
 import Data.Aeson (ToJSON (..))
-import Data.Char qualified
 import Data.String
 import Data.Text (Text)
 import Data.Text qualified as T
-import Data.UUID
 import Harness.Constants qualified as Constants
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
@@ -43,29 +41,19 @@ instance ToYamlString SchemaName where
 --
 -- For all other backends, we fall back to the Constants that were used before
 getSchemaName :: TestEnvironment -> SchemaName
-getSchemaName testEnv = case backendType testEnv of
-  Nothing -> SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
-  Just db -> case db of
-    Postgres -> SchemaName $ T.pack Constants.postgresDb
-    SQLServer -> SchemaName $ T.pack Constants.sqlserverDb
-    BigQuery ->
-      SchemaName $
-        T.pack $
-          "hasura_test_"
-            <> showUUID (uniqueTestId testEnv)
-    Citus -> SchemaName $ T.pack Constants.citusDb
-    Cockroach -> SchemaName $ T.pack Constants.cockroachDb
-    DataConnector "sqlite" -> SchemaName "main"
-    DataConnector _ -> SchemaName $ T.pack Constants.dataConnectorDb
+getSchemaName testEnv = getSchemaNameInternal (backendType testEnv) (uniqueTestId testEnv)
 
--- | Sanitise UUID for use in BigQuery dataset name
--- must be alphanumeric (plus underscores)
-showUUID :: UUID -> String
-showUUID =
-  map
-    ( \a ->
-        if Data.Char.isAlphaNum a
-          then a
-          else '_'
-    )
-    . show
+-- | exposed for use when creating a TestEnvironment
+getSchemaNameInternal :: Maybe BackendType -> UniqueTestId -> SchemaName
+getSchemaNameInternal Nothing _ = SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
+getSchemaNameInternal (Just BigQuery) uniqueTestId =
+  SchemaName $
+    T.pack $
+      "hasura_test_"
+        <> show uniqueTestId
+getSchemaNameInternal (Just Postgres) _ = SchemaName $ T.pack Constants.postgresDb
+getSchemaNameInternal (Just SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
+getSchemaNameInternal (Just Citus) _ = SchemaName $ T.pack Constants.citusDb
+getSchemaNameInternal (Just Cockroach) _ = SchemaName $ T.pack Constants.cockroachDb
+getSchemaNameInternal (Just (DataConnector "sqlite")) _ = SchemaName "main"
+getSchemaNameInternal (Just (DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb

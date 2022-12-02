@@ -20,7 +20,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (defaultBackendCapabilities, defaultBackendServerUrl)
 import Harness.Test.Fixture (defaultBackendDisplayNameString, defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema (Config (..))
@@ -29,7 +29,7 @@ import Test.Hspec (SpecWith, describe, it, pendingWith, shouldBe)
 
 --------------------------------------------------------------------------------
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList

@@ -14,7 +14,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -23,7 +23,7 @@ import Test.Hspec (SpecWith, it, shouldContain)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList

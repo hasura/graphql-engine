@@ -12,13 +12,13 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList

@@ -95,7 +95,7 @@ Tests are written using [`hspec`](http://hspec.github.io/) and
 
 - Modules are declared under the `Test` namespace.
 - Module names must end with `Spec` (e.g. `HelloWorldSpec`).
-- Module names must contain some value `spec :: SpecWith TestEnvironment`,
+- Module names must contain some value `spec :: SpecWith GlobalTestEnvironment`,
   which serves as the entry point for the module.
 
 See the documentation for `hspec` and `hspec-discover`, as well as other
@@ -148,7 +148,7 @@ data and the tables onces the test suite finishes. To prevent that,
 you can modify your test module to prevent teardown. Example:
 
 ```diff
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     [ Fixture.fixture (Fixture.Backend Fixture.SQLServer)

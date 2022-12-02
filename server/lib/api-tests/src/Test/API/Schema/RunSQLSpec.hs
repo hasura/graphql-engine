@@ -9,7 +9,7 @@ import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -17,7 +17,7 @@ import Test.Hspec (SpecWith, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList

@@ -12,7 +12,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema hiding (runSQL)
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -20,7 +20,7 @@ import Test.Hspec (SpecWith, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList

@@ -81,7 +81,7 @@ runWithInitialDb_ testEnvironment =
 -- | Run a plain SQL query.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (Constants.citusConnectionString testEnvironment)
+  runInternal testEnvironment (Constants.citusConnectionString (uniqueTestId testEnvironment))
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
@@ -119,9 +119,10 @@ defaultSourceMetadata testEnvironment =
 
 defaultSourceConfiguration :: TestEnvironment -> Value
 defaultSourceConfiguration testEnvironment =
-  [interpolateYaml|
+  let databaseUrl = citusConnectionString (uniqueTestId testEnvironment)
+   in [interpolateYaml|
     connection_info:
-      database_url: #{ citusConnectionString testEnvironment }
+      database_url: #{ databaseUrl }
       pool_settings: {}
   |]
 

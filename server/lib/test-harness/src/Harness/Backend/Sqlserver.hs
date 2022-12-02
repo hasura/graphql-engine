@@ -62,7 +62,7 @@ livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
 -- | run SQL with the currently created DB for this test
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (Constants.sqlserverConnectInfo testEnvironment)
+  runInternal testEnvironment (Constants.sqlserverConnectInfo (uniqueTestId testEnvironment))
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
@@ -113,7 +113,7 @@ connection_info:
   pool_settings: {}
 |]
   where
-    sqlserverConnectInfo = Constants.sqlserverConnectInfo testEnvironment
+    sqlserverConnectInfo = Constants.sqlserverConnectInfo (uniqueTestId testEnvironment)
 
 -- | Serialize Table into a T-SQL statement, as needed, and execute it on the Sqlserver backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()

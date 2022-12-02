@@ -13,11 +13,11 @@ import Harness.GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList

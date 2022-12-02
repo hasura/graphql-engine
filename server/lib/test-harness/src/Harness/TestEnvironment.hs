@@ -4,9 +4,12 @@
 -- testEnvironment.
 module Harness.TestEnvironment
   ( TestEnvironment (..),
+    GlobalTestEnvironment (..),
     Server (..),
     TestingMode (..),
+    UniqueTestId (..),
     getServer,
+    getTestingMode,
     serverUrl,
     stopServer,
     testLogTrace,
@@ -18,6 +21,7 @@ where
 
 import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
+import Data.Char qualified
 import Data.UUID (UUID)
 import Data.Word
 import Database.PostgreSQL.Simple.Options (Options)
@@ -26,25 +30,47 @@ import Harness.Test.BackendType
 import Hasura.Prelude
 import Text.Pretty.Simple
 
--- | A testEnvironment that's passed to all tests.
-data TestEnvironment = TestEnvironment
-  { -- | connection details for the instance of HGE we're connecting to
-    server :: Server,
-    -- | shared function to log information from tests
+newtype UniqueTestId = UniqueTestId {getUniqueTestId :: UUID}
+
+-- | Sanitise UUID for use in BigQuery dataset name
+-- must be alphanumeric (plus underscores)
+instance Show UniqueTestId where
+  show (UniqueTestId uuid) =
+    fmap
+      ( \a ->
+          if Data.Char.isAlphaNum a
+            then a
+            else '_'
+      )
+      . show
+      $ uuid
+
+-- | static information across an entire test suite run
+data GlobalTestEnvironment = GlobalTestEnvironment
+  { -- | shared function to log information from tests
     logger :: Logger,
-    -- | a uuid generated for each test suite used to generate a unique
-    -- `SchemaName`
-    uniqueTestId :: UUID,
-    -- | the main backend type of the test, if applicable (ie, where we are not
-    -- testing `remote <-> remote` joins or someting similarly esoteric)
-    backendType :: Maybe BackendType,
     -- | the mode in which we're running the tests. See 'TestingMode' for
     -- details'.
-    testingMode :: TestingMode
+    testingMode :: TestingMode,
+    -- | connection details for the instance of HGE we're connecting to
+    server :: Server
+  }
+
+-- | A testEnvironment that's passed to all tests.
+data TestEnvironment = TestEnvironment
+  { -- | shared setup not related to a particular test
+    globalEnvironment :: GlobalTestEnvironment,
+    -- | a uuid generated for each test suite used to generate a unique
+    -- `SchemaName`
+    uniqueTestId :: UniqueTestId,
+    -- | the main backend type of the test, if applicable (ie, where we are not
+    -- testing `remote <-> remote` joins or someting similarly esoteric)
+    backendType :: Maybe BackendType
   }
 
 instance Show TestEnvironment where
-  show TestEnvironment {server} = "<TestEnvironment: " ++ urlPrefix server ++ ":" ++ show (port server) ++ " >"
+  show TestEnvironment {globalEnvironment} =
+    "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"
 
 -- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
 -- practical consequences of this type.
@@ -72,7 +98,7 @@ data Server = Server
 
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
 getServer :: TestEnvironment -> Server
-getServer TestEnvironment {server} = server
+getServer TestEnvironment {globalEnvironment} = server globalEnvironment
 
 -- | Extracts the full URL prefix and port number from a given 'Server'.
 --
@@ -83,13 +109,17 @@ getServer TestEnvironment {server} = server
 serverUrl :: Server -> String
 serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 
+-- | Retrieve the 'TestingMode' associated with some 'TestEnvironment'
+getTestingMode :: TestEnvironment -> TestingMode
+getTestingMode = testingMode . globalEnvironment
+
 -- | Forcibly stop a given 'Server'.
 stopServer :: Server -> IO ()
 stopServer Server {thread} = Async.cancel thread
 
 -- | Log a structured message in tests
 testLogMessage :: LoggableMessage a => TestEnvironment -> a -> IO ()
-testLogMessage testEnv = runLogger (logger testEnv)
+testLogMessage = runLogger . logger . globalEnvironment
 
 -- | Log an unstructured trace string. Should only be used directly in specs,
 -- not in the Harness modules.

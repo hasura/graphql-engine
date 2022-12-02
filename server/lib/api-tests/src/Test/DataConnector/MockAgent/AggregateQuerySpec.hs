@@ -12,7 +12,7 @@ import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -20,7 +20,7 @@ import Test.Hspec (SpecWith, describe, it)
 
 --------------------------------------------------------------------------------
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList

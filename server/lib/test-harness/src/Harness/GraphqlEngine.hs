@@ -43,7 +43,6 @@ where
 -------------------------------------------------------------------------------
 
 import Control.Concurrent.Async qualified as Async
-import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson
 import Data.Aeson.Encode.Pretty as AP
@@ -264,19 +263,12 @@ args:
 -- available before returning.
 --
 -- The port availability is subject to races.
-startServerThread :: Maybe (String, Int) -> IO Server
-startServerThread murlPrefixport = do
-  (urlPrefix, port, thread) <-
-    case murlPrefixport of
-      Just (urlPrefix, port) -> do
-        thread <- Async.async (forever (sleep 1)) -- Just wait.
-        pure (urlPrefix, port, thread)
-      Nothing -> do
-        port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-        let urlPrefix = "http://127.0.0.1"
-        thread <-
-          Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
-        pure (urlPrefix, port, thread)
+startServerThread :: IO Server
+startServerThread = do
+  port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
+  let urlPrefix = "http://127.0.0.1"
+  thread <-
+    Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck (serverUrl server)
   pure server
@@ -291,7 +283,7 @@ runApp serveOptions = do
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
+      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci

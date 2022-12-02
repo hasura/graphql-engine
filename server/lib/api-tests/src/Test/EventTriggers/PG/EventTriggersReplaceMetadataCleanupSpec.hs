@@ -16,7 +16,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -25,7 +25,7 @@ import Test.Hspec (SpecWith, describe, it, shouldBe)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList

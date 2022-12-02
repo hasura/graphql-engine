@@ -10,7 +10,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec
@@ -18,7 +18,7 @@ import Test.Hspec
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   -- Postgres
   Fixture.run

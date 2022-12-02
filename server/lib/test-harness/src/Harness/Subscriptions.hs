@@ -35,7 +35,8 @@ import Data.Map.Strict qualified as Map
 import Harness.Exceptions (throw, withFrozenCallStack)
 import Harness.Logging.Messages
 import Harness.TestEnvironment
-  ( Server (..),
+  ( GlobalTestEnvironment (..),
+    Server (..),
     TestEnvironment (..),
     testLogMessage,
   )
@@ -96,7 +97,7 @@ newtype SubscriptionHandle = SubscriptionHandle {unSubscriptionHandle :: MVar Va
 -- >     actual `shouldBe` expected
 withSubscriptions :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
 withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
-  WS.runClient "127.0.0.1" (fromIntegral $ port $ server testEnvironment) "/v1/graphql" \conn -> do
+  WS.runClient "127.0.0.1" (fromIntegral $ port $ server $ globalEnvironment testEnvironment) "/v1/graphql" \conn -> do
     -- CAVE: loads of stuff still outstanding:
     --  * trimming threads, NDAT-228
     --  * multiplexing handles, NDAT-229
