@@ -2,8 +2,10 @@ import React, { useEffect, useReducer } from 'react';
 import { GraphQLError } from 'graphql';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
-import { Tooltip } from 'react-bootstrap';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { IconTooltip } from '@/new-components/Tooltip';
 import requestAction from '@/utils/requestAction';
+import { Button } from '@/new-components/Button';
 import {
   parseValidateApiData,
   getValidateTransformOptions,
@@ -27,6 +29,10 @@ import {
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
+  setResponsePayloadTransform,
+  setResponseBody,
+  responseTransformReducer,
+  getActionResponseTransformDefaultState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
   RequestTransformContentType,
@@ -35,10 +41,11 @@ import {
 import {
   KeyValuePair,
   RequestTransformStateBody,
+  ResponseTransformStateBody,
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+import { GeneratedAction, OasGeneratorModal } from '@/features/Actions';
 import ActionEditor from '../Common/components/ActionEditor';
-import Button from '../../../Common/Button';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import { showWarningNotification } from '../../Common/Notification';
@@ -81,6 +88,13 @@ const AddAction: React.FC<AddActionProps> = ({
     getActionRequestTransformDefaultState()
   );
 
+  const [responseTransformState, responseTransformDispatch] = useReducer(
+    responseTransformReducer,
+    getActionResponseTransformDefaultState()
+  );
+
+  const createActionRef = React.useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (readOnlyMode)
       dispatch(
@@ -119,7 +133,7 @@ const AddAction: React.FC<AddActionProps> = ({
   } = actionDefinition;
 
   const onSubmit = () => {
-    dispatch(createAction(transformState));
+    dispatch(createAction(transformState, responseTransformState));
   };
 
   const setHeaders = (hs: Header[]) => {
@@ -220,6 +234,16 @@ const AddAction: React.FC<AddActionProps> = ({
   const requestPayloadTransformOnChange = (data: boolean) => {
     transformDispatch(setRequestPayloadTransform(data));
   };
+
+  const responsePayloadTransformOnChange = (data: boolean) => {
+    responseTransformDispatch(setResponsePayloadTransform(data));
+  };
+
+  const responseBodyOnChange = (responseBody: ResponseTransformStateBody) => {
+    responseTransformDispatch(setResponseBody(responseBody));
+  };
+  const [isActionGeneratorOpen, setIsActionGeneratorOpen] =
+    React.useState(false);
 
   // we send separate requests for the `url` preview and `body` preview, as in case of error,
   // we will not be able to resolve if the error is with url or body transform, with the current state of `test_webhook_transform` api
@@ -326,69 +350,150 @@ const AddAction: React.FC<AddActionProps> = ({
     }
   }
 
+  const onImportGeneratedAction = (generatedAction: GeneratedAction): void => {
+    const {
+      types,
+      action,
+      description,
+      method,
+      baseUrl,
+      path,
+      requestTransforms,
+      responseTransforms,
+      headers: actionHeaders,
+      sampleInput,
+      queryParams,
+    } = generatedAction;
+    typeDefinitionOnChange(types, null, null, null);
+    actionDefinitionOnChange(action, null, null, null);
+    commentOnChange({
+      target: { value: description },
+    } as React.ChangeEvent<HTMLInputElement>);
+    handlerOnChange(baseUrl);
+    if (requestTransforms) {
+      requestPayloadTransformOnChange(true);
+      requestBodyOnChange({
+        action: 'transform',
+        template: requestTransforms,
+      });
+    } else {
+      requestPayloadTransformOnChange(false);
+    }
+    toggleForwardClientHeaders();
+    if (responseTransforms) {
+      responsePayloadTransformOnChange(true);
+      responseBodyOnChange({
+        action: 'transform',
+        template: responseTransforms,
+      });
+    } else {
+      responsePayloadTransformOnChange(false);
+    }
+
+    transformDispatch(setRequestSampleInput(sampleInput));
+    requestMethodOnChange(method);
+    requestUrlTransformOnChange(true);
+    requestUrlOnChange(path.replace(/\{([^}]+)\}/g, '{{$body.input.$1}}'));
+    requestQueryParamsOnChange(
+      queryParams.map(name => ({
+        name,
+        value: `{{$body.input.${name}}}`,
+      }))
+    );
+    setHeaders(
+      actionHeaders.map(name => ({
+        name,
+        value: `{{$body.input.${name}}}`,
+        type: 'static',
+      }))
+    );
+
+    setTimeout(() => {
+      if (createActionRef.current) {
+        createActionRef.current.scrollIntoView();
+      }
+    }, 0);
+  };
+
   return (
-    <div className="w-full overflow-y-auto bg-gray-50">
-      <div className="max-w-6xl">
-        <Helmet title="Add Action - Actions | Hasura" />
-        <h2 className="font-bold text-xl mb-5">Add a new action</h2>
+    <Analytics name="AddAction" {...REDACT_EVERYTHING}>
+      <div className="w-full overflow-y-auto bg-gray-50">
+        <div className="max-w-6xl">
+          <Helmet title="Add Action - Actions | Hasura" />
+          <h2 className="font-bold text-xl mb-5">Add a new action</h2>
 
-        <ActionEditor
-          handler={handler}
-          execution={execution}
-          actionDefinition={actionDefinition}
-          typeDefinition={typeDefinition}
-          headers={headers}
-          forwardClientHeaders={forwardClientHeaders}
-          readOnlyMode={readOnlyMode}
-          timeout={timeout}
-          comment={comment}
-          actionType={actionType}
-          commentOnChange={commentOnChange}
-          handlerOnChange={handlerOnChange}
-          executionOnChange={executionOnChange}
-          timeoutOnChange={timeoutOnChange}
-          setHeaders={setHeaders}
-          toggleForwardClientHeaders={toggleForwardClientHeaders}
-          actionDefinitionOnChange={actionDefinitionOnChange}
-          typeDefinitionOnChange={typeDefinitionOnChange}
-        />
-
-        <ConfigureTransformation
-          transformationType="action"
-          state={transformState}
-          resetSampleInput={resetSampleInput}
-          envVarsOnChange={envVarsOnChange}
-          sessionVarsOnChange={sessionVarsOnChange}
-          requestMethodOnChange={requestMethodOnChange}
-          requestUrlOnChange={requestUrlOnChange}
-          requestQueryParamsOnChange={requestQueryParamsOnChange}
-          requestAddHeadersOnChange={requestAddHeadersOnChange}
-          requestBodyOnChange={requestBodyOnChange}
-          requestSampleInputOnChange={requestSampleInputOnChange}
-          requestContentTypeOnChange={requestContentTypeOnChange}
-          requestUrlTransformOnChange={requestUrlTransformOnChange}
-          requestPayloadTransformOnChange={requestPayloadTransformOnChange}
-        />
-
-        <div>
-          <Button
-            color="yellow"
-            size="sm"
-            type="submit"
-            disabled={!allowSave}
-            onClick={onSubmit}
-            data-test="create-action-btn"
-          >
-            Create Action
-          </Button>
-          {readOnlyMode && (
-            <Tooltip id="tooltip-actions-add-readonlymode">
-              Adding new action is not allowed in Read only mode!
-            </Tooltip>
+          {isActionGeneratorOpen && (
+            <OasGeneratorModal
+              onImport={onImportGeneratedAction}
+              onClose={() => setIsActionGeneratorOpen(false)}
+            />
           )}
+
+          <ActionEditor
+            handler={handler}
+            execution={execution}
+            actionDefinition={actionDefinition}
+            typeDefinition={typeDefinition}
+            headers={headers}
+            forwardClientHeaders={forwardClientHeaders}
+            readOnlyMode={readOnlyMode}
+            timeout={timeout}
+            comment={comment}
+            actionType={actionType}
+            commentOnChange={commentOnChange}
+            handlerOnChange={handlerOnChange}
+            executionOnChange={executionOnChange}
+            timeoutOnChange={timeoutOnChange}
+            setHeaders={setHeaders}
+            toggleForwardClientHeaders={toggleForwardClientHeaders}
+            actionDefinitionOnChange={actionDefinitionOnChange}
+            typeDefinitionOnChange={typeDefinitionOnChange}
+            onOpenActionGenerator={() => setIsActionGeneratorOpen(true)}
+          />
+
+          <ConfigureTransformation
+            transformationType="action"
+            requestTransfromState={transformState}
+            responseTransformState={responseTransformState}
+            resetSampleInput={resetSampleInput}
+            envVarsOnChange={envVarsOnChange}
+            sessionVarsOnChange={sessionVarsOnChange}
+            requestMethodOnChange={requestMethodOnChange}
+            requestUrlOnChange={requestUrlOnChange}
+            requestQueryParamsOnChange={requestQueryParamsOnChange}
+            requestAddHeadersOnChange={requestAddHeadersOnChange}
+            requestBodyOnChange={requestBodyOnChange}
+            requestSampleInputOnChange={requestSampleInputOnChange}
+            requestContentTypeOnChange={requestContentTypeOnChange}
+            requestUrlTransformOnChange={requestUrlTransformOnChange}
+            requestPayloadTransformOnChange={requestPayloadTransformOnChange}
+            responsePayloadTransformOnChange={responsePayloadTransformOnChange}
+            responseBodyOnChange={responseBodyOnChange}
+          />
+
+          <div ref={createActionRef}>
+            <Analytics
+              name="actions-tab-create-action-button"
+              passHtmlAttributesToChildren
+            >
+              <Button
+                mode="primary"
+                size="md"
+                type="submit"
+                disabled={!allowSave}
+                onClick={onSubmit}
+                data-test="create-action-btn"
+              >
+                Create Action
+              </Button>
+            </Analytics>
+            {readOnlyMode && (
+              <IconTooltip message="Adding new action is not allowed in Read only mode!" />
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

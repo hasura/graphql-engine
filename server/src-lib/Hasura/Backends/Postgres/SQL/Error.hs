@@ -22,24 +22,24 @@ where
 
 import Control.Lens.TH (makePrisms)
 import Data.Text qualified as T
-import Database.PG.Query.Connection qualified as Q
+import Database.PG.Query.Connection qualified as PG
 import Hasura.Prelude
 
 -- | The top-level error code type. Errors in Postgres are divided into different /classes/, which
 -- are further subdivided into individual error codes. Even if a particular status code is not known
 -- to the application, it’s possible to determine its class and handle it appropriately.
 data PGErrorType
-  = PGDataException !(Maybe (PGErrorCode PGDataException))
-  | PGIntegrityConstraintViolation !(Maybe (PGErrorCode PGIntegrityConstraintViolation))
-  | PGSyntaxErrorOrAccessRuleViolation !(Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
-  | PGTransactionRollback !(Maybe (PGErrorCode PGTransactionRollback))
+  = PGDataException (Maybe (PGErrorCode PGDataException))
+  | PGIntegrityConstraintViolation (Maybe (PGErrorCode PGIntegrityConstraintViolation))
+  | PGSyntaxErrorOrAccessRuleViolation (Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
+  | PGTransactionRollback (Maybe (PGErrorCode PGTransactionRollback))
   deriving (Show, Eq)
 
 data PGErrorCode a
   = -- | represents errors that have the non-specific @000@ status code
     PGErrorGeneric
   | -- | represents errors with a known, more specific status code
-    PGErrorSpecific !a
+    PGErrorSpecific a
   deriving (Show, Eq, Functor)
 
 data PGDataException
@@ -70,9 +70,9 @@ data PGTransactionRollback
 $(makePrisms ''PGErrorType)
 $(makePrisms ''PGErrorCode)
 
-pgErrorType :: Q.PGStmtErrDetail -> Maybe PGErrorType
+pgErrorType :: PG.PGStmtErrDetail -> Maybe PGErrorType
 pgErrorType errorDetails = do
-  parseTypes =<< Q.edStatusCode errorDetails
+  parseTypes =<< PG.edStatusCode errorDetails
   where
     parseTypes fullCodeText =
       choice

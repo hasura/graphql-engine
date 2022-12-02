@@ -17,6 +17,7 @@ import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import GHC.Generics.Extended (constrName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
@@ -26,22 +27,24 @@ import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
+import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Network
+import Hasura.RQL.DDL.OpenTelemetry
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
-import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
+import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -49,24 +52,27 @@ import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata (GetCatalogState, SetCatalogState, emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
+import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
@@ -79,12 +85,16 @@ data RQLMetadataV1
   | RMDropSource DropSource
   | RMRenameSource !RenameSource
   | RMUpdateSource !(AnyBackend UpdateSource)
+  | RMListSourceKinds !ListSourceKinds
+  | RMGetSourceKindCapabilities !GetSourceKindCapabilities
+  | RMGetSourceTables !GetSourceTables
+  | RMGetTableInfo !GetTableInfo
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
-  | -- Tables (PG-specific)
-    RMPgSetTableIsEnum !SetTableIsEnum
+  | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
+  | RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
   | -- Tables permissions
     RMCreateInsertPermission !(AnyBackend (CreatePerm InsPerm))
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
@@ -120,6 +130,9 @@ data RQLMetadataV1
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
+  | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
+  | RMResumeEventTriggerCleanup !TriggerLogCleanupToggleConfig
+  | RMPauseEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
   | RMUpdateRemoteSchema !AddRemoteSchemaQuery
@@ -139,7 +152,7 @@ data RQLMetadataV1
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
-  | RMGetEventInvocations !GetEventInvocations
+  | RMGetScheduledEventInvocations !GetScheduledEventInvocations
   | RMGetCronTriggers
   | -- Actions
     RMCreateAction !(Unvalidated CreateAction)
@@ -149,6 +162,7 @@ data RQLMetadataV1
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
     RMCreateQueryCollection !CreateCollection
+  | RMRenameQueryCollection !RenameCollection
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
@@ -158,6 +172,9 @@ data RQLMetadataV1
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint
+  | -- GraphQL Data Connectors
+    RMDCAddAgent !DCAddAgent
+  | RMDCDeleteAgent !DCDeleteAgent
   | -- Custom types
     RMSetCustomTypes !CustomTypes
   | -- Api limits
@@ -183,6 +200,9 @@ data RQLMetadataV1
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
   | -- QueryTags
     RMSetQueryTagsConfig !SetQueryTagsConfig
+  | -- OpenTelemetry
+    RMSetOpenTelemetryConfig !OpenTelemetryConfig
+  | RMSetOpenTelemetryStatus !OtelStatus
   | -- Debug
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
@@ -190,6 +210,10 @@ data RQLMetadataV1
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
+  deriving (Generic)
+
+-- NOTE! If you add a new request type here that is read-only, make sure to
+--       update queryModifiesMetadata
 
 instance FromJSON RQLMetadataV1 where
   parseJSON = withObject "RQLMetadataV1" \o -> do
@@ -209,12 +233,15 @@ instance FromJSON RQLMetadataV1 where
       "create_remote_schema_remote_relationship" -> RMCreateRemoteSchemaRemoteRelationship <$> args
       "update_remote_schema_remote_relationship" -> RMUpdateRemoteSchemaRemoteRelationship <$> args
       "delete_remote_schema_remote_relationship" -> RMDeleteRemoteSchemaRemoteRelationship <$> args
+      "cleanup_event_trigger_logs" -> RMCleanupEventTriggerLog <$> args
+      "resume_event_trigger_cleanups" -> RMResumeEventTriggerCleanup <$> args
+      "pause_event_trigger_cleanups" -> RMPauseEventTriggerCleanup <$> args
       "create_cron_trigger" -> RMCreateCronTrigger <$> args
       "delete_cron_trigger" -> RMDeleteCronTrigger <$> args
       "create_scheduled_event" -> RMCreateScheduledEvent <$> args
       "delete_scheduled_event" -> RMDeleteScheduledEvent <$> args
       "get_scheduled_events" -> RMGetScheduledEvents <$> args
-      "get_event_invocations" -> RMGetEventInvocations <$> args
+      "get_scheduled_event_invocations" -> RMGetScheduledEventInvocations <$> args
       "get_cron_triggers" -> pure RMGetCronTriggers
       "create_action" -> RMCreateAction <$> args
       "drop_action" -> RMDropAction <$> args
@@ -222,6 +249,7 @@ instance FromJSON RQLMetadataV1 where
       "create_action_permission" -> RMCreateActionPermission <$> args
       "drop_action_permission" -> RMDropActionPermission <$> args
       "create_query_collection" -> RMCreateQueryCollection <$> args
+      "rename_query_collection" -> RMRenameQueryCollection <$> args
       "drop_query_collection" -> RMDropQueryCollection <$> args
       "add_query_to_collection" -> RMAddQueryToCollection <$> args
       "drop_query_from_collection" -> RMDropQueryFromCollection <$> args
@@ -230,6 +258,12 @@ instance FromJSON RQLMetadataV1 where
       "update_scope_of_collection_in_allowlist" -> RMUpdateScopeOfCollectionInAllowlist <$> args
       "create_rest_endpoint" -> RMCreateRestEndpoint <$> args
       "drop_rest_endpoint" -> RMDropRestEndpoint <$> args
+      "dc_add_agent" -> RMDCAddAgent <$> args
+      "dc_delete_agent" -> RMDCDeleteAgent <$> args
+      "list_source_kinds" -> RMListSourceKinds <$> args
+      "get_source_kind_capabilities" -> RMGetSourceKindCapabilities <$> args
+      "get_source_tables" -> RMGetSourceTables <$> args
+      "get_table_info" -> RMGetTableInfo <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
       "set_api_limits" -> RMSetApiLimits <$> args
       "remove_api_limits" -> pure RMRemoveApiLimits
@@ -251,29 +285,42 @@ instance FromJSON RQLMetadataV1 where
       "set_graphql_schema_introspection_options" -> RMSetGraphqlSchemaIntrospectionOptions <$> args
       "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
+      "set_opentelemetry_config" -> RMSetOpenTelemetryConfig <$> args
+      "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
       "bulk" -> RMBulk <$> args
-      -- backend specific
+      -- Backend prefixed metadata actions:
       _ -> do
+        -- 1) Parse the backend source kind and metadata command:
         (backendSourceKind, cmd) <- parseQueryType queryType
         dispatchAnyBackend @BackendAPI backendSourceKind \(backendSourceKind' :: BackendSourceKind b) -> do
+          -- 2) Parse the args field:
           argValue <- args
+          -- 2) Attempt to run all the backend specific command parsers against the source kind, cmd, and arg:
+          -- NOTE: If parsers succeed then this will pick out the first successful one.
           command <- choice <$> sequenceA [p backendSourceKind' cmd argValue | p <- metadataV1CommandParsers @b]
           onNothing command $
             fail $
-              "unknown metadata command \"" <> T.unpack cmd
+              "unknown metadata command \""
+                <> T.unpack cmd
                 <> "\" for backend "
                 <> T.unpack (T.toTxt backendSourceKind')
-    where
-      parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
-      parseQueryType queryType =
-        let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
-         in (,cmd) <$> backendSourceKindFromText prefix
-              `onNothing` fail
-                ( "unknown metadata command \"" <> T.unpack queryType
-                    <> "\"; \""
-                    <> T.unpack prefix
-                    <> "\" was not recognized as a valid backend name"
-                )
+
+-- | Parse the Metadata API action type returning a tuple of the
+-- 'BackendSourceKind' and the action suffix.
+--
+-- For example: @"pg_add_source"@ parses as @(PostgresVanillaValue, "add_source")@
+parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
+parseQueryType queryType =
+  let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
+   in (,cmd)
+        <$> backendSourceKindFromText prefix
+        `onNothing` fail
+          ( "unknown metadata command \""
+              <> T.unpack queryType
+              <> "\"; \""
+              <> T.unpack prefix
+              <> "\" was not recognized as a valid backend name"
+          )
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
@@ -300,6 +347,9 @@ instance FromJSON RQLMetadataRequest where
       VIVersion1 -> RMV1 <$> parseJSON val
       VIVersion2 -> RMV2 <$> parseJSON val
 
+-- | The payload for the @/v1/metadata@ endpoint. See:
+--
+-- https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index/
 data RQLMetadata = RQLMetadata
   { _rqlMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
     _rqlMetadata :: !RQLMetadataRequest
@@ -316,7 +366,8 @@ runMetadataQuery ::
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -328,11 +379,19 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
-  (metadata, currentResourceVersion) <- fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+  let exportsMetadata = \case
+        RMV1 (RMExportMetadata _) -> True
+        RMV2 (RMV2ExportMetadata _) -> True
+        _ -> False
+      metadataDefaults =
+        if (exportsMetadata _rqlMetadata)
+          then emptyMetadataDefaults
+          else _sccMetadataDefaults serverConfigCtx
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env currentResourceVersion _rqlMetadata
       & flip runReaderT logger
-      & runMetadataT metadata
+      & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
       & peelRun (RunCtx userInfo httpManager serverConfigCtx)
       & runExceptT
@@ -342,16 +401,33 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
-        newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Attempting to put new metadata in storage"
+        newResourceVersion <-
+          Tracing.trace "setMetadata" $
+            setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Put new metadata in storage, received new resource version " <> tshow newResourceVersion
 
         -- notify schema cache sync
-        notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+        Tracing.trace "notifySchemaCacheSync" $
+          notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Sent schema cache sync notification at resource version " <> tshow newResourceVersion
+
         (_, modSchemaCache', _) <-
-          setMetadataResourceVersionInSchemaCache newResourceVersion
-            & runCacheRWT modSchemaCache
-            & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-            & runExceptT
-            & liftEitherM
+          Tracing.trace "setMetadataResourceVersionInSchemaCache" $
+            setMetadataResourceVersionInSchemaCache newResourceVersion
+              & runCacheRWT modSchemaCache
+              & peelRun (RunCtx userInfo httpManager serverConfigCtx)
+              & runExceptT
+              & liftEitherM
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -374,14 +450,102 @@ queryModifiesMetadata = \case
       RMSetCatalogState _ -> False
       RMGetCatalogState _ -> False
       RMExportMetadata _ -> False
-      RMGetEventInvocations _ -> False
+      RMGetScheduledEventInvocations _ -> False
       RMGetCronTriggers -> False
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
       RMTestWebhookTransform _ -> False
+      RMGetSourceKindCapabilities _ -> False
+      RMListSourceKinds _ -> False
+      RMGetSourceTables _ -> False
+      RMGetTableInfo _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
-      _ -> True
+      -- We used to assume that the fallthrough was True,
+      -- but it is better to be explicit here to warn when new constructors are added.
+      RMAddSource _ -> True
+      RMDropSource _ -> True
+      RMRenameSource _ -> True
+      RMUpdateSource _ -> True
+      RMTrackTable _ -> True
+      RMUntrackTable _ -> True
+      RMSetTableCustomization _ -> True
+      RMSetApolloFederationConfig _ -> True
+      RMPgSetTableIsEnum _ -> True
+      RMCreateInsertPermission _ -> True
+      RMCreateSelectPermission _ -> True
+      RMCreateUpdatePermission _ -> True
+      RMCreateDeletePermission _ -> True
+      RMDropInsertPermission _ -> True
+      RMDropSelectPermission _ -> True
+      RMDropUpdatePermission _ -> True
+      RMDropDeletePermission _ -> True
+      RMSetPermissionComment _ -> True
+      RMCreateObjectRelationship _ -> True
+      RMCreateArrayRelationship _ -> True
+      RMDropRelationship _ -> True
+      RMSetRelationshipComment _ -> True
+      RMRenameRelationship _ -> True
+      RMCreateRemoteRelationship _ -> True
+      RMUpdateRemoteRelationship _ -> True
+      RMDeleteRemoteRelationship _ -> True
+      RMTrackFunction _ -> True
+      RMUntrackFunction _ -> True
+      RMSetFunctionCustomization _ -> True
+      RMCreateFunctionPermission _ -> True
+      RMDropFunctionPermission _ -> True
+      RMAddComputedField _ -> True
+      RMDropComputedField _ -> True
+      RMCreateEventTrigger _ -> True
+      RMDeleteEventTrigger _ -> True
+      RMCleanupEventTriggerLog _ -> True
+      RMResumeEventTriggerCleanup _ -> True
+      RMPauseEventTriggerCleanup _ -> True
+      RMAddRemoteSchema _ -> True
+      RMUpdateRemoteSchema _ -> True
+      RMRemoveRemoteSchema _ -> True
+      RMReloadRemoteSchema _ -> True
+      RMAddRemoteSchemaPermissions _ -> True
+      RMDropRemoteSchemaPermissions _ -> True
+      RMCreateRemoteSchemaRemoteRelationship _ -> True
+      RMUpdateRemoteSchemaRemoteRelationship _ -> True
+      RMDeleteRemoteSchemaRemoteRelationship _ -> True
+      RMCreateCronTrigger _ -> True
+      RMDeleteCronTrigger _ -> True
+      RMCreateAction _ -> True
+      RMDropAction _ -> True
+      RMUpdateAction _ -> True
+      RMCreateActionPermission _ -> True
+      RMDropActionPermission _ -> True
+      RMCreateQueryCollection _ -> True
+      RMRenameQueryCollection _ -> True
+      RMDropQueryCollection _ -> True
+      RMAddQueryToCollection _ -> True
+      RMDropQueryFromCollection _ -> True
+      RMAddCollectionToAllowlist _ -> True
+      RMDropCollectionFromAllowlist _ -> True
+      RMUpdateScopeOfCollectionInAllowlist _ -> True
+      RMCreateRestEndpoint _ -> True
+      RMDropRestEndpoint _ -> True
+      RMDCAddAgent _ -> True
+      RMDCDeleteAgent _ -> True
+      RMSetCustomTypes _ -> True
+      RMSetApiLimits _ -> True
+      RMRemoveApiLimits -> True
+      RMSetMetricsConfig _ -> True
+      RMRemoveMetricsConfig -> True
+      RMAddInheritedRole _ -> True
+      RMDropInheritedRole _ -> True
+      RMReplaceMetadata _ -> True
+      RMClearMetadata _ -> True
+      RMReloadMetadata _ -> True
+      RMDropInconsistentMetadata _ -> True
+      RMSetGraphqlSchemaIntrospectionOptions _ -> True
+      RMAddHostToTLSAllowlist _ -> True
+      RMDropHostFromTLSAllowlist _ -> True
+      RMSetQueryTagsConfig _ -> True
+      RMSetOpenTelemetryConfig _ -> True
+      RMSetOpenTelemetryStatus _ -> True
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -398,7 +562,8 @@ runMetadataQueryM ::
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -406,8 +571,14 @@ runMetadataQueryM ::
   m EncJSON
 runMetadataQueryM env currentResourceVersion =
   withPathK "args" . \case
-    RMV1 q -> runMetadataQueryV1M env currentResourceVersion q
-    RMV2 q -> runMetadataQueryV2M currentResourceVersion q
+    -- NOTE: This is a good place to install tracing, since it's involved in
+    -- the recursive case via "bulk":
+    RMV1 q ->
+      Tracing.trace ("v1 " <> T.pack (constrName q)) $
+        runMetadataQueryV1M env currentResourceVersion q
+    RMV2 q ->
+      Tracing.trace ("v2 " <> T.pack (constrName q)) $
+        runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
   forall m r.
@@ -421,7 +592,8 @@ runMetadataQueryV1M ::
     MonadMetadataStorageQueryAPI m,
     HasServerConfigCtx m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   MetadataResourceVersion ->
@@ -432,11 +604,16 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropSource q -> runDropSource q
   RMRenameSource q -> runRenameSource q
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
+  RMListSourceKinds q -> runListSourceKinds q
+  RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
+  RMGetSourceTables q -> runGetSourceTables env q
+  RMGetTableInfo q -> runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
-  RMUntrackTable q -> dispatchMetadata runUntrackTableQ q
+  RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
-  RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
+  RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
+  RMPgSetTableIsEnum q -> dispatchMetadata runSetExistingTableIsEnumQ q
   RMCreateInsertPermission q -> dispatchMetadata runCreatePerm q
   RMCreateSelectPermission q -> dispatchMetadata runCreatePerm q
   RMCreateUpdatePermission q -> dispatchMetadata runCreatePerm q
@@ -464,12 +641,16 @@ runMetadataQueryV1M env currentResourceVersion = \case
     dispatchMetadataAndEventTrigger
       ( validateTransforms
           (unUnvalidate1 . cetqRequestTransform . _Just)
+          (unUnvalidate1 . cetqResponseTrasnform . _Just)
           (runCreateEventTriggerQuery . _unUnvalidate1)
       )
       q
   RMDeleteEventTrigger q -> dispatchMetadataAndEventTrigger runDeleteEventTriggerQuery q
   RMRedeliverEvent q -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q -> dispatchEventTrigger runInvokeEventTrigger q
+  RMCleanupEventTriggerLog q -> runCleanupEventTriggerLog q
+  RMResumeEventTriggerCleanup q -> runEventTriggerResumeCleanup q
+  RMPauseEventTriggerCleanup q -> runEventTriggerPauseCleanup q
   RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q -> runUpdateRemoteSchema env q
   RMRemoveRemoteSchema q -> runRemoveRemoteSchema q
@@ -483,28 +664,32 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateCronTrigger q ->
     validateTransforms
       (unUnvalidate . cctRequestTransform . _Just)
+      (unUnvalidate . cctResponseTransform . _Just)
       (runCreateCronTrigger . _unUnvalidate)
       q
   RMDeleteCronTrigger q -> runDeleteCronTrigger q
   RMCreateScheduledEvent q -> runCreateScheduledEvent q
   RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
   RMGetScheduledEvents q -> runGetScheduledEvents q
-  RMGetEventInvocations q -> runGetEventInvocations q
+  RMGetScheduledEventInvocations q -> runGetScheduledEventInvocations q
   RMGetCronTriggers -> runGetCronTriggers
   RMCreateAction q ->
     validateTransforms
       (unUnvalidate . caDefinition . adRequestTransform . _Just)
+      (unUnvalidate . caDefinition . adResponseTransform . _Just)
       (runCreateAction . _unUnvalidate)
       q
   RMDropAction q -> runDropAction q
   RMUpdateAction q ->
     validateTransforms
       (unUnvalidate . uaDefinition . adRequestTransform . _Just)
+      (unUnvalidate . uaDefinition . adResponseTransform . _Just)
       (runUpdateAction . _unUnvalidate)
       q
   RMCreateActionPermission q -> runCreateActionPermission q
   RMDropActionPermission q -> runDropActionPermission q
   RMCreateQueryCollection q -> runCreateCollection q
+  RMRenameQueryCollection q -> runRenameCollection q
   RMDropQueryCollection q -> runDropCollection q
   RMAddQueryToCollection q -> runAddQueryToCollection q
   RMDropQueryFromCollection q -> runDropQueryFromCollection q
@@ -513,6 +698,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMUpdateScopeOfCollectionInAllowlist q -> runUpdateScopeOfCollectionInAllowlist q
   RMCreateRestEndpoint q -> runCreateEndpoint q
   RMDropRestEndpoint q -> runDropEndpoint q
+  RMDCAddAgent q -> runAddDataConnectorAgent q
+  RMDCDeleteAgent q -> runDeleteDataConnectorAgent q
   RMSetCustomTypes q -> runSetCustomTypes q
   RMSetApiLimits q -> runSetApiLimits q
   RMRemoveApiLimits -> runRemoveApiLimits
@@ -534,10 +721,13 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetCatalogState q -> runSetCatalogState q
   RMTestWebhookTransform q ->
     validateTransforms
-      (unUnvalidate . twtTransformer)
+      (unUnvalidate . twtRequestTransformer)
+      (unUnvalidate . twtResponseTransformer . _Just)
       (runTestWebhookTransform . _unUnvalidate)
       q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
+  RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
+  RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
     dispatchMetadata ::
@@ -558,10 +748,12 @@ runMetadataQueryV1M env currentResourceVersion = \case
 runMetadataQueryV2M ::
   ( MonadIO m,
     CacheRWM m,
+    MonadBaseControl IO m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   MetadataResourceVersion ->
   RQLMetadataV2 ->

@@ -1,5 +1,5 @@
 ---
-description: How Hasura GraphQL engine works
+description: How Hasura GraphQL Engine works
 keywords:
   - hasura
   - docs
@@ -9,43 +9,62 @@ keywords:
 slug: index
 ---
 
-# How Hasura GraphQL engine works
+# How Hasura GraphQL Engine works
 
 ## Introduction
 
-Given a database, the Hasura GraphQL engine can automatically generate a GraphQL schema and process GraphQL queries,
-subscriptions and mutations. Here’s what the Hasura GraphQL engine does under the hood.
+The Hasura GraphQL Engine automatically generates a unified GraphQL schema from your databases, REST
+endpoints, GraphQL endpoints and other sources allowing you to connect data together and work with it faster and more
+powerfully than ever before. Hasura also comprises other features and services to provide a full-featured backend
+engine for powering your API.
 
-## Schema generation
+## Databases
 
-The Hasura GraphQL engine automatically generates GraphQL schema components when you track a table/view in Hasura
-and create relationships between them.
+Given a database, the Hasura GraphQL Engine automatically generates a GraphQL schema and processes GraphQL queries,
+subscriptions and mutations.
 
-### Tables
+By default, Hasura supports [PostgreSQL and the multiple other databases](/databases/index.mdx#supported-databases).
 
-When you track a table in the Hasura GraphQL engine, it automatically generates the following for it:
+## Tracking Tables & Schema Generation
 
-- A GraphQL type definition for the table
-- A query field with `where`, `order_by`, `limit` and `offset` arguments
-- A subscription field with `where`, `order_by`, `limit` and `offset` arguments
-- An insert mutation field with `on_conflict` argument that supports upsert and bulk inserts
-- An update mutation field with `where` argument that supports bulk updates
-- A delete mutation field with `where` argument that supports bulk deletes
+When you track a table in the Hasura GraphQL Engine, it automatically generates the following for it:
 
-### Views
+- A GraphQL __*type definition*__ for the table
 
-When you track a view in Hasura GraphQL engine, it automatically generates the following for it:
 
-- A GraphQL type definition for the view
-- A query field with `where`, `order_by`, `limit` and `offset` arguments
-- A subscription field with `where`, `order_by`, `limit` and `offset` arguments
+- A __*query*__ field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments.
+- A __*query by primary key*__ field.
+- A __*query aggregate*__ field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments and
+returning, `count`, `max`, `min`, `sum` and many other aggregates.
 
-Essentially the Hasura GraphQL engine does the same thing it would do for a table, but without creating the insert,
-update and delete mutations.
 
-### Relationships
+- An __*insert mutation*__ field with `on_conflict` argument that supports upsert and bulk inserts.
+- An __*insert one mutation*__ field with `on_conflict` argument that supports upsert.
 
-When you create a relationship between a table/view with another table/view in the Hasura GraphQL engine, it does
+
+- An __*update mutation*__ field with `where` argument that supports bulk updates.
+- An __*update by primary key mutation*__ field.
+
+
+- A __*delete mutation*__ field with `where` argument that supports bulk deletes.
+- A __*delete by primary key mutation*__ field.
+
+
+- A __*subscription*__ field with `where`, `order_by`, `limit` and `offset` arguments.
+- A __*subscription by primary key*__ field.
+- A __*subscription aggregate*__ field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments and
+returning, `count`, `max`, `min`, `sum` and many other aggregates.
+- A __*subscription stream*__ field with `where`, and `cursor` arguments.
+
+## Views
+
+When you track a view with a [database which supports views](/databases/index.mdx#schema) in Hasura GraphQL Engine,
+it also automatically generates the same as the above but without the `_by_pk`  fields. Depending on the type of
+view created, Hasura may not generate the `insert`, `update` and `delete` mutation fields.
+
+## Relationships
+
+When you create a relationship between a table/view with another table/view in the Hasura GraphQL Engine, it does
 the following:
 
 - Augments the type of the table/view by adding a reference to the nested type to allow fetching nested objects.
@@ -53,16 +72,44 @@ the following:
 
 ## Resolvers
 
-The Hasura GraphQL engine does not have any resolvers. The Hasura GraphQL engine is actually a compiler that
+The Hasura GraphQL Engine does not have any resolvers. The Hasura GraphQL Engine is actually a compiler that
 compiles your GraphQL query into an efficient SQL query.
 
-Hasura's GraphQL syntax is also optimized to expose the power of the underlying SQL so that you can make powerful
+Hasura's GraphQL syntax is also optimized to expose the power of the underlying SQL so that you can make optimized
 queries via GraphQL.
 
 ## Metadata
 
-All the information required for schema generation is stored by the Hasura GraphQL engine as Metadata as a JSON blob in
-a "catalogue" which is a Postgres schema in the specified Metadata database.
+Hasura Metadata is the description of the exposed Hasura GraphQL API and all other configuration. All the
+information required for schema generation is stored by the Hasura GraphQL Engine as Metadata as a JSON blob in
+a "catalogue" which is a Postgres schema in the specified Metadata database. When using the Hasura CLI, Hasura
+Metadata is [exposed as yaml files](/migrations-metadata-seeds/manage-metadata.mdx) which can be checked into
+version control to keep the your codebase in-sync with your database schema and Hasura changes.
+
+See [metadata format](/migrations-metadata-seeds/metadata-format.mdx) for more details.
+
+## Authorization
+
+Hasura uses attribute-based authorization where access control is done by creating rules for each model. For
+example, in the case of database tables, you can create rules for database operations (select, insert, update,
+delete) and the permissions that it must enforce in each case. These access control rules use dynamic session
+variables that are passed to the GraphQL Engine from your authentication service with every request.
+
+## Actions
+
+Actions are a way to extend Hasura's schema with REST APIs. You need to provide the schema for the API and the REST
+API endpoint which is then called for resolving the result.
+
+## Remote Schemas
+
+Using Remote Schemas you can add an existing GraphQL API into Hasura. You just have to provide the endpoint for it.
+Hasura will introspect and merge the API into the existing schema. Additionally, you can provide permissions for the
+remote schemas and create relationships with other models in Hasura too.
+
+## Event Triggers
+
+Event triggers use database triggers to capture DML activity and sends it reliably (at least once) to a configured
+webhook.
 
 ## Hasura Cloud
 
@@ -71,5 +118,23 @@ Hasura instances in seconds and includes extra reliability, monitoring, caching,
 features. You can also deploy Hasura manually using our Community Edition Docker image which includes all the core
 features of GraphQL Engine.
 
+[//]: # (## Hasura Cloud Projects)
 
-See [metadata format](/migrations-metadata-seeds/metadata-format.mdx) for more details.
+[//]: # (## Hasura Security)
+
+[//]: # (### Authentication - Hasura allows you to integrate your own authentication solution whether it be Auth0,
+Firebase Authentication or a custom implementation with either JWT or webhooks)
+
+[//]: # (## Scheduled Triggers)
+
+[//]: # (## Data Federation &#40;Linking it together, relationships, data connectors&#41;)
+
+[//]: # (## Deployment options &#40;GitHub Integration, Preview apps, Docker, Kubernetes&#41;)
+
+[//]: # (## Simple user interfaces &#40;console, hasura CLI&#41;)
+
+[//]: # (## Observability)
+
+[//]: # (## Hasura Enterprise)
+
+

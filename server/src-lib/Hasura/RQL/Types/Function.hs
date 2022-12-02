@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.Types.Function
@@ -42,6 +43,18 @@ module Hasura.RQL.Types.Function
   )
 where
 
+import Autodocodec
+  ( HasCodec (codec),
+    bimapCodec,
+    dimapCodec,
+    optionalField',
+    optionalFieldWith',
+    optionalFieldWithDefault',
+    requiredField',
+    stringConstCodec,
+  )
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing
@@ -52,7 +65,6 @@ import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Incremental (Cacheable)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -71,8 +83,6 @@ data FunctionVolatility
 
 instance NFData FunctionVolatility
 
-instance Cacheable FunctionVolatility
-
 $(deriveJSON defaultOptions {constructorTagModifier = drop 2} ''FunctionVolatility)
 
 funcTypToTxt :: FunctionVolatility -> Text
@@ -84,11 +94,14 @@ instance Show FunctionVolatility where
   show = T.unpack . funcTypToTxt
 
 newtype FunctionArgName = FunctionArgName {getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Cacheable, Hashable, Lift, Data)
+  deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Hashable, Lift, Data)
+
+instance HasCodec FunctionArgName where
+  codec = dimapCodec FunctionArgName getFuncArgNameTxt codec
 
 data InputArgument a
-  = IAUserProvided !a
-  | IASessionVariables !FunctionArgName
+  = IAUserProvided a
+  | IASessionVariables FunctionArgName
   deriving (Show, Eq, Functor)
 
 $( deriveToJSON
@@ -109,7 +122,8 @@ data FunctionExposedAs = FEAQuery | FEAMutation
 
 instance NFData FunctionExposedAs
 
-instance Cacheable FunctionExposedAs
+instance HasCodec FunctionExposedAs where
+  codec = stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
 
 $( deriveJSON
      defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
@@ -121,7 +135,10 @@ newtype FunctionPermissionInfo = FunctionPermissionInfo
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable FunctionPermissionInfo
+instance HasCodec FunctionPermissionInfo where
+  codec =
+    AC.object "FunctionPermissionInfo" $
+      FunctionPermissionInfo <$> requiredField' "role" AC..= _fpmRole
 
 $(makeLenses ''FunctionPermissionInfo)
 $(deriveJSON hasuraJSON ''FunctionPermissionInfo)
@@ -140,7 +157,20 @@ data FunctionCustomRootFields = FunctionCustomRootFields
 
 instance NFData FunctionCustomRootFields
 
-instance Cacheable FunctionCustomRootFields
+instance HasCodec FunctionCustomRootFields where
+  codec =
+    bimapCodec checkForDup id $
+      AC.object "FunctionCustomRootFields" $
+        FunctionCustomRootFields
+          <$> optionalFieldWith' "function" graphQLFieldNameCodec AC..= _fcrfFunction
+          <*> optionalFieldWith' "function_aggregate" graphQLFieldNameCodec AC..= _fcrfFunctionAggregate
+    where
+      checkForDup (FunctionCustomRootFields (Just f) (Just fa))
+        | f == fa =
+            Left $
+              T.unpack $
+                "the following custom root field names are duplicated: " <> toTxt f <<> " and " <>> toTxt fa
+      checkForDup fields = Right fields
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionCustomRootFields)
 
@@ -152,10 +182,10 @@ instance FromJSON FunctionCustomRootFields where
     case (function, functionAggregate) of
       (Just f, Just fa)
         | f == fa ->
-          fail $
-            T.unpack $
-              "the following custom root field names are duplicated: "
-                <> toTxt f <<> " and " <>> toTxt fa
+            fail $
+              T.unpack $
+                "the following custom root field names are duplicated: "
+                  <> toTxt f <<> " and " <>> toTxt fa
       _ ->
         pure ()
 
@@ -288,7 +318,14 @@ data FunctionConfig = FunctionConfig
 
 instance NFData FunctionConfig
 
-instance Cacheable FunctionConfig
+instance HasCodec FunctionConfig where
+  codec =
+    AC.object "FunctionConfig" $
+      FunctionConfig
+        <$> optionalField' "session_argument" AC..= _fcSessionArgument
+        <*> optionalField' "exposed_as" AC..= _fcExposedAs
+        <*> optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields AC..= _fcCustomRootFields
+        <*> optionalFieldWith' "custom_name" graphQLFieldNameCodec AC..= _fcCustomName
 
 instance FromJSON FunctionConfig where
   parseJSON = withObject "FunctionConfig" $ \obj ->
@@ -314,8 +351,6 @@ data FunctionArgsExpG a = FunctionArgsExp
   deriving stock (Show, Eq, Functor, Foldable, Traversable, Generic)
 
 instance (Hashable a) => Hashable (FunctionArgsExpG a)
-
-instance (Cacheable a) => Cacheable (FunctionArgsExpG a)
 
 instance (NFData a) => NFData (FunctionArgsExpG a)
 

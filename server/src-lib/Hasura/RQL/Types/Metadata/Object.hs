@@ -28,7 +28,6 @@ module Hasura.RQL.Types.Metadata.Object
     _MOCronTrigger,
     _MOCustomTypes,
     _MOEndpoint,
-    _MOHostTlsAllowlist,
     _MOInheritedRole,
     _MORemoteSchema,
     _MORemoteSchemaPermissions,
@@ -40,8 +39,10 @@ where
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as M
-import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -50,60 +51,67 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableMetadataObjId
-  = MTORel !RelName !RelType
-  | MTOComputedField !ComputedFieldName
-  | MTOPerm !RoleName !PermType
-  | MTOTrigger !TriggerName
-  | MTORemoteRelationship !RelName
-  deriving (Show, Eq, Generic)
+  = MTORel RelName RelType
+  | MTOComputedField ComputedFieldName
+  | MTOPerm RoleName PermType
+  | MTOTrigger TriggerName
+  | MTORemoteRelationship RelName
+  deriving (Show, Eq, Ord, Generic)
 
 instance Hashable TableMetadataObjId
 
 data SourceMetadataObjId b
-  = SMOTable !(TableName b)
-  | SMOFunction !(FunctionName b)
-  | SMOFunctionPermission !(FunctionName b) !RoleName
-  | SMOTableObj !(TableName b) !TableMetadataObjId
+  = SMOTable (TableName b)
+  | SMOFunction (FunctionName b)
+  | SMOFunctionPermission (FunctionName b) RoleName
+  | SMOTableObj (TableName b) TableMetadataObjId
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
 
 deriving instance (Backend b) => Eq (SourceMetadataObjId b)
 
+deriving instance (Backend b) => Ord (SourceMetadataObjId b)
+
 instance (Backend b) => Hashable (SourceMetadataObjId b)
 
 data MetadataObjId
-  = MOSource !SourceName
-  | MOSourceObjId !SourceName !(AB.AnyBackend SourceMetadataObjId)
+  = MOSource SourceName
+  | MOSourceObjId SourceName (AB.AnyBackend SourceMetadataObjId)
   | -- | Originates from user-defined '_arsqName'
-    MORemoteSchema !RemoteSchemaName
-  | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
+    MORemoteSchema RemoteSchemaName
+  | MORemoteSchemaPermissions RemoteSchemaName RoleName
   | -- | A remote relationship on a remote schema type, identified by
     -- 1. remote schema name
     -- 2. remote schema type on which the relationship is defined
     -- 3. name of the relationship
-    MORemoteSchemaRemoteRelationship !RemoteSchemaName !G.Name !RelName
+    MORemoteSchemaRemoteRelationship RemoteSchemaName G.Name RelName
   | MOCustomTypes
-  | MOAction !ActionName
-  | MOActionPermission !ActionName !RoleName
-  | MOCronTrigger !TriggerName
-  | MOInheritedRole !RoleName
-  | MOEndpoint !EndpointName
-  | MOHostTlsAllowlist !String
-  | MOQueryCollectionsQuery !CollectionName !ListedQuery
-  deriving (Show, Eq, Generic)
+  | MOAction ActionName
+  | MOActionPermission ActionName RoleName
+  | MOCronTrigger TriggerName
+  | MOInheritedRole RoleName
+  | MOEndpoint EndpointName
+  | MOQueryCollectionsQuery CollectionName ListedQuery
+  | MODataConnectorAgent DataConnectorName
+  | MOOpenTelemetry OpenTelemetryConfigSubobject
+  deriving (Show, Eq, Ord, Generic)
 
 $(makePrisms ''MetadataObjId)
 
 instance Hashable MetadataObjId
+
+instance ToErrorValue MetadataObjId where
+  toErrorValue = toErrorMessage . moiName
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
@@ -118,8 +126,9 @@ moiTypeName = \case
   MOActionPermission _ _ -> "action_permission"
   MOInheritedRole _ -> "inherited_role"
   MOEndpoint _ -> "rest_endpoint"
-  MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
   MOQueryCollectionsQuery _ _ -> "query_collections"
+  MODataConnectorAgent _ -> "data_connector_agent"
+  MOOpenTelemetry _ -> "open_telemetry"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -142,7 +151,10 @@ moiName objectId =
     MORemoteSchemaPermissions name roleName ->
       toTxt roleName <> " permission in remote schema " <> toTxt name
     MORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
-      "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
+      "remote_relationship "
+        <> toTxt relationshipName
+        <> " on type "
+        <> G.unName typeName
         <> " in remote schema "
         <> toTxt remoteSchemaName
     MOCronTrigger name -> toTxt name
@@ -151,8 +163,12 @@ moiName objectId =
     MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
     MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
     MOEndpoint name -> toTxt name
-    MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
     MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
+    MODataConnectorAgent agentName -> toTxt agentName
+    MOOpenTelemetry subobject -> case subobject of
+      OtelSubobjectAll -> "all"
+      OtelSubobjectExporterOtlp -> "exporter_otlp"
+      OtelSubobjectBatchSpanProcessor -> "batch_span_processor"
   where
     handleSourceObj ::
       forall b.
@@ -164,7 +180,8 @@ moiName objectId =
       SMOTable name -> toTxt name <> " in source " <> toTxt source
       SMOFunction name -> toTxt name <> " in source " <> toTxt source
       SMOFunctionPermission functionName roleName ->
-        toTxt roleName <> " permission for function "
+        toTxt roleName
+          <> " permission for function "
           <> toTxt functionName
           <> " in source "
           <> toTxt source
@@ -184,10 +201,10 @@ moiName objectId =
                 )
 
 data MetadataObject = MetadataObject
-  { _moId :: !MetadataObjId,
-    _moDefinition :: !Value
+  { _moId :: MetadataObjId,
+    _moDefinition :: Value
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Hashable MetadataObject
 
@@ -195,14 +212,14 @@ $(makeLenses ''MetadataObject)
 
 data InconsistentRoleEntity
   = InconsistentTablePermission
-      !SourceName
-      !Text
+      SourceName
+      Text
       -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
       -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
       -- use it with `AB.AnyBackend`
-      !PermType
-  | InconsistentRemoteSchemaPermission !RemoteSchemaName
-  deriving stock (Show, Eq, Generic)
+      PermType
+  | InconsistentRemoteSchemaPermission RemoteSchemaName
+  deriving stock (Show, Eq, Ord, Generic)
 
 instance Hashable InconsistentRoleEntity
 
@@ -229,14 +246,14 @@ instance ToJSON InconsistentRoleEntity where
       object ["remote_schema" .= remoteSchemaName]
 
 data InconsistentMetadata
-  = InconsistentObject !Text !(Maybe Value) !MetadataObject
-  | ConflictingObjects !Text ![MetadataObject]
-  | DuplicateObjects !MetadataObjId ![Value]
-  | DuplicateRestVariables !Text !MetadataObject
-  | InvalidRestSegments !Text !MetadataObject
-  | AmbiguousRestEndpoints !Text ![MetadataObject]
-  | ConflictingInheritedPermission !RoleName !InconsistentRoleEntity
-  deriving stock (Show, Eq, Generic)
+  = InconsistentObject Text (Maybe Value) MetadataObject
+  | ConflictingObjects Text [MetadataObject]
+  | DuplicateObjects MetadataObjId [Value]
+  | DuplicateRestVariables Text MetadataObject
+  | InvalidRestSegments Text MetadataObject
+  | AmbiguousRestEndpoints Text [MetadataObject]
+  | ConflictingInheritedPermission RoleName InconsistentRoleEntity
+  deriving stock (Show, Eq, Ord, Generic)
 
 instance Hashable InconsistentMetadata
 

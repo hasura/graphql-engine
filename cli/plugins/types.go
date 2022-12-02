@@ -13,7 +13,8 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"github.com/pkg/errors"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 // Plugins - holds multiple plugins
@@ -33,8 +34,9 @@ func NewPluginVersions() *PluginVersions {
 }
 
 func (i *PluginVersions) Append(p Plugin) (err error) {
+	var op errors.Op = "plugins.PluginVersions.Append"
 	if _, ok := i.Versions[p.ParsedVersion]; ok {
-		return fmt.Errorf("found duplicate versions for plugin %s - %s", p.Name, p.Version)
+		return errors.E(op, fmt.Errorf("found duplicate versions for plugin %s - %s", p.Name, p.Version))
 	}
 
 	i.Versions[p.ParsedVersion] = p
@@ -108,27 +110,28 @@ func (p *Plugin) ParseVersion() {
 // ValidatePlugin checks for structural validity of the Plugin object with given
 // name.
 func (p Plugin) ValidatePlugin(name string) error {
+	var op errors.Op = "plugins.Plugin.ValidatePlugin"
 	if !IsSafePluginName(name) {
-		return errors.Errorf("the plugin name %q is not allowed, must match %q", name, safePluginRegexp.String())
+		return errors.E(op, fmt.Errorf("the plugin name %q is not allowed, must match %q", name, safePluginRegexp.String()))
 	}
 	if p.Name != name {
-		return errors.Errorf("plugin should be named %q, not %q", name, p.Name)
+		return errors.E(op, fmt.Errorf("plugin should be named %q, not %q", name, p.Name))
 	}
 	if p.ShortDescription == "" {
-		return errors.New("should have a short description")
+		return errors.E(op, "should have a short description")
 	}
 	if strings.ContainsAny(p.ShortDescription, "\r\n") {
-		return errors.New("should not have line breaks in short description")
+		return errors.E(op, "should not have line breaks in short description")
 	}
 	if len(p.Platforms) == 0 {
-		return errors.New("should have a platform specified")
+		return errors.E(op, "should have a platform specified")
 	}
 	if p.Version == "" {
-		return errors.New("should have a version specified")
+		return errors.E(op, "should have a version specified")
 	}
 	for _, pl := range p.Platforms {
 		if err := validatePlatform(pl); err != nil {
-			return errors.Wrapf(err, "platform (%+v) is badly constructed", pl)
+			return errors.E(op, fmt.Errorf("platform (%+v) is badly constructed: %w", pl, err))
 		}
 	}
 	return nil

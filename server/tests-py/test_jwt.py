@@ -119,7 +119,7 @@ class TestJWTExpirySkew():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
@@ -388,7 +388,7 @@ class TestJWTBasic():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
@@ -410,7 +410,7 @@ def gen_rsa_key():
 
 class TestSubscriptionJwtExpiry(object):
 
-    def test_jwt_expiry(self, hge_ctx, ws_client):
+    def test_jwt_expiry(self, hge_ctx, hge_key, ws_client):
         curr_time = datetime.now()
         self.claims = {
             'sub': '1234567890',
@@ -433,7 +433,7 @@ class TestSubscriptionJwtExpiry(object):
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         payload = dict()
         payload['headers'] = authz_header
-        init_ws_conn(hge_ctx, ws_client, payload)
+        init_ws_conn(hge_key, ws_client, payload)
         time.sleep(6)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
@@ -512,7 +512,7 @@ class TestJwtAudienceCheck():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
@@ -592,7 +592,7 @@ class TestJwtIssuerCheck():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
         hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield

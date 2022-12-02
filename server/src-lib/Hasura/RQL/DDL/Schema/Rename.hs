@@ -27,33 +27,33 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.Relationships.ToSource
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RenameItem (b :: BackendType) a = RenameItem
-  { _riTable :: !(TableName b),
-    _riOld :: !a,
-    _riNew :: !a
+  { _riTable :: TableName b,
+    _riOld :: a,
+    _riNew :: a
   }
 
 type RenameCol (b :: BackendType) = RenameItem b (Column b)
 
 data RenameField b
-  = RFCol !(RenameCol b)
-  | RFRel !(RenameItem b RelName)
+  = RFCol (RenameCol b)
+  | RFRel (RenameItem b RelName)
 
 type RenameTable b = (TableName b, TableName b)
 
 data Rename b
-  = RTable !(RenameTable b)
-  | RField !(RenameField b)
+  = RTable (RenameTable b)
+  | RField (RenameField b)
 
 otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
 otherDeps errMsg d =
@@ -99,16 +99,16 @@ renameTableInMetadata source newQT oldQT = do
     sobj@(SOSourceObj depSourceName exists)
       | depSourceName == source,
         Just sourceObjId <- AB.unpackAnyBackend @b exists ->
-        case sourceObjId of
-          SOITableObj refQT (TORel rn) ->
-            updateRelDefs @b source refQT rn (oldQT, newQT)
-          SOITableObj refQT (TOPerm rn pt) ->
-            updatePermFlds @b source refQT rn pt $ RTable (oldQT, newQT)
-          -- A trigger's definition is not dependent on the table directly
-          SOITableObj _ (TOTrigger _) -> pure ()
-          -- A remote relationship's definition is not dependent on the table directly
-          SOITableObj _ (TORemoteRel _) -> pure ()
-          _ -> otherDeps errMsg sobj
+          case sourceObjId of
+            SOITableObj refQT (TORel rn) ->
+              updateRelDefs @b source refQT rn (oldQT, newQT)
+            SOITableObj refQT (TOPerm rn pt) ->
+              updatePermFlds @b source refQT rn pt $ RTable (oldQT, newQT)
+            -- A trigger's definition is not dependent on the table directly
+            SOITableObj _ (TOTrigger _) -> pure ()
+            -- A remote relationship's definition is not dependent on the table directly
+            SOITableObj _ (TORemoteRel _) -> pure ()
+            _ -> otherDeps errMsg sobj
     -- the dependend object is a source object in a different source
     sobj@(SOSourceObj depSourceName exists) ->
       AB.dispatchAnyBackend @Backend exists \(sourceObjId :: SourceObjId b') ->
@@ -171,19 +171,19 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
     sobj@(SOSourceObj depSourceName exists)
       | depSourceName == source,
         Just sourceObjId <- AB.unpackAnyBackend @b exists ->
-        case sourceObjId of
-          SOITableObj refQT (TOPerm role pt) ->
-            updatePermFlds @b source refQT role pt $ RField renameFld
-          SOITableObj refQT (TORel rn) ->
-            updateColInRel @b source refQT rn renameItem
-          SOITableObj refQT (TOTrigger triggerName) ->
-            tell $
-              MetadataModifier $
-                tableMetadataSetter @b source refQT . tmEventTriggers . ix triggerName
-                  %~ updateColumnInEventTrigger @b refQT oCol nCol qt
-          SOITableObj _ (TORemoteRel remoteRelName) ->
-            updateColInRemoteRelationshipLHS source remoteRelName renameItem
-          _ -> otherDeps errMsg sobj
+          case sourceObjId of
+            SOITableObj refQT (TOPerm role pt) ->
+              updatePermFlds @b source refQT role pt $ RField renameFld
+            SOITableObj refQT (TORel rn) ->
+              updateColInRel @b source refQT rn renameItem
+            SOITableObj refQT (TOTrigger triggerName) ->
+              tell $
+                MetadataModifier $
+                  tableMetadataSetter @b source refQT . tmEventTriggers . ix triggerName
+                    %~ updateColumnInEventTrigger @b refQT oCol nCol qt
+            SOITableObj _ (TORemoteRel remoteRelName) ->
+              updateColInRemoteRelationshipLHS source remoteRelName renameItem
+            _ -> otherDeps errMsg sobj
     -- the dependend object is a source object in a different source
     sobj@(SOSourceObj depSourceName exists) ->
       AB.dispatchAnyBackend @Backend exists \(sourceObjId :: SourceObjId b') ->
@@ -202,10 +202,13 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
       case M.lookup (fromCol @b oCol) fieldInfo of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $
-            "cannot rename column " <> oCol
-              <<> " to " <> nCol
-              <<> " in table " <> qt
-              <<> " as a relationship with the name already exists"
+            "cannot rename column "
+              <> oCol
+                <<> " to "
+              <> nCol
+                <<> " in table "
+              <> qt
+                <<> " as a relationship with the name already exists"
         _ -> pure ()
 
 renameRelationshipInMetadata ::

@@ -61,12 +61,15 @@ trackFunctionP1 ::
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
   unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
-    throw400 NotExists $ sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
+    throw400 NotExists $
+      sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
-    throw400 AlreadyTracked $ "function already tracked : " <>> qf
+    throw400 AlreadyTracked $
+      "function already tracked: " <>> qf
   let qt = functionToTable @b qf
   when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
-    throw400 NotSupported $ "table with name " <> qf <<> " already exists"
+    throw400 NotSupported $
+      "table with name " <> qf <<> " already exists"
 
 trackFunctionP2 ::
   forall b m.
@@ -79,9 +82,9 @@ trackFunctionP2 ::
 trackFunctionP2 sourceName qf config comment = do
   buildSchemaCacheFor
     (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction @b qf)
-    $ MetadataModifier $
-      metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
-        %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
+    $ MetadataModifier
+    $ metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
+      %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
   pure successMsg
 
 handleMultipleFunctions ::
@@ -109,10 +112,10 @@ runTrackFunc (TrackFunction qf) = do
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
-  { _tfv2Source :: !SourceName,
-    _tfv2Function :: !(FunctionName b),
-    _tfv2Configuration :: !FunctionConfig,
-    _tfv2Comment :: !(Maybe Text)
+  { _tfv2Source :: SourceName,
+    _tfv2Function :: FunctionName b,
+    _tfv2Configuration :: FunctionConfig,
+    _tfv2Comment :: Maybe Text
   }
 
 instance Backend b => FromJSON (TrackFunctionV2 b) where
@@ -136,8 +139,8 @@ runTrackFunctionV2 (TrackFunctionV2 source qf config comment) = do
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
 data UnTrackFunction b = UnTrackFunction
-  { _utfFunction :: !(FunctionName b),
-    _utfSource :: !SourceName
+  { _utfFunction :: FunctionName b,
+    _utfSource :: SourceName
   }
 
 instance (Backend b) => FromJSON (UnTrackFunction b) where
@@ -205,9 +208,9 @@ to false (by default, it's set to true).
 -}
 
 data FunctionPermissionArgument b = FunctionPermissionArgument
-  { _afpFunction :: !(FunctionName b),
-    _afpSource :: !SourceName,
-    _afpRole :: !RoleName
+  { _afpFunction :: FunctionName b,
+    _afpSource :: SourceName,
+    _afpRole :: RoleName
   }
 
 instance (Backend b) => FromJSON (FunctionPermissionArgument b) where
@@ -247,15 +250,15 @@ runCreateFunctionPermission (FunctionPermissionArgument functionName source role
     ( MOSourceObjId source $
         AB.mkAnyBackend (SMOFunctionPermission @b functionName role)
     )
-    $ MetadataModifier $
-      metaSources
-        . ix
-          source
-        . toSourceMetadata
-        . (smFunctions @b)
-        . ix functionName
-        . fmPermissions
-        %~ (:) (FunctionPermissionInfo role)
+    $ MetadataModifier
+    $ metaSources
+      . ix
+        source
+      . toSourceMetadata
+      . (smFunctions @b)
+      . ix functionName
+      . fmPermissions
+      %~ (:) (FunctionPermissionInfo role)
   pure successMsg
 
 dropFunctionPermissionInMetadata ::
@@ -320,13 +323,13 @@ instance (Backend b) => FromJSON (SetFunctionCustomization b) where
 -- | Changes the custom names of a function. Used in the API command 'pg_set_function_customization'.
 runSetFunctionCustomization ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetFunctionCustomization b ->
   m EncJSON
 runSetFunctionCustomization (SetFunctionCustomization source function config) = do
   void $ askFunctionInfo @b source function
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOFunction @b function)
-    $ MetadataModifier $
-      ((functionMetadataSetter @b source function) . fmConfiguration) .~ config
+    $ MetadataModifier
+    $ ((functionMetadataSetter @b source function) . fmConfiguration) .~ config
   return successMsg

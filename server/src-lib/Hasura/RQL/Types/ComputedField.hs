@@ -19,14 +19,14 @@ module Hasura.RQL.Types.ComputedField
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (NonEmptyText (..))
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -34,7 +34,10 @@ import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax (Name)
 
 newtype ComputedFieldName = ComputedFieldName {unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Cacheable)
+  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, PG.ToPrepArg, ToTxt, Hashable, PG.FromCol, Generic)
+
+instance HasCodec ComputedFieldName where
+  codec = dimapCodec ComputedFieldName unComputedFieldName codec
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
@@ -61,18 +64,16 @@ deriving instance Backend b => Show (FunctionTrackedAs b)
 deriving instance Backend b => Eq (FunctionTrackedAs b)
 
 data ComputedFieldFunction (b :: BackendType) = ComputedFieldFunction
-  { _cffName :: !(FunctionName b),
-    _cffInputArgs :: !(Seq.Seq (FunctionArgument b)),
-    _cffComputedFieldImplicitArgs :: !(ComputedFieldImplicitArguments b),
-    _cffDescription :: !(Maybe PGDescription)
+  { _cffName :: FunctionName b,
+    _cffInputArgs :: Seq.Seq (FunctionArgument b),
+    _cffComputedFieldImplicitArgs :: ComputedFieldImplicitArguments b,
+    _cffDescription :: Maybe PGDescription
   }
   deriving (Generic)
 
 deriving instance (Backend b) => Show (ComputedFieldFunction b)
 
 deriving instance (Backend b) => Eq (ComputedFieldFunction b)
-
-instance (Backend b) => Cacheable (ComputedFieldFunction b)
 
 instance (Backend b) => NFData (ComputedFieldFunction b)
 
@@ -82,11 +83,11 @@ instance (Backend b) => ToJSON (ComputedFieldFunction b) where
   toJSON = genericToJSON hasuraJSON
 
 data ComputedFieldInfo (b :: BackendType) = ComputedFieldInfo
-  { _cfiXComputedFieldInfo :: !(XComputedField b),
-    _cfiName :: !ComputedFieldName,
-    _cfiFunction :: !(ComputedFieldFunction b),
-    _cfiReturnType :: !(ComputedFieldReturn b),
-    _cfiDescription :: !(Maybe Text)
+  { _cfiXComputedFieldInfo :: XComputedField b,
+    _cfiName :: ComputedFieldName,
+    _cfiFunction :: ComputedFieldFunction b,
+    _cfiReturnType :: ComputedFieldReturn b,
+    _cfiDescription :: Maybe Text
   }
   deriving (Generic)
 
@@ -95,8 +96,6 @@ deriving instance (Backend b) => Eq (ComputedFieldInfo b)
 deriving instance (Backend b) => Show (ComputedFieldInfo b)
 
 instance (Backend b) => NFData (ComputedFieldInfo b)
-
-instance (Backend b) => Cacheable (ComputedFieldInfo b)
 
 instance (Backend b) => Hashable (ComputedFieldInfo b)
 

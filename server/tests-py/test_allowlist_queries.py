@@ -2,12 +2,12 @@
 
 import pytest
 from validate import check_query, check_query_f
-from context import PytestConf
 
 usefixtures = pytest.mark.usefixtures
 
-if not PytestConf.config.getoption("--test-allowlist-queries"):
-    pytest.skip("flag --test-allowlist-queries is not set. Cannot run tests for allowlist queries", allow_module_level=True)
+pytestmark = [
+    pytest.mark.hge_env('HASURA_GRAPHQL_ENABLE_ALLOWLIST', 'true')
+]
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
@@ -126,6 +126,9 @@ class TestAllowlistMetadata:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/allowlist_role_based'
+
+    def test_rename_query_collection(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/rename_query_collection.yaml')
 
     def test_add_update_drop(self, hge_ctx):
         # Cycle through add_collection_to_allowlist,

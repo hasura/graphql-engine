@@ -4,6 +4,7 @@
 module Hasura.GraphQL.Schema.RemoteTest (spec) where
 
 import Control.Lens (Prism', prism', to, (^..), _Right)
+import Control.Monad.Memoize
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -13,35 +14,39 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.RawString
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (ErrorMessage, fromErrorMessage)
 import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Parser.Names
-import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
-import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.SourceCustomization
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Network.URI qualified as N
 import Test.Hspec
+
+-- test monad
+
+newtype TestMonad a = TestMonad {runTest :: Either ErrorMessage a}
+  deriving newtype (Functor, Applicative, Monad)
+
+instance P.MonadParse TestMonad where
+  withKey = const id
+  parseErrorWith = const $ TestMonad . Left
 
 -- test tools
 
@@ -119,26 +124,15 @@ buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection GName._Query Nothing Nothing
       remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef (EnvRecord "" N.nullURI) [] False 60 Nothing) identityCustomizer
       remoteSchemaRels = mempty
-      -- Since remote schemas can theoretically join against tables, we need to
-      -- have access to all relevant sources-specific information to build their
-      -- schema. Here, since there are no relationships to a source in this
-      -- test, we are free to give 'undefined' for such fields, as they won't be
-      -- evaluated.
-      schemaInfo =
-        ( adminRoleName :: RoleName,
-          mempty :: CustomizeRemoteFieldName,
-          mempty :: MkTypename,
-          mempty :: MkRootFieldName,
-          HasuraCase :: NamingCase,
-          undefined :: SchemaOptions,
-          SchemaContext
-            HasuraSchema
-            ignoreRemoteRelationship
-        )
+      schemaContext =
+        SchemaContext
+          HasuraSchema
+          ignoreRemoteRelationship
+          adminRoleName
   RemoteSchemaParser query _ _ <-
     runError $
-      flip runReaderT schemaInfo $
-        P.runSchemaT $
+      runMemoizeT $
+        runRemoteSchema schemaContext $
           buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure $
     head query <&> \case
@@ -158,7 +152,7 @@ runQueryParser parser (varDefs, selSet) vars = runIdentity . runError $ do
   field <- case resolvedSelSet of
     [G.SelectionField f] -> pure f
     _ -> error "expecting only one field in the query"
-  runTest (P.fParser parser field) `onLeft` throw500
+  runTest (P.fParser parser field) `onLeft` (throw500 . fromErrorMessage)
 
 run ::
   -- | schema

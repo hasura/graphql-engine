@@ -25,6 +25,8 @@ module Hasura.Backends.Postgres.SQL.Types
     isGeoType,
     IsIdentifier (..),
     Identifier (..),
+    ColumnIdentifier (..),
+    TableIdentifier (..),
     SchemaName (..),
     publicSchema,
     hdbCatalogSchema,
@@ -49,9 +51,13 @@ module Hasura.Backends.Postgres.SQL.Types
     PGRawFunctionInfo (..),
     mkScalarTypeName,
     pgTypeOid,
+    tableIdentifierToIdentifier,
+    identifierToTableIdentifier,
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, optionalFieldWithDefault', parseAlternative, requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Encoding (text)
 import Data.Aeson.Key qualified as K
@@ -59,17 +65,19 @@ import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Int
 import Data.List (uncons)
+import Data.String
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Data.Typeable (Typeable)
+import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
@@ -80,8 +88,28 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
 import Text.Builder qualified as TB
 
+{- Note [About identifier types]
+
+In order to better be able to reason about values representing SQL binders and
+variables we are in the process of retiring the generic 'Identifier' type in
+favor of the more specific types 'TableIdentifier' and 'ColumnIdentifier'.
+
+Likewise, we distinguish binders of names from uses of names: The types
+'TableAlias' and `ColumnAlias` are used to for binders, whereas
+`TableIdentifier` and `ColumnIdentifier` represent usages or references of
+previously bound names.
+
+We want to ensure these are handled in an hygenic way:
+\* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
+\* 'TableIdentifier' can only be constructed from a 'TableAlias' via
+  'tableAliasToIdentifier', and
+\* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
+  potentially be qualified with a 'TableIdentifier'.
+
+-}
+
 newtype Identifier = Identifier {getIdenTxt :: Text}
-  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
 
 instance ToSQL Identifier where
   toSQL (Identifier t) =
@@ -92,6 +120,34 @@ class IsIdentifier a where
 
 instance IsIdentifier Identifier where
   toIdentifier = id
+
+-- | The type of identifiers representing tabular values.
+-- While we are transitioning away from 'Identifier' we provisionally export
+-- the value constructor.
+newtype TableIdentifier = TableIdentifier {unTableIdentifier :: Text}
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
+
+-- | Temporary conversion function, to be removed once 'Identifier' has been
+-- entirely split into 'TableIdentifier' and 'ColumnIdentifier'.
+tableIdentifierToIdentifier :: TableIdentifier -> Identifier
+tableIdentifierToIdentifier = Identifier . unTableIdentifier
+
+-- | Temporary conversion function, to be removed once 'Identifier' has been
+-- entirely split into 'TableIdentifier' and 'ColumnIdentifier'.
+identifierToTableIdentifier :: Identifier -> TableIdentifier
+identifierToTableIdentifier = TableIdentifier . getIdenTxt
+
+instance ToSQL TableIdentifier where
+  toSQL (TableIdentifier t) =
+    TB.text $ pgFmtIdentifier t
+
+-- | The type of identifiers representing scalar values
+newtype ColumnIdentifier = ColumnIdentifier {unColumnIdentifier :: Text}
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
+
+instance ToSQL ColumnIdentifier where
+  toSQL (ColumnIdentifier t) =
+    TB.text $ pgFmtIdentifier t
 
 pgFmtIdentifier :: Text -> Text
 pgFmtIdentifier x =
@@ -117,14 +173,16 @@ newtype TableName = TableName {getTableTxt :: Text}
       FromJSON,
       ToJSON,
       Hashable,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       Data,
       Generic,
       NFData,
-      Cacheable,
       IsString
     )
+
+instance HasCodec TableName where
+  codec = dimapCodec TableName getTableTxt codec
 
 instance IsIdentifier TableName where
   toIdentifier (TableName t) = Identifier t
@@ -142,8 +200,8 @@ data TableType
   | TTLocalTemporary
   deriving (Eq)
 
-instance Q.FromCol TableType where
-  fromCol bs = flip Q.fromColHelper bs $
+instance PG.FromCol TableType where
+  fromCol bs = flip PG.fromColHelper bs $
     PD.enum $ \case
       "BASE TABLE" -> Just TTBaseTable
       "VIEW" -> Just TTView
@@ -156,7 +214,7 @@ isView TTView = True
 isView _ = False
 
 newtype ConstraintName = ConstraintName {getConstraintTxt :: Text}
-  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, NFData, Cacheable)
+  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, NFData)
 
 instance IsIdentifier ConstraintName where
   toIdentifier (ConstraintName t) = Identifier t
@@ -168,7 +226,10 @@ instance ToErrorValue ConstraintName where
   toErrorValue = ErrorValue.squote . getConstraintTxt
 
 newtype FunctionName = FunctionName {getFunctionTxt :: Text}
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, Data, Generic, NFData)
+
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName getFunctionTxt codec
 
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
@@ -190,14 +251,16 @@ newtype SchemaName = SchemaName {getSchemaTxt :: Text}
       FromJSON,
       ToJSON,
       Hashable,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       Data,
       Generic,
       NFData,
-      Cacheable,
       IsString
     )
+
+instance HasCodec SchemaName where
+  codec = dimapCodec SchemaName getSchemaTxt codec
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -212,14 +275,22 @@ instance ToSQL SchemaName where
   toSQL = toSQL . toIdentifier
 
 data QualifiedObject a = QualifiedObject
-  { qSchema :: !SchemaName,
-    qName :: !a
+  { qSchema :: SchemaName,
+    qName :: a
   }
   deriving (Show, Eq, Functor, Ord, Generic, Data)
 
 instance (NFData a) => NFData (QualifiedObject a)
 
-instance (Cacheable a) => Cacheable (QualifiedObject a)
+instance (HasCodec a, Typeable a) => HasCodec (QualifiedObject a) where
+  codec = parseAlternative objCodec strCodec
+    where
+      objCodec =
+        AC.object ("PostgresQualified_" <> typeableName @a) $
+          QualifiedObject
+            <$> optionalFieldWithDefault' "schema" publicSchema AC..= qSchema
+            <*> requiredField' "name" AC..= qName
+      strCodec = QualifiedObject publicSchema <$> codec @a
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -273,12 +344,14 @@ getIdentifierQualifiedObject obj@(QualifiedObject sn o) = do
         (pref, suffs) <- uncons tLst
         prefName <- G.mkName pref
         suffNames <- traverse G.mkNameSuffix suffs
-        pure $ C.Identifier prefName suffNames
+        pure $ C.fromAutogeneratedTuple (prefName, suffNames)
   gqlIdents
     `onNothing` throw400
       ValidationFailed
-      ( "cannot include " <> obj <<> " in the GraphQL schema because " <> C.toSnakeT tLst
-          <<> " is not a valid GraphQL identifier"
+      ( "cannot include "
+          <> obj <<> " in the GraphQL schema because "
+          <> C.toSnakeT tLst
+            <<> " is not a valid GraphQL identifier"
       )
 
 namingConventionSupport :: SupportedNamingCase
@@ -289,15 +362,18 @@ qualifiedObjectToName objectName = do
   let textName = snakeCaseQualifiedObject objectName
   onNothing (G.mkName textName) $
     throw400 ValidationFailed $
-      "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
-        <<> " is not a valid GraphQL identifier"
+      "cannot include "
+        <> objectName <<> " in the GraphQL schema because "
+        <> textName
+          <<> " is not a valid GraphQL identifier"
 
+-- | Represents a database table qualified with the schema name.
 type QualifiedTable = QualifiedObject TableName
 
 type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription = PGDescription {getPGDescription :: Text}
-  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable, Hashable)
+  deriving (Show, Eq, FromJSON, ToJSON, PG.FromCol, NFData, Hashable)
 
 newtype PGCol = PGCol {getPGColTxt :: Text}
   deriving
@@ -307,16 +383,18 @@ newtype PGCol = PGCol {getPGColTxt :: Text}
       FromJSON,
       ToJSON,
       Hashable,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       ToJSONKey,
       FromJSONKey,
       Data,
       Generic,
       NFData,
-      Cacheable,
       IsString
     )
+
+instance HasCodec PGCol where
+  codec = dimapCodec PGCol getPGColTxt codec
 
 instance IsIdentifier PGCol where
   toIdentifier (PGCol t) = Identifier t
@@ -365,16 +443,14 @@ data PGScalarType
   | PGLquery
   | PGLtxtquery
   | PGArray PGScalarType
-  | PGUnknown !Text
-  | PGCompositeScalar !Text
-  | PGEnumScalar !Text
+  | PGUnknown Text
+  | PGCompositeScalar Text
+  | PGEnumScalar Text
   deriving (Show, Eq, Ord, Generic, Data)
 
 instance NFData PGScalarType
 
 instance Hashable PGScalarType
-
-instance Cacheable PGScalarType
 
 pgScalarTypeToText :: PGScalarType -> Text
 pgScalarTypeToText = \case
@@ -545,14 +621,12 @@ data PGTypeKind
   | PGKindEnum
   | PGKindRange
   | PGKindPseudo
-  | PGKindUnknown !Text
+  | PGKindUnknown Text
   deriving (Show, Eq, Generic)
 
 instance NFData PGTypeKind
 
 instance Hashable PGTypeKind
-
-instance Cacheable PGTypeKind
 
 instance FromJSON PGTypeKind where
   parseJSON = withText "postgresTypeKind" $
@@ -576,17 +650,15 @@ instance ToJSON PGTypeKind where
     PGKindUnknown t -> String t
 
 data QualifiedPGType = QualifiedPGType
-  { _qptSchema :: !SchemaName,
-    _qptName :: !PGScalarType,
-    _qptType :: !PGTypeKind
+  { _qptSchema :: SchemaName,
+    _qptName :: PGScalarType,
+    _qptType :: PGTypeKind
   }
   deriving (Show, Eq, Generic)
 
 instance NFData QualifiedPGType
 
 instance Hashable QualifiedPGType
-
-instance Cacheable QualifiedPGType
 
 $(deriveJSON hasuraJSON ''QualifiedPGType)
 
@@ -612,24 +684,22 @@ mkFunctionArgScalarType (QualifiedPGType _schema name type') =
 
 -- | Metadata describing SQL functions at the DB level, i.e. below the GraphQL layer.
 data PGRawFunctionInfo = PGRawFunctionInfo
-  { rfiOid :: !OID,
-    rfiHasVariadic :: !Bool,
-    rfiFunctionType :: !FunctionVolatility,
-    rfiReturnTypeSchema :: !SchemaName,
-    rfiReturnTypeName :: !PGScalarType,
-    rfiReturnTypeType :: !PGTypeKind,
-    rfiReturnsSet :: !Bool,
-    rfiInputArgTypes :: ![QualifiedPGType],
-    rfiInputArgNames :: ![FunctionArgName],
-    rfiDefaultArgs :: !Int,
-    rfiReturnsTable :: !Bool,
-    rfiDescription :: !(Maybe PGDescription)
+  { rfiOid :: OID,
+    rfiHasVariadic :: Bool,
+    rfiFunctionType :: FunctionVolatility,
+    rfiReturnTypeSchema :: SchemaName,
+    rfiReturnTypeName :: PGScalarType,
+    rfiReturnTypeType :: PGTypeKind,
+    rfiReturnsSet :: Bool,
+    rfiInputArgTypes :: [QualifiedPGType],
+    rfiInputArgNames :: [FunctionArgName],
+    rfiDefaultArgs :: Int,
+    rfiReturnsTable :: Bool,
+    rfiDescription :: Maybe PGDescription
   }
   deriving (Show, Eq, Generic)
 
 instance NFData PGRawFunctionInfo
-
-instance Cacheable PGRawFunctionInfo
 
 $(deriveJSON hasuraJSON ''PGRawFunctionInfo)
 
@@ -647,17 +717,20 @@ mkScalarTypeName (PGCompositeScalar compositeScalarType) =
   -- both these types (scalar and object type with same name).
   -- To avoid this, we suffix the table name with `_scalar`
   -- and create a new scalar type
-  (<> Name.__scalar) <$> G.mkName compositeScalarType
+  (<> Name.__scalar)
+    <$> G.mkName compositeScalarType
     `onNothing` throw400
       ValidationFailed
-      ( "cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
+      ( "cannot use SQL type "
+          <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
           <> "valid GraphQL identifier"
       )
 mkScalarTypeName scalarType =
   G.mkName (pgScalarTypeToText scalarType)
     `onNothing` throw400
       ValidationFailed
-      ( "cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
+      ( "cannot use SQL type "
+          <> scalarType <<> " in the GraphQL schema because its name is not a "
           <> "valid GraphQL identifier"
       )
 

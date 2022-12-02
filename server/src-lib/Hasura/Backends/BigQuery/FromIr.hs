@@ -105,18 +105,18 @@ newtype FromIr a = FromIr
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
 data FromIrState = FromIrState
-  { indices :: !(Map Text Int)
+  { indices :: Map Text Int
   }
 
 data FromIrReader = FromIrReader
-  { config :: !FromIrConfig
+  { config :: FromIrConfig
   }
 
 -- | Config values for the from-IR translator.
 data FromIrConfig = FromIrConfig
   { -- | Applies globally to all selects, and may be reduced to
     -- something even smaller by permission/user args.
-    globalSelectLimit :: !Top
+    globalSelectLimit :: Top
   }
 
 -- | A default config.
@@ -319,7 +319,7 @@ simulateDistinctOn select distinctOnColumns orderByColumns = do
               finalDistinctFields = case mExtraPartitionField of
                 Just extraFields
                   | Just neExtraFields <- nonEmpty extraFields ->
-                    neExtraFields <> distinctFields
+                      neExtraFields <> distinctFields
                 _ -> distinctFields
               (distinctOnOrderBy, innerOrderBy) =
                 case orderByColumns of
@@ -1378,7 +1378,8 @@ fromArrayAggregateSelectG annRelationSelectG = do
         joinOn,
         joinProvenance =
           ArrayAggregateJoinProvenance $
-            mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $ select,
+            mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $
+              select,
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,
@@ -1712,17 +1713,16 @@ fromOpExpG expression op =
     Ir.ALT val -> pure (OpExpression LessOp expression val)
     Ir.AGTE val -> pure (OpExpression MoreOrEqualOp expression val)
     Ir.ALTE val -> pure (OpExpression LessOrEqualOp expression val)
-    Ir.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+    Ir.ACast _casts -> refute (pure (UnsupportedOpExpG op))
     Ir.ALIKE val -> pure (OpExpression LikeOp expression val)
     Ir.ANLIKE val -> pure (OpExpression NotLikeOp expression val)
     Ir.ABackendSpecific op' -> pure (fromBackendSpecificOpExpG expression op')
-    Ir.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    Ir.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    Ir.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    Ir.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    Ir.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    Ir.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
-    -- These are new as of 2021-02-18 to this API. Not sure what to do with them at present, marking as unsupported.
+    Ir.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    Ir.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    Ir.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    Ir.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    Ir.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
+    Ir.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op))
 
 fromBackendSpecificOpExpG :: Expression -> BigQuery.BooleanOperators Expression -> Expression
 fromBackendSpecificOpExpG expression op =

@@ -5,12 +5,12 @@ module Hasura.Server.Auth
     AuthMode (..),
     setupAuthMode,
     AdminSecretHash,
+    unsafeMkAdminSecretHash,
     hashAdminSecret,
 
     -- * WebHook related
     AuthHookType (..),
-    AuthHookG (..),
-    AuthHook,
+    AuthHook (..),
 
     -- * JWT related
     RawJWT,
@@ -76,6 +76,9 @@ class (Monad m) => UserAuthentication m where
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
 
+unsafeMkAdminSecretHash :: (Crypto.Digest Crypto.SHA512) -> AdminSecretHash
+unsafeMkAdminSecretHash = AdminSecretHash
+
 instance Hash.Hashable AdminSecretHash where
   hashWithSalt salt (AdminSecretHash h) = Hash.hashWithSalt @ByteString salt $ BA.convert h
 
@@ -125,10 +128,10 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager lo
     -- that parameter, lest users misunderstand their auth configuration:
     _
       | isJust mUnAuthRole ->
-        throwError $
-          "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE)"
-            <> requiresAdminScrtMsg
-            <> " and is not allowed when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
+          throwError $
+            "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE)"
+              <> requiresAdminScrtMsg
+              <> " and is not allowed when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
     (False, Nothing, False) -> return AMNoAuth
     (True, Just hook, False) -> return $ AMAdminSecretAndHook adminSecretHashSet hook
     (False, Just _, False) ->
@@ -229,7 +232,8 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
         case maybeUnauthRole of
           Nothing ->
             throw401 $
-              adminSecretHeader <> "/"
+              adminSecretHeader
+                <> "/"
                 <> deprecatedAccessKeyHeader
                 <> " required, but not found"
           Just unAuthRole ->

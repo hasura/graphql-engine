@@ -17,18 +17,23 @@
     type: set_custom_types
     args:
       objects:
-        - name: UserId
-          fields:
-            - name: id
-              type: Int!
+      - name: UserId
+        fields:
+        - name: id
+          type: Int!
 
-- description: Create an action with a same name with a mutation that's created by tracking "user" table
+- description: Create an action with a same name with a mutation that's created by
+    tracking "user" table
   url: /v1/query
   status: 500
   response:
-    path: "$.args"
     code: unexpected
-    error: "found duplicate fields in selection set for mutation root: insert_user"
+    error: >-
+      Encountered conflicting definitions in the selection set for
+      'mutation_root' for field 'insert_user' defined in [action insert_user,
+      table user in source default]. Fields must not be defined more than once
+      across all sources.
+    path: $.args
   query:
     type: create_action
     args:
@@ -41,4 +46,4 @@
         - name: name
           type: String!
         output_type: UserId!
-        handler: http://127.0.0.1:5593/create-user
+        handler: '{{ACTION_WEBHOOK_HANDLER}}/create-user'

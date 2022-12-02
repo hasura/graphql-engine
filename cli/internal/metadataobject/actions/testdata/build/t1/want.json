@@ -1,1 +1,70 @@
-{"actions": [{"name": "foo", "definition": {"kind": "synchronous", "type": "mutation", "handler": "http://localhost:3000", "arguments": [{"name": "arg1", "type": "fooInput!", "description": null}], "output_type": "fooOutput", "timeout": 10}}], "custom_types": {"enums": [], "input_objects": [{"name": "fooInput", "fields": [{"name": "username", "type": "String!", "description": null}, {"name": "password", "type": "String!", "description": null}]}], "objects": [{"name": "fooOutput", "fields": [{"name": "accessToken", "type": "String!", "description": null}]}], "scalars": []}}
+{
+ "actions": [
+  {
+   "name": "foo",
+   "definition": {
+    "kind": "synchronous",
+    "type": "mutation",
+    "handler": "http://localhost:3000",
+    "arguments": [
+     {
+      "name": "arg1",
+      "type": "fooInput!",
+      "description": null
+     }
+    ],
+    "output_type": "fooOutput",
+    "timeout": 10,
+    "request_transform": {
+     "body": "{\n  \"my-baz\": {{$body.input.foo.baz}}\n \"my-bar\": {{$body.input.foo.bar}}\n \n}",
+     "content_type": "application/json",
+     "method": "POST",
+     "query_params": {},
+     "template_engine": "Kriti",
+     "version": 2
+    },
+    "response_transform": {
+     "body": {
+      "action": "transform",
+      "template": "{\n  \"data\": {{$body}},\n}"
+     },
+     "template_engine": "Kriti",
+     "version": 2
+    }
+   }
+  }
+ ],
+ "custom_types": {
+  "enums": [],
+  "input_objects": [
+   {
+    "name": "fooInput",
+    "fields": [
+     {
+      "name": "username",
+      "type": "String!",
+      "description": null
+     },
+     {
+      "name": "password",
+      "type": "String!",
+      "description": null
+     }
+    ]
+   }
+  ],
+  "objects": [
+   {
+    "name": "fooOutput",
+    "fields": [
+     {
+      "name": "accessToken",
+      "type": "String!",
+      "description": null
+     }
+    ]
+   }
+  ],
+  "scalars": []
+ }
+}

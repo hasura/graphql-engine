@@ -1,0 +1,40 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["libs/console/legacy-ce/src/lib/*"],
+      "@hasura/console-legacy-ce": ["libs/console/legacy-ce/src/index.ts"],
+      "@hasura/console-legacy-ee": ["libs/console/legacy-ee/src/index.js"],
+      "@hasura/console-oss": ["libs/console/legacy-ce/src/exports/main.js"],
+      "@hasura/console-oss/lib/app": [
+        "libs/console/legacy-ce/src/exports/app.js"
+      ],
+      "@hasura/console-oss/lib/appState": [
+        "libs/console/legacy-ce/src/exports/appState.js"
+      ],
+      "@hasura/console-oss/lib/constants": [
+        "libs/console/legacy-ce/src/exports/constants.js"
+      ],
+      "@hasura/console-oss/lib/hoc": [
+        "libs/console/legacy-ce/src/exports/index.js"
+      ],
+      "@hasura/console-oss/lib/main": [
+        "libs/console/legacy-ce/src/exports/main.js"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

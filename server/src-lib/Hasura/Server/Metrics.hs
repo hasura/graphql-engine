@@ -67,6 +67,31 @@ data
       "schema_cache_metadata_resource_version"
       'GaugeType
       ()
+  -- | Current number active live queries
+  ActiveLiveQueries ::
+    ServerMetricsSpec
+      "active_livequeries"
+      'GaugeType
+      ()
+  -- | Current number of streaming subscriptions
+  ActiveStreaming ::
+    ServerMetricsSpec
+      "active_streaming_subscriptions"
+      'GaugeType
+      ()
+  -- | Latency of fetching a batch of events
+  EventFetchTimePerBatch ::
+    ServerMetricsSpec
+      "events_fetch_time_per_batch"
+      'DistributionType
+      ()
+  -- | The time (in seconds) between when a event is picked for delivery to the
+  --   time its status is updated in the DB
+  EventWebhookProcessingTime ::
+    ServerMetricsSpec
+      "event_webhook_processing_time"
+      'DistributionType
+      ()
 
 -- | Mutable references for the server metrics. See `ServerMetricsSpec` for a
 -- description of each metric.
@@ -77,7 +102,11 @@ data ServerMetrics = ServerMetrics
     smNumEventsFetchedPerBatch :: !Distribution,
     smNumEventHTTPWorkers :: !Gauge,
     smEventQueueTime :: !Distribution,
-    smSchemaCacheMetadataResourceVersion :: !Gauge
+    smSchemaCacheMetadataResourceVersion :: !Gauge,
+    smActiveLiveQueries :: !Gauge,
+    smActiveStreamingSubscriptions :: !Gauge,
+    smEventFetchTimePerBatch :: !Distribution,
+    smEventWebhookProcessingTime :: !Distribution
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
@@ -89,4 +118,8 @@ createServerMetrics store = do
   smNumEventHTTPWorkers <- createGauge NumEventHTTPWorkers () store
   smEventQueueTime <- createDistribution EventQueueTime () store
   smSchemaCacheMetadataResourceVersion <- createGauge SchemaCacheMetadataResourceVersion () store
+  smActiveLiveQueries <- createGauge ActiveLiveQueries () store
+  smActiveStreamingSubscriptions <- createGauge ActiveStreaming () store
+  smEventFetchTimePerBatch <- createDistribution EventFetchTimePerBatch () store
+  smEventWebhookProcessingTime <- createDistribution EventWebhookProcessingTime () store
   pure ServerMetrics {..}

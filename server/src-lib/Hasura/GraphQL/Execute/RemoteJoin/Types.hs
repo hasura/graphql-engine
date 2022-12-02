@@ -40,9 +40,8 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -214,18 +213,14 @@ data RemoteSourceJoin b = RemoteSourceJoin
 
 deriving instance
   ( Backend b,
-    Show (ScalarValue b),
-    Show (SourceConfig b),
-    Show (BooleanOperators b (IR.UnpreparedValue b)),
-    Show (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Show (IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
+    Show (SourceConfig b)
   ) =>
   Show (RemoteSourceJoin b)
 
 deriving instance
   ( Backend b,
-    Eq (ScalarValue b),
-    Eq (BooleanOperators b (IR.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+    Eq (IR.SourceRelationshipSelection b Void IR.UnpreparedValue)
   ) =>
   Eq (RemoteSourceJoin b)
 

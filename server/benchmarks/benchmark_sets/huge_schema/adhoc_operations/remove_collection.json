@@ -1,0 +1,15 @@
+{"type": "bulk", "args":[
+    {
+    "type" : "drop_collection_from_allowlist",
+    "args": {
+        "collection": "my_collection"
+    }
+    },
+    {
+    "type" : "drop_query_collection",
+    "args": {
+        "collection": "my_collection",
+        "cascade": false
+    }
+}
+]}

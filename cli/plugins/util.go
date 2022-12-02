@@ -8,7 +8,9 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -17,8 +19,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/plugins/download"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -39,9 +41,10 @@ func isValidSHA256(s string) bool { return validSHA256.MatchString(s) }
 
 // ensureDirs makes sure the paths created
 func ensureDirs(paths ...string) error {
+	var op errors.Op = "plugins.ensureDirs"
 	for _, p := range paths {
 		if err := os.MkdirAll(p, 0755); err != nil {
-			return errors.Wrapf(err, "failed to ensure create directory %q", p)
+			return errors.E(op, fmt.Errorf("failed to ensure create directory %q: %w", p, err))
 		}
 	}
 	return nil
@@ -62,36 +65,38 @@ func IsSafePluginName(name string) bool {
 
 // validatePlatform checks Platform for structural validity.
 func validatePlatform(p Platform) error {
+	var op errors.Op = "plugins.validatePlatform"
 	if p.URI == "" {
-		return errors.New("`uri` has to be set")
+		return errors.E(op, "`uri` has to be set")
 	}
 	if p.Sha256 == "" {
-		return errors.New("`sha256` sum has to be set")
+		return errors.E(op, "`sha256` sum has to be set")
 	}
 	if !isValidSHA256(p.Sha256) {
-		return errors.Errorf("`sha256` value %s is not valid, must match pattern %s", p.Sha256, sha256Pattern)
+		return errors.E(op, fmt.Errorf("`sha256` value %s is not valid, must match pattern %s", p.Sha256, sha256Pattern))
 	}
 	if p.Bin == "" {
-		return errors.New("`bin` has to be set")
+		return errors.E(op, "`bin` has to be set")
 	}
 	if err := validateFiles(p.Files); err != nil {
-		return errors.Wrap(err, "`files` is invalid")
+		return errors.E(op, fmt.Errorf("`files` is invalid: %w", err))
 	}
 	return nil
 }
 
 func validateFiles(fops []FileOperation) error {
+	var op errors.Op = "plugins.validateFiles"
 	if fops == nil {
 		return nil
 	}
 	if len(fops) == 0 {
-		return errors.New("`files` has to be unspecified or non-empty")
+		return errors.E(op, "`files` has to be unspecified or non-empty")
 	}
-	for _, op := range fops {
-		if op.From == "" {
-			return errors.New("`from` field has to be set")
-		} else if op.To == "" {
-			return errors.New("`to` field has to be set")
+	for _, fop := range fops {
+		if fop.From == "" {
+			return errors.E(op, "`from` field has to be set")
+		} else if fop.To == "" {
+			return errors.E(op, "`to` field has to be set")
 		}
 	}
 	return nil
@@ -113,9 +118,10 @@ func MatchPlatform(platforms []Platform) (Platform, bool, error) {
 // while validating its checksum with the provided sha256sum, and extracts its contents to extractDir that must be.
 // created.
 func downloadAndExtract(extractDir, uri, sha256sum string) error {
+	var op errors.Op = "plugins.downloadAndExtract"
 	nurl, err := url.Parse(uri)
 	if err != nil {
-		return errors.Wrap(err, "unable to parse uri")
+		return errors.E(op, fmt.Errorf("unable to parse uri: %w", err))
 	}
 	var fetcher download.Fetcher
 	if nurl.Scheme == "file" {
@@ -125,7 +131,10 @@ func downloadAndExtract(extractDir, uri, sha256sum string) error {
 	}
 	verifier := download.NewSha256Verifier(sha256sum)
 	err = download.NewDownloader(verifier, fetcher).Get(uri, extractDir)
-	return errors.Wrap(err, "failed to unpack the plugin archive")
+	if err != nil {
+		return errors.E(op, fmt.Errorf("failed to unpack the plugin archive: %w", err))
+	}
+	return nil
 }
 
 // IsWindows sees runtime.GOOS to find out if current execution mode is win32.
@@ -135,13 +144,14 @@ func IsWindows() bool {
 }
 
 func createOrUpdateLink(binDir, binary, plugin string) error {
+	var op errors.Op = "plugins.createOrUpdateLink"
 	dst := filepath.Join(binDir, PluginNameToBin(plugin, IsWindows()))
 
 	if err := removeLink(dst); err != nil {
-		return errors.Wrap(err, "failed to remove old symlink")
+		return errors.E(op, fmt.Errorf("failed to remove old symlink: %w", err))
 	}
-	if _, err := os.Stat(binary); os.IsNotExist(err) {
-		return errors.Wrapf(err, "can't create symbolic link, source binary (%q) cannot be found in extracted archive", binary)
+	if _, err := os.Stat(binary); stderrors.Is(err, fs.ErrNotExist) {
+		return errors.E(op, fmt.Errorf("can't create symbolic link, source binary (%q) cannot be found in extracted archive: %w", binary, err))
 	}
 
 	// Create new
@@ -153,14 +163,15 @@ func createOrUpdateLink(binDir, binary, plugin string) error {
 			//
 			// ERROR_PRIVILEGE_NOT_HELD is 1314 (0x522):
 			// https://msdn.microsoft.com/en-us/library/windows/desktop/ms681385(v=vs.85).aspx
-			if lerr, ok := err.(*os.LinkError); ok && lerr.Err != syscall.Errno(1314) {
-				return err
+			var lerr *os.LinkError
+			if stderrors.As(err, &lerr); lerr.Err != syscall.Errno(1314) {
+				return errors.E(op, err)
 			}
 			if err := copyFile(binary, dst, 0755); err != nil {
-				return err
+				return errors.E(op, err)
 			}
 		} else {
-			return errors.Wrapf(err, "failed to create a symlink from %q to %q", binary, dst)
+			return errors.E(op, fmt.Errorf("failed to create a symlink from %q to %q: %w", binary, dst, err))
 		}
 	}
 	return nil
@@ -168,18 +179,19 @@ func createOrUpdateLink(binDir, binary, plugin string) error {
 
 // removeLink removes a symlink reference if exists.
 func removeLink(path string) error {
+	var op errors.Op = "plugins.removeLink"
 	fi, err := os.Lstat(path)
-	if os.IsNotExist(err) {
+	if stderrors.Is(err, fs.ErrNotExist) {
 		return nil
 	} else if err != nil {
-		return errors.Wrapf(err, "failed to read the symlink in %q", path)
+		return errors.E(op, fmt.Errorf("failed to read the symlink in %q: %w", path, err))
 	}
 
 	if fi.Mode()&os.ModeSymlink == 0 && !IsWindows() {
-		return errors.Errorf("file %q is not a symlink (mode=%s)", path, fi.Mode())
+		return errors.E(op, fmt.Errorf("file %q is not a symlink (mode=%s)", path, fi.Mode()))
 	}
 	if err := os.Remove(path); err != nil {
-		return errors.Wrapf(err, "failed to remove the symlink in %q", path)
+		return errors.E(op, fmt.Errorf("failed to remove the symlink in %q: %w", path, err))
 	}
 	return nil
 }
@@ -210,9 +222,10 @@ func IsSubPath(basePath, subPath string) (string, bool) {
 
 // ReplaceBase will return a replacement path with replacement as a base of the path instead of the old base. a/b/c, a, d -> d/b/c
 func ReplaceBase(path, old, replacement string) (string, error) {
+	var op errors.Op = "plugins.ReplaceBase"
 	extendingPath, ok := IsSubPath(old, path)
 	if !ok {
-		return "", errors.Errorf("can't replace %q in %q, it is not a subpath", old, path)
+		return "", errors.E(op, fmt.Errorf("can't replace %q in %q, it is not a subpath", old, path))
 	}
 	return filepath.Join(replacement, extendingPath), nil
 }

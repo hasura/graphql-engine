@@ -15,30 +15,6 @@ import (
 	. "github.com/onsi/gomega/gexec"
 )
 
-func AddDatabaseToHasura(hgeEndpoint, sourceName, databaseKind string) (string, func()) {
-
-	if databaseKind == "postgres" {
-		connectionStringPG, teardownPG := testutil.StartPGContainer(GinkgoT())
-		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringPG, sourceName)
-		return connectionStringPG, teardownPG
-	}
-	if databaseKind == "citus" {
-		connectionStringCitus, teardownCitus := testutil.StartCitusContainer(GinkgoT())
-		testutil.AddCitusSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringCitus, sourceName)
-		return connectionStringCitus, teardownCitus
-	}
-
-	if databaseKind == "mssql" {
-		mssqlPort, teardownMSSQL := testutil.StartMSSQLContainer(GinkgoT())
-		connectionStringMSSQL := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", testutil.DockerSwitchIP, mssqlPort, testutil.MSSQLPassword)
-		testutil.AddMSSQLSourceToHasura(GinkgoT(), hgeEndpoint, connectionStringMSSQL, sourceName)
-		return connectionStringMSSQL, teardownMSSQL
-
-	}
-
-	return "", nil
-}
-
 var testMigrateApply = func(projectDirectory string, globalFlags []string) {
 	Context("migrate apply", func() {
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
@@ -283,9 +259,9 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
-		_, teardownPG := AddDatabaseToHasura(hgeEndpoint, pgSource, "postgres")
-		_, teardownCitus := AddDatabaseToHasura(hgeEndpoint, citusSource, "citus")
-		_, teardownMSSQL := AddDatabaseToHasura(hgeEndpoint, mssqlSource, "mssql")
+		_, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, pgSource, "postgres")
+		_, teardownCitus := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, citusSource, "citus")
+		_, teardownMSSQL := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, mssqlSource, "mssql")
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
 			Args: []string{"init", projectDirectory},
 		})

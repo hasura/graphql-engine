@@ -28,7 +28,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Ordered qualified as AO
-import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
@@ -36,10 +35,9 @@ import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
 import Data.Set (Set)
-import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.Execute.Types
@@ -62,7 +60,6 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
@@ -121,20 +118,20 @@ runActionExecution userInfo aep =
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
-          let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
+          let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
+          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) PG.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
 -- | This function is generally used on the result of 'selectQuerySQL',
 -- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
 -- back the resulting JSON.
 asSingleRowJsonResp ::
-  Q.Query ->
-  [Q.PrepArg] ->
-  Q.TxE QErr EncJSON
+  PG.Query ->
+  [PG.PrepArg] ->
+  PG.TxE QErr EncJSON
 asSingleRowJsonResp query args =
-  encJFromBS . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler query args True
+  runIdentity . PG.getRow
+    <$> PG.rawQE dmlTxErrorHandler query args True
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution ::
@@ -169,6 +166,55 @@ resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExe
           _aaeRequestTransform
           _aaeResponseTransform
 
+throwUnexpected :: (MonadError QErr m) => Text -> m ()
+throwUnexpected = throw400 Unexpected
+
+-- Webhook response object should conform to action output fields
+validateResponseObject :: MonadError QErr m => KM.KeyMap J.Value -> IR.ActionOutputFields -> m ()
+validateResponseObject obj outputField = do
+  -- Note: Fields not specified in the output are ignored
+  void $
+    flip Map.traverseWithKey outputField $ \fieldName fieldTy ->
+      -- When field is non-nullable, it has to present in the response with no null value
+      unless (G.isNullable fieldTy) $ case KM.lookup (K.fromText $ G.unName fieldName) obj of
+        Nothing ->
+          throwUnexpected $
+            "field " <> fieldName <<> " expected in webhook response, but not found"
+        Just v ->
+          when (v == J.Null) $
+            throwUnexpected $
+              "expecting not null value for field " <>> fieldName
+
+-- Validates the webhook response against the output type
+validateResponse :: (MonadError QErr m) => J.Value -> GraphQLType -> IR.ActionOutputFields -> m ()
+validateResponse webhookResponse' outputType outputF =
+  unless (isCustomScalar (unGraphQLType outputType) outputF) do
+    case (webhookResponse', outputType) of
+      (J.Null, _) -> do
+        unless (isNullableType outputType) $ throwUnexpected "got null for the action webhook response"
+      (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
+        unless (name == GName._Int || name == GName._Float) $
+          throwUnexpected $
+            "got scalar String for the action webhook response, expecting " <> G.unName name
+      (J.Bool _, (GraphQLType (G.TypeNamed _ name))) -> do
+        unless (name == GName._Boolean) $
+          throwUnexpected $
+            "got scalar Boolean for the action webhook response, expecting " <> G.unName name
+      (J.String _, (GraphQLType (G.TypeNamed _ name))) -> do
+        unless (name == GName._String || name == GName._ID) $
+          throwUnexpected $
+            "got scalar String for the action webhook response, expecting " <> G.unName name
+      (J.Array _, (GraphQLType (G.TypeNamed _ name))) -> throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
+      (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) -> do
+        traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
+      ((J.Object obj), (GraphQLType (G.TypeNamed _ name))) -> do
+        when (isInBuiltScalar (G.unName name)) $
+          throwUnexpected $
+            "got object for the action webhook response, expecting " <> G.unName name
+        validateResponseObject obj outputF
+      (_, (GraphQLType (G.TypeList _ _))) ->
+        throwUnexpected $ "expecting array for the action webhook response"
+
 -- | Build action response from the Webhook JSON response when there are no relationships defined
 makeActionResponseNoRelations :: IR.ActionFields -> GraphQLType -> IR.ActionOutputFields -> Bool -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputField webhookResponse =
@@ -202,10 +248,10 @@ makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputFiel
       if gTypeContains isCustomScalar (unGraphQLType outputType) outputF && shouldCheckOutputField
         then AO.toOrdered $ J.toJSON webhookResponse
         else case webhookResponse of
-          AWRArray objs -> AO.array $ map mkResponseArray objs
-          AWRObject obj ->
-            mkResponseObject annFields $ KM.fromHashMapText $ mapKeys G.unName obj
-          AWRNull -> AO.Null
+          J.Array objs -> AO.array $ toList $ fmap mkResponseArray objs
+          J.Object obj ->
+            mkResponseObject annFields obj
+          J.Null -> AO.Null
           _ -> AO.toOrdered $ J.toJSON webhookResponse
 
 gTypeContains :: (G.GType -> IR.ActionOutputFields -> Bool) -> G.GType -> IR.ActionOutputFields -> Bool
@@ -309,7 +355,7 @@ resolveAsyncActionQuery userInfo annAction =
                     IR.UVParameter Nothing $
                       ColumnValue (ColumnScalar PGJSONB) $
                         PGValJSONB $
-                          Q.JSONB $
+                          PG.JSONB $
                             J.toJSON [actionLogResponse]
                   functionArgs = FunctionArgsExp [TF.AEInput actionLogInput] mempty
                   tableFromExp =
@@ -360,7 +406,10 @@ resolveAsyncActionQuery userInfo annAction =
           sessionVarValue =
             IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
-                PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
+                PGValJSONB $
+                  PG.JSONB $
+                    J.toJSON $
+                      _uiSession userInfo
           sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
        in -- For non-admin roles, accessing an async action's response should be allowed only for the user
           -- who initiated the action through mutation. The action's response is accessible for a query/subscription
@@ -514,7 +563,7 @@ callWebhook
     (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
       Nothing -> pure (Nothing, Nothing, Nothing)
       Just RequestTransform {..} ->
-        let reqTransformCtx = mkReqTransformCtx webhookUrl sessionVars templateEngine
+        let reqTransformCtx = fmap mkRequestContext $ mkReqTransformCtx webhookUrl sessionVars templateEngine
          in case applyRequestTransform reqTransformCtx requestFields req of
               Left err -> do
                 -- Log The Transformation Error
@@ -538,7 +587,8 @@ callWebhook
     case httpResponse of
       Left e ->
         throw500WithDetail "http exception when calling webhook" $
-          J.toJSON $ ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
+          J.toJSON $
+            ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
         -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
@@ -547,7 +597,8 @@ callWebhook
             responseStatus = responseWreq ^. Wreq.responseStatus
             mkResponseInfo respBody =
               ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
-                toHeadersConf $ responseWreq ^. Wreq.responseHeaders
+                toHeadersConf $
+                  responseWreq ^. Wreq.responseHeaders
 
         transformedResponseBody <- case metadataResponseTransform of
           Nothing -> pure responseBody
@@ -572,84 +623,38 @@ callWebhook
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
             throw500WithDetail "not a valid json response from webhook" $
               J.toJSON $
-                ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $ Just responseInfo
+                ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $
+                  Just responseInfo
           Right responseValue -> do
             let responseInfo = mkResponseInfo responseValue
                 addInternalToErr e =
                   let actionInternalError =
                         J.toJSON $
-                          ActionInternalError (J.String "unexpected response") requestInfo $ Just responseInfo
+                          ActionInternalError (J.String "unexpected response") requestInfo $
+                            Just responseInfo
                    in e {qeInternal = Just $ ExtraInternal actionInternalError}
 
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
-                  modifyQErr addInternalToErr $ do
-                    webhookResponse <- decodeValue responseValue
-                    validateResponse responseValue outputType outputFields
-                    pure (webhookResponse, mkSetCookieHeaders responseWreq)
+                    modifyQErr addInternalToErr $ do
+                      webhookResponse <- decodeValue responseValue
+                      validateResponse responseValue outputType outputFields
+                      pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
-                  ActionWebhookErrorResponse message maybeCode maybeExtensions <-
-                    modifyQErr addInternalToErr $ decodeValue responseValue
-                  let code = maybe Unexpected ActionWebhookCode maybeCode
-                      qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
-                  throwError qErr
+                    ActionWebhookErrorResponse message maybeCode maybeExtensions <-
+                      modifyQErr addInternalToErr $ decodeValue responseValue
+                    let code = maybe Unexpected ActionWebhookCode maybeCode
+                        qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
+                    throwError qErr
                 | otherwise -> do
-                  let err =
-                        J.toJSON $
-                          "expecting 2xx or 4xx status code, but found "
-                            ++ show (HTTP.statusCode responseStatus)
-                  throw500WithDetail "internal error" $
-                    J.toJSON $
-                      ActionInternalError err requestInfo $ Just responseInfo
-    where
-      throwUnexpected = throw400 Unexpected
-
-      -- Webhook response object should conform to action output fields
-      validateResponseObject obj = do
-        -- Note: Fields not specified in the output are ignored
-        void $
-          flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
-            -- When field is non-nullable, it has to present in the response with no null value
-            unless (G.isNullable fieldTy) $ case Map.lookup fieldName obj of
-              Nothing ->
-                throwUnexpected $
-                  "field " <> fieldName <<> " expected in webhook response, but not found"
-              Just v ->
-                when (v == J.Null) $
-                  throwUnexpected $
-                    "expecting not null value for field " <>> fieldName
-
-      -- Validates the webhook response against the output type
-      validateResponse :: J.Value -> GraphQLType -> IR.ActionOutputFields -> m ()
-      validateResponse webhookResponse' outputType' outputF =
-        unless (isCustomScalar (unGraphQLType outputType') outputF) do
-          case (webhookResponse', outputType') of
-            (J.Null, _) -> unless (isNullableType outputType') $ throwUnexpected "got null for the action webhook response"
-            (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
-              unless (name == GName._Int || name == GName._Float) $
-                throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> G.unName name
-            (J.Bool _, (GraphQLType (G.TypeNamed _ name))) ->
-              unless (name == GName._Boolean) $
-                throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
-            (J.String _, (GraphQLType (G.TypeNamed _ name))) ->
-              unless (name == GName._String || name == GName._ID) $
-                throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
-            (J.Array _, (GraphQLType (G.TypeNamed _ name))) ->
-              throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
-            (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) ->
-              traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
-            (ob@(J.Object _), (GraphQLType (G.TypeNamed _ name))) -> do
-              case J.parse (fmap AWRObject . J.parseJSON) ob of
-                J.Error s -> throwUnexpected $ "failed to parse webhookResponse as Object, error: " <> T.pack s -- This should never happen
-                J.Success (AWRObject awr) -> do
-                  when (isInBuiltScalar (G.unName name)) $
-                    throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
-                  validateResponseObject awr
-                J.Success _ ->
-                  throwUnexpected "Webhook response not an object" -- This should never happen
-                  -- Expected output type is an array and webhook response is not an array
-            (_, (GraphQLType (G.TypeList _ _))) ->
-              throwUnexpected $ "expecting array for the action webhook response"
+                    let err =
+                          J.toJSON $
+                            "expecting 2xx or 4xx status code, but found "
+                              ++ show (HTTP.statusCode responseStatus)
+                    throw500WithDetail "internal error" $
+                      J.toJSON $
+                        ActionInternalError err requestInfo $
+                          Just responseInfo
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->
@@ -686,12 +691,12 @@ insertActionTx ::
   SessionVariables ->
   [HTTP.Header] ->
   J.Value ->
-  Q.TxE QErr ActionId
+  PG.TxE QErr ActionId
 insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
-  runIdentity . Q.getRow
-    <$> Q.withQE
+  runIdentity . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO
         "hdb_catalog"."hdb_action_log"
         ("action_name", "session_variables", "request_headers", "input_payload", "status")
@@ -700,21 +705,21 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
     RETURNING "id"
    |]
       ( actionName,
-        Q.AltJ sessionVariables,
-        Q.AltJ $ toHeadersMap httpHeaders,
-        Q.AltJ inputArgsPayload,
+        PG.ViaJSON sessionVariables,
+        PG.ViaJSON $ toHeadersMap httpHeaders,
+        PG.ViaJSON inputArgsPayload,
         "created" :: Text
       )
       False
   where
     toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
-fetchUndeliveredActionEventsTx :: Q.TxE QErr [ActionLogItem]
+fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
 fetchUndeliveredActionEventsTx =
   map mapEvent
-    <$> Q.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     update hdb_catalog.hdb_action_log set status = 'processing'
     where
       id in (
@@ -731,68 +736,68 @@ fetchUndeliveredActionEventsTx =
     mapEvent
       ( actionId,
         actionName,
-        Q.AltJ headersMap,
-        Q.AltJ sessionVariables,
-        Q.AltJ inputPayload
+        PG.ViaJSON headersMap,
+        PG.ViaJSON sessionVariables,
+        PG.ViaJSON inputPayload
         ) =
         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
 
     fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . Map.toList
 
-setActionStatusTx :: ActionId -> AsyncActionStatus -> Q.TxE QErr ()
+setActionStatusTx :: ActionId -> AsyncActionStatus -> PG.TxE QErr ()
 setActionStatusTx actionId = \case
   AASCompleted responsePayload ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       update hdb_catalog.hdb_action_log
       set response_payload = $1, status = 'completed'
       where id = $2
     |]
-      (Q.AltJ responsePayload, actionId)
+      (PG.ViaJSON responsePayload, actionId)
       False
   AASError qerr ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       update hdb_catalog.hdb_action_log
       set errors = $1, status = 'error'
       where id = $2
     |]
-      (Q.AltJ qerr, actionId)
+      (PG.ViaJSON qerr, actionId)
       False
 
-fetchActionResponseTx :: ActionId -> Q.TxE QErr ActionLogResponse
+fetchActionResponseTx :: ActionId -> PG.TxE QErr ActionLogResponse
 fetchActionResponseTx actionId = do
-  (ca, rp, errs, Q.AltJ sessVars) <-
-    Q.getRow
-      <$> Q.withQE
+  (ca, rp, errs, PG.ViaJSON sessVars) <-
+    PG.getRow
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
      SELECT created_at, response_payload::json, errors::json, session_variables::json
        FROM hdb_catalog.hdb_action_log
       WHERE id = $1
     |]
         (Identity actionId)
         True
-  pure $ ActionLogResponse actionId ca (Q.getAltJ <$> rp) (Q.getAltJ <$> errs) sessVars
+  pure $ ActionLogResponse actionId ca (PG.getViaJSON <$> rp) (PG.getViaJSON <$> errs) sessVars
 
-clearActionDataTx :: ActionName -> Q.TxE QErr ()
+clearActionDataTx :: ActionName -> PG.TxE QErr ()
 clearActionDataTx actionName =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
       DELETE FROM hdb_catalog.hdb_action_log
         WHERE action_name = $1
       |]
     (Identity actionName)
     True
 
-setProcessingActionLogsToPendingTx :: LockedActionIdArray -> Q.TxE QErr ()
+setProcessingActionLogsToPendingTx :: LockedActionIdArray -> PG.TxE QErr ()
 setProcessingActionLogsToPendingTx lockedActions =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
     UPDATE hdb_catalog.hdb_action_log
     SET status = 'created'
     WHERE status = 'processing' AND id = ANY($1::uuid[])

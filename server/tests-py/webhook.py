@@ -13,7 +13,7 @@ import http.server
 import traceback
 import sys
 
-class S(http.server.BaseHTTPRequestHandler):
+class Handler(http.server.BaseHTTPRequestHandler):
 
 
     def handle_headers(self, headers):
@@ -33,7 +33,7 @@ class S(http.server.BaseHTTPRequestHandler):
                         print ('forbidden')
                         self.send_response(401)
                         self.end_headers()
-                        self.wfile.write('{}')
+                        self.wfile.write(b'{}')
                 except  Exception as e:
                     print ('forbidden')
                     self.send_response(401)
@@ -52,29 +52,4 @@ class S(http.server.BaseHTTPRequestHandler):
         content_len = self.headers.get('Content-Length')
         req_body = self.rfile.read(int(content_len)).decode("utf-8")
         req_json = json.loads(req_body)
-        if 'headers' in req_json:
-            self.handle_headers(req_json['headers'])
-        else:
-            # TODO: is this a typo?
-            self.handler_headers({})
-
-def run(keyfile, certfile, server_class=http.server.HTTPServer, handler_class=S, port=9090):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    httpd.socket = ssl.wrap_socket (
-        httpd.socket,
-        certfile=certfile,
-        keyfile=keyfile,
-        server_side=True,
-        ssl_version=ssl.PROTOCOL_SSLv23)
-    print('Starting httpd...')
-    httpd.serve_forever()
-
-if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python webhook.py port keyfile certfile")
-        sys.exit(1)
-    port=int(sys.argv[1])
-    print("Starting webhook on port {}".format(port))
-    run(keyfile=sys.argv[2],certfile=sys.argv[3], port=port)
-    print("Exiting webhook")
+        self.handle_headers(req_json.get('headers', {}))

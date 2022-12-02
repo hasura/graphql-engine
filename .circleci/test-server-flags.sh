@@ -96,12 +96,12 @@ kill_hge
 ###### Test --use-prepared-statements=true
 key="HGE$RANDOM$RANDOM"
 
-run_hge_with_flags --use-prepared-statements=true
+run_hge_with_flags --use-prepared-statements=true --admin-secret="$key"
 
 echoInfo "Test --use-prepared-statements=true"
+kill_hge
 grep -F '"use_prepared_statements":true' "$OUTPUT_FOLDER/graphql-engine.log" >/dev/null || (cat "$OUTPUT_FOLDER/graphql-engine.log" && false)
 
-kill_hge
 
 ######### Test HASURA_GRAPHQL_USE_PREPARED_STATEMENTS=abcd
 

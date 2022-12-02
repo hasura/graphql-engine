@@ -8,7 +8,7 @@ module Hasura.Backends.Postgres.Instances.Metadata () where
 
 import Data.HashMap.Strict qualified as Map
 import Data.Text.Extended
-import Hasura.Backends.Postgres.DDL qualified as PG
+import Hasura.Backends.Postgres.DDL qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 import Hasura.Base.Error
@@ -109,25 +109,30 @@ instance PostgresMetadata 'Citus where
                   <> ")"
               )
 
+instance PostgresMetadata 'Cockroach where
+  validateRel _ _ _ = pure ()
+
 ----------------------------------------------------------------
 -- BackendMetadata instance
 
 instance
   ( Backend ('Postgres pgKind),
     PostgresMetadata pgKind,
-    PG.ToMetadataFetchQuery pgKind
+    Postgres.FetchTableMetadata pgKind,
+    Postgres.FetchFunctionMetadata pgKind,
+    Postgres.ToMetadataFetchQuery pgKind
   ) =>
   BackendMetadata ('Postgres pgKind)
   where
-  prepareCatalog = PG.prepareCatalog
-  buildComputedFieldInfo = PG.buildComputedFieldInfo
-  fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
-  resolveSourceConfig = PG.resolveSourceConfig
-  resolveDatabaseMetadata = PG.resolveDatabaseMetadata
-  parseBoolExpOperations = PG.parseBoolExpOperations
-  buildFunctionInfo = PG.buildFunctionInfo
-  updateColumnInEventTrigger = PG.updateColumnInEventTrigger
-  parseCollectableType = PG.parseCollectableType
-  postDropSourceHook = PG.postDropSourceHook
+  prepareCatalog = Postgres.prepareCatalog
+  buildComputedFieldInfo = Postgres.buildComputedFieldInfo
+  fetchAndValidateEnumValues = Postgres.fetchAndValidateEnumValues
+  resolveSourceConfig = Postgres.resolveSourceConfig
+  resolveDatabaseMetadata = Postgres.resolveDatabaseMetadata
+  parseBoolExpOperations = Postgres.parseBoolExpOperations
+  buildFunctionInfo = Postgres.buildFunctionInfo
+  updateColumnInEventTrigger = Postgres.updateColumnInEventTrigger
+  parseCollectableType = Postgres.parseCollectableType
+  postDropSourceHook = Postgres.postDropSourceHook
   validateRelationship = validateRel @pgKind
-  buildComputedFieldBooleanExp = PG.buildComputedFieldBooleanExp
+  buildComputedFieldBooleanExp = Postgres.buildComputedFieldBooleanExp

@@ -1,6 +1,7 @@
 module Database.MSSQL.Transaction
   ( TxET (..),
     MSSQLTxError (..),
+    TxIsolation (..),
     TxT,
     TxE,
     runTx,
@@ -65,6 +66,7 @@ type TxT m a = TxET MSSQLTxError m a
 -- See 'runTxE' if you need to map the error type as well.
 runTx ::
   (MonadIO m, MonadBaseControl IO m) =>
+  TxIsolation ->
   TxT m a ->
   MSSQLPool ->
   ExceptT MSSQLTxError m a
@@ -74,11 +76,12 @@ runTx = runTxE id
 runTxE ::
   (MonadIO m, MonadBaseControl IO m) =>
   (MSSQLTxError -> e) ->
+  TxIsolation ->
   TxET e m a ->
   MSSQLPool ->
   ExceptT e m a
-runTxE ef tx pool = do
-  withMSSQLPool pool (asTransaction ef (`execTx` tx))
+runTxE ef txIsolation tx pool = do
+  withMSSQLPool pool (asTransaction ef txIsolation (`execTx` tx))
     >>= hoistEither . mapLeft (ef . MSSQLConnError)
 
 -- | Useful for building transactions which return no data.
@@ -239,21 +242,35 @@ data TransactionState
     -- rollback of the transaction.
     TSUncommittable
 
+data TxIsolation
+  = ReadCommitted
+  | RepeatableRead
+  | Serializable
+
+instance Show TxIsolation where
+  show = \case
+    ReadCommitted -> "READ COMMITTED"
+    RepeatableRead -> "REPEATABLE READ"
+    Serializable -> "SERIALIZABLE"
+
 -- | Wraps an action in a transaction. Rolls back on errors.
 asTransaction ::
   forall e a m.
   MonadIO m =>
   (MSSQLTxError -> e) ->
+  TxIsolation ->
   (ODBC.Connection -> ExceptT e m a) ->
   ODBC.Connection ->
   ExceptT e m a
-asTransaction ef action conn = do
+asTransaction ef txIsolation action conn = do
   -- Begin the transaction. If there is an error, do not rollback.
-  withExceptT ef $ execTx conn beginTx
+  withExceptT ef $ execTx conn $ setTxIsoLevelTx txIsolation >> beginTx
   -- Run the transaction and commit. If there is an error, rollback.
   flip catchError rollbackAndThrow do
     result <- action conn
-    withExceptT ef $ execTx conn commitTx
+    -- After running the transaction, set the transaction isolation level
+    -- to the default isolation level i.e. Read Committed
+    withExceptT ef $ execTx conn $ commitTx >> setTxIsoLevelTx ReadCommitted
     pure result
   where
     -- Rollback and throw error.
@@ -264,6 +281,10 @@ asTransaction ef action conn = do
 
 beginTx :: MonadIO m => TxT m ()
 beginTx = unitQuery "BEGIN TRANSACTION"
+
+setTxIsoLevelTx :: MonadIO m => TxIsolation -> TxT m ()
+setTxIsoLevelTx txIso =
+  unitQuery $ ODBC.rawUnescapedText $ "SET TRANSACTION ISOLATION LEVEL " <> tshow txIso <> ";"
 
 commitTx :: MonadIO m => TxT m ()
 commitTx =

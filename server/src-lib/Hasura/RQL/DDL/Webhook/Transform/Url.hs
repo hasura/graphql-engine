@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.Webhook.Transform.Url
   ( -- * Url Transformations
     Url (..),
     TransformFn (..),
+    TransformCtx (..),
     UrlTransformFn (..),
   )
 where
@@ -12,18 +13,19 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Text qualified as T
 import Data.Validation
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    TemplatingEngine,
+  ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
-    runRequestTemplateTransform,
     throwErrorBundle,
-    validateRequestUnescapedTemplateTransform',
     wrapUnescapedTemplate,
+  )
+import Hasura.RQL.DDL.Webhook.Transform.Request
+  ( RequestTransformCtx,
+    runRequestTemplateTransform,
+    validateRequestUnescapedTemplateTransform',
   )
 import Network.URI (parseURI)
 
@@ -42,11 +44,13 @@ instance Transform Url where
   -- wrapper.
   newtype TransformFn Url = UrlTransformFn_ UrlTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
+
+  newtype TransformCtx Url = TransformCtx RequestTransformCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyUrlTransformFn' is defined separately.
-  transform (UrlTransformFn_ fn) = applyUrlTransformFn fn
+  transform (UrlTransformFn_ fn) (TransformCtx reqCtx) = applyUrlTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateUrlTransformFn' is defined separately.
@@ -56,7 +60,7 @@ instance Transform Url where
 newtype UrlTransformFn
   = Modify UnescapedTemplate
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+  deriving newtype (NFData, FromJSON, ToJSON)
 
 -- | Provide an implementation for the transformations defined by
 -- 'UrlTransformFn'.

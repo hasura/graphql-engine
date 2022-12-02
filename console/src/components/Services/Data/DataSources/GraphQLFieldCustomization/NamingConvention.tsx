@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NamingConventionOptions } from '@/metadata/types';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { useServerConfig } from '@/hooks';
 import { getSupportedDrivers } from '@/dataSources';
 import { CardRadioGroup } from '@/new-components/CardRadioGroup';
@@ -43,18 +43,27 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
   connectionDBState,
 }) => {
   const { data: configData, isLoading, isError } = useServerConfig();
-
-  if (isError) {
-    return <div>Error in fetching server configuration</div>;
-  }
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  const isNamingConventionEnabled = configData?.experimental_features.includes(
-    'naming_convention'
+  const [enableNamingConvention, setEnableNamingConvention] = useState(
+    !!namingConvention
   );
+
+  const namingConventionEnabled = () => {
+    if (enableNamingConvention) {
+      onChange('namingConvention', null);
+    } else {
+      onChange(
+        'namingConvention',
+        configData?.default_naming_convention === null
+          ? 'hasura-default'
+          : configData?.default_naming_convention
+      );
+    }
+
+    return setEnableNamingConvention(!enableNamingConvention);
+  };
+
+  const isNamingConventionEnabled =
+    configData?.experimental_features.includes('naming_convention');
 
   const isNamingConventionSupported =
     connectionDBState?.dbType &&
@@ -62,13 +71,66 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
       connectionDBState?.dbType
     );
 
+  const namingconventionFields = () => {
+    if (isLoading) {
+      return (
+        <div className="font-normal flex items-center text-gray-600">
+          Loading Naming convention...
+        </div>
+      );
+    }
+    if (isError) {
+      return (
+        <div className="font-normal flex items-center text-gray-600">
+          Error in fetching server configuration
+        </div>
+      );
+    }
+    return (
+      <>
+        {!isNamingConventionEnabled ? (
+          <div className="font-thin">
+            Naming convention is not enabled. To enable naming convention, start
+            the Hasura server with environment variable
+            <code>
+              HASURA_GRAPHQL_EXPERIMENTAL_FEATURES:
+              &quot;naming_convention&quot;
+            </code>
+          </div>
+        ) : (
+          <>
+            <div className="mr-md text-gray-600 checkbox">
+              <label className="cursor-pointer flex">
+                <input
+                  type="checkbox"
+                  checked={enableNamingConvention}
+                  onChange={() => namingConventionEnabled()}
+                  className="cursor-pointer"
+                />
+                <span className="ml-xs">Enable Naming Convention</span>
+              </label>
+            </div>
+            <span className="p-sm py-8">
+              <CardRadioGroup
+                items={namingConventionRadioGroupItems}
+                onChange={ncType => onChange('namingConvention', ncType)}
+                value={namingConvention ?? undefined}
+                disabled={!enableNamingConvention}
+              />
+            </span>
+          </>
+        )}
+      </>
+    );
+  };
+
   return (
     <div>
       {isNamingConventionSupported ? (
         <div className="p-sm box-border">
           <p className="flex items-center text-gray-600 font-semibold">
             Naming Convention
-            <ToolTip message="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)" />
+            <IconTooltip message="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)" />
             <a
               href="https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/naming-convention/#set-naming-convention-for-a-particular-source"
               target="_blank"
@@ -77,24 +139,7 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
               <span className="italic font-thin text-sm	pl-1">(Know More)</span>
             </a>
           </p>
-          {!isNamingConventionEnabled ? (
-            <div className="font-thin">
-              Naming convention is not enabled. To enable naming convention,
-              start the Hasura server with environment variable
-              <code>
-                HASURA_GRAPHQL_EXPERIMENTAL_FEATURES:
-                &quot;naming_convention&quot;
-              </code>
-            </div>
-          ) : (
-            <span className="p-sm py-8">
-              <CardRadioGroup
-                items={namingConventionRadioGroupItems}
-                onChange={ncType => onChange('namingConvention', ncType)}
-                value={namingConvention}
-              />
-            </span>
-          )}
+          {namingconventionFields()}
         </div>
       ) : null}
     </div>

@@ -18,7 +18,7 @@ import Data.Kind (Type)
 import Data.Tagged
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
@@ -37,10 +37,10 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.QueryTags (QueryTagsConfig)
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.Run (RunT (..))
 import Hasura.RQL.Types.SchemaCache.Build (MetadataT (..))
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
@@ -261,6 +261,9 @@ data ExecutionStep where
   ExecStepRaw ::
     JO.Value ->
     ExecutionStep
+  ExecStepMulti ::
+    [ExecutionStep] ->
+    ExecutionStep
 
 -- | The series of steps that need to be executed for a given query. For now, those steps are all
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
@@ -285,8 +288,8 @@ instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
 instance (MonadQueryTags m) => MonadQueryTags (MetadataStorageT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) QueryTagsComment
 
-instance (MonadQueryTags m) => MonadQueryTags (Q.TxET QErr m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (Q.TxET QErr m) QueryTagsComment
+instance (MonadQueryTags m) => MonadQueryTags (PG.TxET QErr m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (PG.TxET QErr m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) QueryTagsComment

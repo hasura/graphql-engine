@@ -1,8 +1,9 @@
 import { dataSource } from '../../../dataSources';
+import { getPersistedPageSize } from './TableBrowseRows/tableUtils';
 
 const defaultCurFilter = {
   where: { $and: [{ '': { $eq: '' } }] },
-  limit: 10,
+  limit: getPersistedPageSize() || 10,
   offset: 0,
   order_by: [{ column: '', type: 'asc', nulls: 'last' }],
 };
@@ -52,6 +53,8 @@ const defaultQueryPermissions = {
   },
   select: {
     columns: [],
+    subscription_root_fields: null,
+    query_root_fields: null,
     computed_fields: [],
     backend_only: false,
     filter: {},

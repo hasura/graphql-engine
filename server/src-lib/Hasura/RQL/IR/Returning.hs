@@ -29,55 +29,44 @@ import Hasura.SQL.Backend
 
 data MutFldG (b :: BackendType) (r :: Type) v
   = MCount
-  | MExp !Text
-  | MRet !(AnnFieldsG b r v)
+  | MExp Text
+  | MRet (AnnFieldsG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
-  ( Show r,
-    Backend b,
-    Show (BooleanOperators b a),
-    Show (FunctionArgumentExp b a),
-    Show a
+  ( Backend b,
+    Show (AnnFieldsG b r v)
   ) =>
-  Show (MutFldG b r a)
+  Show (MutFldG b r v)
 
 deriving stock instance
   ( Backend b,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Eq r,
-    Eq a
+    Eq (AnnFieldsG b r v)
   ) =>
-  Eq (MutFldG b r a)
+  Eq (MutFldG b r v)
 
 type MutFld b = MutFldG b Void (SQLExpression b)
 
 type MutFldsG b r v = Fields (MutFldG b r v)
 
 data MutationOutputG (b :: BackendType) (r :: Type) v
-  = MOutMultirowFields !(MutFldsG b r v)
-  | MOutSinglerowObject !(AnnFieldsG b r v)
+  = MOutMultirowFields (MutFldsG b r v)
+  | MOutSinglerowObject (AnnFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
-    Show (BooleanOperators b a),
-    Show (MutFldsG b r a),
-    Show (FunctionArgumentExp b a),
-    Show r,
-    Show a
+    Show (MutFldsG b r v),
+    Show (AnnFieldsG b r v)
   ) =>
-  Show (MutationOutputG b r a)
+  Show (MutationOutputG b r v)
 
 deriving stock instance
   ( Backend b,
-    Eq (BooleanOperators b a),
-    Eq (FunctionArgumentExp b a),
-    Eq r,
-    Eq a
+    Eq (MutFldsG b r v),
+    Eq (AnnFieldsG b r v)
   ) =>
-  Eq (MutationOutputG b r a)
+  Eq (MutationOutputG b r v)
 
 type MutationOutput b = MutationOutputG b Void (SQLExpression b)
 

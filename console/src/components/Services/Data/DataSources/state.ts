@@ -1,4 +1,5 @@
 import pickBy from 'lodash.pickby';
+import produce from 'immer';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource, renameDataSource } from '../../../../metadata/actions';
@@ -12,6 +13,7 @@ import {
   GraphQLFieldCustomization,
   NamingConventionOptions,
 } from '../../../../metadata/types';
+import { isPostgresFlavour } from './utils';
 
 export const connectionTypes = {
   DATABASE_URL: 'DATABASE_URL',
@@ -41,6 +43,7 @@ export type ConnectDBState = {
   envVarState: {
     envVar: string;
   };
+  extensionsSchema?: string;
   connectionSettings?: ConnectionPoolSettings;
   sslConfiguration?: SSLConfigOptions;
   isolationLevel?: IsolationLevelOptions;
@@ -73,7 +76,7 @@ export const defaultState: ConnectDBState = {
   preparedStatements: false,
   isolationLevel: 'read-committed',
   customization: {
-    namingConvention: 'hasura-default',
+    namingConvention: null,
   },
 };
 
@@ -83,6 +86,7 @@ type DefaultStateProps = {
     envVar?: string;
     dbName?: string;
   };
+  extensionsSchema?: string;
 };
 
 export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
@@ -96,6 +100,9 @@ export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
     envVarState: {
       envVar: props?.dbConnection.envVar || '',
     },
+    ...(props?.extensionsSchema && {
+      extensionsSchema: props?.extensionsSchema,
+    }),
   };
 };
 
@@ -111,10 +118,10 @@ const setDataFromEnv = (str: string) => {
     : undefined;
 };
 
-const checkUndef = (obj?: Record<string, any>) =>
+const checkUndef = (obj?: Record<string, any> | string | null) =>
   obj && Object.values(obj).some(el => el !== undefined && el !== null);
 
-const checkEmpty = (obj?: Record<string, any>) =>
+const checkEmpty = (obj?: Record<string, any> | null | string) =>
   obj && Object.keys(obj).length !== 0 && checkUndef(obj);
 
 export const connectDataSource = (
@@ -131,7 +138,8 @@ export const connectDataSource = (
   >[],
   isEditState = false,
   isRenameSource = false,
-  currentName = ''
+  currentName = '',
+  shouldShowNotification = true
 ) => {
   let connectionParams: ConnectionParams | undefined;
   let databaseURL: string | { from_env: string } =
@@ -152,7 +160,7 @@ export const connectDataSource = (
       currentState.dbType
     )
   ) {
-    if (currentState.dbType === 'postgres' || currentState.dbType === 'citus') {
+    if (isPostgresFlavour(currentState.dbType)) {
       connectionParams = currentState.connectionParamState;
     }
     databaseURL = makeConnectionStringFromConnectionParams({
@@ -183,19 +191,23 @@ export const connectDataSource = (
       ...(checkEmpty(currentState.sslConfiguration) && {
         sslConfiguration: currentState.sslConfiguration,
       }),
+      ...(currentState.extensionsSchema &&
+        currentState.extensionsSchema !== '' && {
+          extensionsSchema: currentState.extensionsSchema,
+        }),
       preparedStatements: currentState.preparedStatements,
       isolationLevel: currentState.isolationLevel,
-      ...(checkEmpty(currentState.customization) && {
-        customization: {
-          ...(checkEmpty(currentState.customization?.rootFields) && {
-            rootFields: currentState.customization?.rootFields,
-          }),
-          ...(checkEmpty(currentState.customization?.typeNames) && {
-            typeNames: currentState.customization?.typeNames,
-          }),
+      customization: {
+        ...(checkEmpty(currentState.customization?.rootFields) && {
+          rootFields: currentState.customization?.rootFields,
+        }),
+        ...(checkEmpty(currentState.customization?.typeNames) && {
+          typeNames: currentState.customization?.typeNames,
+        }),
+        ...(checkEmpty(currentState.customization?.namingConvention) && {
           namingConvention: currentState.customization?.namingConvention,
-        },
-      }),
+        }),
+      },
     },
   };
 
@@ -209,7 +221,8 @@ export const connectDataSource = (
       )
     );
   }
-  return dispatch(addDataSource(data, cb, replicas));
+
+  return dispatch(addDataSource(data, cb, replicas, shouldShowNotification));
 };
 
 export const removeEmptyValues = (obj: any) =>
@@ -223,6 +236,7 @@ export type ConnectDBActions =
         driver: Driver;
         databaseUrl: string;
         connectionParamState?: ConnectionParams;
+        extensionsSchema?: string;
         connectionSettings?: ConnectionPoolSettings;
         preparedStatements: boolean;
         isolationLevel: IsolationLevelOptions;
@@ -233,6 +247,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
+  | { type: 'UPDATE_EXTENSIONS_SCHEMA'; data?: string }
   | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT'; data: number }
   | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
@@ -244,6 +259,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_DB_PASSWORD'; data: string }
   | { type: 'UPDATE_DB_DATABASE_NAME'; data: string }
   | { type: 'UPDATE_MAX_CONNECTIONS'; data: string }
+  | { type: 'UPDATE_TOTAL_MAX_CONNECTIONS'; data: string }
   | { type: 'UPDATE_RETRIES'; data: string }
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
   | { type: 'UPDATE_POOL_TIMEOUT'; data: string }
@@ -289,6 +305,7 @@ export const connectDBReducer = (
         isolationLevel: action.data.isolationLevel,
         sslConfiguration: action.data.sslConfiguration,
         customization: action.data?.customization,
+        extensionsSchema: action.data?.extensionsSchema,
       };
     case 'UPDATE_PARAM_STATE':
       return {
@@ -372,6 +389,13 @@ export const connectDBReducer = (
           max_connections: setNumberFromString(action.data),
         },
       };
+    case 'UPDATE_TOTAL_MAX_CONNECTIONS':
+      return produce(state, (draft: ConnectDBState) => {
+        draft.connectionSettings = state.connectionSettings ?? {};
+        draft.connectionSettings.total_max_connections = setNumberFromString(
+          action.data
+        );
+      });
     case 'UPDATE_RETRIES':
       return {
         ...state,
@@ -474,6 +498,11 @@ export const connectDBReducer = (
           ...state.databaseURLState,
           global_select_limit: action.data,
         },
+      };
+    case 'UPDATE_EXTENSIONS_SCHEMA':
+      return {
+        ...state,
+        extensionsSchema: action.data,
       };
     case 'UPDATE_DB_BIGQUERY_DATASETS':
       return {
@@ -641,6 +670,10 @@ export const makeReadReplicaConnectionObject = (
   const pool_settings: any = {};
   if (stateVal.connectionSettings?.max_connections) {
     pool_settings.max_connections = stateVal.connectionSettings.max_connections;
+  }
+  if (stateVal.connectionSettings?.total_max_connections) {
+    pool_settings.total_max_connections =
+      stateVal.connectionSettings.total_max_connections;
   }
   if (stateVal.connectionSettings?.idle_timeout) {
     pool_settings.idle_timeout = stateVal.connectionSettings.idle_timeout;

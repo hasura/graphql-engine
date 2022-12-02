@@ -5,10 +5,12 @@ module Hasura.RQL.Types.ApiLimit
     MaxDepth (..),
     MaxNodes (..),
     MaxTime (..),
+    MaxBatchSize (..),
     NodeLimit,
     RateLimit,
     RateLimitConfig (..),
     TimeLimit,
+    BatchLimit,
     UniqueParamConfig (..),
     emptyApiLimit,
   )
@@ -24,11 +26,12 @@ import Hasura.Server.Utils (isSessionVariable)
 import Hasura.Session (RoleName)
 
 data ApiLimit = ApiLimit
-  { _alRateLimit :: !(Maybe RateLimit),
-    _alDepthLimit :: !(Maybe DepthLimit),
-    _alNodeLimit :: !(Maybe NodeLimit),
-    _alTimeLimit :: !(Maybe TimeLimit),
-    _alDisabled :: !Bool
+  { _alRateLimit :: Maybe RateLimit,
+    _alDepthLimit :: Maybe DepthLimit,
+    _alNodeLimit :: Maybe NodeLimit,
+    _alTimeLimit :: Maybe TimeLimit,
+    _alBatchLimit :: Maybe BatchLimit,
+    _alDisabled :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -39,6 +42,7 @@ instance FromJSON ApiLimit where
       <*> o .:? "depth_limit"
       <*> o .:? "node_limit"
       <*> o .:? "time_limit"
+      <*> o .:? "batch_limit"
       <*> o .:? "disabled" .!= False
 
 instance ToJSON ApiLimit where
@@ -46,11 +50,11 @@ instance ToJSON ApiLimit where
     genericToJSON (Casing.aesonPrefix Casing.snakeCase) {omitNothingFields = True}
 
 emptyApiLimit :: ApiLimit
-emptyApiLimit = ApiLimit Nothing Nothing Nothing Nothing False
+emptyApiLimit = ApiLimit Nothing Nothing Nothing Nothing Nothing False
 
 data Limit a = Limit
-  { _lGlobal :: !a,
-    _lPerRole :: !(InsOrdHashMap RoleName a)
+  { _lGlobal :: a,
+    _lPerRole :: InsOrdHashMap RoleName a
   }
   deriving (Show, Eq, Generic)
 
@@ -70,9 +74,11 @@ type NodeLimit = Limit MaxNodes
 
 type TimeLimit = Limit MaxTime
 
+type BatchLimit = Limit MaxBatchSize
+
 data RateLimitConfig = RateLimitConfig
-  { _rlcMaxReqsPerMin :: !Int,
-    _rlcUniqueParams :: !(Maybe UniqueParamConfig)
+  { _rlcMaxReqsPerMin :: Int,
+    _rlcUniqueParams :: Maybe UniqueParamConfig
   }
   deriving (Show, Eq, Generic)
 
@@ -87,7 +93,7 @@ instance ToJSON RateLimitConfig where
 -- | The unique key using which an authenticated client can be identified
 data UniqueParamConfig
   = -- | it can be a list of session variable (like session var in 'UserInfo')
-    UPCSessionVar ![Text]
+    UPCSessionVar [Text]
   | -- | or it can be an IP address
     UPCIpAddress
   deriving (Show, Eq, Generic)
@@ -121,6 +127,10 @@ newtype MaxNodes = MaxNodes {unMaxNodes :: Int}
   deriving newtype (ToJSON, FromJSON)
 
 newtype MaxTime = MaxTime {unMaxTime :: Seconds}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (ToJSON, FromJSON)
+
+newtype MaxBatchSize = MaxBatchSize {unMaxBatchSize :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (ToJSON, FromJSON)
 

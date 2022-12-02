@@ -26,19 +26,29 @@ module Hasura.RQL.Types.Source
     SourceResolver,
     MonadResolveSource (..),
     MaintenanceModeVersion (..),
+
+    -- * Health check
+    SourceHealthCheckInfo (..),
+    BackendSourceHealthCheckInfo,
+    SourceHealthCheckCache,
+
+    -- * Source pings
+    SourcePingInfo (..),
+    BackendSourcePingInfo,
+    SourcePingCache,
   )
 where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SourceCustomization
@@ -50,22 +60,36 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
--- Metadata
+-- Metadata (FIXME: this grouping is inaccurate)
 
 data SourceInfo b = SourceInfo
-  { _siName :: !SourceName,
-    _siTables :: !(TableCache b),
-    _siFunctions :: !(FunctionCache b),
-    _siConfiguration :: !(SourceConfig b),
-    _siQueryTagsConfig :: !(Maybe QueryTagsConfig),
-    _siCustomization :: !SourceCustomization
+  { _siName :: SourceName,
+    _siTables :: TableCache b,
+    _siFunctions :: FunctionCache b,
+    _siConfiguration :: ~(SourceConfig b),
+    _siQueryTagsConfig :: Maybe QueryTagsConfig,
+    _siCustomization :: ResolvedSourceCustomization
   }
-  deriving (Generic)
 
 $(makeLenses ''SourceInfo)
 
-instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
-  toJSON = genericToJSON hasuraJSON
+instance
+  ( Backend b,
+    ToJSON (TableCache b),
+    ToJSON (FunctionCache b),
+    ToJSON (QueryTagsConfig),
+    ToJSON (SourceCustomization)
+  ) =>
+  ToJSON (SourceInfo b)
+  where
+  toJSON (SourceInfo {..}) =
+    object
+      [ "name" .= _siName,
+        "tables" .= _siTables,
+        "functions" .= _siFunctions,
+        "configuration" .= _siConfiguration,
+        "query_tags_config" .= _siQueryTagsConfig
+      ]
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo
 
@@ -107,6 +131,7 @@ data ResolvedSource b = ResolvedSource
     _rsFunctions :: DBFunctionsMetadata b,
     _rsScalars :: ScalarMap b
   }
+  deriving (Eq)
 
 instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
@@ -120,6 +145,8 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
 -- | A map from GraphQL name to equivalent scalar type for a given backend.
 data ScalarMap b where
   ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
+
+deriving stock instance Eq (ScalarMap b)
 
 instance Backend b => Semigroup (ScalarMap b) where
   ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2
@@ -152,7 +179,7 @@ instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
-instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
+instance (MonadResolveSource m) => MonadResolveSource (PG.TxET QErr m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
@@ -164,3 +191,28 @@ data MaintenanceModeVersion
   | -- | should correspond to the latest source catalog version
     CurrentMMVersion
   deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Source health check
+
+data SourceHealthCheckInfo b = SourceHealthCheckInfo
+  { _shciName :: SourceName,
+    _shciConnection :: SourceConnConfiguration b,
+    _shciHealthCheck :: HealthCheckConfig b
+  }
+
+type BackendSourceHealthCheckInfo = AB.AnyBackend SourceHealthCheckInfo
+
+type SourceHealthCheckCache = HashMap SourceName BackendSourceHealthCheckInfo
+
+-------------------------------------------------------------------------------
+-- Source pings
+
+data SourcePingInfo b = SourcePingInfo
+  { _spiName :: SourceName,
+    _spiConnection :: SourceConnConfiguration b
+  }
+
+type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
+
+type SourcePingCache = HashMap SourceName BackendSourcePingInfo

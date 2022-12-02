@@ -167,7 +167,7 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
         "$matches_any" -> guardType [PGLtree] >> ABackendSpecific . AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
         "_matches_fulltext" -> guardType [PGLtree] >> ABackendSpecific . AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
         "$matches_fulltext" -> guardType [PGLtree] >> ABackendSpecific . AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
-        x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
       where
         colTy = columnReferenceType column
 
@@ -287,10 +287,12 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
 
         guardType validTys =
           unless (isScalarColumnWhere (`elem` validTys) colTy) $
-            throwError $ buildMsg colTy validTys
+            throwError $
+              buildMsg colTy validTys
         buildMsg ty expTys =
           err400 UnexpectedPayload $
-            " is of type " <> ty <<> "; this operator works only on columns of type "
+            " is of type "
+              <> ty <<> "; this operator works only on columns of type "
               <> T.intercalate "/" (map dquote expTys)
 
         parseVal :: (FromJSON a) => m a

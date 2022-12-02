@@ -1,7 +1,7 @@
 -- | An EDSL for writing Postgres SQL expressions for testing purposes
 --   as they are defined in "Hasura.Backends.Postgres.SQL.DML".
 --
---   This is currently used in "Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec".
+--   This is currently used in "Hasura.Backends.Postgres.SQL.Select.RenameIdentifiersSpec".
 module Hasura.Backends.Postgres.SQL.EDSL
   ( module Hasura.Backends.Postgres.SQL.EDSL,
     module Hasura.Backends.Postgres.SQL.DML,
@@ -119,7 +119,7 @@ selectIdentifiers_ alias table columns =
                                 Extractor
                                   ( SEQIdentifier
                                       ( QIdentifier
-                                          (QualifiedIdentifier (Identifier table) Nothing)
+                                          (QualifiedIdentifier (TableIdentifier table) Nothing)
                                           (Identifier column)
                                       )
                                   )
@@ -175,12 +175,7 @@ tcolumn_ :: Text -> Text -> SQLExp
 tcolumn_ table column =
   SEQIdentifier
     ( QIdentifier
-        ( QualifiedIdentifier
-            ( Identifier
-                { getIdenTxt = table
-                }
-            )
-            Nothing
+        ( QualifiedIdentifier (TableIdentifier table) Nothing
         )
         ( Identifier
             { getIdenTxt = column

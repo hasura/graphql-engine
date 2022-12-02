@@ -12,9 +12,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Text.Extended
 import Data.Vector qualified as V
-import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -195,41 +193,33 @@ query_root obtained in (B). -}
 --
 -- See Note [What introspection exposes]
 buildIntrospectionSchema ::
-  MonadError QErr m =>
   P.Type 'Output ->
   Maybe (P.Type 'Output) ->
   Maybe (P.Type 'Output) ->
-  m P.Schema
+  Either P.ConflictingDefinitions P.Schema
 buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
   let -- The only directives that we currently expose over introspection are our
       -- statically defined ones.  So, for instance, we don't correctly expose
       -- directives from remote schemas.
       directives :: [DirectiveInfo] = directivesInfo @P.Parse
-      -- The __schema and __type introspection fields
-      introspection = [schema @P.Parse, typeIntrospection]
-      {-# INLINE introspection #-}
 
-  -- Collect type information of all non-introspection fields
-  allBasicTypes <-
-    collectTypes
+  -- Collect type information of all fields
+  --
+  -- TODO: it may be worth looking at whether we can stop collecting
+  -- introspection types monadically. They are independent of the user schema;
+  -- the types here are always the same and specified by the GraphQL spec
+  allTypes <-
+    P.collectTypeDefinitions
       [ P.TypeDefinitionsWrapper queryRoot',
         P.TypeDefinitionsWrapper mutationRoot',
         P.TypeDefinitionsWrapper subscriptionRoot',
-        P.TypeDefinitionsWrapper $ P.diArguments =<< directives
+        P.TypeDefinitionsWrapper $ P.diArguments =<< directives,
+        -- The __schema introspection field
+        P.TypeDefinitionsWrapper $ fDefinition (schema @Parse),
+        -- The __type introspection field
+        P.TypeDefinitionsWrapper $ fDefinition (typeIntrospection @Parse)
       ]
 
-  -- TODO: it may be worth looking at whether we can stop collecting
-  -- introspection types monadically.  They are independent of the user schema;
-  -- the types here are always the same and specified by the GraphQL spec
-
-  -- Pull all the introspection types out (__Type, __Schema, etc)
-  allIntrospectionTypes <- collectTypes (map fDefinition introspection)
-
-  let allTypes =
-        Map.unions
-          [ allBasicTypes,
-            Map.filterWithKey (\name _info -> name /= P.getName queryRoot') allIntrospectionTypes
-          ]
   pure $
     P.Schema
       { sDescription = Nothing,
@@ -239,19 +229,6 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
         sSubscriptionType = subscriptionRoot',
         sDirectives = directives
       }
-
-collectTypes ::
-  (MonadError QErr m, P.HasTypeDefinitions a) =>
-  a ->
-  m (HashMap G.Name P.SomeDefinitionTypeInfo)
-collectTypes x =
-  P.collectTypeDefinitions x
-    `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
-      -- See Note [Collecting types from the GraphQL schema]
-      throw500 $
-        "Found conflicting definitions for " <> P.getName type1 <<> ".  The definition at " <> origin1
-          <<> " differs from the the definition at " <> commaSeparated origins
-          <<> "."
 
 -- | Generate a __type introspection parser
 typeIntrospection ::
@@ -329,17 +306,17 @@ typeField =
                   J.String "NON_NULL"
                 P.TList P.Nullable _ ->
                   J.String "LIST"
-                P.TNamed P.Nullable (P.Definition _ _ _ P.TIScalar) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ P.TIScalar) ->
                   J.String "SCALAR"
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIEnum _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIEnum _)) ->
                   J.String "ENUM"
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInputObject _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInputObject _)) ->
                   J.String "INPUT_OBJECT"
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIObject _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject _)) ->
                   J.String "OBJECT"
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInterface _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface _)) ->
                   J.String "INTERFACE"
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIUnion _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIUnion _)) ->
                   J.String "UNION"
       name :: FieldParser n (SomeType -> J.Value)
       name =
@@ -347,14 +324,14 @@ typeField =
           $> \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition name' _ _ _) ->
+                P.TNamed P.Nullable (P.Definition name' _ _ _ _) ->
                   nameAsJSON name'
                 _ -> J.Null
       description :: FieldParser n (SomeType -> J.Value)
       description =
         P.selection_ GName._description Nothing P.string
           $> \case
-            SomeType (P.TNamed _ (P.Definition _ (Just desc) _ _)) ->
+            SomeType (P.TNamed _ (P.Definition _ (Just desc) _ _ _)) ->
               J.String (G.unDescription desc)
             _ -> J.Null
       fields :: FieldParser n (SomeType -> J.Value)
@@ -365,9 +342,9 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
                   J.Array $ V.fromList $ printer <$> fields'
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo fields' _objects'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface (P.InterfaceInfo fields' _objects'))) ->
                   J.Array $ V.fromList $ printer <$> fields'
                 _ -> J.Null
       interfaces :: FieldParser n (SomeType -> J.Value)
@@ -377,7 +354,7 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
                   J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIInterface <$> interfaces'
                 _ -> J.Null
       possibleTypes :: FieldParser n (SomeType -> J.Value)
@@ -387,9 +364,9 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
                   J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIUnion (P.UnionInfo objects'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIUnion (P.UnionInfo objects'))) ->
                   J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
                 _ -> J.Null
       enumValues :: FieldParser n (SomeType -> J.Value)
@@ -400,7 +377,7 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIEnum vals)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIEnum vals)) ->
                   J.Array $ V.fromList $ fmap printer $ toList vals
                 _ -> J.Null
       inputFields :: FieldParser n (SomeType -> J.Value)
@@ -410,7 +387,7 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
                   J.Array $ V.fromList $ map printer fieldDefs
                 _ -> J.Null
       -- ofType peels modalities off of types
@@ -557,7 +534,7 @@ typeKind =
         ]
     )
   where
-    mkDefinition name = (P.Definition name Nothing Nothing P.EnumValueInfo, ())
+    mkDefinition name = (P.Definition name Nothing Nothing [] P.EnumValueInfo, ())
 
 {-
 type __Field {
@@ -694,7 +671,9 @@ schemaSet =
             J.Array $
               V.fromList $
                 map (printer . schemaTypeToSomeType) $
-                  sortOn P.getName $ Map.elems $ sTypes partialSchema
+                  sortOn P.getName $
+                    Map.elems $
+                      sTypes partialSchema
         where
           schemaTypeToSomeType :: P.SomeDefinitionTypeInfo -> SomeType
           schemaTypeToSomeType (P.SomeDefinitionTypeInfo def) =

@@ -8,6 +8,7 @@ module Hasura.Backends.DataConnector.Agent.Client
 where
 
 import Control.Exception (try)
+import Control.Lens ((&~), (.=))
 import Hasura.Backends.DataConnector.Logging (logAgentRequest, logClientError)
 import Hasura.Base.Error
 import Hasura.HTTP qualified
@@ -25,7 +26,8 @@ import Servant.Client.Internal.HttpClient (clientResponseToResponse, mkFailureRe
 data AgentClientContext = AgentClientContext
   { _accLogger :: Logger Hasura,
     _accBaseUrl :: BaseUrl,
-    _accHttpManager :: Manager
+    _accHttpManager :: Manager,
+    _accResponseTimeout :: Maybe Int
   }
 
 newtype AgentClientT m a = AgentClientT (ReaderT AgentClientContext m a)
@@ -50,7 +52,12 @@ runRequestAcceptStatus' acceptStatus req = do
     TransformableHTTP.tryFromClientRequest req'
       `onLeft` (\err -> throw500 $ "Error in Data Connector backend: Could not create request. " <> err)
 
-  (tracedReq, responseOrException) <- tracedHttpRequest transformableReq (\tracedReq -> fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ TransformableHTTP.performRequest tracedReq _accHttpManager)
+  -- Set the response timeout explicitly if it is provided
+  let transformableReq' =
+        transformableReq &~ do
+          for _accResponseTimeout \x -> TransformableHTTP.timeout .= HTTP.responseTimeoutMicro x
+
+  (tracedReq, responseOrException) <- tracedHttpRequest transformableReq' (\tracedReq -> fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ TransformableHTTP.performRequest tracedReq _accHttpManager)
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of
     Left ex ->

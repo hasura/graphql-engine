@@ -9,6 +9,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     OnConnH,
     WSActions (..),
     WSConn,
+    WSErrorMessage (..),
     WSEvent (EMessageSent),
     WSEventInfo (WSEventInfo, _wseiEventType, _wseiOperationId, _wseiOperationName, _wseiParameterizedQueryHash, _wseiQueryExecutionTime, _wseiResponseSize),
     WSHandlers (WSHandlers),
@@ -19,13 +20,13 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     WSQueueResponse (WSQueueResponse),
     WSServer,
     closeConn,
+    sendMsgAndCloseConn,
     createServerApp,
     createWSServer,
     getData,
     getRawWebSocketConnection,
     getWSId,
-    onClientMessageParseErrorText,
-    onConnInitErrorText,
+    mkWSServerErrorCode,
     sendMsg,
     shutdown,
 
@@ -47,6 +48,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.SerializableBlob qualified as SB
 import Data.String
+import Data.Text qualified as T
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Data.Word (Word16)
@@ -57,10 +59,12 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (MetricsConfig (..))
 import Hasura.Server.Init.Config (WSConnectionInitTimeout (..))
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
 import Network.WebSockets qualified as WS
+import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.IO.Error qualified as E
 
@@ -190,6 +194,11 @@ closeConnWithCode wsConn code bs = do
     WSLog (_wcConnId wsConn) (ECloseSent $ SB.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
+sendMsgAndCloseConn :: WSConn a -> Word16 -> BL.ByteString -> ServerMsg -> IO ()
+sendMsgAndCloseConn wsConn errCode bs serverErr = do
+  WS.sendTextData (_wcConnRaw wsConn) (encodeServerMsg serverErr)
+  WS.sendCloseCode (_wcConnRaw wsConn) errCode bs
+
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
@@ -251,7 +260,7 @@ type WSKeepAliveMessageAction a = WSConn a -> IO ()
 
 type WSPostExecErrMessageAction a = WSConn a -> OperationId -> GQExecError -> IO ()
 
-type WSOnErrorMessageAction a = WSConn a -> ConnErrMsg -> Maybe String -> IO ()
+type WSOnErrorMessageAction a = WSConn a -> ConnErrMsg -> WSErrorMessage -> IO ()
 
 type WSCloseConnAction a = WSConn a -> OperationId -> String -> IO ()
 
@@ -268,13 +277,12 @@ data WSActions a = WSActions
     _wsaErrorMsgFormat :: !([J.Value] -> J.Value)
   }
 
--- | to be used with `WSOnErrorMessageAction`
-onClientMessageParseErrorText :: Maybe String
-onClientMessageParseErrorText = Just "Parsing client message failed: "
+data WSErrorMessage = ClientMessageParseFailed | ConnInitFailed
 
--- | to be used with `WSOnErrorMessageAction`
-onConnInitErrorText :: Maybe String
-onConnInitErrorText = Just "Connection initialization failed: "
+mkWSServerErrorCode :: WSErrorMessage -> ConnErrMsg -> ServerErrorCode
+mkWSServerErrorCode errorMessage connErrMsg = case errorMessage of
+  ClientMessageParseFailed -> (GenericError4400 $ ("Parsing client message failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
+  ConnInitFailed -> (GenericError4400 $ ("Connection initialization failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
 
 type OnConnH m a = WSId -> WS.RequestHead -> IpAddress -> WSActions a -> m (Either WS.RejectRequest (AcceptWith a))
 
@@ -296,6 +304,7 @@ data WSHandlers m a = WSHandlers
 
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m) =>
+  IO MetricsConfig ->
   WSConnectionInitTimeout ->
   WSServer a ->
   -- | user provided handlers
@@ -303,12 +312,12 @@ createServerApp ::
   -- | aka WS.ServerApp
   HasuraServerApp m
 {-# INLINE createServerApp #-}
-createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
+createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
   -- if the client doesn't send a `connection_init` message within the timeout period
-  wsConnInitTimer <- liftIO $ getNewWSTimer (unWSConnectionInitTimeout wsConnInitTimeout)
+  wsConnInitTimer <- liftIO $ getNewWSTimer (unrefine $ unWSConnectionInitTimeout wsConnInitTimeout)
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> logUnexpectedExceptions $ do
@@ -381,6 +390,7 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
             closeHandler wsConn
           AcceptingConns _ -> do
             let rcv = forever $ do
+                  shouldCaptureVariables <- liftIO $ _mcAnalyzeQueryVariables <$> getMetricsConfig
                   -- Process all messages serially (important!), in a separate thread:
                   msg <-
                     liftIO $
@@ -391,8 +401,11 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
                       -- Regardless this should be safe:
                       handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed) $
                         WS.receiveData conn
-                  let message = MessageDetails (SB.fromLBS msg) (BL.length msg)
-                  logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
+                  let censoredMessage =
+                        MessageDetails
+                          (SB.fromLBS (if shouldCaptureVariables then msg else "<censored>"))
+                          (BL.length msg)
+                  logWSLog logger $ WSLog wsId (EMessageReceived censoredMessage) Nothing
                   messageHandler wsConn msg subProtocol
 
             let send = forever $ do
@@ -410,7 +423,8 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
                     -- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`
                     timeoutStatus <- liftIO $ getWSTimerState wsConnInitTimer
                     when (timeoutStatus == Done && subProtocol == GraphQLWS) $
-                      liftIO $ closeConnWithCode wsConn 4408 "Connection initialisation timed out"
+                      liftIO $
+                        closeConnWithCode wsConn 4408 "Connection initialisation timed out"
 
                     -- terminates on WS.ConnectionException and JWT expiry
                     let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]

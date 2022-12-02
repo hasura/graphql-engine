@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"regexp"
-
-	"github.com/pkg/errors"
+	"strings"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
+	errors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
@@ -74,17 +74,18 @@ func (p *DefaultTemplateProvider) DoTemplateExist(path string) bool {
 }
 
 func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error) {
+	var op errors.Op = "console.DefaultTemplateProvider.LoadTemplates"
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
 		templatePath := path + templateName
 		templateBytes, err := p.consoleFS.ReadFile(templatePath)
 		if err != nil {
-			return nil, errors.Wrap(err, "error reading from file "+templatePath)
+			return nil, errors.E(op, fmt.Errorf("error reading from file: path: %s :%w", templatePath, err))
 		}
 		theTemplate, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating template"+path+templateName)
+			return nil, errors.E(op, fmt.Errorf("error creating template: path: %s, name: %s: %w", path, templateName, err))
 		}
 		r.Add(templateName, theTemplate)
 	}
@@ -120,6 +121,9 @@ func (p *DefaultTemplateProvider) GetTemplateVersion(v *version.Version) string 
 func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 	// server has a version
 	if v.Server != "" {
+		if strings.HasSuffix(v.Server, "-ce") {
+			return fmt.Sprintf("channel/%s/%s", versioned, v.Server)
+		}
 		// version is semver
 		if v.ServerSemver != nil {
 			// check for release channels

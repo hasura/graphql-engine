@@ -22,6 +22,14 @@ version control.
 The Hasura GraphQL engine lets you do anything you would usually do with your database by giving you GraphQL over native
 constructs.
 
+:::info Note
+
+Hasura supports many types out of the box. For strings, Hasura can recognize and return UTF-8 encoded string types from your database.
+
+If string-type columns in your database have an encoding other than UTF-8, unexpected values may be returned for queries made on those columns.
+
+:::
+
 ## Explore schema
 
 - [Explore schema with Postgres / Citus / Hyperscale](/schema/postgres/index.mdx)

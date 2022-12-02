@@ -7,7 +7,6 @@
 # * We can set and unset custom names with `set_function_customization`
 # * We test that we don't introduce name clashes
 
-
 - description: Define the SQL function the tests will be using
   url: /v2/query
   status: 200
@@ -23,7 +22,6 @@
             title ilike ('%' || t.name || '%')
             $$ language sql stable;
 
-
 # Test: We can supply (all) aliases via `pg_track_function`, and the names are applied.
 
 - description: Test that we supply all custom names to `pg_track_function`.
@@ -37,8 +35,8 @@
       function: unaliased_function
       configuration:
         custom_root_fields:
-         function: nameBase
-         function_aggregate: nameAggregate
+          function: nameBase
+          function_aggregate: nameAggregate
 
 - description: Execute the function without the alias, which should fail
   url: /v1/graphql
@@ -102,7 +100,6 @@
     type: pg_untrack_function
     args:
       name: unaliased_function
-
 
 # Test: We can supply just the base alias via `pg_track_function`, and the names are applied.
 
@@ -171,7 +168,6 @@
         aggregate:
           count: 1
 
-
 # Test: Using set_function_customization
 
 - description: Test that we fail on non-existing functions
@@ -185,7 +181,7 @@
     type: pg_set_function_customization
     args:
       function: non_existing_function
-      configuration: { }
+      configuration: {}
 
 - description: Test that we fail on duplicate custom root fields
   url: /v1/metadata
@@ -214,7 +210,7 @@
     type: pg_set_function_customization
     args:
       function: unaliased_function
-      configuration: { }
+      configuration: {}
 
 - descripion: Execute the function without the alias, which should now work
   url: /v1/graphql
@@ -244,7 +240,7 @@
       function: unaliased_function
       configuration:
         custom_root_fields:
-         function: nameBaseOther
+          function: nameBaseOther
 
 - description: Execute the function by its alias
   url: /v1/graphql
@@ -330,7 +326,8 @@
   status: 500
   response:
     code: unexpected
-    error: 'found duplicate fields in selection set: unaliased_function_aggregate, unaliased_function'
+    error: >-
+      found duplicate fields in selection set: ['unaliased_function_aggregate', 'unaliased_function']
     path: $.args
 
   query:

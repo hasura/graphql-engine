@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/afero"
@@ -23,16 +24,21 @@ Convenience script used to upgrade your CLI project to use config v3.
 Note that this process is completely independent from your Hasura Graphql Engine server update process`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			if opts.Force && len(opts.TargetDatabase) == 0 {
-				return fmt.Errorf("--database-name is required when --force is set")
+				return errors.E(op, fmt.Errorf("--database-name is required when --force is set"))
 			}
 			opts.Fs = afero.NewOsFs()
 			opts.ProjectDirectory = ec.ExecutionDirectory
@@ -40,7 +46,10 @@ Note that this process is completely independent from your Hasura Graphql Engine
 			opts.SeedsAbsDirectoryPath = ec.SeedsDirectory
 			opts.Logger = ec.Logger
 			opts.EC = ec
-			return scripts.UpdateProjectV3(opts)
+			if err := scripts.UpdateProjectV3(opts); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 

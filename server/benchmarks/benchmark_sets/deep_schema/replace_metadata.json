@@ -1,0 +1,88 @@
+{"type":"replace_metadata", "args":{
+    "version": 3,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [
+          {"table":{"name":"t01","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t02","schema":"public"}}},"name":"r01"}]},
+          {"table":{"name":"t03","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t04","schema":"public"}}},"name":"r03"}]},
+          {"table":{"name":"t05","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t06","schema":"public"}}},"name":"r05"}]},
+          {"table":{"name":"t07","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t08","schema":"public"}}},"name":"r07"}]},
+          {"table":{"name":"t09","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t10","schema":"public"}}},"name":"r09"}]},
+          {"table":{"name":"t11","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t12","schema":"public"}}},"name":"r11"}]},
+          {"table":{"name":"t13","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t14","schema":"public"}}},"name":"r13"}]},
+          {"table":{"name":"t15","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t16","schema":"public"}}},"name":"r15"}]},
+          {"table":{"name":"t17","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t18","schema":"public"}}},"name":"r17"}]},
+          {"table":{"name":"t19","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t20","schema":"public"}}},"name":"r19"}]},
+          {"table":{"name":"t21","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t22","schema":"public"}}},"name":"r21"}]},
+          {"table":{"name":"t23","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t24","schema":"public"}}},"name":"r23"}]},
+          {"table":{"name":"t25","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t26","schema":"public"}}},"name":"r25"}]},
+          {"table":{"name":"t27","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t28","schema":"public"}}},"name":"r27"}]},
+          {"table":{"name":"t29","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t30","schema":"public"}}},"name":"r29"}]},
+          {"table":{"name":"t31","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t32","schema":"public"}}},"name":"r31"}]},
+          {"table":{"name":"t33","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t34","schema":"public"}}},"name":"r33"}]},
+          {"table":{"name":"t35","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t36","schema":"public"}}},"name":"r35"}]},
+          {"table":{"name":"t37","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t38","schema":"public"}}},"name":"r37"}]},
+          {"table":{"name":"t39","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t40","schema":"public"}}},"name":"r39"}]},
+          {"table":{"name":"t41","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t42","schema":"public"}}},"name":"r41"}]},
+          {"table":{"name":"t43","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t44","schema":"public"}}},"name":"r43"}]},
+          {"table":{"name":"t45","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t46","schema":"public"}}},"name":"r45"}]},
+          {"table":{"name":"t47","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t48","schema":"public"}}},"name":"r47"}]},
+          {"table":{"name":"t49","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"object","source":"default_2","table":{"name":"t50","schema":"public"}}},"name":"r49"}]}
+        ],
+        "configuration": {
+          "connection_info": {
+            "database_url": {"from_env":"HASURA_GRAPHQL_DATABASE_URL"},
+            "isolation_level": "read-committed",
+            "pool_settings": {
+              "connection_lifetime": 600,
+              "idle_timeout": 180,
+              "max_connections": 50,
+              "retries": 1
+            },
+            "use_prepared_statements": true
+          }
+        }
+      },
+      {
+        "name": "default_2",
+        "kind": "postgres",
+        "tables": [
+          {"table":{"name":"t02","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t03","schema":"public"}}},"name":"r02"}]},
+          {"table":{"name":"t04","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t05","schema":"public"}}},"name":"r04"}]},
+          {"table":{"name":"t06","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t07","schema":"public"}}},"name":"r06"}]},
+          {"table":{"name":"t08","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t09","schema":"public"}}},"name":"r08"}]},
+          {"table":{"name":"t10","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t11","schema":"public"}}},"name":"r10"}]},
+          {"table":{"name":"t12","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t13","schema":"public"}}},"name":"r12"}]},
+          {"table":{"name":"t14","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t15","schema":"public"}}},"name":"r14"}]},
+          {"table":{"name":"t16","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t17","schema":"public"}}},"name":"r16"}]},
+          {"table":{"name":"t18","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t19","schema":"public"}}},"name":"r18"}]},
+          {"table":{"name":"t20","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t21","schema":"public"}}},"name":"r20"}]},
+          {"table":{"name":"t22","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t23","schema":"public"}}},"name":"r22"}]},
+          {"table":{"name":"t24","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t25","schema":"public"}}},"name":"r24"}]},
+          {"table":{"name":"t26","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t27","schema":"public"}}},"name":"r26"}]},
+          {"table":{"name":"t28","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t29","schema":"public"}}},"name":"r28"}]},
+          {"table":{"name":"t30","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t31","schema":"public"}}},"name":"r30"}]},
+          {"table":{"name":"t32","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t33","schema":"public"}}},"name":"r32"}]},
+          {"table":{"name":"t34","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t35","schema":"public"}}},"name":"r34"}]},
+          {"table":{"name":"t36","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t37","schema":"public"}}},"name":"r36"}]},
+          {"table":{"name":"t38","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t39","schema":"public"}}},"name":"r38"}]},
+          {"table":{"name":"t40","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t41","schema":"public"}}},"name":"r40"}]},
+          {"table":{"name":"t42","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t43","schema":"public"}}},"name":"r42"}]},
+          {"table":{"name":"t44","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t45","schema":"public"}}},"name":"r44"}]},
+          {"table":{"name":"t46","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t47","schema":"public"}}},"name":"r46"}]},
+          {"table":{"name":"t48","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t49","schema":"public"}}},"name":"r48"}]},
+          {"table":{"name":"t50","schema":"public"},"remote_relationships":[{"definition":{"to_source":{"field_mapping":{"id":"id"},"relationship_type":"array","source":"default","table":{"name":"t01","schema":"public"}}},"name":"r50"}]}
+        ],
+        "configuration": {
+          "connection_info": {
+            "database_url": {"from_env":"HASURA_GRAPHQL_DATABASE_URL"},
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false
+          }
+        }
+      }
+    ]
+  }
+}

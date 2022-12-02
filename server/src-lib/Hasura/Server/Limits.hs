@@ -9,6 +9,7 @@ import Hasura.Base.Error
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.ApiLimit (ApiLimit)
+import Hasura.Server.Types qualified as HGE
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
@@ -26,7 +27,7 @@ data ResourceLimits = ResourceLimits
 -- | Monads which support resource (memory, CPU time, etc.) limiting
 class Monad m => HasResourceLimits m where
   askHTTPHandlerLimit :: m ResourceLimits
-  askGraphqlOperationLimit :: m (UserInfo -> ApiLimit -> ResourceLimits)
+  askGraphqlOperationLimit :: HGE.RequestId -> UserInfo -> ApiLimit -> m ResourceLimits
 
   -- A default for monad transformer instances
   default askHTTPHandlerLimit ::
@@ -36,8 +37,11 @@ class Monad m => HasResourceLimits m where
 
   default askGraphqlOperationLimit ::
     (m ~ t n, MonadTrans t, HasResourceLimits n) =>
-    m (UserInfo -> ApiLimit -> ResourceLimits)
-  askGraphqlOperationLimit = lift askGraphqlOperationLimit
+    HGE.RequestId ->
+    UserInfo ->
+    ApiLimit ->
+    m ResourceLimits
+  askGraphqlOperationLimit reqId userInfo apiLimit = lift $ askGraphqlOperationLimit reqId userInfo apiLimit
 
 instance HasResourceLimits m => HasResourceLimits (ReaderT r m)
 

@@ -1,11 +1,25 @@
+import { isProConsole } from '@/utils';
 import { FeatureFlagDefinition } from './types';
 
 const relationshipTabTablesId = '0bea35ff-d3e9-45e9-af1b-59923bf82fa9';
-const addRemoteSchemaId = 'bf57c2ba-cab2-11ec-9d64-0242ac120002';
+const gdcId = '88436c32-2798-11ed-a261-0242ac120002';
+const importActionFromOpenApiId = '12e5aaf4-c794-4b8f-b762-5fda0bff946a';
 
 export const availableFeatureFlagIds = {
   relationshipTabTablesId,
-  addRemoteSchemaId,
+  gdcId,
+  importActionFromOpenApiId,
+};
+
+const importActionFromOpenApi: FeatureFlagDefinition = {
+  id: importActionFromOpenApiId,
+  title: 'Import Action from OpenAPI',
+  description:
+    'Try out the very experimental feature to generate one action from an OpenAPI endpoint',
+  section: 'data',
+  status: 'experimental',
+  defaultValue: false,
+  discussionUrl: '',
 };
 
 export const availableFeatureFlags: FeatureFlagDefinition[] = [
@@ -20,13 +34,15 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     discussionUrl: '',
   },
   {
-    id: addRemoteSchemaId,
-    title: 'New create remote schema page',
+    id: gdcId,
+    title: 'Experimental features for GDC',
     description:
-      'Try out the new Add Remote Schema page that supports GraphQL customization',
-    section: 'remote schemas',
-    status: 'alpha',
+      'Try out the very experimental features that are available for GDC on the console',
+    section: 'data',
+    status: 'experimental',
     defaultValue: false,
     discussionUrl: '',
   },
+  // eslint-disable-next-line no-underscore-dangle
+  ...(isProConsole(window.__env) ? [importActionFromOpenApi] : []),
 ];

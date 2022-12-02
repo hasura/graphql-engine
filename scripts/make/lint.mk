@@ -9,48 +9,56 @@ SHELL_FILES = $(shell git ls-files '*.sh')
 CHANGED_SHELL_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\.sh$$')
 
 HLINT = hlint
+HLINT_VERSION = $(shell $(HLINT) --numeric-version)
+HLINT_CHECK_VERSION = $(shell jq '.hlint' ./server/VERSIONS.json)
 
 NIX_FMT = nixpkgs-fmt
 
-ORMOLU_CHECK_VERSION = 0.3.0.0
-ORMOLU_ARGS = --cabal-default-extensions
 ORMOLU = ormolu
 ORMOLU_VERSION = $(shell $(ORMOLU) --version | awk 'NR==1 { print $$2 }')
+ORMOLU_CHECK_VERSION = $(shell jq '.ormolu' ./server/VERSIONS.json)
 
-SHELLCHECK = shellcheck
+# Run Shellcheck with access to any file that's sourced, relative to the script's own directory
+SHELLCHECK = shellcheck --external-sources --source-path=SCRIPTDIR
+
+.PHONY: check-hlint-version
+check-hlint-version:
+	@if ! [ "$(HLINT_VERSION)" = "$(HLINT_CHECK_VERSION)" ]; then \
+		echo "WARNING: hlint version mismatch, expected $(HLINT_CHECK_VERSION) but got $(HLINT_VERSION)"; \
+	fi
 
 .PHONY: check-ormolu-version
 check-ormolu-version:
 	@if ! [ "$(ORMOLU_VERSION)" = "$(ORMOLU_CHECK_VERSION)" ]; then \
-		echo "WARNING: ormolu version mismatch, expected $(ORMOLU_CHECK_VERSION)"; \
+		echo "WARNING: ormolu version mismatch, expected $(ORMOLU_CHECK_VERSION) but got $(ORMOLU_VERSION)"; \
 	fi
 
 .PHONY: format-hs
 ## format-hs: auto-format Haskell source code using ormolu
 format-hs: check-ormolu-version
-	@echo running ormolu --mode inplace
-	@$(ORMOLU) $(ORMOLU_ARGS) --mode inplace $(HS_FILES)
+	@echo running $(ORMOLU) --mode inplace
+	@$(ORMOLU) --mode inplace $(HS_FILES)
 
 .PHONY: format-hs-changed
 ## format-hs-changed: auto-format Haskell source code using ormolu (changed files only)
 format-hs-changed: check-ormolu-version
-	@echo running ormolu --mode inplace
+	@echo running $(ORMOLU) --mode inplace
 	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
-		$(ORMOLU) $(ORMOLU_ARGS) --mode inplace $(CHANGED_HS_FILES); \
+		$(ORMOLU) --mode inplace $(CHANGED_HS_FILES); \
 	fi
 
 .PHONY: check-format-hs
 ## check-format-hs: check Haskell source code formatting using ormolu
 check-format-hs: check-ormolu-version
-	@echo running ormolu --mode check
-	@$(ORMOLU) $(ORMOLU_ARGS) --mode check $(HS_FILES)
+	@echo running $(ORMOLU) --mode check
+	@$(ORMOLU) --mode check $(HS_FILES)
 
 .PHONY: check-format-hs-changed
 ## check-format-hs-changed: check Haskell source code formatting using ormolu (changed-files-only)
 check-format-hs-changed: check-ormolu-version
-	@echo running ormolu --mode check
+	@echo running $(ORMOLU) --mode check
 	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
-		$(ORMOLU) $(ORMOLU_ARGS) --mode check $(CHANGED_HS_FILES); \
+		$(ORMOLU) --mode check $(CHANGED_HS_FILES); \
 	fi
 
 # We don't bother checking only changed *.nix files, as there's so few.
@@ -89,17 +97,29 @@ check-format-changed: check-format-hs-changed check-format-nix
 
 .PHONY: lint-hs
 ## lint-hs: lint Haskell code using `hlint`
-lint-hs:
+lint-hs: check-hlint-version
 	@echo running hlint
 	@$(HLINT) $(HS_FILES)
 
 .PHONY: lint-hs-changed
 ## lint-hs-changed: lint Haskell code using `hlint` (changed files only)
-lint-hs-changed:
+lint-hs-changed: check-hlint-version
 	@echo running hlint
 	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
 		$(HLINT) $(CHANGED_HS_FILES); \
 	fi
+
+.PHONY: lint-hs-fix
+## lint-hs-fix: lint Haskell code using `hlint` and attempt to fix warnings using `apply-refact`
+lint-hs-fix: check-hlint-version
+	@echo running hlint --refactor
+	@echo $(HS_FILES) | xargs -n1 $(HLINT) --refactor --refactor-options='--inplace'
+
+.PHONY: lint-hs-fix-changed
+## lint-hs-fix-changed: lint Haskell code using `hlint` and attempt to fix warnings using `apply-refact` (changed files only)
+lint-hs-fix-changed: check-hlint-version
+	@echo running hlint --refactor
+	@echo $(CHANGED_HS_FILES) | xargs --no-run-if-empty -n1 $(HLINT) --refactor --refactor-options='--inplace'
 
 .PHONY: lint-shell
 ## lint-shell: lint shell scripts using `shellcheck`

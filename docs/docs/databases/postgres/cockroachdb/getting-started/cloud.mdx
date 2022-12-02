@@ -1,0 +1,110 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: Hasura Cloud for CockroachDB
+keywords:
+  - hasura
+  - docs
+  - databases
+  - cockroachdb
+  - hasura-cloud
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Hasura Cloud & CockroachDB
+
+## Try it out
+
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='600px' />
+
+### Step 2: Add your CockroachDB database as a source to Hasura
+
+In the `Data > Data Manager > Connect Existing Database` section on the Console, select `CockroachDB` from the
+`Data Source Driver` dropdown and add the connection string. As CockroachDB speaks the same protocol as Postgres, the
+connection string will start with `postgres://`, i.e, there is no difference between CockroachDB's connection strings
+and Postgres’s connection strings.
+
+CockroachDB requires an SSL root certificate by default. To use this, you must set an environment variable for your
+Hasura GraphQL Engine instance with the contents of the certificate as the value, and then specify the name of the environment
+variable as the `SSL Root Certificate`.
+
+:::info Note
+
+Pay extra notice that if you use one of CockroachDB's serverless databases, you will be prompted with a connection string
+that contains the parameter `sslverify`. You must add this parameter manually via the "SSL Certificates Settings" section.
+
+Depending on how you have configured [Network
+Authorization](https://www.cockroachlabs.com/docs/cockroachcloud/network-authorization.html) on your CockroachDB
+Serverless database, you will also need to either add the Hasura IP (which can be
+found on the `General` tab of your Hasura project details page) to the allowlist,
+or setup a [dedicated
+VPC](/deployment/hasura-cloud/dedicated-vpc.mdx).
+
+:::
+
+<Thumbnail src='/img/databases/cockroachdb-postgres/1-add-source-cloud.png' alt='Add source' width='1100px' />
+
+Once you add the database, you'll see your database pop up on the sidebar.
+
+### Step 3: Track existing tables or create new tables
+
+If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a
+list of tables.
+
+<!--
+
+   .. thumbnail:: /img/databases/ms-sql-server/3-manage-mydb.png
+      :alt: Manage my-db
+      :width: 1000px
+
+-->
+
+Track tables selectively or all of them so that Hasura can introspect the tables and create the corresponding GraphQL
+schema.
+
+<Thumbnail src='/img/databases/cockroachdb-postgres/4-track-tables.png' alt='Track tables' width='1100px' />
+
+If you have foreign keys, you'll also see suggested relationships. Again, you can choose to track them selectively or
+all at once.
+
+<Thumbnail
+  src='/img/databases/cockroachdb-postgres/5-track-rels.png'
+  alt='Track foreign-key relationships'
+  width='1100px'
+/>
+
+If you don't have existing tables, go ahead and add new tables and data and try out some queries, just like with a
+regular Postgres database.
+
+<Thumbnail src='/img/databases/cockroachdb-postgres/6-add-tables.png' alt='Add a new table' width='1100px' />
+
+### Step 4: Try out a GraphQL query
+
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+creating a GraphQL query.
+
+<Thumbnail src='/img/databases/cockroachdb-postgres/7-make-graphql-query.png' alt='Make GraphQL query' width='1100px' />
+
+## Keep up to date
+
+Hasura currently supports [queries](/queries/postgres/index.mdx),
+[relationships](/schema/postgres/table-relationships/index.mdx), and [mutations](/mutations/postgres/index.mdx) on
+CockroachDB.
+
+Please refer to the [Postgres docs](/queries/postgres/index.mdx) on how you can try these features out via the Console
+or by manipulating Metadata in JSON/YAML directly.
+
+If you'd like to stay informed about the status of CockroachDB support, subscribe to our newsletter and join our
+discord!
+
+- https://hasura.io/newsletter/
+- https://discord.com/invite/hasura

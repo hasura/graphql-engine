@@ -22,7 +22,7 @@ args:
     delete:
       columns: '*'
     enable_manual: true
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"
 
 - type: mssql_create_event_trigger
   args: &def_args1
@@ -38,4 +38,4 @@ args:
     delete:
       columns: '*'
     enable_manual: false
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"

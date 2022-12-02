@@ -16,6 +16,8 @@ import {
   isFeatureSupported,
 } from '../../../../dataSources';
 import { getTableConfiguration } from './utils';
+import { reloadDataSource } from '@/metadata/actions';
+import { updateLimit } from './ViewAction.utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -24,6 +26,7 @@ const V_EXPAND_REL = 'ViewTable/V_EXPAND_REL';
 const V_CLOSE_REL = 'ViewTable/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ViewTable/V_SET_ACTIVE';
 const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
+const V_SET_QUERY_LIMIT = 'ViewTable/V_SET_QUERY_LIMIT';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
@@ -47,6 +50,12 @@ const vCollapseRow = () => ({
 });
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
+
+const vSetLimit = (limit, curPath) => ({
+  type: V_SET_QUERY_LIMIT,
+  limit,
+  curPath,
+});
 
 const showError = (err, msg, dispatch) =>
   dispatch(showErrorNotification(msg, err.error, err));
@@ -72,11 +81,8 @@ const vMakeRowsRequest = () => {
     const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
-    const {
-      endpoint,
-      getTableRowRequestBody,
-      processTableRowData,
-    } = dataSource.generateTableRowRequest();
+    const { endpoint, getTableRowRequestBody, processTableRowData } =
+      dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
       body: JSON.stringify(
@@ -85,15 +91,38 @@ const vMakeRowsRequest = () => {
       headers,
       credentials: globalCookiePolicy,
     };
-
     return dispatch(requestAction(endpoint, options)).then(
       data => {
+        if (data?.errors) {
+          Promise.all([
+            dispatch(
+              showErrorNotification(
+                'Browse query failed',
+                data?.errors?.[0]?.message || '',
+                {
+                  callToAction: 'reload-metadata',
+                  callback: () => {
+                    dispatch(
+                      reloadDataSource({
+                        driver: tables.driver,
+                        name: tables.currentDataSource,
+                      })
+                    );
+                  },
+                }
+              )
+            ),
+            dispatch({ type: V_REQUEST_PROGRESS, data: false }),
+          ]);
+          return;
+        }
         const { currentSchema, currentTable: originalTable } = tables;
         const { rows, estimatedCount } = processTableRowData(data, {
           currentSchema,
           originalTable,
           tableConfiguration,
         });
+
         const currentTable = getState().tables.currentTable;
         if (currentTable === originalTable) {
           Promise.all([
@@ -124,11 +153,8 @@ const vMakeExportRequest = () => {
     const headers = dataHeaders(getState);
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getConfiguration(tables, sources);
-    const {
-      endpoint,
-      getTableRowRequestBody,
-      processTableRowData,
-    } = dataSource.generateTableRowRequest();
+    const { endpoint, getTableRowRequestBody, processTableRowData } =
+      dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
       body: JSON.stringify(
@@ -170,11 +196,8 @@ const vMakeCountRequest = () => {
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getConfiguration(tables, sources);
 
-    const {
-      endpoint,
-      getRowsCountRequestBody,
-      processCount,
-    } = dataSource.generateRowsCountRequest();
+    const { endpoint, getRowsCountRequestBody, processCount } =
+      dataSource.generateRowsCountRequest();
     const requestBody = getRowsCountRequestBody({ tables, tableConfiguration });
 
     const options = {
@@ -259,11 +282,8 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
 
-    const {
-      endpoint,
-      getDeleteRowRequestBody,
-      processDeleteRowData,
-    } = dataSource.generateDeleteRowRequest();
+    const { endpoint, getDeleteRowRequestBody, processDeleteRowData } =
+      dataSource.generateDeleteRowRequest();
     const reqBody = getDeleteRowRequestBody({
       pkClause,
       tableName,
@@ -313,11 +333,8 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
       return;
     }
     const source = getState().tables.currentDataSource;
-    const {
-      endpoint,
-      getBulkDeleteRowRequestBody,
-      processBulkDeleteRowData,
-    } = dataSource.generateBulkDeleteRowRequest();
+    const { endpoint, getBulkDeleteRowRequestBody, processBulkDeleteRowData } =
+      dataSource.generateBulkDeleteRowRequest();
 
     const { tables, metadata } = getState();
     const { currentTable: originalTable, allSchemas, currentSchema } = tables;
@@ -392,11 +409,23 @@ const vCloseRel = (path, relname) => {
     return dispatch(vMakeTableRequests());
   };
 };
+
+const DEFAULT_PAGE_LIMIT = 5;
+
 /* ************ helpers ************************/
-const defaultSubQuery = (relname, tableSchema) => {
-  return {
+const defaultSubQuery = (relname, tableSchema, isObjRel) => {
+  const baseSubQuery = {
     name: relname,
     columns: tableSchema.columns.map(c => c.column_name),
+  };
+  if (isObjRel) {
+    return baseSubQuery;
+  }
+
+  return {
+    ...baseSubQuery,
+    limit: DEFAULT_PAGE_LIMIT,
+    offset: 0,
   };
 };
 
@@ -415,7 +444,7 @@ const expandQuery = (
 
     const newColumns = [
       ...curQuery.columns,
-      defaultSubQuery(relname, childTableSchema),
+      defaultSubQuery(relname, childTableSchema, rel.rel_type === 'object'),
     ];
     if (isObjRel) {
       return { ...curQuery, columns: newColumns };
@@ -433,7 +462,15 @@ const expandQuery = (
         oldStuff[k] = curQuery[k];
       }
     });
-    return { name: curQuery.name, where: pk, columns: newColumns, oldStuff };
+
+    return {
+      name: curQuery.name,
+      where: pk,
+      columns: newColumns,
+      oldStuff,
+      limit: curQuery.limit || DEFAULT_PAGE_LIMIT,
+      offset: curQuery.offset || 0,
+    };
   }
 
   const curRelName = curPath[0];
@@ -574,7 +611,11 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   }
 
   ['where', 'order_by', 'limit', 'offset'].map(k => {
-    delete curQuery[k];
+    try {
+      delete curQuery[k];
+    } catch (err) {
+      console.error('Error while deleting key', k, 'from', curQuery);
+    }
   });
 
   for (const k in queryStuff) {
@@ -626,6 +667,20 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
           viewState.query,
           action.queryStuff,
           viewState.activePath
+        ),
+      };
+    case V_SET_QUERY_LIMIT:
+      const updateQueryLimitState = updateLimit(
+        viewState,
+        action.limit,
+        action.curPath
+      );
+      return {
+        ...viewState,
+        query: addQueryOptsActivePath(
+          updateQueryLimitState.query,
+          updateQueryLimitState.query,
+          action.curPath
         ),
       };
     case V_EXPAND_REL:
@@ -727,6 +782,7 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
 export default viewReducer;
 export {
   vSetDefaults,
+  vSetLimit,
   vExpandRel,
   vCloseRel,
   vExpandRow,

@@ -5,11 +5,10 @@
 -- | Types and functions used in the process of building the schema cache from metadata information
 -- stored in the @hdb_catalog@ schema in Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
-  ( CollectedInfo (..),
-    partitionCollectedInfo,
+  ( MetadataDependency (..),
     recordInconsistency,
     recordInconsistencyM,
-    recordInconsistencies,
+    recordInconsistenciesM,
     recordDependencies,
     recordDependenciesM,
     withRecordInconsistency,
@@ -23,7 +22,7 @@ module Hasura.RQL.Types.SchemaCache.Build
     buildSchemaCacheWithInvalidations,
     buildSchemaCache,
     buildSchemaCacheFor,
-    buildSchemaCacheStrict,
+    throwOnInconsistencies,
     withNewInconsistentObjsCheck,
     getInconsistentQueryCollections,
   )
@@ -39,11 +38,13 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
+import Data.List.Extended qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
 import Data.Trie qualified as Trie
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.GraphQL.Analyse
@@ -55,8 +56,8 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -64,79 +65,56 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
--- ----------------------------------------------------------------------------
--- types used during schema cache construction
-
-data CollectedInfo
-  = CIInconsistency !InconsistentMetadata
-  | CIDependency
-      !MetadataObject
-      -- ^ for error reporting on missing dependencies
-      !SchemaObjId
-      !SchemaDependency
-  deriving (Eq)
-
-$(makePrisms ''CollectedInfo)
-
-class AsInconsistentMetadata s where
-  _InconsistentMetadata :: Prism' s InconsistentMetadata
-
-instance AsInconsistentMetadata InconsistentMetadata where
-  _InconsistentMetadata = id
-
-instance AsInconsistentMetadata CollectedInfo where
-  _InconsistentMetadata = _CIInconsistency
-
-partitionCollectedInfo ::
-  Seq CollectedInfo ->
-  ([InconsistentMetadata], [(MetadataObject, SchemaObjId, SchemaDependency)])
-partitionCollectedInfo =
-  flip foldr ([], []) \info (inconsistencies, dependencies) -> case info of
-    CIInconsistency inconsistency -> (inconsistency : inconsistencies, dependencies)
-    CIDependency metadataObject objectId schemaDependency ->
-      let dependency = (metadataObject, objectId, schemaDependency)
-       in (inconsistencies, dependency : dependencies)
+-- * Inconsistencies
 
 recordInconsistency ::
-  (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
-recordInconsistency = first (arr (: [])) >>> recordInconsistencies'
+  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, MetadataObject), Text) `arr` ()
+recordInconsistency = proc ((val, mo), reason) ->
+  tellA -< Seq.singleton $ Left $ InconsistentObject reason val mo
 
 recordInconsistencyM ::
-  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => Maybe Value -> MetadataObject -> Text -> m ()
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => Maybe Value -> MetadataObject -> Text -> m ()
 recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
 
-recordInconsistencies ::
-  (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
-recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
+recordInconsistenciesM ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [MetadataObject] -> Text -> m ()
+recordInconsistenciesM metadataObjects reason = recordInconsistenciesM' ((Nothing,) <$> metadataObjects) reason
 
 recordInconsistenciesM' ::
-  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => [(Maybe Value, MetadataObject)] -> Text -> m ()
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [(Maybe Value, MetadataObject)] -> Text -> m ()
 recordInconsistenciesM' metadataObjects reason =
-  tell $ Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
+  tell $ Seq.fromList $ map (Left . uncurry (InconsistentObject reason)) metadataObjects
 
-recordInconsistencies' ::
-  (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
-recordInconsistencies' = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
+-- * Dependencies
+
+data MetadataDependency
+  = MetadataDependency
+      MetadataObject
+      -- ^ for error reporting on missing dependencies
+      SchemaObjId
+      SchemaDependency
+  deriving (Eq)
 
 recordDependencies ::
-  (ArrowWriter (Seq CollectedInfo) arr) =>
-  (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
+  (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
+  (MetadataObject, SchemaObjId, Seq SchemaDependency) `arr` ()
 recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
-  tellA -< Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
+  tellA -< Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
 
 recordDependenciesM ::
-  (MonadWriter (Seq CollectedInfo) m) =>
+  (MonadWriter (Seq (Either im MetadataDependency)) m) =>
   MetadataObject ->
   SchemaObjId ->
-  [SchemaDependency] ->
+  Seq SchemaDependency ->
   m ()
 recordDependenciesM metadataObject schemaObjectId dependencies = do
-  tell $ Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
+  tell $ Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
+
+-- * Helpers
 
 -- | Monadic version of 'withRecordInconsistency'
 withRecordInconsistencyM ::
-  (MonadWriter (Seq w) m, AsInconsistentMetadata w) =>
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
   MetadataObject ->
   ExceptT QErr m a ->
   m (Maybe a)
@@ -160,7 +138,7 @@ withRecordInconsistencyM metadataObject f = do
 
 -- | Record any errors resulting from a computation as inconsistencies
 withRecordInconsistency ::
-  (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w) =>
+  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
   ErrorA QErr arr (e, s) a ->
   arr (e, (MetadataObject, s)) (Maybe a)
 withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
@@ -204,23 +182,25 @@ data BuildReason
 data CacheInvalidations = CacheInvalidations
   { -- | Force reloading of all database information, including information not technically stored in
     -- metadata (currently just enum values). Set by the @reload_metadata@ API.
-    ciMetadata :: !Bool,
+    ciMetadata :: Bool,
     -- | Force refetching of the given remote schemas, even if their definition has not changed. Set
     -- by the @reload_remote_schema@ API.
-    ciRemoteSchemas :: !(HashSet RemoteSchemaName),
+    ciRemoteSchemas :: HashSet RemoteSchemaName,
     -- | Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
     -- by the @pg_reload_source@ API.
-    ciSources :: !(HashSet SourceName)
+    ciSources :: HashSet SourceName,
+    -- | Force re-fetching of `DataConnectorInfo` from the named data connectors.
+    ciDataConnectors :: HashSet DataConnectorName
   }
 
 $(deriveJSON hasuraJSON ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
-  CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =
-    CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2)
+  CacheInvalidations a1 b1 c1 d1 <> CacheInvalidations a2 b2 c2 d2 =
+    CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2) (d1 <> d2)
 
 instance Monoid CacheInvalidations where
-  mempty = CacheInvalidations False mempty mempty
+  mempty = CacheInvalidations False mempty mempty mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
@@ -234,7 +214,7 @@ instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
-instance (CacheRWM m) => CacheRWM (Q.TxET QErr m) where
+instance (CacheRWM m) => CacheRWM (PG.TxET QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
@@ -248,7 +228,6 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       MonadReader r,
       MonadError e,
       MonadTx,
-      SourceM,
       TableCoreInfoRM b,
       CacheRM,
       CacheRWM,
@@ -271,9 +250,11 @@ instance (UserInfoM m) => UserInfoM (MetadataT m) where
 instance HasServerConfigCtx m => HasServerConfigCtx (MetadataT m) where
   askServerConfigCtx = lift askServerConfigCtx
 
-runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
-runMetadataT metadata (MetadataT m) =
-  runStateT m metadata
+-- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
+-- provided so that it can be considered from the --metadataDefaults arguments.
+runMetadataT :: Metadata -> MetadataDefaults -> MetadataT m a -> m (a, Metadata)
+runMetadataT metadata defaults (MetadataT m) =
+  runStateT m (metadata `overrideMetadataDefaults` defaults)
 
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
 buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do
@@ -310,10 +291,9 @@ buildSchemaCacheFor objectId metadataModifier = do
         { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ Map.elems newInconsistentObjects)
         }
 
--- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
-buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
-buildSchemaCacheStrict = do
-  buildSchemaCache mempty
+-- | Requests the schema cache, and fails if there is any inconsistent metadata.
+throwOnInconsistencies :: (QErrM m, CacheRWM m) => m ()
+throwOnInconsistencies = do
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do
@@ -330,7 +310,7 @@ withNewInconsistentObjsCheck action = do
 
   let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        hashNub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        L.uniques $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")

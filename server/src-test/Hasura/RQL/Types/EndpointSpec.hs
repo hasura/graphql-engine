@@ -23,10 +23,10 @@ emptyTrie = Trie.empty
 singleton :: String -> Int -> TestTrie
 singleton k s = Trie.singleton [] $ MMap.singleton k s
 
-insert :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => [PathComponent a] -> k -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
+insert :: (Hashable a, Hashable k, Ord v) => [PathComponent a] -> k -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
 insert p k = Trie.insertWith (<>) p . MMap.singleton k
 
-inserts :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => [PathComponent a] -> [k] -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
+inserts :: (Hashable a, Hashable k, Ord v) => [PathComponent a] -> [k] -> v -> MultiMapPathTrie a k v -> MultiMapPathTrie a k v
 inserts p ks v t = foldl' (\t' k -> insert p k v t') t ks
 
 spec :: Spec

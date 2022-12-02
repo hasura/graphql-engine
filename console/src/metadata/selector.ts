@@ -85,6 +85,11 @@ const getActions = createSelector(
   metadata => metadata?.actions || []
 );
 
+const getAllowList = createSelector(
+  getMetadata,
+  metadata => metadata?.allowlist || []
+);
+
 type PermKeys = Pick<
   TableEntry,
   | 'update_permissions'
@@ -99,8 +104,14 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTablesFromAllSources, getActions, getRemoteSchemas, getSecuritySettings],
-  (tables, actions, remoteSchemas, securitySettings) => {
+  [
+    getTablesFromAllSources,
+    getActions,
+    getRemoteSchemas,
+    getSecuritySettings,
+    getAllowList,
+  ],
+  (tables, actions, remoteSchemas, securitySettings, allowlists) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
       permKeys.forEach(key =>
@@ -114,6 +125,11 @@ export const rolesSelector = createSelector(
     );
     remoteSchemas?.forEach(remoteSchema => {
       remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
+    });
+    allowlists?.forEach(allowlist => {
+      if (allowlist?.scope?.global === false) {
+        allowlist?.scope?.roles?.forEach(role => roleNames.push(role));
+      }
     });
 
     Object.entries(securitySettings.api_limits ?? {}).forEach(
@@ -176,16 +192,14 @@ export const getTablesInfoSelector = createSelector(
 
 export const getTableInformation = createSelector(
   getTables,
-  tables => (tableName: string, tableSchema: string) => <
-    T extends keyof TableEntry
-  >(
-    property: T
-  ): TableEntry[T] | null => {
-    const table = tables?.find(
-      t => tableName === t.table.name && tableSchema === t.table.schema
-    );
-    return table ? table[property] : null;
-  }
+  tables =>
+    (tableName: string, tableSchema: string) =>
+    <T extends keyof TableEntry>(property: T): TableEntry[T] | null => {
+      const table = tables?.find(
+        t => tableName === t.table.name && tableSchema === t.table.schema
+      );
+      return table ? table[property] : null;
+    }
 );
 
 export const getCurrentTableInformation = createSelector(
@@ -293,6 +307,7 @@ export const getEventTriggers = createSelector(getMetadata, metadata => {
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
             request_transform: trigger.request_transform,
           })) || [];
@@ -307,11 +322,13 @@ export const getManualEventsTriggers = createSelector(
   getEventTriggers,
   getCurrentSchema,
   getCurrentTable,
-  (triggers, schema, table) => {
+  getCurrentSource,
+  (triggers, schema, table, source) => {
     return triggers.filter(
       t =>
         t.table_name === table &&
         t.schema_name === schema &&
+        t.source === source &&
         t.configuration.definition.enable_manual
     );
   }
@@ -340,6 +357,7 @@ export const getEventTriggerByName = createSelector(
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
             request_transform: trigger.request_transform,
           };

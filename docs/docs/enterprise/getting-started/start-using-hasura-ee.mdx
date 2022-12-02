@@ -1,0 +1,34 @@
+---
+sidebar_label: Start Using Hasura EE
+description: Start using Hasura EE
+title: 'Start Using Hasura EE'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 5
+---
+
+# Start Using Hasura EE
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+
+## Instructions
+
+After following one of the Hasura EE getting started guides:
+
+- Head to `http://localhost:8080/console` to open the Hasura console.
+- Log in using the admin secret key that you set.
+- Learn more about [connecting data sources](/databases/connect-db/index.mdx).
+- Check out the [Hasura Enterprise features](/enterprise/index.mdx).
+
+## Complete your production-readiness checklist (optional)
+
+When you are ready to move Hasura to production, check out our
+[production-readiness checklist](/deployment/production-checklist.mdx). In addition, please ensure the following:
+
+- Make sure you are using a fully managed Redis and Postgres instance (for metadata). Set alerts on them to ensure
+  continuous availability.
+- We recommend running Hasura with at least 4 CPU cores and a minimum of 8 GB RAM in production. Please set autoscaling
+  on CPU.
+- [Enable and consume metrics](/enterprise/metrics.mdx/#enable-metrics-endpoint).

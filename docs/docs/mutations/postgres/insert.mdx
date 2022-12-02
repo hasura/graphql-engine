@@ -361,16 +361,16 @@ A nested insert mutation is processed as follows:
 
 The order of object insertion can be controlled using the
 [insertion_order](/api-reference/syntax-defs.mdx#objrelusingmanualmapping) option while creating a manual relationship.
-This is necessary to ensure [nested inserts](/guides/data-modelling/one-to-one.mdx#one-to-one-insert) in one-to-one
-relationships are possible using either side as the parent which would otherwise error out with a `Not-NULL violation`
-error in one of the cases.
+This is necessary to ensure [nested inserts](/schema/common-patterns/data-modeling/one-to-one.mdx#one-to-one-insert) in
+one-to-one relationships are possible using either side as the parent which would otherwise error out with a
+`Not-NULL violation` error in one of the cases.
 
 :::
 
 ### Many-to-many relationships
 
-Let's say the `articles` has a [many-to-many relationship](/guides/data-modelling/many-to-many.mdx) with the `tags`
-table via a bridge table `article_tags`.
+Let's say the `articles` has a [many-to-many relationship](/schema/common-patterns/data-modeling/many-to-many.mdx) with
+the `tags` table via a bridge table `article_tags`.
 
 **Example:** Insert an `article` along with a few `tags`.
 

@@ -1,20 +1,24 @@
 import pytest
 
-from validate import check_query_f, check_query
+from conftest import extract_server_address_from, use_action_fixtures
 from remote_server import NodeGraphQL
-from context import PytestConf
-from conftest import use_action_fixtures, use_function_permission_fixtures
+from validate import check_query_f
 
+pytestmark = [
+    pytest.mark.admin_secret,
+    pytest.mark.hge_env('HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS', 'true'),
+]
 
-if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
-    pytest.skip('--enable-remote-schema-permissions is missing, skipping role inheritance tests', allow_module_level=True)
-
-@pytest.fixture(scope="module")
-def graphql_service():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"])
-    svc.start()
-    yield svc
-    svc.stop()
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def graphql_service(hge_fixture_env: dict[str, str]):
+    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_1')
+    server = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"], port=port)
+    server.start()
+    print(f'{graphql_service.__name__} server started on {server.url}')
+    hge_fixture_env['GRAPHQL_SERVICE_1'] = server.url
+    yield server
+    server.stop()
 
 @pytest.mark.usefixtures('per_class_db_schema_for_mutation_tests', 'per_method_db_data_for_mutation_tests')
 class TestGraphQLMutationRolesInheritance:
@@ -37,12 +41,7 @@ class TestGraphQLMutationRolesInheritance:
     def test_defined_permission_should_override_inherited_permission(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'override_inherited_permission.yaml')
 
-use_remote_schema_permissions_inheritance_fixtures = pytest.mark.usefixtures (
-    "graphql_service",
-    "per_class_tests_db_state"
-)
-
-@use_remote_schema_permissions_inheritance_fixtures
+@pytest.mark.usefixtures('graphql_service', 'per_class_tests_db_state')
 class TestRemoteSchemaPermissionsInheritance:
 
     @classmethod
@@ -75,7 +74,8 @@ class TestActionsPermissionInheritance:
     def test_override_inherited_permission(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'override_inherited_permission.yaml')
 
-@use_function_permission_fixtures
+@pytest.mark.usefixtures('per_class_db_schema_for_mutation_tests', 'per_method_db_data_for_mutation_tests')
+@pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestCustomFunctionPermissionsInheritance:
 
     @classmethod

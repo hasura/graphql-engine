@@ -10,7 +10,7 @@ module Hasura.GraphQL.Execute.Action.Types
     ActionResponseInfo (..),
     ActionWebhookErrorResponse (..),
     ActionWebhookPayload (..),
-    ActionWebhookResponse (..),
+    ActionWebhookResponse,
     AsyncActionQueryExecution (..),
     AsyncActionQueryExecutionPlan (..),
     AsyncActionQuerySourceExecution (..),
@@ -21,9 +21,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
 import Data.Int (Int64)
-import Data.Scientific (Scientific)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -38,7 +36,6 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype ActionExecution = ActionExecution
@@ -98,31 +95,7 @@ data ActionWebhookErrorResponse = ActionWebhookErrorResponse
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 
-data ActionWebhookResponse
-  = AWRArray ![J.Value]
-  | AWRObject !(Map.HashMap G.Name J.Value)
-  | AWRNum !Scientific
-  | AWRBool !Bool
-  | AWRString !Text
-  | AWRNull
-  deriving (Show, Eq)
-
-instance J.FromJSON ActionWebhookResponse where
-  parseJSON v = case v of
-    J.Array {} -> AWRArray <$> J.parseJSON v
-    J.Object {} -> AWRObject <$> J.parseJSON v
-    J.Number {} -> AWRNum <$> J.parseJSON v
-    J.Bool {} -> AWRBool <$> J.parseJSON v
-    J.String {} -> AWRString <$> J.parseJSON v
-    J.Null {} -> pure AWRNull
-
-instance J.ToJSON ActionWebhookResponse where
-  toJSON (AWRArray objects) = J.toJSON objects
-  toJSON (AWRObject obj) = J.toJSON obj
-  toJSON (AWRNum n) = J.toJSON n
-  toJSON (AWRBool b) = J.toJSON b
-  toJSON (AWRString s) = J.toJSON s
-  toJSON (AWRNull) = J.Null
+type ActionWebhookResponse = J.Value
 
 data ActionRequestInfo = ActionRequestInfo
   { _areqiUrl :: !Text,

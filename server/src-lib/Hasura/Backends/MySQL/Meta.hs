@@ -118,22 +118,22 @@ mergeDBTableMetadata new existing =
     }
 
 data InformationSchema = InformationSchema
-  { isTableSchema :: !Text,
-    isTableName :: !Text,
-    isColumnName :: !Text,
-    isOrdinalPosition :: !Word,
-    isColumnDefault :: !(Maybe Text),
-    isIsNullable :: !Text,
-    isDataType :: !(Maybe Text),
-    isColumnType :: !Text,
-    isColumnKey :: !InformationSchemaColumnKey,
-    isColumnComment :: !Text,
-    isConstraintName :: !(Maybe Text),
-    isConstraintOrdinalPosition :: !(Maybe Word),
-    isPositionInUniqueConstraint :: !(Maybe Word),
-    isReferencedTableSchema :: !(Maybe Text),
-    isReferencedTableName :: !(Maybe Text),
-    isReferencedColumnName :: !(Maybe Text)
+  { isTableSchema :: Text,
+    isTableName :: Text,
+    isColumnName :: Text,
+    isOrdinalPosition :: Word,
+    isColumnDefault :: Maybe Text,
+    isIsNullable :: Text,
+    isDataType :: Maybe Text,
+    isColumnType :: Text,
+    isColumnKey :: InformationSchemaColumnKey,
+    isColumnComment :: Text,
+    isConstraintName :: Maybe Text,
+    isConstraintOrdinalPosition :: Maybe Word,
+    isPositionInUniqueConstraint :: Maybe Word,
+    isReferencedTableSchema :: Maybe Text,
+    isReferencedTableName :: Maybe Text,
+    isReferencedColumnName :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 

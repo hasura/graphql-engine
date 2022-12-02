@@ -66,6 +66,7 @@ export interface TableConfig {
 export interface TableEntry {
   table: QualifiedTable;
   is_enum?: boolean;
+  apollo_federation_config?: { enable: 'v1' };
   configuration?: TableConfig;
   event_triggers?: EventTrigger[];
   computed_fields?: ComputedField[];
@@ -89,6 +90,8 @@ export interface CustomRootFields {
   select_by_pk?: string | CustomRootField | null;
   /** Customise the `<table-name>_aggregate` root field */
   select_aggregate?: string | CustomRootField | null;
+  /** Customise the `<table-name>_stream` root field */
+  select_stream?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>` root field */
   insert?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>_one` root field */
@@ -419,6 +422,15 @@ export interface ComputedFieldDefinition {
  * NOTE: The metadata type doesn't QUITE match the 'create' arguments here
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
  */
+
+export interface EventTriggerAutoCleanup {
+  schedule: string;
+  batch_size: number;
+  clear_older_than: number;
+  timeout: number;
+  clean_invocation_logs: boolean;
+  paused: boolean;
+}
 export interface EventTrigger {
   /** Name of the event trigger */
   name: TriggerName;
@@ -433,6 +445,8 @@ export interface EventTrigger {
   headers?: ServerHeader[];
   /** Request transformation object */
   request_transform?: RequestTransform;
+  /** Auto-cleanup configuration object */
+  cleanup_config?: EventTriggerAutoCleanup;
 }
 
 export interface EventTriggerDefinition {
@@ -520,6 +534,8 @@ export interface CronTrigger {
   include_in_metadata: boolean;
   /**	Custom comment. */
   comment?: string;
+  /** Rest connectors. */
+  request_transform?: RequestTransform;
 }
 
 /**
@@ -737,9 +753,17 @@ export interface QueryCollection {
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
  */
+
+type AllowListScope =
+  | {
+      global: false;
+      roles: string[];
+    }
+  | { global: true };
 export interface AllowList {
   /** Name of a query collection to be added to the allow-list */
   collection: CollectionName;
+  scope?: AllowListScope;
 }
 
 // //////////////////////////////
@@ -909,6 +933,11 @@ export type RequestTransformBody = {
   form_template?: Record<string, string>;
 };
 
+export type ResponseTransformBody = {
+  action: RequestTransformBodyActions;
+  template?: string;
+};
+
 export type RequestTransformHeaders = {
   add_headers?: Record<string, string>;
   remove_headers?: string[];
@@ -925,6 +954,9 @@ interface RequestTransformFields {
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
 
+/**
+ * https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs/#requesttransformation
+ */
 interface RequestTransformV1 extends RequestTransformFields {
   version: 1;
   body?: string;
@@ -936,6 +968,12 @@ interface RequestTransformV2 extends RequestTransformFields {
 }
 
 export type RequestTransform = RequestTransformV1 | RequestTransformV2;
+
+export type ResponseTranform = {
+  version: 2;
+  body?: ResponseTransformBody;
+  template_engine?: Nullable<RequestTransformTemplateEngine>;
+};
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
@@ -949,6 +987,7 @@ export interface ActionDefinition {
   handler: WebhookURL;
   type?: 'mutation' | 'query';
   transform?: RequestTransform;
+  responseTransform?: ResponseTranform;
 }
 
 /**
@@ -1030,6 +1069,7 @@ export interface SSLConfigOptions {
 
 export interface ConnectionPoolSettings {
   max_connections?: number;
+  total_max_connections?: number;
   idle_timeout?: number;
   retries?: number;
   pool_timeout?: number;
@@ -1054,7 +1094,7 @@ export type GraphQLFieldCustomization = {
     prefix?: string;
     suffix?: string;
   };
-  namingConvention?: NamingConventionOptions;
+  namingConvention?: NamingConventionOptions | null;
 };
 
 export interface SourceConnectionInfo {
@@ -1098,9 +1138,10 @@ type GraphQLCustomizationMetadata = {
 
 export interface MetadataDataSource {
   name: string;
-  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus' | 'cockroach';
   configuration?: {
     connection_info?: SourceConnectionInfo;
+    extensions_schema?: string;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
     service_account?: BigQueryServiceAccount;
@@ -1157,6 +1198,7 @@ export interface HasuraMetadataV3 {
     disabled?: boolean;
     depth_limit?: APILimit<number>;
     node_limit?: APILimit<number>;
+    batch_limit?: APILimit<number>;
     time_limit?: APILimit<number>;
     rate_limit?: APILimit<{
       unique_params: Nullable<'IP' | string[]>;

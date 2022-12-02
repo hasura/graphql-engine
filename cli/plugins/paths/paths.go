@@ -15,10 +15,11 @@
 package paths
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 const (
@@ -94,17 +95,18 @@ func (p Paths) PluginVersionInstallPath(plugin, version string) string {
 // Realpath evaluates symbolic links. If the path is not a symbolic link, it
 // returns the cleaned path. Symbolic links with relative paths return error.
 func Realpath(path string) (string, error) {
+	var op errors.Op = "paths.Realpath"
 	s, err := os.Lstat(path)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to stat the currently executed path (%q)", path)
+		return "", errors.E(op, fmt.Errorf("failed to stat the currently executed path (%q): %w", path, err))
 	}
 
 	if s.Mode()&os.ModeSymlink != 0 {
 		if path, err = os.Readlink(path); err != nil {
-			return "", errors.Wrap(err, "failed to resolve the symlink of the currently executed version")
+			return "", errors.E(op, fmt.Errorf("failed to resolve the symlink of the currently executed version: %w", err))
 		}
 		if !filepath.IsAbs(path) {
-			return "", errors.Errorf("symbolic link is relative (%s)", path)
+			return "", errors.E(op, fmt.Errorf("symbolic link is relative (%s): %w", path, err))
 		}
 	}
 	return filepath.Clean(path), nil

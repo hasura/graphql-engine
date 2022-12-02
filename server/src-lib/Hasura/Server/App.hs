@@ -1,14 +1,14 @@
 {-# LANGUAGE CPP #-}
 
 module Hasura.Server.App
-  ( APIResp (JSONResp),
+  ( APIResp (JSONResp, RawResp),
     ConsoleRenderer (..),
     Handler,
     HandlerCtx (hcReqHeaders, hcServerCtx, hcUser),
     HasuraApp (HasuraApp),
     MonadConfigApiHandler (..),
     MonadMetadataApiAuthorization (..),
-    ServerCtx (scManager, scLoggingSettings),
+    ServerCtx (scManager, scLoggingSettings, scEnabledAPIs),
     boolToText,
     configApiGetHandler,
     isAdminSecretSet,
@@ -63,9 +63,11 @@ import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint as EP
+import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
@@ -83,6 +85,7 @@ import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
 import Hasura.Server.OpenAPI (buildOpenAPI)
+import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Rest
 import Hasura.Server.SchemaCacheRef
   ( SchemaCacheRef,
@@ -129,7 +132,9 @@ data ServerCtx = ServerCtx
     scLoggingSettings :: !LoggingSettings,
     scEventingMode :: !EventingMode,
     scEnableReadOnlyMode :: !ReadOnlyMode,
-    scDefaultNamingConvention :: !(Maybe NamingCase)
+    scDefaultNamingConvention :: !(Maybe NamingCase),
+    scPrometheusMetrics :: !PrometheusMetrics,
+    scMetadataDefaults :: !MetadataDefaults
   }
 
 data HandlerCtx = HandlerCtx
@@ -277,7 +282,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO $ Tracing.extractHttpContext headers
+  tracingCtx <- liftIO $ Tracing.extractB3HttpContext headers
   handlerLimit <- lift askHTTPHandlerLimit
 
   let runTraceT ::
@@ -387,7 +392,8 @@ v1QueryHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   RQLQuery ->
   m (HttpResponse EncJSON)
@@ -401,6 +407,7 @@ v1QueryHandler query = do
     action logger = do
       userInfo <- asks hcUser
       scRef <- asks (scCacheRef . hcServerCtx)
+      metadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
       schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
       httpMgr <- asks (scManager . hcServerCtx)
       sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
@@ -423,6 +430,7 @@ v1QueryHandler query = do
               eventingMode
               readOnlyMode
               defaultNamingCase
+              metadataDefaults
       runQuery
         env
         logger
@@ -440,11 +448,12 @@ v1MetadataHandler ::
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    MonadMetadataApiAuthorization m
+    MonadMetadataApiAuthorization m,
+    MonadEventLogCleanup m
   ) =>
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler query = do
+v1MetadataHandler query = Tracing.trace "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   userInfo <- asks hcUser
   scRef <- asks (scCacheRef . hcServerCtx)
@@ -461,6 +470,7 @@ v1MetadataHandler query = do
   _sccEventingMode <- asks (scEventingMode . hcServerCtx)
   _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   _sccDefaultNamingConvention <- asks (scDefaultNamingConvention . hcServerCtx)
+  _sccMetadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
   let serverConfigCtx = ServerConfigCtx {..}
   r <-
     withSchemaCacheUpdate
@@ -490,7 +500,7 @@ v2QueryHandler ::
   ) =>
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler query = do
+v2QueryHandler query = Tracing.trace "v2 Query" $ do
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   scRef <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
@@ -515,6 +525,7 @@ v2QueryHandler query = do
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
       defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
+      defaultMetadata <- asks (scMetadataDefaults . hcServerCtx)
       let serverConfigCtx =
             ServerConfigCtx
               functionPermsCtx
@@ -525,6 +536,7 @@ v2QueryHandler query = do
               eventingMode
               readOnlyMode
               defaultNamingCase
+              defaultMetadata
 
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
@@ -572,7 +584,8 @@ mkExecutionContext = do
   enableAL <- asks (scEnableAllowlist . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode
+  prometheusMetrics <- asks (scPrometheusMetrics . hcServerCtx)
+  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode prometheusMetrics
 
 v1GQHandler ::
   ( MonadIO m,
@@ -675,10 +688,10 @@ consoleAssetsHandler logger loggingSettings dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
+  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> m (Either String Text)
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
-  renderConsole a b c d = lift $ renderConsole a b c d
+  renderConsole a b c d e = lift $ renderConsole a b c d e
 
 renderHtmlTemplate :: M.Template -> Value -> Either String Text
 renderHtmlTemplate template jVal =
@@ -709,6 +722,8 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 (ES._ssStreamQueryOptions $ scSubscriptionState)
                 consoleAssetsDir
                 scExperimentalFeatures
+                scEnabledAPIs
+                scDefaultNamingConvention
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp
@@ -739,7 +754,8 @@ mkWaiApp ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   -- | Set of environment variables for reference in UIs
@@ -758,6 +774,8 @@ mkWaiApp ::
   Bool ->
   -- | filepath to the console static assets directory - TODO: better type
   Maybe Text ->
+  -- | DSN for console sentry integration
+  Maybe Text ->
   -- | is telemetry enabled
   Bool ->
   -- | each application, when run, gets an 'InstanceId'. this is used at various places including
@@ -772,6 +790,7 @@ mkWaiApp ::
   SchemaCacheRef ->
   EKG.Store EKG.EmptyMetrics ->
   ServerMetrics ->
+  PrometheusMetrics ->
   Options.RemoteSchemaPermissions ->
   Options.InferFunctionPermissions ->
   WS.ConnectionOptions ->
@@ -787,6 +806,8 @@ mkWaiApp ::
   MetadataQueryLoggingMode ->
   -- | default naming convention
   Maybe NamingCase ->
+  -- | default metadata entries
+  MetadataDefaults ->
   m HasuraApp
 mkWaiApp
   setupHook
@@ -799,6 +820,7 @@ mkWaiApp
   corsCfg
   enableConsole
   consoleAssetsDir
+  consoleSentryDsn
   enableTelemetry
   instanceId
   apis
@@ -809,6 +831,7 @@ mkWaiApp
   schemaCacheRef
   ekgStore
   serverMetrics
+  prometheusMetrics
   enableRSPermsCtx
   functionPermsCtx
   connectionOptions
@@ -820,7 +843,8 @@ mkWaiApp
   enabledLogTypes
   wsConnInitTimeout
   enableMetadataQueryLogging
-  defaultNC = do
+  defaultNC
+  metadataDefaults = do
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -840,6 +864,7 @@ mkWaiApp
         enableAL
         keepAliveDelay
         serverMetrics
+        prometheusMetrics
 
     let serverCtx =
           ServerCtx
@@ -862,13 +887,15 @@ mkWaiApp
               scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging,
               scEventingMode = eventingMode,
               scEnableReadOnlyMode = readOnlyMode,
-              scDefaultNamingConvention = defaultNC
+              scDefaultNamingConvention = defaultNC,
+              scPrometheusMetrics = prometheusMetrics,
+              scMetadataDefaults = metadataDefaults
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $
         Spock.spockT lowerIO $
-          httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+          httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry
 
     let wsServerApp = WS.createWSServerApp env enabledLogTypes mode wsServerEnv wsConnInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -895,22 +922,25 @@ httpApp ::
     MonadMetadataStorage (MetadataStorageT m),
     HasResourceLimits m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   CorsConfig ->
   ServerCtx ->
   Bool ->
   Maybe Text ->
+  Maybe Text ->
   Bool ->
   Spock.SpockT m ()
-httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry = do
   -- Additional spock action to run
   setupHook serverCtx
 
   -- cors middleware
   unless (isCorsDisabled corsCfg) $
-    Spock.middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
+    Spock.middleware $
+      corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
   -- API Console and Root Dir
   when (enableConsole && enableMetadata) serveApiConsole
@@ -1008,31 +1038,39 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
 
     Spock.post "v1/metadata" $
       spockAction encodeQErr id $
-        mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v1MetadataHandler
+        mkPostHandler $
+          fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v1MetadataHandler
 
     Spock.post "v2/query" $
       spockAction encodeQErr id $
-        mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v2QueryHandler
+        mkPostHandler $
+          fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v2QueryHandler
 
   when enablePGDump $
     Spock.post "v1alpha1/pg_dump" $
       spockAction encodeQErr id $
-        mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> v1Alpha1PGDumpHandler
+        mkPostHandler $
+          fmap (emptyHttpLogMetadata @m,) <$> v1Alpha1PGDumpHandler
 
   when enableConfig $ runConfigApiHandler serverCtx consoleAssetsDir
 
   when enableGraphQL $ do
     Spock.post "v1alpha1/graphql" $
       spockAction GH.encodeGQErr id $
-        mkGQLRequestHandler $ mkGQLAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
+        mkGQLRequestHandler $
+          mkGQLAPIRespHandler $
+            v1Alpha1GQHandler E.QueryHasura
 
     Spock.post "v1/graphql" $
       spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $ mkGQLAPIRespHandler v1GQHandler
+        mkGQLRequestHandler $
+          mkGQLAPIRespHandler v1GQHandler
 
     Spock.post "v1beta1/relay" $
       spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $ mkGQLAPIRespHandler $ v1GQRelayHandler
+        mkGQLRequestHandler $
+          mkGQLAPIRespHandler $
+            v1GQRelayHandler
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
   -- this to be available even when developer APIs are not compiled in, to
@@ -1135,7 +1173,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       Spock.get Spock.root $ Spock.redirect "console"
 
       -- serve static files if consoleAssetsDir is set
-      onJust consoleAssetsDir $ \dir ->
+      for_ consoleAssetsDir $ \dir ->
         Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
           consoleAssetsHandler logger (scLoggingSettings serverCtx) dir (T.unpack path)
 
@@ -1144,7 +1182,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         req <- Spock.request
         let headers = Wai.requestHeaders req
             authMode = scAuthMode serverCtx
-        consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
+        consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
         either (raiseGenericApiError logger (scLoggingSettings serverCtx) headers . internalError . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError ::

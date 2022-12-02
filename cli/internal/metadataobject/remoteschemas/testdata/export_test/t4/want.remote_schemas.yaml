@@ -14,6 +14,10 @@
             query: query_root
             mutation: mutation_root
           }
+          scalar bigint
+          scalar jsonb
+          scalar timestamptz
+          scalar uuid
           type battle_character_loot {
             battle_character: battle_characters!
             battle_character_id: uuid!
@@ -85,18 +89,6 @@
             need: Boolean
             updated_at: timestamptz!
           }
-          enum battle_stat_types_enum {
-            damage_dealt
-            damage_received
-            health_restored
-          }
-          enum battle_states_enum {
-            complete
-            connecting
-            pending
-            post_battle
-            running
-          }
           type battles {
             battle_characters(limit: Int, offset: Int): [battle_characters!]!
             battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
@@ -110,23 +102,6 @@
             started_at: timestamptz
             state: battle_states_enum!
             updated_at: timestamptz!
-          }
-          scalar bigint
-          enum category_types_enum {
-            astronomy
-            components
-            equipment
-            farming
-            mining
-            woodcutting
-          }
-          enum character_class_types_enum {
-            archer
-            defender
-            sharpshooter
-            thaumturgist
-            warrior
-            wizard
           }
           type character_classes {
             character: characters!
@@ -163,11 +138,6 @@
             query_type: query_types_enum!
             revision: Int!
             updated_at: timestamptz!
-          }
-          enum character_inventory_types_enum {
-            character_item_basic
-            character_item_equipment_components
-            character_item_equipments
           }
           type character_item_basic {
             amount: Int!
@@ -244,17 +214,6 @@
             recipe_id: uuid!
             updated_at: timestamptz!
           }
-          enum character_skill_types_enum {
-            astronomy
-            attack
-            crafting
-            defense
-            farming
-            health
-            magic
-            mining
-            woodcutting
-          }
           type character_skills {
             character: characters!
             character_id: uuid!
@@ -311,6 +270,390 @@
             id: uuid!
             updated_at: timestamptz!
           }
+          type craft_result {
+            amount: Int!
+            id: uuid!
+          }
+          type create_tower_battle_result {
+            status: String!
+          }
+          type equipment_component_stats {
+            created_at: timestamptz!
+            equipment_component: equipment_components!
+            equipment_components_id: uuid!
+            id: uuid!
+            stat: combat_stat_types_enum!
+            updated_at: timestamptz!
+            value: Float
+          }
+          type equipment_components {
+            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
+            component_material: item_material_types_enum!
+            component_type: equipment_component_types_enum!
+            created_at: timestamptz!
+            equipment_component_stats(limit: Int, offset: Int): [equipment_component_stats!]!
+            equipment_type: equipment_types_enum!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
+            variants(path: String): jsonb!
+          }
+          type floors {
+            boss_available: Boolean!
+            cleared: Boolean!
+            created_at: timestamptz!
+            floor: Int!
+            height: Int!
+            id: uuid!
+            open: Boolean!
+            realm: realms!
+            realm_id: uuid!
+            rooms(limit: Int, offset: Int): [rooms!]!
+            starting_position: Int!
+            updated_at: timestamptz!
+            width: Int!
+          }
+          type forge_result {
+            id: uuid!
+          }
+          type icon_variants {
+            base: String!
+            created_at: timestamptz!
+            id: uuid!
+            item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
+            item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
+            template: String!
+            updated_at: timestamptz!
+            variant: icon_variant_types_enum
+            z_index: Int!
+          }
+          type invalidate_character_events_result {
+            invalidated: Boolean!
+          }
+          type invalidate_realm_events_result {
+            invalidated: Boolean!
+          }
+          type item_battle_icon_variants {
+            created_at: timestamptz!
+            equipment_type: equipment_types_enum!
+            icon_variant: icon_variants!
+            icon_variant_id: uuid!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
+          }
+          type item_inventory_icon_variants {
+            created_at: timestamptz!
+            icon_variant: icon_variants!
+            icon_variant_id: uuid!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
+          }
+          type items {
+            battle_character_loots(limit: Int, offset: Int): [battle_character_loot!]!
+            battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
+            category: category_types_enum!
+            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
+            character_inventory: character_inventory_types_enum!
+            character_item_basics(limit: Int, offset: Int): [character_item_basic!]!
+            character_item_equipment_components(limit: Int, offset: Int): [character_item_equipment_components!]!
+            character_item_equipments(limit: Int, offset: Int): [character_item_equipments!]!
+            created_at: timestamptz!
+            description: String!
+            equipment_components(limit: Int, offset: Int): [equipment_components!]!
+            icon: String!
+            id: uuid!
+            internal_name: internal_name_item_enum!
+            item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
+            item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
+            mining_spaces(limit: Int, offset: Int): [mining_spaces!]!
+            name: String!
+            realm: realms!
+            realm_id: uuid!
+            recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
+            recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
+            sell_price: Int!
+            subcategory: subcategory_types_enum!
+            tier: Int!
+            updated_at: timestamptz!
+          }
+          type mining_spaces {
+            character: characters!
+            character_id: uuid!
+            created_at: timestamptz!
+            health: Int!
+            id: uuid!
+            item: items
+            item_id: uuid
+            max_health: Int!
+            ore_material: item_material_types_enum!
+            position: Int!
+            updated_at: timestamptz!
+          }
+          type mutation_root {
+            character_craft_recipe(recipe_internal_name: internal_name_recipe_enum!, amount: Int!): craft_result!
+            character_forge_equipment(recipe_internal_name: internal_name_recipe_enum!, components: [forge_equipment_component_element!]!): forge_result!
+            character_select_loadout(loadout_id: uuid!): characters!
+            character_tick_mining: character_tick_mining_result!
+            character_update_loadout(loadout_id: uuid!, character_class_id: uuid!, character_equipment_ids: [uuid!]!): character_loadouts!
+            create_tower_battle(battle_group_id: uuid!, room_id: uuid!): create_tower_battle_result!
+            invalidate_character_events(query_type: query_types_enum!): invalidate_character_events_result!
+            invalidate_realm_events(query_type: query_types_enum!): invalidate_realm_events_result!
+            mining_hit_ore(id: uuid!): mining_spaces!
+            tower_reveal_floor(floor_id: uuid!): [rooms!]!
+            user_create_character(id_token: String!, name: String!, realm_id: uuid!): user_create_character_result!
+            user_login(id_token: String!): user_login_result!
+            user_select_character(id_token: String!, character_id: uuid!): user_select_character_result!
+            user_validate_token(id_token: String!): user_validate_result!
+          }
+          type query_root {
+            character_name_available(name: String!): character_name_available_result
+          }
+          type realm_events {
+            checksum: String!
+            created_at: timestamptz!
+            id: uuid!
+            param1: String!
+            param2: String!
+            patch_diff(path: String): jsonb!
+            query_result(path: String): jsonb!
+            query_type: query_types_enum!
+            realm: realms!
+            realm_id: uuid!
+            revision: Int!
+            updated_at: timestamptz!
+          }
+          type realms {
+            active: Boolean
+            battles(limit: Int, offset: Int): [battles!]!
+            characters(limit: Int, offset: Int): [characters!]!
+            created_at: timestamptz!
+            current_floor: Int
+            floors(limit: Int, offset: Int): [floors!]!
+            id: uuid!
+            items(limit: Int, offset: Int): [items!]!
+            name: String
+            realm_events(limit: Int, offset: Int): [realm_events!]!
+            updated_at: timestamptz!
+          }
+          type recipe_basic {
+            created_at: timestamptz!
+            id: uuid!
+            recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
+            recipe_basic_required_skills(limit: Int, offset: Int): [recipe_basic_required_skills!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            updated_at: timestamptz!
+          }
+          type recipe_basic_required_items {
+            amount: Int!
+            consumes: Boolean!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            recipe_basic: recipe_basic!
+            recipe_basic_id: uuid!
+            updated_at: timestamptz!
+          }
+          type recipe_basic_required_skills {
+            created_at: timestamptz!
+            id: uuid!
+            level: Int!
+            recipe_basic: recipe_basic!
+            recipe_basic_id: uuid!
+            skill: character_skill_types_enum!
+            updated_at: timestamptz!
+          }
+          type recipe_component {
+            created_at: timestamptz!
+            equipment_component_material: item_material_types_enum!
+            equipment_component_type: equipment_component_types_enum!
+            id: uuid!
+            recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
+            recipe_component_required_skills(limit: Int, offset: Int): [recipe_component_required_skills!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            updated_at: timestamptz!
+          }
+          type recipe_component_required_items {
+            amount: Int!
+            consumes: Boolean!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            recipe_component: recipe_component!
+            recipe_component_id: uuid!
+            updated_at: timestamptz!
+          }
+          type recipe_component_required_skills {
+            created_at: timestamptz!
+            id: uuid!
+            level: Int!
+            recipe_component: recipe_component!
+            recipe_component_id: uuid!
+            skill: character_skill_types_enum!
+            updated_at: timestamptz!
+          }
+          type recipe_equipment {
+            created_at: timestamptz!
+            equipment_category: equipment_category_types_enum!
+            equipment_slot: equipment_slot_types_enum!
+            equipment_type: equipment_types_enum!
+            icon: String!
+            id: uuid!
+            recipe_equipment_components(limit: Int, offset: Int): [recipe_equipment_components!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            updated_at: timestamptz!
+          }
+          type recipe_equipment_components {
+            component_icon: String!
+            component_type: equipment_component_types_enum!
+            created_at: timestamptz!
+            id: uuid!
+            order: Int!
+            recipe_equipment: recipe_equipment!
+            recipe_equipment_id: uuid!
+            updated_at: timestamptz!
+          }
+          type recipes {
+            category: category_types_enum!
+            character_recipes(limit: Int, offset: Int): [character_recipes!]!
+            created_at: timestamptz!
+            id: uuid!
+            internal_name: internal_name_recipe_enum!
+            item: items!
+            item_id: uuid!
+            max_to_craft: Int!
+            recipe_basic: recipe_basic
+            recipe_basic_id: uuid
+            recipe_component: recipe_component
+            recipe_component_id: uuid
+            recipe_equipment: recipe_equipment
+            recipe_equipment_id: uuid
+            recipe_type: recipe_types_enum!
+            required_crafting_level: Int!
+            required_gold: bigint!
+            subcategory: subcategory_types_enum!
+            time_to_craft: Int!
+            updated_at: timestamptz!
+            xp: Int!
+          }
+          type room_enemy {
+            created_at: timestamptz!
+            id: uuid!
+            known_internal_name: internal_name_enemy_enum!
+            order: Int!
+            real_internal_name: internal_name_enemy_enum!
+            room: rooms!
+            room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
+            room_id: uuid!
+            updated_at: timestamptz!
+          }
+          type room_enemy_loot {
+            created_at: timestamptz!
+            id: uuid!
+            item: items
+            item_id: uuid
+            known_amount: Int!
+            known_chance: Float!
+            known_chance_string: String!
+            loot_type: room_loot_types_enum!
+            order: Int!
+            real_amount: Int!
+            real_chance: Float!
+            real_chance_string: String!
+            room_enemy: room_enemy!
+            room_enemy_id: uuid!
+            updated_at: timestamptz!
+          }
+          type rooms {
+            battles(limit: Int, offset: Int): [battles!]!
+            cleared: Boolean!
+            created_at: timestamptz!
+            floor: floors!
+            floor_id: uuid!
+            id: uuid!
+            known_distance: Int!
+            known_state: room_state_types_enum!
+            position: Int!
+            real_distance: Int!
+            real_state: room_state_types_enum!
+            room_enemies(limit: Int, offset: Int): [room_enemy!]!
+            updated_at: timestamptz!
+          }
+          type user_create_character_result {
+            status: String!
+          }
+          type user_login_result {
+            status: String!
+          }
+          type user_select_character_result {
+            status: String!
+          }
+          type user_validate_result {
+            status: String!
+          }
+          type users {
+            active_character_id: uuid
+            character: characters
+            characters(limit: Int, offset: Int): [characters!]!
+            created_at: timestamptz!
+            id: uuid!
+            is_guest: Boolean!
+            jwt_uid: String!
+            settings(path: String): jsonb
+            updated_at: timestamptz!
+          }
+          enum battle_stat_types_enum {
+            damage_dealt
+            damage_received
+            health_restored
+          }
+          enum battle_states_enum {
+            complete
+            connecting
+            pending
+            post_battle
+            running
+          }
+          enum category_types_enum {
+            astronomy
+            components
+            equipment
+            farming
+            mining
+            woodcutting
+          }
+          enum character_class_types_enum {
+            archer
+            defender
+            sharpshooter
+            thaumturgist
+            warrior
+            wizard
+          }
+          enum character_inventory_types_enum {
+            character_item_basic
+            character_item_equipment_components
+            character_item_equipments
+          }
+          enum character_skill_types_enum {
+            astronomy
+            attack
+            crafting
+            defense
+            farming
+            health
+            magic
+            mining
+            woodcutting
+          }
           enum combat_stat_types_enum {
             accuracy
             accuracyExtra
@@ -335,13 +678,6 @@
             magicPower
             magicPowerExtra
           }
-          type craft_result {
-            amount: Int!
-            id: uuid!
-          }
-          type create_tower_battle_result {
-            status: String!
-          }
           enum equipment_category_types_enum {
             magic_armor
             magic_mainhand
@@ -360,15 +696,6 @@
             D
             F
             S
-          }
-          type equipment_component_stats {
-            created_at: timestamptz!
-            equipment_component: equipment_components!
-            equipment_components_id: uuid!
-            id: uuid!
-            stat: combat_stat_types_enum!
-            updated_at: timestamptz!
-            value: Float
           }
           enum equipment_component_types_enum {
             axe_blade
@@ -389,19 +716,6 @@
             rune
             trim
             trowel_blade
-          }
-          type equipment_components {
-            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
-            component_material: item_material_types_enum!
-            component_type: equipment_component_types_enum!
-            created_at: timestamptz!
-            equipment_component_stats(limit: Int, offset: Int): [equipment_component_stats!]!
-            equipment_type: equipment_types_enum!
-            id: uuid!
-            item: items!
-            item_id: uuid!
-            updated_at: timestamptz!
-            variants(path: String): jsonb!
           }
           enum equipment_slot_types_enum {
             armor
@@ -446,43 +760,10 @@
             wand
             wizard_robes
           }
-          type floors {
-            boss_available: Boolean!
-            cleared: Boolean!
-            created_at: timestamptz!
-            floor: Int!
-            height: Int!
-            id: uuid!
-            open: Boolean!
-            realm: realms!
-            realm_id: uuid!
-            rooms(limit: Int, offset: Int): [rooms!]!
-            starting_position: Int!
-            updated_at: timestamptz!
-            width: Int!
-          }
-          input forge_equipment_component_element {
-            id: uuid!
-            variant: String!
-          }
-          type forge_result {
-            id: uuid!
-          }
           enum icon_variant_types_enum {
             armor_body
             armor_helmet
             armor_shoulders
-          }
-          type icon_variants {
-            base: String!
-            created_at: timestamptz!
-            id: uuid!
-            item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
-            item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
-            template: String!
-            updated_at: timestamptz!
-            variant: icon_variant_types_enum
-            z_index: Int!
           }
           enum internal_name_enemy_enum {
             bee
@@ -896,31 +1177,6 @@
             titanium_trowel_blade
             tower_shield
           }
-          type invalidate_character_events_result {
-            invalidated: Boolean!
-          }
-          type invalidate_realm_events_result {
-            invalidated: Boolean!
-          }
-          type item_battle_icon_variants {
-            created_at: timestamptz!
-            equipment_type: equipment_types_enum!
-            icon_variant: icon_variants!
-            icon_variant_id: uuid!
-            id: uuid!
-            item: items!
-            item_id: uuid!
-            updated_at: timestamptz!
-          }
-          type item_inventory_icon_variants {
-            created_at: timestamptz!
-            icon_variant: icon_variants!
-            icon_variant_id: uuid!
-            id: uuid!
-            item: items!
-            item_id: uuid!
-            updated_at: timestamptz!
-          }
           enum item_material_types_enum {
             adamantine
             copper
@@ -933,69 +1189,6 @@
             stone
             titanium
           }
-          type items {
-            battle_character_loots(limit: Int, offset: Int): [battle_character_loot!]!
-            battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
-            category: category_types_enum!
-            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
-            character_inventory: character_inventory_types_enum!
-            character_item_basics(limit: Int, offset: Int): [character_item_basic!]!
-            character_item_equipment_components(limit: Int, offset: Int): [character_item_equipment_components!]!
-            character_item_equipments(limit: Int, offset: Int): [character_item_equipments!]!
-            created_at: timestamptz!
-            description: String!
-            equipment_components(limit: Int, offset: Int): [equipment_components!]!
-            icon: String!
-            id: uuid!
-            internal_name: internal_name_item_enum!
-            item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
-            item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
-            mining_spaces(limit: Int, offset: Int): [mining_spaces!]!
-            name: String!
-            realm: realms!
-            realm_id: uuid!
-            recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
-            recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
-            recipes(limit: Int, offset: Int): [recipes!]!
-            room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
-            sell_price: Int!
-            subcategory: subcategory_types_enum!
-            tier: Int!
-            updated_at: timestamptz!
-          }
-          scalar jsonb
-          type mining_spaces {
-            character: characters!
-            character_id: uuid!
-            created_at: timestamptz!
-            health: Int!
-            id: uuid!
-            item: items
-            item_id: uuid
-            max_health: Int!
-            ore_material: item_material_types_enum!
-            position: Int!
-            updated_at: timestamptz!
-          }
-          type mutation_root {
-            character_craft_recipe(recipe_internal_name: internal_name_recipe_enum!, amount: Int!): craft_result!
-            character_forge_equipment(recipe_internal_name: internal_name_recipe_enum!, components: [forge_equipment_component_element!]!): forge_result!
-            character_select_loadout(loadout_id: uuid!): characters!
-            character_tick_mining: character_tick_mining_result!
-            character_update_loadout(loadout_id: uuid!, character_class_id: uuid!, character_equipment_ids: [uuid!]!): character_loadouts!
-            create_tower_battle(battle_group_id: uuid!, room_id: uuid!): create_tower_battle_result!
-            invalidate_character_events(query_type: query_types_enum!): invalidate_character_events_result!
-            invalidate_realm_events(query_type: query_types_enum!): invalidate_realm_events_result!
-            mining_hit_ore(id: uuid!): mining_spaces!
-            tower_reveal_floor(floor_id: uuid!): [rooms!]!
-            user_create_character(id_token: String!, name: String!, realm_id: uuid!): user_create_character_result!
-            user_login(id_token: String!): user_login_result!
-            user_select_character(id_token: String!, character_id: uuid!): user_select_character_result!
-            user_validate_token(id_token: String!): user_validate_result!
-          }
-          type query_root {
-            character_name_available(name: String!): character_name_available_result
-          }
           enum query_types_enum {
             notifyBattleUpdates
             notifyCharacterUpdates
@@ -1005,167 +1198,10 @@
             notifyRecipeUpdates
             notifyTowerFloorUpdates
           }
-          type realm_events {
-            checksum: String!
-            created_at: timestamptz!
-            id: uuid!
-            param1: String!
-            param2: String!
-            patch_diff(path: String): jsonb!
-            query_result(path: String): jsonb!
-            query_type: query_types_enum!
-            realm: realms!
-            realm_id: uuid!
-            revision: Int!
-            updated_at: timestamptz!
-          }
-          type realms {
-            active: Boolean
-            battles(limit: Int, offset: Int): [battles!]!
-            characters(limit: Int, offset: Int): [characters!]!
-            created_at: timestamptz!
-            current_floor: Int
-            floors(limit: Int, offset: Int): [floors!]!
-            id: uuid!
-            items(limit: Int, offset: Int): [items!]!
-            name: String
-            realm_events(limit: Int, offset: Int): [realm_events!]!
-            updated_at: timestamptz!
-          }
-          type recipe_basic {
-            created_at: timestamptz!
-            id: uuid!
-            recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
-            recipe_basic_required_skills(limit: Int, offset: Int): [recipe_basic_required_skills!]!
-            recipes(limit: Int, offset: Int): [recipes!]!
-            updated_at: timestamptz!
-          }
-          type recipe_basic_required_items {
-            amount: Int!
-            consumes: Boolean!
-            created_at: timestamptz!
-            id: uuid!
-            item: items!
-            item_id: uuid!
-            recipe_basic: recipe_basic!
-            recipe_basic_id: uuid!
-            updated_at: timestamptz!
-          }
-          type recipe_basic_required_skills {
-            created_at: timestamptz!
-            id: uuid!
-            level: Int!
-            recipe_basic: recipe_basic!
-            recipe_basic_id: uuid!
-            skill: character_skill_types_enum!
-            updated_at: timestamptz!
-          }
-          type recipe_component {
-            created_at: timestamptz!
-            equipment_component_material: item_material_types_enum!
-            equipment_component_type: equipment_component_types_enum!
-            id: uuid!
-            recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
-            recipe_component_required_skills(limit: Int, offset: Int): [recipe_component_required_skills!]!
-            recipes(limit: Int, offset: Int): [recipes!]!
-            updated_at: timestamptz!
-          }
-          type recipe_component_required_items {
-            amount: Int!
-            consumes: Boolean!
-            created_at: timestamptz!
-            id: uuid!
-            item: items!
-            item_id: uuid!
-            recipe_component: recipe_component!
-            recipe_component_id: uuid!
-            updated_at: timestamptz!
-          }
-          type recipe_component_required_skills {
-            created_at: timestamptz!
-            id: uuid!
-            level: Int!
-            recipe_component: recipe_component!
-            recipe_component_id: uuid!
-            skill: character_skill_types_enum!
-            updated_at: timestamptz!
-          }
-          type recipe_equipment {
-            created_at: timestamptz!
-            equipment_category: equipment_category_types_enum!
-            equipment_slot: equipment_slot_types_enum!
-            equipment_type: equipment_types_enum!
-            icon: String!
-            id: uuid!
-            recipe_equipment_components(limit: Int, offset: Int): [recipe_equipment_components!]!
-            recipes(limit: Int, offset: Int): [recipes!]!
-            updated_at: timestamptz!
-          }
-          type recipe_equipment_components {
-            component_icon: String!
-            component_type: equipment_component_types_enum!
-            created_at: timestamptz!
-            id: uuid!
-            order: Int!
-            recipe_equipment: recipe_equipment!
-            recipe_equipment_id: uuid!
-            updated_at: timestamptz!
-          }
           enum recipe_types_enum {
             recipe_basic
             recipe_component
             recipe_equipment
-          }
-          type recipes {
-            category: category_types_enum!
-            character_recipes(limit: Int, offset: Int): [character_recipes!]!
-            created_at: timestamptz!
-            id: uuid!
-            internal_name: internal_name_recipe_enum!
-            item: items!
-            item_id: uuid!
-            max_to_craft: Int!
-            recipe_basic: recipe_basic
-            recipe_basic_id: uuid
-            recipe_component: recipe_component
-            recipe_component_id: uuid
-            recipe_equipment: recipe_equipment
-            recipe_equipment_id: uuid
-            recipe_type: recipe_types_enum!
-            required_crafting_level: Int!
-            required_gold: bigint!
-            subcategory: subcategory_types_enum!
-            time_to_craft: Int!
-            updated_at: timestamptz!
-            xp: Int!
-          }
-          type room_enemy {
-            created_at: timestamptz!
-            id: uuid!
-            known_internal_name: internal_name_enemy_enum!
-            order: Int!
-            real_internal_name: internal_name_enemy_enum!
-            room: rooms!
-            room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
-            room_id: uuid!
-            updated_at: timestamptz!
-          }
-          type room_enemy_loot {
-            created_at: timestamptz!
-            id: uuid!
-            item: items
-            item_id: uuid
-            known_amount: Int!
-            known_chance: Float!
-            known_chance_string: String!
-            loot_type: room_loot_types_enum!
-            order: Int!
-            real_amount: Int!
-            real_chance: Float!
-            real_chance_string: String!
-            room_enemy: room_enemy!
-            room_enemy_id: uuid!
-            updated_at: timestamptz!
           }
           enum room_loot_types_enum {
             gold
@@ -1176,21 +1212,6 @@
             floor
             shadow
             wall
-          }
-          type rooms {
-            battles(limit: Int, offset: Int): [battles!]!
-            cleared: Boolean!
-            created_at: timestamptz!
-            floor: floors!
-            floor_id: uuid!
-            id: uuid!
-            known_distance: Int!
-            known_state: room_state_types_enum!
-            position: Int!
-            real_distance: Int!
-            real_state: room_state_types_enum!
-            room_enemies(limit: Int, offset: Int): [room_enemy!]!
-            updated_at: timestamptz!
           }
           enum subcategory_types_enum {
             apprentice_robes
@@ -1247,31 +1268,10 @@
             wand
             wizard_robes
           }
-          scalar timestamptz
-          type user_create_character_result {
-            status: String!
-          }
-          type user_login_result {
-            status: String!
-          }
-          type user_select_character_result {
-            status: String!
-          }
-          type user_validate_result {
-            status: String!
-          }
-          type users {
-            active_character_id: uuid
-            character: characters
-            characters(limit: Int, offset: Int): [characters!]!
-            created_at: timestamptz!
+          input forge_equipment_component_element {
             id: uuid!
-            is_guest: Boolean!
-            jwt_uid: String!
-            settings(path: String): jsonb
-            updated_at: timestamptz!
+            variant: String!
           }
-          scalar uuid
     - role: anonymous
       definition:
         schema: |

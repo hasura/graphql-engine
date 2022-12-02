@@ -12,7 +12,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
-import Data.IntMap.Strict.Extended qualified as IntMap
+import Data.IntMap.Strict qualified as IntMap
 import Data.Text qualified as T
 import Data.Tuple (swap)
 import Hasura.Base.Error
@@ -30,7 +30,7 @@ import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
@@ -135,7 +135,7 @@ foldJoinTreeWith ::
   m (f JO.Value)
 foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
-  joinIndices <- fmap IntMap.catMaybes $
+  joinIndices <- fmap catMaybes $
     for joins $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
       previousStep <- case _jalJoin of
@@ -288,7 +288,8 @@ collectJoinArguments joinTree lhs = do
           phantomFields =
             HS.fromList $
               map getFieldNameTxt $
-                concatMap (getPhantomFields . snd) $ toList joinTree_
+                concatMap (getPhantomFields . snd) $
+                  toList joinTree_
 
       -- If we need the typename to disambiguate branches in the join tree, it
       -- will be present in the answer as a placeholder internal field.
@@ -318,7 +319,8 @@ collectJoinArguments joinTree lhs = do
             joinArgument <- forM (getJoinColumnMapping remoteJoin) $ \alias -> do
               let aliasTxt = getFieldNameTxt $ getAliasFieldName alias
               onNothing (JO.lookup aliasTxt object) $
-                throw500 $ "a join column is missing from the response: " <> aliasTxt
+                throw500 $
+                  "a join column is missing from the response: " <> aliasTxt
             if Map.null (Map.filter (== JO.Null) joinArgument)
               then
                 Just . CVFromRemote

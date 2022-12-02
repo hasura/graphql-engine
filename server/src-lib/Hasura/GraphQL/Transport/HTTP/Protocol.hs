@@ -151,6 +151,7 @@ renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . 
 --
 --     https://spec.graphql.org/June2018/#sec-Executable-Definitions  and...
 --     https://graphql.org/learn/serving-over-http/
+{-# INLINEABLE getSingleOperation #-}
 getSingleOperation ::
   MonadError QErr m =>
   GQLReqParsed ->
@@ -205,7 +206,7 @@ isExecError = isLeft
 encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
-    Right r -> [("data", encJFromLBS r)]
+    Right r -> [("data", encJFromLbsWithoutSoh r)]
     Left e -> [("data", encJFromBuilder "null"), ("errors", encJFromJValue e)]
 
 -- We don't want to force the `Maybe GQResponse` unless absolutely necessary

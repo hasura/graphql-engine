@@ -6,7 +6,7 @@
     args:
       name: user1
       definition:
-        url:  http://localhost:5000/user-graphql
+        url:  "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql"
         customization:
           root_fields_namespace: bar
           type_names:
@@ -23,7 +23,7 @@
     args:
       name: user2
       definition:
-        url:  http://localhost:5000/user-graphql
+        url:  "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql"
         customization:
           root_fields_namespace: baz
   response:

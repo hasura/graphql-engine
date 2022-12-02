@@ -1,0 +1,80 @@
+{
+  "family": "hasura",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "hasura",
+      "image": "hasura/graphql-engine:v2.12.0-beta.1",
+      "portMappings": [
+        {
+          "hostPort": 8080,
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "HASURA_GRAPHQL_EE_LICENSE_KEY",
+          "value": ""
+        },
+        {
+          "name": "HASURA_GRAPHQL_METADATA_DATABASE_URL",
+          "value": "postgres://<username>:<password>@hostname:<port>/<dbname>"
+        },
+        {
+          "name": "HASURA_GRAPHQL_REDIS_URL",
+          "value": "redis://hostname:6379"
+        },
+        {
+          "name": "HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL",
+          "value": "redis://hostname:6379"
+        },
+        {
+          "name": "HASURA_GRAPHQL_ADMIN_SECRET",
+          "value": "myadminsecretkey"
+        },
+        {
+          "name": "HASURA_GRAPHQL_ENABLE_CONSOLE",
+          "value": "true"
+        },
+        {
+          "name": "HASURA_GRAPHQL_DEV_MODE",
+          "value": "true"
+        },
+        {
+          "name": "HASURA_GRAPHQL_ENABLED_LOG_TYPES",
+          "value": "startup, http-log, response-caching-log"
+        },
+        {
+          "name": "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR",
+          "value": "/srv/console-assets"
+        },
+        {
+          "name": "HASURA_GRAPHQL_MAX_CACHE_SIZE",
+          "value": "200"
+        },
+        {
+          "name": "HASURA_GRAPHQL_SERVER_PORT",
+          "value": "8080"
+        }
+      ],
+      "healthCheck": {
+        "retries": 3,
+        "command": ["CMD-SHELL", "curl -f http://localhost:8080/healthz || exit 1"],
+        "timeout": 5,
+        "interval": 30,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2GB",
+  "tags": [
+    {
+      "key": "name",
+      "value": "hasura"
+    }
+  ]
+}

@@ -8,8 +8,8 @@ import { RequestTransformStateBody } from '../stateDefaults';
 
 type TemplateEditorProps = {
   requestBody: RequestTransformStateBody;
-  requestBodyError: string;
-  requestSampleInput: string;
+  requestBodyError?: string;
+  requestSampleInput?: string;
   requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   height?: string;
   width?: string;
@@ -27,9 +27,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [localValue, setLocalValue] = useState<string>(
     requestBody.template ?? ''
   );
-  const [localError, setLocalError] = useState<Nullable<string>>(
-    requestBodyError
-  );
+  const [localError, setLocalError] =
+    useState<Nullable<string>>(requestBodyError);
 
   useEffect(() => {
     setLocalValue(requestBody.template ?? '');
@@ -45,7 +44,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   useEffect(() => {
     const sampleInputWordCompleter = getAceCompleterFromString(
-      requestSampleInput
+      requestSampleInput || ''
     );
     if (
       editorRef?.current?.editor?.completers &&
@@ -88,6 +87,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         setOptions={{
           enableBasicAutocompletion: true,
           enableLiveAutocompletion: true,
+          useWorker: false,
         }}
       />
     </>

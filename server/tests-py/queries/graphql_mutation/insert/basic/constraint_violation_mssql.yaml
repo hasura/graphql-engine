@@ -26,6 +26,6 @@ response:
           \ INTO #inserted([id], [author_id], [title], [content]) VALUES ( 1, (N'some\
           \ title'), (N'some content') )"
       path: $
-    message: Integrity constraint violation. [Microsoft][ODBC Driver 17 for SQL Server][SQL
+    message: Integrity constraint violation. [Microsoft][ODBC Driver 18 for SQL Server][SQL
       Server]The INSERT statement conflicted with the FOREIGN KEY constraint "article_author_fk".
       The conflict occurred in database "master", table "dbo.author", column 'id'.

@@ -10,15 +10,15 @@ module Hasura.RQL.Types.Relationships.ToSource
   )
 where
 
+import Autodocodec (HasCodec, requiredField')
+import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.HashMap.Strict qualified as HM
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.SourceCustomization
 
 --------------------------------------------------------------------------------
 -- metadata
@@ -44,16 +44,23 @@ import Hasura.RQL.Types.SourceCustomization
 --
 -- FIXME: move this to Hasura/Metadata
 data ToSourceRelationshipDef = ToSourceRelationshipDef
-  { _tsrdRelationshipType :: !RelType,
-    _tsrdFieldMapping :: !(HashMap FieldName FieldName),
-    _tsrdSource :: !SourceName,
-    _tsrdTable :: !Value
+  { _tsrdRelationshipType :: RelType,
+    _tsrdFieldMapping :: HashMap FieldName FieldName,
+    _tsrdSource :: SourceName,
+    _tsrdTable :: Value
   }
   deriving stock (Show, Eq, Generic)
 
 instance NFData ToSourceRelationshipDef
 
-instance Cacheable ToSourceRelationshipDef
+instance HasCodec ToSourceRelationshipDef where
+  codec =
+    AC.object "ToSourceRelationshipDef" $
+      ToSourceRelationshipDef
+        <$> requiredField' "relationship_type" AC..= _tsrdRelationshipType
+        <*> requiredField' "field_mapping" AC..= _tsrdFieldMapping
+        <*> requiredField' "source" AC..= _tsrdSource
+        <*> requiredField' "table" AC..= _tsrdTable
 
 instance ToJSON ToSourceRelationshipDef where
   toJSON = genericToJSON hasuraJSON
@@ -61,26 +68,23 @@ instance ToJSON ToSourceRelationshipDef where
 instance FromJSON ToSourceRelationshipDef where
   parseJSON = genericParseJSON hasuraJSON
 
--- schema cache representation
---
+--------------------------------------------------------------------------------
+-- schema cache
 
 -- | Schema cache information for a table field targeting a remote source.
 data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
-  { _rsfiName :: !RelName,
-    _rsfiType :: !RelType,
-    _rsfiSource :: !SourceName,
-    _rsfiSourceConfig :: !(SourceConfig tgt),
-    _rsfiSourceCustomization :: !SourceTypeCustomization,
+  { _rsfiName :: RelName,
+    _rsfiType :: RelType,
+    _rsfiSource :: SourceName,
+    _rsfiSourceConfig :: SourceConfig tgt,
     -- | this is parsed from `Value`
-    _rsfiTable :: !(TableName tgt),
+    _rsfiTable :: TableName tgt,
     -- | LHS field name -> RHS Column, RHS Column type
-    _rsfiMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
+    _rsfiMapping :: HM.HashMap FieldName (ScalarType tgt, Column tgt)
   }
   deriving stock (Generic)
 
 deriving instance (Backend tgt) => Eq (RemoteSourceFieldInfo tgt)
-
-instance (Backend tgt) => Cacheable (RemoteSourceFieldInfo tgt)
 
 --------------------------------------------------------------------------------
 -- template haskell generation

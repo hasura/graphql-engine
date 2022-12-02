@@ -27,7 +27,6 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -47,7 +46,8 @@ runSetCustomTypes ::
   m EncJSON
 runSetCustomTypes customTypes = do
   buildSchemaCacheFor MOCustomTypes $
-    MetadataModifier $ metaCustomTypes .~ customTypes
+    MetadataModifier $
+      metaCustomTypes .~ customTypes
   pure successMsg
 
 clearCustomTypesInMetadata :: MetadataModifier
@@ -200,14 +200,14 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
         if
             | Set.member fieldBaseType inputTypes -> pure ()
             | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
-              tell $ Map.singleton fieldBaseType scalarInfo
+                tell $ Map.singleton fieldBaseType scalarInfo
             | otherwise ->
-              refute $
-                pure $
-                  InputObjectFieldTypeDoesNotExist
-                    (_iotdName inputObjectDefinition)
-                    (_iofdName inputObjectField)
-                    fieldBaseType
+                refute $
+                  pure $
+                    InputObjectFieldTypeDoesNotExist
+                      (_iotdName inputObjectDefinition)
+                      (_iofdName inputObjectField)
+                      fieldBaseType
 
     validateObject ::
       ObjectTypeDefinition -> m AnnotatedObjectType
@@ -220,7 +220,9 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
 
       -- check for duplicate field names
       unless (null duplicateFieldNames) $
-        dispute $ pure $ ObjectDuplicateFields _otdName duplicateFieldNames
+        dispute $
+          pure $
+            ObjectDuplicateFields _otdName duplicateFieldNames
 
       fields <- for _otdFields $ \objectField -> do
         let fieldName = _ofdName objectField
@@ -237,28 +239,31 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
           annotatedObjectFieldType <-
             if
                 | Just scalarDef <- Map.lookup fieldBaseType scalarTypes ->
-                  pure $ AOFTScalar $ ASTCustom scalarDef
+                    pure $ AOFTScalar $ ASTCustom scalarDef
                 | Just enumDef <- Map.lookup fieldBaseType enumTypes ->
-                  pure $ AOFTEnum enumDef
+                    pure $ AOFTEnum enumDef
                 | Map.member fieldBaseType objectTypes ->
-                  pure $ AOFTObject fieldBaseType
+                    pure $ AOFTObject fieldBaseType
                 | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
-                  pure $ AOFTScalar scalarInfo
+                    pure $ AOFTScalar scalarInfo
                 | otherwise ->
-                  refute $
-                    pure $
-                      ObjectFieldTypeDoesNotExist
-                        _otdName
-                        fieldName
-                        fieldBaseType
+                    refute $
+                      pure $
+                        ObjectFieldTypeDoesNotExist
+                          _otdName
+                          fieldName
+                          fieldBaseType
           pure (unGraphQLType fieldType, annotatedObjectFieldType)
 
       let fieldsMap =
             Map.fromList $
-              map (_ofdName &&& (fst . _ofdType)) $ toList fields
+              map (_ofdName &&& (fst . _ofdType)) $
+                toList fields
 
       when (Set.size (Set.fromList $ _trdSource <$> _otdRelationships) > 1) $
-        refute $ pure $ ObjectRelationshipMultiSources _otdName
+        refute $
+          pure $
+            ObjectRelationshipMultiSources _otdName
       annotatedRelationships <- for _otdRelationships $ \TypeRelationshipDefinition {..} -> do
         -- get the source info
         SourceInfo {..} <-
@@ -313,7 +318,6 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
             _trdType
             _siName
             _siConfiguration
-            (getSourceTypeCustomization _siCustomization)
             remoteTableInfo
             annotatedFieldMapping
 
@@ -340,52 +344,52 @@ lookupBackendScalar allScalars baseType =
 
 data CustomTypeValidationError
   = -- | type names have to be unique across all types
-    DuplicateTypeNames !(Set.HashSet G.Name)
+    DuplicateTypeNames (Set.HashSet G.Name)
   | -- | field name and the field's base type
     InputObjectFieldTypeDoesNotExist
-      !InputObjectTypeName
-      !InputObjectFieldName
-      !G.Name
+      InputObjectTypeName
+      InputObjectFieldName
+      G.Name
   | -- | duplicate field declaration in input objects
     InputObjectDuplicateFields
-      !InputObjectTypeName
-      !(Set.HashSet InputObjectFieldName)
+      InputObjectTypeName
+      (Set.HashSet InputObjectFieldName)
   | -- | field name and the field's base type
     ObjectFieldTypeDoesNotExist
-      !ObjectTypeName
-      !ObjectFieldName
-      !G.Name
+      ObjectTypeName
+      ObjectFieldName
+      G.Name
   | -- | duplicate field declaration in objects
-    ObjectDuplicateFields !ObjectTypeName !(Set.HashSet G.Name)
+    ObjectDuplicateFields ObjectTypeName (Set.HashSet G.Name)
   | -- | object fields can't have arguments
-    ObjectFieldArgumentsNotAllowed !ObjectTypeName !ObjectFieldName
+    ObjectFieldArgumentsNotAllowed ObjectTypeName ObjectFieldName
   | -- | object fields can't have object types as base types
-    ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.Name
+    ObjectFieldObjectBaseType ObjectTypeName ObjectFieldName G.Name
   | -- | The table specified in the relationship does not exist
     ObjectRelationshipTableDoesNotExist
-      !ObjectTypeName
-      !RelationshipName
-      !QualifiedTable
+      ObjectTypeName
+      RelationshipName
+      QualifiedTable
   | -- | The field specified in the relationship mapping does not exist
     ObjectRelationshipFieldDoesNotExist
-      !ObjectTypeName
-      !RelationshipName
-      !ObjectFieldName
+      ObjectTypeName
+      RelationshipName
+      ObjectFieldName
   | -- | The field specified in the relationship mapping is a list type
     ObjectRelationshipFieldListType
-      !ObjectTypeName
-      !RelationshipName
-      !ObjectFieldName
+      ObjectTypeName
+      RelationshipName
+      ObjectFieldName
   | -- | The column specified in the relationship mapping does not exist
     ObjectRelationshipColumnDoesNotExist
-      !ObjectTypeName
-      !RelationshipName
-      !QualifiedTable
-      !PGCol
+      ObjectTypeName
+      RelationshipName
+      QualifiedTable
+      PGCol
   | -- | Object relationship refers to table in multiple sources
-    ObjectRelationshipMultiSources !ObjectTypeName
+    ObjectRelationshipMultiSources ObjectTypeName
   | -- | duplicate enum values
-    DuplicateEnumValues !EnumTypeName !(Set.HashSet G.EnumValue)
+    DuplicateEnumValues EnumTypeName (Set.HashSet G.EnumValue)
   deriving (Show, Eq)
 
 showCustomTypeValidationError ::
@@ -394,14 +398,16 @@ showCustomTypeValidationError = \case
   DuplicateTypeNames types ->
     "duplicate type names: " <> dquoteList types
   InputObjectFieldTypeDoesNotExist objType fieldName fieldTy ->
-    "the type " <> fieldTy <<> " for field "
+    "the type "
+      <> fieldTy <<> " for field "
       <> fieldName <<> " in "
       <> " input object type "
       <> objType <<> " does not exist"
   InputObjectDuplicateFields objType fields ->
     "the input object " <> objType <<> " has duplicate fields: " <> dquoteList fields
   ObjectFieldTypeDoesNotExist objType fieldName fieldTy ->
-    "the type " <> fieldTy <<> " for field "
+    "the type "
+      <> fieldTy <<> " for field "
       <> fieldName <<> " in "
       <> " object type "
       <> objType <<> " does not exist"
@@ -410,26 +416,42 @@ showCustomTypeValidationError = \case
   ObjectFieldArgumentsNotAllowed objType _ ->
     "the object " <> objType <<> " can't have arguments"
   ObjectFieldObjectBaseType objType fieldName fieldType ->
-    "the type " <> fieldType <<> " of the field " <> fieldName
-      <<> " in the object type " <> objType
-      <<> " is object type which isn't allowed"
+    "the type "
+      <> fieldType <<> " of the field "
+      <> fieldName
+        <<> " in the object type "
+      <> objType
+        <<> " is object type which isn't allowed"
   ObjectRelationshipTableDoesNotExist objType relName table ->
-    "the remote table " <> table <<> " for relationship " <> relName
-      <<> " of object type " <> objType
-      <<> " does not exist"
+    "the remote table "
+      <> table <<> " for relationship "
+      <> relName
+        <<> " of object type "
+      <> objType
+        <<> " does not exist"
   ObjectRelationshipFieldDoesNotExist objType relName fieldName ->
-    "the field " <> fieldName <<> " for relationship " <> relName
-      <<> " in object type " <> objType
-      <<> " does not exist"
+    "the field "
+      <> fieldName <<> " for relationship "
+      <> relName
+        <<> " in object type "
+      <> objType
+        <<> " does not exist"
   ObjectRelationshipFieldListType objType relName fieldName ->
-    "the type of the field " <> fieldName <<> " for relationship " <> relName
-      <<> " in object type " <> objType
-      <<> " is a list type"
+    "the type of the field "
+      <> fieldName <<> " for relationship "
+      <> relName
+        <<> " in object type "
+      <> objType
+        <<> " is a list type"
   ObjectRelationshipColumnDoesNotExist objType relName remoteTable column ->
-    "the column " <> column <<> " of remote table " <> remoteTable
-      <<> " for relationship " <> relName
-      <<> " of object type " <> objType
-      <<> " does not exist"
+    "the column "
+      <> column <<> " of remote table "
+      <> remoteTable
+        <<> " for relationship "
+      <> relName
+        <<> " of object type "
+      <> objType
+        <<> " does not exist"
   ObjectRelationshipMultiSources objType ->
     "the object " <> objType <<> " has relationships refers to tables in multiple sources"
   DuplicateEnumValues tyName values ->

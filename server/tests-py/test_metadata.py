@@ -1,6 +1,7 @@
-from validate import check_query_f
-import pytest
 import os
+import pytest
+
+from validate import check_query_f
 
 usefixtures = pytest.mark.usefixtures
 
@@ -10,7 +11,7 @@ use_mutation_fixtures = usefixtures(
 )
 
 
-@usefixtures('per_method_tests_db_state')
+@usefixtures('gql_server', 'per_method_tests_db_state')
 class TestMetadata:
 
     def test_reload_metadata(self, hge_ctx):
@@ -289,7 +290,7 @@ class TestMetadata:
             })
 
     @pytest.mark.skipif(
-        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test@localhost:5432/pg_source_1',
+        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test:gql_test@localhost:5432/pg_source_1',
         reason="This test relies on hardcoded connection parameters that match Circle's setup.")
     def test_pg_add_source_with_source_parameters(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_add_source_with_parameters.yaml')
@@ -598,7 +599,7 @@ class TestMetadataOrder:
         assert export_resp['resource_version'] == export_resp_1['resource_version']
 
 
-@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres', 'bigquery'])
+@pytest.mark.backend('citus', 'mssql', 'postgres', 'bigquery')
 @usefixtures('per_class_tests_db_state')
 class TestSetTableCustomizationPostgresMSSQLCitusBigquery:
 
@@ -609,7 +610,7 @@ class TestSetTableCustomizationPostgresMSSQLCitusBigquery:
     def test_set_table_customization(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + hge_ctx.backend_suffix('/set_table_customization') + '.yaml')
 
-@pytest.mark.parametrize("backend", ['bigquery'])
+@pytest.mark.backend('bigquery')
 @usefixtures('per_method_tests_db_state')
 class TestMetadataBigquery:
 

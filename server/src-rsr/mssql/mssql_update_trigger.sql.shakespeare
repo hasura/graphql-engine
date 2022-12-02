@@ -1,6 +1,7 @@
 CREATE OR ALTER TRIGGER #{qualifiedTriggerName}
 ON #{qualifiedTableName}
 AFTER UPDATE
+#{replicationClause}
 AS
 BEGIN
 DECLARE @json_pk_not_updated NVARCHAR(MAX)
@@ -8,8 +9,8 @@ DECLARE @json_pk_updated NVARCHAR(MAX)
 
 -- When primary key is not updated during a UPDATE transaction then construct both
 -- 'data.old' and 'data.new'.
-SET @json_pk_not_updated =  
-      (SELECT 
+SET @json_pk_not_updated =
+      (SELECT
           #{oldDeliveryColsSQLExp}, #{newDeliveryColsSQLExp},
           '#{operation}' as [payload.op],
           '#{schemaName}' as [schema_name],
@@ -40,7 +41,7 @@ IF (#{isPrimaryKeyInListenColumnsExp})
           -- table whose primary key does not match to any rows present in DELETED
           -- table. When such an situation occurs during a UPDATE transaction, then
           -- this means that the primary key of the row was updated.
-          (SELECT 
+          (SELECT
             #{oldDeliveryColsSQLExpWhenPrimaryKeyUpdated}, #{newDeliveryColsSQLExpWhenPrimaryKeyUpdated},
             '#{operation}' as [payload.op],
             '#{schemaName}' as [schema_name],

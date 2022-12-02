@@ -63,10 +63,9 @@ import Data.Aeson.TH qualified as J
 import Data.Text.Extended
 import Data.Time.Clock qualified as UTC
 import Data.UUID qualified as UUID
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -92,38 +91,34 @@ data ActionMetadata = ActionMetadata
 
 instance NFData ActionMetadata
 
-instance Cacheable ActionMetadata
-
 data ActionPermissionMetadata = ActionPermissionMetadata
-  { _apmRole :: !RoleName,
-    _apmComment :: !(Maybe Text)
+  { _apmRole :: RoleName,
+    _apmComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 
 instance NFData ActionPermissionMetadata
 
-instance Cacheable ActionPermissionMetadata
-
 newtype ActionName = ActionName {unActionName :: G.Name}
-  deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Cacheable, Hashable)
+  deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Hashable)
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
-  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON, Hashable)
+  deriving (Show, Eq, PG.ToPrepArg, PG.FromCol, J.ToJSON, J.FromJSON, Hashable)
 
 actionIdToText :: ActionId -> Text
 actionIdToText = UUID.toText . unActionId
 
 -- Required in the context of event triggers?
 -- TODO: document this / get rid of it
-instance Q.FromCol ActionName where
+instance PG.FromCol ActionName where
   fromCol bs = do
-    text <- Q.fromCol bs
+    text <- PG.fromCol bs
     name <- G.mkName text `onNothing` Left (text <> " is not valid GraphQL name")
     pure $ ActionName name
 
 -- For legacy catalog format.
-instance Q.ToPrepArg ActionName where
-  toPrepVal = Q.toPrepVal . G.unName . unActionName
+instance PG.ToPrepArg ActionName where
+  toPrepVal = PG.toPrepVal . G.unName . unActionName
 
 type ActionDefinitionInput =
   ActionDefinition GraphQLType InputWebhook
@@ -132,32 +127,28 @@ type ActionDefinitionInput =
 -- Definition
 
 data ActionDefinition arg webhook = ActionDefinition
-  { _adArguments :: ![ArgumentDefinition arg],
-    _adOutputType :: !GraphQLType,
-    _adType :: !ActionType,
-    _adHeaders :: ![HeaderConf],
-    _adForwardClientHeaders :: !Bool,
+  { _adArguments :: [ArgumentDefinition arg],
+    _adOutputType :: GraphQLType,
+    _adType :: ActionType,
+    _adHeaders :: [HeaderConf],
+    _adForwardClientHeaders :: Bool,
     -- | If the timeout is not provided by the user, then
     -- the default timeout of 30 seconds will be used
-    _adTimeout :: !Timeout,
-    _adHandler :: !webhook,
-    _adRequestTransform :: !(Maybe RequestTransform),
-    _adResponseTransform :: !(Maybe MetadataResponseTransform)
+    _adTimeout :: Timeout,
+    _adHandler :: webhook,
+    _adRequestTransform :: Maybe RequestTransform,
+    _adResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
 instance (NFData a, NFData w) => NFData (ActionDefinition a w)
 
-instance (Cacheable a, Cacheable w) => Cacheable (ActionDefinition a w)
-
 data ActionType
   = ActionQuery
-  | ActionMutation !ActionMutationKind
+  | ActionMutation ActionMutationKind
   deriving (Show, Eq, Generic)
 
 instance NFData ActionType
-
-instance Cacheable ActionType
 
 data ActionMutationKind
   = ActionSynchronous
@@ -166,24 +157,20 @@ data ActionMutationKind
 
 instance NFData ActionMutationKind
 
-instance Cacheable ActionMutationKind
-
 --------------------------------------------------------------------------------
 -- Arguments
 
 data ArgumentDefinition a = ArgumentDefinition
-  { _argName :: !ArgumentName,
-    _argType :: !a,
-    _argDescription :: !(Maybe G.Description)
+  { _argName :: ArgumentName,
+    _argType :: a,
+    _argDescription :: Maybe G.Description
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
 instance (NFData a) => NFData (ArgumentDefinition a)
 
-instance (Cacheable a) => Cacheable (ArgumentDefinition a)
-
 newtype ArgumentName = ArgumentName {unArgumentName :: G.Name}
-  deriving (Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData)
 
 --------------------------------------------------------------------------------
 -- Schema cache
@@ -214,38 +201,38 @@ newtype ActionPermissionInfo = ActionPermissionInfo
 -- GraphQL.Execute.
 
 data ActionExecContext = ActionExecContext
-  { _aecManager :: !HTTP.Manager,
-    _aecHeaders :: !HTTP.RequestHeaders,
-    _aecSessionVariables :: !SessionVariables
+  { _aecManager :: HTTP.Manager,
+    _aecHeaders :: HTTP.RequestHeaders,
+    _aecSessionVariables :: SessionVariables
   }
 
 data ActionLogItem = ActionLogItem
-  { _aliId :: !ActionId,
-    _aliActionName :: !ActionName,
-    _aliRequestHeaders :: ![HTTP.Header],
-    _aliSessionVariables :: !SessionVariables,
-    _aliInputPayload :: !J.Value
+  { _aliId :: ActionId,
+    _aliActionName :: ActionName,
+    _aliRequestHeaders :: [HTTP.Header],
+    _aliSessionVariables :: SessionVariables,
+    _aliInputPayload :: J.Value
   }
   deriving (Show, Eq)
 
 data ActionLogResponse = ActionLogResponse
-  { _alrId :: !ActionId,
-    _alrCreatedAt :: !UTC.UTCTime,
-    _alrResponsePayload :: !(Maybe J.Value),
-    _alrErrors :: !(Maybe J.Value),
-    _alrSessionVariables :: !SessionVariables
+  { _alrId :: ActionId,
+    _alrCreatedAt :: UTC.UTCTime,
+    _alrResponsePayload :: Maybe J.Value,
+    _alrErrors :: Maybe J.Value,
+    _alrSessionVariables :: SessionVariables
   }
   deriving (Show, Eq)
 
 type ActionLogResponseMap = HashMap ActionId ActionLogResponse
 
 data AsyncActionStatus
-  = AASCompleted !J.Value
-  | AASError !QErr
+  = AASCompleted J.Value
+  | AASError QErr
 
 data ActionsInfo = ActionsInfo
-  { _asiName :: !ActionName,
-    _asiForwardClientHeaders :: !Bool
+  { _asiName :: ActionName,
+    _asiForwardClientHeaders :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -257,9 +244,9 @@ type LockedActionEventId = EventId
 newtype LockedActionIdArray = LockedActionIdArray {unCohortIdArray :: [LockedActionEventId]}
   deriving (Show, Eq)
 
-instance Q.ToPrepArg LockedActionIdArray where
+instance PG.ToPrepArg LockedActionIdArray where
   toPrepVal (LockedActionIdArray l) =
-    Q.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
+    PG.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
 

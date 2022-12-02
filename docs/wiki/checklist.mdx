@@ -1,0 +1,75 @@
+---
+sidebar_label: PR Review Checklist
+sidebar_position: 40
+---
+
+# PR Review Checklist
+
+## TL;DR
+
+In a hurry? We get it. Here's a quick checklist to help you get your PR merged faster:
+
+- [ ] Check for spelling or grammatical errors.
+- [ ] Check that `<h1>` is title case.
+- [ ] Check that `<h2>`s and below are sentence case.
+- [ ] Check that Hasura features (e.g., Console `||` Actions) are title case.
+- [ ] Check for broken internal links.
+- [ ] Check for broken external links.
+- [ ] Check for broken images.
+- [ ] Check for broken (questionably rendered) code snippets.
+
+## Our process
+
+Everybody is different, and we all review PRs in our way. However, there are some common elements we examine and
+questions we ask ourselves when reviewing a PR. Our goal in providing this document is to give you a "docs-reviewer"
+lens through which to look. In the long run, taking a quick parse through your contribution while thinking about these
+steps and questions will ensure we can approve your docs changes and merge your PR swiftly. **We hold a strict standard
+because we want to ensure our users can quickly find what they need, understand it because it's well-written, and get
+back to building with Hasura** 🚀
+
+### Pass one: grammar school
+
+As we're reading through a PR for the first time and trying to gather context, most of us focus on easy wins. While
+we're formulating a structure and trying to get a better idea of the document you've created, we're also trying to pick
+out quick typos like the following:
+
+- Misspelled words
+- Missing punctuation
+- Extra or missing whitespaces
+- Sentence structure / syntax
+
+When we see these, we'll generally offer suggestions you can commit directly from GitHub. However, we should note that
+reviews filled with errors like these take longer to review (and are less fun).
+
+:::info Note
+
+We hope to introduce a simple linter that examines spelling as part of our CI pipeline on any PRs that include docs
+contributions.
+
+:::
+
+### Pass two: infrastructure
+
+Next, we'll typically do an infrastructure test (i.e., does everything _work_?). If you followed the guidelines in our
+[style guide](/wiki/category/style/), you're probably okay. However, we'll also do the following:
+
+- Check new internal links and ensure they're
+  [root-relative file paths](/docusaurus-mdx-guide/page-structure.mdx#references--links)
+- Check external links and ensure they're not returning `404`
+- Double-check headings are [correctly cased](/style/headings.mdx)
+- Look for Hasura features (like Hasura Console, Metadata, Migrations) and ensure they're proper cases
+- Look for opportunities to cross-link to other pages in docs
+
+### Pass three: structural integrity
+
+Finally, we can focus on the total product: the docs themselves. We ask ourselves a few questions as we're judging the
+contribution (yes, we're judgy and, in fact, judged everything you wrote and probably have strong opinions at this point
+😅). The central theme around which we target all these questions is UX:
+
+- How will a user interpret this new section / page?
+- If a user starts at the beginning of the page, will they understand the new contribution?
+- If a user arrives from another page, and the new contribution is a nested section of an existing page, will they have
+  enough context to understand the value of the contribution?
+
+If we can answer these questions with a resounding "yes," we'll approve the PR and merge it. If not, we'll ask you to
+make some changes or we'll push a commit that we've reworked and ask for your to look over it.

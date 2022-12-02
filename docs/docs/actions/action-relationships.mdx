@@ -11,55 +11,47 @@ keywords:
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Actions relationships
 
 ## Introduction
 
-Actions are a way to extend your GraphQL schema with custom queries or
-mutations. It is quite a typical case that an action's response is
-actually related to existing objects in the schema and the action needs
-to be connected with the rest of the graph.
+Actions are a way to extend your GraphQL schema with custom queries or mutations. It is quite a typical case that an
+action's response is actually related to existing objects in the schema and the action needs to be connected with the
+rest of the graph.
 
-For example, a custom `insertAuthor` action will be related to the
-`author` object in the schema. Hence, we would want to be able to get
-information about the `author` from the graph as a response of the
-`insertAuthor` mutation.
+For example, a custom `insertAuthor` action will be related to the `author` object in the schema. Hence, we would want
+to be able to get information about the `author` from the graph as a response of the `insertAuthor` mutation.
 
 ## Using action output type's relationships
 
-Actions can be connected to the rest of the graph by setting up
-relationships on its return output type.
+Actions can be connected to the rest of the graph by setting up relationships on its return output type.
 
-This allows complex responses to be returned as an action's response
-traversing the graph via the output type's relationships.
+This allows complex responses to be returned as an action's response traversing the graph via the output type's
+relationships.
 
 **For example**, given the action:
 
 ```graphql
 type Mutation {
-  updateAuthor (
-    id: Int!
-    name: String!
-  ): UpdateAuthorOutput
+  updateAuthor(id: Int!, name: String!): UpdateAuthorOutput
 }
 
 type UpdateAuthorOutput {
-   author_id : Int!
+  author_id: Int!
 }
 ```
 
-We can create an object relationship called `updatedAuthor` between the
-`UpdateAuthorOutput` object type and the `author` table using the
-`UpdateAuthorOutput.author_id` and `author.id` fields.
+We can create an object relationship called `updatedAuthor` between the `UpdateAuthorOutput` object type and the
+`author` table using the `UpdateAuthorOutput.author_id` and `author.id` fields.
 
 The object type will now be modified as:
 
 ```graphql {3}
 type UpdateAuthorOutput {
-   author_id : Int!
-   updatedAuthor: author
+  author_id: Int!
+  updatedAuthor: author
 }
 ```
 
@@ -90,15 +82,11 @@ You can create relationships for custom output types by:
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Actions -> [action-name] -> Relationships` tab in the
-console for the action returning the output type.
+Head to the `Actions -> [action-name] -> Relationships` tab in the console for the action returning the output type.
 
 Set the output type relationship as shown below:
 
-<Thumbnail
-  src="/img/graphql/core/actions/actions-relationship.png"
-  alt="Console action relationship"
-/>
+<Thumbnail src='/img/actions/actions-relationship.png' alt='Console action relationship' />
 
 Hit `Save` to create the relationship.
 
@@ -109,7 +97,7 @@ Go to `metadata/actions.yaml` in the Hasura project directory.
 
 Update the definition of the `UpdateAuthorOutput` object type as:
 
-```yaml  {4-11}
+```yaml {4-11}
 - custom_types
   - objects
     - name: UpdateAuthorOutput
@@ -124,6 +112,7 @@ Update the definition of the `UpdateAuthorOutput` object type as:
 ```
 
 Save the changes and run `hasura metadata apply` to create the relationship.
+
 </TabItem>
 <TabItem value="api" label="API">
 
@@ -165,11 +154,13 @@ X-Hasura-Role: admin
   }
 }
 ```
+
   </TabItem>
 </Tabs>
 
-:::info  Additional Resources
+:::info Additional Resources
 
-Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+Introduction to Hasura Actions -
+[View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
 :::

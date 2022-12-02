@@ -53,13 +53,13 @@ We can now add a check constraint to limit the `rating` values as follows:
 
 Head to the `Modify` tab in the table page and add a check constraint in the `Check Constraints` section:
 
-<Thumbnail src='/img/graphql/core/schema/validation-add-check-constraint.png' alt='Add check constraint' />
+<Thumbnail src='/img/schema/validation-add-check-constraint.png' alt='Add check constraint' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the following SQL
-statement to the `up.sql` file:
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the
+following SQL statement to the `up.sql` file:
 
 ```sql
 ALTER TABLE author
@@ -156,10 +156,10 @@ time before an article is inserted or updated.
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the SQL statement
-below to create a Postgres function and trigger to the `up.sql` file. Also, add an SQL statement to the `down.sql` to
-revert the previous statement in case you need to [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations)
-the migration.
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the SQL
+statement below to create a Postgres function and trigger to the `up.sql` file. Also, add an SQL statement to the
+`down.sql` to revert the previous statement in case you need to
+[roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the migration.
 
 Apply the migration by running:
 
@@ -268,10 +268,7 @@ Now, we can create a role `user` and add an insert validation rule as follows:
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail
-  src='/img/graphql/core/schema/validation-not-empty.png'
-  alt='validation using permission: title cannot be empty'
-/>
+<Thumbnail src='/img/schema/validation-not-empty.png' alt='validation using permission: title cannot be empty' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -376,7 +373,7 @@ Now, we can create a role `user` and add an insert validation rule as follows:
 <TabItem value="console" label="Console">
 
 <Thumbnail
-  src='/img/graphql/core/schema/validation-author-isactive.png'
+  src='/img/schema/validation-author-isactive.png'
   alt='validation using permissions: author should be active'
 />
 
@@ -485,7 +482,7 @@ to check with this service if they are deny-listed or not.
 The validation process looks as follows:
 
 <Thumbnail
-  src='/img/graphql/core/schema/diagram-actions-data-validation.png'
+  src='/img/schema/diagram-actions-data-validation.png'
   alt='validation using actions: article not deny-listed'
   width='60%'
 />

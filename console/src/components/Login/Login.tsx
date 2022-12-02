@@ -1,28 +1,30 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { Connect } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '@/new-components/Button';
+import { Form, InputField, Checkbox } from '@/new-components/Form';
 import { push } from 'react-router-redux';
+import { z } from 'zod';
 import Helmet from 'react-helmet';
 import { FaSpinner } from 'react-icons/fa';
-import Button from '../Common/Button/Button';
 import globals from '../../Globals';
 import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 import { ConnectInjectedProps } from '../../types';
 
-import styles from './Login.scss';
 import hasuraLogo from './black-logo.svg';
+import hasuraEELogo from './black-logo-ee.svg';
 
-const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
+const validationSchema = z.object({
+  password: z.string().min(1, { message: 'Please add password' }),
+  savePassword: z.boolean().or(z.string()).optional(),
+});
+
+const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
   // request state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  // should persist admin secret
-  const [shouldPersist, setShouldPersist] = useState(true);
-
-  // input handler
-  const [adminSecretInput, setAdminSecretInput] = useState('');
 
   const getLoginForm = () => {
     const getLoginButtonText = () => {
@@ -42,15 +44,8 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
       return loginText;
     };
 
-    const toggleShouldPersist = () => setShouldPersist(!shouldPersist);
-
-    const onAdminSecretChange = (e: ChangeEvent<HTMLInputElement>) =>
-      setAdminSecretInput(e.target.value);
-
     // form submit handler
-    const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-
+    const onSubmit = ({ password, savePassword }: any) => {
       const successCallback = () => {
         setLoading(false);
         setError(null);
@@ -58,7 +53,6 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
       };
 
       const errorCallback = (err: Error) => {
-        setAdminSecretInput('');
         setLoading(false);
         setError(err);
       };
@@ -66,8 +60,8 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
       setLoading(true);
 
       verifyLogin({
-        adminSecret: adminSecretInput,
-        shouldPersist,
+        adminSecret: password,
+        shouldPersist: Boolean(savePassword),
         successCallback,
         errorCallback,
         dispatch,
@@ -75,40 +69,55 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
     };
 
     return (
-      <form className="form-horizontal" onSubmit={onSubmit}>
-        <div className={`${styles.input_addon_group} ${styles.padd_top}`}>
-          <div className={`input-group ${styles.input_group}`}>
-            <input
-              onChange={onAdminSecretChange}
-              className={`${styles.form_input} form-control`}
-              type="password"
-              placeholder="Enter admin-secret"
-              name="password"
-            />
-          </div>
-        </div>
-        <div className={styles.login_btn}>
-          <Button
-            type="submit"
-            color="green"
-            className="form-control"
-            disabled={loading}
-          >
-            {getLoginButtonText()}
-          </Button>
-        </div>
-        <div className={styles.add_pad_left}>
-          <label className={`${styles.cursorPointer} flex items-center`}>
-            <input
-              type="checkbox"
-              checked={shouldPersist}
-              onChange={toggleShouldPersist}
-              className={`${styles.add_mar_right_small} ${styles.remove_margin_top} ${styles.cursorPointer} legacy-input-fix`}
-            />
-            Remember in this browser
-          </label>
-        </div>
-      </form>
+      <Form
+        schema={validationSchema}
+        options={{
+          defaultValues: undefined,
+        }}
+        onSubmit={onSubmit}
+      >
+        {() => (
+          <Analytics name="Login" {...REDACT_EVERYTHING}>
+            <div className="flex flex-col bg-white p-4">
+              {!!children && <div>{children}</div>}
+              <div>
+                <div className="w-full">
+                  <InputField
+                    name="password"
+                    type="password"
+                    size="full"
+                    placeholder="Enter admin-secret"
+                  />
+                </div>
+              </div>
+              <div className="w-full">
+                <Button
+                  full
+                  type="submit"
+                  mode="primary"
+                  size="md"
+                  disabled={loading}
+                >
+                  {getLoginButtonText()}
+                </Button>
+              </div>
+              <div>
+                <label className="cursor-pointer flex items-center pt-sm">
+                  <Checkbox
+                    name="savePassword"
+                    options={[
+                      {
+                        value: 'checked',
+                        label: 'Remember in this browser',
+                      },
+                    ]}
+                  />
+                </label>
+              </div>
+            </div>
+          </Analytics>
+        )}
+      </Form>
     );
   };
 
@@ -132,21 +141,26 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
     );
 
     return (
-      <div className={styles.text_center}>
+      <div className="text-center">
         {adminSecret ? invalidAdminSecretMessage : missingAdminSecretMessage}
       </div>
     );
   };
 
+  const showLogo =
+    globals.consoleType === 'pro' || globals.consoleType === 'pro-lite' ? (
+      <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="Hasura EE" />
+    ) : (
+      <img src={hasuraLogo} alt="Hasura" />
+    );
+
   return (
-    <div className={`${styles.mainWrapper} container-fluid`}>
-      <div className={`${styles.container} container`} id="login">
-        <div className={styles.loginCenter}>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="flex" id="login">
+        <div className="">
           <Helmet title="Login | Hasura" />
-          <div className={styles.hasuraLogo}>
-            <img src={hasuraLogo} alt="Hasura" />
-          </div>
-          <div className={styles.loginWrapper}>
+          <div className="flex justify-center mb-md">{showLogo}</div>
+          <div className="w-[400px] border shadow-lg p-md rounded-lg bg-white">
             {globals.consoleMode !== CLI_CONSOLE_MODE
               ? getLoginForm()
               : getCLIAdminSecretErrorMessage()}

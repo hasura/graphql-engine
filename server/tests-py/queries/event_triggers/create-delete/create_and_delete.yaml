@@ -21,7 +21,7 @@
           columns: "*"
         delete:
           columns: "*"
-        webhook: http://127.0.0.1:5592
+        webhook: "{{EVENT_WEBHOOK_HANDLER}}"
 
     - type: delete_event_trigger
       args:
@@ -56,7 +56,7 @@
           columns: "*"
         delete:
           columns: "*"
-        webhook: http://127.0.0.1:5592
+        webhook: "{{EVENT_WEBHOOK_HANDLER}}"
 
     - type: delete_event_trigger
       args:
@@ -91,7 +91,7 @@
           columns: "*"
         delete:
           columns: "*"
-        webhook: http://127.0.0.1:5592
+        webhook: "{{EVENT_WEBHOOK_HANDLER}}"
 
     - type: delete_event_trigger
       args:

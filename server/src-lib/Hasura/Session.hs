@@ -28,6 +28,7 @@ module Hasura.Session
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
 import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
@@ -36,9 +37,8 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Server.Utils
 import Hasura.Tracing (TraceT)
@@ -55,12 +55,14 @@ newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
       ToJSONKey,
       FromJSON,
       ToJSON,
-      Q.FromCol,
-      Q.ToPrepArg,
+      PG.FromCol,
+      PG.ToPrepArg,
       Generic,
-      NFData,
-      Cacheable
+      NFData
     )
+
+instance HasCodec RoleName where
+  codec = dimapCodec RoleName getRoleTxt nonEmptyTextCodec
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
@@ -78,7 +80,7 @@ adminRoleName :: RoleName
 adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
-  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData, Ord)
+  deriving (Show, Eq, Hashable, IsString, Data, NFData, Ord)
 
 instance ToJSON SessionVariable where
   toJSON = toJSON . CI.original . unSessionVariable
@@ -225,7 +227,8 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables ->
       onNothing maybeSessionRole $
-        throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
+        throw400 InvalidParams $
+          userRoleHeader <> " not found in session variables"
     URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
     URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess

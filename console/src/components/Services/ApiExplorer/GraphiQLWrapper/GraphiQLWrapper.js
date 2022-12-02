@@ -13,7 +13,7 @@ import {
 } from '../OneGraphExplorer/utils';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
-import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/Heroku/utils';
+import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';
@@ -33,13 +33,14 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
-import globals from '../../../../Globals';
+import { canAccessCacheButton } from '@/utils/permissions';
 
-import 'graphiql/graphiql.css';
-import 'graphiql-code-exporter/CodeExporter.css';
+import './GraphiQL.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
 import { LS_KEYS, setLSItem } from '@/utils/localStorage';
+import { CodeExporterEventTracer } from './CodeExporterEventTracer';
+import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -68,6 +69,8 @@ class GraphiQLWrapper extends Component {
   }
 
   _handleToggleCodeExporter = () => {
+    trackGraphiQlToolbarButtonClick('Code Exporter');
+
     const nextState = !this.state.codeExporterOpen;
 
     persistCodeExporterOpen(nextState);
@@ -83,15 +86,13 @@ class GraphiQLWrapper extends Component {
       dispatch,
       mode,
       loading,
+      query: queryFromProps,
+      forceIntrospectAt,
     } = this.props;
     const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
-    const {
-      responseTime,
-      responseSize,
-      isResponseCached,
-      responseTrackingId,
-    } = this.props.response;
+    const { responseTime, responseSize, isResponseCached, responseTrackingId } =
+      this.props.response;
 
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -118,6 +119,8 @@ class GraphiQLWrapper extends Component {
     let graphiqlContext;
 
     const handleClickPrettifyButton = () => {
+      trackGraphiQlToolbarButtonClick('Prettify');
+
       const editor = graphiqlContext.getQueryEditor();
       const currentText = editor.getValue();
       const prettyText = print(sdlParse(currentText));
@@ -125,12 +128,15 @@ class GraphiQLWrapper extends Component {
     };
 
     const handleToggleHistory = () => {
+      trackGraphiQlToolbarButtonClick('History');
       graphiqlContext.setState(prevState => ({
         historyPaneOpen: !prevState.historyPaneOpen,
       }));
     };
 
     const deriveActionFromOperation = () => {
+      trackGraphiQlToolbarButtonClick('Derive action');
+
       const { schema, query } = graphiqlContext.state;
       if (!schema) return;
       if (!query) return;
@@ -164,7 +170,7 @@ class GraphiQLWrapper extends Component {
       dispatch(_push(getActionsCreateRoute()));
     };
 
-    const routeToREST = gqlProps => () => {
+    const createRouteToREST = gqlProps => () => {
       const { query, schema } = graphiqlContext.state;
       setLSItem(LS_KEYS.graphiqlQuery, query);
       if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
@@ -180,6 +186,8 @@ class GraphiQLWrapper extends Component {
     };
 
     const _toggleCacheDirective = () => {
+      trackGraphiQlToolbarButtonClick('Cache');
+
       const editor = graphiqlContext.getQueryEditor();
       const operationString = editor.getValue();
       const cacheToggledOperationString = toggleCacheDirective(operationString);
@@ -230,6 +238,8 @@ class GraphiQLWrapper extends Component {
 
       // get toolbar buttons
       const getGraphiqlButtons = () => {
+        const routeToREST = createRouteToREST(graphiqlProps);
+
         const buttons = [
           {
             label: 'Prettify',
@@ -244,13 +254,16 @@ class GraphiQLWrapper extends Component {
           {
             label: 'Explorer',
             title: 'Toggle Explorer',
-            onClick: graphiqlProps.toggleExplorer,
+            onClick: () => {
+              trackGraphiQlToolbarButtonClick('Explorer');
+              graphiqlProps.toggleExplorer();
+            },
           },
           {
             label: 'Cache',
             title: 'Cache the response of this query',
             onClick: _toggleCacheDirective,
-            hide: globals.consoleType !== 'cloud',
+            hide: !canAccessCacheButton(),
           },
           {
             label: 'Code Exporter',
@@ -260,7 +273,10 @@ class GraphiQLWrapper extends Component {
           {
             label: 'REST',
             title: 'REST Endpoints',
-            onClick: routeToREST(graphiqlProps),
+            onClick: () => {
+              trackGraphiQlToolbarButtonClick('REST');
+              routeToREST();
+            },
           },
         ];
         if (mode === 'graphql') {
@@ -279,6 +295,7 @@ class GraphiQLWrapper extends Component {
 
       return (
         <>
+          <CodeExporterEventTracer />
           <GraphiQL
             {...graphiqlProps}
             ref={c => {
@@ -313,11 +330,10 @@ class GraphiQLWrapper extends Component {
 
     return (
       <GraphiQLErrorBoundary>
-        <div className="w-full h-full border mt-md overflow-hidden rounded border-gray-300">
+        <div className="w-full h-full border overflow-hidden rounded border-gray-300">
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
             endpoint={getGraphQLEndpoint(mode)}
-            dispatch={dispatch}
             headers={graphqlNetworkData.headers}
             headersInitialised={graphqlNetworkData.headersInitialised}
             headerFocus={headerFocus}
@@ -326,6 +342,8 @@ class GraphiQLWrapper extends Component {
             numberOfTables={numberOfTables}
             dispatch={dispatch}
             mode={mode}
+            forceIntrospectAt={forceIntrospectAt}
+            query={queryFromProps}
           />
         </div>
       </GraphiQLErrorBoundary>
@@ -340,11 +358,14 @@ GraphiQLWrapper.propTypes = {
   headerFocus: PropTypes.bool.isRequired,
   urlParams: PropTypes.object.isRequired,
   response: PropTypes.object,
+  query: PropTypes.string,
 };
 
 const mapStateToProps = state => ({
   mode: state.apiexplorer.mode,
   loading: state.apiexplorer.loading,
+  query: state.apiexplorer.graphiql.query,
+  forceIntrospectAt: state.apiexplorer.graphiql.forceIntrospectAt,
 });
 
 const GraphiQLWrapperConnected = connect(mapStateToProps)(GraphiQLWrapper);

@@ -40,9 +40,9 @@ import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FunctionMeta b = FunctionMeta
-  { fmOid :: !OID,
-    fmFunction :: !(FunctionName b),
-    fmType :: !FunctionVolatility
+  { fmOid :: OID,
+    fmFunction :: FunctionName b,
+    fmType :: FunctionVolatility
   }
   deriving (Generic)
 
@@ -57,8 +57,8 @@ instance (Backend b) => ToJSON (FunctionMeta b) where
   toJSON = genericToJSON hasuraJSON
 
 data ComputedFieldMeta b = ComputedFieldMeta
-  { ccmName :: !ComputedFieldName,
-    ccmFunctionMeta :: !(FunctionMeta b)
+  { ccmName :: ComputedFieldName,
+    ccmFunctionMeta :: FunctionMeta b
   }
   deriving (Generic, Show, Eq)
 
@@ -69,9 +69,9 @@ instance (Backend b) => ToJSON (ComputedFieldMeta b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 data TableMeta (b :: BackendType) = TableMeta
-  { tmTable :: !(TableName b),
-    tmInfo :: !(DBTableMetadata b),
-    tmComputedFields :: ![ComputedFieldMeta b]
+  { tmTable :: TableName b,
+    tmInfo :: DBTableMetadata b,
+    tmComputedFields :: [ComputedFieldMeta b]
   }
   deriving (Show, Eq)
 
@@ -86,16 +86,16 @@ deriving instance (Backend b) => Show (ComputedFieldDiff b)
 deriving instance (Backend b) => Eq (ComputedFieldDiff b)
 
 data TableDiff (b :: BackendType) = TableDiff
-  { _tdNewName :: !(Maybe (TableName b)),
-    _tdDroppedCols :: ![Column b],
-    _tdAlteredCols :: ![(RawColumnInfo b, RawColumnInfo b)],
-    _tdDroppedFKeyCons :: ![ConstraintName b],
-    _tdComputedFields :: !(ComputedFieldDiff b),
+  { _tdNewName :: Maybe (TableName b),
+    _tdDroppedCols :: [Column b],
+    _tdAlteredCols :: [(RawColumnInfo b, RawColumnInfo b)],
+    _tdDroppedFKeyCons :: [ConstraintName b],
+    _tdComputedFields :: ComputedFieldDiff b,
     -- The final list of uniq/primary constraint names
     -- used for generating types on_conflict clauses
     -- TODO: this ideally should't be part of TableDiff
-    _tdUniqOrPriCons :: ![ConstraintName b],
-    _tdNewDescription :: !(Maybe PGDescription)
+    _tdUniqOrPriCons :: [ConstraintName b],
+    _tdNewDescription :: Maybe PGDescription
   }
 
 getTableDiff ::
@@ -207,8 +207,8 @@ getTableChangeDeps source tn tableDiff = do
         $ _cfdDropped computedFieldDiff
 
 data TablesDiff (b :: BackendType) = TablesDiff
-  { _sdDroppedTables :: ![TableName b],
-    _sdAlteredTables :: ![(TableName b, TableDiff b)]
+  { _sdDroppedTables :: [TableName b],
+    _sdAlteredTables :: [(TableName b, TableDiff b)]
   }
 
 getTablesDiff ::
@@ -242,7 +242,7 @@ getIndirectDependenciesFromTableDiff source tablesDiff = do
       SOSourceObj s obj
         | s == source,
           Just (SOITableObj tn _) <- AB.unpackAnyBackend @b obj ->
-          not $ tn `HS.member` HS.fromList droppedTables
+            not $ tn `HS.member` HS.fromList droppedTables
       -- table objects in any other source
       SOSourceObj _ obj ->
         AB.runBackend obj \case
@@ -252,8 +252,8 @@ getIndirectDependenciesFromTableDiff source tablesDiff = do
       _ -> False
 
 data FunctionsDiff b = FunctionsDiff
-  { fdDropped :: ![FunctionName b],
-    fdAltered :: ![(FunctionName b, FunctionVolatility)]
+  { fdDropped :: [FunctionName b],
+    fdAltered :: [(FunctionName b, FunctionVolatility)]
   }
 
 deriving instance (Backend b) => Show (FunctionsDiff b)
@@ -298,7 +298,7 @@ processTablesDiff source preActionTables tablesDiff = do
     ti <-
       onNothing
         (M.lookup oldQtn preActionTables)
-        (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
+        (throw500 $ "old table metadata not found in cache: " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
     TablesDiff droppedTables alteredTables = tablesDiff
@@ -345,18 +345,24 @@ alterTableInMetadata source ti tableDiff = do
           getFunction = fmFunction . ccmFunctionMeta
       forM_ overloaded $ \(columnName, function) ->
         throw400 NotSupported $
-          "The function " <> function
-            <<> " associated with computed field" <> columnName
-            <<> " of table " <> table
-            <<> " is being overloaded"
+          "The function "
+            <> function
+              <<> " associated with computed field"
+            <> columnName
+              <<> " of table "
+            <> table
+              <<> " is being overloaded"
       forM_ altered $ \(old, new) ->
         if
             | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
-              throw400 NotSupported $
-                "The type of function " <> getFunction old
-                  <<> " associated with computed field " <> ccmName old
-                  <<> " of table " <> table
-                  <<> " is being altered to \"VOLATILE\""
+                throw400 NotSupported $
+                  "The type of function "
+                    <> getFunction old
+                      <<> " associated with computed field "
+                    <> ccmName old
+                      <<> " of table "
+                    <> table
+                      <<> " is being altered to \"VOLATILE\""
             | otherwise -> pure ()
 
 dropTablesInMetadata ::
@@ -391,20 +397,21 @@ alterColumnsInMetadata source alteredCols fields sc tn =
        ) -> do
         if
             | oldName /= newName ->
-              renameColumnInMetadata oldName newName source tn fields
+                renameColumnInMetadata oldName newName source tn fields
             | oldType /= newType -> do
-              let colId =
-                    SOSourceObj source $
-                      AB.mkAnyBackend $
-                        SOITableObj @b tn $
-                          TOCol @b oldName
-                  typeDepObjs = getDependentObjsWith (== DROnType) sc colId
+                let colId =
+                      SOSourceObj source $
+                        AB.mkAnyBackend $
+                          SOITableObj @b tn $
+                            TOCol @b oldName
+                    typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
-              unless (null typeDepObjs) $
-                throw400 DependencyError $
-                  "cannot change type of column " <> oldName <<> " in table "
-                    <> tn <<> " because of the following dependencies : "
-                    <> reportSchemaObjs typeDepObjs
+                unless (null typeDepObjs) $
+                  throw400 DependencyError $
+                    "cannot change type of column "
+                      <> oldName <<> " in table "
+                      <> tn <<> " because of the following dependencies: "
+                      <> reportSchemaObjs typeDepObjs
             | otherwise -> pure ()
 
 removeDroppedColumnsFromMetadataField ::

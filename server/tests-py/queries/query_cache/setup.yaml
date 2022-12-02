@@ -66,7 +66,7 @@ args:
       - name: email
         type: String!
       output_type: EmailResponse
-      handler: http://127.0.0.1:5593/get-user-by-email
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"
       forward_client_headers: true
 
 - type: create_action
@@ -78,4 +78,4 @@ args:
       - name: email
         type: String!
       output_type: EmailResponse
-      handler: http://127.0.0.1:5593/get-user-by-email      
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"

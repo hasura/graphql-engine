@@ -12,7 +12,7 @@ See [this blog post for a tutorial](https://hasura.io/blog/graphql-and-geo-locat
 ## Usage
 
 - Clone this repo on a machine where you'd like to deploy graphql engine
-- `docker-compose up -d`
+- `docker compose up -d`
 
 GraphQL endpoint will be `https://<your-domain.com>/v1/graphql`
 Console will be available on `https://<your-domain.com>/console`

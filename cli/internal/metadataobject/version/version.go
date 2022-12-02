@@ -49,7 +49,7 @@ func (a *VersionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
 		return nil, a.error(err)
@@ -62,7 +62,7 @@ func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsi
 	return map[string]interface{}{a.Key(): v.Version}, nil
 }
 
-func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var version map[string]yaml.Node
 	if v, ok := metadata[a.Key()]; ok {
 		version = map[string]yaml.Node{a.Key(): v}
@@ -87,7 +87,7 @@ func (a *VersionConfig) Filename() string {
 	return "version.yaml"
 }
 
-func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -96,7 +96,7 @@ func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataO
 	return files, nil
 }
 
-func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
 		return a.error(err)

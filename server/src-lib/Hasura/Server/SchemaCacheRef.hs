@@ -122,9 +122,10 @@ getSchemaCache scRef = lastBuiltSchemaCache . fst <$> readSchemaCacheRef scRef
 logInconsistentMetadata :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
 logInconsistentMetadata logger objs =
   unless (null objs) $
-    L.unLogger logger $ mkInconsMetadataLog objs
+    L.unLogger logger $
+      mkInconsMetadataLog objs
 
--- Internal helper. Set the gague metric to the metadata version of the schema
+-- Internal helper. Set the gauge metric to the metadata version of the schema
 -- cache, if it exists.
 updateMetadataVersionGauge :: MonadIO m => Gauge -> RebuildableSchemaCache -> m ()
 updateMetadataVersionGauge metadataVersionGauge schemaCache = do

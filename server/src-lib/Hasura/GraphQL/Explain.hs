@@ -61,6 +61,7 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
+    RFMulti _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
     RFDB sourceName exists -> do
       step <- AB.dispatchAnyBackend @BackendExecute
         exists
@@ -90,7 +91,8 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       UAdminSecretSent
       sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
-  (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc queryType query
+  let graphQLContext = E.makeGQLContext userInfo sc queryType
+  queryParts <- GH.getSingleOperation query
   case queryParts of
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
       (unpreparedQueries, _, _) <-

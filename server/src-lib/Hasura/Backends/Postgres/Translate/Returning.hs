@@ -35,11 +35,11 @@ import Hasura.SQL.Backend
 -- see Note [Mutation output expression].
 data MutationCTE
   = -- | A Mutation with check constraint validation (Insert or Update)
-    MCCheckConstraint !S.TopLevelCTE
+    MCCheckConstraint S.TopLevelCTE
   | -- | A Select statement which emits mutated table rows
-    MCSelectValues !S.Select
+    MCSelectValues S.Select
   | -- | A Delete statement
-    MCDelete !S.SQLDelete
+    MCDelete S.SQLDelete
   deriving (Show, Eq)
 
 getMutationCTE :: MutationCTE -> S.TopLevelCTE
@@ -83,7 +83,7 @@ mkMutFldExp ::
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  Identifier ->
+  TableIdentifier ->
   Maybe Int ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
@@ -106,15 +106,15 @@ mkMutFldExp cteAlias preCalAffRows strfyNum tCase = \case
           mkSQLSelect JASMultipleRows $
             AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
 
-toFIIdentifier :: Identifier -> FIIdentifier
-toFIIdentifier = coerce . getIdenTxt
+toFIIdentifier :: TableIdentifier -> FIIdentifier
+toFIIdentifier = coerce . unTableIdentifier
 {-# INLINE toFIIdentifier #-}
 
 {- Note [Mutation output expression]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 An example output expression for INSERT mutation:
 
-WITH "<table-name>__mutation_result_alias" AS (
+WITH "mra__<table-name>" AS (
   INSERT INTO <table-name> (<insert-column>[..])
   VALUES
     (<insert-value-row>[..])
@@ -122,15 +122,15 @@ WITH "<table-name>__mutation_result_alias" AS (
     -- An extra column expression which performs the 'CHECK' validation
     (<CHECK Condition>) AS "check__constraint"
 ),
-"<table-name>__all_columns_alias" AS (
+"aca__<table-name>" AS (
   -- Only extract columns from mutated rows. Columns sorted by ordinal position so that
   -- resulted rows can be casted to table type.
   SELECT (<table-column>[..])
   FROM
-    "<table-name>__mutation_result_alias"
+    "mra__<table-name>"
 )
-<SELECT statement to generate mutation response using '<table-name>__all_columns_alias' as FROM
- and bool_and("check__constraint") from "<table-name>__mutation_result_alias">
+<SELECT statement to generate mutation response using 'aca__<table-name>' as FROM
+ and bool_and("check__constraint") from "mra__<table-name>">
 -}
 
 -- | Generate mutation output expression with given mutation CTE statement.
@@ -149,44 +149,46 @@ mkMutationOutputExp ::
   S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
   S.SelectWith
-    [ (S.toTableAlias mutationResultAlias, getMutationCTE cte),
-      (S.toTableAlias allColumnsAlias, allColumnsSelect)
+    [ (mutationResultAlias, getMutationCTE cte),
+      (allColumnsAlias, allColumnsSelect)
     ]
     sel
   where
-    mutationResultAlias = Identifier $ snakeCaseQualifiedObject qt <> "__mutation_result_alias"
-    allColumnsAlias = Identifier $ snakeCaseQualifiedObject qt <> "__all_columns_alias"
+    mutationResultAlias = S.mkTableAlias $ "mra__" <> snakeCaseQualifiedObject qt
+    mutationResultIdentifier = S.tableAliasToIdentifier mutationResultAlias
+    allColumnsAlias = S.mkTableAlias $ "aca__" <> snakeCaseQualifiedObject qt
+    allColumnsIdentifier = S.tableAliasToIdentifier allColumnsAlias
     allColumnsSelect =
       S.CTESelect $
         S.mkSelect
           { S.selExtr = map (S.mkExtr . ciColumn) (sortCols allCols),
-            S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
+            S.selFrom = Just $ S.mkIdenFromExp mutationResultIdentifier
           }
 
     sel =
       S.mkSelect
         { S.selExtr =
-            S.Extractor extrExp Nothing :
-            bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
+            S.Extractor extrExp Nothing
+              : bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
         }
       where
-        checkErrorExp = mkCheckErrorExp mutationResultAlias
+        checkErrorExp = mkCheckErrorExp mutationResultIdentifier
         extrExp = case mutOutput of
           MOutMultirowFields mutFlds ->
             let jsonBuildObjArgs = flip concatMap mutFlds $
                   \(FieldName k, mutFld) ->
                     [ S.SELit k,
-                      mkMutFldExp allColumnsAlias preCalAffRows strfyNum tCase mutFld
+                      mkMutFldExp allColumnsIdentifier preCalAffRows strfyNum tCase mutFld
                     ]
              in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
           MOutSinglerowObject annFlds ->
-            let tabFrom = FromIdentifier $ toFIIdentifier allColumnsAlias
+            let tabFrom = FromIdentifier $ toFIIdentifier allColumnsIdentifier
                 tabPerm = TablePerm annBoolExpTrue Nothing
              in S.SESelect $
                   mkSQLSelect JASSingleObject $
                     AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum tCase
 
-mkCheckErrorExp :: IsIdentifier a => a -> S.SQLExp
+mkCheckErrorExp :: TableIdentifier -> S.SQLExp
 mkCheckErrorExp alias =
   let boolAndCheckConstraint =
         S.handleIfNull (S.SEBool $ S.BELit True) $

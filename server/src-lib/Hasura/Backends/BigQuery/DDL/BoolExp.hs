@@ -56,7 +56,7 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
         "$lte" -> parseLte
         -- TODO: support column operators
 
-        x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
       where
         colTy = columnReferenceType columnRef
         parseOne = parseWithTy columnType val

@@ -65,9 +65,9 @@ resolveVar varName (These expectedVar (Left l)) =
       | typeName == GName._Boolean && T.null l -> Right $ Just $ J.Bool True -- Booleans indicated true by a standalone key.
       | nullable && T.null l -> Right Nothing -- Missing value, but nullable variable sets value to null.
       | otherwise -> case J.decodeStrict (T.encodeUtf8 l) of -- We special case parsing of bools and numbers and pass the rest through as literal strings.
-        Just v@(J.Bool _) | typeName `elem` [Name._Bool, GName._Boolean] -> Right $ Just v
-        Just v@(J.Number _) | typeName `elem` [GName._Int, GName._Float, Name._Number, Name._Double, Name._float8, Name._numeric] -> Right $ Just v
-        _ -> Right $ Just $ J.String l
+          Just v@(J.Bool _) | typeName `elem` [Name._Bool, GName._Boolean] -> Right $ Just v
+          Just v@(J.Number _) | typeName `elem` [GName._Int, GName._Float, Name._Number, Name._Double, Name._float8, Name._numeric] -> Right $ Just v
+          _ -> Right $ Just $ J.String l
 
 mkPassthroughRequest :: EndpointMetadata GQLQueryWithText -> VariableValues -> GQLReq GQLQueryText
 mkPassthroughRequest queryx resolvedVariables =
@@ -136,7 +136,7 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
 
               resolvedVariablesMaybe <- joinedVars `onLeft` throw400 BadRequest
 
-              let resolvedVariables = M.catMaybes resolvedVariablesMaybe
+              let resolvedVariables = catMaybes resolvedVariablesMaybe
 
               -- Construct a graphql query by pairing the resolved variables
               -- with the query string from the schema cache, and pass it

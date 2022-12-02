@@ -383,12 +383,18 @@ def generate_regression_report():
     # For each benchmark set we uploaded, for PR_NUMBER...
     for o in s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"{THIS_S3_BUCKET_PREFIX}/")['Contents']:
         this_prefix, benchmark_set_name = o['Key'].split('/')
-        this_report           = fetch_report_json(this_prefix,                benchmark_set_name)
+        this_report = fetch_report_json(this_prefix, benchmark_set_name)
         try:
             merge_base_report = fetch_report_json(f"mono-pr-{merge_base_pr}", benchmark_set_name)
         except botocore.exceptions.ClientError:
             # This will happen, e.g. when a new benchmark set is added in this change set
             warn(f"No results for {benchmark_set_name} found for PR #{merge_base_pr}. Skipping")
+            continue
+
+        # A benchmark set may contain no queries (e.g. formerly, If it was just
+        # using the ad hoc operation mode), in which case the results are an
+        # empty array.  Skip in those cases for now
+        if not (this_report and merge_base_report):
             continue
 
         benchmark_set_results = []
@@ -418,6 +424,14 @@ def generate_regression_report():
             # this_bench['requests']['count'] # TODO use this to normalize allocations
             name = this_bench['name']
 
+            # Skip if: this is a "low load" variation with few samples since these are 
+            #          likely redundant / less useful for the purpose of finding regressions
+            #          (see mono #5942)
+            if "low_load" in name:
+                warn(f"Skipping '{name}' which has 'low_load' in name")
+                continue
+
+            # Skip if: no result in merge base report to compare to:
             try:
                 merge_base_bench = merge_base_report_dict[name]
             except KeyError:
@@ -434,11 +448,34 @@ def generate_regression_report():
                 )
             except KeyError:
                 continue
+
+            # For now just report regressions in the stable bytes-allocated metric for adhoc
+            if name.startswith("ADHOC-"):
+                warn(f"Just reporting regressions in bytes_alloc_per_req for '{name}' which is adhoc")
+                benchmark_set_results.append((name, metrics))
+                # Skip everything else:
+                continue
+
+            # Response body size:
+            try:
+                merge_base_body_size = float(merge_base_bench['response']['totalBytes']) / float(merge_base_bench['requests']['count'])
+                this_body_size       = float(      this_bench['response']['totalBytes']) / float(      this_bench['requests']['count'])
+                response_body_change = pct_change(merge_base_body_size, this_body_size)
+                # filter response body size unless it changes significantly, since this is rare:
+                if abs(response_body_change) > 1:
+                    metrics['response_body_size'] = response_body_change
+            # We need to catch division by zero here for adhoc mode queries
+            # (where we just set total_bytes to 0 for now), but probably want
+            # to keep this in even if that changes.
+            except (ZeroDivisionError, KeyError):
+                pass
             # NOTE: we decided to omit higher-percentile latencies here since
             # they are noisy (which might lead to people ignoring benchmarks)
-            # and there are better ways to view these tail latencies in the works.
-          # for m in ['min', 'p50', 'p90', 'p97_5']:
-            for m in ['min', 'p50']:
+            # NOTE: we originally had `min` here, thinking it should be an
+            # asymptote (we can only get so fast doing a particular workload),
+            # but this hasn't turned out to be a useful summary statistic (we
+            # might need several times more samples for it to stabilize)
+            for m in ['p50']:
                 try:
                     this_hist = this_bench['histogram']['json']
                     merge_base_hist = merge_base_bench['histogram']['json']
@@ -468,6 +505,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     def out(s): f.write(s+"\n")
 
     out(f"## Benchmark Results") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
+    out(f"<details closed><summary>Click for detailed reports, and help docs</summary>")
     out(f"")
     out((f"The regression report below shows, for each benchmark, the **percent change** for "
          f"different metrics, between the merge base (the changes from **PR {merge_base_pr}**) and "
@@ -486,7 +524,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
             f"[:bar_chart: merge base]({graphql_bench_url([base_id])})... "
             f"[:bar_chart: both compared]({graphql_bench_url([these_id, base_id])})")
     out(f"")
-    out(f"<details open><summary>Click here for a detailed report.</summary>")
+    out(f"</details>")
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
@@ -502,30 +540,32 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         elif -25.0 <= val < 0: return "++  "  # GREEN
         else:                  return "+++ "  # GREEN
 
-    out(            f"``` diff                                       ")  # START DIFF SYNTAX
+    out(f"``` diff")  # START DIFF SYNTAX
     for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
         if benchmark_set_name[:-5] in skip_pr_report_names: continue
         l0 = live_bytes_before_diff
         l1 = live_bytes_after_diff
         u0 = mem_in_use_before_diff
-        u1 = mem_in_use_after_diff
-        out(        f"{col( )}    ┌{'─'*(len(benchmark_set_name)+4)}┐")
-        out(        f"{col( )}    │  {benchmark_set_name}  │"         )
-        out(        f"{col( )}    └{'─'*(len(benchmark_set_name)+4)}┘")
-        out(        f"{col( )}                                       ")
-        out(        f"{col( )}    ᐉ  Memory Residency (RTS-reported):")
-        out(        f"{col(l0)}        {'live_bytes':<25}:  {l0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
-        out(        f"{col(l1)}        {'live_bytes':<25}:  {l1:>6.1f}   (AFTER benchmarks ran)")
-        out(        f"{col(u0)}        {'mem_in_use':<25}:  {u0:>6.1f}   (BEFORE benchmarks ran; baseline for schema)")
-        out(        f"{col(u1)}        {'mem_in_use':<25}:  {u1:>6.1f}   (AFTER benchmarks ran)")
+        # u1 = mem_in_use_after_diff
+
+        out(        f"{col(u0)} {benchmark_set_name[:-5]+'  ':─<21s}{'┤ MEMORY RESIDENCY (from RTS)': <30}{'mem_in_use (BEFORE benchmarks)': >38}{u0:>12.1f} ┐")
+        out(        f"{col(l0)} {                        '  ': <21s}{'│'                            : <30}{'live_bytes (BEFORE benchmarks)': >38}{l0:>12.1f} │")
+        out(        f"{col(l1)} {                        '  ': <21s}{'│'                              }{'   live_bytes  (AFTER benchmarks)':_>67}{l1:>12.1f} ┘")
         for bench_name, metrics in benchmarks:
-            out(    f"{col( )}                                       ")
-            out(    f"{col( )}    ᐅ {bench_name.replace('-k6-custom','').replace('_',' ')}:")
+            bench_name_pretty = bench_name.replace('-k6-custom','').replace('_',' ') # need at least 40 chars
             for metric_name, d in metrics.items():
-                out(f"{col(d)}        {metric_name:<25}:  {d:>6.1f}")
-        out(        f"{col( )}                                       ")
-    out(            f"```                                            ")  # END DIFF SYNTAX
-    out(f"</details>")
+              if len(list(metrics.items())) == 1:  # need to waste a line if only one metric:
+                out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
+                out(f"{col(  )} {                        '  ': <21s}{'│'                                 }{                              '':_>67}{''  :>12s} ┘")
+              elif metric_name == list(metrics.items())[0][0]:  # first:
+                out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
+              elif metric_name == list(metrics.items())[-1][0]:  # last:
+                out(f"{col(d )} {                        '  ': <21s}{'│'                                 }{               '   '+metric_name:_>67}{d :>12.1f} ┘")
+              else:   # middle, omit name
+                out(f"{col(d )} {                        '  ': <21s}{'│ '                           : <40}{                     metric_name: >28}{d :>12.1f} │")
+
+
+    out(f"```")  # END DIFF SYNTAX
 
     say(f"Wrote github comment to {REGRESSION_REPORT_COMMENT_FILENAME}")
     f.close()

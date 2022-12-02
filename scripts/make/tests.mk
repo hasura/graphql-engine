@@ -1,109 +1,87 @@
-# scripts used in CI to wait for DBs to be ready
-DB_UTILS = ./.buildkite/scripts/util/util.sh
-
-# the following variables are set up in Docker Compose
-# and are also defined in Harness.Constants for use in hspec tests
-PG_PORT = 65002
-PG_DBNAME = "hasura"
-PG_DBUSER = "hasura"
-PG_DBPASSWORD = "hasura"
-MYSQL_PORT = 65001
-MYSQL_DBNAME = "hasura"
-MYSQL_DBUSER = "hasura"
-MYSQL_DBPASSWORD = "hasura"
-MSSQL_PORT = 65003
-MSSQL_DBNAME = "hasura"
-MSSQL_DBUSER = "hasura"
-MSSQL_DBPASSWORD = "Hasura1!"
-CITUS_PORT = 65004
-
-.PHONY: start-postgres
-## start-postgres: start local postgres DB in Docker and wait for it to be ready
-start-postgres:
-	docker-compose up -d postgres
-	$(DB_UTILS) wait_for_postgres $(PG_PORT)
-	$(DB_UTILS) wait_for_postgres_db $(PG_PORT) "$(PG_DBNAME)" "$(PG_DBUSER)" "$(PG_DBPASSWORD)"
-
-.PHONY: start-citus
-## start-citus: start local citus DB in Docker and wait for it to be ready
-start-citus:
-	docker-compose up -d citus
-	$(DB_UTILS) wait_for_postgres $(CITUS_PORT)
-	$(DB_UTILS) wait_for_postgres_db $(CITUS_PORT) "$(PG_DBNAME)" "$(PG_DBUSER)" "$(PG_DBPASSWORD)"
-
-.PHONY: start-sqlserver
-## start-sqlserver: start local sqlserver DB in Docker and wait for it to be ready
-start-sqlserver:
-	docker-compose up -d sqlserver
-	$(DB_UTILS) wait_for_mssql $(MSSQL_PORT)
-	$(DB_UTILS) wait_for_mssql_db $(MSSQL_PORT) "$(MSSQL_DBNAME)" "$(MSSQL_DBUSER)" "$(MSSQL_DBPASSWORD)"
-
-.PHONY: start-mysql
-## start-mysql: start local mariaDB in Docker and wait for it to be ready
-start-mysql:
-	docker-compose up -d mariadb
-	$(DB_UTILS) wait_for_mysql $(MYSQL_PORT) "$(MYSQL_DBNAME)" "$(MYSQL_DBUSER)" "$(MYSQL_DBPASSWORD)"
-	# there isn't a wait_for_mysql_db that does an actual query yet, so just give
-	# it a bit of time to wake up
-	sleep 10
-
-.PHONY: start-backends
-## start-backends: start postgres/mysql/mssql and wait for them to be ready 
-start-backends: start-postgres start-sqlserver start-mysql start-citus
-
 .PHONY: test-bigquery
 ## test-bigquery: run tests for BigQuery backend
-test-bigquery: start-postgres remove-tix-file
-	# will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/tests-hspec#required-setup-for-bigquery-tests
-	@cabal run tests-hspec -- -m "BigQuery" || EXIT_STATUS=$$?; \
-	if [ -z $$EXIT_STATUS ]; then \
-		make test-cleanup; \
-	else \
-		make test-cleanup; \
-		exit $$EXIT_STATUS; \
-	fi
+# will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
+test-bigquery: remove-tix-file
+	docker compose up -d --wait postgres
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=BigQuery \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-sqlserver
-## test-sqlserver: run tests for SQL Server backend
-test-sqlserver: start-postgres start-sqlserver remove-tix-file
-	@cabal run tests-hspec -- -m "SQLServer" || EXIT_STATUS=$$?; \
-	if [ -z $$EXIT_STATUS ]; then \
-		make test-cleanup; \
-	else \
-		make test-cleanup; \
-		exit $$EXIT_STATUS; \
-	fi
+## test-sqlserver: run tests for MS SQL Server backend
+test-sqlserver: remove-tix-file
+	docker compose up -d --wait postgres sqlserver-healthcheck
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=SQLServer \
+		cabal run api-tests:exe:api-tests)
 
-.PHONY: test-mysql
-## test-mysql: run tests for MySQL backend
-test-mysql: start-postgres start-mysql remove-tix-file
-	@cabal run tests-hspec -- -m "MySQL" || EXIT_STATUS=$$?; \
-	if [ -z $$EXIT_STATUS ]; then \
-		make test-cleanup; \
-	else \
-		make test-cleanup; \
-		exit $$EXIT_STATUS; \
-	fi
+.PHONY: test-citus
+## test-citus: run tests for Citus backend
+test-citus: remove-tix-file
+	docker compose up -d --wait postgres citus
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=Citus \
+		cabal run api-tests:exe:api-tests)
+
+.PHONY: test-data-connectors
+## test-data-connectors: run tests for Data Connectors
+test-data-connectors: remove-tix-file
+	docker compose build
+	docker compose up -d --wait postgres dc-reference-agent dc-sqlite-agent
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=DataConnector \
+		cabal run api-tests:exe:api-tests)
+
+.PHONY: test-cockroach
+## test-cockroach: run tests for Cockroach backend
+test-cockroach: remove-tix-file
+	docker compose up -d --wait postgres cockroach
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=Cockroach \
+		cabal run api-tests:exe:api-tests)
+
+.PHONY: test-postgres
+## test-postgres: run tests for Postgres backend
+# we have a few tests labeled with 'Postgres' which test their variants, too,
+# so this also starts containers for Postgres variants
+test-postgres: remove-tix-file
+	docker compose up -d --wait postgres cockroach citus
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=Postgres \
+		cabal run api-tests:exe:api-tests)
+
+.PHONY: test-no-backends
+## test-no-backends
+# the leftover tests with no particular backend, like Remote Schemas
+test-no-backends: start-backends remove-tix-file
+	$(call stop_after, \
+		HASURA_TEST_BACKEND_TYPE=None \
+		cabal run api-tests:exe:api-tests)
 
 .PHONY: test-backends
 ## test-backends: run tests for all backends
+# BigQuery tests will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
 test-backends: start-backends remove-tix-file
-	# big query tests will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/tests-hspec#required-setup-for-bigquery-tests
-	# run tests
-	@cabal run tests-hspec || EXIT_STATUS=$$?; \
-	if [ -z $$EXIT_STATUS ]; then \
-		make test-cleanup; \
-	else \
-		make test-cleanup; \
-		exit $$EXIT_STATUS; \
-	fi
+	$(call stop_after, \
+		cabal run api-tests:exe:api-tests)
 
-.PHONY: test-cleanup
-## test-cleanup: teardown for test DBs
-test-cleanup:
-	# stop docker
-	docker-compose down -v
+.PHONY: test-unit
+## test-unit: run unit tests from main suite
+test-unit: remove-tix-file
+	cabal run graphql-engine:test:graphql-engine-tests
 
-.PHONY: remove-tix-file
-remove-tix-file:
-	@rm tests-hspec.tix || true
+.PHONY: test-integration-mssql
+## test-integration-mssql: run MS SQL Server integration tests
+test-integration-mssql: remove-tix-file
+	docker compose up -d --wait sqlserver{,-healthcheck,-init}
+	$(call stop_after, \
+		HASURA_MSSQL_CONN_STR='$(TEST_MSSQL_CONNECTION_STRING)' \
+			cabal run graphql-engine:test:graphql-engine-test-mssql)
+
+.PHONY: test-integration-postgres
+## test-integration-postgres: run PostgreSQL integration tests
+test-integration-postgres: remove-tix-file
+	docker compose up -d --wait postgres
+	$(call stop_after, \
+		HASURA_GRAPHQL_DATABASE_URL='$(TEST_POSTGRES_URL)' \
+			cabal run graphql-engine:test:graphql-engine-test-postgres)

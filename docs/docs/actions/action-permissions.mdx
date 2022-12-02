@@ -11,29 +11,25 @@ keywords:
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Actions permissions
 
 ## Introduction
 
-As with the other fields in the GraphQL schema, users need to be given
-access to an action.
+As with the other fields in the GraphQL schema, users need to be given access to an action.
 
 ## Set action permissions
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Actions -> [action-name] -> Permissions` tab in the
-console.
+Head to the `Actions -> [action-name] -> Permissions` tab in the console.
 
-<Thumbnail
-  src="/img/graphql/core/actions/actions-permissions.png"
-  alt="Console action permission"
-/>
+<Thumbnail src='/img/actions/actions-permissions.png' alt='Console action permission' />
 
 Hit `Save` to give the role permission to access the action.
+
 </TabItem>
 <TabItem value="cli" label="CLI">
 
@@ -57,7 +53,8 @@ Save the changes and run `hasura metadata apply` to set the permissions.
 </TabItem>
 <TabItem value="api" label="API">
 
-Action permissions can be set by using the [create_action_permission](/api-reference/metadata-api/actions.mdx#metadata-create-action-permission) metadata API:
+Action permissions can be set by using the
+[create_action_permission](/api-reference/metadata-api/actions.mdx#metadata-create-action-permission) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -72,11 +69,13 @@ X-Hasura-Role: admin
   }
 }
 ```
+
 </TabItem>
 </Tabs>
 
 :::info Additional Resources
 
-Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+Introduction to Hasura Actions -
+[View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
 :::

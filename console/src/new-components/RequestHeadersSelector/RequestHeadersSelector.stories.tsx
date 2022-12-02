@@ -2,6 +2,7 @@ import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { expect } from '@storybook/jest';
 import { userEvent, within, waitFor } from '@storybook/testing-library';
+import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
 import {
   RequestHeadersSelector,
@@ -55,12 +56,13 @@ export const Primary: Story<Props> = args => {
 
 Primary.args = {
   name: 'headers',
+  onSubmit: jest.fn().mockImplementation(action('submit')),
 };
 
 Primary.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
-  const addNewRowButton = canvas.getByText('Add additional header');
+  const addNewRowButton = canvas.getByText('Add');
 
   // Add a third header
   await userEvent.click(addNewRowButton);
@@ -122,8 +124,14 @@ Primary.play = async ({ args, canvasElement }) => {
   };
 
   await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
-  const firstOnSubmitCallParams = args.onSubmit.mock.calls[0];
-  expect(firstOnSubmitCallParams).toMatchObject(
-    expect.objectContaining([{ ...submittedHeaders }])
-  );
+
+  // ATTENTION: The more idiomatic version of this assertion is:
+  //  expect(args.onSubmit).toBeCalledWith(
+  // expect.objectContaining({ ...submittedHeaders })
+  //  );
+  // but at the time of writing, I (Stefano Magni) cannot get why it fails.
+  // Hence the need to access mock.calls directly
+
+  const formHeaders = args.onSubmit.mock.calls[0][0];
+  expect(formHeaders).toMatchObject(submittedHeaders);
 };

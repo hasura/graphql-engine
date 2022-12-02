@@ -15,7 +15,7 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
     - **PGADMIN_DEFAULT_PASSWORD:** `admin`
 - Read more `Environment Variables` here: https://hub.docker.com/r/dpage/pgadmin4/
 - Edit `docker-compose.yaml` and change `HASURA_GRAPHQL_ADMIN_SECRET` to something secure
-- `docker-compose up -d`
+- `docker compose up -d`
 - Navigate to `http://localhost:5050`, login and add a new server with the following parameters:  
   General - Name: Hasura  
   Connection - Host: `postgres`

@@ -11,7 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.ByteString.Builder qualified as BB
 import Data.Sequence qualified as DS
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -33,9 +33,9 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 data CountQueryP1 = CountQueryP1
-  { cqp1Table :: !QualifiedTable,
-    cqp1Where :: !(AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla))),
-    cqp1Distinct :: !(Maybe [PGCol])
+  { cqp1Table :: QualifiedTable,
+    cqp1Where :: (AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla))),
+    cqp1Distinct :: Maybe [PGCol]
   }
   deriving (Eq)
 
@@ -121,30 +121,30 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
 validateCountQ ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   CountQuery ->
-  m (CountQueryP1, DS.Seq Q.PrepArg)
+  m (CountQueryP1, DS.Seq PG.PrepArg)
 validateCountQ query = do
   let source = cqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
 countQToTx ::
-  (QErrM m, MonadTx m) =>
-  (CountQueryP1, DS.Seq Q.PrepArg) ->
+  (MonadTx m) =>
+  (CountQueryP1, DS.Seq PG.PrepArg) ->
   m EncJSON
 countQToTx (u, p) = do
   qRes <-
     liftTx $
-      Q.rawQE
+      PG.rawQE
         dmlTxErrorHandler
-        (Q.fromBuilder countSQL)
+        (PG.fromBuilder countSQL)
         (toList p)
         True
   return $ encJFromBuilder $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
-    encodeCount (Q.SingleRow (Identity c)) =
+    encodeCount (PG.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
 runCount ::
@@ -160,4 +160,4 @@ runCount ::
   m EncJSON
 runCount q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
-  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx
+  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadOnly . countQToTx

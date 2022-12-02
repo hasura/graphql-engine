@@ -12,7 +12,7 @@ import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson (object, toJSON, (.=))
 import Data.ByteString.Char8 qualified as B (pack)
 import Data.Environment qualified as Env
-import Data.Text (pack, unpack)
+import Data.Text (pack)
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
@@ -36,6 +36,11 @@ import Hasura.Server.Init.Config
   )
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
+import Hasura.Server.Prometheus
+  ( PrometheusMetrics (..),
+    decWebsocketConnections,
+    incWebsocketConnections,
+  )
 import Hasura.Server.Types (ReadOnlyMode)
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
@@ -63,8 +68,9 @@ createWSServerApp ::
   WSConnectionInitTimeout ->
   WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn ->
-  WS.createServerApp connInitTimeout (_wseServer serverEnv) handlers ipAddress pendingConn
+createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
+  let getMetricsConfig = scMetricsConfig . fst <$> _wseGCtxMap serverEnv
+  WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) handlers ipAddress pendingConn
   where
     handlers =
       WS.WSHandlers
@@ -74,6 +80,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
 
     logger = _wseLogger serverEnv
     serverMetrics = _wseServerMetrics serverEnv
+    prometheusMetrics = _wsePrometheusMetrics serverEnv
 
     wsActions = mkWSActions logger
 
@@ -81,6 +88,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
     -- here `sp` stands for sub-protocol
     onConnHandler rid rh ip sp = mask_ do
       liftIO $ EKG.Gauge.inc $ smWebsocketConnections serverMetrics
+      liftIO $ incWebsocketConnections $ pmConnections prometheusMetrics
       flip runReaderT serverEnv $ onConn rid rh ip (wsActions sp)
 
     onMessageHandler conn bs sp =
@@ -89,7 +97,8 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
 
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
-      onClose logger serverMetrics (_wseSubscriptionState serverEnv) conn
+      liftIO $ decWebsocketConnections $ pmConnections prometheusMetrics
+      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
@@ -106,6 +115,7 @@ createWSServerEnv ::
   Bool ->
   KeepAliveDelay ->
   ServerMetrics ->
+  PrometheusMetrics ->
   m WSServerEnv
 createWSServerEnv
   logger
@@ -117,7 +127,8 @@ createWSServerEnv
   readOnlyMode
   enableAL
   keepAliveDelay
-  serverMetrics = do
+  serverMetrics
+  prometheusMetrics = do
     wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
     pure $
       WSServerEnv
@@ -132,6 +143,7 @@ createWSServerEnv
         enableAL
         keepAliveDelay
         serverMetrics
+        prometheusMetrics
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =
@@ -149,9 +161,13 @@ mkWSActions logger subProtocol =
         Apollo -> SMData $ DataMsg opId $ throwError execErr
         GraphQLWS -> SMErr $ ErrorMsg opId $ toJSON execErr
 
-    mkOnErrorMessageAction wsConn err mErrMsg = case subProtocol of
-      Apollo -> sendMsg wsConn $ SMConnErr err
-      GraphQLWS -> sendCloseWithMsg logger wsConn (GenericError4400 $ (fromMaybe "" mErrMsg) <> (unpack . unConnErrMsg $ err)) Nothing Nothing
+    mkOnErrorMessageAction wsConn err mErrMsg =
+      case subProtocol of
+        Apollo ->
+          case mErrMsg of
+            WS.ConnInitFailed -> sendCloseWithMsg logger wsConn (WS.mkWSServerErrorCode mErrMsg err) (Just $ SMConnErr err) Nothing
+            WS.ClientMessageParseFailed -> sendMsg wsConn $ SMConnErr err
+        GraphQLWS -> sendCloseWithMsg logger wsConn (WS.mkWSServerErrorCode mErrMsg err) (Just $ SMConnErr err) Nothing
 
     mkConnectionCloseAction wsConn opId errMsg =
       when (subProtocol == GraphQLWS) $

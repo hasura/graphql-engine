@@ -17,6 +17,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -30,6 +31,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.Server.Utils
 import Hasura.Session
@@ -56,14 +58,16 @@ assertPermDefined ::
   TableInfo backend ->
   m ()
 assertPermDefined role pt tableInfo =
-  unless (maybe False (permissionIsDefined pt) rpi) $
+  unless (any (permissionIsDefined pt) rpi) $
     throw400 PermissionDenied $
-      "'" <> tshow pt <> "'"
+      "'"
+        <> tshow pt
+        <> "'"
         <> " permission on "
         <> tableInfoName tableInfo
-        <<> " for role "
+          <<> " for role "
         <> role
-        <<> " does not exist"
+          <<> " does not exist"
   where
     rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
 
@@ -72,23 +76,27 @@ newtype CreatePerm a b = CreatePerm (WithTable b (PermDef b a))
 deriving instance (Backend b, FromJSON (PermDef b a)) => FromJSON (CreatePerm a b)
 
 data CreatePermP1Res a = CreatePermP1Res
-  { cprInfo :: !a,
-    cprDeps :: ![SchemaDependency]
+  { cprInfo :: a,
+    cprDeps :: [SchemaDependency]
   }
   deriving (Show, Eq)
 
 procBoolExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b
+  ) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   BoolExp b ->
-  m (AnnBoolExpPartialSQL b, [SchemaDependency])
+  m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
 procBoolExp source tn fieldInfoMap be = do
   let rhsParser = BoolExpRHSParser parseCollectableType PSESession
   abe <- annBoolExp rhsParser tn fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
-  return (abe, deps)
+  return (abe, Seq.fromList deps)
 
 getDepHeadersFromVal :: Value -> [Text]
 getDepHeadersFromVal val = case val of
@@ -109,9 +117,9 @@ getDependentHeaders (BoolExp boolExp) =
   Set.fromList $ flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 data DropPerm b = DropPerm
-  { dipSource :: !SourceName,
-    dipTable :: !(TableName b),
-    dipRole :: !RoleName
+  { dipSource :: SourceName,
+    dipTable :: TableName b,
+    dipRole :: RoleName
   }
 
 instance (Backend b) => FromJSON (DropPerm b) where

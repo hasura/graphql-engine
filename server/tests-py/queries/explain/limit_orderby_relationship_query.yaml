@@ -14,13 +14,13 @@ query:
 response:
 - field: article
   sql: "SELECT  coalesce(json_agg(\"root\" ORDER BY \"root.or.author.pg.id\" DESC\
-    \ NULLS FIRST), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_3_e\"\
-    \  FROM  (SELECT  \"_0_root.base\".\"id\" AS \"id\", \"_0_root.base\".\"title\"\
-    \ AS \"title\", \"_0_root.base\".\"content\" AS \"content\"       ) AS \"_3_e\"\
-    \      ) ) AS \"root\", \"_2_root.or.author\".\"root.or.author.pg.id\" AS \"root.or.author.pg.id\"\
-    \ FROM  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')     ) AS \"_0_root.base\"\
-    \ LEFT OUTER JOIN LATERAL (SELECT  \"_1_root.or.author.base\".\"id\" AS \"root.or.author.pg.id\"\
-    \ FROM  (SELECT  *  FROM \"public\".\"author\"  WHERE ((\"_0_root.base\".\"author_id\"\
-    ) = (\"id\"))    LIMIT 1 ) AS \"_1_root.or.author.base\"      ) AS \"_2_root.or.author\"\
+    \ NULLS FIRST), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_e\"\
+    \  FROM  (SELECT  \"_root.base\".\"id\" AS \"id\", \"_root.base\".\"title\" AS\
+    \ \"title\", \"_root.base\".\"content\" AS \"content\"       ) AS \"_e\"     \
+    \ ) ) AS \"root\", \"_root.or.author\".\"root.or.author.pg.id\" AS \"root.or.author.pg.id\"\
+    \ FROM  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')     ) AS \"_root.base\"\
+    \ LEFT OUTER JOIN LATERAL (SELECT  \"_root.or.author.base\".\"id\" AS \"root.or.author.pg.id\"\
+    \ FROM  (SELECT  *  FROM \"public\".\"author\"  WHERE ((\"_root.base\".\"author_id\"\
+    ) = (\"id\"))    LIMIT 1 ) AS \"_root.or.author.base\"      ) AS \"_root.or.author\"\
     \ ON ('true')    ORDER BY \"root.or.author.pg.id\" DESC NULLS FIRST LIMIT 2 )\
-    \ AS \"_4_root\"      "
+    \ AS \"_root\"      "

@@ -11,7 +11,7 @@
         name: test_t1
         schema: hge_tests
       source: default
-      webhook: http://127.0.0.1:5592
+      webhook: "{{EVENT_WEBHOOK_HANDLER}}"
       insert:
         columns: '*'
         payload:

@@ -21,4 +21,4 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook_from_env: WEBHOOK_FROM_ENV
+    webhook_from_env: EVENT_WEBHOOK_HANDLER

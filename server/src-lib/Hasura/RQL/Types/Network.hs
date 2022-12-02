@@ -11,18 +11,11 @@ where
 import Data.Aeson as A
 import Data.Text qualified as T
 import Hasura.Prelude
-import Test.QuickCheck.Arbitrary as Q
 
 data Network = Network
-  { networkTlsAllowlist :: ![TlsAllow]
+  { networkTlsAllowlist :: [TlsAllow]
   }
   deriving (Show, Eq, Generic)
-
-instance Q.Arbitrary Network where
-  -- TODO: Decide if the arbitrary instance should be extended to actual arbitrary networks
-  -- This could prove complicated for testing purposes since the implications
-  -- Are difficult to test.
-  arbitrary = pure (Network [])
 
 instance FromJSON Network where
   parseJSON = withObject "Network" $ \o -> Network <$> o .:? "tls_allowlist" .!= []
@@ -34,9 +27,9 @@ emptyNetwork :: Network
 emptyNetwork = Network []
 
 data TlsAllow = TlsAllow
-  { taHost :: !String,
-    taSuffix :: !(Maybe String),
-    taPermit :: !(Maybe [TlsPermission])
+  { taHost :: String,
+    taSuffix :: Maybe String,
+    taPermit :: Maybe [TlsPermission]
   }
   deriving (Show, Read, Eq, Generic)
 
@@ -77,7 +70,7 @@ instance ToJSON TlsPermission where
 
 type AddHostToTLSAllowlist = TlsAllow
 
-data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist {_dhftaHost :: !String}
+data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist {_dhftaHost :: String}
   deriving (Show, Eq)
 
 instance FromJSON DropHostFromTLSAllowlist where

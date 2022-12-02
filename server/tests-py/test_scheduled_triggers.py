@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import pytest
-from datetime import datetime,timedelta
 from croniter import croniter
-from validate import validate_event_webhook,validate_event_headers
 import json
+from datetime import datetime,timedelta
+import pytest
+from validate import validate_event_webhook,validate_event_headers
+
 from utils import until_asserts_pass
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
@@ -133,6 +134,7 @@ class TestScheduledEvent(object):
 
         until_asserts_pass(100,try_check_events_statuses)
 
+@pytest.mark.usefixtures('scheduled_triggers_evts_webhook')
 class TestCronTrigger(object):
 
     cron_trigger_name = "cron_trigger"

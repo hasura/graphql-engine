@@ -42,52 +42,49 @@ module Hasura.Backends.Postgres.Types.BoolExp
 where
 
 import Data.Aeson.Extended
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 
 data BooleanOperators a
-  = AILIKE !a --     ILIKE, case insensitive
-  | ANILIKE !a -- NOT ILIKE, case insensitive
-  | ASIMILAR !a --     similar, regex
-  | ANSIMILAR !a -- not similar, regex
-  | AREGEX !a -- regex: match POSIX case sensitive
-  | AIREGEX !a -- regex: match POSIX case insensitive
-  | ANREGEX !a -- regex: dont match POSIX case sensitive
-  | ANIREGEX !a -- regex: dont match POSIX case insensitive
-  | AContains !a
-  | AContainedIn !a
-  | AHasKey !a
-  | AHasKeysAny !a
-  | AHasKeysAll !a
-  | ASTContains !a
-  | ASTCrosses !a
-  | ASTEquals !a
-  | ASTIntersects !a
-  | AST3DIntersects !a
-  | ASTOverlaps !a
-  | ASTTouches !a
-  | ASTWithin !a
-  | ASTIntersectsRast !a
-  | ASTDWithinGeom !(DWithinGeomOp a)
-  | AST3DDWithinGeom !(DWithinGeomOp a)
-  | ASTDWithinGeog !(DWithinGeogOp a)
-  | ASTIntersectsGeomNband !(STIntersectsGeomminNband a)
-  | ASTIntersectsNbandGeom !(STIntersectsNbandGeommin a)
-  | AAncestor !a
-  | AAncestorAny !a
-  | ADescendant !a
-  | ADescendantAny !a
-  | AMatches !a
-  | AMatchesAny !a
-  | AMatchesFulltext !a
+  = AILIKE a --     ILIKE, case insensitive
+  | ANILIKE a -- NOT ILIKE, case insensitive
+  | ASIMILAR a --     similar, regex
+  | ANSIMILAR a -- not similar, regex
+  | AREGEX a -- regex: match POSIX case sensitive
+  | AIREGEX a -- regex: match POSIX case insensitive
+  | ANREGEX a -- regex: dont match POSIX case sensitive
+  | ANIREGEX a -- regex: dont match POSIX case insensitive
+  | AContains a
+  | AContainedIn a
+  | AHasKey a
+  | AHasKeysAny a
+  | AHasKeysAll a
+  | ASTContains a
+  | ASTCrosses a
+  | ASTEquals a
+  | ASTIntersects a
+  | AST3DIntersects a
+  | ASTOverlaps a
+  | ASTTouches a
+  | ASTWithin a
+  | ASTIntersectsRast a
+  | ASTDWithinGeom (DWithinGeomOp a)
+  | AST3DDWithinGeom (DWithinGeomOp a)
+  | ASTDWithinGeog (DWithinGeogOp a)
+  | ASTIntersectsGeomNband (STIntersectsGeomminNband a)
+  | ASTIntersectsNbandGeom (STIntersectsNbandGeommin a)
+  | AAncestor a
+  | AAncestorAny a
+  | ADescendant a
+  | ADescendantAny a
+  | AMatches a
+  | AMatchesAny a
+  | AMatchesFulltext a
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
 instance NFData a => NFData (BooleanOperators a)
 
 instance Hashable a => Hashable (BooleanOperators a)
-
-instance Cacheable a => Cacheable (BooleanOperators a)
 
 instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
   toJSONKeyValue = \case

@@ -5,10 +5,10 @@
     type: set_custom_types
     args:
       objects:
-      - name: UserId
-        fields:
-          - name: id
-            type: Int!
+        - name: UserId
+          fields:
+            - name: id
+              type: Int!
 
 - description: Create an action
   url: /v1/query
@@ -20,20 +20,24 @@
       definition:
         kind: synchronous
         arguments:
-        - name: email
-          type: Int!
-        - name: name
-          type: String!
+          - name: email
+            type: Int!
+          - name: name
+            type: String!
         output_type: UserId!
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - description: Track the table
   url: /v1/query
   status: 500
   response:
-    path: "$.args"
     code: unexpected
-    error: "found duplicate fields in selection set for mutation root: insert_user"
+    error: >-
+      Encountered conflicting definitions in the selection set for
+      'mutation_root' for field 'insert_user' defined in [action insert_user,
+      table user in source default]. Fields must not be defined more than once
+      across all sources.
+    path: $.args
   query:
     type: track_table
     args:

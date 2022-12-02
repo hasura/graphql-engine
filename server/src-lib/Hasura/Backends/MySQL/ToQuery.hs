@@ -66,7 +66,8 @@ fromExpression =
       fromExpression x <+> " IN " <+> SeqPrinter (fmap fromExpression xs)
     ColumnExpression fieldName -> fromFieldName fieldName
     MethodExpression field method args ->
-      fromExpression field <+> "."
+      fromExpression field
+        <+> "."
         <+> fromString (T.unpack method)
         <+> "("
         <+> SeqPrinter (map fromExpression args)
@@ -255,7 +256,10 @@ fromProjection =
                           ", "
                           ( fields
                               <&> \(fieldName@FieldName {..}, fieldOrigin :: FieldOrigin) ->
-                                "IFNULL(" <+> fromFieldName fieldName <+> ", " <+> fromFieldOrigin fieldOrigin
+                                "IFNULL("
+                                  <+> fromFieldName fieldName
+                                  <+> ", "
+                                  <+> fromFieldOrigin fieldOrigin
                                   <+> ") AS "
                                   <+> fromNameText fName
                           )
@@ -375,7 +379,8 @@ toQueryPretty = go 0
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (LT.Builder, InsOrdHashMap Int ScalarValue)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty
+  second (OMap.fromList . map swap . OMap.toList)
+    . flip runState mempty
     . runBuilderPretty
 
 runBuilderPretty :: Printer -> State (InsOrdHashMap ScalarValue Int) LT.Builder

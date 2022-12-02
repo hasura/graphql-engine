@@ -9,7 +9,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as DS
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -60,7 +60,8 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
     throwNotInsErr c = do
       roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $
-        "column " <> c <<> " is not insertable"
+        "column "
+          <> c <<> " is not insertable"
           <> " for role " <>> roleName
 
 validateInpCols :: (MonadError QErr m) => [PGCol] -> [PGCol] -> m ()
@@ -123,9 +124,11 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       withPathK "constraint" $
         unless (c `elem` tableConsNames) $
           throw400 Unexpected $
-            "constraint " <> getConstraintTxt c
-              <<> " for table " <> _tciName coreInfo
-              <<> " does not exist"
+            "constraint "
+              <> getConstraintTxt c
+                <<> " for table "
+              <> _tciName coreInfo
+                <<> " does not exist"
 
     getUpdPerm = do
       upi <- askUpdPermInfo tableInfo
@@ -202,8 +205,9 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
       role <- askCurRole
       unless (isTabUpdatable role tableInfo) $
         throw400 PermissionDenied $
-          "upsert is not allowed for role " <> role
-            <<> " since update permissions are not defined"
+          "upsert is not allowed for role "
+            <> role
+              <<> " since update permissions are not defined"
       buildConflictClause sessVarBldr tableInfo inpCols c
   return $
     InsertQueryP1
@@ -222,11 +226,11 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 convInsQ ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   InsertQuery ->
-  m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
 convInsQ query = do
   let source = iqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       convInsertQuery
         (withPathK "objects" . decodeInsObjs)
@@ -252,8 +256,9 @@ runInsert q = do
   userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite $
-    flip runReaderT emptyQueryTagsComment $ execInsertQuery strfyNum Nothing userInfo res
+  runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite $
+    flip runReaderT emptyQueryTagsComment $
+      execInsertQuery strfyNum Nothing userInfo res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do

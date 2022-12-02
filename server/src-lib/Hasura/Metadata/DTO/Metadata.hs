@@ -3,7 +3,6 @@ module Hasura.Metadata.DTO.Metadata (MetadataDTO (..)) where
 import Autodocodec
   ( Autodocodec (Autodocodec),
     HasCodec (codec),
-    JSONCodec,
     dimapCodec,
     disjointEitherCodec,
     named,
@@ -43,10 +42,10 @@ instance HasCodec MetadataDTO where
     named "Metadata" $
       dimapCodec decode encode $
         disjointEitherCodec
-          (codec :: JSONCodec MetadataV1)
+          (codec @MetadataV1)
           ( disjointEitherCodec
-              (codec :: JSONCodec MetadataV2)
-              (codec :: JSONCodec MetadataV3)
+              (codec @MetadataV2)
+              (codec @MetadataV3)
           )
           <?> "configuration format for the Hasura GraphQL Engine"
     where

@@ -77,7 +77,7 @@ data ActionFieldG (r :: Type)
   | -- | Constant text value (used for __typename fields)
     ACFExpression Text
   | -- | Nested object. G.Name is the original field name from the object type.
-    ACFNestedObject G.Name !(ActionFieldsG r)
+    ACFNestedObject G.Name (ActionFieldsG r)
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 type ActionFieldsG r = Fields (ActionFieldG r)
@@ -99,21 +99,21 @@ data ActionRemoteRelationshipSelect r = ActionRemoteRelationshipSelect
 $(makePrisms ''ActionFieldG)
 
 data AnnActionExecution (r :: Type) = AnnActionExecution
-  { _aaeName :: !RQL.ActionName,
+  { _aaeName :: RQL.ActionName,
     -- | output type
-    _aaeOutputType :: !GraphQLType,
+    _aaeOutputType :: GraphQLType,
     -- | output selection
-    _aaeFields :: !(ActionFieldsG r),
+    _aaeFields :: (ActionFieldsG r),
     -- | jsonified input arguments
-    _aaePayload :: !J.Value,
+    _aaePayload :: J.Value,
     -- | to validate the response fields from webhook
-    _aaeOutputFields :: !ActionOutputFields,
-    _aaeWebhook :: !(EnvRecord ResolvedWebhook),
-    _aaeHeaders :: ![HeaderConf],
-    _aaeForwardClientHeaders :: !Bool,
-    _aaeTimeOut :: !Timeout,
-    _aaeRequestTransform :: !(Maybe RequestTransform),
-    _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
+    _aaeOutputFields :: ActionOutputFields,
+    _aaeWebhook :: EnvRecord ResolvedWebhook,
+    _aaeHeaders :: [HeaderConf],
+    _aaeForwardClientHeaders :: Bool,
+    _aaeTimeOut :: Timeout,
+    _aaeRequestTransform :: Maybe RequestTransform,
+    _aaeResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -127,16 +127,16 @@ getActionOutputFields inp = case inp of
   AOTScalar _ -> Map.empty
 
 data AnnActionMutationAsync = AnnActionMutationAsync
-  { _aamaName :: !RQL.ActionName,
-    _aamaForwardClientHeaders :: !Bool,
+  { _aamaName :: RQL.ActionName,
+    _aamaForwardClientHeaders :: Bool,
     -- | jsonified input arguments
-    _aamaPayload :: !J.Value
+    _aamaPayload :: J.Value
   }
   deriving (Show, Eq)
 
 data AsyncActionQueryFieldG (r :: Type)
-  = AsyncTypename !Text
-  | AsyncOutput !(ActionFieldsG r)
+  = AsyncTypename Text
+  | AsyncOutput (ActionFieldsG r)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
@@ -145,14 +145,14 @@ data AsyncActionQueryFieldG (r :: Type)
 type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
 
 data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
-  { _aaaqName :: !RQL.ActionName,
-    _aaaqActionId :: !RQL.ActionId,
-    _aaaqOutputType :: !GraphQLType,
-    _aaaqFields :: !(AsyncActionQueryFieldsG r),
-    _aaaqDefinitionList :: ![(Column b, ScalarType b)],
-    _aaaqStringifyNum :: !StringifyNumbers,
-    _aaaqForwardClientHeaders :: !Bool,
-    _aaaqSource :: !(ActionSourceInfo b)
+  { _aaaqName :: RQL.ActionName,
+    _aaaqActionId :: RQL.ActionId,
+    _aaaqOutputType :: GraphQLType,
+    _aaaqFields :: AsyncActionQueryFieldsG r,
+    _aaaqDefinitionList :: [(Column b, ScalarType b)],
+    _aaaqStringifyNum :: StringifyNumbers,
+    _aaaqForwardClientHeaders :: Bool,
+    _aaaqSource :: ActionSourceInfo b
   }
   deriving stock (Functor, Foldable, Traversable)
 

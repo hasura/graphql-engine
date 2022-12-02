@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
@@ -280,7 +281,8 @@ computeActionsMetrics actionCache =
     customTypesLen = inputTypesLen + outputTypesLen
 
     typeRelationships =
-      length . L.nub
+      length
+        . L.nub
         . concatMap
           ( \aInfo -> case (snd . _aiOutputType $ aInfo) of
               AOTObject aot -> map _atrName $ _aotRelationships aot
@@ -293,3 +295,4 @@ versionToTopic :: Version -> Topic
 versionToTopic = \case
   VersionDev _ -> Topic "server_metrics_v2_test"
   VersionRelease _ -> Topic "server_metrics_v2"
+  VersionCE _ -> Topic "server_metrics_v2"

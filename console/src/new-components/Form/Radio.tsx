@@ -1,4 +1,4 @@
-import React, { ReactText } from 'react';
+import React, { ReactNode, ReactText } from 'react';
 import clsx from 'clsx';
 import { v4 as uuid } from 'uuid';
 import get from 'lodash.get';
@@ -6,7 +6,7 @@ import { FieldError, useFormContext } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 type RadioItem = {
-  label: ReactText;
+  label: ReactNode;
   value: ReactText;
   disabled?: boolean;
 };
@@ -21,10 +21,6 @@ export type RadioProps = FieldWrapperPassThroughProps & {
    */
   options: RadioItem[];
   /**
-   * The radio list size
-   */
-  size?: 'full' | 'medium';
-  /**
    * The radio list orientation
    */
   orientation?: 'vertical' | 'horizontal';
@@ -36,7 +32,6 @@ export type RadioProps = FieldWrapperPassThroughProps & {
 
 export const Radio: React.FC<RadioProps> = ({
   name,
-  size = 'full',
   options,
   orientation = 'vertical',
   disabled = false,
@@ -50,12 +45,7 @@ export const Radio: React.FC<RadioProps> = ({
 
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
-    <FieldWrapper
-      id={name}
-      {...wrapperProps}
-      className={size === 'medium' ? 'w-1/2 max-w-lg' : 'w-full max-w-xl'}
-      error={maybeError}
-    >
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div
         className={clsx(
           'flex',
@@ -79,7 +69,7 @@ export const Radio: React.FC<RadioProps> = ({
                     ? 'border-red-600 hover:border-red-700'
                     : disabled || optionDisabled
                     ? 'cursor-not-allowed bg-gray-200 border-gray-300'
-                    : ' border-gray-400 hover:border-gray-500 focus:ring-yellow-400'
+                    : ' border-gray-400 hover:border-gray-500 focus-visible:ring-yellow-400'
                 )}
                 {...register(name)}
                 disabled={disabled || optionDisabled}

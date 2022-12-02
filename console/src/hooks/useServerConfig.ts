@@ -5,18 +5,26 @@ import { useQuery, UseQueryOptions } from 'react-query';
 import { APIError } from './error';
 import { Api } from './apiUtils';
 
+type ExperimentalFeature =
+  | 'streaming_subscriptions'
+  | 'naming_convention'
+  | 'apollo_federation';
+
 export interface ServerConfig {
   version: string;
   is_function_permissions_inferred: boolean;
+  default_naming_convention: string;
   is_admin_secret_set: boolean;
   is_auth_hook_set: boolean;
+  is_allow_list_enabled: boolean;
   is_remote_schema_permissions_enabled: boolean;
   is_jwt_set: boolean;
-  experimental_features: string[];
+  experimental_features: ExperimentalFeature[];
   jwt: {
     claims_namespace: string;
     claims_format: string;
   };
+  is_prometheus_metrics_enabled: boolean;
 }
 
 export function useServerConfig<T = ServerConfig>(
@@ -31,7 +39,7 @@ export function useServerConfig<T = ServerConfig>(
   // Hooks warning disabled cos of: https://tkdodo.eu/blog/react-query-data-transformations
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const select = React.useCallback(
-    transformFn || ((d: ServerConfig) => (d as unknown) as T),
+    transformFn || ((d: ServerConfig) => d as unknown as T),
     []
   );
 

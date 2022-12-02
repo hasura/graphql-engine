@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="8.828" height="8.828" viewBox="0 0 8.828 8.828">
+    <defs>
+        <style>
+            .cls-1{fill:none;stroke:#606060;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px}
+        </style>
+    </defs>
+    <g id="x-circle" transform="translate(-7.586 -7.586)">
+        <path id="Line_405" d="M6 0L0 6" class="cls-1" data-name="Line 405" transform="translate(9 9)"/>
+        <path id="Line_406" d="M0 0l6 6" class="cls-1" data-name="Line 406" transform="translate(9 9)"/>
+    </g>
+</svg>

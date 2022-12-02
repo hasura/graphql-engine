@@ -11,7 +11,7 @@
       definition:
         kind: synchronous
         output_type: OutObjectScalarTransformed!
-        handler: http://127.0.0.1:5593/scalar-response
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-response"
         response_transform:
           template_engine: Kriti
           body: |
@@ -48,4 +48,4 @@
         kind: synchronous
         arguments:
         output_type: String!
-        handler: http://127.0.0.1:5593/scalar-response
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-response"

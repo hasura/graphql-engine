@@ -1,7 +1,16 @@
+/* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { GraphQLError } from 'graphql';
-import { Tooltip, OverlayTrigger } from 'react-bootstrap';
-import { FaQuestionCircle } from 'react-icons/fa';
+import { IconTooltip } from '@/new-components/Tooltip';
+import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import {
+  availableFeatureFlagIds,
+  FeatureFlagToast,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
+import { isProConsole } from '@/utils';
+import { FaMagic } from 'react-icons/fa';
 import HandlerEditor from './HandlerEditor';
 import ExecutionEditor from './ExecutionEditor';
 import HeaderConfEditor from './HeaderConfEditor';
@@ -12,6 +21,7 @@ import { Nullable } from '../../../../Common/utils/tsUtils';
 import ActionDefIcon from '../../../../Common/Icons/ActionDef';
 import TypesDefIcon from '../../../../Common/Icons/TypesDef';
 import { inputStyles } from '../../constants';
+import { TypeGeneratorModal } from './TypeGeneratorModal/TypeGeneratorModal';
 
 type ActionEditorProps = {
   handler: string;
@@ -42,6 +52,7 @@ type ActionEditorProps = {
     timer: Nullable<NodeJS.Timeout>,
     ast: Nullable<Record<string, any>>
   ) => void;
+  onOpenActionGenerator?: () => void;
 };
 
 const ActionEditor: React.FC<ActionEditorProps> = ({
@@ -63,6 +74,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
   toggleForwardClientHeaders,
   actionDefinitionOnChange,
   typeDefinitionOnChange,
+  onOpenActionGenerator,
 }) => {
   const {
     sdl: typesDefinitionSdl,
@@ -76,89 +88,138 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
     timer: actionParseTimer,
   } = actionDefinition;
 
+  const [isTypesGeneratorOpen, setIsTypesGeneratorOpen] = React.useState(false);
+
+  const { enabled: isImportFromOASEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.importActionFromOpenApiId
+  );
+
   return (
     <>
-      <h2 className="text-lg font-semibold mb-xs flex items-center">
-        Action Configuration
-      </h2>
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <h2 className="text-lg font-semibold mb-xs flex items-center">
+          Action Configuration
+        </h2>
+      </Analytics>
 
-      <div className="mb-md w-8/12">
-        <label
-          htmlFor="comment"
-          className="block text-gray-600 font-medium mb-xs"
-        >
-          Comment / Description
-        </label>
-        <input
-          disabled={readOnlyMode}
-          value={comment}
-          placeholder="This is the comment which acts as a description for the action."
-          onChange={commentOnChange}
-          type="text"
-          name="comment"
-          className={inputStyles}
-        />
-      </div>
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div className="mb-md w-8/12">
+          <label
+            htmlFor="comment"
+            className="block text-gray-600 font-medium mb-xs"
+          >
+            Comment / Description
+          </label>
+          <input
+            disabled={readOnlyMode}
+            value={comment}
+            placeholder="This is the comment which acts as a description for the action."
+            onChange={commentOnChange}
+            type="text"
+            name="comment"
+            className={inputStyles}
+          />
+        </div>
+      </Analytics>
 
-      <div className="mb-lg">
-        <label
-          htmlFor="action"
-          className="flex items-center block text-gray-600 font-medium mb-xs"
-        >
-          <ActionDefIcon />
-          Action Definition <span className="ml-xs text-red-700">*</span>
-        </label>
-        <p className="text-sm text-gray-600">
-          Define the action as a query or mutation using the GraphQL SDL.
-        </p>
-        <p className="text-sm text-gray-600 mb-sm">
-          You can use the custom types already defined by you or define new
-          types in the new types definition editor below.
-        </p>
-        <GraphQLEditor
-          value={actionDefinitionSdl}
-          error={actionDefinitionError}
-          onChange={actionDefinitionOnChange}
-          timer={actionParseTimer}
-          readOnlyMode={readOnlyMode}
-          width="100%"
-          fontSize="12px"
-        />
-      </div>
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div className="mb-lg">
+          <label
+            htmlFor="action"
+            className="flex items-center block text-gray-600 font-medium mb-xs"
+          >
+            <ActionDefIcon />
+            Action Definition <span className="ml-xs text-red-700">*</span>
+          </label>
+          <p className="text-sm text-gray-600">
+            Define the action as a query or mutation using the GraphQL SDL.
+          </p>
+          <p className="text-sm text-gray-600 mb-sm">
+            You can use the custom types already defined by you or define new
+            types in the new types definition editor below.
+          </p>
+          {onOpenActionGenerator &&
+            isProConsole(window.__env) &&
+            (isImportFromOASEnabled ? (
+              <div className="mb-xs">
+                <Button icon={<FaMagic />} onClick={onOpenActionGenerator}>
+                  Import from OpenAPI
+                </Button>
+              </div>
+            ) : (
+              <FeatureFlagToast
+                flagId={availableFeatureFlagIds.importActionFromOpenApiId}
+              />
+            ))}
+          <GraphQLEditor
+            value={actionDefinitionSdl}
+            error={actionDefinitionError}
+            onChange={actionDefinitionOnChange}
+            timer={actionParseTimer}
+            readOnlyMode={readOnlyMode}
+            width="100%"
+            fontSize="12px"
+          />
+        </div>
+      </Analytics>
 
-      <h2 className="text-lg font-semibold mb-xs flex items-center">
-        Type Configuration
-      </h2>
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <h2 className="text-lg font-semibold mb-xs flex items-center">
+          Type Configuration
+        </h2>
+      </Analytics>
 
-      <div className="mb-lg">
-        <div className="grid gap-4 grid-cols-2 mb-sm">
-          <div>
-            <label
-              htmlFor="types"
-              className="flex items-center block text-gray-600 font-medium mb-xs"
-            >
-              <TypesDefIcon />
-              Declare New Types
-            </label>
-            <p className="text-sm text-gray-600 mb-sm">
-              You can define new GraphQL types which you can use in the action
-              definition above.
-            </p>
-            <GraphQLEditor
-              value={typesDefinitionSdl}
-              error={typesDefinitionError}
-              timer={typedefParseTimer}
-              onChange={typeDefinitionOnChange}
-              readOnlyMode={readOnlyMode}
-              width="100%"
-              fontSize="12px"
-              allowEmpty
-            />
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div className="mb-lg">
+          <div className="grid gap-4 grid-cols-2 mb-sm">
+            <div>
+              <label
+                htmlFor="types"
+                className="flex items-center block text-gray-600 font-medium mb-xs"
+              >
+                <TypesDefIcon />
+                Declare New Types
+              </label>
+              <p className="text-sm text-gray-600 mb-sm">
+                You can define new GraphQL types which you can use in the action
+                definition above.
+              </p>
+              <GraphQLEditor
+                value={typesDefinitionSdl}
+                error={typesDefinitionError}
+                timer={typedefParseTimer}
+                onChange={typeDefinitionOnChange}
+                readOnlyMode={readOnlyMode}
+                width="100%"
+                fontSize="12px"
+                allowEmpty
+              />
+            </div>
+
+            <GlobalTypesViewer />
           </div>
 
-          <GlobalTypesViewer />
+          <TypeGeneratorModal
+            isOpen={isTypesGeneratorOpen}
+            onInsertTypes={types =>
+              typeDefinitionOnChange(types, null, null, null)
+            }
+            onClose={() => setIsTypesGeneratorOpen(false)}
+          />
+
+          <Analytics
+            name="actions-tab-btn-type-generator"
+            passHtmlAttributesToChildren
+          >
+            <Button
+              icon={<FaMagic />}
+              onClick={() => setIsTypesGeneratorOpen(true)}
+            >
+              Type generator
+            </Button>
+          </Analytics>
         </div>
-      </div>
+      </Analytics>
 
       <HandlerEditor
         value={handler}
@@ -166,55 +227,52 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
         disabled={readOnlyMode}
       />
 
-      <div className="mb-lg w-8/12">
-        {actionType === 'query' ? null : (
-          <ExecutionEditor
-            value={execution}
-            onChange={executionOnChange}
-            disabled={readOnlyMode}
-          />
-        )}
-      </div>
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div className="mb-lg w-8/12">
+          {actionType === 'query' ? null : (
+            <ExecutionEditor
+              value={execution}
+              onChange={executionOnChange}
+              disabled={readOnlyMode}
+            />
+          )}
+        </div>
+      </Analytics>
 
-      <div className="mb-lg w-8/12">
-        <HeaderConfEditor
-          forwardClientHeaders={forwardClientHeaders}
-          toggleForwardClientHeaders={toggleForwardClientHeaders}
-          headers={headers}
-          setHeaders={setHeaders}
-          disabled={readOnlyMode}
-        />
-      </div>
-
-      <div className="mb-lg w-8/12">
-        <h2 className="text-lg font-semibold mb-xs flex items-center">
-          Action custom timeout
-          <OverlayTrigger
-            placement="right"
-            overlay={
-              <Tooltip id="tooltip-cascade">
-                Configure timeout for Action. Defaults to 30 seconds.
-              </Tooltip>
-            }
-          >
-            <FaQuestionCircle className="ml-xs" aria-hidden="true" />
-          </OverlayTrigger>
-        </h2>
-        <div className="mb-lg w-4/12">
-          <input
-            className={`${inputStyles} mb-sm`}
-            type="number"
-            placeholder="Timeout in seconds"
-            value={timeout}
-            data-key="timeoutConf"
-            data-test="action-timeout-seconds"
-            onChange={timeoutOnChange}
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div className="mb-lg w-8/12">
+          <HeaderConfEditor
+            forwardClientHeaders={forwardClientHeaders}
+            toggleForwardClientHeaders={toggleForwardClientHeaders}
+            headers={headers}
+            setHeaders={setHeaders}
             disabled={readOnlyMode}
-            pattern="^\d+$"
-            title="Only non negative integers are allowed"
           />
         </div>
-      </div>
+      </Analytics>
+
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div className="mb-lg w-8/12">
+          <h2 className="text-lg font-semibold mb-xs flex items-center">
+            Action custom timeout
+            <IconTooltip message="Configure timeout for Action. Defaults to 30 seconds." />
+          </h2>
+          <div className="mb-lg w-4/12">
+            <input
+              className={`${inputStyles} mb-sm`}
+              type="number"
+              placeholder="Timeout in seconds"
+              value={timeout}
+              data-key="timeoutConf"
+              data-test="action-timeout-seconds"
+              onChange={timeoutOnChange}
+              disabled={readOnlyMode}
+              pattern="^\d+$"
+              title="Only non negative integers are allowed"
+            />
+          </div>
+        </div>
+      </Analytics>
     </>
   );
 };

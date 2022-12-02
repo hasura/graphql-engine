@@ -13,10 +13,10 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Range
 import Test.Aeson.Utils
 import Test.Hspec
 
@@ -34,14 +34,14 @@ spec = do
   describe "Relationship" $ do
     let relationship =
           Relationship
-            { _rTargetTable = TableName "target_table_name",
+            { _rTargetTable = TableName ["target_table_name"],
               _rRelationshipType = ObjectRelationship,
               _rColumnMapping = [(ColumnName "outer_column", ColumnName "inner_column")]
             }
     testToFromJSONToSchema
       relationship
       [aesonQQ|
-        { "target_table": "target_table_name",
+        { "target_table": ["target_table_name"],
           "relationship_type": "object",
           "column_mapping": {
             "outer_column": "inner_column"
@@ -52,19 +52,19 @@ spec = do
   describe "TableRelationships" $ do
     let relationshipA =
           Relationship
-            { _rTargetTable = TableName "target_table_name_a",
+            { _rTargetTable = TableName ["target_table_name_a"],
               _rRelationshipType = ObjectRelationship,
               _rColumnMapping = [(ColumnName "outer_column_a", ColumnName "inner_column_a")]
             }
     let relationshipB =
           Relationship
-            { _rTargetTable = TableName "target_table_name_b",
+            { _rTargetTable = TableName ["target_table_name_b"],
               _rRelationshipType = ArrayRelationship,
               _rColumnMapping = [(ColumnName "outer_column_b", ColumnName "inner_column_b")]
             }
     let tableRelationships =
           TableRelationships
-            { _trSourceTable = TableName "source_table_name",
+            { _trSourceTable = TableName ["source_table_name"],
               _trRelationships =
                 [ (RelationshipName "relationship_a", relationshipA),
                   (RelationshipName "relationship_b", relationshipB)
@@ -73,17 +73,17 @@ spec = do
     testToFromJSONToSchema
       tableRelationships
       [aesonQQ|
-        { "source_table": "source_table_name",
+        { "source_table": ["source_table_name"],
           "relationships": {
             "relationship_a": {
-              "target_table": "target_table_name_a",
+              "target_table": ["target_table_name_a"],
               "relationship_type": "object",
               "column_mapping": {
                 "outer_column_a": "inner_column_a"
               }
             },
             "relationship_b": {
-              "target_table": "target_table_name_b",
+              "target_table": ["target_table_name_b"],
               "relationship_type": "array",
               "column_mapping": {
                 "outer_column_b": "inner_column_b"
@@ -96,7 +96,7 @@ spec = do
 
 genRelationshipName :: MonadGen m => m RelationshipName
 genRelationshipName =
-  RelationshipName <$> Gen.text (linear 0 10) Gen.unicode
+  RelationshipName <$> genArbitraryAlphaNumText defaultRange
 
 genRelationshipType :: MonadGen m => m RelationshipType
 genRelationshipType = Gen.enumBounded
@@ -106,10 +106,10 @@ genRelationship =
   Relationship
     <$> genTableName
     <*> genRelationshipType
-    <*> (HashMap.fromList <$> Gen.list (linear 0 5) ((,) <$> genColumnName <*> genColumnName))
+    <*> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnName <*> genColumnName))
 
 genTableRelationships :: MonadGen m => m TableRelationships
 genTableRelationships =
   TableRelationships
     <$> genTableName
-    <*> fmap HashMap.fromList (Gen.list (linear 0 5) ((,) <$> genRelationshipName <*> genRelationship))
+    <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))

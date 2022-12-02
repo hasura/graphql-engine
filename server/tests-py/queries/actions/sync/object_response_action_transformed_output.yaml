@@ -16,7 +16,7 @@
         - name: name
           type: String!
         output_type: Int!
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
         response_transform:
           template_engine: Kriti
           body: |
@@ -52,4 +52,4 @@
         - name: name
           type: String!
         output_type: UserId
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"

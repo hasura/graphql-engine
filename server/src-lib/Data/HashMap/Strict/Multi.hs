@@ -33,10 +33,10 @@ newtype MultiMap k v = MultiMap
   }
   deriving newtype (Eq, Show, ToJSON)
 
-instance (Eq k, Hashable k, Ord v) => Semigroup (MultiMap k v) where
+instance (Hashable k, Ord v) => Semigroup (MultiMap k v) where
   MultiMap m0 <> MultiMap m1 = MultiMap $ M.unionWith S.union m0 m1
 
-instance (Eq k, Hashable k, Ord v) => Monoid (MultiMap k v) where
+instance (Hashable k, Ord v) => Monoid (MultiMap k v) where
   mempty = MultiMap mempty
 
 -------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ toMap = unMultiMap
 -- If the provided list constains duplicate mappings, the resulting
 -- 'MultiMap' will store the set of all mapped values for each
 -- duplicate key.
-fromList :: (Eq k, Hashable k, Ord v) => [(k, v)] -> MultiMap k v
+fromList :: (Hashable k, Ord v) => [(k, v)] -> MultiMap k v
 fromList l = MultiMap $ M.fromListWith (S.union) $ map (fmap S.singleton) l
 
 -- | Creates an association list from a 'MultiMap'.
@@ -73,14 +73,14 @@ toList (MultiMap m) = M.toList $ fmap (S.toList) m
 
 -- | Return the value to which the specified key is mapped, or 'Nothing' if
 -- this map contains no mapping for the key.
-lookup :: (Eq k, Hashable k) => k -> MultiMap k v -> S.Set v
+lookup :: Hashable k => k -> MultiMap k v -> S.Set v
 lookup k (MultiMap m) = fromMaybe S.empty $ M.lookup k m
 
 -- | Associate the specified value with the specified key in this map.
 --
 -- If this map previously contained a mapping for the key, the new value is
 -- inserted in the set, and does not replace the previous mapping.
-insert :: (Eq k, Hashable k, Ord v) => k -> v -> MultiMap k v -> MultiMap k v
+insert :: (Hashable k, Ord v) => k -> v -> MultiMap k v -> MultiMap k v
 insert k v (MultiMap m) = MultiMap $ M.insertWith (S.union) k (S.singleton v) m
 
 -- | Returns a list of this map's keys.

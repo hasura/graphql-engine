@@ -71,9 +71,9 @@ import Hasura.Prelude hiding
 -- we choose a naive implementation in the interest of getting other
 -- work done.
 data RecordSet = RecordSet
-  { origin :: !(Maybe PlannedAction),
-    rows :: !(Vector (InsOrdHashMap FieldName OutputValue)),
-    wantedFields :: !(Maybe [Text])
+  { origin :: Maybe PlannedAction,
+    rows :: Vector (InsOrdHashMap FieldName OutputValue),
+    wantedFields :: Maybe [Text]
   }
   deriving (Show)
 
@@ -85,7 +85,7 @@ instance GHC.TypeLits.TypeError ('GHC.TypeLits.Text "Aeson loses key order, so y
 -- jobs can be executed in parallel.
 data ExecuteReader = ExecuteReader
   { recordSets :: IORef (InsOrdHashMap Ref RecordSet),
-    credentials :: !SourceConfig
+    credentials :: SourceConfig
   }
 
 -- | Any problem encountered while executing the plan.
@@ -113,9 +113,9 @@ newtype Execute a = Execute
 
 -- | A value outputted by this execute module in a record set.
 data OutputValue
-  = ArrayOutputValue !(Vector OutputValue)
-  | RecordOutputValue !(InsOrdHashMap DataLoaderPlan.FieldName OutputValue)
-  | ScalarOutputValue !J.Value -- TODO: switch to 'MySQL.Scalar...'?
+  = ArrayOutputValue (Vector OutputValue)
+  | RecordOutputValue (InsOrdHashMap DataLoaderPlan.FieldName OutputValue)
+  | ScalarOutputValue J.Value -- TODO: switch to 'MySQL.Scalar...'?
   | NullOutputValue
   deriving (Show, Eq, Generic)
 
@@ -230,7 +230,7 @@ getFinalRecordSet HeadAndTail {..} = do
           fmap
             ( OMap.filterWithKey
                 ( \(FieldName k) _ ->
-                    maybe True (elem k) (wantedFields headSet)
+                    all (elem k) (wantedFields headSet)
                 )
             )
             (rows tailSet)
@@ -365,7 +365,7 @@ joinArrayRows wantedFields fieldName leftRow rightRow =
             ( RecordOutputValue
                 . OMap.filterWithKey
                   ( \(DataLoaderPlan.FieldName k) _ ->
-                      maybe True (elem k) wantedFields
+                      all (elem k) wantedFields
                   )
             )
             rightRow
@@ -385,14 +385,14 @@ joinObjectRows ::
 joinObjectRows wantedFields fieldName leftRow rightRows
   | V.length rightRows /= 1 = Left . BrokenJoinInvariant . foldMap OMap.keys $ rightRows
   | otherwise =
-    let row = V.head rightRows
-     in pure $
-          OMap.insert
-            (DataLoaderPlan.FieldName fieldName)
-            ( RecordOutputValue
-                ( OMap.filterWithKey
-                    (\(DataLoaderPlan.FieldName k) _ -> maybe True (elem k) wantedFields)
-                    row
-                )
-            )
-            leftRow
+      let row = V.head rightRows
+       in pure $
+            OMap.insert
+              (DataLoaderPlan.FieldName fieldName)
+              ( RecordOutputValue
+                  ( OMap.filterWithKey
+                      (\(DataLoaderPlan.FieldName k) _ -> all (elem k) wantedFields)
+                      row
+                  )
+              )
+              leftRow

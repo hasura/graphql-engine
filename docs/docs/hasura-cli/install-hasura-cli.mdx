@@ -1,5 +1,5 @@
 ---
-sidebar_label: Installing the Hasura CLI
+sidebar_label: Installing / Uninstalling
 sidebar_position: 1
 description: Install the Hasura CLI on Linux, Mac OS, Windows
 keywords:
@@ -11,13 +11,33 @@ keywords:
   - windows
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Link from "@docusaurus/Link";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Link from '@docusaurus/Link';
 
-# Installing the Hasura CLI
+# Installing / Uninstalling the Hasura CLI
 
-## Install a binary globally
+## Installing the Hasura CLI
+
+### Installing through npm
+
+The Hasura CLI is conveniently available as an npm package which wraps the compiled binary and is independently
+maintained by members of the community. It can be beneficial to use the npm package if you want a  version-fixed CLI
+dedicated to your node.js project. You can find usage details (e.g. flag information) in the
+[original repository](https://github.com/jjangga0214/hasura-cli). To install the CLI, you can use npm (or yarn):
+
+```bash
+# install as a devDependency of your project
+npm install --save-dev hasura-cli[@tag|@version]
+
+# or install globally on your system
+npm install --global hasura-cli[@tag|@version]
+```
+
+### Installing the Hasura CLI binary globally
+
+If you prefer to install the binary globally, you can download it by following the instructions for your
+operating system:
 
 <Tabs className="api-tabs">
 <TabItem value="linux" label="Linux">
@@ -28,19 +48,17 @@ In your Linux shell, run the following command:
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 ```
 
-This will install the Hasura CLI in `/usr/local/bin`. You might have to
-provide your `sudo` password depending on the permissions of your
-`/usr/local/bin` location.
+This will install the Hasura CLI in `/usr/local/bin`. You might have to provide your `sudo` password depending on the
+permissions of your `/usr/local/bin` location.
 
-If you'd prefer to install to a different location other than
-`/usr/local/bin`, set the `INSTALL_PATH` variable accordingly:
+If you'd prefer to install to a different location other than `/usr/local/bin`, set the `INSTALL_PATH` variable
+accordingly:
 
 ```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
 ```
 
-You can also install a specific version of the CLI by providing the
-`VERSION` variable:
+You can also install a specific version of the CLI by providing the `VERSION` variable:
 
 ```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.2.0 bash
@@ -55,19 +73,17 @@ In your Terminal, run the following command:
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 ```
 
-This will install the Hasura CLI in `/usr/local/bin`. You might have to
-provide your `sudo` password depending on the permissions of your
-`/usr/local/bin` location.
+This will install the Hasura CLI in `/usr/local/bin`. You might have to provide your `sudo` password depending on the
+permissions of your `/usr/local/bin` location.
 
-If you'd prefer to install to a different location other than
-`/usr/local/bin`, set the `INSTALL_PATH` variable accordingly:
+If you'd prefer to install to a different location other than `/usr/local/bin`, set the `INSTALL_PATH` variable
+accordingly:
 
 ```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
 ```
 
-You can also install a specific version of the CLI by providing the
-`VERSION` variable:
+You can also install a specific version of the CLI by providing the `VERSION` variable:
 
 ```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.2.0 bash
@@ -76,31 +92,47 @@ curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION
 </TabItem>
 <TabItem value="windows" label="Windows">
 
-Download the binary `cli-hasura-windows-amd64.exe` available under
-`Assets` of the latest release from the GitHub release page : <Link to="https://github.com/hasura/graphql-engine/releases">https://github.com/hasura/graphql-engine/releases</Link>
+Download the binary `cli-hasura-windows-amd64.exe` available under `Assets` of the latest release from the GitHub
+release page :
 
-Rename the downloaded file to `hasura`. You can add the path to the
-environment variable `PATH` for making `hasura` accessible globally.
+<Link to='https://github.com/hasura/graphql-engine/releases'>https://github.com/hasura/graphql-engine/releases</Link>
+
+Rename the downloaded file to `hasura`. You can add the path to the environment variable `PATH` for making `hasura`
+accessible globally.
 
 </TabItem>
 </Tabs>
 
-## Install through npm
+:::tip Tip: Add shell completion
 
-Hasura CLI is available as an npm package that is independently
-maintained by some members of the community. It can be beneficial to use
-the npm package if you want a version-fixed cli dedicated to your
-node.js project. You can find usage details (e.g. flag information) in
-the [original repository](https://github.com/jjangga0214/hasura-cli).
+To add command auto-completion in your shell, refer to the
+[hasura completion](/hasura-cli/commands/hasura_completion.mdx) command.
+
+:::
+
+## Uninstalling the Hasura CLI
+
+### Uninstalling through npm
+
+If you installed the CLI as an npm package, use npm (or yarn):
 
 ```bash
-# install as a devDependency of your project
-npm install --save-dev hasura-cli[@tag|@version]
+# if installed as a project dependency
+npm uninstall hasura-cli
 
-# or install globally on your system
-npm install --global hasura-cli[@tag|@version]
+# if installed as a global package
+npm uninstall --global hasura-cli
 ```
 
-## (Optional) Add shell completion
+### Uninstalling a binary globally
 
-To add command auto completion in the shell, refer to [hasura completion](/hasura-cli/commands/hasura_completion.mdx).
+If you installed the binary directly on your system, delete the binary file from its installation location.
+
+```bash
+# By default, the binary is installed at /usr/local/bin/hasura
+$ which hasura
+  /usr/local/bin/hasura
+
+# use sudo if required
+$ rm /usr/local/bin/hasura
+```

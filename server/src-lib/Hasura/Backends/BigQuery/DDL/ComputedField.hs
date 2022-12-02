@@ -151,7 +151,8 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
 
     showErrors :: [ComputedFieldError] -> Text
     showErrors allErrors =
-      "the computed field " <> computedField <<> " cannot be added to table "
+      "the computed field "
+        <> computedField <<> " cannot be added to table "
         <> table <<> " "
         <> reasonMessage
       where

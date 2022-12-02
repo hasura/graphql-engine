@@ -11,7 +11,6 @@ where
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Session
 
@@ -20,8 +19,6 @@ newtype ParentRoles = ParentRoles {_unParentRoles :: HashSet RoleName}
 
 instance Hashable ParentRoles
 
-instance Cacheable ParentRoles
-
 -- | The `Role` type represents a role by
 --   containing its name and the names of its parent roles.
 --   This type is used externally in the `add_inherited_role`
@@ -29,16 +26,14 @@ instance Cacheable ParentRoles
 --   in the permission building
 --   part of the schema cache building process
 data Role = Role
-  { _rRoleName :: !RoleName,
+  { _rRoleName :: RoleName,
     -- | set of the parent role names, in case of
     -- non-inherited roles it will be an empty set
-    _rParentRoles :: !ParentRoles
+    _rParentRoles :: ParentRoles
   }
   deriving (Show, Eq, Generic)
 
 instance Hashable Role
-
-instance Cacheable Role
 
 instance ToJSON Role where
   toJSON (Role roleName parentRoles) =

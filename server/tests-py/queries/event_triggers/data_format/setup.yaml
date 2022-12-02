@@ -4,8 +4,6 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE EXTENSION IF NOT EXISTS postgis;
-
       create table hge_tests.test_bigint(
           id bigint,
           name text
@@ -40,7 +38,7 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"
 
 - type: create_event_trigger
   args:
@@ -54,4 +52,4 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"

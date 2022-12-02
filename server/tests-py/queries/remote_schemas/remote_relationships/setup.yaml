@@ -71,7 +71,7 @@ args:
   args:
     name: my-remote-schema
     definition:
-      url: http://localhost:4000
+      url: "{{GRAPHQL_SERVICE_HANDLER}}"
       forward_client_headers: false
 
 - type: track_table

@@ -192,9 +192,9 @@ collapseMap selects =
 --   = FromIrError (NonEmpty Error)
 
 data PrepareState = PrepareState
-  { positionalArguments :: ![RQL.ColumnValue 'MSSQL],
-    namedArguments :: !(HashMap G.Name (RQL.ColumnValue 'MSSQL)),
-    sessionVariables :: !(Set.HashSet SessionVariable)
+  { positionalArguments :: [RQL.ColumnValue 'MSSQL],
+    namedArguments :: HashMap G.Name (RQL.ColumnValue 'MSSQL),
+    sessionVariables :: Set.HashSet SessionVariable
   }
 
 emptyPrepareState :: PrepareState

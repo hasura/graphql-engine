@@ -17,7 +17,8 @@ const scheme = (proto) => {
   return window.location.protocol === "https:" ? `${proto}s` : proto;
 };
 
-const HASURA_GRAPHQL_ENGINE_HOSTNAME = "localhost:8080";
+const HASURA_GRAPHQL_ENGINE_HOSTNAME =
+  process.env.REACT_APP_HASURA_GRAPHQL_ENGINE_HOSTNAME || "localhost:8080";
 export const GRAPHQL_ENDPOINT = `${scheme(
   "http"
 )}://${HASURA_GRAPHQL_ENGINE_HOSTNAME}/v1/graphql`;

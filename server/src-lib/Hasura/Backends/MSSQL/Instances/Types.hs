@@ -5,6 +5,7 @@
 -- Defines a 'Hasura.RQL.Types.Backend.Backend' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Types () where
 
+import Autodocodec (codec)
 import Data.Aeson
 import Data.Text.Casing (GQLNameIdentifier)
 import Database.ODBC.SQLServer qualified as ODBC
@@ -16,11 +17,16 @@ import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (TriggerOnReplication (..))
+import Hasura.RQL.Types.HealthCheck
+import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MSSQL where
   type BackendConfig 'MSSQL = ()
+  type BackendInfo 'MSSQL = ()
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type TableName 'MSSQL = MSSQL.TableName
@@ -56,6 +62,14 @@ instance Backend 'MSSQL where
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
   type XStreamingSubscription 'MSSQL = XDisable
+
+  type HealthCheckTest 'MSSQL = HealthCheckTestSql
+  healthCheckImplementation =
+    Just $
+      HealthCheckImplementation
+        { _hciDefaultTest = defaultHealthCheckTestSql,
+          _hciTestCodec = codec
+        }
 
   isComparableType :: ScalarType 'MSSQL -> Bool
   isComparableType = MSSQL.isComparableType
@@ -102,3 +116,9 @@ instance Backend 'MSSQL where
 
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MSSQL -> [FunctionArgumentExp 'MSSQL v]
   fromComputedFieldImplicitArguments _ = absurd
+
+  resizeSourcePools :: SourceConfig 'MSSQL -> ServerReplicas -> IO ()
+  resizeSourcePools sourceConfig =
+    MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
+
+  defaultTriggerOnReplication = TOREnableTrigger

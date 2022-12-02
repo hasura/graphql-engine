@@ -1,6 +1,8 @@
 package sources
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"testing"
 
@@ -51,13 +53,15 @@ func TestSourceConfig_Build(t *testing.T) {
 				assert.NoError(t, err)
 				jsonbs, err := goyaml.YAMLToJSON(gotbs)
 				assert.NoError(t, err)
-
+				var pretty_jsonbs bytes.Buffer
+				err = json.Indent(&pretty_jsonbs, jsonbs, "", " ")
+				assert.NoError(t, err)
 				// uncomment following lines to update golden file
-				// assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				// assert.NoError(t, ioutil.WriteFile(tt.wantGolden, pretty_jsonbs.Bytes(), os.ModePerm))
 
 				wantbs, err := ioutil.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
-				assert.Equal(t, string(wantbs), string(jsonbs))
+				assert.Equal(t, string(wantbs), pretty_jsonbs.String())
 			}
 		})
 	}

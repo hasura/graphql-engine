@@ -1,0 +1,6 @@
+.DS_Store
+.git
+.gitignore
+node_modules
+yarn-error.log
+.docusaurus
