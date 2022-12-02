@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { useReadOnlyMode } from '@/hooks';
 import { useMetadata } from '@/features/MetadataAPI';
 import { HasuraMetadataV3 } from '@/metadata/types';
-import { insertItem } from './InsertActions';
-import { ColumnName, RowValues } from '../TableCommon/DataTableRowItem.types';
-import { DataTableRowItemProps } from '../TableCommon/DataTableRowItem';
+import isObject from 'lodash.isobject';
+
+import { fetchEnumOptions, insertItem } from './InsertActions';
 import { TableInsertItems } from './TableInsertItems';
-import {
-  useTableEnums,
-  UseTableEnumsResponseArrayType,
-} from './hooks/useTableEnums';
 import { useSchemas } from './hooks/useSchemas';
-import { TableObject } from './types';
+import { findTable, generateTableDef } from '../../../../dataSources';
+import { ordinalColSort } from '../utils';
+import { ColumnName } from '../TableCommon/DataTableRowItem.types';
+import { isColumnAutoIncrement } from '../Common/Components/utils';
+import { setTable } from '../DataActions';
 
 type GetButtonTextArgs = {
   insertedRows: number;
@@ -30,33 +30,6 @@ const getButtonText = ({ insertedRows, ongoingRequest }: GetButtonTextArgs) => {
 
   return 'Save';
 };
-
-const getTableWithEnumRelations = (
-  source: string,
-  schema: string,
-  metadata: HasuraMetadataV3 | undefined
-) => {
-  return metadata
-    ? (metadata?.sources
-        ?.find(s => s.name === source)
-        ?.tables.filter((t: any) => {
-          return t?.is_enum && t?.table?.schema === schema;
-        })
-        ?.map(t => t?.table) as TableObject[])
-    : [];
-};
-
-const formatEnumOptions = (
-  tableEnums: UseTableEnumsResponseArrayType | undefined
-) =>
-  tableEnums
-    ? tableEnums?.reduce((tally, curr) => {
-        return {
-          ...tally,
-          [curr.from]: curr.values,
-        };
-      }, {})
-    : [];
 
 const getTableMetadata = (
   source: string,
@@ -88,11 +61,40 @@ export const TableInsertItemContainer = (
     schema: schemaName,
   } = props.params;
   const currentRow = props.router?.location?.state?.row;
+
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setTable(tableName));
+    dispatch(fetchEnumOptions());
+  }, [tableName]);
 
   const [isMigration, setIsMigration] = useState(false);
   const [insertedRows, setInsertedRows] = useState(0);
-  const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
+  const [values, setValues] = useState<Record<ColumnName, unknown>>(
+    currentRow ?? {}
+  );
+  const [nullCheckedValues, setNullCheckedValues] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleNullChecks = (columnName: string, value: boolean) => {
+    setNullCheckedValues({
+      ...nullCheckedValues,
+      [columnName]: value,
+    });
+  };
+
+  const [defaultValueColumns, setDefaultValueColumns] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleDefaultValueColumns = (columnName: string, value: boolean) => {
+    setDefaultValueColumns({
+      ...defaultValueColumns,
+      [columnName]: value,
+    });
+  };
 
   const migrationMode = useAppSelector(store => store.main.migrationMode);
 
@@ -109,31 +111,11 @@ export const TableInsertItemContainer = (
     schemaName,
   });
 
-  const tablesWithEnumRelations = getTableWithEnumRelations(
-    dataSourceName,
-    schemaName,
-    metadata?.metadata
-  );
+  const insertTable = useAppSelector(store => store.tables.insert);
+  const { enumOptions } = insertTable;
 
-  const { data: tableEnums } = useTableEnums({
-    tables: tablesWithEnumRelations,
-    dataSourceName,
-  });
-  const onColumnUpdate: DataTableRowItemProps['onColumnUpdate'] = (
-    columnName,
-    rowValues
-  ) => {
-    const newValues = { ...values };
-    if (!newValues[columnName]) {
-      newValues[columnName] = {
-        valueNode: rowValues.valueNode,
-        nullNode: rowValues.nullNode,
-        defaultNode: rowValues.defaultNode,
-        radioNode: rowValues.radioNode,
-      };
-    }
-    newValues[columnName] = rowValues;
-    setValues(newValues);
+  const onColumnUpdate = (columnName: string, value: unknown) => {
+    setValues({ ...values, [columnName]: value });
   };
 
   const toggleMigrationCheckBox = () =>
@@ -159,8 +141,6 @@ export const TableInsertItemContainer = (
     });
   };
 
-  const enumOptions = formatEnumOptions(tableEnums);
-
   // Refactor in next iteration: --- Insert section start ---
   const insert = useAppSelector(
     (store: { tables: { insert: any } }) => store.tables.insert
@@ -177,32 +157,37 @@ export const TableInsertItemContainer = (
 
   const onClickSave: React.MouseEventHandler = e => {
     e.preventDefault();
-    const inputValues = Object.keys(values).reduce<
-      Record<ColumnName, string | null | undefined>
-    >((acc, colName) => {
-      if (values?.[colName]?.nullNode?.checked) {
-        acc[colName] = null;
-        return acc;
+
+    const currentTable = findTable(
+      schemas,
+      generateTableDef(tableName, schemaName)
+    );
+
+    const columns = currentTable?.columns.sort(ordinalColSort) || [];
+    const inputValues = columns.reduce((tally, col) => {
+      const colName = col.column_name;
+      if (defaultValueColumns[colName]) {
+        return tally;
       }
-
-      if (values?.[colName]?.defaultNode?.checked) {
-        return acc;
+      if (nullCheckedValues[colName]) {
+        return {
+          ...tally,
+          [colName]: null,
+        };
       }
-
-      acc[colName] = values?.[colName]?.valueNode?.value?.toString()
-        ? values?.[colName]?.valueNode?.value?.toString()
-        : values?.[colName]?.valueNode?.props?.value?.toString();
-
-      return acc;
+      const isAutoIncrement = isColumnAutoIncrement(col);
+      if (!isAutoIncrement && typeof values[colName] !== 'undefined') {
+        return {
+          ...tally,
+          [colName]: isObject(values[colName])
+            ? JSON.stringify(values[colName])
+            : values[colName],
+        };
+      }
+      return tally;
     }, {});
 
-    dispatch(
-      insertItem(
-        tableName,
-        currentRow ? { ...currentRow, ...inputValues } : inputValues,
-        isMigration
-      )
-    ).then(() => {
+    dispatch(insertItem(tableName, inputValues, isMigration)).then(() => {
       nextInsert();
     });
   };
@@ -211,6 +196,9 @@ export const TableInsertItemContainer = (
 
   return (
     <TableInsertItems
+      values={values}
+      setNullCheckedValues={handleNullChecks}
+      setDefaultValueColumns={handleDefaultValueColumns}
       isEnum={!!tableMetadata?.is_enum}
       toggleMigrationCheckBox={toggleMigrationCheckBox}
       onColumnUpdate={onColumnUpdate}
@@ -218,7 +206,6 @@ export const TableInsertItemContainer = (
       dispatch={dispatch}
       tableName={tableName}
       currentSchema={schemaName}
-      clone={currentRow}
       schemas={schemas}
       migrationMode={!!migrationMode}
       readOnlyMode={!!readOnlyMode}

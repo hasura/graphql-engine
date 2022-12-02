@@ -63,11 +63,13 @@ export const Primary: Story = () => (
     {values.map((value, i) => {
       return (
         <DataTableRowItem
-          baseCopyRow={{}}
           column={value.column}
           enumOptions={value.enumOptions}
           index={String(i)}
           onColumnUpdate={() => {}}
+          values={{}}
+          setNullCheckedValues={() => null}
+          setDefaultValueColumns={() => null}
         />
       );
     })}

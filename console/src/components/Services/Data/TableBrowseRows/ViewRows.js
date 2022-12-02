@@ -46,7 +46,6 @@ import {
   addOrder,
 } from './FilterActions';
 
-import _push from '../push';
 import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
@@ -371,18 +370,20 @@ const ViewRows = props => {
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableEditRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableEditRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+              })
             );
           };
-
           const editTitle = 'Edit row';
 
           return getActionButton(
@@ -694,7 +695,8 @@ const ViewRows = props => {
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableColumnsSorted = tableSchema.columns
+
+  const tableColumnsSorted = tableSchema?.columns
     .map(col => {
       const customColumnName = getTableCustomColumnName(
         tableSchema,

@@ -37,10 +37,8 @@ const Alert = ({ lastError, lastSuccess }: AlertProps) => {
 
 type TableEditItemsProps = {
   oldItem: Record<string, string>;
-  ongoingRequest: boolean;
   tableName: string;
   currentSchema: string;
-  clone: Record<string, unknown>;
   schemas: Table[];
   migrationMode: boolean;
   readOnlyMode: boolean;
@@ -53,12 +51,14 @@ type TableEditItemsProps = {
   lastError: Record<any, any>;
   lastSuccess: Record<any, any>;
   buttonText: string;
+  values: Record<string, unknown>;
+  setNullCheckedValues: (colName: string, isNullChecked: boolean) => void;
+  setDefaultValueColumns: (colName: string, isDefaultChecked: boolean) => void;
 };
 
 export const TableEditItems = ({
   tableName,
   currentSchema,
-  clone,
   schemas,
   migrationMode,
   readOnlyMode,
@@ -72,6 +72,9 @@ export const TableEditItems = ({
   lastSuccess,
   buttonText,
   oldItem,
+  values,
+  setNullCheckedValues,
+  setDefaultValueColumns,
 }: TableEditItemsProps) => {
   const currentTable = findTable(
     schemas,
@@ -108,11 +111,13 @@ export const TableEditItems = ({
                       defaultValue={
                         oldItem ? oldItem[column?.column_name] : undefined
                       }
+                      values={values}
+                      setNullCheckedValues={setNullCheckedValues}
+                      setDefaultValueColumns={setDefaultValueColumns}
                       key={column?.column_name}
                       column={column}
                       onColumnUpdate={onColumnUpdate}
                       enumOptions={enumOptions}
-                      baseCopyRow={clone}
                       index={index.toString()}
                     />
                   ))}

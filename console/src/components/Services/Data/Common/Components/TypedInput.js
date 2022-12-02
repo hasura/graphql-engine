@@ -11,13 +11,11 @@ export const TypedInput = ({
   enumOptions,
   col,
   index,
-  clone,
-  inputRef,
   onChange,
-  onFocus,
   prevValue = null,
   hasDefault = false,
   disabled,
+  values,
 }) => {
   const {
     column_name: colName,
@@ -27,19 +25,20 @@ export const TypedInput = ({
 
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
   const getDefaultValue = () => {
-    if (clone && colName in clone) return clone[colName];
-    if (prevValue !== undefined) {
-      return prevValue === null ? '' : prevValue;
+    if (
+      values?.[colName] !== null &&
+      values?.[colName] !== undefined &&
+      !disabled
+    ) {
+      return values?.[colName];
     }
     return '';
   };
 
   const standardInputProps = {
     onChange,
-    onFocus,
     onClick,
     disabled,
-    ref: inputRef,
     'data-test': `typed-input-${index}`,
     className: `form-control ${styles.insertBox}`,
     defaultValue: getDefaultValue(),
@@ -56,7 +55,7 @@ export const TypedInput = ({
       <select
         {...standardInputProps}
         className={`form-control ${styles.insertBox}`}
-        defaultValue={prevValue || ''}
+        defaultValue={getDefaultValue()}
       >
         <option disabled value="">
           -- enum value --

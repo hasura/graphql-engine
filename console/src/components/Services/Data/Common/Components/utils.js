@@ -109,3 +109,6 @@ export const getKeyDef = (config, constraintName) => {
     </div>
   );
 };
+
+export const isColumnAutoIncrement = column =>
+  /nextval|_seq|::regclass/.test(column.column_default);
