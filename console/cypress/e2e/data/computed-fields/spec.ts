@@ -99,6 +99,7 @@ export const openModifySection = () => {
   });
   cy.get(getElementFromAlias('computed-field-name-input')).type('full_name', {
     force: true,
+    delay: 10,
   });
   cy.wait(2000);
   // type & select function name
@@ -112,9 +113,10 @@ export const openModifySection = () => {
     .first()
     .click();
   // enter comment
-  cy.get(
-    getElementFromAlias('computed-field-comment-input')
-  ).type('this is a test comment', { force: true });
+  cy.get(getElementFromAlias('computed-field-comment-input')).type(
+    'this is a test comment',
+    { force: true }
+  );
   // saving the computed field
   cy.get(getElementFromAlias('modify-table-computed-field-0-save')).click();
   // verify that a computed field exists

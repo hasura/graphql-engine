@@ -188,6 +188,7 @@
     "@babel/preset-typescript": "7.13.0",
     "@babel/register": "7.9.0",
     "@babel/runtime": "7.14.8",
+    "@cypress/snapshot": "^2.1.7",
     "@graphql-codegen/cli": "2.13.8",
     "@graphql-codegen/typescript-operations": "^2.5.5",
     "@hookform/devtools": "4.0.1",

@@ -1,7 +1,10 @@
 import { testMode } from '../../../helpers/common';
 
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
+import { readMetadata } from './utils/services/readMetadata';
 import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
+import { Metadata } from '../../../../src/features/hasura-metadata-types';
+import { checkMetadataPayload } from '../../utils/checkMetadataPayload';
 
 if (testMode !== 'cli') {
   describe('Actions with Transform', () => {
@@ -199,7 +202,7 @@ if (testMode !== 'cli') {
 
       // --------------------
       cy.log('**--- Click the Add Response Transform button**');
-      cy.contains('Add Response Transform').click();
+      cy.contains('Add Response Transform').click({ force: true });
 
       // --------------------
       cy.get('[data-cy="Change Response"]').within(() => {
@@ -231,8 +234,27 @@ if (testMode !== 'cli') {
       // --------------------
       cy.log('**--- Click the Create button**');
       // cy.wait(1000) because of debounce
+
+      cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+        if (JSON.stringify(req.body).includes('create_action')) {
+          req.alias = 'createAction';
+        }
+        req.continue();
+      });
+
+      cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+        if (JSON.stringify(req.body).includes('create_action')) {
+          req.alias = 'createAction';
+        }
+      });
+
       cy.wait(1000);
+
       cy.getBySel('create-action-btn').click();
+
+      cy.wait('@createAction').then(interception => {
+        checkMetadataPayload(interception, { name: 'Action payload' });
+      });
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -251,6 +273,14 @@ if (testMode !== 'cli') {
       // cy.log('**------------------------------**');
       // cy.log('**------------------------------**');
       // cy.log('**------------------------------**');
+
+      readMetadata().then((md: { body: Metadata['metadata'] }) => {
+        cy.wrap(
+          (md.body.actions || []).find(action => action.name === 'login')
+        ).snapshot({
+          name: 'Action metadata',
+        });
+      });
 
       // // --------------------
       cy.log('**--- Wait all the requests to be settled**');
