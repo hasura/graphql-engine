@@ -105,9 +105,9 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       if (Reals.indexOf(colType) > 0) {
         insertObject[colName] = parseFloat(colValue, 10) || colValue;
       } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
-        if (colValue === 'true') {
+        if (colValue === 'true' || colValue === true) {
           insertObject[colName] = true;
-        } else if (colValue === 'false') {
+        } else if (colValue === 'false' || colValue === false) {
           insertObject[colName] = false;
         } else {
           insertObject[colName] = null;

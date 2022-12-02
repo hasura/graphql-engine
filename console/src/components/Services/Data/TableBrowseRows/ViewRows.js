@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import globals from '@/Globals';
 import 'react-table/react-table.css';
 import {
   FaCaretDown,
@@ -12,6 +13,7 @@ import {
   FaTrash,
 } from 'react-icons/fa';
 import clsx from 'clsx';
+import { push } from 'react-router-redux';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
@@ -72,8 +74,6 @@ import {
   setPersistedPageSize,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
-import { push } from 'react-router-redux';
-import globals from '@/Globals';
 
 const ViewRows = props => {
   const {
