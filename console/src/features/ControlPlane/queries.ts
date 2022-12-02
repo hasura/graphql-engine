@@ -107,3 +107,52 @@ export const NEON_TOKEN_EXCHANGE_QUERY = gql(`
     }
   }
 `);
+
+export const fetchDatabaseLatencyJobId = gql(`
+  mutation CheckDBLatency (
+    $project_id: uuid!
+  ) {
+    checkDBLatency (
+      project_id: $project_id
+    ) {
+      db_latency_job_id
+    }
+  }
+`);
+
+export const fetchInfoFromJobId = gql(`
+query ($id: uuid!) {
+  jobs_by_pk(id: $id) {
+    id
+    status
+    tasks {
+      id
+      name
+      task_events {
+        id
+        event_type
+        public_event_data
+        error
+      }
+    }
+  }
+}
+`);
+
+export const insertInfoIntoDBLatencyQuery = gql(`
+mutation (
+  $jobId: uuid!,
+  $projectId: uuid!,
+  $isLatencyDisplayed: Boolean!,
+  $datasDifferenceInMilliseconds: Int!
+) {
+  insert_db_latency_one(object: {
+    job_id: $jobId,
+    is_latency_displayed: $isLatencyDisplayed,
+    project_id: $projectId,
+    console_check_duration: $datasDifferenceInMilliseconds
+  }) {
+    id
+  }
+}
+`);

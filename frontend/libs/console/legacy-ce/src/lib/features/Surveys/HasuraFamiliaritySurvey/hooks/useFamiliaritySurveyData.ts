@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { APIError } from '@/hooks/error';
-import { IconCardGroupItem } from '@/new-components/IconCardGroup';
+import { IconCardGroupItem } from '../components/IconCardGroup';
 import { SurveysResponseData } from '../../types';
 import { mapOptionLabelToDetails } from './utils';
 import { surveyName, surveysQueryKey } from '../../constants';
@@ -41,7 +41,7 @@ export function useFamiliaritySurveyData(): {
   });
 
   const surveyQuestionData = data?.data?.survey?.find(
-    (surveyInfo) => surveyInfo.survey_name === surveyName
+    surveyInfo => surveyInfo.survey_name === surveyName
   )?.survey_questions?.[0];
 
   const surveyOptions = useMemo(
@@ -59,7 +59,7 @@ export function useFamiliaritySurveyData(): {
   }
 
   const isSurveyAnswered = data?.data?.survey_question_answers?.some(
-    (answer) => answer.survey_question_id === surveyQuestionData.id
+    answer => answer.survey_question_id === surveyQuestionData.id
   );
 
   // skip showing the survey form if survey is already answered

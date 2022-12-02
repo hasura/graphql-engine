@@ -44,7 +44,7 @@ export function useEmitOnboardingEvents(
       default:
         break;
     }
-  }, [neonIntegrationStatus]);
+  }, [neonIntegrationStatus.status]);
 
   useEffect(() => {
     if (installingTemplate) {

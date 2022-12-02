@@ -86,7 +86,7 @@ Object.defineProperty(window, 'open', { value: mockPopupImpl.openPopup });
 // --------------------------------------------------
 const mockHTTPResponse = (status = 200, returnBody: any) => {
   global.fetch = jest.fn().mockImplementationOnce(() => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         resolve({
           ok: true,

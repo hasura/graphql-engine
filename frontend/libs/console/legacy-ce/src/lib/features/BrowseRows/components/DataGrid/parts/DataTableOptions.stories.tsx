@@ -36,13 +36,13 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
       <DataTableOptions
         pagination={{
           goToNextPage: () => {
-            setPageIndex((currentPage) => {
+            setPageIndex(currentPage => {
               updateStatus(`pageIndex is : ${currentPage + 1}`);
               return currentPage + 1;
             });
           },
           goToPreviousPage: () => {
-            setPageIndex((currentPage) => {
+            setPageIndex(currentPage => {
               updateStatus(`pageIndex is : ${currentPage - 1}`);
               return currentPage - 1;
             });
@@ -50,7 +50,7 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
           isNextPageDisabled: false,
           isPreviousPageDisabled: pageIndex <= 0,
           pageSize,
-          setPageSize: (newPageSize) => {
+          setPageSize: newPageSize => {
             updateStatus(`pageSize is : ${newPageSize}`);
             setPageSize(newPageSize);
           },
@@ -68,10 +68,10 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
             { name: '>=', value: '_gte' },
             { name: '<=', value: '_lte' },
           ],
-          removeWhereClause: (id) => {
+          removeWhereClause: id => {
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
           },
-          removeOrderByClause: (id) => {
+          removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
         }}

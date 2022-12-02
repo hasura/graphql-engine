@@ -14,7 +14,7 @@ import { heading, inputStyles } from '../../constants';
 
 type Props = ReturnType<typeof useScheduledTrigger>;
 
-const Form: React.FC<Props> = (props) => {
+const Form: React.FC<Props> = props => {
   const { state, setState } = props;
 
   const {
@@ -98,6 +98,7 @@ const Form: React.FC<Props> = (props) => {
           value={payload}
           onChange={setState.payload}
           height="200px"
+          setOptions={{ useWorker: false }}
         />
       </FormSection>
       <CollapsibleToggle

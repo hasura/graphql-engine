@@ -8,6 +8,7 @@ where
 
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -59,7 +60,7 @@ resolveInheritedRole ::
   MonadError QErr m =>
   HashSet RoleName ->
   InheritedRole ->
-  m (Role, [SchemaDependency])
+  m (Role, Seq SchemaDependency)
 resolveInheritedRole allRoles (Role roleName (ParentRoles parentRoles)) = do
   let missingParentRoles = Set.filter (`notElem` allRoles) parentRoles
   unless (Set.null missingParentRoles) $
@@ -69,5 +70,5 @@ resolveInheritedRole allRoles (Role roleName (ParentRoles parentRoles)) = do
             <> " which are required to construct the inherited role: " <>> roleName
      in throw400 NotExists $ errMessage $ commaSeparated $ Set.map roleNameToTxt missingParentRoles
   let schemaDependencies =
-        map (\parentRole -> SchemaDependency (SORole parentRole) DRParentRole) $ toList parentRoles
+        fmap (\parentRole -> SchemaDependency (SORole parentRole) DRParentRole) (Seq.fromList (toList parentRoles))
   pure $ (Role roleName $ ParentRoles parentRoles, schemaDependencies)

@@ -58,7 +58,7 @@ export const Primary: ComponentStory<typeof SortRows> = () => {
           sorts: [{ column: 'FirstName', type: 'asc' }],
         },
       }}
-      onSubmit={(data) => {
+      onSubmit={data => {
         console.log(data);
       }}
     >

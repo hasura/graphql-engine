@@ -9,33 +9,33 @@ import {
   TIME_RANGE_BY_DAY,
 } from '../constants';
 
-export const getIfAliased = (c) => {
+export const getIfAliased = c => {
   if (c in aliasedNames) {
     return aliasedNames[c];
   }
   return c;
 };
 
-export const getActualIfAliased = (c) => {
+export const getActualIfAliased = c => {
   if (c in actualTypeToAlias) {
     return actualTypeToAlias[c];
   }
   return c;
 };
 
-const transformTimeType = (d) => {
+const transformTimeType = d => {
   return moment(d).fromNow();
 };
 
-const transformExecutionTime = (d) => {
+const transformExecutionTime = d => {
   return Math.round(d * 1000 * 100) / 100;
 };
 
-const transformResponseTime = (d) => {
+const transformResponseTime = d => {
   return Math.round((d / 1000) * 100) / 100;
 };
 
-const transformToTwoPlaces = (d) => {
+const transformToTwoPlaces = d => {
   return Math.round(d * 100) / 100;
 };
 
@@ -45,10 +45,10 @@ const transformedVals = {
   average_response_size: transformResponseTime,
 };
 
-const transformExecutionTimeHeader = (val) => {
+const transformExecutionTimeHeader = val => {
   return `${val} ms`;
 };
-const transformResponseSizeHeader = (val) => {
+const transformResponseSizeHeader = val => {
   return `${val} kB`;
 };
 
@@ -57,7 +57,7 @@ const transformedHeaderVal = {
   average_response_size: transformResponseSizeHeader,
 };
 
-const filterByType = (filters, type) => filters.filter((f) => f.type === type);
+const filterByType = (filters, type) => filters.filter(f => f.type === type);
 const indexOf = (list, predicateFn) => {
   let elementIndex = -1;
   list.forEach((l, index) => {
@@ -70,23 +70,23 @@ const indexOf = (list, predicateFn) => {
 
 const getJson = (list, key) => {
   const r = {};
-  list.forEach((l) => (r[l[key]] = true));
+  list.forEach(l => (r[l[key]] = true));
   return r;
 };
 
-const stripUnderScore = (val) => {
+const stripUnderScore = val => {
   return val.split('_').join(' ');
 };
 
-const capitalize = (val) => {
+const capitalize = val => {
   return `${val.charAt(0).toUpperCase()}${val.slice(1)}`;
 };
 
-const curried = (sourceFn) => (type) => (value) => {
+const curried = sourceFn => type => value => {
   sourceFn(type, value);
 };
 
-const curriedInputElement = (sourceFn) => (type) => (e) => {
+const curriedInputElement = sourceFn => type => e => {
   if (e.keyCode === 13) {
     if (e.target.value.length > 0) {
       sourceFn(type, e.target.value);
@@ -94,18 +94,18 @@ const curriedInputElement = (sourceFn) => (type) => (e) => {
   }
 };
 
-const curriedCheckboxElement = (sourceFn) => (type) => (e) => {
+const curriedCheckboxElement = sourceFn => type => e => {
   const getId = e.target.getAttribute('data-field-id');
   sourceFn(type, getId);
 };
 
 /* Doing this to fix refreshing state on every miliseconds change */
-const removeSecondsMiliseconds = (d) => {
+const removeSecondsMiliseconds = d => {
   d.setSeconds(0, 0);
   return d;
 };
 
-const getTimeRangeValue = (symbol) => {
+const getTimeRangeValue = symbol => {
   const now = new Date();
   switch (symbol) {
     case TIME_RANGE_BY_HOUR:
@@ -129,7 +129,7 @@ const getTimeRangeValue = (symbol) => {
   }
 };
 
-const getTimeInterval = (symbol) => {
+const getTimeInterval = symbol => {
   switch (symbol) {
     case TIME_RANGE_BY_HOUR:
       return '5 minutes';

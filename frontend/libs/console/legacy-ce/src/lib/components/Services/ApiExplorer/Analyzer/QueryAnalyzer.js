@@ -44,7 +44,7 @@ export default class QueryAnalyser extends React.Component {
     const { dispatch, analyseQuery } = this.props;
     this.props
       .analyzeFetcher(analyseQuery.query, dispatch)
-      .then((data) => {
+      .then(data => {
         // todo: unsure if this guard is necessary. Replaces previous guard that would silently return
         // this was previously necessary as the analyze fetcher would handle errors without throwing
         if (!data) {
@@ -58,7 +58,7 @@ export default class QueryAnalyser extends React.Component {
           activeNode: 0,
         });
       })
-      .catch((e) => {
+      .catch(e => {
         alert(`Unable to fetch: ${e?.message ?? ''}`);
         this.props.clearAnalyse();
       });
@@ -172,7 +172,7 @@ export default class QueryAnalyser extends React.Component {
       </Modal>
     );
   }
-  handleAnalyseNodeChange = (e) => {
+  handleAnalyseNodeChange = e => {
     const nodeKey = e.target.getAttribute('data-key');
     if (nodeKey) {
       this.setState({ activeNode: parseInt(nodeKey, 10) });

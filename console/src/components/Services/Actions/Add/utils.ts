@@ -23,7 +23,8 @@ const getArgObjFromDefinition = (
   type = getTrimmedType(type);
   const name = arg?.name;
   if (type === 'String' || type === 'ID') return { [name]: `${name}` };
-  if (type === 'Int' || type === 'Float') return { [name]: 10 };
+  if (type === 'Int' || type === 'Float' || type === 'BigInt')
+    return { [name]: 10 };
   if (type === 'Boolean') return { [name]: false };
 
   const userDefType = typesdef?.types.find(
@@ -38,6 +39,13 @@ const getArgObjFromDefinition = (
       [name]: obj,
     };
   }
+
+  if (userDefType?.kind === 'enum') {
+    return {
+      [name]: userDefType.values?.[0]?.value ?? '',
+    };
+  }
+
   return {};
 };
 

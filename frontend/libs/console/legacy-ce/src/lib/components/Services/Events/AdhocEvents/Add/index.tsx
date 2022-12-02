@@ -22,7 +22,7 @@ const AddContainer: React.FC<Props> = ({ dispatch, readOnlyMode }) => {
 type PropsFromState = {
   readOnlyMode: boolean;
 };
-const mapStateToProps: MapStateToProps<PropsFromState> = (state) => ({
+const mapStateToProps: MapStateToProps<PropsFromState> = state => ({
   readOnlyMode: state.main.readOnlyMode,
 });
 

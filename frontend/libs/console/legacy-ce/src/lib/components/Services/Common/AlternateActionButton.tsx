@@ -1,3 +1,4 @@
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import React, { ReactText } from 'react';
 
 type Props = {
@@ -13,13 +14,16 @@ type Props = {
  */
 export const AlternateActionButton = (props: Props) => {
   const { label, onClick, trackId } = props;
+
+  const analyticsAttributes = useGetAnalyticsAttributes(trackId);
+
   return (
     <div
       style={{
         margin: '0px',
         padding: '0px',
       }}
-      data-trackid={trackId}
+      {...analyticsAttributes}
     >
       {/* using the native button with copied styles from `react-notifications-system-redux` action button
       to keep it consistent with rest of the notifications system. */}

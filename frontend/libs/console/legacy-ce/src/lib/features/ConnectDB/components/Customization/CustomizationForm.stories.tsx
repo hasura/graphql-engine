@@ -27,11 +27,11 @@ export default {
   title: 'Data/Connect/GraphQL Field Customization',
   component: CustomizationForm,
   decorators: [
-    (s) => {
+    s => {
       return (
         <Forms.New
           schema={schema}
-          onSubmit={(d) => {
+          onSubmit={d => {
             console.log(d);
           }}
         >
@@ -42,7 +42,7 @@ export default {
   ],
 } as Meta;
 
-export const Primary: ComponentStory<typeof CustomizationForm> = (args) => (
+export const Primary: ComponentStory<typeof CustomizationForm> = args => (
   <CustomizationForm {...args} />
 );
 
@@ -63,7 +63,7 @@ const inputIds = [
 Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  inputIds.forEach(async (id) => {
+  inputIds.forEach(async id => {
     const parts = id.split('.');
     const subHeading = parts[1];
     const fieldName = parts[2];

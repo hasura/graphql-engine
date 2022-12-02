@@ -9,7 +9,7 @@ import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
 interface Props extends InjectedProps {}
 
-const ProcessedEventsContainer: React.FC<Props> = (props) => {
+const ProcessedEventsContainer: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
   if (isLoading) {
     return <span>Loading...</span>;

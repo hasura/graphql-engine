@@ -2,7 +2,7 @@ import React from 'react';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { useFormContext } from 'react-hook-form';
-import { SupportedDrivers } from '@/features/MetadataAPI';
+import { SupportedDrivers } from '@/features/hasura-metadata-types';
 import { DataSource, Feature } from '@/features/DataSource';
 import { OpenApi3Form } from '@/features/OpenApi3Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';

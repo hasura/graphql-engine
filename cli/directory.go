@@ -1,7 +1,9 @@
 package cli
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -36,7 +38,7 @@ func (ec *ExecutionContext) validateDirectory() error {
 
 	ed, err := os.Stat(ec.ExecutionDirectory)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if stderrors.Is(err, fs.ErrNotExist) {
 			return errors.E(op, fmt.Errorf("did not find required directory. use 'init'?: %w", err))
 		}
 		return errors.E(op, fmt.Errorf("error getting directory details: %w", err))
@@ -89,7 +91,7 @@ func ValidateDirectory(dir string) error {
 	var op errors.Op = "cli.ValidateDirectory"
 	notFound := []string{}
 	for _, f := range filesRequired {
-		if _, err := os.Stat(filepath.Join(dir, f)); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(dir, f)); stderrors.Is(err, fs.ErrNotExist) {
 			relpath, e := filepath.Rel(dir, f)
 			if e == nil {
 				f = relpath

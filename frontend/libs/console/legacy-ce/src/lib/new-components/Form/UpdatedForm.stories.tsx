@@ -111,42 +111,41 @@ FormInputDefaultValue.parameters = {
   },
 };
 
-export const ManuallyTriggerFormValidation: ComponentStory<
-  typeof Form
-> = () => {
-  const validationSchema = z.object({
-    inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
-  });
+export const ManuallyTriggerFormValidation: ComponentStory<typeof Form> =
+  () => {
+    const validationSchema = z.object({
+      inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
+    });
 
-  return (
-    <Form
-      id="formId"
-      schema={validationSchema}
-      trigger
-      onSubmit={action('onSubmit')}
-    >
-      {(options) => {
-        return (
-          <div className="space-y-2">
-            <h1 className="text-xl font-semibold mb-xs">
-              Manually trigger form validation
-            </h1>
-            <InputField
-              name="inputFieldName"
-              label="The input field label"
-              placeholder="Input field placeholder"
-            />
-            <Button type="submit" mode="primary">
-              Submit
-            </Button>
-            {/* Debug form state */}
-            <DevTool control={options.control} />
-          </div>
-        );
-      }}
-    </Form>
-  );
-};
+    return (
+      <Form
+        id="formId"
+        schema={validationSchema}
+        trigger
+        onSubmit={action('onSubmit')}
+      >
+        {options => {
+          return (
+            <div className="space-y-2">
+              <h1 className="text-xl font-semibold mb-xs">
+                Manually trigger form validation
+              </h1>
+              <InputField
+                name="inputFieldName"
+                label="The input field label"
+                placeholder="Input field placeholder"
+              />
+              <Button type="submit" mode="primary">
+                Submit
+              </Button>
+              {/* Debug form state */}
+              <DevTool control={options.control} />
+            </div>
+          );
+        }}
+      </Form>
+    );
+  };
 ManuallyTriggerFormValidation.storyName = '💠 Manually trigger form validation';
 ManuallyTriggerFormValidation.parameters = {
   docs: {
@@ -203,14 +202,14 @@ export const AllInputs: ComponentStory<typeof Form> = () => {
       // When nothing is selected, the value is a false boolean
       .union([z.string().array(), z.boolean()])
       .refine(
-        (value) => Array.isArray(value) && value.length > 0,
+        value => Array.isArray(value) && value.length > 0,
         'Choose at least one option'
       ),
     radioName: z
       // When nothing is selected, the value is null
       .union([z.string(), z.null()])
       .refine(
-        (value) => typeof value === 'string' && value.length > 0,
+        value => typeof value === 'string' && value.length > 0,
         'Choose one option'
       ),
     codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),
@@ -329,14 +328,14 @@ export const AllInputsHorizontal: ComponentStory<typeof Form> = () => {
       // When nothing is selected, the value is a false boolean
       .union([z.string().array(), z.boolean()])
       .refine(
-        (value) => Array.isArray(value) && value.length > 0,
+        value => Array.isArray(value) && value.length > 0,
         'Choose at least one option'
       ),
     radioName: z
       // When nothing is selected, the value is null
       .union([z.string(), z.null()])
       .refine(
-        (value) => typeof value === 'string' && value.length > 0,
+        value => typeof value === 'string' && value.length > 0,
         'Choose one option'
       ),
     codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),

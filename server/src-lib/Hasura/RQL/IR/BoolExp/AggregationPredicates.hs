@@ -12,7 +12,6 @@ where
 import Data.Aeson
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, OpExpG)
 import Hasura.RQL.Types.Backend (Backend (Column))
@@ -61,13 +60,6 @@ deriving instance
     Show (AnnBoolExp b field)
   ) =>
   Show (AggregationPredicatesImplementation b field)
-
-instance
-  ( B.Backend b,
-    Cacheable (AggregationPredicate b field),
-    Cacheable (AnnBoolExp b field)
-  ) =>
-  Cacheable (AggregationPredicatesImplementation b field)
 
 instance
   ( B.Backend b,
@@ -140,14 +132,6 @@ instance
 
 instance
   ( B.Backend b,
-    Cacheable (AggregationPredicateArguments b),
-    Cacheable (AnnBoolExp b field),
-    Cacheable (OpExpG b field)
-  ) =>
-  Cacheable (AggregationPredicate b field)
-
-instance
-  ( B.Backend b,
     NFData (AggregationPredicateArguments b),
     NFData (AnnBoolExp b field),
     NFData (OpExpG b field)
@@ -181,8 +165,6 @@ deriving instance B.Backend b => Eq (AggregationPredicateArguments b)
 deriving instance B.Backend b => Show (AggregationPredicateArguments b)
 
 instance Backend b => Hashable (AggregationPredicateArguments b)
-
-instance Backend b => Cacheable (AggregationPredicateArguments b)
 
 instance Backend b => NFData (AggregationPredicateArguments b)
 

@@ -24,12 +24,16 @@ const convertValue = (
   if (Array.isArray(value)) {
     return value;
   }
-
   if (tableColumnType === 'integer') {
-    return parseInt(value, 10);
+    const parsed = parseInt(value, 10);
+    if (!isNaN(parsed)) return parsed;
+    return value;
   }
-
   if (tableColumnType === 'boolean') {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+
     return Boolean(value);
   }
 
@@ -41,7 +45,7 @@ export const adaptFormValuesToQuery = (
   columnDataTypes: TableColumn[]
 ): UserQuery => {
   const where =
-    formValues?.filter?.map(filter => {
+    formValues?.filters?.map(filter => {
       const columnDataType = columnDataTypes.find(
         col => col.name === filter.column
       );
@@ -50,7 +54,6 @@ export const adaptFormValuesToQuery = (
       if (filter.operator === '$in' || filter.operator === '$nin') {
         partialValue = convertArray(filter.value);
       }
-
       const value = !columnDataType
         ? filter.value
         : convertValue(partialValue, columnDataType.dataType);
@@ -63,7 +66,7 @@ export const adaptFormValuesToQuery = (
     }) ?? [];
 
   const orderBy =
-    formValues?.sort?.map(order => {
+    formValues?.sorts?.map(order => {
       const orderCondition: OrderCondition = {
         column: order.column,
         type: order.type,
@@ -118,7 +121,9 @@ export const setUrlParams = (
   });
 };
 
-const parseArray = (val: string | number | boolean | string[] | number[]) => {
+const parseArray = (
+  val: string | number | boolean | string[] | number[] | null
+) => {
   if (Array.isArray(val)) return val;
   if (typeof val === 'string') {
     try {
@@ -233,3 +238,32 @@ export const runFilterQuery =
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeTableRequests());
   };
+
+export const convertUserQueryToFiltersAndSortFormValues = (
+  userQuery: UserQuery
+): FiltersAndSortFormValues => {
+  const filters: FiltersAndSortFormValues['filters'] = userQuery.where.$and.map(
+    and => {
+      const columnName = Object.keys(and)[0];
+      const operator = Object.keys(and[columnName])[0];
+      const value = and[columnName][operator];
+      return {
+        column: columnName,
+        operator,
+        value: String(value),
+      };
+    }
+  );
+
+  const sorts: FiltersAndSortFormValues['sorts'] = userQuery.order_by.map(
+    order => ({
+      column: order.column,
+      type: order.type,
+    })
+  );
+
+  return {
+    filters,
+    sorts,
+  };
+};

@@ -16,7 +16,7 @@ function FetchTables({ database }: { database: string }) {
   );
 }
 
-export const FetchTableColumns: ComponentStory<typeof FetchTables> = (args) => {
+export const FetchTableColumns: ComponentStory<typeof FetchTables> = args => {
   return <FetchTables {...args} />;
 };
 

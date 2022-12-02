@@ -47,7 +47,6 @@ import Data.Time
 import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
 import Hasura.SQL.Types (ExtensionsSchema (..))
@@ -64,8 +63,6 @@ data PostgresPoolSettings = PostgresPoolSettings
     _ppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable PostgresPoolSettings
 
 instance Hashable PostgresPoolSettings
 
@@ -161,8 +158,6 @@ data SSLMode
   | VerifyFull
   deriving (Eq, Ord, Generic, Enum, Bounded)
 
-instance Cacheable SSLMode
-
 instance Hashable SSLMode
 
 instance NFData SSLMode
@@ -198,8 +193,6 @@ instance FromJSON SSLMode where
 newtype CertVar
   = CertVar String
   deriving (Show, Eq, Generic)
-
-instance Cacheable CertVar
 
 instance Hashable CertVar
 
@@ -279,8 +272,6 @@ instance Bitraversable PGClientCerts where
       <*> pure pgcSslMode
       <*> traverse f pgcSslPassword
 
-instance (Cacheable p, Cacheable a) => Cacheable (PGClientCerts p a)
-
 instance (Hashable p, Hashable a) => Hashable (PGClientCerts p a)
 
 instance (NFData p, NFData a) => NFData (PGClientCerts p a)
@@ -289,8 +280,6 @@ instance ToJSON SSLMode where
   toJSON = String . tshow
 
 deriving instance Generic PG.TxIsolation
-
-instance Cacheable PG.TxIsolation
 
 instance NFData PG.TxIsolation
 
@@ -323,8 +312,6 @@ data PostgresSourceConnInfo = PostgresSourceConnInfo
     _psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable PostgresSourceConnInfo
 
 instance Hashable PostgresSourceConnInfo
 
@@ -379,8 +366,6 @@ data PostgresConnConfiguration = PostgresConnConfiguration
     _pccExtensionsSchema :: ExtensionsSchema
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable PostgresConnConfiguration
 
 instance Hashable PostgresConnConfiguration
 

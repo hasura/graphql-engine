@@ -15,7 +15,7 @@ const ForeignKeyWrapper = ({
 }) => {
   // columns in the right order with their indices
   const orderedColumns = columns
-    .filter((c) => Boolean(c.name))
+    .filter(c => Boolean(c.name))
     .map((c, i) => ({
       name: c.name,
       type: c.type,
@@ -35,10 +35,10 @@ const ForeignKeyWrapper = ({
 
     // Generate a list of reference tables and their columns
     const refTables = {};
-    allSchemas.forEach((tableSchema) => {
+    allSchemas.forEach(tableSchema => {
       if (fk.refSchemaName === tableSchema.table_schema) {
         refTables[tableSchema.table_name] = tableSchema.columns.map(
-          (c) => c.column_name
+          c => c.column_name
         );
       }
     });

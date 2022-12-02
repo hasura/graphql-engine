@@ -52,7 +52,7 @@ describe("useCheckConstraints hooks' postgres test", () => {
 
     expect(result.current.data!.length).toBeGreaterThan(0);
 
-    result.current.data!.forEach((table) => {
+    result.current.data!.forEach(table => {
       expect(schemas).toContain(table.table_schema);
     });
 
@@ -103,7 +103,7 @@ describe("useCheckConstraints hooks' mssql test", () => {
 
     expect(result.current.data!.length).toBeGreaterThan(0);
 
-    result.current.data!.forEach((table) => {
+    result.current.data!.forEach(table => {
       expect(schemas).toContain(table.table_schema);
     });
 

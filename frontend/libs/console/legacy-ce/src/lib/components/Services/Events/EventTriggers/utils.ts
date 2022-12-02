@@ -146,7 +146,7 @@ const getColumnDataFromOpCols = (
   isAllColumnsChecked?: boolean
 ): Record<string, ColVals> => {
   const colData: Record<string, ColVals> = {};
-  operationColumns.forEach((op) => {
+  operationColumns.forEach(op => {
     if (
       opValue === 'INSERT' ||
       opValue === 'MANUAL' ||

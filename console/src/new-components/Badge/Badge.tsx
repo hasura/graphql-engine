@@ -1,7 +1,14 @@
 import React from 'react';
 import clsx from 'clsx';
 
-type BadgeColor = 'green' | 'red' | 'yellow' | 'indigo' | 'gray';
+export type BadgeColor =
+  | 'green'
+  | 'red'
+  | 'yellow'
+  | 'indigo'
+  | 'gray'
+  | 'blue'
+  | 'purple';
 interface BadgeProps extends React.ComponentProps<'span'> {
   /**
    * The color of the basge
@@ -15,6 +22,8 @@ const badgeClassnames: Record<BadgeColor, string> = {
   yellow: 'bg-yellow-100 text-yellow-800',
   gray: 'bg-gray-300 text-gray-800',
   indigo: 'bg-indigo-100 text-indigo-800',
+  blue: 'bg-blue-100 text-blue-800',
+  purple: 'bg-purple-100 text-purple-800',
 };
 
 export const Badge: React.FC<React.PropsWithChildren<BadgeProps>> = ({

@@ -1,41 +1,47 @@
-import { AxiosInstance } from 'axios';
-import { z } from 'zod';
+import {
+  Source,
+  SupportedDrivers,
+  Table,
+} from '@/features/hasura-metadata-types';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
-import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
-import { postgres, PostgresTable } from './postgres';
+import { AxiosInstance } from 'axios';
+import { z } from 'zod';
+import pickBy from 'lodash.pickby';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
-import { mssql } from './mssql';
-import { gdc } from './gdc';
 import { cockroach } from './cockroach';
-import * as utils from './common/utils';
+import { gdc } from './gdc';
+import { mssql } from './mssql';
+import { postgres, PostgresTable } from './postgres';
 import type {
+  DriverInfoResponse,
+  GetFKRelationshipProps,
+  GetSupportedOperatorsProps,
+  GetTableColumnsProps,
+  GetTableRowsProps,
+  GetTablesListAsTreeProps,
+  GetTrackableTablesProps,
   // Property,
   IntrospectedTable,
-  TableColumn,
-  GetTrackableTablesProps,
-  GetTableColumnsProps,
-  TableFkRelationships,
-  GetFKRelationshipProps,
-  DriverInfoResponse,
-  GetTablesListAsTreeProps,
-  TableRow,
-  GetTableRowsProps,
-  WhereClause,
-  OrderBy,
   Operator,
-  GetSupportedOperatorsProps,
+  OrderBy,
+  TableColumn,
+  TableFkRelationships,
+  TableRow,
+  WhereClause,
 } from './types';
 
+import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
 import {
   exportMetadata,
-  NetworkArgs,
-  RunSQLResponse,
   getDriverPrefix,
+  NetworkArgs,
+  runIntrospectionQuery,
+  RunSQLResponse,
 } from './api';
-import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
+import { getTableName } from './common/getTableName';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -113,7 +119,7 @@ const getDatabaseMethods = async ({
   const { metadata } = await exportMetadata({ httpClient });
 
   const dataSource = metadata.sources.find(
-    (source) => source.name === dataSourceName
+    source => source.name === dataSourceName
   );
 
   if (!dataSource) {
@@ -139,11 +145,10 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
     getAllSourceKinds: async () => {
       const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
-      const allDrivers = serverSupportedDrivers.map(async (driver) => {
+      const allDrivers = serverSupportedDrivers.map(async driver => {
         const driverInfo = await getDriverMethods(
           driver.kind
         ).introspection?.getDriverInfo();
-        console.log(driver, driverInfo);
 
         if (driverInfo && driverInfo !== Feature.NotImplemented)
           return {
@@ -190,7 +195,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       return z.object({
         driver: z.literal(driver),
         name: z.string().min(1, 'Name is a required field!'),
-        replace_configuration: z.preprocess((x) => {
+        replace_configuration: z.preprocess(x => {
           if (!x) return false;
           return true;
         }, z.boolean()),
@@ -206,12 +211,14 @@ export const DataSource = (httpClient: AxiosInstance) => ({
                 prefix: z.string().optional(),
                 suffix: z.string().optional(),
               })
+              .transform(value => pickBy(value, d => d !== ''))
               .optional(),
             type_names: z
               .object({
                 prefix: z.string().optional(),
                 suffix: z.string().optional(),
               })
+              .transform(value => pickBy(value, d => d !== ''))
               .optional(),
           })
           .deepPartial()
@@ -223,7 +230,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const { metadata } = await exportMetadata({ httpClient });
 
     const dataSource = metadata.sources.find(
-      (source) => source.name === dataSourceName
+      source => source.name === dataSourceName
     );
 
     if (!dataSource) {
@@ -258,7 +265,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const { metadata } = await exportMetadata({ httpClient });
 
     const dataSource = metadata.sources.find(
-      (source) => source.name === dataSourceName
+      source => source.name === dataSourceName
     );
 
     if (!dataSource) {
@@ -400,13 +407,14 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
 });
 
+export { GDCTable } from './gdc';
+export * from './guards';
+export * from './types';
 export {
+  PostgresTable,
   exportMetadata,
-  utils,
+  getTableName,
   RunSQLResponse,
   getDriverPrefix,
-  PostgresTable,
+  runIntrospectionQuery,
 };
-
-export * from './types';
-export * from './guards';

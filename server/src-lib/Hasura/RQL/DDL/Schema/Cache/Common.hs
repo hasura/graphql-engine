@@ -23,16 +23,15 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     addTableContext,
     bindErrorA,
     boActions,
-    boCronTriggers,
     boCustomTypes,
     boBackendCache,
-    boEndpoints,
-    boOpenTelemetryInfo,
     boRemoteSchemas,
     boRoles,
     boSources,
     buildInfoMap,
+    buildInfoMapM,
     buildInfoMapPreservingMetadata,
+    buildInfoMapPreservingMetadataM,
     initialInvalidationKeys,
     invalidateKeys,
     mkTableInputs,
@@ -57,15 +56,11 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
-import Hasura.RQL.Types.Endpoint
-import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles
@@ -89,8 +84,6 @@ deriving newtype instance Eq (BackendInvalidationKeys b) => Eq (BackendInvalidat
 
 deriving newtype instance Ord (BackendInvalidationKeys b) => Ord (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Inc.Cacheable (BackendInvalidationKeys b) => Inc.Cacheable (BackendInvalidationKeysWrapper b)
-
 deriving newtype instance Show (BackendInvalidationKeys b) => Show (BackendInvalidationKeysWrapper b)
 
 deriving newtype instance Semigroup (BackendInvalidationKeys b) => Semigroup (BackendInvalidationKeysWrapper b)
@@ -107,8 +100,6 @@ data InvalidationKeys = InvalidationKeys
     _ikBackends :: BackendMap BackendInvalidationKeysWrapper
   }
   deriving (Show, Eq, Generic)
-
-instance Inc.Cacheable InvalidationKeys
 
 instance Inc.Select InvalidationKeys
 
@@ -147,8 +138,6 @@ data TableBuildInput b = TableBuildInput
 
 instance (Backend b) => NFData (TableBuildInput b)
 
-instance (Backend b) => Inc.Cacheable (TableBuildInput b)
-
 data NonColumnTableInputs b = NonColumnTableInputs
   { _nctiTable :: TableName b,
     _nctiObjectRelationships :: [ObjRelDef b],
@@ -170,8 +159,6 @@ data TablePermissionInputs b = TablePermissionInputs
 deriving instance (Backend b) => Show (TablePermissionInputs b)
 
 deriving instance (Backend b) => Eq (TablePermissionInputs b)
-
-instance (Backend b) => Inc.Cacheable (TablePermissionInputs b)
 
 mkTableInputs ::
   TableMetadata b -> (TableBuildInput b, NonColumnTableInputs b, TablePermissionInputs b)
@@ -197,6 +184,8 @@ mkTableInputs TableMetadata {..} =
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
+--
+-- See also Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
 data BuildOutputs = BuildOutputs
   { _boSources :: SourceCache,
     _boActions :: ActionCache,
@@ -205,11 +194,8 @@ data BuildOutputs = BuildOutputs
     -- generation (because of field conflicts).
     _boRemoteSchemas :: HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject),
     _boCustomTypes :: AnnotatedCustomTypes,
-    _boCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
-    _boEndpoints :: M.HashMap EndpointName (EndpointMetadata GQLQueryWithText),
     _boRoles :: HashMap RoleName Role,
-    _boBackendCache :: BackendCache,
-    _boOpenTelemetryInfo :: OpenTelemetryInfo
+    _boBackendCache :: BackendCache
   }
 
 $(makeLenses ''BuildOutputs)
@@ -292,7 +278,7 @@ withRecordDependencies ::
   arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
   (result, dependencies) <- runWriterA f -< (e, s)
-  recordDependencies -< (metadataObject, schemaObjectId, toList dependencies)
+  recordDependencies -< (metadataObject, schemaObjectId, dependencies)
   returnA -< result
 {-# INLINEABLE withRecordDependencies #-}
 
@@ -337,13 +323,32 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
   returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 
--- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
+buildInfoMapM ::
+  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (a -> m (Maybe b)) ->
+  [a] ->
+  m (HashMap k b)
+buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
+  let groupedInfos = M.groupOn extractKey infos
+  infoMapMaybes <- for groupedInfos \duplicateInfos -> do
+    infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
+    case infoMaybe of
+      Nothing -> pure Nothing
+      Just info -> do
+        buildInfo info
+  pure $ catMaybes infoMapMaybes
+
+-- | Like 'buildInfoMap', but includes each processed info’s associated 'MetadataObject' in the result.
 -- This is useful if the results will be further processed, and the 'MetadataObject' is still needed
 -- to mark the object inconsistent.
 buildInfoMapPreservingMetadata ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -357,6 +362,22 @@ buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
       result <- buildInfo -< (e, info)
       returnA -< result <&> (,mkMetadataObject info)
 {-# INLINEABLE buildInfoMapPreservingMetadata #-}
+
+buildInfoMapPreservingMetadataM ::
+  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (a -> m (Maybe b)) ->
+  [a] ->
+  m (HashMap k (b, MetadataObject))
+buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
+  buildInfoMapM extractKey mkMetadataObject buildInfoPreserving
+  where
+    buildInfoPreserving info = do
+      result <- buildInfo info
+      pure $ result <&> (,mkMetadataObject info)
 
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e

@@ -52,7 +52,7 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
           number="1"
           url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#method"
         />
-        {requestMethodOptions.map((method) => (
+        {requestMethodOptions.map(method => (
           <div key={method} className="inline-flex items-center mr-md">
             <input
               id={method}

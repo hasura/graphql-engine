@@ -44,3 +44,13 @@ package graphql-engine-pro
   -- For speed; see `cabal.project.dev-sh.local`:
   executable-dynamic: True
   library-vanilla: False
+
+package test-harness-pro
+  ghc-options: -Werror -j
+  executable-dynamic: True
+  library-vanilla: False
+
+package api-tests-pro
+  ghc-options: -Werror -j
+  executable-dynamic: True
+  library-vanilla: False

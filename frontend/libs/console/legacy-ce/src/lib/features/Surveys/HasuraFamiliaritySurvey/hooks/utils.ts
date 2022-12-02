@@ -1,4 +1,4 @@
-import { IconCardGroupItem } from '@/new-components/IconCardGroup';
+import { IconCardGroupItem } from '../components/IconCardGroup';
 import { SurveysResponseData } from '../../types';
 import {
   familiaritySurveyOptionCode,
@@ -20,9 +20,9 @@ type UnroderedOptionArray = {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const manuallyOrderOptions = (unroderedOptionArray: UnroderedOptionArray) => {
   const surveyOptionDetails: IconCardGroupItem<string>[] = [];
-  familiaritySurveyOptionCode.forEach((optionCode) => {
+  familiaritySurveyOptionCode.forEach(optionCode => {
     const optionData = unroderedOptionArray.find(
-      (optionObj) => optionObj.option === optionCode
+      optionObj => optionObj.option === optionCode
     );
     if (optionData) {
       const optionValues = getFamiliaritySurveyOptionDetails(
@@ -41,12 +41,12 @@ const manuallyOrderOptions = (unroderedOptionArray: UnroderedOptionArray) => {
  */
 const randomlyOrderOptions = (unroderedOptionArray: UnroderedOptionArray) => {
   const shuffledOptionArray = unroderedOptionArray
-    .map((value) => ({ value, sort: Math.random() }))
+    .map(value => ({ value, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)
     .map(({ value }) => value);
 
   const surveyOptionDetails: IconCardGroupItem<string>[] =
-    shuffledOptionArray.map((option) =>
+    shuffledOptionArray.map(option =>
       getFamiliaritySurveyOptionDetails(option.id, option.option)
     );
 
@@ -60,7 +60,7 @@ export const mapOptionLabelToDetails = (
 
   // Array containing order of options as it comes from backend
   const unroderedOptionArray: UnroderedOptionArray = [];
-  data?.survey_question_options?.forEach((optionData) => {
+  data?.survey_question_options?.forEach(optionData => {
     const optionLabel = optionData.option.toLowerCase();
 
     if (

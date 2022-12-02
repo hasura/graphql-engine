@@ -29,7 +29,7 @@ export const SingleTable = ({
     }
   }, [currentDatasource, dispatch, driver]);
 
-  const source = useAppSelector((s) => s.tables.currentDataSource);
+  const source = useAppSelector(s => s.tables.currentDataSource);
 
   const {
     data: primaryKey,

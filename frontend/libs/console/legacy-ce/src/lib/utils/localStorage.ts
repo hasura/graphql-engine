@@ -107,7 +107,7 @@ export const LS_KEYS = {
 };
 
 export const clearGraphiqlLS = () => {
-  Object.values(LS_KEYS).forEach((lsKey) => {
+  Object.values(LS_KEYS).forEach(lsKey => {
     if (lsKey.startsWith('graphiql:')) {
       window.localStorage.removeItem(lsKey);
     }

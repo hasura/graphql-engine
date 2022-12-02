@@ -22,14 +22,16 @@ const DeleteOperationsFromAllowList = ({
     executeOnComplete();
   };
 
-  const { loading: deleteMetadataInProgress, refetch: runDelete } =
-    useHasuraQuery({
-      query: deleteOperationQuery,
-      dispatcher: dispatch,
-      onError: (err) => alert(JSON.stringify(err)),
-      onCompleted: onOperationFromMetadataDeleteCompleted,
-      run: false,
-    });
+  const {
+    loading: deleteMetadataInProgress,
+    refetch: runDelete,
+  } = useHasuraQuery({
+    query: deleteOperationQuery,
+    dispatcher: dispatch,
+    onError: err => alert(JSON.stringify(err)),
+    onCompleted: onOperationFromMetadataDeleteCompleted,
+    run: false,
+  });
 
   return (
     <DeleteOperations

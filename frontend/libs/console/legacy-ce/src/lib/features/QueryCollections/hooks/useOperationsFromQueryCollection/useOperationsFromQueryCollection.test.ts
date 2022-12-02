@@ -1,7 +1,6 @@
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
 import { renderHook } from '@testing-library/react-hooks';
-import { metadata, metadata_with_no_query_collections } from './mocks/metadata';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useOperationsFromQueryCollection } from './useOperationsFromQueryCollection';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -12,11 +11,7 @@ afterAll(() => server.close());
 
 describe('useOperationsFromQueryCollection with valid data', () => {
   beforeEach(() => {
-    server.use(
-      rest.post('/v1/metadata', (req, res, ctx) =>
-        res(ctx.status(200), ctx.json(metadata))
-      )
-    );
+    server.use(...handlers({ url: '' }));
   });
   test('When useOperationsFromQueryCollection hook is called with query collection Name, then a valid list of operations are returned', async () => {
     const { result, waitForValueToChange } = renderHook(
@@ -28,21 +23,13 @@ describe('useOperationsFromQueryCollection with valid data', () => {
 
     const operations = result.current.data!;
 
-    expect(operations).toHaveLength(1);
-    expect(operations[0].name).toEqual('MyQuery');
-    expect(operations[0].query).toEqual(
-      'query MyQuery {\n  user {\n    id\n  }\n}\n'
-    );
+    expect(operations).toHaveLength(3);
   });
 });
 
 describe('useOperationsFromQueryCollection with no query collections', () => {
   beforeEach(() => {
-    server.use(
-      rest.post('/v1/metadata', (req, res, ctx) =>
-        res(ctx.status(200), ctx.json(metadata_with_no_query_collections))
-      )
-    );
+    server.use(...handlers({ url: '' }));
   });
   test('When useOperationsFromQueryCollection is called with an invalid query collection, then empty array should be returned', async () => {
     const { result, waitForValueToChange } = renderHook(
@@ -54,6 +41,8 @@ describe('useOperationsFromQueryCollection with no query collections', () => {
 
     const operations = result.current.data!;
 
-    expect(operations).toHaveLength(0);
+    expect(operations[0].query).toEqual('query MyQuery { user { email name}}');
+
+    expect(operations).toHaveLength(3);
   });
 });

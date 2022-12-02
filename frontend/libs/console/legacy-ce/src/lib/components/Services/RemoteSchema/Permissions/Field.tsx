@@ -22,7 +22,7 @@ export interface FieldProps {
 
 export const Field: React.FC<FieldProps> = ({
   i,
-  setItem = (e) => console.log(e),
+  setItem = e => console.log(e),
   onExpand = console.log,
   expanded,
 }) => {
@@ -41,7 +41,7 @@ export const Field: React.FC<FieldProps> = ({
   const [fieldVal, setfieldVal] = useState<Record<string, any>>(initState);
   const setArg = useCallback(
     (vStr: Record<string, unknown>) => {
-      setfieldVal((oldVal) => {
+      setfieldVal(oldVal => {
         const newState = {
           ...oldVal,
           ...vStr,

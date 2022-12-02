@@ -11,8 +11,8 @@ import {
   redirectToMetadataStatus,
   isMetadataStatusPage,
   prefetchSurveysData,
+  prefetchOnboardingData,
   PageNotFound,
-  tracingTools,
 } from '@hasura/console-oss';
 import {
   dataRouterUtils,
@@ -43,6 +43,7 @@ import {
   FeatureFlags,
   isMonitoringTabSupportedEnvironment,
   AllowListDetail,
+  PrometheusSettings,
 } from '@hasura/console-oss';
 import AccessDeniedComponent from './components/AccessDenied/AccessDenied';
 import { restrictedPathsMetadata } from './utils/redirectUtils';
@@ -54,9 +55,8 @@ import { decodeToken, checkAccess } from './utils/computeAccess';
 import preLoginHook from './utils/preLoginHook';
 import metricsRouter from './components/Services/Metrics/MetricsRouter';
 import { notifyRouteChangeToAppcues } from './utils/appCues';
-import { growthExperimentsClient } from './utils/growthExperimentsClient';
 
-const routes = (store) => {
+const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
     if (globals.consoleMode === 'cli') {
@@ -64,7 +64,7 @@ const routes = (store) => {
         () => {
           cb();
         },
-        (r) => {
+        r => {
           if (r.code === 'data_api_error') {
             if (globals.adminSecret) {
               alert('Hasura CLI: ' + r.message);
@@ -207,7 +207,7 @@ const routes = (store) => {
     cb();
   };
 
-  const shouldLoadAsyncGlobals = (storeLocal) => {
+  const shouldLoadAsyncGlobals = storeLocal => {
     let shouldLoadServer = true;
     let shouldLoadOpts = true;
     const mainData = storeLocal.getState().main;
@@ -241,33 +241,10 @@ const routes = (store) => {
     return { shouldLoadOpts, shouldLoadServer };
   };
 
-  const initialiseCloudGrowthExperiments = (nextState, replaceState, cb) => {
-    growthExperimentsClient
-      .setAllExperimentConfig()
-      .then(() => {
-        /**
-         * Add custom user attributes to heap through addUserProperties API
-         * https://developers.heap.io/reference/adduserproperties
-         */
-        const allExperiments = growthExperimentsClient.getAllExperimentConfig();
-        tracingTools.heap.addUserProperties(
-          allExperiments.reduce(
-            (props, exp) => ({ ...props, [exp.experiment]: 'true' }),
-            {}
-          )
-        );
-      })
-      .finally(() => {
-        cb();
-      });
-  };
-
   const generateOnEnterHooks = (...args) => {
     prefetchSurveysData();
-    const onEnterHooks = [
-      initialiseCloudGrowthExperiments,
-      validateAccessToRoute,
-    ];
+    prefetchOnboardingData();
+    const onEnterHooks = [validateAccessToRoute];
     const { shouldLoadOpts, shouldLoadServer } = shouldLoadAsyncGlobals(store);
     if (shouldLoadOpts || shouldLoadServer) {
       onEnterHooks.push(
@@ -371,6 +348,7 @@ const routes = (store) => {
             <Route path="about" component={aboutContainer(connect)} />
             <Route path="inherited-roles" component={InheritedRolesContainer} />
             <Route path="insecure-domain" component={InsecureDomains} />
+            <Route path="prometheus-settings" component={PrometheusSettings} />
             <Route path="feature-flags" component={FeatureFlags} />
           </Route>
           {dataRouter}

@@ -15,7 +15,7 @@ export const PoolTimeout: React.VFC<ConnectionSettingsFormProps> = ({
       className={`form-control ${styles.connnection_settings_form_input}`}
       placeholder="360"
       value={connectionDBState.connectionSettings?.pool_timeout ?? undefined}
-      onChange={(e) =>
+      onChange={e =>
         connectionDBStateDispatch({
           type: 'UPDATE_POOL_TIMEOUT',
           data: e.target.value,

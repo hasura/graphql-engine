@@ -223,11 +223,6 @@ run_pytest_parallel() {
 }
 
 case "$SERVER_TEST_TO_RUN" in
-haskell-tests)
-	echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
-	"${GRAPHQL_ENGINE_TESTS:?}" postgres
-	;;
-
 no-auth)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 

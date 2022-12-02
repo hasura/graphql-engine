@@ -73,7 +73,7 @@ const Dropdown: React.VFC<DropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = useCallback(() => {
-    setIsOpen((_isOpen) => !_isOpen);
+    setIsOpen(_isOpen => !_isOpen);
   }, []);
 
   const dismissDropdown = useCallback(() => setIsOpen(false), []);

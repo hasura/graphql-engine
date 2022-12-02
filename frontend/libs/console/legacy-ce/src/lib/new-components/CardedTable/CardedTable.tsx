@@ -54,8 +54,8 @@ const Header = ({ columns }: HeaderProps) => {
   return (
     <TableHead>
       <TableHeadRow>
-        {columns.map((column) => (
-          <TableHeadCell>{column}</TableHeadCell>
+        {columns.map((column, i) => (
+          <TableHeadCell key={i}>{column}</TableHeadCell>
         ))}
       </TableHeadRow>
     </TableHead>
@@ -99,7 +99,7 @@ interface BodyProps {
 const Body = ({ data, showActionCell = false }: BodyProps) => {
   return (
     <TableBody>
-      {data.map((row) => {
+      {data.map(row => {
         return (
           <TableBodyRow>
             {row.map((cell, index) => {

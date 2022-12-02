@@ -11,3 +11,4 @@ export const appcuesIdentify = () => {
     window.Appcues.identify(globals.hasuraCloudProjectId);
   }
 };
+

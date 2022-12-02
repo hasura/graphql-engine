@@ -26,6 +26,7 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
@@ -154,6 +155,9 @@ data RQLMetadataV1
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
   | -- QueryTags
     RMSetQueryTagsConfig !SetQueryTagsConfig
+  | -- OpenTelemetry
+    RMSetOpenTelemetryConfig !OpenTelemetryConfig
+  | RMSetOpenTelemetryStatus !OtelStatus
   | -- Debug
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState

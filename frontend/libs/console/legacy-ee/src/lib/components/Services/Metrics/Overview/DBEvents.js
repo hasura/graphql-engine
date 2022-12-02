@@ -46,7 +46,7 @@ const DBEvents = ({ source: { tables = [] } }) => {
                 aria-hidden="true"
               />
             </div>
-            {events.map((event) => (
+            {events.map(event => (
               <EventNameItem event={event} key={event.name} />
             ))}
           </div>

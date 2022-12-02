@@ -7,7 +7,7 @@ import styles from '../../Metrics.module.scss';
 
 import dropdown from '../../images/drop-down.svg';
 
-const DropdownComponent = (props) => {
+const DropdownComponent = props => {
   /* Accepts children which can be a single Menu Items
    * or array of Menu Items
    * TODO: How to validate whether the childrens are only of Menu item type?
@@ -25,13 +25,13 @@ const DropdownComponent = (props) => {
   const selectedValuesList =
     Object.keys(selectedValues).length === options.length - 1
       ? Object.assign({ ...selectedValues }, { 'Select All': true })
-      : selectedValues;
+      : selectedValues
   const handleToggle = (isOpen, event, metadata) => {
     if (isOpen || metadata.source !== 'select') {
       setShow(isOpen);
     }
   };
-  const handleChange = (val) => {
+  const handleChange = val => {
     if (
       val === SELECT_ALL_NAME_DISPLAY &&
       Object.keys(selectedValuesList).length === options.length
@@ -44,7 +44,7 @@ const DropdownComponent = (props) => {
     }
   };
 
-  const renderTitle = (title) => {
+  const renderTitle = title => {
     if (
       title === 'Select All' &&
       Object.keys(selectedValuesList).length === options.length
@@ -59,7 +59,7 @@ const DropdownComponent = (props) => {
       open={show}
       id="dropdown-custom-menu"
       onToggle={handleToggle}
-      onSelect={(e) => {
+      onSelect={e => {
         handleChange(e);
       }}
       className={styles.dropDownBtn}

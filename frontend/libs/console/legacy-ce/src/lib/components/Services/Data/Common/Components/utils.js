@@ -1,7 +1,7 @@
 import React from 'react';
 import { dataSource } from '../../../../../dataSources';
 
-export const getUkeyPkeyConfig = (columns) => {
+export const getUkeyPkeyConfig = columns => {
   const colLength = columns.length;
   if (!colLength) return null;
   if (colLength === 1) {
@@ -15,8 +15,8 @@ export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   const filteredColMap = {};
 
   colMappings
-    .filter((colMap) => colMap.column !== '' && colMap.refColumn !== '')
-    .forEach((colMap) => {
+    .filter(colMap => colMap.column !== '' && colMap.refColumn !== '')
+    .forEach(colMap => {
       if (!orderedColumns[colMap.column]) return;
       filteredColMap[orderedColumns[colMap.column].name] = colMap.refColumn;
     });
@@ -33,22 +33,21 @@ export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   return `${lCol} → ${refTableName} . ${rCol}`;
 };
 
-export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
-  return tableSchema.foreign_key_constraints.map((fkc) => {
+export const getExistingFKConstraints = (tableSchema, orderedColumns) =>
+  (tableSchema?.foreign_key_constraints || []).map(fkc => {
     const fk = {};
     fk.refTableName = fkc.ref_table;
     fk.refSchemaName = fkc.ref_table_table_schema;
     fk.onUpdate = dataSource.getReferenceOption(fkc.on_update);
     fk.onDelete = dataSource.getReferenceOption(fkc.on_delete);
     fk.constraintName = fkc.constraint_name;
-    fk.colMappings = Object.keys(fkc.column_mapping).map((lc) => ({
-      column: orderedColumns.find((oc) => oc.name === lc).index.toString(),
+    fk.colMappings = Object.keys(fkc.column_mapping).map(lc => ({
+      column: orderedColumns.find(oc => oc.name === lc).index.toString(),
       refColumn: fkc.column_mapping[lc],
     }));
     fk.colMappings.push({ column: '', refColumn: '' });
     return fk;
   });
-};
 
 export const generateFKConstraintName = (
   tableName,
@@ -57,7 +56,7 @@ export const generateFKConstraintName = (
   ignoreConstraints = []
 ) => {
   const expectedName = `${tableName}_${lCols
-    .map((lc) => lc.replace(/"/g, ''))
+    .map(lc => lc.replace(/"/g, ''))
     .join('_')}_fkey`.substring(0, 60);
 
   let maxSuffix;

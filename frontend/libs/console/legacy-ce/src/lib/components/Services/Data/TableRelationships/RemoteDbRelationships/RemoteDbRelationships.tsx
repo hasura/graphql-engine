@@ -58,7 +58,7 @@ export const RemoteDbRelationships: React.FC<Props> = ({
             <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/remote-relationships/remote-source-relationships.html" />
           </h4>
           <div className={styles.activeEdit}>
-            {data?.map((r) => (
+            {data?.map(r => (
               <AddManualRelationship
                 key={r?.name}
                 tableSchema={tableSchema}

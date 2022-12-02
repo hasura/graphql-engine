@@ -1,5 +1,8 @@
 import { TableColumn } from '../../../../DataSource';
-import { adaptFormValuesToQuery } from './LegacyRunQueryContainer.utils';
+import {
+  adaptFormValuesToQuery,
+  filterValidUserQuery,
+} from './LegacyRunQueryContainer.utils';
 import { FiltersAndSortFormValues, UserQuery } from '../types';
 
 describe('adaptFormValuesToQuery', () => {
@@ -73,5 +76,49 @@ describe('adaptFormValuesToQuery', () => {
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
+  });
+});
+
+describe('filterValidUserQuery', () => {
+  it('removes empty and conditions', () => {
+    const userQuery: UserQuery = {
+      where: { $and: [{ '': { '': '' } }] },
+      order_by: [{ column: '', type: '--', nulls: 'last' }],
+    };
+
+    const expected: UserQuery = {
+      where: { $and: [] },
+      order_by: [],
+    };
+    expect(filterValidUserQuery(userQuery)).toEqual(expected);
+  });
+
+  it('removes empty and conditions and returns valid conditions', () => {
+    const userQuery: UserQuery = {
+      where: { $and: [{ '': { '': '' } }, { name: { $eq: 'foo' } }] },
+      order_by: [
+        { column: '', type: '--', nulls: 'last' },
+        { column: 'name', type: 'desc', nulls: 'last' },
+      ],
+    };
+
+    const expected: UserQuery = {
+      where: { $and: [{ name: { $eq: 'foo' } }] },
+      order_by: [{ column: 'name', type: 'desc', nulls: 'last' }],
+    };
+    expect(filterValidUserQuery(userQuery)).toEqual(expected);
+  });
+
+  it('returns valid conditions', () => {
+    const userQuery: UserQuery = {
+      where: { $and: [{ name: { $eq: 'foo' } }] },
+      order_by: [{ column: 'name', type: 'desc', nulls: 'last' }],
+    };
+
+    const expected: UserQuery = {
+      where: { $and: [{ name: { $eq: 'foo' } }] },
+      order_by: [{ column: 'name', type: 'desc', nulls: 'last' }],
+    };
+    expect(filterValidUserQuery(userQuery)).toEqual(expected);
   });
 });

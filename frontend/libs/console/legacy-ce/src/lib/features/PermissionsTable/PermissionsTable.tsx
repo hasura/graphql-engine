@@ -1,22 +1,18 @@
 import React from 'react';
 import { FaInfo } from 'react-icons/fa';
-
-import { QUERY_TYPES, Operations } from '@/dataSources';
-
-import { arrayDiff } from '../../components/Common/utils/jsUtils';
-
+import Skeleton from 'react-loading-skeleton';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
 import { TableMachine } from './hooks';
-import { DataLeaf } from '../PermissionsTab/types/types';
-import { useDataSource } from '../PermissionsTab/types/useDataSource';
 
 type QueryType = 'insert' | 'select' | 'update' | 'delete';
+const queryType = ['insert', 'select', 'update', 'delete'] as const;
 
 interface ViewPermissionsNoteProps {
   viewsSupported: boolean;
-  supportedQueryTypes: Operations[];
+  supportedQueryTypes: QueryType[];
 }
 
 export const ViewPermissionsNote: React.FC<ViewPermissionsNoteProps> = ({
@@ -27,7 +23,9 @@ export const ViewPermissionsNote: React.FC<ViewPermissionsNoteProps> = ({
     return null;
   }
 
-  const unsupportedQueryTypes = arrayDiff(QUERY_TYPES, supportedQueryTypes);
+  const unsupportedQueryTypes = queryType.filter(
+    query => !supportedQueryTypes.includes(query)
+  );
 
   if (unsupportedQueryTypes.length) {
     return (
@@ -42,7 +40,8 @@ export const ViewPermissionsNote: React.FC<ViewPermissionsNoteProps> = ({
 };
 
 export interface PermissionsTableProps {
-  dataLeaf: DataLeaf;
+  dataSourceName: string;
+  table: unknown;
   machine: ReturnType<TableMachine>;
 }
 
@@ -54,16 +53,35 @@ export interface Selection {
 }
 
 export const PermissionsTable: React.FC<PermissionsTableProps> = ({
-  dataLeaf,
+  dataSourceName,
+  table,
   machine,
 }) => {
+  const { data, isLoading } = useRolePermissions({
+    dataSourceName,
+    table,
+  });
+
   const [state, send] = machine;
 
-  const dataSource = useDataSource();
-  const { supportedQueries, rolePermissions } = useRolePermissions({
-    dataSource,
-    dataLeaf,
-  });
+  if (isLoading)
+    return (
+      <div>
+        <Skeleton count={5} height={30} className="my-1.5" />
+      </div>
+    );
+
+  if (!data) {
+    return (
+      <div>
+        <IndicatorCard status="negative" headline="Error">
+          Something went wrong while fetching permissions
+        </IndicatorCard>
+      </div>
+    );
+  }
+
+  const { supportedQueries, rolePermissions } = data;
 
   return (
     <>
@@ -76,7 +94,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               <th className="w-0 bg-gray-50 border-r border-gray-200 px-md py-sm text-sm font-semibold text-muted uppercase tracking-wider">
                 ROLE
               </th>
-              {supportedQueries.map((supportedQuery) => (
+              {supportedQueries.map(supportedQuery => (
                 <th
                   className="bg-gray-50 px-md py-sm text-sm font-semibold text-muted text-center uppercase tracking-wider"
                   key={supportedQuery}
@@ -100,7 +118,9 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                   />
 
                   {permissionTypes.map(({ permissionType, access }) => {
-                    const isEditable = roleName !== 'admin';
+                    // only select is possible on GDC as mutations are not available yet
+                    const isEditable =
+                      roleName !== 'admin' && permissionType === 'select';
 
                     if (isNewRole) {
                       return (

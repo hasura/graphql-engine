@@ -54,7 +54,7 @@ const RetryInputRow = ({
   );
 };
 
-const RetryConfEditor: React.FC<Props> = (props) => {
+const RetryConfEditor: React.FC<Props> = props => {
   const { retryConf, setRetryConf } = props;
   const handleRetryConfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const label = e.target.name;

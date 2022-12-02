@@ -17,12 +17,10 @@ where
 import Autodocodec (Codec (StringCodec), HasCodec (codec), JSONCodec, bimapCodec, literalTextCodec, parseAlternatives, (<?>))
 import Data.Aeson hiding ((<?>))
 import Data.Aeson.Types (Parser)
-import Data.Proxy
 import Data.Text (unpack)
 import Data.Text.Extended
 import Data.Text.NonEmpty (NonEmptyText, nonEmptyTextQQ)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..), mkDataConnectorName)
-import Hasura.Incremental
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Witch qualified
@@ -34,7 +32,7 @@ data PostgresKind
   | Citus
   | Cockroach
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (Hashable, Cacheable)
+  deriving anyclass (Hashable)
 
 -- | An enum that represents each backend we support.
 data BackendType
@@ -44,7 +42,7 @@ data BackendType
   | MySQL
   | DataConnector
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (Hashable, Cacheable)
+  deriving anyclass (Hashable)
 
 -- | The name of the backend, as we expect it to appear in our metadata and API.
 instance Witch.From BackendType NonEmptyText where
@@ -64,8 +62,6 @@ instance FromJSON BackendType where
 
 instance ToJSON BackendType where
   toJSON = String . toTxt
-
-instance Cacheable (Proxy (b :: BackendType))
 
 -- | Similar to 'BackendType', however, in the case of 'DataConnectorKind' we need to be able
 -- capture the name of the data connector that should be used by the DataConnector backend.
@@ -90,9 +86,6 @@ deriving instance Show (BackendSourceKind b)
 deriving instance Eq (BackendSourceKind b)
 
 deriving instance Ord (BackendSourceKind b)
-
-instance Cacheable (BackendSourceKind b) where
-  unchanged _ = (==)
 
 instance Witch.From (BackendSourceKind b) NonEmptyText where
   -- All cases are specified explicitly here to ensure compiler warnings highlight

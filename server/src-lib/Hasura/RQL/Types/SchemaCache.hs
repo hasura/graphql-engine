@@ -56,8 +56,6 @@ module Hasura.RQL.Types.SchemaCache
     RemoteSchemaMap,
     DepMap,
     WithDeps,
-    SourceM (..),
-    SourceT (..),
     TableCoreInfoRM (..),
     TableCoreCacheRT (..),
     TableInfoRM (..),
@@ -106,6 +104,7 @@ module Hasura.RQL.Types.SchemaCache
     getOpExpDeps,
     BackendInfoWrapper (..),
     BackendCache,
+    getBackendInfo,
   )
 where
 
@@ -122,11 +121,6 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.Incremental
-  ( Dependency,
-    MonadDepend (..),
-    selectKeyD,
-  )
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
@@ -156,7 +150,8 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Hasura.SQL.BackendMap
+import Hasura.SQL.BackendMap (BackendMap)
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Hasura.Server.Types
 import Hasura.Session
@@ -211,7 +206,7 @@ mkComputedFieldDep reason s tn computedField =
     . SOITableObj @b tn
     $ TOComputedField computedField
 
-type WithDeps a = (a, [SchemaDependency])
+type WithDeps a = (a, Seq SchemaDependency)
 
 type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo G.Name)
 
@@ -472,6 +467,9 @@ deriving newtype instance (Monoid (BackendInfo b)) => Monoid (BackendInfoWrapper
 
 type BackendCache = BackendMap BackendInfoWrapper
 
+getBackendInfo :: forall b m. (CacheRM m, HasTag b) => m (Maybe (BackendInfo b))
+getBackendInfo = askSchemaCache <&> fmap unBackendInfoWrapper . BackendMap.lookup @b . scBackendCache
+
 -------------------------------------------------------------------------------
 
 data SchemaCache = SchemaCache
@@ -496,6 +494,7 @@ data SchemaCache = SchemaCache
     scQueryCollections :: QueryCollections,
     scBackendCache :: BackendCache,
     scSourceHealthChecks :: SourceHealthCheckCache,
+    scSourcePingConfig :: SourcePingCache,
     scOpenTelemetryConfig :: OpenTelemetryInfo
   }
 
@@ -532,33 +531,9 @@ getAllRemoteSchemas sc =
         getInconsistentRemoteSchemas $ scInconsistentObjs sc
    in consistentRemoteSchemas <> inconsistentRemoteSchemas
 
-class (Monad m) => SourceM m where
-  askCurrentSource :: m SourceName
-
-instance (SourceM m) => SourceM (ReaderT r m) where
-  askCurrentSource = lift askCurrentSource
-
-instance (SourceM m) => SourceM (StateT s m) where
-  askCurrentSource = lift askCurrentSource
-
-instance (Monoid w, SourceM m) => SourceM (WriterT w m) where
-  askCurrentSource = lift askCurrentSource
-
-instance (SourceM m) => SourceM (TraceT m) where
-  askCurrentSource = lift askCurrentSource
-
-newtype SourceT m a = SourceT {runSourceT :: SourceName -> m a}
-  deriving
-    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx, TableCoreInfoRM b, CacheRM)
-    via (ReaderT SourceName m)
-  deriving (MonadTrans) via (ReaderT SourceName)
-
-instance (Monad m) => SourceM (SourceT m) where
-  askCurrentSource = SourceT pure
-
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
-class (SourceM m) => TableCoreInfoRM b m where
+class Monad m => TableCoreInfoRM b m where
   lookupTableCoreInfo :: TableName b -> m (Maybe (TableCoreInfo b))
 
 instance (TableCoreInfoRM b m) => TableCoreInfoRM b (ReaderT r m) where
@@ -573,23 +548,19 @@ instance (Monoid w, TableCoreInfoRM b m) => TableCoreInfoRM b (WriterT w m) wher
 instance (TableCoreInfoRM b m) => TableCoreInfoRM b (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
-newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: (SourceName, Dependency (TableCoreCache b)) -> m a}
+newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: TableCoreCache b -> m a}
   deriving
     (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
-    via (ReaderT (SourceName, Dependency (TableCoreCache b)) m)
-  deriving (MonadTrans) via (ReaderT (SourceName, Dependency (TableCoreCache b)))
+    via (ReaderT (TableCoreCache b) m)
+  deriving (MonadTrans) via (ReaderT (TableCoreCache b))
 
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT b m) where
   ask = lift ask
   local f m = TableCoreCacheRT (local f . runTableCoreCacheRT m)
 
-instance (Monad m) => SourceM (TableCoreCacheRT b m) where
-  askCurrentSource =
-    TableCoreCacheRT (pure . fst)
-
-instance (MonadDepend m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
+instance (Monad m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCoreCacheRT (dependOnM . selectKeyD tableName . snd)
+    TableCoreCacheRT (pure . M.lookup tableName)
 
 -- | All our RQL DML queries operate over a single source. This typeclass facilitates that.
 class (TableCoreInfoRM b m) => TableInfoRM b m where
@@ -607,29 +578,19 @@ instance (Monoid w, TableInfoRM b m) => TableInfoRM b (WriterT w m) where
 instance (TableInfoRM b m) => TableInfoRM b (TraceT m) where
   lookupTableInfo tableName = lift $ lookupTableInfo tableName
 
-newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: (SourceName, TableCache b) -> m a}
+newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: TableCache b -> m a}
   deriving
-    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
-    via (ReaderT (SourceName, TableCache b) m)
-  deriving (MonadTrans) via (ReaderT (SourceName, TableCache b))
-
-instance (UserInfoM m) => UserInfoM (TableCacheRT b m) where
-  askUserInfo = lift askUserInfo
-
-instance (Monad m) => SourceM (TableCacheRT b m) where
-  askCurrentSource =
-    TableCacheRT (pure . fst)
+    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx, UserInfoM, HasServerConfigCtx)
+    via (ReaderT (TableCache b) m)
+  deriving (MonadTrans) via (ReaderT (TableCache b))
 
 instance (Monad m, Backend b) => TableCoreInfoRM b (TableCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCacheRT (pure . fmap _tiCoreInfo . M.lookup tableName . snd)
+    TableCacheRT (pure . fmap _tiCoreInfo . M.lookup tableName)
 
 instance (Monad m, Backend b) => TableInfoRM b (TableCacheRT b m) where
   lookupTableInfo tableName =
-    TableCacheRT (pure . M.lookup tableName . snd)
-
-instance (HasServerConfigCtx m) => HasServerConfigCtx (TableCacheRT b m) where
-  askServerConfigCtx = lift askServerConfigCtx
+    TableCacheRT (pure . M.lookup tableName)
 
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache

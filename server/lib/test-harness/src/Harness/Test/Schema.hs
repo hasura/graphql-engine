@@ -41,10 +41,11 @@ module Harness.Test.Schema
     trackComputedField,
     untrackComputedField,
     runSQL,
+    addSource,
   )
 where
 
-import Data.Aeson ((.=))
+import Data.Aeson (Value, (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as K
 import Data.Time (UTCTime, defaultTimeLocale)
@@ -52,7 +53,7 @@ import Data.Time.Format (parseTimeOrError)
 import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType
 import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment)
@@ -374,11 +375,14 @@ trackComputedField ::
   Table ->
   String ->
   String ->
+  Aeson.Value ->
+  Aeson.Value ->
   TestEnvironment ->
   IO ()
-trackComputedField backend source Table {tableName} functionName asFieldName testEnvironment = do
+trackComputedField backend source Table {tableName} functionName asFieldName argumentMapping returnTable testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = getSchemaName testEnvironment
+      schemaKey = schemaKeyword backend
       requestType = backendType <> "_add_computed_field"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -388,15 +392,17 @@ args:
   source: *source
   comment: null
   table:
-    schema: *schema
+    *schemaKey: *schema
     name: *tableName
   name: *asFieldName
   definition:
     function:
-      schema: *schema
+      *schemaKey: *schema
       name: *functionName
     table_argument: null
     session_argument: null
+    argument_mapping: *argumentMapping
+    return_table: *returnTable
 |]
 
 -- | Unified untrack computed field
@@ -404,6 +410,7 @@ untrackComputedField :: HasCallStack => BackendType -> String -> Table -> String
 untrackComputedField backend source Table {tableName} fieldName testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = getSchemaName testEnvironment
+      schemaKey = schemaKeyword backend
   let requestType = backendType <> "_drop_computed_field"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -412,7 +419,7 @@ type: *requestType
 args:
   source: *source
   table:
-    schema: *schema
+    *schemaKey: *schema
     name: *tableName
   name: *fieldName
 |]
@@ -429,7 +436,6 @@ mkTableField backend schemaName tableName =
       nativeFieldName = Aeson.object [schemaKeyword backend .= Aeson.String (unSchemaName schemaName), "name" .= Aeson.String tableName]
    in case backend of
         Postgres -> nativeFieldName
-        MySQL -> nativeFieldName
         SQLServer -> nativeFieldName
         BigQuery -> nativeFieldName
         Citus -> nativeFieldName
@@ -591,3 +597,15 @@ args:
   cascade: false
   read_only: false
 |]
+
+addSource :: BackendType -> Text -> Value -> TestEnvironment -> IO ()
+addSource backend sourceName sourceConfig testEnvironment = do
+  let backendType = defaultBackendTypeString backend
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [interpolateYaml|
+      type: #{ backendType }_add_source
+      args:
+        name: #{ sourceName }
+        configuration: #{ sourceConfig }
+      |]

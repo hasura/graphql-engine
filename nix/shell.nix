@@ -68,6 +68,7 @@ let
   devInputs = [
     pkgs.nixpkgs-fmt
     pkgs.shellcheck
+    pkgs.terraform
   ];
 
   ciInputs = [
@@ -89,7 +90,7 @@ let
     freetdsWithODBC
     pkgs.libmysqlclient
     pkgs.mariadb
-    pkgs.postgresql
+    pkgs.postgresql_15
     pkgs.unixODBC
     msodbcsql
   ]

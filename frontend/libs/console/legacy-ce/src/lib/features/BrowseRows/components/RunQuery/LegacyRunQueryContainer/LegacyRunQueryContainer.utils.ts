@@ -41,9 +41,9 @@ export const adaptFormValuesToQuery = (
   columnDataTypes: TableColumn[]
 ): UserQuery => {
   const where =
-    formValues?.filter?.map((filter) => {
+    formValues?.filter?.map(filter => {
       const columnDataType = columnDataTypes.find(
-        (col) => col.name === filter.column
+        col => col.name === filter.column
       );
 
       let partialValue: string | string[] | number[] = filter.value;
@@ -63,7 +63,7 @@ export const adaptFormValuesToQuery = (
     }) ?? [];
 
   const orderBy =
-    formValues?.sort?.map((order) => {
+    formValues?.sort?.map(order => {
       const orderCondition: OrderCondition = {
         column: order.column,
         type: order.type,
@@ -87,8 +87,8 @@ type SetParamsArgs = {
 
 const setParams = (query: SetParamsArgs = { filters: [], sorts: [] }) => {
   const searchParams = new URLSearchParams();
-  query.filters.forEach((filter) => searchParams.append('filter', filter));
-  query.sorts.forEach((sort) => searchParams.append('sort', sort));
+  query.filters.forEach(filter => searchParams.append('filter', filter));
+  query.sorts.forEach(sort => searchParams.append('sort', sort));
   return searchParams.toString();
 };
 
@@ -97,13 +97,13 @@ export const setUrlParams = (
   orderBy: UserQuery['order_by']
 ) => {
   const sorts = orderBy
-    .filter((order) => order.column)
-    .map((order) => `${order.column};${order.type}`);
+    .filter(order => order.column)
+    .map(order => `${order.column};${order.type}`);
   const filters = whereAnd
     .filter(
-      (where) => Object.keys(where).length === 1 && Object.keys(where)[0] !== ''
+      where => Object.keys(where).length === 1 && Object.keys(where)[0] !== ''
     )
-    .map((where) => {
+    .map(where => {
       const col = Object.keys(where)[0];
       const op = Object.keys(where[col])[0];
       const value = where[col][op];
@@ -151,12 +151,25 @@ export const getColumns = (columns: string[]) => {
 };
 
 export const filterValidUserQuery = (userQuery: UserQuery): UserQuery => {
+  const filteredWhereClauses = userQuery.where.$and.filter(w => {
+    const colName = Object.keys(w)[0].trim();
+    if (colName === '') {
+      return false;
+    }
+    const opName = Object.keys(w[colName])[0].trim();
+    if (opName === '') {
+      return false;
+    }
+    return true;
+  });
+
+  const filteredOrderBy = userQuery.order_by.filter(
+    clause => !!clause.column && !!clause.type
+  );
+
   return {
-    ...userQuery,
-    where: { $and: userQuery.where.$and },
-    order_by: userQuery.order_by.filter(
-      (clause) => !!clause.column && !!clause.type
-    ),
+    where: { $and: filteredWhereClauses },
+    order_by: filteredOrderBy,
   };
 };
 
@@ -171,18 +184,12 @@ type RunFilterQuery = {
 export const runFilterQuery =
   ({ tableSchema, whereAnd, orderBy, limit, offset }: RunFilterQuery) =>
   (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => {
-    const whereClauses = whereAnd.filter((w) => {
-      const colName = Object.keys(w)[0].trim();
-      if (colName === '') {
-        return false;
-      }
-      const opName = Object.keys(w[colName])[0].trim();
-      if (opName === '') {
-        return false;
-      }
-      return true;
+    const filteredUserQuery = filterValidUserQuery({
+      where: { $and: whereAnd },
+      order_by: orderBy,
     });
-    const finalWhereClauses = whereClauses.map((whereClause) => {
+
+    const finalWhereClauses = filteredUserQuery.where.$and.map(whereClause => {
       const colName = Object.keys(whereClause)[0];
       const opName = Object.keys(whereClause[colName])[0];
       const val = whereClause[colName][opName];
@@ -193,7 +200,7 @@ export const runFilterQuery =
       }
 
       const colType =
-        tableSchema?.columns?.find((column) => column.column_name === colName)
+        tableSchema?.columns?.find(column => column.column_name === colName)
           ?.data_type || '';
 
       if (Integers.indexOf(colType) > 0 && typeof val === 'string') {
@@ -216,11 +223,12 @@ export const runFilterQuery =
       }
       return whereClause;
     });
+
     const newQuery = {
       where: { $and: finalWhereClauses },
       limit,
       offset,
-      order_by: orderBy.filter((w) => w.column.trim() !== ''),
+      order_by: filteredUserQuery.order_by,
     };
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeTableRequests());

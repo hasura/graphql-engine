@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { useMetadata } from '@/features/MetadataAPI';
-import { isProConsole } from '@/utils/proConsole';
+import globals from '@/Globals';
+import { isCloudConsole } from '@/utils';
 import React, { Dispatch } from 'react';
 import { ConnectDBActions, ConnectDBState } from '../state';
 import { buildFormSettings } from './buildFormSettings';
@@ -23,15 +24,13 @@ export interface ConnectionSettingsFormProps {
   isEditState?: boolean;
 }
 
-const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = (
-  props
-) => {
+const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = props => {
   const { connectionDBState, isEditState } = props;
 
   const { data: metadata } = useMetadata();
 
   const currentDBState = metadata?.metadata?.sources.find(
-    (d) => d.name === connectionDBState?.displayName
+    d => d.name === connectionDBState?.displayName
   );
   const isMaxConnectionSet =
     currentDBState?.configuration?.connection_info?.pool_settings
@@ -47,7 +46,7 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = (
   if (!isEditState) {
     return (
       <FormContainer>
-        {!isProConsole(window.__env) && <MaxConnections {...props} />}
+        {!isCloudConsole(globals) && <MaxConnections {...props} />}
         {formSettings.cumulativeMaxConnections && (
           <CumulativeMaxConnections {...props} />
         )}
@@ -61,9 +60,13 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = (
       </FormContainer>
     );
   }
+
+  const isOssConsole = !isCloudConsole(globals);
+  const canShowMaxConnections = isOssConsole || isMaxConnectionSet;
+
   return (
     <FormContainer>
-      {isMaxConnectionSet && <MaxConnections {...props} />}
+      {canShowMaxConnections && <MaxConnections {...props} />}
       {formSettings.cumulativeMaxConnections && (
         <CumulativeMaxConnections {...props} />
       )}

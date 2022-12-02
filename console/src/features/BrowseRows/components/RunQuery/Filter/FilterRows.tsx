@@ -11,7 +11,8 @@ export type FilterRowsProps = {
   columns: TableColumn[];
   operators: Operator[];
   name: string;
-  initialFilters?: FiltersAndSortFormValues['filter'];
+  initialFilters?: FiltersAndSortFormValues['filters'];
+  onRemove: () => void;
 };
 
 export const FilterRows = ({
@@ -19,6 +20,7 @@ export const FilterRows = ({
   columns,
   operators,
   initialFilters = [],
+  onRemove,
 }: FilterRowsProps) => {
   const { fields, append, remove, update } = useFieldArray<
     Record<string, WhereClause[]>
@@ -43,10 +45,11 @@ export const FilterRows = ({
         });
       });
     }
-  }, [initialFilters]);
+  }, [initialFilters?.length]);
 
   const removeEntry = (index: number) => {
     remove(index);
+    onRemove();
   };
 
   const columnOptions: SelectItem[] = columns.map(column => {
@@ -83,9 +86,7 @@ export const FilterRows = ({
             key={index}
             columnOptions={columnOptions}
             operatorOptions={operatorOptions}
-            onRemove={() => {
-              removeEntry(index);
-            }}
+            onRemove={() => removeEntry(index)}
             name={`${name}.${index}`}
             defaultValues={defaultValues}
           />

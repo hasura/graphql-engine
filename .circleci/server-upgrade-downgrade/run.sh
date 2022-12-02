@@ -129,8 +129,9 @@ cur_server_version() {
 
 log "Run pytests with server upgrade"
 
+PYTEST_DIR="server/tests-py"
+
 WORKTREE_DIR="$(mktemp -d)"
-RELEASE_PYTEST_DIR="${WORKTREE_DIR}/server/tests-py"
 RELEASE_VERSION="$($LATEST_SERVER_BINARY version | cut -d':' -f2 | awk '{print $1}')"
 rm_worktree() {
 	rm -rf "$WORKTREE_DIR"
@@ -169,7 +170,7 @@ get_current_catalog_version() {
 # See pytest_report_collectionfinish() for the logic that determines what is an
 # "upgrade test", namely presence of particular markers.
 get_server_upgrade_tests() {
-	cd $RELEASE_PYTEST_DIR
+	cd $PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
 	set -x
 	# NOTE: any tests deselected in run_server_upgrade_pytest need to be filtered out here too
@@ -236,7 +237,7 @@ run_server_upgrade_pytest() {
 	[ -n "$tests_to_run" ] || (echo "Got no test as input" && false)
 
 	run_pytest() {
-		cd $RELEASE_PYTEST_DIR
+		cd $PYTEST_DIR
 		set -x
 
 		# With --avoid-error-message-checks, we are only going to throw warnings if the error message has changed between releases
@@ -365,8 +366,8 @@ make_latest_release_worktree
 # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
-pip3 -q install -r "${RELEASE_PYTEST_DIR}/requirements.txt" ||
-	pip3 -q install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com -r "${RELEASE_PYTEST_DIR}/requirements.txt"
+pip3 -q install -r "${PYTEST_DIR}/requirements.txt" ||
+	pip3 -q install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com -r "${PYTEST_DIR}/requirements.txt"
 
 
 wait_for_postgres "$HASURA_GRAPHQL_DATABASE_URL"

@@ -3,6 +3,10 @@ const filterQueryScss = require('../lib/components/Common/FilterQuery/FilterQuer
 const tableScss = require('../lib/components/Common/TableCommon/Table.module.scss');
 
 import * as EndpointNamedExps from '../lib/Endpoints';
+import { isMetadataStatusPage } from '../lib/components/Error/ErrorBoundary.tsx';
+import { redirectToMetadataStatus } from '../lib/components/Common/utils/routesUtils.ts';
+import { ApiLimits } from '../lib/components/Services/ApiExplorer/Security';
+import { IntrospectionOptions } from '../lib/components/Services/ApiExplorer/Security/Introspection';
 
 export {
   persistGraphiQLHeaders,
@@ -11,10 +15,15 @@ export {
 export { fetchConsoleNotifications } from '../lib/components/Main/Actions';
 export { default as NotificationSection } from '../lib/components/Main/NotificationSection';
 export { default as Onboarding } from '../lib/components/Common/Onboarding';
-export { tracingTools } from '../lib/features/TracingTools';
+export {
+  Analytics,
+  startTracing,
+  addUserProperties,
+  programmaticallyTraceError,
+} from '../lib/features/Analytics';
 export { OnboardingWizard } from '../lib/features/OnboardingWizard';
 export { prefetchSurveysData } from '../lib/features/Surveys';
-export { makeGrowthExperimentsClient } from '../lib/features/GrowthExperiments';
+export { prefetchOnboardingData } from '../lib/features/OnboardingWizard';
 export { default as PageNotFound } from '../lib/components/Error/PageNotFound';
 export * from '../lib/new-components/Button/';
 export * from '../lib/new-components/Tooltip/';
@@ -37,10 +46,6 @@ export {
   loadInconsistentObjects,
   exportMetadata,
 } from '../lib/metadata/actions';
-import { isMetadataStatusPage } from '../lib/components/Error/ErrorBoundary.tsx';
-import { redirectToMetadataStatus } from '../lib/components/Common/utils/routesUtils.ts';
-import { ApiLimits } from '../lib/components/Services/ApiExplorer/Security';
-import { IntrospectionOptions } from '../lib/components/Services/ApiExplorer/Security/Introspection';
 
 export { default as globals } from '../lib/Globals';
 export { default as endpoints } from '../lib/Endpoints';
@@ -78,16 +83,13 @@ export {
 export * from './table';
 export { ReactQueryProvider, reactQueryClient } from '../lib/lib/reactQuery';
 
+export { PrometheusSettings } from '../lib/features/Prometheus';
+
 export { FeatureFlags } from '../lib/features/FeatureFlags';
 
 export {
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
 } from '../lib/utils/proConsole';
-
-export {
-  SampleDBBanner,
-  newSampleDBTrial,
-} from '../lib/components/Services/Data/DataSources/SampleDatabase';
 
 export { AllowListDetail } from '../lib/components/Services/AllowList/AllowListDetail';

@@ -1,1 +1,0 @@
-export { DatabaseRelationshipsContainer } from './DatabaseRelationshipsContainer';

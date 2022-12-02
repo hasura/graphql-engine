@@ -89,7 +89,7 @@ const fetchCustomFunction = (functionName, schema, source) => {
           return Promise.resolve();
         }
       },
-      (error) => {
+      error => {
         console.error('Failed to fetch function' + JSON.stringify(error));
         return dispatch({ type: CUSTOM_FUNCTION_FETCH_FAIL, data: error });
       }
@@ -168,7 +168,7 @@ const unTrackCustomFunction = () => {
       dispatch({ type: RESET });
       dispatch(exportMetadata());
     };
-    const customOnError = (error) => {
+    const customOnError = error => {
       Promise.all([
         dispatch({ type: UNTRACK_CUSTOM_FUNCTION_FAIL, data: error }),
       ]);
@@ -188,7 +188,7 @@ const unTrackCustomFunction = () => {
     );
   };
 };
-const updateSessVar = (session_argument) => {
+const updateSessVar = session_argument => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
@@ -250,7 +250,7 @@ const updateSessVar = (session_argument) => {
       dispatch({ type: SESSVAR_CUSTOM_FUNCTION_REQUEST });
       dispatch(exportMetadata());
     };
-    const customOnError = (error) => {
+    const customOnError = error => {
       dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });
     };
 
@@ -269,10 +269,10 @@ const updateSessVar = (session_argument) => {
   };
 };
 
-const setEditing = (editing) => (dispatch) =>
+const setEditing = editing => dispatch =>
   dispatch({ type: CUSTOM_FUNCTION_COMMENT_EDITING, data: editing });
 
-const saveFunctionComment = (updatedComment) => (dispatch, getState) => {
+const saveFunctionComment = updatedComment => (dispatch, getState) => {
   const source = getState().tables.currentDataSource;
   const { currentSchema } = getState().tables;
   const { functionName } = getState().functions;
@@ -307,7 +307,7 @@ const saveFunctionComment = (updatedComment) => (dispatch, getState) => {
     });
   };
 
-  const customOnError = (err) => {
+  const customOnError = err => {
     dispatch({ type: FUNCTION_COMMENT_SET_FAIL, data: err });
   };
 
@@ -352,7 +352,7 @@ const setFunctionPermission =
       dispatch(exportMetadata(onSuccessCb));
     };
 
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_FAIL, data: err });
     };
 
@@ -397,7 +397,7 @@ const dropFunctionPermission =
       dispatch(exportMetadata(onSuccessCb));
     };
 
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_FAIL, data: err });
     };
 

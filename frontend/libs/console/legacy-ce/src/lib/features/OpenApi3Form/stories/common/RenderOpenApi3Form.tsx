@@ -35,11 +35,11 @@ export const RenderOpenApi3Form = ({
       options={{
         defaultValues,
       }}
-      onSubmit={(values) => {
+      onSubmit={values => {
         setSubmittedValues(values as any);
       }}
     >
-      {() => {
+      {options => {
         return (
           <>
             <OpenApi3Form
@@ -58,6 +58,7 @@ export const RenderOpenApi3Form = ({
                 <ReactJson src={submittedValues} name={false} />
               )}
             </div>
+            {console.log(options.formState.errors)}
           </>
         );
       }}

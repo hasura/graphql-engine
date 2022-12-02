@@ -44,7 +44,7 @@ export const useRootFieldPermissions = ({
     const containsString = currentPermissionArray?.includes(permission);
     if (containsString || !currentPermissionArray) {
       const toDispatch = currentPermissionArray?.filter(
-        (queryPermission) => queryPermission !== permission
+        queryPermission => queryPermission !== permission
       );
       onSubmitUpdate(key, toDispatch);
       return;

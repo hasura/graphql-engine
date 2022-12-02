@@ -9,7 +9,7 @@ import reducer from './reducer';
 
 export const store = configureStore({
   reducer,
-  middleware: (getDefaultMiddleware) => {
+  middleware: getDefaultMiddleware => {
     // Middleware by default : https://redux-toolkit.js.org/api/getDefaultMiddleware#included-default-middleware
     return getDefaultMiddleware({
       // Removed because we use callbacks in some places and they are not serializable.

@@ -22,7 +22,7 @@ export const getFromLS = () => {
   }
 };
 
-export const getKeyFromLS = (key) => {
+export const getKeyFromLS = key => {
   const retrieveFromLS = getFromLS();
   return retrieveFromLS[key] || '';
 };

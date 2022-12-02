@@ -115,7 +115,7 @@ const makeRequest = (
       body: JSON.stringify(finalReqBody),
     };
 
-    const onSuccess = (data) => {
+    const onSuccess = data => {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         dispatch(loadMigrationStatus());
       }
@@ -125,7 +125,7 @@ const makeRequest = (
       customOnSuccess(data);
     };
 
-    const onError = (err) => {
+    const onError = err => {
       dispatch(handleMigrationErrors(errorMsg, err));
       customOnError(err);
     };
@@ -148,7 +148,7 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
     } = getState().remoteSchemas;
 
     const currentRemoteSchema = allRemoteSchemas.find(
-      (rs) => rs.name === currentRemoteSchemaName
+      rs => rs.name === currentRemoteSchemaName
     );
     const allPermissions = currentRemoteSchema?.permissions || [];
 
@@ -262,15 +262,15 @@ const permRemoveMultipleRoles = () => {
     } = getState().remoteSchemas;
 
     const currentRemoteSchema = allRemoteSchemas.find(
-      (rs) => rs.name === currentRemoteSchemaName
+      rs => rs.name === currentRemoteSchemaName
     );
     const currentPermissions = currentRemoteSchema.permissions;
 
     const roles = bulkSelect;
     const migration = new Migration();
 
-    roles.map((role) => {
-      const currentRolePermission = currentPermissions.filter((el) => {
+    roles.map(role => {
+      const currentRolePermission = currentPermissions.filter(el => {
         return el.role === role;
       });
 

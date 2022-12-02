@@ -37,7 +37,7 @@ export const getTokenUrl = () => {
   return `${hasuraOAuthUrl}${relativeOAuthTokenUrl}`;
 };
 
-const base64URLEncode = (str) => {
+const base64URLEncode = str => {
   return str
     .toString('base64')
     .replace(/\+/g, '-')
@@ -45,8 +45,11 @@ const base64URLEncode = (str) => {
     .replace(/=/g, '');
 };
 
-const sha256 = (buffer) => {
-  return crypto.createHash('sha256').update(buffer).digest();
+const sha256 = buffer => {
+  return crypto
+    .createHash('sha256')
+    .update(buffer)
+    .digest();
 };
 
 const generateCodeVerifier = () => {
@@ -62,11 +65,11 @@ const generateState = () => {
   return state;
 };
 
-export const modifyRedirectUrl = (redirectUrl) => {
+export const modifyRedirectUrl = redirectUrl => {
   modifyKey('redirectUrl', redirectUrl);
 };
 
-export const parseQueryParams = (search) => {
+export const parseQueryParams = search => {
   return parseQueryString(search);
 };
 

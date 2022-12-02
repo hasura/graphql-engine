@@ -4,7 +4,7 @@ import { services } from '../../../../dataSources/services';
 // NOTE: Raw SQL is disabled for Cockroach due to this https://github.com/hasura/graphql-engine/issues/8794
 export const unsupportedRawSQLDrivers = ['cockroach'];
 
-const getSQLValue = (value) => {
+const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
 
   let sqlValue = value;
@@ -15,7 +15,7 @@ const getSQLValue = (value) => {
   return sqlValue.replace(/['"]+/g, '');
 };
 
-export const removeCommentsSQL = (sql) => {
+export const removeCommentsSQL = sql => {
   const commentsSQLRegex = /(--[^\r\n]*)|(\/\*[\w\W]*?(?=\*\/)\*\/)/; // eslint-disable-line
   const regExp = commentsSQLRegex;
   const comments = sql.match(new RegExp(regExp, 'gmi'));
@@ -25,7 +25,7 @@ export const removeCommentsSQL = (sql) => {
   return comments.reduce((acc, comment) => acc.replace(comment, ''), sql);
 };
 
-const getDefaultSchema = (driver) => {
+const getDefaultSchema = driver => {
   if (driver === 'postgres' || driver === 'citus') return 'public';
   if (driver === 'mssql') return 'dbo';
 };

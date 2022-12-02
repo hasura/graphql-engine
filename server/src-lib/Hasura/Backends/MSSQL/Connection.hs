@@ -40,7 +40,6 @@ import Database.MSSQL.Transaction qualified as MSTx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
@@ -62,11 +61,9 @@ instance MonadIO m => MonadMSSQLTx (MSTx.TxET QErr m) where
 
 -- | ODBC connection string for MSSQL server
 newtype MSSQLConnectionString = MSSQLConnectionString {unMSSQLConnectionString :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData)
+  deriving (Show, Eq, ToJSON, FromJSON, Hashable, NFData)
 
 -- * Orphan instances
-
-instance Cacheable MSPool.ConnectionString
 
 instance Hashable MSPool.ConnectionString
 
@@ -76,8 +73,6 @@ data InputConnectionString
   = RawString MSPool.ConnectionString
   | FromEnvironment Text
   deriving stock (Show, Eq, Generic)
-
-instance Cacheable InputConnectionString
 
 instance Hashable InputConnectionString
 
@@ -109,8 +104,6 @@ data MSSQLPoolSettings = MSSQLPoolSettings
     _mpsIdleTimeout :: Int
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable MSSQLPoolSettings
 
 instance Hashable MSSQLPoolSettings
 
@@ -150,8 +143,6 @@ data MSSQLConnectionInfo = MSSQLConnectionInfo
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable MSSQLConnectionInfo
-
 instance Hashable MSSQLConnectionInfo
 
 instance NFData MSSQLConnectionInfo
@@ -176,8 +167,6 @@ data MSSQLConnConfiguration = MSSQLConnConfiguration
     _mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable MSSQLConnConfiguration
 
 instance Hashable MSSQLConnConfiguration
 
@@ -278,9 +267,6 @@ instance Show MSSQLSourceConfig where
 instance Eq MSSQLSourceConfig where
   MSSQLSourceConfig connStr1 _ == MSSQLSourceConfig connStr2 _ =
     connStr1 == connStr2
-
-instance Cacheable MSSQLSourceConfig where
-  unchanged _ = (==)
 
 instance ToJSON MSSQLSourceConfig where
   toJSON = toJSON . _mscConnectionString

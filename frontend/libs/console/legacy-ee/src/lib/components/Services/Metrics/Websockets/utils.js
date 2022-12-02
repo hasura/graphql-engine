@@ -29,7 +29,7 @@ import {
 
 import moment from 'moment';
 
-export const retrieveDefaultDropdownOptions = (value) => {
+export const retrieveDefaultDropdownOptions = value => {
   switch (value) {
     case TIME_RANGE_SYMBOL:
       return timeRangeFilters;
@@ -70,7 +70,7 @@ export const createFilter = (type, value) => {
   };
 };
 
-export const checkIfEmptyReturnAppropriateValue = (n) => {
+export const checkIfEmptyReturnAppropriateValue = n => {
   if (n === ERROR_CODE_SYMBOL) {
     return EMPTY_ERROR_CODE_SYMBOL;
   }
@@ -86,7 +86,7 @@ export const checkIfEmptyReturnAppropriateValue = (n) => {
   return '';
 };
 
-export const getFilterNameFromEmptyValue = (n) => {
+export const getFilterNameFromEmptyValue = n => {
   if (n === EMPTY_ERROR_CODE_SYMBOL) {
     return ERROR_CODE_SYMBOL;
   }
@@ -102,26 +102,26 @@ export const getFilterNameFromEmptyValue = (n) => {
   return '';
 };
 
-export const getIfAliased = (c) => {
+export const getIfAliased = c => {
   if (c in aliasedColumns) {
     return aliasedColumns[c];
   }
   return c;
 };
 
-export const getActualIfAliased = (c) => {
+export const getActualIfAliased = c => {
   if (c in actualTypeToAlias) {
     return actualTypeToAlias[c];
   }
   return c;
 };
 
-const parseGroupByArrayType = (q) => {
+const parseGroupByArrayType = q => {
   const regex = /{(.*)}/m;
   return regex.exec(q);
 };
 
-const filterByType = (filters, type) => filters.filter((f) => f.type === type);
+const filterByType = (filters, type) => filters.filter(f => f.type === type);
 const indexOf = (list, predicateFn) => {
   let elementIndex = -1;
   list.forEach((l, index) => {
@@ -134,7 +134,7 @@ const indexOf = (list, predicateFn) => {
 
 const getJson = (list, key) => {
   const r = {};
-  list.forEach((l) => {
+  list.forEach(l => {
     if (typeof l[key] === 'string') {
       r[l[key]] = true;
     } else {
@@ -144,25 +144,25 @@ const getJson = (list, key) => {
   return r;
 };
 
-const stripUnderScore = (val) => {
+const stripUnderScore = val => {
   return val.split('_').join(' ');
 };
 
-const capitalize = (val) => {
+const capitalize = val => {
   return `${val.charAt(0).toUpperCase()}${val.slice(1)}`;
 };
 
-const curried = (sourceFn) => (type) => (value) => {
+const curried = sourceFn => type => value => {
   sourceFn(type, value);
 };
 
 /* Doing this to fix refreshing state on every miliseconds change */
-const removeSecondsMiliseconds = (d) => {
+const removeSecondsMiliseconds = d => {
   d.setSeconds(0, 0);
   return d;
 };
 
-const getTimeRangeValue = (symbol) => {
+const getTimeRangeValue = symbol => {
   const now = new Date();
   switch (symbol) {
     case TIME_RANGE_BY_HOUR:
@@ -186,7 +186,7 @@ const getTimeRangeValue = (symbol) => {
   }
 };
 
-const detectAdjective = (n) => {
+const detectAdjective = n => {
   if (n > 1) return 's';
   return '';
 };
@@ -200,7 +200,7 @@ const getSelectedValue = (selectedValues, defaultValue) => {
   return filteredElement;
 };
 
-const getSelectedFiltersCount = (selectedValues) => {
+const getSelectedFiltersCount = selectedValues => {
   let filteredElement = 'No filter applied';
 
   const totalSelectedValues = Object.keys(selectedValues);
@@ -213,17 +213,17 @@ const getSelectedFiltersCount = (selectedValues) => {
 };
 
 export const getValuesForEmptyMap = () => {
-  return Object.keys(NO_TITLE_MAP).map((m) => NO_TITLE_MAP[m]);
+  return Object.keys(NO_TITLE_MAP).map(m => NO_TITLE_MAP[m]);
 };
 
 export const getWhereClauseEx = (filterMap, filters, arraySerializer) => {
   const fFilter = {};
   const emptyValues = getValuesForEmptyMap();
-  Object.keys(filterMap).forEach((f) => {
+  Object.keys(filterMap).forEach(f => {
     if (f !== TIME_RANGE_SYMBOL) {
       const appliedFilters = filterByType(filters, f);
       const fil = [];
-      appliedFilters.forEach((e) => {
+      appliedFilters.forEach(e => {
         if (emptyValues.indexOf(e.value) !== -1) {
           fil.push('""');
           if (e.value === EMPTY_CLIENT_NAME_SYMBOL) {
@@ -245,12 +245,12 @@ export const getWhereClauseEx = (filterMap, filters, arraySerializer) => {
 export const getWhereClause = (filterMap, filters) => {
   const fFilter = [];
   const emptyValues = getValuesForEmptyMap();
-  Object.keys(filterMap).forEach((f) => {
+  Object.keys(filterMap).forEach(f => {
     const appliedFilters = filterByType(filters, f);
     const fil = [];
     // TODO: The below logic can be improved by using _in operator to search for something like
     // ["", null] for nullable string column. Currently it uses _or and adds each condition inplace
-    appliedFilters.forEach((e) => {
+    appliedFilters.forEach(e => {
       if (emptyValues.indexOf(e.value) !== -1) {
         if (e.value === EMPTY_CLIENT_NAME_SYMBOL) {
           fil.push(
@@ -330,7 +330,7 @@ export const getWhereClause = (filterMap, filters) => {
   return fFilter;
 };
 
-export const getSelectedLength = (o) => {
+export const getSelectedLength = o => {
   return Object.keys(o).length;
 };
 

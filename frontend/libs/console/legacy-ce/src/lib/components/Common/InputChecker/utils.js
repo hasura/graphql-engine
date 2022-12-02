@@ -1,4 +1,4 @@
-const intChecker = (val) => {
+const intChecker = val => {
   const rVal = parseInt(val, 10);
 
   if (!rVal) {
@@ -6,7 +6,7 @@ const intChecker = (val) => {
   }
   return rVal;
 };
-const boolChecker = (val) => {
+const boolChecker = val => {
   let rVal = '';
   if (val === 'true') {
     rVal = true;
@@ -22,7 +22,7 @@ const boolChecker = (val) => {
   return rVal;
 };
 
-const jsonChecker = (val) => {
+const jsonChecker = val => {
   try {
     JSON.parse(val);
   } catch (e) {

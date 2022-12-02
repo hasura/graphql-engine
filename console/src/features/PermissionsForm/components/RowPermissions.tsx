@@ -175,6 +175,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                 setValue(rowPermissionsCheckType, SelectedSection.Custom)
               }
               editorProps={{ $blockScrolling: true }}
+              setOptions={{ useWorker: false }}
             />
           </div>
         )}
@@ -214,6 +215,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                   setValue(rowPermissionsCheckType, SelectedSection.Custom)
                 }
                 editorProps={{ $blockScrolling: true }}
+                setOptions={{ useWorker: false }}
               />
             </div>
           )}

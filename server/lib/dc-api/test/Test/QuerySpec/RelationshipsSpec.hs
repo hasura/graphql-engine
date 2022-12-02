@@ -3,11 +3,12 @@ module Test.QuerySpec.RelationshipsSpec (spec) where
 import Control.Arrow ((>>>))
 import Control.Lens (Traversal', ix, (&), (?~), (^.), (^..), (^?), _Just)
 import Control.Monad (when)
+import Data.Aeson (Value (..))
 import Data.HashMap.Strict (HashMap)
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Maybe (maybeToList)
+import Data.Maybe (fromMaybe, maybeToList)
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client)
@@ -60,6 +61,43 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
               paginatedAlbums = albums & sortOn (^? Data.field "ArtistId") & drop 1 & take 2
               paginatedAlbums' = Data.deleteField "ArtistId" <$> paginatedAlbums
            in Data.insertField "Albums" (mkSubqueryResponse paginatedAlbums') artist
+
+    let expectedAlbums = joinInAlbums <$> _tdArtistsRows
+    Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedArtists `jsonShouldBe` Nothing
+
+  it "can filter in object relationships" $ do
+    let artistWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Name" _tdStringType) (ScalarValue (String "H") _tdStringType)
+    let query = albumsWithArtistQuery (qWhere ?~ artistWhere)
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+
+    let joinInArtist (album :: HashMap FieldName FieldValue) =
+          let artist = do
+                artistId <- album ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+                artist' <- _tdArtistsRowsById ^? ix artistId
+                if (artist' ^? Data.field "Name" . Data._ColumnFieldString) >= Just "H" then Just artist' else Nothing
+              artistPropVal = maybeToList artist
+           in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+    let removeArtistId = Data.deleteField "ArtistId"
+
+    let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
+    Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
+  it "can filter in array relationships" $ do
+    let albumsWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Title" _tdStringType) (ScalarValue (String "O") _tdStringType)
+    let query = artistsWithAlbumsQuery (qWhere ?~ albumsWhere)
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> guardedQuery api sourceName config query
+
+    let joinInAlbums (artist :: HashMap FieldName FieldValue) =
+          let albums = fromMaybe [] $ do
+                artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+                _tdAlbumsRows
+                  & filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId && album ^? Data.field "Title" . Data._ColumnFieldString >= Just "O")
+                  & fmap (Data.deleteField "ArtistId")
+                  & sortOn (^? Data.field "ArtistId")
+                  & pure
+           in Data.insertField "Albums" (mkSubqueryResponse albums) artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums

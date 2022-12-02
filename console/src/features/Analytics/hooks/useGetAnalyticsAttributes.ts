@@ -3,6 +3,8 @@ import { getAnalyticsAttributes } from '../core/getAnalyticsAttributes';
 
 /**
  * The hook-ish version of getAnalyticsAttributes.
+ * The default choice should be to use the <Analytics /> component but this hook can be used in
+ * cases where the analytics name is optional.
  */
 export function useGetAnalyticsAttributes(
   name?: string,

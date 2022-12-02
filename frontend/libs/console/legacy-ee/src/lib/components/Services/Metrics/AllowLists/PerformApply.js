@@ -10,7 +10,7 @@ const PerformApply = ({ query, dispatch, updateStatus }) => {
           updateStatus('Applied Successfully');
           setTimeout(() => updateStatus('Apply'), 5000);
         })
-        .catch((applyErr) => {
+        .catch(applyErr => {
           updateStatus(applyErr.toString());
         });
     };
@@ -18,7 +18,7 @@ const PerformApply = ({ query, dispatch, updateStatus }) => {
       .then(() => {
         return performApply();
       })
-      .catch((err) => {
+      .catch(err => {
         /*
          * Sample error response for collection doesn't exist
           {"path":"$.args.collection","error":"query collection with name \"my_collection\" does not exists","code":"not-exists"}

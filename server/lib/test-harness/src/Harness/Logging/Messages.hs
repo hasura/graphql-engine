@@ -9,6 +9,17 @@ module Harness.Logging.Messages
     logTrace,
     LogHspecEvent (..),
     LogWithContext (..),
+    LogHGERequest (..),
+    LogHGEResponse (..),
+    LogDBQuery (..),
+    LogDropDBFailedWarning (..),
+    LogSubscriptionInit (..),
+    LogSubscriptionResponse (..),
+    LogFixtureTestStart (..),
+    LogFixtureSetupFailed (..),
+    LogFixtureSetupSucceeded (..),
+    LogFixtureTeardownFailed (..),
+    LogFixtureTeardownSucceeded (..),
     LogHarness (..),
     logHarness,
     -- FastLogger integration
@@ -16,6 +27,7 @@ module Harness.Logging.Messages
   )
 where
 
+import Control.Exception.Safe
 import Data.Aeson hiding (Error, Result, Success)
 import Data.Aeson.Types (Pair)
 import Data.ByteString qualified as BS
@@ -181,6 +193,128 @@ instance LoggableMessage LogWithContext where
       [ ("type", String "LogWithContext"),
         ("context", toJSON lwcContext),
         ("log", lwcLog)
+      ]
+
+data LogHGERequest = LogHGERequest
+  { lhRequestPath :: Text,
+    lhRequestBody :: Value
+  }
+
+instance LoggableMessage LogHGERequest where
+  fromLoggableMessage LogHGERequest {..} =
+    object
+      [ ("type", String "LogHGERequest"),
+        ("path", String lhRequestPath),
+        ("body", lhRequestBody)
+      ]
+
+data LogHGEResponse = LogHGEResponse
+  { lhResponsePath :: Text,
+    lhResponseBody :: Value
+  }
+
+instance LoggableMessage LogHGEResponse where
+  fromLoggableMessage LogHGEResponse {..} =
+    object
+      [ ("type", String "LogHGEResponse"),
+        ("path", String lhResponsePath),
+        ("body", lhResponseBody)
+      ]
+
+data LogDBQuery = LogDBQuery
+  { ldqConnectionString :: Text,
+    ldqQuery :: Text
+  }
+
+instance LoggableMessage LogDBQuery where
+  fromLoggableMessage LogDBQuery {..} =
+    object
+      [ ("type", String "LogDBQuery"),
+        ("connection_string", String ldqConnectionString),
+        ("query", String ldqQuery)
+      ]
+
+data LogDropDBFailedWarning = LogDropDBFailedWarning
+  { lddfwDatabaseName :: Text,
+    lddfwException :: SomeException
+  }
+
+instance LoggableMessage LogDropDBFailedWarning where
+  fromLoggableMessage LogDropDBFailedWarning {..} =
+    object
+      [ ("type", String "LogDropDBFailedWarning"),
+        ("database_name", String lddfwDatabaseName),
+        ("exception", String (tshow lddfwException))
+      ]
+
+data LogSubscriptionInit = LogSubscriptionInit
+  {lsiQuery :: Value}
+
+instance LoggableMessage LogSubscriptionInit where
+  fromLoggableMessage LogSubscriptionInit {..} =
+    object
+      [ ("type", String "LogSubscriptionInit"),
+        ("query", lsiQuery)
+      ]
+
+data LogSubscriptionResponse = LogSubscriptionResponse
+  {lsrBody :: Value}
+
+instance LoggableMessage LogSubscriptionResponse where
+  fromLoggableMessage LogSubscriptionResponse {..} =
+    object
+      [ ("type", String "LogSubscriptionResponse"),
+        ("body", lsrBody)
+      ]
+
+data LogFixtureTestStart = LogFixtureTestStart
+  {lftsFixtureName :: Text}
+
+instance LoggableMessage LogFixtureTestStart where
+  fromLoggableMessage LogFixtureTestStart {..} =
+    object
+      [ ("type", String "LogFixtureTestStart"),
+        ("fixture_name", String lftsFixtureName)
+      ]
+
+data LogFixtureSetupSucceeded = LogFixtureSetupSucceeded
+  {lfssStep :: Int}
+
+instance LoggableMessage LogFixtureSetupSucceeded where
+  fromLoggableMessage LogFixtureSetupSucceeded {..} =
+    object
+      [ ("type", String "LogFixtureSetupSucceeded"),
+        ("step", Number (fromIntegral lfssStep))
+      ]
+
+data LogFixtureSetupFailed = LogFixtureSetupFailed
+  {lfsfStep :: Int}
+
+instance LoggableMessage LogFixtureSetupFailed where
+  fromLoggableMessage LogFixtureSetupFailed {..} =
+    object
+      [ ("type", String "LogFixtureSetupFailed"),
+        ("step", Number (fromIntegral lfsfStep))
+      ]
+
+data LogFixtureTeardownSucceeded = LogFixtureTeardownSucceeded
+  {lftsStep :: Int}
+
+instance LoggableMessage LogFixtureTeardownSucceeded where
+  fromLoggableMessage LogFixtureTeardownSucceeded {..} =
+    object
+      [ ("type", String "LogFixtureTeardownSucceeded"),
+        ("step", Number (fromIntegral lftsStep))
+      ]
+
+data LogFixtureTeardownFailed = LogFixtureTeardownFailed
+  {lftfStep :: Int}
+
+instance LoggableMessage LogFixtureTeardownFailed where
+  fromLoggableMessage LogFixtureTeardownFailed {..} =
+    object
+      [ ("type", String "LogFixtureTeardownFailed"),
+        ("step", Number (fromIntegral lftfStep))
       ]
 
 -- | Temporary message type for messages logged from within the Harness modules.

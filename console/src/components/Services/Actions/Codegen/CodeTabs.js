@@ -61,6 +61,7 @@ const CodeTabs = ({
       value: content.trim(),
       readOnly: true,
       mode: getLanguageModeFromExtension(getFileExtensionFromFilename(name)),
+      setOptions: { useWorker: false },
     };
     return (
       <Tab eventKey={name} title={name} key={name}>

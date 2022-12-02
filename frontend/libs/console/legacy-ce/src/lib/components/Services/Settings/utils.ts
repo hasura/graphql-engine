@@ -55,7 +55,7 @@ const filterInconsistentMetadataObject = (
 
       if (inconsistentObject.type === 'table') {
         const tableName = getTableNameFromDef(inconsistentObject.definition);
-        return schemas.filter((s) => s.table_name !== tableName);
+        return schemas.filter(s => s.table_name !== tableName);
       }
 
       if (
@@ -63,7 +63,7 @@ const filterInconsistentMetadataObject = (
         inconsistentObject.type === 'object_relation'
       ) {
         const { table } = inconsistentObject.definition;
-        return schemas.map((schema) => {
+        return schemas.map(schema => {
           if (schema.table_name === getTableNameFromDef(table)) {
             return {
               ...schema,
@@ -78,7 +78,7 @@ const filterInconsistentMetadataObject = (
 
       if (permissionTypes.includes(inconsistentObject.type)) {
         const { table } = inconsistentObject.definition;
-        return schemas.map((schema) => {
+        return schemas.map(schema => {
           if (schema.table_name === getTableNameFromDef(table)) {
             return {
               ...schema,
@@ -97,7 +97,7 @@ const filterInconsistentMetadataObject = (
 
       if (inconsistentObject.type === 'function') {
         return functions.filter(
-          (f) =>
+          f =>
             f.function_name !==
             getTableNameFromDef(inconsistentObject.definition)
         );
@@ -109,7 +109,7 @@ const filterInconsistentMetadataObject = (
 
       if (inconsistentObject.type === 'event_trigger') {
         return triggers.filter(
-          (t) => t.name !== inconsistentObject.definition.configuration.name
+          t => t.name !== inconsistentObject.definition.configuration.name
         );
       }
 
@@ -119,7 +119,7 @@ const filterInconsistentMetadataObject = (
 
       if (inconsistentObject.type === 'remote_schema') {
         return remoteSchemas.filter(
-          (t) => t.name !== inconsistentObject.definition.name
+          t => t.name !== inconsistentObject.definition.name
         );
       }
 
@@ -129,7 +129,7 @@ const filterInconsistentMetadataObject = (
 
       if (inconsistentObject.type === 'action') {
         return actions.filter(
-          (t) => t.name !== inconsistentObject.definition.name
+          t => t.name !== inconsistentObject.definition.name
         );
       }
 
@@ -146,7 +146,7 @@ export const filterInconsistentMetadataObjects = (
 ) => {
   let filteredMetadataObjects = JSON.parse(JSON.stringify(metadataObjects));
 
-  inconsistentObjects.forEach((object) => {
+  inconsistentObjects.forEach(object => {
     filteredMetadataObjects = filterInconsistentMetadataObject(
       filteredMetadataObjects,
       object,

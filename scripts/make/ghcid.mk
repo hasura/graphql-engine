@@ -10,25 +10,25 @@ PANE_HEIGHT = $(shell tmux display -p "\#{pane_height}" || echo 30 )
 # this needs to make it into ghcid: https://github.com/biegunka/terminal-size/pull/16
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HSPEC_MATCH="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
 	else \
-  	HSPEC_MATCH="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main"; \
 	fi
 endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HSPEC_MATCH="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--setup ":set args $(2)" \
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
 	else \
-  	HSPEC_MATCH="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main" \
 			--setup ":set args $(2)"; \
 	fi
@@ -63,10 +63,14 @@ ghcid-api-tests:
 ghcid-test-harness:
 	$(call run_ghcid,test-harness)
 
+.PHONY: ghcid-api-tests-pro
+## ghcid-api-tests-pro: build and watch api-tests in pro
+ghcid-api-tests-pro:
+	$(call run_ghcid,api-tests-pro:exe:api-tests-pro)
+
 .PHONY: ghcid-test-backends
 ## ghcid-test-backends: run all api tests in ghcid
-ghcid-test-backends: start-sqlserver remove-tix-file
-	docker compose up -d --wait postgres citus cockroach mariadb dc-reference-agent dc-sqlite-agent
+ghcid-test-backends: start-backends remove-tix-file
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests)
 
 .PHONY: ghcid-test-bigquery
@@ -78,15 +82,9 @@ ghcid-test-bigquery: remove-tix-file
 
 .PHONY: ghcid-test-sqlserver
 ## ghcid-test-sqlserver: run tests for SQL Server backend in ghcid
-ghcid-test-sqlserver: start-sqlserver remove-tix-file
-	docker compose up -d --wait postgres
+ghcid-test-sqlserver: remove-tix-file
+	docker compose up -d --wait postgres sqlserver{,-healthcheck,-init}
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests,SQLServer)
-
-.PHONY: ghcid-test-mysql
-## ghcid-test-mysql: run tests for MySQL backend in ghcid
-ghcid-test-mysql: remove-tix-file
-	docker compose up -d --wait postgres mariadb
-	$(call run_ghcid_api_tests,api-tests:exe:api-tests,MySQL)
 
 .PHONY: ghcid-test-citus
 ## ghcid-test-citus: run tests for Citus backend in ghcid
@@ -103,6 +101,7 @@ ghcid-test-cockroach: remove-tix-file
 .PHONY: ghcid-test-data-connectors
 ## ghcid-test-data-connectors: run tests for DataConnectors in ghcid
 ghcid-test-data-connectors: remove-tix-file
+	docker compose build
 	docker compose up -d --wait postgres dc-reference-agent dc-sqlite-agent
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests,DataConnector)
 

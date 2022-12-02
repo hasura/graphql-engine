@@ -123,7 +123,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
         if (existTableSchema) {
           const { allTableSchemas } = this.props;
 
-          const allSchemaNames = allTableSchemas.map((t) => t.table_schema);
+          const allSchemaNames = allTableSchemas.map(t => t.table_schema);
 
           if (!allSchemaNames.includes(existTableSchema)) {
             missingSchemas.push(existTableSchema);
@@ -874,7 +874,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
             allFunctions
           );
           const computedField = computedFields.scalar.find(
-            (cs) => cs.computed_field_name === columnName
+            cs => cs.computed_field_name === columnName
           );
           if (computedField) {
             computedFieldFn = getComputedFieldFunction(
@@ -1100,7 +1100,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
       }
 
       const computedFieldsOptions = scalarComputedFieldsWithoutArgs.map(
-        (f) => f.computed_field_name
+        f => f.computed_field_name
       );
       const newOperatorOptions = [
         { optGroupTitle: 'bool operators', options: boolOperators },

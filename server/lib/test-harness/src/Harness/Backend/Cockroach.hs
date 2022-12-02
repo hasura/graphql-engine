@@ -41,13 +41,14 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Logging
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (Cockroach), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
+import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -80,20 +81,13 @@ runWithInitialDb_ testEnvironment =
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (Constants.cockroachConnectionString testEnvironment)
+  runInternal testEnvironment (Constants.cockroachConnectionString (uniqueTestId testEnvironment))
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Executing connection string: "
-        <> connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+  testLogMessage testEnvironment $ LogDBQuery (T.pack connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -116,43 +110,39 @@ runInternal testEnvironment connectionString query = do
 -- | Metadata source information for the default CockroachDB instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
-  let source = defaultSource Cockroach
-      backendType = defaultBackendTypeString Cockroach
-      sourceConfiguration = defaultSourceConfiguration testEnvironment
-   in [yaml|
-        name: *source
-        kind: *backendType
-        tables: []
-        configuration: *sourceConfiguration
-      |]
+  [interpolateYaml|
+    name: #{ defaultSource Cockroach }
+    kind: #{ defaultBackendTypeString Cockroach }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnvironment }
+  |]
 
 defaultSourceConfiguration :: TestEnvironment -> Value
 defaultSourceConfiguration testEnvironment =
-  let databaseUrl = cockroachConnectionString testEnvironment
-   in [yaml|
-        connection_info:
-          database_url: *databaseUrl
-          pool_settings: {}
-      |]
+  let databaseUrl = cockroachConnectionString (uniqueTestId testEnvironment)
+   in [interpolateYaml|
+    connection_info:
+      database_url: #{ databaseUrl }
+      pool_settings: {}
+  |]
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Cockroach backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "CREATE TABLE",
-          T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
-          "(",
+  run_
+    testEnv
+    [i|
+      CREATE TABLE #{ Constants.cockroachDb }."#{ tableName }"
+        (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
               <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
               <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
-              <> map Postgres.uniqueConstraintSql tableConstraints,
-          ");"
-        ]
+              <> map Postgres.uniqueConstraintSql tableConstraints
+        });
+    |]
 
   for_ tableUniqueIndexes (run_ testEnv . Postgres.createUniqueIndexSql schemaName tableName)
 
@@ -266,7 +256,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(_ :: SomeException) -> pure ()
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -303,8 +293,8 @@ setup tables (testEnvironment, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 -- Because the Fixture takes care of dropping the DB, all we do here is
 -- clear the metadata with `replace_metadata`.
-teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown _ (testEnvironment, _) = do
+teardown :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+teardown _ (testEnvironment, _) =
   GraphqlEngine.setSources testEnvironment mempty Nothing
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction

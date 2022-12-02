@@ -2,11 +2,11 @@ import { aggCategory, pgCategoryCode } from './PgInfo';
 
 const commonlyUsedFunctions = ['now', 'gen_random_uuid', 'random'];
 
-const getParanthesized = (name) => {
+const getParanthesized = name => {
   return `${name}()`;
 };
 
-const splitDbRow = (row) => {
+const splitDbRow = row => {
   /* Splits comma seperated type names
    * Splits comma seperated type user friendly type names
    * Splits comma seperated type descriptions
@@ -24,9 +24,9 @@ const splitDbRow = (row) => {
  *  For text: text text "variable-length string, no limit specified"
  * */
 
-const getAllDataTypeMap = (allDataTypes) => {
+const getAllDataTypeMap = allDataTypes => {
   const dTIndex = {};
-  allDataTypes.forEach((dataTypes) => {
+  allDataTypes.forEach(dataTypes => {
     const { typInfo, typDisplayName, typDescription } = splitDbRow(dataTypes);
 
     typInfo.forEach((currentType, typIndex) => {
@@ -136,8 +136,8 @@ const getDataOptions = (commonDataTypes, restTypes, identifier) => {
    *  "Category the particular type belongs to"
    * ]
    * */
-  aggCategory.forEach((category) => {
-    const categoryRow = restTypes.filter((r) => r[3] === category);
+  aggCategory.forEach(category => {
+    const categoryRow = restTypes.filter(r => r[3] === category);
     if (categoryRow.length > 0) {
       const { typInfo, typValueMap } = getDataTypeInfo(
         categoryRow[0],
@@ -158,7 +158,7 @@ const getDataOptions = (commonDataTypes, restTypes, identifier) => {
   };
 };
 
-const getPlaceholder = (column) => {
+const getPlaceholder = column => {
   switch (column.type) {
     case 'timestamptz':
       return 'example: now()';
@@ -171,7 +171,7 @@ const getPlaceholder = (column) => {
   }
 };
 
-const getDefaultValue = (column) => {
+const getDefaultValue = column => {
   return ('default' in column && column.default.value) || '';
 };
 
@@ -187,11 +187,11 @@ const inferDefaultValues = (defaultFuncs, typeCasts) => {
    *  Look for the types which the current type can be casted to
    *  Try to find the default values for the right type and accumulate it to an array
    * */
-  const computeDefaultValues = (currentType) => {
+  const computeDefaultValues = currentType => {
     visitedType[currentType] = true;
     /* Retrieve the recommended type casts for the current type */
     const validRightCasts = getRecommendedTypeCasts(currentType, typeCasts);
-    validRightCasts.forEach((v) => {
+    validRightCasts.forEach(v => {
       if (!visitedType[v]) {
         if (v in defaultFuncs) {
           visitedType[v] = true;

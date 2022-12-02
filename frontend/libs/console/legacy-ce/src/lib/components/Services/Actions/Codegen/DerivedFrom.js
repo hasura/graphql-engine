@@ -38,6 +38,7 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
         width={'600px'}
         height={'200px'}
         readOnly
+        setOptions={{ useWorker: false }}
       />
     </div>
   );

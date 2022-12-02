@@ -22,6 +22,7 @@ cypress/screenshots
 coverage
 # is it needed anymore?
 test
+cypress.env.json
 
 # Webpack-related stuff
 webpack-assets.json

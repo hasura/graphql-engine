@@ -230,7 +230,7 @@ convInsQ ::
 convInsQ query = do
   let source = iqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       convInsertQuery
         (withPathK "objects" . decodeInsObjs)

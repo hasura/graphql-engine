@@ -1,5 +1,8 @@
 // type definition for all custom commands
 declare namespace Cypress {
+  interface PluginConfig {
+    useRelativeSnapshots: boolean;
+  }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Chainable<Subject> {
     /**
@@ -69,5 +72,7 @@ declare namespace Cypress {
       thisTest: Mocha.Context;
       saveFixtureFiles?: boolean;
     }): Chainable<unknown>;
+
+    snapshot(options?: { name?: string }): void;
   }
 }

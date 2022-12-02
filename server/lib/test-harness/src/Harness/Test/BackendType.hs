@@ -8,6 +8,7 @@ module Harness.Test.BackendType
     pattern DataConnectorReference,
     pattern DataConnectorSqlite,
     defaultSource,
+    defaultBackendDisplayNameString,
     defaultBackendTypeString,
     defaultBackendServerUrl,
     defaultBackendCapabilities,
@@ -30,7 +31,6 @@ import Hasura.Prelude
 --       parameterized constructor for new data-connectors in future.
 data BackendType
   = Postgres
-  | MySQL
   | SQLServer
   | BigQuery
   | Citus
@@ -51,7 +51,6 @@ pattern DataConnectorReference = DataConnector "reference"
 defaultSource :: BackendType -> String
 defaultSource = \case
   Postgres -> "postgres"
-  MySQL -> "mysql"
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
@@ -97,10 +96,12 @@ defaultBackendCapabilities = \case
             aggregate_functions:
               max: DateTime
               min: DateTime
+            graphql_type: String
           string:
             aggregate_functions:
               longest: string
               shortest: string
+            graphql_type: String
     |]
   _ -> Nothing
 
@@ -108,18 +109,21 @@ defaultBackendCapabilities = \case
 defaultBackendTypeString :: BackendType -> String
 defaultBackendTypeString = \case
   Postgres -> "pg"
-  MySQL -> "mysql"
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
   Cockroach -> "cockroach"
   DataConnector agent -> agent
 
+defaultBackendDisplayNameString :: BackendType -> String
+defaultBackendDisplayNameString b = case defaultBackendTypeString b of
+  "sqlite" -> "Hasura SQLite (sqlite)"
+  x -> x
+
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendServerUrl :: BackendType -> Maybe String
 defaultBackendServerUrl = \case
   Postgres -> Nothing
-  MySQL -> Nothing
   SQLServer -> Nothing
   BigQuery -> Nothing
   Citus -> Nothing
@@ -128,10 +132,11 @@ defaultBackendServerUrl = \case
   DataConnectorSqlite -> Just "http://localhost:65007"
   DataConnector _ -> Nothing
 
+-- workaround until we support schema/dataset keys generically
+-- https://hasurahq.atlassian.net/browse/NDAT-332
 schemaKeyword :: BackendType -> Key
 schemaKeyword = \case
   Postgres -> "schema"
-  MySQL -> "schema"
   SQLServer -> "schema"
   BigQuery -> "dataset"
   Citus -> "schema"

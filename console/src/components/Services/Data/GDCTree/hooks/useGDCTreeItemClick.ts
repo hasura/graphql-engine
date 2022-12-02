@@ -1,8 +1,8 @@
-import { getRoute } from '@/features/Data';
 import { exportMetadata } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 import { Dispatch } from '@/types';
 import { useCallback } from 'react';
+import { getRoute } from '../../../../../utils/getDataRoute';
 import { useIsUnmounted } from '../../Common/tsUtils';
 import _push from '../../push';
 

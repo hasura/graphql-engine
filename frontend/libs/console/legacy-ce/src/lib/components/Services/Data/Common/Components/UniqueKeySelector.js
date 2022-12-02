@@ -37,7 +37,7 @@ const UniqueKeySelector = ({
 
   // select options
   const getColumnOptions = () => {
-    return columns.map((c) => {
+    return columns.map(c => {
       if (uniqueKey.includes(c.index) || !c.name || !c.type) {
         return null;
       }
@@ -51,8 +51,8 @@ const UniqueKeySelector = ({
 
   // selected columns
   const existingSelects = uniqueKey.map((uk, i) => {
-    const removeUniqueCol = (e) => dispatchRemoveUniqueCol(e, i);
-    const setUniqueCol = (e) => dispatchSelectUniqueCol(e, i);
+    const removeUniqueCol = e => dispatchRemoveUniqueCol(e, i);
+    const setUniqueCol = e => dispatchSelectUniqueCol(e, i);
 
     const removeIcon = (
       <FaTimes
@@ -82,7 +82,7 @@ const UniqueKeySelector = ({
 
   // placeholder dropdown to add more columns
   const newSelect = () => {
-    const selectUniqueCol = (e) => dispatchSelectUniqueCol(e, numCols);
+    const selectUniqueCol = e => dispatchSelectUniqueCol(e, numCols);
     return (
       <div className="flex" key={numCols}>
         <select

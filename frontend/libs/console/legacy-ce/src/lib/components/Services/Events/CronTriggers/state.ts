@@ -46,31 +46,31 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
     state,
     setState: {
       name: (name: string) => {
-        setState((s) => ({ ...s, name }));
+        setState(s => ({ ...s, name }));
       },
       webhook: (webhook: string) => {
-        setState((s) => ({ ...s, webhook }));
+        setState(s => ({ ...s, webhook }));
       },
       schedule: (schedule: string) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           schedule,
         }));
       },
       payload: (jsonString: string) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           payload: jsonString,
         }));
       },
       headers: (headers: Header[]) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           headers,
         }));
       },
       loading: (action: FormAsyncAction, isLoading: boolean) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           loading: {
             ...s.loading,
@@ -79,19 +79,19 @@ export const useScheduledTrigger = (initState?: LocalScheduledTriggerState) => {
         }));
       },
       retryConf: (r: RetryConf) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           retryConf: r,
         }));
       },
       comment: (comment: string) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           comment,
         }));
       },
       toggleIncludeInMetadata: () => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           includeInMetadata: !s.includeInMetadata,
         }));

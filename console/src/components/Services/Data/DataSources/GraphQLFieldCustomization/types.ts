@@ -42,7 +42,10 @@ export type GraphQLFieldCustomizationProps = {
     prefix?: string;
     suffix?: string;
   };
-  onChange: (fieldName: CustomizationFieldName, fieldValue: string) => void;
+  onChange: (
+    fieldName: CustomizationFieldName,
+    fieldValue: string | null | undefined
+  ) => void;
   connectionDBState?: ConnectDBState;
-  namingConvention?: NamingConventionOptions;
+  namingConvention?: NamingConventionOptions | null;
 };

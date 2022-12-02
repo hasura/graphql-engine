@@ -90,7 +90,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
               borderBottom: '2px dotted black',
               borderRadius: 0,
             }}
-            onChange={(e) => setLocalValue(e.target.value)}
+            onChange={e => setLocalValue(e.target.value)}
           />
           {isSessionvar() && (
             <button

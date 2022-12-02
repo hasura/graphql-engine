@@ -65,7 +65,6 @@ import Data.Functor.Barbie (AllBF, ApplicativeB, ConstraintsB, FunctorB, Travers
 import Data.Functor.Barbie qualified as B
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Webhook.Transform.Body (Body (..), BodyTransformFn, TransformFn (BodyTransformFn_))
 import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body
@@ -94,7 +93,7 @@ data RequestTransform = RequestTransform
     templateEngine :: TemplatingEngine
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
 
 instance FromJSON RequestTransform where
   parseJSON = Aeson.withObject "RequestTransform" \o -> do
@@ -180,10 +179,6 @@ deriving stock instance
 deriving anyclass instance
   AllBF NFData f RequestFields =>
   NFData (RequestFields f)
-
-deriving anyclass instance
-  AllBF Cacheable f RequestFields =>
-  Cacheable (RequestFields f)
 
 -- NOTE: It is likely that we can derive these instances. Possibly if
 -- we move the aeson instances onto the *Transform types.
@@ -331,7 +326,7 @@ data MetadataResponseTransform = MetadataResponseTransform
     mrtTemplatingEngine :: TemplatingEngine
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
 
 instance FromJSON MetadataResponseTransform where
   parseJSON = Aeson.withObject "MetadataResponseTransform" $ \o -> do

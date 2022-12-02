@@ -46,7 +46,7 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
             Column Name
           </option>
 
-          {columns?.map((columnName) => (
+          {columns?.map(columnName => (
             <option key={columnName} value={columnName}>
               {columnName}
             </option>
@@ -68,7 +68,7 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
             Select Preset Type
           </option>
 
-          {['static', 'from session variable'].map((type) => (
+          {['static', 'from session variable'].map(type => (
             <option key={type} value={type}>
               {type}
             </option>
@@ -128,7 +128,7 @@ const useStatus = (disabled: boolean) => {
 
   const columnNames = presets
     .map(({ columnName }) => columnName)
-    .filter((columnName) => columnName !== 'default');
+    .filter(columnName => columnName !== 'default');
 
   if (!columnNames?.length) {
     return 'No Presets';
@@ -189,12 +189,12 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
           {controlledFields.map((field, index) => {
             // remove current preset from columns to remove
             const columnsToRemove = controlledFields
-              .map((preset) => preset?.columnName)
-              .filter((preset) => preset !== presets[index]?.columnName);
+              .map(preset => preset?.columnName)
+              .filter(preset => preset !== presets[index]?.columnName);
 
             // remove other presets from selectable columns
             const selectableColumns = columns?.filter(
-              (column) => !columnsToRemove.includes(column)
+              column => !columnsToRemove.includes(column)
             );
 
             return (

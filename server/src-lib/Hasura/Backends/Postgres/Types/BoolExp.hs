@@ -42,7 +42,6 @@ module Hasura.Backends.Postgres.Types.BoolExp
 where
 
 import Data.Aeson.Extended
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 
@@ -86,8 +85,6 @@ data BooleanOperators a
 instance NFData a => NFData (BooleanOperators a)
 
 instance Hashable a => Hashable (BooleanOperators a)
-
-instance Cacheable a => Cacheable (BooleanOperators a)
 
 instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
   toJSONKeyValue = \case

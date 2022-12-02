@@ -11,7 +11,7 @@ const renderInputField = (
   const onSubmit = jest.fn();
   render(
     <Form
-      onSubmit={(args) => {
+      onSubmit={args => {
         console.log('AAAA', args);
         onSubmit(args);
       }}

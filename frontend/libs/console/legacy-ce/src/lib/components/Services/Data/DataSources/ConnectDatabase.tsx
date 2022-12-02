@@ -11,7 +11,6 @@ import { canAccessReadReplica } from '@/utils/permissions';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
-import globals from '../../../../Globals';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { showErrorNotification } from '../../Common/Notification';
 import _push from '../push';
@@ -36,12 +35,11 @@ import ReadReplicaForm from './ReadReplicaForm';
 import EditDataSource from './EditDataSource';
 import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
-import { newSampleDBTrial } from './SampleDatabase';
 
 interface ConnectDatabaseProps extends InjectedProps {}
 
-const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
-  const { dispatch, onboardingSampleDBCohortConfig } = props;
+const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
+  const { dispatch } = props;
 
   const [connectDBInputState, connectDBDispatch] = useReducer(
     connectDBReducer,
@@ -72,22 +70,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
   const paths = pathname.split('/');
   const editSourceName = paths[paths.length - 1];
   const currentSourceInfo = sources.find(
-    (source) => source.name === editSourceName
+    source => source.name === editSourceName
   );
-
-  // initialise an instance of sample DB trial and pass it to the connect DB form
-  const sampleDBTrial = newSampleDBTrial({
-    consoleType: globals.consoleType,
-    hasuraCloudProjectId: globals.hasuraCloudProjectId || '',
-    cohortConfig: onboardingSampleDBCohortConfig,
-  });
-
-  // user landed on connect-db page
-  React.useEffect(() => {
-    if (!isEditState && sampleDBTrial && sampleDBTrial.isActive()) {
-      sampleDBTrial.track.landOnConnectDB();
-    }
-  }, [sampleDBTrial, isEditState]);
 
   useEffect(() => {
     if (isEditState && currentSourceInfo) {
@@ -120,7 +104,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
 
       const existingReadReplicas: ExtendedConnectDBState[] | [] = (
         currentSourceInfo.configuration?.read_replicas ?? []
-      ).map((replica) => {
+      ).map(replica => {
         const dbType = currentSourceInfo.kind ?? 'postgres';
         const replicaDBUrlInfo = getReadReplicaDBUrlInfo(replica, dbType);
         return {
@@ -235,31 +219,12 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
   const onSuccessConnectDBCb = () => {
     setLoading(false);
 
-    // track sample DB connection success event
-    if (sampleDBTrial.isActive()) {
-      dispatch(
-        sampleDBTrial.track.connectionStatus(
-          'success',
-          connectDBInputState.databaseURLState.dbURL
-        )
-      );
-    }
-
     resetState();
     // route to manage page
     dispatch(_push('/data/manage'));
   };
 
   const onConnectDatabase = () => {
-    // cloud-console: track button click for sample DB trial analytics
-    if (
-      sampleDBTrial.isActive() &&
-      connectDBInputState.databaseURLState?.dbURL ===
-        sampleDBTrial.getDatabaseUrl()
-    ) {
-      sampleDBTrial.track.connectButton();
-    }
-
     if (!connectDBInputState.displayName.trim()) {
       dispatch(
         showErrorNotification(
@@ -271,7 +236,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
     }
 
     // TODO: check if permitted, if not pass undefined
-    const read_replicas = readReplicasState.map((replica) =>
+    const read_replicas = readReplicasState.map(replica =>
       makeReadReplicaConnectionObject(replica)
     );
 
@@ -422,7 +387,6 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
     return (
       <EditDataSource>
         <DataSourceFormWrapper
-          sampleDBTrial={sampleDBTrial}
           connectionDBState={connectDBInputState}
           connectionDBStateDispatch={connectDBDispatch}
           connectionTypeState={connectionType}
@@ -458,7 +422,6 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = (props) => {
   return (
     <Tabbed tabName="connect">
       <DataSourceFormWrapper
-        sampleDBTrial={sampleDBTrial}
         connectionDBState={connectDBInputState}
         connectionDBStateDispatch={connectDBDispatch}
         connectionTypeState={connectionType}
@@ -497,8 +460,6 @@ const mapStateToProps = (state: ReduxState) => {
     sources: state.metadata.metadataObject?.sources ?? [],
     dbConnection: state.tables.dbConnection,
     pathname: state?.routing?.locationBeforeTransitions?.pathname ?? '',
-    onboardingSampleDBCohortConfig:
-      state.main.cloud.onboardingSampleDB.cohortConfig,
   };
 };
 

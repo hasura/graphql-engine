@@ -43,12 +43,10 @@ const ArgElement: React.FC<Props> = ({
       {arg.isChecked && arg.isLeafArg && (
         <ArgValueElement
           value={arg.value}
-          handleArgValueKindChange={(e) =>
+          handleArgValueKindChange={e =>
             handleArgValueKindChange(arg, e.target.value as ArgValueKind)
           }
-          handleArgValueChange={(e) =>
-            handleArgValueChange(arg, e.target.value)
-          }
+          handleArgValueChange={e => handleArgValueChange(arg, e.target.value)}
           columns={columns}
         />
       )}

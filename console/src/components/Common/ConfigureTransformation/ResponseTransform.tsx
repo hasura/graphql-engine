@@ -1,42 +1,38 @@
 import React, { useRef } from 'react';
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
-import CrossIcon from '../Icons/Cross';
 import TemplateEditor from './CustomEditors/TemplateEditor';
 import { editorDebounceTime } from './utils';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
-import { KeyValuePair, RequestTransformStateBody } from './stateDefaults';
-import KeyValueInput from './CustomEditors/KeyValueInput';
-import { isEmpty } from '../utils/jsUtils';
-import { requestBodyActionState } from './requestTransformState';
+import { KeyValuePair, ResponseTransformStateBody } from './stateDefaults';
+import { responseBodyActionState } from './requestTransformState';
 
 type PayloadOptionsTransformsProps = {
-  requestBody: RequestTransformStateBody;
-  requestBodyError: string;
-  requestSampleInput: string;
-  requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
+  responseBody: ResponseTransformStateBody;
+  responseBodyOnChange: (responseBody: ResponseTransformStateBody) => void;
 };
 
 const ResponseTransforms: React.FC<PayloadOptionsTransformsProps> = ({
-  requestSampleInput,
-  requestBody,
-  requestBodyError,
-  requestBodyOnChange,
+  responseBody,
+  responseBodyOnChange,
 }) => {
   const editorRef = useRef<any>();
 
   const [localFormElements, setLocalFormElements] = React.useState<
     KeyValuePair[]
-  >(requestBody.form_template ?? [{ name: '', value: '' }]);
+  >(responseBody.form_template ?? [{ name: '', value: '' }]);
 
   React.useEffect(() => {
     setLocalFormElements(
-      requestBody.form_template ?? [{ name: '', value: '' }]
+      responseBody.form_template ?? [{ name: '', value: '' }]
     );
-  }, [requestBody]);
+  }, [responseBody]);
 
   useDebouncedEffect(
     () => {
-      requestBodyOnChange({ ...requestBody, form_template: localFormElements });
+      responseBodyOnChange({
+        ...responseBody,
+        form_template: localFormElements,
+      });
     },
     editorDebounceTime,
     [localFormElements]
@@ -65,33 +61,12 @@ const ResponseTransforms: React.FC<PayloadOptionsTransformsProps> = ({
           }
           number="1"
         />
-        {requestBody.action ===
-        requestBodyActionState.transformApplicationJson ? (
+        {responseBody.action ===
+        responseBodyActionState.transformApplicationJson ? (
           <TemplateEditor
-            requestBody={requestBody}
-            requestBodyError={requestBodyError}
-            requestSampleInput={requestSampleInput}
-            requestBodyOnChange={requestBodyOnChange}
+            requestBody={responseBody}
+            requestBodyOnChange={responseBodyOnChange}
           />
-        ) : null}
-
-        {requestBody.action ===
-        requestBodyActionState.transformFormUrlEncoded ? (
-          <>
-            {!isEmpty(requestBodyError) && (
-              <div className="mb-sm" data-test="transform-requestBody-error">
-                <CrossIcon />
-                <span className="text-red-500 ml-sm">{requestBodyError}</span>
-              </div>
-            )}
-            <div className="grid gap-3 grid-cols-3 mb-sm">
-              <KeyValueInput
-                pairs={localFormElements}
-                setPairs={setLocalFormElements}
-                testId="add-url-encoded-body"
-              />
-            </div>
-          </>
         ) : null}
       </div>
     </div>

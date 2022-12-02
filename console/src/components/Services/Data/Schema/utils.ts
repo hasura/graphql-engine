@@ -1,4 +1,5 @@
 import React from 'react';
+import { TaskEvent } from '@/features/ConnectDB';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 import { LS_KEYS, getLSItem, setLSItem } from '../../../../utils/localStorage';
 import globals from '../../../../Globals';
@@ -49,4 +50,30 @@ export const useVPCBannerVisibility = () => {
     show,
     dismiss,
   };
+};
+
+export type DBLatencyData = TaskEvent['public_event_data']['sources'][number];
+
+const isSourceLatencyGood = (sourceLatencyData: DBLatencyData) => {
+  return sourceLatencyData.avg_latency <= 100 && sourceLatencyData.error === '';
+};
+
+export const checkHighLatencySources = (taskEvent: TaskEvent | undefined) => {
+  if (!taskEvent) {
+    return false;
+  }
+  return Object.keys(taskEvent.public_event_data.sources).every(sourceName =>
+    isSourceLatencyGood(taskEvent.public_event_data.sources[sourceName])
+  );
+};
+
+export const getSourceInfoFromLatencyData = (
+  sourceName: string,
+  latencyData?: TaskEvent
+) => {
+  if (!latencyData) {
+    return undefined;
+  }
+
+  return latencyData.public_event_data.sources[sourceName] || undefined;
 };

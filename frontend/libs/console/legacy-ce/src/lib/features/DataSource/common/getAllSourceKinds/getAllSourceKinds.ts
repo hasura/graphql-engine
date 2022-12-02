@@ -13,5 +13,5 @@ export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {
   });
 
   /** Temp filter to filter of mysql until it gets some resolution from the server */
-  return result.sources.filter((source) => source.kind !== 'mysql');
+  return result.sources.filter(source => source.kind !== 'mysql');
 };

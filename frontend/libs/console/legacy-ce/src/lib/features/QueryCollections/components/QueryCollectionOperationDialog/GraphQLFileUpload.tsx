@@ -38,7 +38,7 @@ export const GraphQLFileUpload: React.FC<GraphQLFileUploadProps> = ({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
 
-    readFile(files![0], (data) => {
+    readFile(files![0], data => {
       try {
         const parsedData = parseQueryString(data);
         setValue(name, parsedData);

@@ -7,8 +7,8 @@ import globals from '../../Globals';
 
 const { hasuraClientID, hasuraOAuthScopes } = globals;
 
-export const retrieveIdToken = (code) => {
-  return (dispatch) => {
+export const retrieveIdToken = code => {
+  return dispatch => {
     const formData = new FormData();
     formData.append('code', code);
     formData.append('client_id', hasuraClientID);
@@ -23,8 +23,8 @@ export const retrieveIdToken = (code) => {
   };
 };
 
-export const retrieveByRefreshToken = (refreshToken) => {
-  return (dispatch) => {
+export const retrieveByRefreshToken = refreshToken => {
+  return dispatch => {
     const formData = new FormData();
     formData.append('refresh_token', refreshToken);
     formData.append('client_id', hasuraClientID);

@@ -44,7 +44,7 @@ const Headers: React.FC<HeaderComponentProps> = ({
 
   return (
     <PreviewTable headings={requestHeadersHeadings}>
-      {headerState.map((header) => (
+      {headerState.map(header => (
         <tr
           className="p-md border-b border-gray-300 mb-md"
           key={`rest-header-${header.index}`}

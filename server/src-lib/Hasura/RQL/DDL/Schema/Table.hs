@@ -24,6 +24,7 @@ module Hasura.RQL.DDL.Schema.Table
 where
 
 import Control.Arrow.Extended
+import Control.Arrow.Interpret
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
@@ -433,43 +434,38 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
   rawTableInfos <-
     (|
       Inc.keyed
-        (|
-          withTable
-            ( \tables -> do
-                table <- noDuplicateTables -< tables
-                let maybeInfo = Map.lookup (_tbiName table) dbTablesMeta
-                buildRawTableInfo -< (table, maybeInfo, sourceConfig, reloadMetadataInvalidationKey)
-            )
-        |)
-      |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
-  let rawTableCache = removeSourceInKey $ catMaybes rawTableInfos
+        ( \tableName tables ->
+            (|
+              withRecordInconsistency
+                ( do
+                    table <- noDuplicateTables -< tables
+                    case Map.lookup (_tbiName table) dbTablesMeta of
+                      Nothing ->
+                        throwA
+                          -<
+                            err400 NotExists $ "no such table/view exists in source: " <>> _tbiName table
+                      Just metadataTable ->
+                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey)
+                )
+            |) (mkTableMetadataObject source tableName)
+        )
+      |) (Map.groupOnNE _tbiName tableBuildInputs)
+  let rawTableCache = catMaybes rawTableInfos
       enumTables = flip mapMaybe rawTableCache \rawTableInfo ->
         (,,) <$> _tciPrimaryKey rawTableInfo <*> pure (_tciCustomConfig rawTableInfo) <*> _tciEnumValues rawTableInfo
   tableInfos <-
-    (|
-      Inc.keyed
-        (| withTable (\table -> processTableInfo -< (enumTables, table, tCase)) |)
-      |) (withSourceInKey source rawTableCache)
-  returnA -< removeSourceInKey (catMaybes tableInfos)
+    interpretWriter
+      -< for rawTableCache \table -> withRecordInconsistencyM (mkTableMetadataObject source (_tciName table)) do
+        processTableInfo enumTables table tCase
+  returnA -< catMaybes tableInfos
   where
-    withSourceInKey :: Hashable k => SourceName -> HashMap k v -> HashMap (SourceName, k) v
-    withSourceInKey source = mapKeys (source,)
-
-    removeSourceInKey :: Hashable k => HashMap (SourceName, k) v -> HashMap k v
-    removeSourceInKey = mapKeys snd
-
-    withTable :: ErrorA QErr arr (e, s) a -> arr (e, ((SourceName, TableName b), s)) (Maybe a)
-    withTable f =
-      withRecordInconsistency f
-        <<< second
-          ( first $ arr \(source, name) ->
-              MetadataObject
-                ( MOSourceObjId source $
-                    AB.mkAnyBackend $
-                      SMOTable @b name
-                )
-                (toJSON name)
-          )
+    mkTableMetadataObject source name =
+      MetadataObject
+        ( MOSourceObjId source $
+            AB.mkAnyBackend $
+              SMOTable @b name
+        )
+        (toJSON name)
 
     noDuplicateTables = proc tables -> case tables of
       table :| [] -> returnA -< table
@@ -481,23 +477,14 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         QErr
         arr
         ( TableBuildInput b,
-          Maybe (DBTableMetadata b),
+          DBTableMetadata b,
           SourceConfig b,
           Inc.Dependency Inc.InvalidationKey
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, sourceConfig, reloadMetadataInvalidationKey) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey) -> do
       let TableBuildInput name isEnum config apolloFedConfig = tableBuildInput
-      metadataTable <-
-        (|
-          onNothingA
-            ( throwA
-                -<
-                  err400 NotExists $ "no such table/view exists in source: " <>> name
-            )
-          |) maybeInfo
-
-      let columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
+          columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
           columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
           description = buildDescription name config metadataTable
@@ -531,30 +518,25 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
     processTableInfo ::
-      ErrorA
-        QErr
-        arr
-        ( Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues),
-          TableCoreInfoG b (RawColumnInfo b) (Column b),
-          NamingCase
-        )
-        (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-    processTableInfo = proc (enumTables, rawInfo, tCase) ->
-      liftEitherA
-        -< do
-          let columns = _tciFieldInfoMap rawInfo
-              enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
-          columnInfoMap <-
-            collectColumnConfiguration columns (_tciCustomConfig rawInfo)
-              >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
-          assertNoDuplicateFieldNames (Map.elems columnInfoMap)
+      QErrM n =>
+      Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
+      TableCoreInfoG b (RawColumnInfo b) (Column b) ->
+      NamingCase ->
+      n (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+    processTableInfo enumTables rawInfo tCase = do
+      let columns = _tciFieldInfoMap rawInfo
+          enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
+      columnInfoMap <-
+        collectColumnConfiguration columns (_tciCustomConfig rawInfo)
+          >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
+      assertNoDuplicateFieldNames (Map.elems columnInfoMap)
 
-          primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
-          pure
-            rawInfo
-              { _tciFieldInfoMap = columnInfoMap,
-                _tciPrimaryKey = primaryKey
-              }
+      primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
+      pure
+        rawInfo
+          { _tciFieldInfoMap = columnInfoMap,
+            _tciPrimaryKey = primaryKey
+          }
 
     resolvePrimaryKeyColumns ::
       forall n a. (QErrM n) => HashMap FieldName a -> PrimaryKey b (Column b) -> n (PrimaryKey b a)

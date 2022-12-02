@@ -44,6 +44,7 @@ import {
   ResponseTransformStateBody,
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+import { GeneratedAction, OasGeneratorModal } from '@/features/Actions';
 import ActionEditor from '../Common/components/ActionEditor';
 import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
@@ -91,6 +92,8 @@ const AddAction: React.FC<AddActionProps> = ({
     responseTransformReducer,
     getActionResponseTransformDefaultState()
   );
+
+  const createActionRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (readOnlyMode)
@@ -239,6 +242,8 @@ const AddAction: React.FC<AddActionProps> = ({
   const responseBodyOnChange = (responseBody: ResponseTransformStateBody) => {
     responseTransformDispatch(setResponseBody(responseBody));
   };
+  const [isActionGeneratorOpen, setIsActionGeneratorOpen] =
+    React.useState(false);
 
   // we send separate requests for the `url` preview and `body` preview, as in case of error,
   // we will not be able to resolve if the error is with url or body transform, with the current state of `test_webhook_transform` api
@@ -345,12 +350,84 @@ const AddAction: React.FC<AddActionProps> = ({
     }
   }
 
+  const onImportGeneratedAction = (generatedAction: GeneratedAction): void => {
+    const {
+      types,
+      action,
+      description,
+      method,
+      baseUrl,
+      path,
+      requestTransforms,
+      responseTransforms,
+      headers: actionHeaders,
+      sampleInput,
+      queryParams,
+    } = generatedAction;
+    typeDefinitionOnChange(types, null, null, null);
+    actionDefinitionOnChange(action, null, null, null);
+    commentOnChange({
+      target: { value: description },
+    } as React.ChangeEvent<HTMLInputElement>);
+    handlerOnChange(baseUrl);
+    if (requestTransforms) {
+      requestPayloadTransformOnChange(true);
+      requestBodyOnChange({
+        action: 'transform',
+        template: requestTransforms,
+      });
+    } else {
+      requestPayloadTransformOnChange(false);
+    }
+    toggleForwardClientHeaders();
+    if (responseTransforms) {
+      responsePayloadTransformOnChange(true);
+      responseBodyOnChange({
+        action: 'transform',
+        template: responseTransforms,
+      });
+    } else {
+      responsePayloadTransformOnChange(false);
+    }
+
+    transformDispatch(setRequestSampleInput(sampleInput));
+    requestMethodOnChange(method);
+    requestUrlTransformOnChange(true);
+    requestUrlOnChange(path.replace(/\{([^}]+)\}/g, '{{$body.input.$1}}'));
+    requestQueryParamsOnChange(
+      queryParams.map(name => ({
+        name,
+        value: `{{$body.input.${name}}}`,
+      }))
+    );
+    setHeaders(
+      actionHeaders.map(name => ({
+        name,
+        value: `{{$body.input.${name}}}`,
+        type: 'static',
+      }))
+    );
+
+    setTimeout(() => {
+      if (createActionRef.current) {
+        createActionRef.current.scrollIntoView();
+      }
+    }, 0);
+  };
+
   return (
     <Analytics name="AddAction" {...REDACT_EVERYTHING}>
       <div className="w-full overflow-y-auto bg-gray-50">
         <div className="max-w-6xl">
           <Helmet title="Add Action - Actions | Hasura" />
           <h2 className="font-bold text-xl mb-5">Add a new action</h2>
+
+          {isActionGeneratorOpen && (
+            <OasGeneratorModal
+              onImport={onImportGeneratedAction}
+              onClose={() => setIsActionGeneratorOpen(false)}
+            />
+          )}
 
           <ActionEditor
             handler={handler}
@@ -371,6 +448,7 @@ const AddAction: React.FC<AddActionProps> = ({
             toggleForwardClientHeaders={toggleForwardClientHeaders}
             actionDefinitionOnChange={actionDefinitionOnChange}
             typeDefinitionOnChange={typeDefinitionOnChange}
+            onOpenActionGenerator={() => setIsActionGeneratorOpen(true)}
           />
 
           <ConfigureTransformation
@@ -393,7 +471,7 @@ const AddAction: React.FC<AddActionProps> = ({
             responseBodyOnChange={responseBodyOnChange}
           />
 
-          <div>
+          <div ref={createActionRef}>
             <Analytics
               name="actions-tab-create-action-button"
               passHtmlAttributesToChildren

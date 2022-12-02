@@ -11,7 +11,7 @@ import { Button } from '@hasura/console-oss';
 
 import styles from '../Metrics.module.scss';
 
-const DatePickerModal = (props) => {
+const DatePickerModal = props => {
   const selectionRange = {
     startDate: new Date(),
     endDate: new Date(),
@@ -66,7 +66,7 @@ const DatePickerModal = (props) => {
             */}
             <DateRangePicker
               ranges={[rangeState]}
-              onChange={(date) => setRangeState(date.selection)}
+              onChange={date => setRangeState(date.selection)}
               dateFormat="MMMM d, yyyy h:mm aa"
             />
           </div>

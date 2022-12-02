@@ -20,7 +20,7 @@ export const useListAvailableAgentsFromMetadata = () => {
       if (!backend_configs) return [];
 
       const values = Object.entries(backend_configs.dataconnector).map<DcAgent>(
-        (item) => {
+        item => {
           const [dcAgentName, definition] = item;
 
           return {
@@ -37,5 +37,6 @@ export const useListAvailableAgentsFromMetadata = () => {
 
       return result;
     },
+    refetchOnWindowFocus: false,
   });
 };

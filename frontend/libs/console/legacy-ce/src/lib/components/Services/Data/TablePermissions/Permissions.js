@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import JSONEditor from './JSONEditor';
 import { IconTooltip } from '@/new-components/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
@@ -307,7 +308,7 @@ class Permissions extends Component {
       );
     };
 
-    const getHeader = (tableSchema) => {
+    const getHeader = tableSchema => {
       return (
         <TableHeader
           dispatch={dispatch}
@@ -374,7 +375,7 @@ class Permissions extends Component {
         const rolePermissions = getTablePermissionsByRoles(tableSchema);
 
         const getBulkCheckbox = (role, isNewRole) => {
-          const dispatchBulkSelect = (e) => {
+          const dispatchBulkSelect = e => {
             const isChecked = e.target.checked;
             const selectedRole = e.target.getAttribute('data-role');
             dispatch(permSetBulkSelect(isChecked, selectedRole));
@@ -392,13 +393,12 @@ class Permissions extends Component {
             onChange: dispatchBulkSelect,
             role,
             isNewRole,
-            checked: permissionsState.bulkSelect.filter((e) => e === role)
-              .length,
+            checked: permissionsState.bulkSelect.filter(e => e === role).length,
           };
         };
 
-        const getQueryTypes = (role) => {
-          const dispatchOpenEdit = (queryType) => () => {
+        const getQueryTypes = role => {
+          const dispatchOpenEdit = queryType => () => {
             if (role === '') {
               document.getElementById('new-role-input').focus();
             } else {
@@ -426,7 +426,7 @@ class Permissions extends Component {
             );
           };
 
-          const getRoleQueryPermission = (queryType) =>
+          const getRoleQueryPermission = queryType =>
             permissionsSymbols[
               getPermissionsIcon(
                 role,
@@ -436,7 +436,7 @@ class Permissions extends Component {
                 groupedComputedFields
               )
             ];
-          return supportedQueryTypes.map((queryType) => {
+          return supportedQueryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
               permissionsState.role === role &&
@@ -470,7 +470,7 @@ class Permissions extends Component {
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
 
-        const _rolePermissions = _roleList.map((r) => {
+        const _rolePermissions = _roleList.map(r => {
           return {
             roleName: r,
             permTypes: getQueryTypes(r),
@@ -485,7 +485,7 @@ class Permissions extends Component {
           isNewRole: true,
         });
 
-        const dispatchRoleNameChange = (e) => {
+        const dispatchRoleNameChange = e => {
           const newRole = e.target.value;
           if (permissionsState.query) {
             dispatch(
@@ -515,7 +515,7 @@ class Permissions extends Component {
       );
     };
 
-    const getBulkSection = (tableSchema) => {
+    const getBulkSection = tableSchema => {
       const bulkSelectedRoles = permissionsState.bulkSelect;
 
       if (!bulkSelectedRoles.length) {
@@ -523,7 +523,7 @@ class Permissions extends Component {
       }
 
       const getSelectedRoles = () => {
-        return bulkSelectedRoles.map((r) => {
+        return bulkSelectedRoles.map(r => {
           return (
             <span key={r} className={styles.add_pad_right}>
               <b>{r}</b>{' '}
@@ -569,7 +569,7 @@ class Permissions extends Component {
       const query = permissionsState.query;
 
       const rolePermissions = tableSchema.permissions.find(
-        (p) => p.role_name === permissionsState.role
+        p => p.role_name === permissionsState.role
       );
 
       const currQueryPermissions = rolePermissions
@@ -663,8 +663,8 @@ class Permissions extends Component {
             dispatch(permAllowAll(filterType));
           };
 
-          const dispatchFuncSetFilter = (filter) => {
-            this.setState((prev) => ({
+          const dispatchFuncSetFilter = filter => {
+            this.setState(prev => ({
               localFilterString: {
                 ...prev.localFilterString,
                 [filterType]: filter,
@@ -676,7 +676,7 @@ class Permissions extends Component {
             }
           };
 
-          const dispatchSetFilterSameAs = (filter) => () => {
+          const dispatchSetFilterSameAs = filter => () => {
             dispatch(permSetFilterSameAs(JSON.parse(filter), filterType));
           };
 
@@ -791,7 +791,7 @@ class Permissions extends Component {
           };
 
           const addCustomCheckOption = () => {
-            const loadSchemasFunc = (schemaNames) => {
+            const loadSchemasFunc = schemaNames => {
               dispatch(updateSchemaInfo({ schemas: schemaNames }));
             };
 
@@ -847,7 +847,7 @@ class Permissions extends Component {
         };
 
         const getLimitSection = () => {
-          const dispatchLimit = (limit) => {
+          const dispatchLimit = limit => {
             const parsedLimit = parseInt(limit, 10);
             dispatch(permToggleModifyLimit(parsedLimit));
           };
@@ -872,7 +872,7 @@ class Permissions extends Component {
                     styles.mar_small_left + ' form-control ' + styles.limitInput
                   }
                   value={limitValue}
-                  onChange={(e) => dispatchLimit(e.target.value)}
+                  onChange={e => dispatchLimit(e.target.value)}
                   disabled={noPermissions}
                   title={noPermissions ? noPermissionsMsg : ''}
                   type="number"
@@ -959,7 +959,7 @@ class Permissions extends Component {
       const primaryKeys =
         getPrimaryKeysFromTable(this.props.allSchemas, this.props) || [];
 
-      const onColumnClick = (fieldType) => (e) => {
+      const onColumnClick = fieldType => e => {
         const columnName = e.target.value;
         const isChecked = e.target.checked;
         if (this.props.permissionsState.query !== 'select') {
@@ -1000,13 +1000,11 @@ class Permissions extends Component {
       const getAllFields = () => {
         const allFields = {};
 
-        allFields.columns = (tableSchema.columns || []).map(
-          (c) => c.column_name
-        );
+        allFields.columns = (tableSchema.columns || []).map(c => c.column_name);
 
         if (query === 'select') {
           allFields.computed_fields = groupedComputedFields.scalar.map(
-            (cf) => cf.computed_field_name
+            cf => cf.computed_field_name
           );
         }
 
@@ -1049,14 +1047,14 @@ class Permissions extends Component {
             );
           };
 
-          tableSchema.columns.forEach((colObj) => {
+          tableSchema.columns.forEach(colObj => {
             const columnName = colObj.column_name;
 
             _columnList.push(getFieldCheckbox('columns', columnName));
           });
 
           if (query === 'select') {
-            groupedComputedFields.scalar.forEach((scalarComputedField) => {
+            groupedComputedFields.scalar.forEach(scalarComputedField => {
               const computedFieldName = scalarComputedField.computed_field_name;
 
               _columnList.push(
@@ -1248,7 +1246,7 @@ class Permissions extends Component {
         );
       };
 
-      const getPresetsSection = (action) => {
+      const getPresetsSection = action => {
         if (query !== action) {
           return;
         }
@@ -1261,7 +1259,7 @@ class Permissions extends Component {
         const getPresetValues = () => {
           const presetColumns = Object.keys(presets);
 
-          const setPresetValue = (e) => {
+          const setPresetValue = e => {
             // Get the index of the changed value and if both key and value are set create one more object in set
             const inputNode = e.target;
 
@@ -1281,7 +1279,7 @@ class Permissions extends Component {
             });
           };
 
-          const setPresetColumn = (e) => {
+          const setPresetColumn = e => {
             // Get the index of the changed value and if both key and value are set create one more object in set
             const selectNode = e.target;
             const selectedColumn = selectNode.value;
@@ -1306,7 +1304,7 @@ class Permissions extends Component {
             }
           };
 
-          const setPresetType = (e) => {
+          const setPresetType = e => {
             const selectNode = e.target;
 
             const column = selectNode.getAttribute('data-preset-column');
@@ -1321,7 +1319,7 @@ class Permissions extends Component {
             });
           };
 
-          const deletePreset = (e) => {
+          const deletePreset = e => {
             const column = e.target.getAttribute('data-preset-column');
             const index = e.target.getAttribute('data-index-id');
 
@@ -1338,7 +1336,7 @@ class Permissions extends Component {
             });
           };
 
-          const getPresetValueType = (preset) => {
+          const getPresetValueType = preset => {
             let _valueType = '';
 
             if (preset.column || preset.value) {
@@ -1433,7 +1431,7 @@ class Permissions extends Component {
             const presetInputDisabled = !preset.column;
 
             const columnInfo = columns.find(
-              (c) => c.column_name === preset.column
+              c => c.column_name === preset.column
             );
             const columnType = columnInfo
               ? dataSource.getColumnType(columnInfo)
@@ -1472,7 +1470,7 @@ class Permissions extends Component {
             return _presetInput;
           };
 
-          const getPresetExample = (preset) => {
+          const getPresetExample = preset => {
             let _presetExample;
 
             const presetType = getPresetValueType(preset);
@@ -1592,7 +1590,7 @@ class Permissions extends Component {
           return;
         }
 
-        const handleClick = (e) => {
+        const handleClick = e => {
           const isAggregateSelectedInQueryRoots =
             this.props.permissionsState?.select?.query_root_fields?.includes(
               'select_aggregate'
@@ -1694,7 +1692,7 @@ class Permissions extends Component {
 
           const getApplyToRow = (applyTo, index) => {
             const getSelect = (type, options, value = '') => {
-              const setApplyTo = (e) => {
+              const setApplyTo = e => {
                 dispatch(permSetApplySamePerm(index, type, e.target.value));
               };
 
@@ -1783,7 +1781,7 @@ class Permissions extends Component {
           );
 
           const validApplyToList = permissionsState.applySamePermissions.filter(
-            (applyTo) => applyTo.table && applyTo.action && applyTo.role
+            applyTo => applyTo.table && applyTo.action && applyTo.role
           );
 
           clonePermissionsHtml = (
@@ -1967,34 +1965,36 @@ class Permissions extends Component {
 
     return (
       <RightContainer>
-        <div className={styles.container}>
-          {getHeader(currentTableSchema)}
-          <br />
-          <div className={styles.padd_left_remove}>
-            <div className={`${styles.padd_remove} col-xs-12`}>
-              <h4 className={styles.subheading_text}>Permissions</h4>
-              {getPermissionsTable(
-                currentTableSchema,
-                supportedQueryTypes,
-                allRoles
-              )}
-              {getBulkSection(currentTableSchema)}
-              {getEditSection(
-                currentTableSchema,
-                supportedQueryTypes,
-                allRoles
+        <Analytics name="Permissions" {...REDACT_EVERYTHING}>
+          <div className={styles.container}>
+            {getHeader(currentTableSchema)}
+            <br />
+            <div className={styles.padd_left_remove}>
+              <div className={`${styles.padd_remove} col-xs-12`}>
+                <h4 className={styles.subheading_text}>Permissions</h4>
+                {getPermissionsTable(
+                  currentTableSchema,
+                  supportedQueryTypes,
+                  allRoles
+                )}
+                {getBulkSection(currentTableSchema)}
+                {getEditSection(
+                  currentTableSchema,
+                  supportedQueryTypes,
+                  allRoles
+                )}
+              </div>
+            </div>
+            <div className={`${styles.fixed} hidden`}>
+              {getAlertHtml(
+                ongoingRequest,
+                lastError,
+                lastSuccess,
+                lastFormError
               )}
             </div>
           </div>
-          <div className={`${styles.fixed} hidden`}>
-            {getAlertHtml(
-              ongoingRequest,
-              lastError,
-              lastSuccess,
-              lastFormError
-            )}
-          </div>
-        </div>
+        </Analytics>
       </RightContainer>
     );
   }
@@ -2033,6 +2033,6 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const permissionsConnector = (connect) => connect(mapStateToProps)(Permissions);
+const permissionsConnector = connect => connect(mapStateToProps)(Permissions);
 
 export default permissionsConnector;

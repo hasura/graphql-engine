@@ -14,14 +14,14 @@ import Test.Hspec.Core.Format qualified as Hspec
 import Test.Hspec.Core.Runner
 import Test.Hspec.Core.Spec
 
--- | Make the logger in the 'TestEnvironment' add context about the specs that use it.
-contextualizeLogger :: SpecWith TestEnvironment -> SpecWith TestEnvironment
+-- | Make the logger in the 'GlobalTestEnvironment' add context about the specs that use it.
+contextualizeLogger :: SpecWith GlobalTestEnvironment -> SpecWith GlobalTestEnvironment
 contextualizeLogger = mapSpecForest (map contextualizeTree)
 
-contextualizeTree :: SpecTree TestEnvironment -> SpecTree TestEnvironment
+contextualizeTree :: SpecTree GlobalTestEnvironment -> SpecTree GlobalTestEnvironment
 contextualizeTree spectree = go [] spectree
   where
-    go :: [Text] -> SpecTree TestEnvironment -> SpecTree TestEnvironment
+    go :: [Text] -> SpecTree GlobalTestEnvironment -> SpecTree GlobalTestEnvironment
     go ps (Node path children) = Node path (map (go (T.pack path : ps)) children)
     go ps (NodeWithCleanup loc action children) =
       NodeWithCleanup
@@ -40,10 +40,10 @@ contextualizeTree spectree = go [] spectree
                   progressCallback
           }
 
-    attachPrefix :: [Text] -> TestEnvironment -> TestEnvironment
-    attachPrefix prefixes te =
-      te
-        { logger = Logger $ \msg -> runLogger (logger te) $ LogWithContext prefixes (fromLoggableMessage msg)
+    attachPrefix :: [Text] -> GlobalTestEnvironment -> GlobalTestEnvironment
+    attachPrefix prefixes gte =
+      gte
+        { logger = Logger $ \msg -> runLogger (logger gte) $ LogWithContext prefixes (fromLoggableMessage msg)
         }
 
 -- | A Hspec 'Formatter' that outputs to a 'Logger'.

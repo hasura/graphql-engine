@@ -11,8 +11,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -686,7 +688,7 @@ func (ec *ExecutionContext) Validate() error {
 
 	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
-	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
+	if _, err := os.Stat(ec.MigrationDir); stderrors.Is(err, fs.ErrNotExist) {
 		err = os.MkdirAll(ec.MigrationDir, os.ModePerm)
 		if err != nil {
 			return errors.E(op, fmt.Errorf("cannot create migrations directory: %w", err))
@@ -694,7 +696,7 @@ func (ec *ExecutionContext) Validate() error {
 	}
 
 	ec.SeedsDirectory = filepath.Join(ec.ExecutionDirectory, ec.Config.SeedsDirectory)
-	if _, err := os.Stat(ec.SeedsDirectory); os.IsNotExist(err) {
+	if _, err := os.Stat(ec.SeedsDirectory); stderrors.Is(err, fs.ErrNotExist) {
 		err = os.MkdirAll(ec.SeedsDirectory, os.ModePerm)
 		if err != nil {
 			return errors.E(op, fmt.Errorf("cannot create seeds directory: %w", err))
@@ -704,7 +706,7 @@ func (ec *ExecutionContext) Validate() error {
 	if ec.Config.Version >= V2 && ec.Config.MetadataDirectory != "" {
 		if len(ec.Config.MetadataFile) > 0 {
 			ec.MetadataFile = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataFile)
-			if _, err := os.Stat(ec.MetadataFile); os.IsNotExist(err) {
+			if _, err := os.Stat(ec.MetadataFile); stderrors.Is(err, fs.ErrNotExist) {
 				if err := ioutil.WriteFile(ec.MetadataFile, []byte(""), os.ModePerm); err != nil {
 					return errors.E(op, err)
 				}
@@ -720,7 +722,7 @@ func (ec *ExecutionContext) Validate() error {
 		}
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
-		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) && !(len(ec.MetadataFile) > 0) {
+		if _, err := os.Stat(ec.MetadataDir); stderrors.Is(err, fs.ErrNotExist) && !(len(ec.MetadataFile) > 0) {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
 			if err != nil {
 				return errors.E(op, fmt.Errorf("cannot create metadata directory: %w", err))
@@ -952,7 +954,7 @@ func (ec *ExecutionContext) loadEnvfile() error {
 		if ec.Envfile != ".env" {
 			return errors.E(op, err)
 		}
-		if !os.IsNotExist(err) {
+		if !stderrors.Is(err, fs.ErrNotExist) {
 			ec.Logger.Warn(err)
 		}
 	}

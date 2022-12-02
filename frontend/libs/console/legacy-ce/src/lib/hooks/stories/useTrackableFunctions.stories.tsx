@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof TrackableFunctions>;
 
-export const Playground: ComponentStory<typeof TrackableFunctions> = (args) => {
+export const Playground: ComponentStory<typeof TrackableFunctions> = args => {
   return <TrackableFunctions {...args} />;
 };
 

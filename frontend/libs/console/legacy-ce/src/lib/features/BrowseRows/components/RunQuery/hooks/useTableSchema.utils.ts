@@ -1,4 +1,4 @@
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { BigQueryTable, PostgresTable } from '@/features/DataSource';
 
 export const getTableSchemaName = (table: Table) => {

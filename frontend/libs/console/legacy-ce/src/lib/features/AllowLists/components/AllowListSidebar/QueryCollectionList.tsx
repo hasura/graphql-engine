@@ -55,7 +55,7 @@ export const QueryCollectionList = (props: QueryCollectionItemProps) => {
           matchingQueryCollections.map(({ name }) => (
             <QueryCollectionItem
               href={buildHref(name)}
-              onClick={(e) => {
+              onClick={e => {
                 onClick(buildHref(name));
                 e.preventDefault();
               }}

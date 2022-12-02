@@ -126,13 +126,13 @@ describe(' getTypesFromIntrospection', () => {
     expect(filterTypes[1]?.typeName).toEqual('Country');
     // beacuse ID, Boolean is Scalar type
     const filterScalarType = filterTypes.find(
-      (obj) => obj.typeName === 'ID',
+      obj => obj.typeName === 'ID',
       'Boolean'
     );
     expect(filterScalarType).toBe(undefined);
     // because __TypeKind is of ENUM type
     const filterEnumType = filterTypes.find(
-      (obj) => obj.typeName === '__TypeKind'
+      obj => obj.typeName === '__TypeKind'
     );
     expect(filterEnumType).toBe(undefined);
     // snapshot only contains object types

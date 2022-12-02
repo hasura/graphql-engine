@@ -17,17 +17,14 @@ import Data.Aeson.Extended
 import Data.Aeson.Types
 import Data.Text.Extended (ToTxt (..))
 import Data.Time as Time
-import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
-import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax
 import Hasura.Base.ToErrorValue
 
 deriving instance Generic (Aliased a)
 instance Hashable a => Hashable (Aliased a)
-instance Cacheable a => Cacheable (Aliased a)
 deriving instance Eq a => Eq (Aliased a)
 instance NFData a => NFData (Aliased a)
 deriving instance Show a => Show (Aliased a)
@@ -38,7 +35,6 @@ deriving instance Data a => Data (Aliased a)
 #define INSTANCE_CLUMP_1(name) \
          deriving instance Generic name ;\
          instance Hashable name ;\
-         instance Cacheable name ;\
          deriving instance Eq name ;\
          deriving instance Show name ;\
          deriving instance Data name ;\
@@ -60,7 +56,6 @@ INSTANCE_CLUMP_1(FunctionName)
 #define INSTANCE_CLUMP_2(name) \
          deriving instance Generic name ;\
          instance Hashable name ;\
-         instance Cacheable name ;\
          deriving instance Eq name ;\
          deriving instance Show name ;\
          deriving instance Data name ;\
@@ -126,11 +121,6 @@ deriving instance Lift Order
 -- Third-party types
 
 deriving instance Generic (Time.TimeZone)
-instance Cacheable Time.TimeZone
-
-instance Cacheable ODBC.Value
-
-instance Cacheable ODBC.Binary
 
 --------------------------------------------------------------------------------
 -- Debug instances
@@ -235,8 +225,6 @@ deriving instance Generic (Countable n)
 
 instance Hashable n => Hashable (Countable n)
 
-instance Cacheable n => Cacheable (Countable n)
-
 deriving instance Eq n => Eq (Countable n)
 
 deriving instance Show n => Show (Countable n)
@@ -282,8 +270,6 @@ deriving instance Eq a => Eq (BooleanOperators a)
 instance NFData a => NFData (BooleanOperators a)
 
 instance Hashable a => Hashable (BooleanOperators a)
-
-instance Cacheable a => Cacheable (BooleanOperators a)
 
 instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
   toJSONKeyValue = \case

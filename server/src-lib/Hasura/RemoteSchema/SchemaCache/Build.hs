@@ -41,7 +41,7 @@ buildRemoteSchemas ::
     Inc.ArrowCache m arr,
     MonadIO m,
     HasHttpManagerM m,
-    Inc.Cacheable remoteRelationshipDefinition,
+    Eq remoteRelationshipDefinition,
     ToJSON remoteRelationshipDefinition,
     MonadError QErr m
   ) =>
@@ -145,17 +145,13 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
           addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err
       (|
         withRecordInconsistency
-          ( (|
-              modifyErrA
-                ( do
-                    (resolvedSchemaIntrospection, dependencies) <-
-                      liftEitherA <<< bindA
-                        -<
-                          runExceptT $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
-                    recordDependencies -< (metadataObject, schemaObject, dependencies)
-                    returnA -< resolvedSchemaIntrospection
-                )
-            |) addPermContext
+          ( do
+              (resolvedSchemaIntrospection, dependency) <-
+                liftEitherA <<< bindA
+                  -<
+                    runExceptT $ modifyErr addPermContext $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
+              recordDependencies -< (metadataObject, schemaObject, pure dependency)
+              returnA -< resolvedSchemaIntrospection
           )
         |) metadataObject
 

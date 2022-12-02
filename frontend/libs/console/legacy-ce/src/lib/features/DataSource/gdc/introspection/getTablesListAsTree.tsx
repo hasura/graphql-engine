@@ -15,11 +15,11 @@ export const getTablesListAsTree = async ({
 
   if (!metadata) throw Error('Unable to fetch metadata');
 
-  const source = metadata.sources.find((s) => s.name === dataSourceName);
+  const source = metadata.sources.find(s => s.name === dataSourceName);
 
   if (!source) throw Error('Unable to fetch metadata source');
 
-  const tables = source.tables.map((table) => {
+  const tables = source.tables.map(table => {
     if (typeof table.table === 'string') return [table.table] as GDCTable;
     return table.table as GDCTable;
   });

@@ -2,7 +2,9 @@ package cli
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -138,7 +140,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 
 	// check if the global config file exist
 	_, err = os.Stat(ec.GlobalConfigFile)
-	if os.IsNotExist(err) {
+	if stderrors.Is(err, fs.ErrNotExist) {
 
 		// file does not exist, teat as first run and create it
 		ec.Logger.Debug("global config file does not exist, this could be the first run, creating it...")
@@ -162,7 +164,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 		// also show a notice about telemetry
 		ec.Logger.Info(TelemetryNotice)
 
-	} else if os.IsExist(err) || err == nil {
+	} else if stderrors.Is(err, fs.ErrExist) || err == nil {
 
 		// file exists, verify contents
 		ec.Logger.Debug("global config file exists, verifying contents")

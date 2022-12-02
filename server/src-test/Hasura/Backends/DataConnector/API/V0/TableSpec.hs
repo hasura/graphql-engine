@@ -86,7 +86,7 @@ genConstraint =
    in Constraint <$> genTableName <*> mapping
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
-genTableInfo :: MonadGen m => m TableInfo
+genTableInfo :: (MonadGen m, GenBase m ~ Identity) => m TableInfo
 genTableInfo =
   TableInfo
     <$> genTableName

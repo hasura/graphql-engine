@@ -19,7 +19,7 @@ Default CSS display is \`inline\`, provided without padding and margin (displaye
     },
   },
   decorators: [
-    (Story) => <div className="p-16 w-full flex justify-center">{Story()}</div>,
+    Story => <div className="p-16 w-full flex justify-center">{Story()}</div>,
   ],
   component: Tooltip,
 } as ComponentMeta<typeof Tooltip>;
@@ -37,7 +37,7 @@ const TooltipChildrenExample = () => (
   <span>The tooltip tooltipContentChildren</span>
 );
 
-export const ApiPlayground: ComponentStory<typeof Tooltip> = (args) => (
+export const ApiPlayground: ComponentStory<typeof Tooltip> = args => (
   <Tooltip {...args} />
 );
 ApiPlayground.storyName = '⚙️ API';

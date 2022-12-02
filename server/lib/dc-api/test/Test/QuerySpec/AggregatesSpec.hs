@@ -108,8 +108,10 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can count all rows with distinct non-null values in a column, after applying pagination and filtering" $ do
       let limit = 20
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "InvoiceId" _tdIntType) (ScalarValue (Number 380) _tdIntType)
+      -- It is important to add an explicit order by for this query as different database engines will order implicitly resulting in incorrect results
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "InvoiceId" Ascending :| []
       let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where')
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- guardedQuery api sourceName config queryRequest
 
       let billingStateCount =
@@ -452,7 +454,12 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
         let offset = 15
         let limit = 10
         let orderByRelations = HashMap.fromList [(_tdTracksRelationshipName, OrderByRelation Nothing mempty)]
-        let orderBy = OrderBy orderByRelations $ OrderByElement [_tdTracksRelationshipName] OrderByStarCountAggregate Ascending :| []
+        let orderBy =
+              OrderBy orderByRelations $
+                NonEmpty.fromList
+                  [ OrderByElement [_tdTracksRelationshipName] OrderByStarCountAggregate Descending,
+                    _tdOrderByColumn [] "Title" Descending
+                  ]
         let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title"))]
         let queryRequest =
               albumsQueryRequest
@@ -471,7 +478,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
 
         let names =
               _tdAlbumsRows
-                & sortOn getRelatedTracksCount
+                & sortOn (\album -> (Down $ getRelatedTracksCount album, Down $ album ^? Data.field "Title" . Data._ColumnFieldString))
                 & drop offset
                 & take limit
                 & mapMaybe (^? Data.field "Title" . Data._ColumnFieldString)

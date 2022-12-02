@@ -10,7 +10,7 @@ type DialogContainer = {
   activeIndex?: number;
 };
 
-export const DialogContainer: React.FC<DialogContainer> = (props) => {
+export const DialogContainer: React.FC<DialogContainer> = props => {
   const { activeIndex, showStepper, header, subHeader } = props;
   return (
     // Radix dialog is being used for creating a layover component over the whole app.

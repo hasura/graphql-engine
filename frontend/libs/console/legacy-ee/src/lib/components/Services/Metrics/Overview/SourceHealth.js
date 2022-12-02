@@ -13,7 +13,7 @@ import { isAdmin } from '../utils';
 const SourceHealth = ({
   inconsistentObjects,
   metadata: { sources = [], actions = [], remote_schemas = [] } = {},
-  project,
+  project
 }) => {
   const [selectedSource, setSelectedSource] = useState({});
 
@@ -21,24 +21,25 @@ const SourceHealth = ({
 
   return (
     <div className={styles.sourceHealth}>
-      <Col md={12} lg={_isAdmin ? 8 : 12} className={styles.no_pad}>
+      <Col
+        md={12}
+        lg={_isAdmin ? 8 : 12}
+        className={styles.no_pad}
+      >
         <div>
           <p className={`${styles.strong} ${styles.padding_top_20}`}>
             Source Health
           </p>
           {_isAdmin ? (
-            <ul
-              className={`${styles.tree} ${styles.ul_pad_remove} ${styles.horizontal}`}
-            >
+            <ul className={`${styles.tree} ${styles.ul_pad_remove} ${styles.horizontal}`}>
               <li>
                 <OverallHealthCard />
                 <ul className={styles.ul_pad_remove}>
                   {sources &&
                     sources.map((source, ix) => (
                       <DataSourceItem
-                        key={`DataSource_${
-                          source?.name || Math.floor(Math.random() * ix * 1000)
-                        }`}
+                        key={`DataSource_${source?.name ||
+                          Math.floor(Math.random() * ix * 1000)}`}
                         source={source}
                         selectedSource={selectedSource}
                         setSelectedSource={setSelectedSource}
@@ -50,9 +51,8 @@ const SourceHealth = ({
                       <RemoteSchemaItem
                         source={source}
                         inconsistentObjects={inconsistentObjects}
-                        key={`RemoteSchema_${
-                          source?.name || Math.floor(Math.random() * ix * 1000)
-                        }`}
+                        key={`RemoteSchema_${source?.name ||
+                          Math.floor(Math.random() * ix * 1000)}`}
                       />
                     ))}
                   {Array.isArray(actions) && actions.length > 0 && (

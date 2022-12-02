@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
 
 import StatsPanel from '../StatsPanel/StatsPanel';
 import {
@@ -17,11 +18,11 @@ import { fetchFiltersData } from './graphql.queries';
 import SubscriptionWorkersOverTime from './SubscriptionWorkersOverTime';
 import { retrieveDefaultDropdownOptions, retrieveFilterData } from './utils';
 
-export const SubscriptionWorkers = (props) => {
+export const SubscriptionWorkers = props => {
   const { RenderLink, projectId, dispatch, queryParams, privileges } = props;
   const [rowData, setRowData] = useState(null);
 
-  const onFilterChangeCb = (nextFilters) => {
+  const onFilterChangeCb = nextFilters => {
     if (nextFilters.length > 0) {
       const qs = `?filters=${window.encodeURI(JSON.stringify(nextFilters))}`;
       updateQsHistory(qs);
@@ -30,15 +31,15 @@ export const SubscriptionWorkers = (props) => {
     }
   };
 
-  const getTitle = (value) => {
+  const getTitle = value => {
     return TITLE_MAP[value];
   };
 
-  const getEmptyTitle = (value) => {
+  const getEmptyTitle = value => {
     return NO_TITLE_MAP[value];
   };
 
-  const updateRowData = (row) => {
+  const updateRowData = row => {
     const rowInfo = {};
     if (row) {
       rowInfo.end = row.last_activity_time;
@@ -67,23 +68,28 @@ export const SubscriptionWorkers = (props) => {
     >
       {({ filters, groups }) => {
         return (
-          <div className="infoWrapper">
-            <SubscriptionWorkersOverTime
-              filters={filters}
-              projectId={projectId}
-              rowData={rowData}
-            />
-            <BrowseRows
-              RenderLink={RenderLink}
-              filters={filters}
-              groupBys={groups}
-              label={'Workers'}
-              projectId={projectId}
-              dispatch={dispatch}
-              updateRowData={updateRowData}
-              privileges={privileges}
-            />
-          </div>
+          <Analytics
+            name="MonitoringSubscriptionWorkers"
+            {...REDACT_EVERYTHING}
+          >
+            <div className="infoWrapper">
+              <SubscriptionWorkersOverTime
+                filters={filters}
+                projectId={projectId}
+                rowData={rowData}
+              />
+              <BrowseRows
+                RenderLink={RenderLink}
+                filters={filters}
+                groupBys={groups}
+                label={'Workers'}
+                projectId={projectId}
+                dispatch={dispatch}
+                updateRowData={updateRowData}
+                privileges={privileges}
+              />
+            </div>
+          </Analytics>
         );
       }}
     </StatsPanel>
@@ -107,5 +113,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-export const subscriptionWorkersConnector = (connect) =>
+export const subscriptionWorkersConnector = connect =>
   connect(mapStateToProps)(SubscriptionWorkers);

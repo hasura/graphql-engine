@@ -39,7 +39,7 @@ function DeleteRemoteDatabaseRelationshipComponent({
 
 export const DeleteRemoteDatabaseRelationship: ComponentStory<
   typeof DeleteRemoteDatabaseRelationshipComponent
-> = (args) => {
+> = args => {
   return <DeleteRemoteDatabaseRelationshipComponent {...args} />;
 };
 

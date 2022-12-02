@@ -217,14 +217,14 @@ const TrackableEntry: React.FC<TrackableEntryProps> = ({
             }
             onClickSecondaryAction={() => {
               const currentFuncInfo = func.input_arg_types?.find(
-                (fn) => fn.type === 'c'
+                fn => fn.type === 'c'
               );
               if (!currentFuncInfo) {
                 return;
               }
               if (
                 !allSchemas?.find(
-                  (schemaInfo) =>
+                  schemaInfo =>
                     schemaInfo?.table_name === currentFuncInfo.name &&
                     schemaInfo?.table_schema === currentFuncInfo.schema
                 )

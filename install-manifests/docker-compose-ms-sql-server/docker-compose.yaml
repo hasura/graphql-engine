@@ -1,7 +1,7 @@
 version: '3.6'
 services:
   postgres:
-    image: postgres
+    image: postgres:14
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data

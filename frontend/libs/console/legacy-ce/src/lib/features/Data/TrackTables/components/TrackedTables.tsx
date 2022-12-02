@@ -69,7 +69,7 @@ export const TrackedTables = (props: TrackTableProps) => {
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {filteredTables.map((table) => (
+          {filteredTables.map(table => (
             <TableRow
               key={table.id}
               table={table}

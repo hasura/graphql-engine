@@ -22,7 +22,7 @@ export const findAllowedQueryCollections = (
   allowList: AllowList[]
 ) => {
   return allowList.find(
-    (allowedCollection) => collectionName === allowedCollection.collection
+    allowedCollection => collectionName === allowedCollection.collection
   );
 };
 
@@ -31,13 +31,13 @@ export const setAllowedQueries = (
   allowlist?: AllowList[]
 ): AllowedQueriesCollection[] => {
   if (!allQueryCollections || !allowlist) return [];
-  const allowedQueryCollections = allQueryCollections.filter((query) =>
+  const allowedQueryCollections = allQueryCollections.filter(query =>
     findAllowedQueryCollections(query.name, allowlist)
   );
 
   const allowedQueries: AllowedQueriesCollection[] = [];
-  allowedQueryCollections.forEach((collection) => {
-    collection.definition.queries.forEach((query) => {
+  allowedQueryCollections.forEach(collection => {
+    collection.definition.queries.forEach(query => {
       allowedQueries.push({ ...query, collection: collection.name });
     });
   });
@@ -93,7 +93,7 @@ export const addAllowedQueriesQuery = (
   queries: Array<{ name: string; query: string }>,
   source: string
 ) => {
-  const addQueries = queries.map((query) => addAllowedQuery(query));
+  const addQueries = queries.map(query => addAllowedQuery(query));
 
   return {
     type: 'bulk',
@@ -222,7 +222,7 @@ export const updateAPILimitsQuery = ({
     'batch_limit',
   ] as const;
 
-  api_limits.forEach((key) => {
+  api_limits.forEach(key => {
     const role =
       newAPILimits[key]?.per_role && !isEmpty(newAPILimits[key]?.per_role)
         ? Object.keys(newAPILimits[key]?.per_role ?? {})[0]
@@ -306,7 +306,7 @@ export const removeAPILimitsQuery = ({
     'batch_limit',
   ] as const;
 
-  api_limits.forEach((key) => {
+  api_limits.forEach(key => {
     delete existingAPILimits?.[key]?.per_role?.[role];
   });
 
@@ -351,7 +351,7 @@ export const isMetadataEmpty = (metadataObject: HasuraMetadataV3) => {
   const { actions, sources, remote_schemas } = metadataObject;
   const hasRemoteSchema = remote_schemas && remote_schemas.length;
   const hasAction = actions && actions.length;
-  const hasTable = sources.some((source) => source.tables.length);
+  const hasTable = sources.some(source => source.tables.length);
   return !(hasRemoteSchema || hasAction || hasTable);
 };
 
@@ -366,12 +366,12 @@ export const hasSources = (metadataObject: HasuraMetadataV3) => {
 export const getSourceFromInconistentObjects = (inconsistentObjects: any[]) =>
   inconsistentObjects
     .map(
-      (inconsistentObject) =>
+      inconsistentObject =>
         (inconsistentObject?.type === 'source' &&
           inconsistentObject?.definition) ||
         inconsistentObject?.definition?.source
     )
-    .filter((sourceName) => typeof sourceName === 'string')
+    .filter(sourceName => typeof sourceName === 'string')
     .filter(
       (sourceName, index, sourceNameList) =>
         sourceNameList?.indexOf(sourceName) === index

@@ -35,8 +35,7 @@ import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
 import { canAccessCacheButton } from '@/utils/permissions';
 
-import 'graphiql/graphiql.css';
-import 'graphiql-code-exporter/CodeExporter.css';
+import './GraphiQL.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
 import { LS_KEYS, setLSItem } from '@/utils/localStorage';

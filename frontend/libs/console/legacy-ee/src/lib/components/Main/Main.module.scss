@@ -1,4 +1,3 @@
-@import '~bootstrap-sass/assets/stylesheets/bootstrap/variables';
 @import '../../components/Common/Common.module';
 
 :global .fa.fa-bell + div {
@@ -676,8 +675,6 @@
 }
 
 .header {
-  background: $navbar-inverse-bg;
-  color: $navbar-inverse-color;
   /* taken from bootsrap $navbar-inverse-bg variable */
   background: #222;
   /* taken from bootsrap $navbar-inverse-color variable */
@@ -694,7 +691,6 @@
 
   .headerItem {
     display: inline-block;
-    color: $navbar-inverse-color;
     /* taken from bootsrap $navbar-inverse-color variable */
     color: lighten(lighten(#000, 46.7%), 15%);
     line-height: 15px;
@@ -705,21 +701,18 @@
 
   .headerItem:hover {
     display: inline-block;
-    color: $navbar-inverse-link-hover-color;
     /* taken from bootsrap $navbar-inverse-link-hover-color variable */
     color: #fff;
     transition: color 0.5s;
   }
 
   .headerItem:hover * {
-    color: $navbar-inverse-link-hover-color;
     /* taken from bootsrap $navbar-inverse-link-hover-color variable */
     color: #fff;
     transition: color 0.5s;
   }
 
   .headerItem * {
-    color: $navbar-inverse-color;
     /* taken from bootsrap $navbar-inverse-color variable */
     color: lighten(lighten(#000, 46.7%), 15%);
   }

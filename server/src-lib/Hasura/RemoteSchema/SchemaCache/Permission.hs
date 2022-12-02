@@ -1022,7 +1022,7 @@ resolveRoleBasedRemoteSchema ::
   RemoteSchemaName ->
   IntrospectionResult ->
   G.SchemaDocument ->
-  m (IntrospectionResult, [SchemaDependency])
+  m (IntrospectionResult, SchemaDependency)
 resolveRoleBasedRemoteSchema roleName remoteSchemaName remoteSchemaIntrospection (G.SchemaDocument providedTypeDefns) = do
   when (roleName == adminRoleName) $ throw400 ConstraintViolation $ "cannot define permission for admin role"
   let providedSchemaDocWithDefaultScalars =
@@ -1035,7 +1035,7 @@ resolveRoleBasedRemoteSchema roleName remoteSchemaName remoteSchemaIntrospection
             validateRemoteSchema $
               irDoc remoteSchemaIntrospection
         )
-  pure (introspectionRes, [schemaDependency])
+  pure (introspectionRes, schemaDependency)
   where
     showErrors :: [RoleBasedSchemaValidationError] -> Text
     showErrors errors =

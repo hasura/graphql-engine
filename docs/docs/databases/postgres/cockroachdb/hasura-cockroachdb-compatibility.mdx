@@ -29,7 +29,7 @@ Currently, the following features are supported with CockroachDB and Hasura:
 
 ## Queries
 
-Queries are fully supported except for queries containing `distinct_on` arguments, but please note that GraphQL key
+Queries are fully supported except for queries containing `distinct_on` arguments, [see issue](https://github.com/cockroachdb/cockroach/issues/90763), but please note that GraphQL key
 ordering in JSON objects is not guaranteed. This is because CockroachDB implements the `JSONB` variant of the Postgres
 JSON types, which do not preserve key ordering.
 
@@ -78,3 +78,8 @@ Subscriptions are currently not supported with CockroachDB. Support will be adde
 
 CockroachDB does not yet support creating triggers ([see issue](https://github.com/cockroachdb/cockroach/issues/28296))
 on reference tables. Hence, this is currently not supported.
+
+## Naming conventions
+
+Naming conventions are currently only implemented as an experimental feature on Postgres sources.
+[See docs](/schema/postgres/naming-convention.mdx).

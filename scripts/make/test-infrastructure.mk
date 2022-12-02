@@ -8,6 +8,9 @@ endif
 
 export MSSQL_IMAGE
 
+TEST_MSSQL_CONNECTION_STRING = Driver={ODBC Driver 18 for SQL Server};Server=localhost,65003;Uid=sa;Pwd=Password!;Encrypt=optional
+TEST_POSTGRES_URL = postgres://hasura:hasura@localhost:65002/hasura
+
 define stop_after
 @ echo $1 >&2
 @ $1 || EXIT_STATUS=$$?; \

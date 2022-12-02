@@ -321,6 +321,7 @@ const RawSQL = ({
           onChange={handleSQLChange}
           // prevents unwanted frequent event triggers
           debounceChangePeriod={200}
+          setOptions={{ useWorker: false }}
         />
       </div>
     );

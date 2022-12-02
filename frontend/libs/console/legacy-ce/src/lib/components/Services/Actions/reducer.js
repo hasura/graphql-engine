@@ -15,7 +15,7 @@ const commonState = {
 
 // common actions
 const SET_CURRENT_ACTION = 'Actions/SET_CURRENT_ACTION';
-export const setCurrentAction = (actionName) => ({
+export const setCurrentAction = actionName => ({
   type: SET_CURRENT_ACTION,
   name: actionName,
 });

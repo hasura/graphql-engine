@@ -36,7 +36,7 @@ const mapRootJsonFromServerToState = (
         key,
       }))
       .filter(
-        (value) =>
+        value =>
           value.metadata_version === `${metadataVersion}` &&
           value.template_version === '1'
       )
@@ -89,13 +89,13 @@ export const schemaSharingSelectors = {
     ({ key, section }: { key: string; section: string }) =>
     (state: ReduxState) => {
       const maybeSection = state.templateGallery.templates?.sections?.find(
-        (block) => block.name === section
+        block => block.name === section
       );
       if (!maybeSection) {
         return undefined;
       }
       const maybeTemplate = maybeSection.templates.find(
-        (template) => template.key === key
+        template => template.key === key
       );
       if (!maybeTemplate) {
         return undefined;
@@ -104,13 +104,13 @@ export const schemaSharingSelectors = {
     },
   getSchemasForDb: (driver: Driver) => (state: ReduxState) =>
     state.templateGallery.templates?.sections
-      .map((section) => ({
+      .map(section => ({
         ...section,
         templates: section.templates.filter(
-          (template) => template.dialect === driver
+          template => template.dialect === driver
         ),
       }))
-      .filter((section) => section.templates.length > 0),
+      .filter(section => section.templates.length > 0),
 };
 
 export const fetchGlobalSchemaSharingConfiguration = createAsyncThunk<
@@ -151,7 +151,7 @@ export const fetchSchemaConfigurationByName = createAsyncThunk<
     const itemConfig: ServerJsonTemplateDefinition = JSON.parse(itemConfigRaw);
 
     const sqlFiles = await Promise.all(
-      itemConfig.sqlFiles.map((sqlFile) =>
+      itemConfig.sqlFiles.map(sqlFile =>
         dispatch(requestAction<string>(`${baseTemplatePath}/${sqlFile}`))
       )
     );
@@ -235,7 +235,7 @@ export const applyTemplate = createAsyncThunk<
 
       const newMetadata: HasuraMetadataV3 = {
         ...oldMetadata.metadata,
-        sources: oldMetadata.metadata.sources.map((oldSource) => {
+        sources: oldMetadata.metadata.sources.map(oldSource => {
           if (oldSource.name !== source) {
             return oldSource;
           }
@@ -279,12 +279,12 @@ const schemaSharingSlice = createSlice({
   name: 'templateGallery',
   initialState: initialStoreState,
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
-      .addCase(fetchGlobalSchemaSharingConfiguration.pending, (state) => {
+      .addCase(fetchGlobalSchemaSharingConfiguration.pending, state => {
         state.globalConfigState = 'fetching';
       })
-      .addCase(fetchGlobalSchemaSharingConfiguration.rejected, (state) => {
+      .addCase(fetchGlobalSchemaSharingConfiguration.rejected, state => {
         state.globalConfigState = 'failure';
       })
       .addCase(
@@ -305,8 +305,8 @@ const schemaSharingSlice = createSlice({
           }
         ) => {
           const maybeTemplate = state.templates?.sections
-            ?.find?.((section) => section.name === category)
-            ?.templates?.find((template) => template.key === key);
+            ?.find?.(section => section.name === category)
+            ?.templates?.find(template => template.key === key);
           if (maybeTemplate) {
             maybeTemplate.fetchingStatus = 'fetching';
           }
@@ -324,8 +324,8 @@ const schemaSharingSlice = createSlice({
           }
         ) => {
           const maybeTemplate = state.templates?.sections
-            ?.find?.((section) => section.name === category)
-            ?.templates?.find((template) => template.key === key);
+            ?.find?.(section => section.name === category)
+            ?.templates?.find(template => template.key === key);
           if (maybeTemplate) {
             maybeTemplate.fetchingStatus = 'success';
             maybeTemplate.isPartialData = false;
@@ -344,8 +344,8 @@ const schemaSharingSlice = createSlice({
           }
         ) => {
           const maybeTemplate = state.templates?.sections
-            ?.find?.((section) => section.name === category)
-            ?.templates?.find((template) => template.key === key);
+            ?.find?.(section => section.name === category)
+            ?.templates?.find(template => template.key === key);
           if (maybeTemplate) {
             maybeTemplate.fetchingStatus = 'failure';
           }

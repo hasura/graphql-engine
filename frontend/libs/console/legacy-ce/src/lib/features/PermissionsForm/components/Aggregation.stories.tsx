@@ -6,7 +6,8 @@ import { Form } from '@/new-components/Form';
 import { AggregationSection, AggregationProps } from './Aggregation';
 
 export default {
-  title: 'Features/Permissions Form/Components/Aggregation Section',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Aggregation Section',
   component: AggregationSection,
   parameters: {
     // Disable storybook for playground stories
@@ -18,7 +19,7 @@ const schema = z.object({
   enableAggregation: z.boolean(),
 });
 
-export const AggregationEnabled: Story<AggregationProps> = (args) => (
+export const AggregationEnabled: Story<AggregationProps> = args => (
   <AggregationSection {...args} />
 );
 AggregationEnabled.args = {
@@ -30,13 +31,14 @@ AggregationEnabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { enableAggregation: true } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>
   ),
 ];
 
-export const AggregationDisabled: Story<AggregationProps> = (args) => (
+export const AggregationDisabled: Story<AggregationProps> = args => (
   <AggregationSection {...args} />
 );
 AggregationDisabled.args = {
@@ -48,6 +50,7 @@ AggregationDisabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { enableAggregation: false } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>

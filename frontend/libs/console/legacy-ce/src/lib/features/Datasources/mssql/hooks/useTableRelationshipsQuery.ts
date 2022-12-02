@@ -59,7 +59,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
   >({
     sql: getSQL(table),
     queryKey: ['mssql', 'fk_relationships', database, schema, table],
-    transformFn: (data) => {
+    transformFn: data => {
       const { result } = data;
 
       if (!result) throw Error(`Invalid SQL response: recieved ${result}`);
@@ -70,7 +70,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
         );
 
       try {
-        const rows = result.slice(1).map((row) => ({
+        const rows = result.slice(1).map(row => ({
           from: {
             table: row[0],
             column: JSON.parse(row[2]).map(

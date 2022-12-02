@@ -15,7 +15,7 @@ export const FKRelationships = ({
   table: QualifiedTable;
 }) => {
   const dispatch = useAppDispatch();
-  const source = useAppSelector((s) => s.tables.currentDataSource);
+  const source = useAppSelector(s => s.tables.currentDataSource);
 
   React.useEffect(() => {
     if (currentDatasource) {

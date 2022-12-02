@@ -262,7 +262,7 @@ export const exportMetadata =
     };
 
     return dispatch(requestAction(Endpoints.metadata, options))
-      .then((data) => {
+      .then(data => {
         dispatch({
           type: 'Metadata/EXPORT_METADATA_SUCCESS',
           data,
@@ -270,7 +270,7 @@ export const exportMetadata =
         if (successCb) successCb(data);
         return getState();
       })
-      .catch((err) => {
+      .catch(err => {
         if (errorCb) errorCb(err);
       });
   };
@@ -379,7 +379,7 @@ export const renameDataSource =
     const { isRenameSource, name } = renameData;
     const { metadata } = getState();
     const { sources } = metadata.metadataObject ?? {};
-    const currentSource = sources?.find((s) => s.name === name);
+    const currentSource = sources?.find(s => s.name === name);
     const isEdit = data.payload.replace_configuration;
     const addQuery = addSource(data.driver, data.payload, replicas);
     const renameQuery = {
@@ -469,7 +469,7 @@ export const removeDataSource =
   (dispatch, getState) => {
     const { currentDataSource } = getState().tables;
     const sources = getDataSources(getState()).filter(
-      (s) => s.name !== data.name
+      s => s.name !== data.name
     );
     const upQuery = removeSource(data.driver, data.name);
 
@@ -629,7 +629,7 @@ export const resetMetadata =
         }
         dispatch(showSuccessNotification('Metadata reset successfully!'));
       },
-      (error) => {
+      error => {
         console.error(error);
         dispatch(showErrorNotification('Metadata reset failed', null, error));
         if (errorCb) {
@@ -645,7 +645,7 @@ export const replaceMetadataFromFile =
     successCb: () => void,
     errorCb: () => void
   ): Thunk<void, MetadataActions> =>
-  (dispatch) => {
+  dispatch => {
     let parsedFileContent;
     try {
       parsedFileContent = JSON.parse(fileContent);
@@ -752,7 +752,7 @@ export const loadInconsistentObjects = (
         body: JSON.stringify(loadQuery),
       })
     ).then(
-      (data) => {
+      data => {
         const inconsistentObjects = shouldReloadMetadata
           ? data[1].inconsistent_objects
           : data.inconsistent_objects;
@@ -766,7 +766,7 @@ export const loadInconsistentObjects = (
           clearIntrospectionSchemaCache();
         }
       },
-      (error) => {
+      error => {
         console.error(error);
         dispatch({
           type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_ERROR',
@@ -801,7 +801,7 @@ export const reloadDataSource =
         dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
         return getState();
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
         dispatch(showErrorNotification('Reload data source failed', null, err));
       });
@@ -828,7 +828,7 @@ export const reloadRemoteSchema = (
         body: JSON.stringify(reloadQuery),
       })
     ).then(
-      (data) => {
+      data => {
         const inconsistentObjects = data[1].inconsistent_objects;
 
         dispatch(handleInconsistentObjects(inconsistentObjects));
@@ -839,7 +839,7 @@ export const reloadRemoteSchema = (
           successCb();
         }
       },
-      (error) => {
+      error => {
         console.error(error);
         dispatch({
           type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_ERROR',
@@ -859,7 +859,7 @@ export const reloadMetadata = (
   successCb: () => void,
   failureCb: () => void
 ): Thunk<void, MetadataActions> => {
-  return (dispatch) => {
+  return dispatch => {
     return dispatch(
       loadInconsistentObjects(
         {
@@ -897,7 +897,7 @@ export const dropInconsistentObjects = (
           successCb();
         }
       },
-      (error) => {
+      error => {
         console.error(error);
         dispatch({
           type: 'Metadata/DROP_INCONSISTENT_METADATA_ERROR',
@@ -1006,7 +1006,7 @@ export const deleteAllowList = (
       args: { collection: string; cascade: boolean };
     }[] = [];
 
-    collectionNames.forEach((collectionName) => {
+    collectionNames.forEach(collectionName => {
       upQueries.push(deleteAllowListQuery(collectionName));
     });
 
@@ -1050,7 +1050,7 @@ export const addAllowedQueries = (
     const source = getState().tables.currentDataSource;
     const isAllowedQueryCollectionInMetadata =
       getState().metadata?.metadataObject?.query_collections?.find(
-        (qc) => qc.name === allowedQueriesCollection
+        qc => qc.name === allowedQueriesCollection
       ) ?? false;
 
     const upQuery = !isAllowedQueryCollectionInMetadata
@@ -1288,7 +1288,7 @@ export const addRESTEndpoint =
     const downQueries = [];
 
     const consoleCollection = metadataObject?.query_collections?.find(
-      (collection) => collection.name === allowedQueriesCollection
+      collection => collection.name === allowedQueriesCollection
     );
 
     if (!consoleCollection) {
@@ -1364,7 +1364,7 @@ export const dropRESTEndpoint =
     }
 
     const currentObj = currentRESTEndpoints.find(
-      (re) => re.name === endpointName
+      re => re.name === endpointName
     );
 
     if (!currentObj) {

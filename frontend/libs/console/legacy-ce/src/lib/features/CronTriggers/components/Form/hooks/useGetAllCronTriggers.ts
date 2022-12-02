@@ -9,7 +9,7 @@ interface GetCronTriggersResponse {
 }
 
 export const useGetAllCronTriggers = () => {
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   // https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/scheduled-triggers/#metadata-get-cron-triggers
   const body = {

@@ -41,7 +41,7 @@ type CreateETFormProps = {
   handleAutoCleanupChange: (config: EventTriggerAutoCleanup) => void;
 };
 
-const CreateETForm: React.FC<CreateETFormProps> = (props) => {
+const CreateETForm: React.FC<CreateETFormProps> = props => {
   const {
     state: {
       name,
@@ -101,8 +101,8 @@ const CreateETForm: React.FC<CreateETFormProps> = (props) => {
       >
         <option value="">Select database</option>
         {dataSourcesList
-          .filter((s) => supportedDrivers.includes(s.driver))
-          .map((s) => (
+          .filter(s => supportedDrivers.includes(s.driver))
+          .map(s => (
             <option key={s.name} value={s.name}>
               {s.name}
             </option>
@@ -120,7 +120,7 @@ const CreateETForm: React.FC<CreateETFormProps> = (props) => {
           <option value="">Select schema</option>
           {Object.keys(databaseInfo)
             .sort()
-            .map((s) => (
+            .map(s => (
               <option value={s} key={s}>
                 {s}
               </option>
@@ -137,7 +137,7 @@ const CreateETForm: React.FC<CreateETFormProps> = (props) => {
           {databaseInfo[table.schema] &&
             Object.keys(databaseInfo[table.schema])
               .sort()
-              .map((t) => {
+              .map(t => {
                 return (
                   <option key={t} value={t}>
                     {t}

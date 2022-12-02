@@ -18,7 +18,7 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
   const [dismissed, setDismissed] = React.useState(false);
   const { isError, isLoading, data } = useFeatureFlags(additionalFlags);
   const setPermanentDismiss = useFeatureFlagDismiss();
-  const featureFlag = data?.find((i) => i.id === flagId);
+  const featureFlag = data?.find(i => i.id === flagId);
   if (
     isError ||
     isLoading ||

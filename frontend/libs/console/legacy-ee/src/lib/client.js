@@ -4,7 +4,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { ReactQueryProvider, tracingTools } from '@hasura/console-oss';
+import { ReactQueryProvider, startTracing } from '@hasura/console-oss';
 
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
@@ -16,7 +16,7 @@ import store from './store';
 
 import globals from './Globals';
 
-tracingTools.sentry.startTracing(globals, window.__env);
+startTracing(globals, window.__env);
 
 const hashLinkScroll = () => {
   const { hash } = window.location;

@@ -129,7 +129,7 @@ const EventsSubTable: React.FC<Props> = ({
       setLoading(true);
       props
         .getEventInvocationData(url, options)
-        .then((data) => {
+        .then(data => {
           setLoading(false);
           const parsed = parseEventsSQLResp(data?.result);
           if (parsed) setInvocations(parsed);
@@ -139,7 +139,7 @@ const EventsSubTable: React.FC<Props> = ({
           }
           setErrInfo(data.error);
         })
-        .catch((err) => {
+        .catch(err => {
           setErrInfo(err);
           setLoading(false);
         });
@@ -156,7 +156,7 @@ const EventsSubTable: React.FC<Props> = ({
 
     props
       .getEventInvocationData(url, options)
-      .then((data) => {
+      .then(data => {
         setLoading(false);
         if (data && data?.invocations && !data.error) {
           setInvocations(data.invocations);
@@ -164,7 +164,7 @@ const EventsSubTable: React.FC<Props> = ({
         }
         setErrInfo(data.error);
       })
-      .catch((err) => {
+      .catch(err => {
         setLoading(false);
         setErrInfo(err);
       });
@@ -197,7 +197,7 @@ const EventsSubTable: React.FC<Props> = ({
   const invocationRows = inv.map((r: any, i: number) => {
     const newRow: Record<string, JSX.Element> = {};
     // Insert cells corresponding to all rows
-    invocationColumns.forEach((col) => {
+    invocationColumns.forEach(col => {
       newRow[col] = (
         <div className="text-center overflow-hidden" key={`${col}-${col}-${i}`}>
           {sanitiseRow(col, r)}

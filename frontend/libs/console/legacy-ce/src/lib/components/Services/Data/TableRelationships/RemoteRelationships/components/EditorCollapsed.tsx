@@ -12,7 +12,7 @@ const Collapsed: React.FC<Props> = ({ relationship }) => {
   }
   const parseRelationship = parseRemoteRelationship(relationship);
   const relationMap = () => {
-    const fields = parseRelationship.remoteFields.map((field) => field.name);
+    const fields = parseRelationship.remoteFields.map(field => field.name);
     return ['', ...fields].join(' . ');
   };
   return (

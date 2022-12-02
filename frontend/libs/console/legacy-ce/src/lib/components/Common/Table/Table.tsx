@@ -50,7 +50,7 @@ const SideBarItem: React.FC<{
           className="form_control"
           value={inputValue}
           placeholder="Enter new Role"
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={e => setInputValue(e.target.value)}
         />
       )}
       <div className={`${isLast ? styles.hidden : ''}`}>

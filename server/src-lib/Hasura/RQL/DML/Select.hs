@@ -333,7 +333,7 @@ phaseOne ::
 phaseOne query = do
   let sourceName = getSourceDMLQuery query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache sourceName
-  flip runTableCacheRT (sourceName, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       convSelectQuery sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 

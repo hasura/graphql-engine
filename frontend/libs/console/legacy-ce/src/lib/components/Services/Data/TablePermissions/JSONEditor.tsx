@@ -49,7 +49,7 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
   }, [data]);
 
   const onEditorValueChange = useCallback(
-    (newVal) => setValue(newVal),
+    newVal => setValue(newVal),
     [setValue]
   );
 
@@ -65,6 +65,7 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
       showPrintMargin={false}
       value={value}
       annotations={annotations}
+      setOptions={{ useWorker: false }}
     />
   );
 };

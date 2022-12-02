@@ -3,6 +3,22 @@
   "sourceRoot": "apps/console-ee/src",
   "projectType": "application",
   "targets": {
+    "build-server-assets": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/apps/server-assets-console-ee"],
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "rm -rf dist/apps/server-assets-console-ee",
+          "cp dist/apps/console-ee dist/apps/server-assets-console-ee -r",
+          "mkdir -p dist/apps/server-assets-console-ee/versioned",
+          "mv dist/apps/server-assets-console-ee/*.{js,css} dist/apps/server-assets-console-ee/versioned",
+          "gzip -r -f dist/apps/server-assets-console-ee/versioned",
+          "mv dist/apps/server-assets-console-ee/*.map dist/apps/server-assets-console-ee/versioned"
+        ],
+        "parallel": false
+      }
+    },
     "build": {
       "executor": "@nrwl/web:webpack",
       "outputs": ["{options.outputPath}"],

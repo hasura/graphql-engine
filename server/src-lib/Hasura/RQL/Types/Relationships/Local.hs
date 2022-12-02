@@ -30,7 +30,6 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
-import Hasura.Incremental (Cacheable)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -43,8 +42,6 @@ data RelDef a = RelDef
     _rdComment :: Maybe T.Text
   }
   deriving (Show, Eq, Generic)
-
-instance (Cacheable a) => Cacheable (RelDef a)
 
 instance (HasCodec a, Typeable a) => HasCodec (RelDef a) where
   codec =
@@ -78,8 +75,6 @@ deriving instance Backend b => Eq (RelManualConfig b)
 
 deriving instance Backend b => Show (RelManualConfig b)
 
-instance (Backend b) => Cacheable (RelManualConfig b)
-
 instance (Backend b) => HasCodec (RelManualConfig b) where
   codec =
     AC.object (codecNamePrefix @b <> "RelManualConfig") $
@@ -109,8 +104,6 @@ data RelUsing (b :: BackendType) a
   = RUFKeyOn a
   | RUManual (RelManualConfig b)
   deriving (Show, Eq, Generic)
-
-instance (Backend b, Cacheable a) => Cacheable (RelUsing b a)
 
 instance (Backend b, HasCodec a, Typeable a) => HasCodec (RelUsing b a) where
   codec = dimapCodec dec enc $ disjointEitherCodec fkCodec manualCodec
@@ -156,8 +149,6 @@ deriving instance Backend b => Eq (ArrRelUsingFKeyOn b)
 
 deriving instance Backend b => Show (ArrRelUsingFKeyOn b)
 
-instance Backend b => Cacheable (ArrRelUsingFKeyOn b)
-
 -- TODO: This has to move to a common module
 data WithTable b a = WithTable
   { wtSource :: SourceName,
@@ -190,8 +181,6 @@ data ObjRelUsingChoice b
 deriving instance Backend b => Eq (ObjRelUsingChoice b)
 
 deriving instance Backend b => Show (ObjRelUsingChoice b)
-
-instance (Backend b) => Cacheable (ObjRelUsingChoice b)
 
 instance (Backend b) => HasCodec (ObjRelUsingChoice b) where
   codec = dimapCodec dec enc $ disjointEitherCodec sameTableCodec remoteTableCodec
@@ -338,8 +327,6 @@ deriving instance Backend b => Eq (RelInfo b)
 
 instance Backend b => NFData (RelInfo b)
 
-instance Backend b => Cacheable (RelInfo b)
-
 instance Backend b => Hashable (RelInfo b)
 
 instance (Backend b) => FromJSON (RelInfo b) where
@@ -352,8 +339,6 @@ data Nullable = Nullable | NotNullable
   deriving (Eq, Show, Generic)
 
 instance NFData Nullable
-
-instance Cacheable Nullable
 
 instance Hashable Nullable
 

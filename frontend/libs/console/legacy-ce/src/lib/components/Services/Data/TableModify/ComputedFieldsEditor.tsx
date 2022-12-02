@@ -204,6 +204,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               maxLines={100}
               width="100%"
               showPrintMargin={false}
+              setOptions={{ useWorker: false }}
             />
           </div>
         );
@@ -378,7 +379,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
                     table.table_name,
                     table.table_schema
                   )
-                  .map((fn) => fn.function_name)}
+                  .map(fn => fn.function_name)}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
                 bsClass="function-name-select"

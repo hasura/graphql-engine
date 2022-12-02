@@ -20,7 +20,6 @@ module Harness.Backend.Postgres
     trackTable,
     untrackTable,
     setupTablesAction,
-    setupTablesActionDiscardingTeardownErrors,
     setupPermissionsAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
@@ -29,24 +28,31 @@ module Harness.Backend.Postgres
     createUniqueIndexSql,
     mkPrimaryKeySql,
     mkReferenceSql,
+    wrapIdentifier,
   )
 where
 
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
+import Data.Aeson qualified as Aeson
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as S8
+import Data.Monoid (Last, getLast)
 import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Extended (commaSeparated)
+import Data.Text.Lazy qualified as TL
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
+import Database.PostgreSQL.Simple.Options (Options (..))
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Logging
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
@@ -57,18 +63,37 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+import Text.Pretty.Simple (pShow)
 
 -- | The default connection information based on the 'TestingMode'. The
 -- interesting thing here is the database: in both modes, we specify an
 -- /initial/ database (returned by this function), which we use only as a way
 -- to create other databases for testing.
-defaultConnectInfo :: TestEnvironment -> Postgres.ConnectInfo
-defaultConnectInfo testEnvironment =
-  case testingMode testEnvironment of
-    TestAllBackends ->
+defaultConnectInfo :: HasCallStack => GlobalTestEnvironment -> Postgres.ConnectInfo
+defaultConnectInfo globalTestEnvironment =
+  case testingMode globalTestEnvironment of
+    TestNewPostgresVariant opts@Options {..} ->
+      let getComponent :: forall a. String -> Last a -> a
+          getComponent component =
+            fromMaybe
+              ( error $
+                  unlines
+                    [ "Postgres URI is missing its " <> component <> " component.",
+                      "Postgres options: " <> TL.unpack (pShow opts)
+                    ]
+              )
+              . getLast
+       in Postgres.ConnectInfo
+            { connectUser = getComponent "user" user,
+              connectPassword = getComponent "password" password,
+              connectHost = getComponent "host" $ hostaddr <> host,
+              connectPort = fromIntegral . getComponent "port" $ port,
+              connectDatabase = getComponent "dbname" $ dbname
+            }
+    _otherTestingMode ->
       Postgres.ConnectInfo
         { connectHost = Constants.postgresHost,
           connectUser = Constants.postgresUser,
@@ -76,27 +101,20 @@ defaultConnectInfo testEnvironment =
           connectPassword = Constants.postgresPassword,
           connectDatabase = Constants.postgresDb
         }
-    TestNewPostgresVariant {..} ->
-      Postgres.ConnectInfo
-        { connectHost = postgresSourceHost,
-          connectPort = postgresSourcePort,
-          connectUser = postgresSourceUser,
-          connectPassword = postgresSourcePassword,
-          connectDatabase = postgresSourceInitialDatabase
-        }
 
 -- | Create a connection string for whatever unique database has been generated
 -- for this 'TestEnvironment'.
 makeFreshDbConnectionString :: TestEnvironment -> S8.ByteString
 makeFreshDbConnectionString testEnvironment =
   Postgres.postgreSQLConnectionString
-    (defaultConnectInfo testEnvironment)
+    (defaultConnectInfo (globalEnvironment testEnvironment))
       { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
       }
 
 metadataLivenessCheck :: HasCallStack => IO ()
 metadataLivenessCheck =
-  doLivenessCheck (fromString postgresqlMetadataConnectionString)
+  doLivenessCheck $
+    fromString postgresqlMetadataConnectionString
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
@@ -121,29 +139,22 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
-runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
-runWithInitialDb_ testEnvironment =
-  runInternal testEnvironment $
-    Postgres.postgreSQLConnectionString (defaultConnectInfo testEnvironment)
+runWithInitialDb_ :: HasCallStack => GlobalTestEnvironment -> String -> IO ()
+runWithInitialDb_ globalTestEnvironment =
+  runInternal globalTestEnvironment $
+    Postgres.postgreSQLConnectionString (defaultConnectInfo globalTestEnvironment)
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
+  runInternal (globalEnvironment testEnvironment) (makeFreshDbConnectionString testEnvironment)
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO ()
-runInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Executing connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+runInternal :: HasCallStack => GlobalTestEnvironment -> S8.ByteString -> String -> IO ()
+runInternal globalTestEnvironment connectionString query = do
+  runLogger (logger globalTestEnvironment) $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -173,14 +184,7 @@ queryWithInitialDb testEnvironment =
 -- On error, print something useful for debugging.
 queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
 queryInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Querying connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -206,61 +210,57 @@ runSQL = Schema.runSQL Postgres (defaultSource Postgres)
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnv =
-  let source = defaultSource Postgres
-      backendType = defaultBackendTypeString Postgres
-      sourceConfiguration = defaultSourceConfiguration testEnv
-   in [yaml|
-name: *source
-kind: *backendType
-tables: []
-configuration: *sourceConfiguration
-|]
+  [interpolateYaml|
+    name: #{ defaultSource Postgres }
+    kind: #{ defaultBackendTypeString Postgres }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnv }
+  |]
 
 defaultSourceConfiguration :: TestEnvironment -> Value
-defaultSourceConfiguration testEnv =
-  let databaseUrl = makeFreshDbConnectionString testEnv
-   in [yaml|
+defaultSourceConfiguration testEnv = do
+  let connectionString :: Text
+      connectionString = bsToTxt $ makeFreshDbConnectionString testEnv
+
+  [interpolateYaml|
     connection_info:
-      database_url: *databaseUrl
+      database_url: #{ connectionString }
       pool_settings: {}
-   |]
+  |]
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "CREATE TABLE",
-          T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
-          "(",
+  run_
+    testEnv
+    [i|
+      CREATE TABLE #{ Constants.postgresDb }."#{ tableName }"
+        (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
               <> (bool [mkPrimaryKeySql pk] [] (null pk))
               <> (mkReferenceSql schemaName <$> tableReferences)
-              <> map uniqueConstraintSql tableConstraints,
-          ");"
-        ]
+              <> map uniqueConstraintSql tableConstraints
+        });
+    |]
 
   for_ tableUniqueIndexes (run_ testEnv . createUniqueIndexSql schemaName tableName)
 
 uniqueConstraintSql :: Schema.Constraint -> Text
 uniqueConstraintSql = \case
   Schema.UniqueConstraintColumns cols ->
-    T.unwords $ ["UNIQUE ", "("] ++ [commaSeparated cols] ++ [")"]
+    [i| UNIQUE (#{ commaSeparated cols }) |]
   Schema.CheckConstraintExpression ex ->
-    T.unwords $ ["CHECK ", "(", ex, ")"]
+    [i| CHECK (#{ ex }) |]
 
 createUniqueIndexSql :: SchemaName -> Text -> Schema.UniqueIndex -> String
-createUniqueIndexSql schemaName tableName = \case
+createUniqueIndexSql (SchemaName schemaName) tableName = \case
   Schema.UniqueIndexColumns cols ->
-    T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", qualifiedTableName, "("] ++ [commaSeparated cols] ++ [")"]
+    [i| CREATE UNIQUE INDEX ON "#{ schemaName }"."#{ tableName }" (#{ commaSeparated cols }) |]
   Schema.UniqueIndexExpression ex ->
-    T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", qualifiedTableName, "((", ex, "))"]
-  where
-    qualifiedTableName = wrapIdentifier (unSchemaName schemaName) <> "." <> wrapIdentifier tableName
+    [i| CREATE UNIQUE INDEX ON "#{ schemaName }"."#{ tableName }" ((#{ ex })) |]
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -290,38 +290,24 @@ mkPrimaryKeySql key =
     ]
 
 mkReferenceSql :: SchemaName -> Schema.Reference -> Text
-mkReferenceSql schemaName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  T.unwords
-    [ "FOREIGN KEY",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      unSchemaName schemaName <> "." <> wrapIdentifier referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
-    ]
+mkReferenceSql (SchemaName schemaName) Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+  [i|
+    FOREIGN KEY ("#{ referenceLocalColumn }")
+    REFERENCES #{ schemaName }."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
+    ON DELETE CASCADE ON UPDATE CASCADE
+  |]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
 insertTable :: TestEnvironment -> Schema.Table -> IO ()
-insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
-  | null tableData = pure ()
-  | otherwise = do
-      run_ testEnv $
-        T.unpack $
-          T.unwords
-            [ "INSERT INTO",
-              T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
-              "(",
-              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+insertTable testEnv Schema.Table {tableName, tableColumns, tableData} = unless (null tableData) do
+  run_
+    testEnv
+    [i|
+      INSERT INTO "#{ Constants.postgresDb }"."#{ tableName }"
+        (#{ commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns) })
+      VALUES
+        #{ commaSeparated $ mkRow <$> tableData };
+    |]
 
 -- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
 --
@@ -350,26 +336,26 @@ mkRow row =
     ]
 
 -- | Serialize Table into a PL-SQL DROP statement and execute it
+-- We don't want @IF EXISTS@ here, because we don't want this to fail silently.
 dropTable :: TestEnvironment -> Schema.Table -> IO ()
-dropTable testEnv Schema.Table {tableName} = do
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.postgresDb <> "." <> tableName,
-          -- "CASCADE",
-          ";"
-        ]
+dropTable testEnv Schema.Table {tableName} =
+  run_
+    testEnv
+    [i| DROP TABLE #{ Constants.postgresDb }.#{ tableName }; |]
 
 dropTableIfExists :: TestEnvironment -> Schema.Table -> IO ()
 dropTableIfExists testEnv Schema.Table {tableName} = do
-  run_ testEnv $
-    T.unpack $
-      T.unwords
-        [ "SET client_min_messages TO WARNING;", -- suppress a NOTICE if the table isn't there
-          "DROP TABLE IF EXISTS",
-          T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName
-        ]
+  -- A transaction means that the @SET LOCAL@ is scoped to this operation.
+  -- In other words, whatever the @client_min_messages@ flag's previous value
+  -- was will be restored after running this.
+  run_
+    testEnv
+    [i|
+      BEGIN;
+      SET LOCAL client_min_messages = warning;
+      DROP TABLE IF EXISTS #{ Constants.postgresDb }."#{ tableName }";
+      COMMIT;
+    |]
 
 -- | Post an http request to start tracking the table
 trackTable :: TestEnvironment -> Schema.Table -> IO ()
@@ -387,16 +373,20 @@ untrackTable testEnvironment table =
 createDatabase :: TestEnvironment -> IO ()
 createDatabase testEnvironment = do
   runWithInitialDb_
-    testEnvironment
+    (globalEnvironment testEnvironment)
     ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
   createSchema testEnvironment
+
+dropDatabase :: TestEnvironment -> IO ()
+dropDatabase testEnvironment = do
+  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+  dropDatabaseInternal dbName testEnvironment
 
 -- | we drop databases at the end of test runs so we don't need to do DB clean
 -- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
 -- < 13 in CI so instead we boot all the active users then drop as normal.
-dropDatabase :: TestEnvironment -> IO ()
-dropDatabase testEnvironment = do
-  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+dropDatabaseInternal :: String -> TestEnvironment -> IO ()
+dropDatabaseInternal dbName testEnvironment = do
   void $
     queryWithInitialDb @(Postgres.Only Bool)
       testEnvironment
@@ -409,15 +399,19 @@ dropDatabase testEnvironment = do
 
   -- if this fails, don't make the test fail
   runWithInitialDb_
-    testEnvironment
+    (globalEnvironment testEnvironment)
     ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(_ :: SomeException) -> pure ()
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
 createSchema :: TestEnvironment -> IO ()
 createSchema testEnvironment = do
   let schemaName = Schema.getSchemaName testEnvironment
+
+  -- A transaction means that the @SET LOCAL@ is scoped to this operation.
+  -- In other words, whatever the @client_min_messages@ flag's previous value
+  -- was will be restored after running this.
   run_
     testEnvironment
     [i|
@@ -456,12 +450,6 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -> SetupAction
-setupTablesActionDiscardingTeardownErrors ts env =
-  SetupAction
-    (setup ts (env, ()))
-    (const $ teardown ts (env, ()) `catchAny` \ex -> testLogHarness env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =
@@ -503,6 +491,8 @@ setupComputedFieldAction table functionName asFieldName env =
         table
         functionName
         asFieldName
+        Aeson.Null
+        Aeson.Null
         env
     )
     ( \_ ->

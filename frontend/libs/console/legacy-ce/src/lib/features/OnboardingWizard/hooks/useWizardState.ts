@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { GrowthExperimentsClient } from '@/features/GrowthExperiments';
 import { useFamiliaritySurveyData } from '@/features/Surveys';
-import { experimentId } from '../constants';
+import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
 
 export type WizardState =
@@ -10,13 +9,7 @@ export type WizardState =
   | 'template-summary'
   | 'hidden';
 
-export function useWizardState(
-  growthExperimentsClient: GrowthExperimentsClient,
-  hasNeonAccess = false
-) {
-  const { getAllExperimentConfig } = growthExperimentsClient;
-  const experimentData = getAllExperimentConfig();
-
+export function useWizardState() {
   const {
     showFamiliaritySurvey,
     data: familiaritySurveyData,
@@ -24,29 +17,16 @@ export function useWizardState(
     onOptionClick: familiaritySurveyOnOptionClick,
   } = useFamiliaritySurveyData();
 
+  const { data: onboardingData } = useOnboardingData();
+
   const [state, setState] = useState<WizardState>(
-    getWizardState(
-      experimentData,
-      experimentId,
-      showFamiliaritySurvey,
-      hasNeonAccess
-    )
+    getWizardState(showFamiliaritySurvey, onboardingData)
   );
 
   useEffect(() => {
-    // this effect is only used to update the wizard state for initial async fetching of experiments config
-    // it only takes care of "showing" the wizard, but not hiding it, hence the check for `hidden`
-    // hiding wizard is taken care of by setting the wizard state directly to "hidden"
-    const wizardState = getWizardState(
-      experimentData,
-      experimentId,
-      showFamiliaritySurvey,
-      hasNeonAccess
-    );
-    if (wizardState !== 'hidden') {
-      setState(wizardState);
-    }
-  }, [experimentData, showFamiliaritySurvey, hasNeonAccess]);
+    const wizardState = getWizardState(showFamiliaritySurvey, onboardingData);
+    setState(wizardState);
+  }, [onboardingData, showFamiliaritySurvey]);
 
   return {
     state,

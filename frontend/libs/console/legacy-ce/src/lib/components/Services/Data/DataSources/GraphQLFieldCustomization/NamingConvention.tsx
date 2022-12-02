@@ -89,7 +89,7 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
             <span className="p-sm py-8">
               <CardRadioGroup
                 items={namingConventionRadioGroupItems}
-                onChange={(ncType) => onChange('namingConvention', ncType)}
+                onChange={ncType => onChange('namingConvention', ncType)}
                 value={namingConvention}
               />
             </span>

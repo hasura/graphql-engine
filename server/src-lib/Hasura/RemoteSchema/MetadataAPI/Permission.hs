@@ -15,7 +15,6 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
@@ -37,8 +36,6 @@ data AddRemoteSchemaPermission = AddRemoteSchemaPermission
 
 instance NFData AddRemoteSchemaPermission
 
-instance Cacheable AddRemoteSchemaPermission
-
 $(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermission)
 
 data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
@@ -48,8 +45,6 @@ data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
   deriving (Show, Eq, Generic)
 
 instance NFData DropRemoteSchemaPermissions
-
-instance Cacheable DropRemoteSchemaPermissions
 
 $(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
 

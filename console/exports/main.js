@@ -93,3 +93,5 @@ export {
 } from '../src/utils/proConsole';
 
 export { AllowListDetail } from '../src/components/Services/AllowList/AllowListDetail';
+
+export { default as generatedAdminSecretLoginConnector } from '../src/components/Login/Login';

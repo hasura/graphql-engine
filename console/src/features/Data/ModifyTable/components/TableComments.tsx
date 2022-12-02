@@ -1,3 +1,4 @@
+import { MetadataUtils, useMetadata } from '@/features/hasura-metadata-api';
 import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
@@ -6,7 +7,7 @@ import clsx from 'clsx';
 import React, { useMemo } from 'react';
 import TextareaAutosize from 'react-autosize-textarea';
 import { FaEdit, FaRegComment } from 'react-icons/fa';
-import { useMetadataTable, useUpdateTableConfiguration } from '../hooks';
+import { useUpdateTableConfiguration } from '../hooks';
 
 import { ModifyTableProps } from '../ModifyTable';
 
@@ -18,9 +19,11 @@ export interface TableCommentsProps extends ModifyTableProps {
 export const TableComments: React.VFC<TableCommentsProps> = props => {
   const { dataSourceName, table } = props;
 
-  const { isLoading, metadataTable } = useMetadataTable(dataSourceName, table);
-
-  const savedComment = metadataTable?.configuration?.comment || '';
+  const { isLoading, data: savedComment } = useMetadata(
+    m =>
+      MetadataUtils.findMetadataTable(dataSourceName, table, m)?.configuration
+        ?.comment
+  );
 
   const [comment, setComment] = React.useState<Nullable<string>>(null);
 

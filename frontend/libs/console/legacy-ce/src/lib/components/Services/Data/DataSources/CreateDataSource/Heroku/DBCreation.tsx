@@ -59,7 +59,7 @@ const DBCreation: React.FC<Props> = ({
       const dbName = allDataSources.length ? `herokuapp-${appName}` : 'default';
       setIsSettingEnvVar(true);
       setDBURLInEnvVars(dbURL)
-        .then((envVar) => {
+        .then(envVar => {
           setIsSettingEnvVar(false);
           setCreatedEnvVar(envVar);
           dispatch(
@@ -97,7 +97,7 @@ const DBCreation: React.FC<Props> = ({
             );
           }, 9000);
         })
-        .catch((e) => {
+        .catch(e => {
           console.error(e);
           if (isSettingEnvVar) {
             dispatch(

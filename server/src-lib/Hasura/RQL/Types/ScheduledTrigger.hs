@@ -55,7 +55,6 @@ import Data.Time.Clock
 import Data.Time.Clock.Units
 import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as PG
-import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common (InputWebhook (..))
@@ -87,8 +86,6 @@ data STRetryConf = STRetryConf
   deriving (Show, Eq, Generic)
 
 instance NFData STRetryConf
-
-instance Cacheable STRetryConf
 
 instance FromJSON STRetryConf where
   parseJSON = withObject "STRetryConf" \o -> do
@@ -130,8 +127,6 @@ data CronTriggerMetadata = CronTriggerMetadata
 
 instance NFData CronTriggerMetadata
 
-instance Cacheable CronTriggerMetadata
-
 instance FromJSON CronTriggerMetadata where
   parseJSON =
     withObject "CronTriggerMetadata" $ \o -> do
@@ -167,8 +162,6 @@ data CreateCronTrigger = CreateCronTrigger
 $(makeLenses ''CreateCronTrigger)
 
 instance NFData CreateCronTrigger
-
-instance Cacheable CreateCronTrigger
 
 instance FromJSON CreateCronTrigger where
   parseJSON =

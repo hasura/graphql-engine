@@ -1,20 +1,22 @@
 import { MssqlTable } from '..';
 import { runSQL, RunSQLResponse } from '../../api';
-import { GetFKRelationshipProps } from '../../types';
+import { GetFKRelationshipProps, TableFkRelationships } from '../../types';
 
-const adaptFkRelationships = (result: RunSQLResponse['result']) => {
+const adaptFkRelationships = (
+  result: RunSQLResponse['result']
+): TableFkRelationships[] => {
   if (!result) return [];
 
   return result.slice(1).map(row => ({
     from: {
-      table: row[0],
-      column: JSON.parse(row[2]).map(
+      table: { name: row[0], schema: row[1] },
+      column: JSON.parse(row[4]).map(
         (col: { column: string; referenced_column: string }) => col.column
       ),
     },
     to: {
-      table: row[1],
-      column: JSON.parse(row[2]).map(
+      table: { name: row[2], schema: row[3] },
+      column: JSON.parse(row[4]).map(
         (col: { column: string; referenced_column: string }) =>
           col.referenced_column
       ),
@@ -30,8 +32,10 @@ export const getFKRelationships = async ({
   const { name } = table as MssqlTable;
 
   const sql = `SELECT
-  tab1.name AS [table_name],
-  tab2.name AS [ref_table],
+  tab1.name AS [fromTable],
+  sch1.name AS [fromSchema],
+  tab2.name AS [toTable],
+  sch2.name AS [toSchema],
     (
         SELECT
             col1.name AS [column],

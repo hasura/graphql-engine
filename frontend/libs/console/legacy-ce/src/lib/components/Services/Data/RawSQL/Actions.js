@@ -109,7 +109,7 @@ const trackAllItems =
       () => {
         dispatch(showSuccessNotification('Items were tracked successfuly'));
       },
-      (err) => {
+      err => {
         if (err.code === 'conflict') {
           dispatch(handleOutOfDateMetadata);
         }
@@ -174,7 +174,7 @@ const executeSQL =
       body: JSON.stringify(requestBody),
     };
 
-    const callback = (data) => {
+    const callback = data => {
       if (isMigration) {
         dispatch(loadMigrationStatus());
       }
@@ -189,7 +189,7 @@ const executeSQL =
 
     return dispatch(requestAction(url, options))
       .then(
-        (data) => {
+        data => {
           if (isTableTrackChecked) {
             dispatch(exportMetadata()).then(() => {
               dispatch(
@@ -200,7 +200,7 @@ const executeSQL =
           }
           callback(data);
         },
-        (err) => {
+        err => {
           const title = 'SQL Execution Failed';
           dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
           dispatch({ type: REQUEST_ERROR, data: err });
@@ -211,7 +211,7 @@ const executeSQL =
           }
         }
       )
-      .catch((errorMsg) => {
+      .catch(errorMsg => {
         const parsedErrorMsg = errorMsg;
         parsedErrorMsg.message = JSON.parse(errorMsg.message);
         dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });

@@ -1,11 +1,11 @@
-export const isEmpty = (value) =>
+export const isEmpty = value =>
   value === undefined || value === null || value === '';
 
-export const isEmptyObject = (obj) => {
+export const isEmptyObject = obj => {
   return Object.keys(obj).length === 0;
 };
-const join = (rules) => (value, data) =>
-  rules.map((rule) => rule(value, data)).filter((error) => !!error)[0];
+const join = rules => (value, data) =>
+  rules.map(rule => rule(value, data)).filter(error => !!error)[0];
 
 export function email(value) {
   // Let's not start a debate on email regex. This is just for an example app!
@@ -24,7 +24,7 @@ export function required(value) {
 }
 
 export function minLength(min) {
-  return (value) => {
+  return value => {
     if (!isEmpty(value) && value.length < min) {
       return `Must be at least ${min} characters`;
     }
@@ -32,7 +32,7 @@ export function minLength(min) {
 }
 
 export function maxLength(max) {
-  return (value) => {
+  return value => {
     if (!isEmpty(value) && value.length > max) {
       return `Must be no more than ${max} characters`;
     }
@@ -54,7 +54,7 @@ export function isFloat(n) {
 }
 
 export function oneOf(enumeration) {
-  return (value) => {
+  return value => {
     if (!~enumeration.indexOf(value)) {
       return `Must be one of: ${enumeration.join(', ')}`;
     }
@@ -74,7 +74,7 @@ export function match(field) {
 export function createValidator(rules) {
   return (data = {}) => {
     const errors = {};
-    Object.keys(rules).forEach((key) => {
+    Object.keys(rules).forEach(key => {
       const rule = join([].concat(rules[key])); // concat enables both functions and arrays of functions
       const error = rule(data[key], data);
       if (error) {
@@ -87,7 +87,7 @@ export function createValidator(rules) {
 
 export const addNumbersSafely = (...args) => {
   let result = 0;
-  args.forEach((i) => {
+  args.forEach(i => {
     if (!Number.isNaN(Number(i))) result = Number(i) + Number(result);
   });
   return result;

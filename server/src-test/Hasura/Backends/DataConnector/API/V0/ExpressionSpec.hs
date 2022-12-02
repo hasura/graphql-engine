@@ -18,7 +18,7 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumTextExcluding)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -219,28 +219,31 @@ spec = do
 
     jsonOpenApiProperties genExpression
 
-genBinaryComparisonOperator :: MonadGen m => m BinaryComparisonOperator
+genBinaryComparisonOperator :: (MonadGen m, GenBase m ~ Identity) => m BinaryComparisonOperator
 genBinaryComparisonOperator =
   Gen.choice
     [ Gen.element [LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, Equal],
-      CustomBinaryComparisonOperator <$> genArbitraryAlphaNumText defaultRange
+      CustomBinaryComparisonOperator
+        <$> genArbitraryAlphaNumTextExcluding
+          ["less_than", "less_than_or_equal", "greater_than", "greater_than_or_equal", "equal"]
+          defaultRange
     ]
 
-genBinaryArrayComparisonOperator :: MonadGen m => m BinaryArrayComparisonOperator
+genBinaryArrayComparisonOperator :: (MonadGen m, GenBase m ~ Identity) => m BinaryArrayComparisonOperator
 genBinaryArrayComparisonOperator =
   Gen.choice
     [ pure In,
-      CustomBinaryArrayComparisonOperator <$> genArbitraryAlphaNumText defaultRange
+      CustomBinaryArrayComparisonOperator <$> genArbitraryAlphaNumTextExcluding ["in"] defaultRange
     ]
 
-genUnaryComparisonOperator :: MonadGen m => m UnaryComparisonOperator
+genUnaryComparisonOperator :: (MonadGen m, GenBase m ~ Identity) => m UnaryComparisonOperator
 genUnaryComparisonOperator =
   Gen.choice
     [ pure IsNull,
-      CustomUnaryComparisonOperator <$> genArbitraryAlphaNumText defaultRange
+      CustomUnaryComparisonOperator <$> genArbitraryAlphaNumTextExcluding ["is_null"] defaultRange
     ]
 
-genComparisonColumn :: MonadGen m => m ComparisonColumn
+genComparisonColumn :: (MonadGen m, GenBase m ~ Identity) => m ComparisonColumn
 genComparisonColumn =
   ComparisonColumn
     <$> genColumnPath
@@ -251,7 +254,7 @@ genColumnPath :: MonadGen m => m ColumnPath
 genColumnPath =
   Gen.element [CurrentTable, QueryTable]
 
-genComparisonValue :: MonadGen m => m ComparisonValue
+genComparisonValue :: (MonadGen m, GenBase m ~ Identity) => m ComparisonValue
 genComparisonValue =
   Gen.choice
     [ AnotherColumn <$> genComparisonColumn,
@@ -265,7 +268,7 @@ genExistsInTable =
       UnrelatedTable <$> genTableName
     ]
 
-genExpression :: MonadGen m => m Expression
+genExpression :: (MonadGen m, GenBase m ~ Identity) => m Expression
 genExpression =
   Gen.recursive
     Gen.choice

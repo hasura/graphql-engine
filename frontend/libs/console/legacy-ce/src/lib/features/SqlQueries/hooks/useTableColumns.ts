@@ -24,7 +24,7 @@ export const useTableColumns = (
 
   const driver = source?.kind ?? '';
 
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   type TableColumn = {
     database: string;
@@ -43,7 +43,7 @@ export const useTableColumns = (
 
     const result: TableColumn[] = [];
 
-    data.slice(1).forEach((row) => {
+    data.slice(1).forEach(row => {
       const obj: Record<string, string> = {};
 
       keys.forEach((key, i) => {
@@ -74,7 +74,7 @@ export const useTableColumns = (
           headers,
           body,
         },
-        (d) => parser(d.result ?? [])
+        d => parser(d.result ?? [])
       );
     },
     enabled: !!driver && !!table.name,

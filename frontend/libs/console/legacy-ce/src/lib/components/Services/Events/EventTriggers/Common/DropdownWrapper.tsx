@@ -23,7 +23,7 @@ type DropdownWrapperProps = {
   inputStyle?: Record<string, string>;
 };
 
-const DropdownWrapper: React.FC<DropdownWrapperProps> = (props) => {
+const DropdownWrapper: React.FC<DropdownWrapperProps> = props => {
   const { onHandlerValChange, handlerVal } = props;
   const [localValue, setLocalValue] = useState<string>(handlerVal);
 

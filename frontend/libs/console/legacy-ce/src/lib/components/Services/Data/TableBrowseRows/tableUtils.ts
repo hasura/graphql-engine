@@ -44,7 +44,7 @@ export const persistColumnOrderChange = (
 
   // remove duplicates
   const newOrders: OrderEntry[] = [];
-  orderData.forEach((item) => {
+  orderData.forEach(item => {
     const sameElements = orderData.filter(compareReorderItems(item));
     const alreadyAdded = newOrders.some(compareReorderItems(item));
 

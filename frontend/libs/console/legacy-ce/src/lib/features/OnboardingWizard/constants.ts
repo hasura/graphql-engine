@@ -1,4 +1,3 @@
-import { growthExperimentsIds } from '@/features/GrowthExperiments';
 import globals from '@/Globals';
 import { BASE_URL_TEMPLATE } from '@/components/Services/Data/Schema/TemplateGallery/templateGalleryConfig';
 
@@ -8,6 +7,22 @@ import { BASE_URL_TEMPLATE } from '@/components/Services/Data/Schema/TemplateGal
 const ROOT_DIR = 'postgres';
 const TEMPLATE_DIR = 'getting-started';
 export const NEON_TEMPLATE_BASE_PATH = `${BASE_URL_TEMPLATE}/${ROOT_DIR}/${TEMPLATE_DIR}`;
+
+export const onboardingQueryKey = 'onboardingData';
+
+/**
+ * GraphQl query to fetch all onboarding related data
+ */
+export const fetchAllOnboardingDataQuery = `
+  query fetchAllOnboardingData {
+    user_onboarding {
+      activity
+      target
+    }
+  }
+`;
+
+export const fetchAllOnboardingDataQueryVariables = {};
 
 export const getMetadataUrl = (baseUrl: string) => {
   return `${baseUrl}/metadata.json`;
@@ -27,13 +42,11 @@ export const getSchemaImageUrl = (baseUrl: string) => {
 
 export const NEON_ONBOARDING_QUERY_KEY = 'neonOnboarding';
 
-export const experimentId = growthExperimentsIds.onboardingWizardV1;
-
-export const graphQlMutation = `
-mutation trackExperimentsCohortActivity ($projectId: uuid!, $experimentId: String!, $kind: String! $error_code: String) {
-  trackExperimentsCohortActivity(experiment: $experimentId, payload: {kind: $kind, project_id: $projectId, error_code: $error_code}) {
-    status
-  }
+export const trackOnboardingActivityMutation = `
+  mutation trackOnboardingActivity($projectId: uuid!, $kind: String!, $error_code: String) {
+    trackOnboardingActivity(payload: {kind: $kind, project_id: $projectId, error_code: $error_code}) {
+      status
+    }
 }
 `;
 
@@ -41,7 +54,6 @@ const projectId = globals.hasuraCloudProjectId;
 
 const mutationVariables = {
   ...(projectId && { projectId }),
-  experimentId,
 };
 
 export const onboardingCompleteVariables = {

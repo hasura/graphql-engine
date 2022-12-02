@@ -21,7 +21,7 @@ export default {
   title: 'components/ListMap',
   component: ListMap,
   decorators: [
-    (StoryComponent) => {
+    StoryComponent => {
       return (
         <Form
           options={{
@@ -44,7 +44,7 @@ export const ArrayToArray: Story = () => {
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
       name="type_selector"
-      onChange={(e) => console.log(e)}
+      onChange={e => console.log(e)}
       from={{
         options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
         label: 'Source Column',
@@ -65,7 +65,7 @@ export const ArrayToString: Story = () => {
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
       name="type_selector"
-      onChange={(e) => console.log(e)}
+      onChange={e => console.log(e)}
       from={{
         options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
         label: 'Source Column',
@@ -83,7 +83,7 @@ export const WithIcons: Story = () => {
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
       name="type_selector"
-      onChange={(e) => console.log(e)}
+      onChange={e => console.log(e)}
       from={{
         options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
         label: 'Source Column',
@@ -104,7 +104,7 @@ export const WithMultipleIcons: Story = () => {
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
       name="type_selector"
-      onChange={(e) => console.log(e)}
+      onChange={e => console.log(e)}
       from={{
         options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
         label: 'Source Column',
@@ -125,7 +125,7 @@ export const WithNoLabelsAndNoBackground: Story = ({ className }) => {
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
       name="type_selector"
-      onChange={(e) => console.log(e)}
+      onChange={e => console.log(e)}
       from={{
         options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
       }}

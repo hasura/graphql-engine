@@ -1,5 +1,5 @@
 import { DataSource, Feature } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 
@@ -12,7 +12,7 @@ export const useTableColumns = ({
 }) => {
   const httpClient = useHttpClient();
   return useQuery({
-    queryKey: [table, dataSourceName],
+    queryKey: ['column-introspection', dataSourceName, table],
     queryFn: async () => {
       const columns = await DataSource(httpClient).getTableColumns({
         dataSourceName,
@@ -33,5 +33,6 @@ export const useTableColumns = ({
             : supportedOperators,
       };
     },
+    refetchOnWindowFocus: false,
   });
 };

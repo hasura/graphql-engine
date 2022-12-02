@@ -12,14 +12,14 @@ interface TabsProps extends React.ComponentProps<typeof RadixTabs.Root> {
   items: TabsItem[];
 }
 
-export const Tabs: React.FC<TabsProps> = (props) => {
+export const Tabs: React.FC<TabsProps> = props => {
   const { items, ...rest } = props;
   return (
     <RadixTabs.Root defaultValue={items[0]?.value} {...rest}>
       <RadixTabs.List aria-label="Tabs">
         <div className="border-b border-gray-200 bg-legacybg flex space-x-4">
           {items.map(({ value: itemValue, label }) => (
-            <RadixTabs.Trigger value={itemValue} asChild>
+            <RadixTabs.Trigger key={label} value={itemValue} asChild>
               <button
                 className={clsx(
                   'whitespace-nowrap py-xs px-sm border-b-2 font-semibold',
@@ -34,7 +34,9 @@ export const Tabs: React.FC<TabsProps> = (props) => {
         </div>
       </RadixTabs.List>
       {items.map(({ value: itemValue, content }) => (
-        <RadixTabs.Content value={itemValue}>{content}</RadixTabs.Content>
+        <RadixTabs.Content key={itemValue} value={itemValue}>
+          {content}
+        </RadixTabs.Content>
       ))}
     </RadixTabs.Root>
   );

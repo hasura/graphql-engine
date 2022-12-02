@@ -15,8 +15,8 @@ const DatasourceItem = ({
   const { name, definition } = source;
   const sourceName = name || definition || '';
   const isInconsistent =
-    inconsistentObjects.find((i) => i?.definition === sourceName) !== undefined;
-  const keyHandler = (event) => {
+    inconsistentObjects.find(i => i?.definition === sourceName) !== undefined;
+  const keyHandler = event => {
     if (event.key === 'Enter') return setSelectedSource(source);
   };
   const hasReadReplicas = source?.configuration?.read_replicas?.length > 0;
@@ -33,9 +33,8 @@ const DatasourceItem = ({
   ) : (
     <li>
       <div
-        className={`${styles.dagCard} ${styles.dagCardClickable} ${
-          active && styles.active
-        }`}
+        className={`${styles.dagCard} ${styles.dagCardClickable} ${active &&
+          styles.active}`}
         onClick={() => setSelectedSource(source)}
         onKeyPress={keyHandler}
         role="button"

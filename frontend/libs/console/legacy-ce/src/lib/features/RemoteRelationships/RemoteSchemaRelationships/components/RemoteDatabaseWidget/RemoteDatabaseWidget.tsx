@@ -41,11 +41,10 @@ const useLoadData = (sources?: MetadataDataSource[]) => {
       Array.from(
         new Set(
           source?.tables.map(
-            (tableObj) =>
-              tableObj.table.schema ?? (tableObj as any).table.dataset
+            tableObj => tableObj.table.schema ?? (tableObj as any).table.dataset
           )
         )
-      ).map((value) => ({ value, label: value })) || []
+      ).map(value => ({ value, label: value })) || []
     );
   }, [source]);
 
@@ -53,12 +52,12 @@ const useLoadData = (sources?: MetadataDataSource[]) => {
     return (
       source?.tables
         ?.filter(
-          (tableObj) =>
+          tableObj =>
             (tableObj as any)?.table?.[
               driver === 'bigquery' ? 'dataset' : 'schema'
             ] === schemaName
         )
-        .map((tableObj) => ({
+        .map(tableObj => ({
           value: tableObj?.table?.name,
           label: tableObj?.table?.name,
         })) || []

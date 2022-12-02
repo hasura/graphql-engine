@@ -117,6 +117,9 @@ export const QueryDialog = ({
               const filters = watch('filters');
               const sorts = watch('sorts');
 
+              const onSubmitHandler = () =>
+                handleSubmitQuery(filters, trigger, sorts);
+
               return (
                 <>
                   <div className="p-4">
@@ -124,16 +127,21 @@ export const QueryDialog = ({
                       name="filters"
                       columns={columns}
                       operators={supportedOperators}
+                      onRemove={() => onSubmitHandler()}
                     />
 
                     <hr className="my-4" />
 
-                    <SortRows name="sorts" columns={columns} />
+                    <SortRows
+                      name="sorts"
+                      columns={columns}
+                      onRemove={() => onSubmitHandler()}
+                    />
                   </div>
                   <Dialog.Footer
                     callToAction="Run Query"
                     onClose={onClose}
-                    onSubmit={() => handleSubmitQuery(filters, trigger, sorts)}
+                    onSubmit={() => onSubmitHandler()}
                   />
                 </>
               );

@@ -1,29 +1,46 @@
 import { PostgresTable } from '..';
 import { runSQL, RunSQLResponse } from '../../api';
-import { GetFKRelationshipProps } from '../../types';
+import { GetFKRelationshipProps, TableFkRelationships } from '../../types';
+
+const getTable = (tableName: string) => {
+  const splitResult = tableName.split('.');
+  if (splitResult.length === 1)
+    return { schema: 'public', name: splitResult[0].replace(/"/g, '') };
+  return {
+    schema: splitResult[0].replace(/"/g, ''),
+    name: splitResult[1].replace(/"/g, ''),
+  };
+};
 
 const adaptFkRelationships = (
-  result: RunSQLResponse['result'],
-  schema: string
-) => {
+  result: RunSQLResponse['result']
+  // schema: string
+): TableFkRelationships[] => {
   if (!result) return [];
+  console.log('>>>', result);
+  const adaptedResult: TableFkRelationships[] = result.slice(1).map(row => {
+    const sourceTable: PostgresTable = getTable(row[0]);
+    const targetTable: PostgresTable = getTable(row[2]);
 
-  return result.slice(1).map((row) => ({
-    from: {
-      /**
-       * This is to remove the schema name from tables that are not from `public` schema
-       */
-      table: row[0]?.replace(/"/g, '').replace(`${schema}.`, ''),
-      /**
-       * break complex fk joins into array of string and remove and `"` character in the names
-       */
-      column: row[1].split(',')?.map((i) => i?.replace(/"/g, '')),
-    },
-    to: {
-      table: row[2]?.replace(/"/g, '').replace(`${schema}.`, ''),
-      column: row[3].split(',')?.map((i) => i?.replace(/"/g, '')),
-    },
-  }));
+    return {
+      from: {
+        /**
+         * This is to remove the schema name from tables that are not from `public` schema
+         */
+        table: sourceTable,
+        /**
+         * break complex fk joins into array of string and remove and `"` character in the names
+         */
+        column: row[1].split(',')?.map(i => i?.replace(/"/g, '')),
+      },
+      to: {
+        table: targetTable,
+        column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
+      },
+    };
+  });
+
+  return adaptedResult;
 };
 
 export const getFKRelationships = async ({
@@ -60,5 +77,5 @@ export const getFKRelationships = async ({
     httpClient,
   });
 
-  return adaptFkRelationships(response.result, schema);
+  return adaptFkRelationships(response.result);
 };

@@ -83,11 +83,11 @@ export type GetFKRelationshipProps = {
 
 export type TableFkRelationships = {
   from: {
-    table: string;
+    table: Table;
     column: string[];
   };
   to: {
-    table: string;
+    table: Table;
     column: string[];
   };
 };

@@ -19,6 +19,7 @@ module Harness.GraphqlEngine
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
+    postGraphqlWithVariables,
     postGraphqlWithPair,
     postGraphqlWithHeaders,
     postWithHeadersStatus,
@@ -42,7 +43,6 @@ where
 -------------------------------------------------------------------------------
 
 import Control.Concurrent.Async qualified as Async
-import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson
 import Data.Aeson.Encode.Pretty as AP
@@ -53,8 +53,9 @@ import Data.Time (getCurrentTime)
 import Harness.Constants qualified as Constants
 import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
+import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
-import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogHarness)
+import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogMessage)
 import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
@@ -110,10 +111,9 @@ postWithHeaders =
 postWithHeadersStatus ::
   HasCallStack => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
-  testLogHarness testEnv $ "Posting to " <> T.pack path
-  testLogHarness testEnv $ "Request body: " <> AP.encodePretty requestBody
+  testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
   responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers requestBody
-  testLogHarness testEnv $ "Response body: " <> AP.encodePretty responseBody
+  testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
   pure responseBody
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
@@ -148,6 +148,18 @@ postGraphqlYamlWithHeaders testEnvironment headers =
 postGraphql :: HasCallStack => TestEnvironment -> Value -> IO Value
 postGraphql testEnvironment value =
   withFrozenCallStack $ postGraphqlYaml testEnvironment (object ["query" .= value])
+
+-- | Same as 'postGraphql', but accepts variables to the GraphQL query as well.
+postGraphqlWithVariables :: HasCallStack => TestEnvironment -> Value -> Value -> IO Value
+postGraphqlWithVariables testEnvironment query variables =
+  withFrozenCallStack $
+    postGraphqlYaml
+      testEnvironment
+      ( object
+          [ "query" .= query,
+            "variables" .= variables
+          ]
+      )
 
 -- | Same as postGraphql but accepts a list of 'Pair' to pass
 -- additional parameters to the endpoint.
@@ -251,19 +263,12 @@ args:
 -- available before returning.
 --
 -- The port availability is subject to races.
-startServerThread :: Maybe (String, Int) -> IO Server
-startServerThread murlPrefixport = do
-  (urlPrefix, port, thread) <-
-    case murlPrefixport of
-      Just (urlPrefix, port) -> do
-        thread <- Async.async (forever (sleep 1)) -- Just wait.
-        pure (urlPrefix, port, thread)
-      Nothing -> do
-        port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-        let urlPrefix = "http://127.0.0.1"
-        thread <-
-          Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
-        pure (urlPrefix, port, thread)
+startServerThread :: IO Server
+startServerThread = do
+  port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
+  let urlPrefix = "http://127.0.0.1"
+  thread <-
+    Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck (serverUrl server)
   pure server
@@ -278,7 +283,7 @@ runApp serveOptions = do
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
+      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci

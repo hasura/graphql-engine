@@ -34,6 +34,7 @@ import Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Network
+import Hasura.RQL.DDL.OpenTelemetry
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.QueryTags
@@ -57,6 +58,7 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata (GetCatalogState, SetCatalogState, emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Roles
@@ -198,6 +200,9 @@ data RQLMetadataV1
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
   | -- QueryTags
     RMSetQueryTagsConfig !SetQueryTagsConfig
+  | -- OpenTelemetry
+    RMSetOpenTelemetryConfig !OpenTelemetryConfig
+  | RMSetOpenTelemetryStatus !OtelStatus
   | -- Debug
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
@@ -280,6 +285,8 @@ instance FromJSON RQLMetadataV1 where
       "set_graphql_schema_introspection_options" -> RMSetGraphqlSchemaIntrospectionOptions <$> args
       "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
+      "set_opentelemetry_config" -> RMSetOpenTelemetryConfig <$> args
+      "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
       "bulk" -> RMBulk <$> args
       -- Backend prefixed metadata actions:
       _ -> do
@@ -394,6 +401,10 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Attempting to put new metadata in storage"
         newResourceVersion <-
           Tracing.trace "setMetadata" $
             setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
@@ -533,6 +544,8 @@ queryModifiesMetadata = \case
       RMAddHostToTLSAllowlist _ -> True
       RMDropHostFromTLSAllowlist _ -> True
       RMSetQueryTagsConfig _ -> True
+      RMSetOpenTelemetryConfig _ -> True
+      RMSetOpenTelemetryStatus _ -> True
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -593,7 +606,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
-  RMGetSourceTables q -> runGetSourceTables q
+  RMGetSourceTables q -> runGetSourceTables env q
   RMGetTableInfo q -> runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
@@ -713,6 +726,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
       (runTestWebhookTransform . _unUnvalidate)
       q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
+  RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
+  RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
     dispatchMetadata ::

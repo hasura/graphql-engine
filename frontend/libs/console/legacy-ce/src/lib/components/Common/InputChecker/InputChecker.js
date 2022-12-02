@@ -29,7 +29,7 @@ class InputChecker extends Component {
           errorMessage: '',
         });
       })
-      .catch((r) => {
+      .catch(r => {
         this.setState({
           isError: true,
           errorMessage: r.message,

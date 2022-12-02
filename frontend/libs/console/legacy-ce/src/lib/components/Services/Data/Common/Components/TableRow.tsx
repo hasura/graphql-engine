@@ -70,7 +70,7 @@ export interface TableRowProps {
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'radioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: Record<string, any>;
+  enumOptions: string[];
   index: string;
   clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
@@ -119,7 +119,7 @@ export const TableRow: React.FC<TableRowProps> = ({
         <input
           type="radio"
           className={`${focusYellowRing} !m-0 !mr-sm `}
-          ref={(node) => {
+          ref={node => {
             setRef('radioNode', node);
           }}
           name={`${colName}-value`}
@@ -147,7 +147,7 @@ export const TableRow: React.FC<TableRowProps> = ({
         <input
           type="radio"
           className={`${focusYellowRing} !m-0 !mr-sm`}
-          ref={(node) => {
+          ref={node => {
             setRef('nullNode', node);
           }}
           disabled={!isNullable}
@@ -161,7 +161,7 @@ export const TableRow: React.FC<TableRowProps> = ({
         <input
           type="radio"
           className={`${focusYellowRing} !m-0 !mr-sm`}
-          ref={(node) => {
+          ref={node => {
             setRef('defaultNode', node);
           }}
           name={`${colName}-value`}

@@ -98,12 +98,12 @@ export const createPKClause = (
       newPKClause[key] = insertion[key];
     });
   } else {
-    columns.forEach((col) => {
+    columns.forEach(col => {
       newPKClause[col.column_name] = insertion[col.column_name];
     });
   }
 
-  Object.keys(newPKClause).forEach((key) => {
+  Object.keys(newPKClause).forEach(key => {
     const currentValue = newPKClause[key];
     if (Array.isArray(currentValue)) {
       newPKClause[key] = dataSource.arrayToPostgresArray(currentValue);
@@ -120,7 +120,7 @@ export const getInsertUpQuery = (
   source: string
 ) => {
   const columnValues = Object.keys(insertion)
-    .map((key) => `"${key}"`)
+    .map(key => `"${key}"`)
     .join(', ');
 
   const values = Object.values(insertion)
@@ -156,7 +156,7 @@ export const getInsertDownQuery = (
   source: string
 ) => {
   const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
-  const clauses = Object.keys(whereClause).map((pk) =>
+  const clauses = Object.keys(whereClause).map(pk =>
     convertPGPrimaryKeyValue(whereClause[pk], pk)
   );
   const condition = clauses.join(' AND ');
@@ -223,7 +223,7 @@ export const getBulkDeleteQuery = (
   schemaName: string,
   source: string
 ) =>
-  pkClauses.map((pkClause) =>
+  pkClauses.map(pkClause =>
     getDeleteQuery(pkClause, tableName, schemaName, source)
   );
 

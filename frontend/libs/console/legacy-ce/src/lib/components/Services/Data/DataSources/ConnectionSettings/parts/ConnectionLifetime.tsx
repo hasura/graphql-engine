@@ -17,7 +17,7 @@ export const ConnectionLifetime: React.VFC<ConnectionSettingsFormProps> = ({
       value={
         connectionDBState.connectionSettings?.connection_lifetime ?? undefined
       }
-      onChange={(e) =>
+      onChange={e =>
         connectionDBStateDispatch({
           type: 'UPDATE_CONNECTION_LIFETIME',
           data: e.target.value,

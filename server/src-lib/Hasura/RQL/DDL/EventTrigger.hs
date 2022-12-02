@@ -33,6 +33,7 @@ module Hasura.RQL.DDL.EventTrigger
     cetqRequestTransform,
     cetqResponseTrasnform,
     cteqCleanupConfig,
+    cteqTriggerOnReplication,
     runCleanupEventTriggerLog,
     runEventTriggerResumeCleanup,
     runEventTriggerPauseCleanup,
@@ -51,6 +52,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
@@ -97,7 +99,8 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqReplace :: Bool,
     _cetqRequestTransform :: Maybe RequestTransform,
     _cetqResponseTrasnform :: Maybe MetadataResponseTransform,
-    _cteqCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
+    _cteqCleanupConfig :: Maybe AutoTriggerLogCleanupConfig,
+    _cteqTriggerOnReplication :: TriggerOnReplication
   }
 
 $(makeLenses ''CreateEventTriggerQuery)
@@ -134,7 +137,8 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig
+    triggerOnReplication <- o .:? "trigger_on_replication" .!= defaultTriggerOnReplication @b
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig triggerOnReplication
     where
       checkEmptyCols spec =
         case spec of
@@ -208,7 +212,7 @@ resolveEventTriggerQuery ::
   (Backend b, UserInfoM m, QErrM m, CacheRM m) =>
   CreateEventTriggerQuery b ->
   m (Bool, EventTriggerConf b)
-resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform cleanupConfig) = do
+resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform cleanupConfig triggerOnReplication) = do
   ti <- askTableCoreInfo source qt
   -- can only replace for same table
   when replace $ do
@@ -220,7 +224,7 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig)
+  return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig triggerOnReplication)
   where
     assertCols :: TableCoreInfo b -> Maybe (SubscribeOpSpec b) -> m ()
     assertCols ti opSpec = for_ opSpec \sos -> case sosColumns sos of
@@ -453,24 +457,49 @@ buildEventTriggerInfo ::
   SourceName ->
   TableName b ->
   EventTriggerConf b ->
-  m (EventTriggerInfo b, [SchemaDependency])
-buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig) = do
-  webhookConf <- case (webhook, webhookFromEnv) of
-    (Just w, Nothing) -> return $ WCValue w
-    (Nothing, Just wEnv) -> return $ WCEnv wEnv
-    _ -> throw500 "expected webhook or webhook_from_env"
-  let headerConfs = fromMaybe [] mheaders
-  webhookInfo <- getWebhookInfoFromConf env webhookConf
-  headerInfos <- getHeaderInfosFromConf env headerConfs
-  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos reqTransform respTransform cleanupConfig
-      tabDep =
-        SchemaDependency
-          ( SOSourceObj source $
-              AB.mkAnyBackend $
-                SOITable @b tableName
-          )
-          DRParent
-  pure (eTrigInfo, tabDep : getTrigDefDeps @b source tableName def)
+  m (EventTriggerInfo b, Seq SchemaDependency)
+buildEventTriggerInfo
+  env
+  source
+  tableName
+  ( EventTriggerConf
+      name
+      def
+      webhook
+      webhookFromEnv
+      rconf
+      mheaders
+      reqTransform
+      respTransform
+      cleanupConfig
+      triggerOnReplication
+    ) = do
+    webhookConf <- case (webhook, webhookFromEnv) of
+      (Just w, Nothing) -> return $ WCValue w
+      (Nothing, Just wEnv) -> return $ WCEnv wEnv
+      _ -> throw500 "expected webhook or webhook_from_env"
+    let headerConfs = fromMaybe [] mheaders
+    webhookInfo <- getWebhookInfoFromConf env webhookConf
+    headerInfos <- getHeaderInfosFromConf env headerConfs
+    let eTrigInfo =
+          EventTriggerInfo
+            name
+            def
+            rconf
+            webhookInfo
+            headerInfos
+            reqTransform
+            respTransform
+            cleanupConfig
+            triggerOnReplication
+        tabDep =
+          SchemaDependency
+            ( SOSourceObj source $
+                AB.mkAnyBackend $
+                  SOITable @b tableName
+            )
+            DRParent
+    pure (eTrigInfo, tabDep Seq.:<| getTrigDefDeps @b source tableName def)
 
 getTrigDefDeps ::
   forall b.
@@ -478,14 +507,15 @@ getTrigDefDeps ::
   SourceName ->
   TableName b ->
   TriggerOpsDef b ->
-  [SchemaDependency]
+  Seq SchemaDependency
 getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $
-    catMaybes
-      [ subsOpSpecDeps <$> mIns,
-        subsOpSpecDeps <$> mUpd,
-        subsOpSpecDeps <$> mDel
-      ]
+    Seq.fromList
+      <$> catMaybes
+        [ subsOpSpecDeps <$> mIns,
+          subsOpSpecDeps <$> mUpd,
+          subsOpSpecDeps <$> mDel
+        ]
   where
     subsOpSpecDeps :: SubscribeOpSpec b -> [SchemaDependency]
     subsOpSpecDeps os =

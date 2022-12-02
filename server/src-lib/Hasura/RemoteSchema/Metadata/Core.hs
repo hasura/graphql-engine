@@ -23,7 +23,6 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text qualified as T
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
@@ -53,8 +52,6 @@ data RemoteSchemaDef = RemoteSchemaDef
   deriving (Show, Eq, Generic)
 
 instance NFData RemoteSchemaDef
-
-instance Cacheable RemoteSchemaDef
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaDef)
 
@@ -87,8 +84,6 @@ data RemoteSchemaMetadataG r = RemoteSchemaMetadata
     _rsmRemoteRelationships :: (SchemaRemoteRelationships r)
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable r => Cacheable (RemoteSchemaMetadataG r)
 
 instance J.FromJSON (RemoteRelationshipG r) => J.FromJSON (RemoteSchemaMetadataG r) where
   parseJSON = J.withObject "RemoteSchemaMetadata" \obj ->

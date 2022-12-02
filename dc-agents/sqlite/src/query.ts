@@ -294,7 +294,7 @@ type RelationshipJoinInfo = {
   columnMapping: Record<string, string> // Mapping from source table column name to target table column name
 }
 
-function array_relationship(
+function table_query(
     ts: TableRelationships[],
     tableName: TableName,
     joinInfo: RelationshipJoinInfo | null,
@@ -325,20 +325,7 @@ function array_relationship(
     }
   })()
 
-  return tag('array_relationship',`(SELECT JSON_OBJECT(${[...fieldSelect, ...aggregateSelect].join(', ')}) ${fieldFrom})`);
-}
-
-function object_relationship(
-    ts: TableRelationships[],
-    targetTable: TableName,
-    joinInfo: RelationshipJoinInfo,
-    fields: Fields,
-  ): string {
-    const targetTableAlias = generateTableAlias(targetTable);
-    const innerFrom = `${escapeTableName(targetTable)} AS ${targetTableAlias}`;
-    const whereClause = where(ts, null, joinInfo, targetTable, targetTableAlias);
-    return tag('object_relationship',
-      `(SELECT JSON_OBJECT('rows', JSON_ARRAY(${json_object(ts, fields, targetTable, targetTableAlias)})) AS j FROM ${innerFrom} ${whereClause})`);
+  return tag('table_query',`(SELECT JSON_OBJECT(${[...fieldSelect, ...aggregateSelect].join(', ')}) ${fieldFrom})`);
 }
 
 function relationship(ts: TableRelationships[], r: Relationship, field: RelationshipField, sourceTableAlias: string): string {
@@ -348,28 +335,24 @@ function relationship(ts: TableRelationships[], r: Relationship, field: Relation
     columnMapping: r.column_mapping,
   };
 
-  switch(r.relationship_type) {
-    case 'object':
-      return tag('relationship', object_relationship(
-        ts,
-        r.target_table,
-        relationshipJoinInfo,
-        coerceUndefinedOrNullToEmptyRecord(field.query.fields),
-      ));
+  // We force a limit of 1 for object relationships in case the user has configured a manual
+  // "object" relationship that accidentally actually is an array relationship
+  const limit =
+    r.relationship_type === "object"
+      ? 1
+      : coerceUndefinedToNull(field.query.limit);
 
-    case 'array':
-      return tag('relationship', array_relationship(
-        ts,
-        r.target_table,
-        relationshipJoinInfo,
-        coerceUndefinedOrNullToEmptyRecord(field.query.fields),
-        coerceUndefinedOrNullToEmptyRecord(field.query.aggregates),
-        coerceUndefinedToNull(field.query.where),
-        coerceUndefinedToNull(field.query.limit),
-        coerceUndefinedToNull(field.query.offset),
-        coerceUndefinedToNull(field.query.order_by),
-      ));
-  }
+  return tag("relationship", table_query(
+    ts,
+    r.target_table,
+    relationshipJoinInfo,
+    coerceUndefinedOrNullToEmptyRecord(field.query.fields),
+    coerceUndefinedOrNullToEmptyRecord(field.query.aggregates),
+    coerceUndefinedToNull(field.query.where),
+    limit,
+    coerceUndefinedToNull(field.query.offset),
+    coerceUndefinedToNull(field.query.order_by),
+  ));
 }
 
 function bop_array(o: BinaryArrayComparisonOperator): string {
@@ -625,7 +608,7 @@ function offset(o: number | null): string {
 /** Top-Level Query Function.
  */
 function query(request: QueryRequest): string {
-  const result = array_relationship(
+  const result = table_query(
     request.table_relationships,
     request.table,
     null,

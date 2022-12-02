@@ -20,7 +20,7 @@ export const useSourcesTree = () => {
               ...schemas,
               [child]: source.tables
                 .filter((t: any) => t.table[key] === child)
-                .map((t) => t.table.name),
+                .map(t => t.table.name),
             };
           }, {}),
         },

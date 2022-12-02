@@ -85,7 +85,7 @@ export const DatabaseSelector = (props: Props) => {
           options={Object.keys(tree)}
           value={localValue.database}
           disabled={!Object.keys(tree) || disabledKeys?.includes('database')}
-          onChange={(e) => {
+          onChange={e => {
             e.persist();
             const temp = {
               database: e.target.value,
@@ -114,7 +114,7 @@ export const DatabaseSelector = (props: Props) => {
           options={schemaOptions}
           value={(localValue as any).schema ?? (localValue as any).dataset}
           disabled={!schemaOptions || disabledKeys?.includes('schema')}
-          onChange={(e) => {
+          onChange={e => {
             e.persist();
             const temp = {
               ...localValue,
@@ -150,7 +150,7 @@ export const DatabaseSelector = (props: Props) => {
           options={tableOptions}
           value={localValue.table}
           disabled={!tableOptions || disabledKeys?.includes('table')}
-          onChange={(e) => {
+          onChange={e => {
             e.persist();
             const temp = {
               ...localValue,

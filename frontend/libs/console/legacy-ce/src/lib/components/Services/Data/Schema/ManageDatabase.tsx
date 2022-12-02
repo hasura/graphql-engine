@@ -5,12 +5,15 @@ import { connect, ConnectedProps } from 'react-redux';
 import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
 import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
+import { useMetadataSource } from '@/features/MetadataAPI';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { nativeDrivers } from '@/features/DataSource';
-import { isProConsole } from '@/utils/proConsole';
+import { isCloudConsole } from '@/utils';
+import globals from '@/Globals';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -63,6 +66,8 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [removing, setRemoving] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
   const [dbVersion, setDbVersion] = useState('');
+  const { data: sourceInfo } = useMetadataSource(dataSource?.name);
+
   const fetchDBVersion = () => {
     const query = services[dataSource.driver].getDatabaseVersionSql ?? '';
 
@@ -82,10 +87,10 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     };
 
     dispatch(requestAction(url, options)).then(
-      (data) => {
+      data => {
         setDbVersion(data.result[1][0]);
       },
-      (error) => {
+      error => {
         dispatch(
           showErrorNotification('Failed to fetch Database version', null, error)
         );
@@ -104,6 +109,15 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     dataSource.name,
     inconsistentObjects
   );
+
+  const isTotalMaxConnectionSet =
+    !!sourceInfo?.configuration?.connection_info?.pool_settings
+      ?.total_max_connections;
+  const isMaxConnectionSet =
+    !!sourceInfo?.configuration?.connection_info?.pool_settings
+      ?.max_connections;
+  const showMaxConnectionWarning =
+    isCloudConsole(globals) && !isTotalMaxConnectionSet && isMaxConnectionSet;
 
   return (
     <tr data-test={dataSource.name}>
@@ -130,14 +144,17 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         >
           Reload
         </Button>
-        {isProConsole(window.__env)
-          ? !dataSource?.connection_pool_settings?.total_max_connections && (
-              <span className="bg-blue-100 font-bold rounded-lg pr-xs">
-                <FaExclamationTriangle className="mr-0.5 pb-1 pl-1.5 text-lg" />
-                Set Total Max Connections
-              </span>
-            )
-          : null}
+        {showMaxConnectionWarning && (
+          <span
+            className="bg-blue-100 font-bold rounded-lg pr-xs cursor-pointer"
+            onClick={() => {
+              onEdit(dataSource.name);
+            }}
+          >
+            <FaExclamationTriangle className="mr-0.5 pb-1 pl-1.5 text-lg" />
+            Set Total Max Connections
+          </span>
+        )}
       </td>
       <td className="px-sm py-xs max-w-xs align-top">
         <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
@@ -182,6 +199,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
               isLoading={removing}
               loadingText="Removing..."
               className="text-red-600"
+              data-test={`remove-${dataSource.name}`}
               onClick={() => {
                 setRemoving(true);
                 onRemove(dataSource.name, dataSource.driver, () =>
@@ -264,7 +282,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
     if (confirmation) {
       dispatch(removeDataSource({ driver, name }))
         .then(cb)
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
           cb();
         });
@@ -293,97 +311,102 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   return (
     <RightContainer>
       <Helmet title="Manage - Data | Hasura" />
-      <div
-        className={`container-fluid ${styles.manage_dbs_page}`}
-        data-test="manage-database-section"
-      >
-        <BreadCrumb breadCrumbs={crumbs} />
-        <div className={styles.padd_top}>
-          <div className={`${styles.display_flex} manage-db-header`}>
-            <h2
-              className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right}`}
-            >
-              Data Manager
-            </h2>
-            <Button
-              mode="primary"
-              size="md"
-              className={styles.add_mar_right}
-              onClick={onClickConnectDB}
-            >
-              Connect Database
-            </Button>
+      <Analytics name="ActionEditor" {...REDACT_EVERYTHING}>
+        <div
+          className={`container-fluid ${styles.manage_dbs_page}`}
+          data-test="manage-database-section"
+        >
+          <BreadCrumb breadCrumbs={crumbs} />
+          <div className={styles.padd_top}>
+            <div className={`${styles.display_flex} manage-db-header`}>
+              <h2
+                className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right}`}
+              >
+                Data Manager
+              </h2>
+              <Button
+                mode="primary"
+                size="md"
+                className={styles.add_mar_right}
+                onClick={onClickConnectDB}
+              >
+                Connect Database
+              </Button>
+            </div>
+            {shouldShowVPCBanner && (
+              <VPCBanner className="mt-md" onClose={dismissVPCBanner} />
+            )}
           </div>
-          {shouldShowVPCBanner && (
-            <VPCBanner className="mt-md" onClose={dismissVPCBanner} />
-          )}
+          <div className={styles.manage_db_content}>
+            <hr className="my-md" />
+
+            <div className="overflow-x-auto border border-gray-300 rounded">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider" />
+                  <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+                    Database
+                  </th>
+                  <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+                    Connection String
+                  </th>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sourcesFromMetadata.length ? (
+                    sourcesFromMetadata.map(source => {
+                      if (nativeDrivers.includes(source.kind)) {
+                        const data = dataSources.find(
+                          s => s.name === source.name
+                        );
+                        if (!data) return null;
+
+                        return (
+                          <DatabaseListItem
+                            key={data.name}
+                            dataSource={data}
+                            inconsistentObjects={inconsistentObjects}
+                            pushRoute={pushRoute}
+                            onEdit={onEdit}
+                            onReload={onReload}
+                            onRemove={onRemove}
+                            dispatch={dispatch}
+                            dataHeaders={dataHeaders}
+                          />
+                        );
+                      }
+                      if (isDCAgentsManageUIEnabled)
+                        return (
+                          <GDCDatabaseListItem
+                            dataSource={{
+                              name: source.name,
+                              kind: source.kind,
+                            }}
+                            inconsistentObjects={inconsistentObjects}
+                            dispatch={dispatch}
+                          />
+                        );
+                      return null;
+                    })
+                  ) : (
+                    <td colSpan={3} className="text-center px-sm py-xs">
+                      You don&apos;t have any data sources connected, please
+                      connect one to continue.
+                    </td>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {isDCAgentsManageUIEnabled ? (
+            <div className="mt-lg">
+              <ManageAgents />
+            </div>
+          ) : null}
+
+          <NeonDashboardLink className="mt-lg" />
         </div>
-        <div className={styles.manage_db_content}>
-          <hr className="my-md" />
-
-          <div className="overflow-x-auto border border-gray-300 rounded">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider" />
-                <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
-                  Database
-                </th>
-                <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
-                  Connection String
-                </th>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sourcesFromMetadata.length ? (
-                  sourcesFromMetadata.map((source) => {
-                    if (nativeDrivers.includes(source.kind)) {
-                      const data = dataSources.find(
-                        (s) => s.name === source.name
-                      );
-                      if (!data) return null;
-
-                      return (
-                        <DatabaseListItem
-                          key={data.name}
-                          dataSource={data}
-                          inconsistentObjects={inconsistentObjects}
-                          pushRoute={pushRoute}
-                          onEdit={onEdit}
-                          onReload={onReload}
-                          onRemove={onRemove}
-                          dispatch={dispatch}
-                          dataHeaders={dataHeaders}
-                        />
-                      );
-                    }
-                    if (isDCAgentsManageUIEnabled)
-                      return (
-                        <GDCDatabaseListItem
-                          dataSource={{ name: source.name, kind: source.kind }}
-                          inconsistentObjects={inconsistentObjects}
-                          dispatch={dispatch}
-                        />
-                      );
-                    return null;
-                  })
-                ) : (
-                  <td colSpan={3} className="text-center px-sm py-xs">
-                    You don&apos;t have any data sources connected, please
-                    connect one to continue.
-                  </td>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {isDCAgentsManageUIEnabled ? (
-          <div className="mt-lg">
-            <ManageAgents />
-          </div>
-        ) : null}
-
-        <NeonDashboardLink className="mt-lg" />
-      </div>
+      </Analytics>
     </RightContainer>
   );
 };

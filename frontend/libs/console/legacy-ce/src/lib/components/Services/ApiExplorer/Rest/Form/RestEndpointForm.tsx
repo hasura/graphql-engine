@@ -60,13 +60,13 @@ const validationSchema = z.object({
     // When nothing is selected, the value is a false boolean
     .union([z.string().array(), z.boolean()])
     .refine(
-      (value) => Array.isArray(value) && value.length > 0,
+      value => Array.isArray(value) && value.length > 0,
       'Choose at least one method'
     ),
   request: z
     .string()
     .min(1, { message: 'Please add a GraphQL query' })
-    .refine((val) => isQueryValid(val), 'Please add a valid GraphQL query'),
+    .refine(val => isQueryValid(val), 'Please add a valid GraphQL query'),
 });
 
 export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
@@ -84,6 +84,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
     <Form
       ref={restEndpointFormRef}
       schema={validationSchema}
+      className="p-4"
       options={{
         defaultValues: formState,
       }}

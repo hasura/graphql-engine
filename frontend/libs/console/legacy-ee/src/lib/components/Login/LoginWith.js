@@ -30,7 +30,7 @@ const initiateOAuthRequest = (location, shouldRedirectBack) => {
   window.location.href = authUrl;
 };
 
-const LoginWith = (props) => {
+const LoginWith = props => {
   const { location, children, shouldRedirectBack } = props;
 
   const onClick = () => {

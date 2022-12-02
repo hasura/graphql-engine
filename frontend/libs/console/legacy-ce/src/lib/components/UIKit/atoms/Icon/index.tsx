@@ -117,7 +117,7 @@ export type IconProps = {
   type: keyof Theme['icon'];
 };
 
-export const Icon: React.FC<IconProps> = (props) => {
+export const Icon: React.FC<IconProps> = props => {
   const { type } = props;
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]

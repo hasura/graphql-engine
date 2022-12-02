@@ -42,7 +42,7 @@ capabilities =
             API._cQueries = Just API.QueryCapabilities,
             API._cMutations = Nothing,
             API._cSubscriptions = Nothing,
-            API._cScalarTypes = mempty,
+            API._cScalarTypes = scalarTypesCapabilities,
             API._cRelationships = Just API.RelationshipCapabilities {},
             API._cComparisons =
               Just
@@ -71,8 +71,23 @@ capabilities =
                       )
                 },
             _csrOtherSchemas = mempty
-          }
+          },
+      _crDisplayName = Nothing,
+      _crReleaseName = Nothing
     }
+  where
+    scalarTypesCapabilities =
+      API.ScalarTypesCapabilities $
+        HashMap.fromList
+          [ mkScalarTypeCapability "MyInt" $ Just API.GraphQLInt,
+            mkScalarTypeCapability "MyFloat" $ Just API.GraphQLFloat,
+            mkScalarTypeCapability "MyString" $ Just API.GraphQLString,
+            mkScalarTypeCapability "MyBoolean" $ Just API.GraphQLBoolean,
+            mkScalarTypeCapability "MyID" $ Just API.GraphQLID,
+            mkScalarTypeCapability "MyAnything" $ Nothing
+          ]
+    mkScalarTypeCapability :: Text -> Maybe API.GraphQLType -> (API.ScalarType, API.ScalarTypeCapabilities)
+    mkScalarTypeCapability name gqlType = (API.CustomTy name, mempty {API._stcGraphQLType = gqlType})
 
 -- | Stock Schema for a Chinook Agent
 schema :: API.SchemaResponse
@@ -530,6 +545,20 @@ schema =
                       (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
                       (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))
                     ]
+            },
+          API.TableInfo
+            { API._tiName = mkTableName "MyCustomScalarsTable",
+              API._tiColumns =
+                [ API.ColumnInfo (API.ColumnName "MyIntColumn") (API.CustomTy "MyInt") False Nothing,
+                  API.ColumnInfo (API.ColumnName "MyFloatColumn") (API.CustomTy "MyFloat") False Nothing,
+                  API.ColumnInfo (API.ColumnName "MyStringColumn") (API.CustomTy "MyString") False Nothing,
+                  API.ColumnInfo (API.ColumnName "MyBooleanColumn") (API.CustomTy "MyBoolean") False Nothing,
+                  API.ColumnInfo (API.ColumnName "MyIDColumn") (API.CustomTy "MyID") False Nothing,
+                  API.ColumnInfo (API.ColumnName "MyAnythingColumn") (API.CustomTy "MyAnything") False Nothing
+                ],
+              API._tiPrimaryKey = [],
+              API._tiDescription = Nothing,
+              API._tiForeignKeys = API.ForeignKeys mempty
             }
         ]
     }
@@ -569,6 +598,10 @@ mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ 
 explainHandler :: API.SourceName -> API.Config -> API.QueryRequest -> Handler API.ExplainResponse
 explainHandler _sourceName _queryConfig _query = pure $ API.ExplainResponse [] ""
 
+-- Returns an empty mutation response for now
+mutationsHandler :: API.SourceName -> API.Config -> API.MutationRequest -> Handler (Union API.MutationResponses)
+mutationsHandler _ _ _ = pure . inject . SOP.I $ API.MutationResponse []
+
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
@@ -584,6 +617,7 @@ dcMockableServer mcfg mquery mQueryConfig =
     :<|> mockSchemaHandler mcfg mQueryConfig
     :<|> mockQueryHandler mcfg mquery mQueryConfig
     :<|> explainHandler
+    :<|> mutationsHandler
     :<|> healthcheckHandler
     :<|> metricsHandler
     :<|> rawHandler

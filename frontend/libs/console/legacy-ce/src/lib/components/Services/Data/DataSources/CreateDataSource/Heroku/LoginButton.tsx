@@ -106,7 +106,7 @@ const LoginButton: React.FC<Props> = ({ children, dispatch, callback }) => {
             callback();
           }
         })
-        .catch((e) => {
+        .catch(e => {
           setError(
             `Error logging in with Heroku: ${e.message || 'unexpected'}`
           );

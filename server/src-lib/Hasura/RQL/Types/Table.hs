@@ -120,7 +120,6 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -146,8 +145,6 @@ data CustomRootField = CustomRootField
   deriving (Show, Eq, Generic)
 
 instance NFData CustomRootField
-
-instance Cacheable CustomRootField
 
 instance HasCodec CustomRootField where
   codec =
@@ -209,8 +206,6 @@ data TableCustomRootFields = TableCustomRootFields
   deriving (Show, Eq, Generic)
 
 instance NFData TableCustomRootFields
-
-instance Cacheable TableCustomRootFields
 
 instance HasCodec TableCustomRootFields where
   codec =
@@ -312,8 +307,6 @@ data FieldInfo (b :: BackendType)
 
 deriving instance Backend b => Eq (FieldInfo b)
 
-instance Backend b => Cacheable (FieldInfo b)
-
 instance Backend b => ToJSON (FieldInfo b) where
   toJSON =
     genericToJSON $
@@ -399,13 +392,6 @@ instance
     NFData (PreSetColsPartial b)
   ) =>
   NFData (InsPermInfo b)
-
-instance
-  ( Backend b,
-    Cacheable (AnnBoolExpPartialSQL b),
-    Cacheable (PreSetColsPartial b)
-  ) =>
-  Cacheable (InsPermInfo b)
 
 instance
   ( Backend b,
@@ -529,13 +515,6 @@ instance
 
 instance
   ( Backend b,
-    Cacheable (AnnBoolExpPartialSQL b),
-    Cacheable (AnnColumnCaseBoolExpPartialSQL b)
-  ) =>
-  Cacheable (SelPermInfo b)
-
-instance
-  ( Backend b,
     ToJSON (AnnBoolExpPartialSQL b),
     ToJSON (AnnColumnCaseBoolExpPartialSQL b)
   ) =>
@@ -575,13 +554,6 @@ instance
 
 instance
   ( Backend b,
-    Cacheable (AnnBoolExpPartialSQL b),
-    Cacheable (PreSetColsPartial b)
-  ) =>
-  Cacheable (UpdPermInfo b)
-
-instance
-  ( Backend b,
     ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (UpdPermInfo b)
@@ -613,12 +585,6 @@ instance
     NFData (AnnBoolExpPartialSQL b)
   ) =>
   NFData (DelPermInfo b)
-
-instance
-  ( Backend b,
-    Cacheable (AnnBoolExpPartialSQL b)
-  ) =>
-  Cacheable (DelPermInfo b)
 
 instance
   ( Backend b,
@@ -716,8 +682,6 @@ data ViewInfo = ViewInfo
 
 instance NFData ViewInfo
 
-instance Cacheable ViewInfo
-
 $(deriveJSON hasuraJSON ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
@@ -731,8 +695,6 @@ data ColumnConfig = ColumnConfig
   deriving stock (Eq, Show, Generic)
 
 instance NFData ColumnConfig
-
-instance Cacheable ColumnConfig
 
 instance HasCodec ColumnConfig where
   codec =
@@ -780,8 +742,6 @@ deriving instance (Backend b) => Eq (TableConfig b)
 deriving instance (Backend b) => Show (TableConfig b)
 
 instance (Backend b) => NFData (TableConfig b)
-
-instance (Backend b) => Cacheable (TableConfig b)
 
 $(makeLenses ''TableConfig)
 
@@ -876,8 +836,6 @@ instance Backend b => NFData (Constraint b)
 
 instance Backend b => Hashable (Constraint b)
 
-instance Backend b => Cacheable (Constraint b)
-
 instance Backend b => ToJSON (Constraint b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -897,8 +855,6 @@ deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
 instance (Backend b, NFData a) => NFData (PrimaryKey b a)
 
 instance (Eq a, Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
-
-instance (Backend b, Cacheable a) => Cacheable (PrimaryKey b a)
 
 instance (Backend b, ToJSON a) => ToJSON (PrimaryKey b a) where
   toJSON = genericToJSON hasuraJSON
@@ -930,8 +886,6 @@ instance Backend b => NFData (UniqueConstraint b)
 
 instance Backend b => Hashable (UniqueConstraint b)
 
-instance Backend b => Cacheable (UniqueConstraint b)
-
 instance Backend b => ToJSON (UniqueConstraint b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -952,8 +906,6 @@ deriving instance Backend b => Show (ForeignKey b)
 instance Backend b => NFData (ForeignKey b)
 
 instance Backend b => Hashable (ForeignKey b)
-
-instance Backend b => Cacheable (ForeignKey b)
 
 instance Backend b => ToJSON (ForeignKey b) where
   toJSON = genericToJSON hasuraJSON
@@ -980,8 +932,6 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
   deriving (Generic)
 
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
-
-instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
 
 instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
@@ -1054,7 +1004,7 @@ type TableEventTriggers b = M.HashMap (TableName b) [TriggerName]
 newtype ForeignKeyMetadata (b :: BackendType) = ForeignKeyMetadata
   { unForeignKeyMetadata :: ForeignKey b
   }
-  deriving (Show, Eq, NFData, Hashable, Cacheable)
+  deriving (Show, Eq, NFData, Hashable)
 
 instance Backend b => FromJSON (ForeignKeyMetadata b) where
   parseJSON = withObject "ForeignKeyMetadata" \o -> do
@@ -1103,8 +1053,6 @@ deriving instance Backend b => Eq (DBTableMetadata b)
 deriving instance Backend b => Show (DBTableMetadata b)
 
 instance Backend b => NFData (DBTableMetadata b)
-
-instance Backend b => Cacheable (DBTableMetadata b)
 
 instance Backend b => FromJSON (DBTableMetadata b) where
   parseJSON = genericParseJSON hasuraJSON

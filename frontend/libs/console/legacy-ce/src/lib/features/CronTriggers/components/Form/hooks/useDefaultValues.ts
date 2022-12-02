@@ -25,7 +25,7 @@ export const useDefaultValues = (props: Props) => {
     // if cron trigger name is passed to the component, then we are updating an existing cron trigger
     // wait for fetching all cron triggers api call to resolve, then find the cron trigger
     const currentTrigger = data?.cron_triggers.find(
-      (cronTrigger) => cronTriggerName === cronTrigger.name
+      cronTrigger => cronTriggerName === cronTrigger.name
     );
 
     if (!currentTrigger) {

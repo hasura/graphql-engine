@@ -104,7 +104,7 @@ App.propTypes = {
   notifications: PropTypes.array,
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.progressBar,
     notifications: state.notifications,

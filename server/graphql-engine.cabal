@@ -173,7 +173,12 @@ common common-all
       -- in the graphql-engine 'executable' stanza below, and in any other dependent
       -- executables (See mono #2610):
       -fexpose-all-unfoldings
-      -O2
+      -- Use O1 over O2, as (as of writing) it improves compile times a little, without
+      -- hurting performance:
+      -O1
+      -- This seems like a better default for us, lowering memory residency without 
+      -- impacting compile times too much, though it does increase binary size:
+      -funfolding-use-threshold=640
   else
     -- we just want to build fast:
     ghc-options: -O0
@@ -282,6 +287,7 @@ common lib-depends
                      , process
                      , profunctors
                      , refined
+                     , reflection
                      , retry
                      , safe-exceptions
                      , scientific
@@ -552,8 +558,10 @@ library
                      , Hasura.Backends.MSSQL.Types.Internal
                      , Hasura.Backends.MSSQL.Types.Update
                      , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.Connection.Connect
                      , Hasura.Backends.Postgres.Connection.MonadTx
                      , Hasura.Backends.Postgres.Connection.Settings
+                     , Hasura.Backends.Postgres.Connection.VersionCheck
                      , Hasura.Backends.Postgres.DDL
                      , Hasura.Backends.Postgres.DDL.BoolExp
                      , Hasura.Backends.Postgres.DDL.ComputedField
@@ -571,6 +579,7 @@ library
                      , Hasura.Backends.Postgres.Instances.API
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
+                     , Hasura.Backends.Postgres.Instances.PingSource
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.SchemaCache
                      , Hasura.Backends.Postgres.Instances.Transport
@@ -651,6 +660,7 @@ library
                      , Hasura.Logging
                      , Hasura.HTTP
                      , Hasura.Incremental
+                     , Hasura.PingSources
                      , Hasura.Server.API.Backend
                      , Hasura.Server.API.Instances
                      , Hasura.Server.API.Metadata
@@ -678,6 +688,7 @@ library
                      , Hasura.Server.Types
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
+                     , Hasura.ShutdownLatch
 
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
@@ -781,6 +792,7 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
+                     , Hasura.RQL.DDL.OpenTelemetry
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.QueryCollection
@@ -1013,8 +1025,8 @@ test-suite graphql-engine-tests
     , graphql-parser
     , data-has
     , hedgehog
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
+    , hspec
+    , hspec-core
     , hspec-expectations
     , hspec-expectations-json
     , hspec-expectations-lifted
@@ -1034,7 +1046,6 @@ test-suite graphql-engine-tests
     , mmorph
     , monad-control
     , mtl
-    , natural-transformation >=0.4 && <0.5
     , network-uri
     , openapi3
     , optparse-applicative
@@ -1058,9 +1069,6 @@ test-suite graphql-engine-tests
     , vector
     , yaml
     , shakespeare
-    -- mssql support
-    , odbc
-    , resource-pool
 
   if !flag(ghci-load-test-with-lib)
     build-depends: graphql-engine
@@ -1084,8 +1092,6 @@ test-suite graphql-engine-tests
     Data.Text.RawString
     Data.TimeSpec
     Data.TrieSpec
-    Database.MSSQL.TransactionSuite
-    Discover
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
     Hasura.Backends.BigQuery.SourceSpec
@@ -1095,15 +1101,16 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec
     Hasura.Backends.DataConnector.API.V0.ExpressionSpec
+    Hasura.Backends.DataConnector.API.V0.MutationsSpec
     Hasura.Backends.DataConnector.API.V0.OrderBySpec
     Hasura.Backends.DataConnector.API.V0.QuerySpec
     Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
     Hasura.Backends.DataConnector.API.V0.ScalarSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
-    Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.Backends.MySQL.TypesSpec
+    Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
     Hasura.Backends.Postgres.RQLGenerator
     Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
@@ -1119,7 +1126,6 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.Translate.UpdateSpec
     Hasura.EncJSONSpec
     Hasura.EventingSpec
-    Hasura.EventTriggerCleanupSuite
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
@@ -1143,7 +1149,6 @@ test-suite graphql-engine-tests
     Hasura.Server.AuthSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
-    Hasura.Server.MigrateSuite
     Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
     Hasura.Server.VersionSpec
@@ -1151,7 +1156,6 @@ test-suite graphql-engine-tests
     Hasura.Server.Init.ArgSpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
-    Hasura.StreamingSubscriptionSuite
     Hasura.Tracing.TraceIdSpec
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Expectation
@@ -1169,3 +1173,35 @@ test-suite graphql-engine-tests
     Test.Parser.Monad
     Test.QuickCheck.Extended
     Test.SIString
+
+test-suite graphql-engine-test-mssql
+  import: common-all, common-exe, lib-depends
+  build-tool-depends: hspec-discover:hspec-discover
+  type: exitcode-stdio-1.0
+  build-depends:
+      graphql-engine
+    , hspec
+    , odbc
+  hs-source-dirs: test-mssql
+  main-is: Main.hs
+  other-modules:
+    Database.MSSQL.TransactionSpec
+    Hasura.Backends.MSSQL.ErrorSpec
+    SpecHook
+
+test-suite graphql-engine-test-postgres
+  import: common-all, common-exe, lib-depends
+  build-tool-depends: hspec-discover:hspec-discover
+  type: exitcode-stdio-1.0
+  build-depends:
+      graphql-engine
+    , hspec
+    , hspec-core
+    , hspec-expectations-lifted
+    , natural-transformation
+  hs-source-dirs: test-postgres
+  main-is: Main.hs
+  other-modules:
+    Hasura.EventTriggerCleanupSuite
+    Hasura.StreamingSubscriptionSuite
+    Hasura.Server.MigrateSuite

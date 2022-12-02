@@ -21,7 +21,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
   },
 } as ComponentMeta<typeof Radio>;
 
-export const ApiPlayground: ComponentStory<typeof Radio> = (args) => {
+export const ApiPlayground: ComponentStory<typeof Radio> = args => {
   const validationSchema = z.object({});
 
   return (
@@ -188,6 +188,35 @@ StateWithDefaultValue.parameters = {
   },
 };
 
+export const StateLoading: ComponentStory<typeof Radio> = () => {
+  const options = [
+    { value: 'value0', label: 'Value 0' },
+    { value: 'value1', label: 'Value 1', disabled: true },
+    { value: 'value2', label: 'Value 2' },
+  ];
+
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <Radio
+          name="radioNames"
+          label="The radio label"
+          options={options}
+          disabled
+        />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateDisabled: ComponentStory<typeof Radio> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
@@ -226,7 +255,7 @@ export const StateWithErrorMessage: ComponentStory<typeof Radio> = () => {
 
   const options = [
     { value: 'value0', label: 'Value 0' },
-    { value: 'value1', label: 'Value 1', disabled: true },
+    { value: 'value1', label: 'Value 1', loading: true },
     { value: 'value2', label: 'Value 2' },
   ];
 
@@ -242,6 +271,7 @@ export const StateWithErrorMessage: ComponentStory<typeof Radio> = () => {
     </Form>
   );
 };
+
 StateWithErrorMessage.storyName = '🔁 State - With error message';
 StateWithErrorMessage.parameters = {
   docs: {

@@ -4,7 +4,7 @@ import {
   customTypesSelector,
 } from '../../../../metadata/selector';
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.actions.modify,
     allActions: actionsSelector(state),
@@ -12,5 +12,5 @@ const mapStateToProps = (state) => {
   };
 };
 
-const connector = (connect) => connect(mapStateToProps)(Modify);
+const connector = connect => connect(mapStateToProps)(Modify);
 export default connector;

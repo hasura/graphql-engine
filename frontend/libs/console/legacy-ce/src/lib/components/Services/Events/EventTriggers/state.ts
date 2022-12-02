@@ -110,19 +110,19 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
     state,
     setState: {
       name: (name: string) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           name,
         }));
       },
       source: (chosenSource: string) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           source: chosenSource,
         }));
       },
       table: (tableName?: string, schemaName?: string) => {
-        setState((s) => {
+        setState(s => {
           let newTableDef = { ...s.table };
           if (schemaName && schemaName !== newTableDef.schema) {
             newTableDef = {
@@ -147,13 +147,13 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
         });
       },
       operations: (operations: Record<EventTriggerOperation, boolean>) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           operations,
         }));
       },
       webhook: (webhook: URLConf) => {
-        setState((s) => {
+        setState(s => {
           return {
             ...s,
             webhook,
@@ -161,19 +161,19 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
         });
       },
       retryConf: (r: RetryConf) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           retryConf: r,
         }));
       },
       headers: (headers: Header[]) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           headers,
         }));
       },
       operationColumns: (columns: ETOperationColumn[]) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           operationColumns: columns,
         }));
@@ -182,13 +182,13 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
         setState(s);
       },
       toggleAllColumnChecked: () => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           isAllColumnChecked: !s.isAllColumnChecked,
         }));
       },
       cleanupConfig: (cleanupConfig: EventTriggerAutoCleanup) => {
-        setState((s) => ({
+        setState(s => ({
           ...s,
           cleanupConfig,
         }));

@@ -12,7 +12,6 @@ import {
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
 import { processResponseDetails } from '../components/Services/ApiExplorer/Actions';
-import { maskPostgresError } from '../components/Services/Data/DataSources/SampleDatabase/service';
 
 const requestAction = <T = any>(
   url: string,
@@ -40,13 +39,13 @@ const requestAction = <T = any>(
       dispatch({ type: LOAD_REQUEST });
       const startTime = new Date().getTime();
       fetch(url, requestOptions).then(
-        (response) => {
+        response => {
           const contentType = response.headers.get('Content-Type');
           const isResponseJson = `${contentType}`.includes('application/json');
 
           if (response.ok) {
             if (!isResponseJson) {
-              return response.text().then((responseBody) => {
+              return response.text().then(responseBody => {
                 if (SUCCESS) {
                   dispatch({ type: SUCCESS, data: responseBody });
                 }
@@ -56,7 +55,7 @@ const requestAction = <T = any>(
               });
             }
 
-            return response.json().then((results) => {
+            return response.json().then(results => {
               if (SUCCESS) {
                 dispatch({ type: SUCCESS, data: results });
               }
@@ -77,24 +76,13 @@ const requestAction = <T = any>(
                 );
               }
 
-              // if GraphQL error, mask it if it's a postgres trial read-only DB error
-              if (results?.errors) {
-                const maskedErrorMsg = maskPostgresError(results, getState);
-                if (maskedErrorMsg) {
-                  const graphqlError: any = {
-                    errors: [{ message: maskedErrorMsg }],
-                  };
-                  resolve(graphqlError);
-                }
-              }
-
               resolve(results);
             });
           }
           dispatch({ type: FAILED_REQUEST });
           if (response.status >= 400 && response.status <= 500) {
             if (!isResponseJson) {
-              return response.text().then((errorMessage) => {
+              return response.text().then(errorMessage => {
                 if (ERROR) {
                   dispatch({ type: ERROR, data: errorMessage });
                 } else {
@@ -109,13 +97,7 @@ const requestAction = <T = any>(
                 reject(errorMessage);
               });
             }
-            return response.json().then((errorMsg) => {
-              // if it's a postgres trial read-only DB error, mask it with a friendly error
-              const maskedErrorMsg = maskPostgresError(errorMsg, getState);
-              if (maskedErrorMsg) {
-                reject(maskedErrorMsg);
-              }
-
+            return response.json().then(errorMsg => {
               const msg = errorMsg;
               if (ERROR) {
                 dispatch({ type: ERROR, data: msg });
@@ -136,7 +118,7 @@ const requestAction = <T = any>(
               reject(msg);
             });
           }
-          return response.text().then((errorMsg) => {
+          return response.text().then(errorMsg => {
             dispatch({ type: FAILED_REQUEST });
             if (ERROR) {
               dispatch({ type: ERROR, response, data: errorMsg });
@@ -144,7 +126,7 @@ const requestAction = <T = any>(
             reject();
           });
         },
-        (error) => {
+        error => {
           console.error('Request error: ', error);
           dispatch({ type: CONNECTION_FAILED });
           if (ERROR) {

@@ -41,7 +41,7 @@ export const useRemoveAgent = () => {
           onSuccess: () => {
             if (onSuccess) onSuccess();
           },
-          onError: (err) => {
+          onError: err => {
             if (onError) onError(err);
           },
         }

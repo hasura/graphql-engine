@@ -1,7 +1,14 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
+module Hasura.Backends.DataConnector.API.V0.QuerySpec
+  ( spec,
+    genFieldName,
+    genFieldMap,
+    genField,
+    genFieldValue,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Aeson.QQ.Simple (aesonQQ)
@@ -14,7 +21,7 @@ import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -154,8 +161,7 @@ genFieldName :: Gen FieldName
 genFieldName = FieldName <$> genArbitraryAlphaNumText defaultRange
 
 genFieldMap :: Gen value -> Gen (HashMap FieldName value)
-genFieldMap genValue' =
-  HashMap.fromList <$> Gen.list defaultRange ((,) <$> genFieldName <*> genValue')
+genFieldMap genValue' = genHashMap genFieldName genValue' defaultRange
 
 genRelationshipField :: Gen RelationshipField
 genRelationshipField =

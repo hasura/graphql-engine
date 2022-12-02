@@ -17,7 +17,7 @@ export const cockroach: Database = {
     getDriverInfo: async () => ({
       name: 'cockroach',
       displayName: 'CockroachDB',
-      release: 'disabled',
+      release: 'Beta',
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;

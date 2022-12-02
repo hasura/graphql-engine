@@ -8,7 +8,6 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Session
 import Language.GraphQL.Draft.Printer qualified as G
@@ -21,8 +20,6 @@ newtype RemoteSchemaPermissionDefinition = RemoteSchemaPermissionDefinition
   deriving (Show, Eq, Generic)
 
 instance NFData RemoteSchemaPermissionDefinition
-
-instance Cacheable RemoteSchemaPermissionDefinition
 
 instance Hashable RemoteSchemaPermissionDefinition
 
@@ -40,7 +37,5 @@ data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
     _rspmComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteSchemaPermissionMetadata
 
 $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaPermissionMetadata)

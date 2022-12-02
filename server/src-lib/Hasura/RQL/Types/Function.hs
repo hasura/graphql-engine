@@ -65,7 +65,6 @@ import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Incremental (Cacheable)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -84,8 +83,6 @@ data FunctionVolatility
 
 instance NFData FunctionVolatility
 
-instance Cacheable FunctionVolatility
-
 $(deriveJSON defaultOptions {constructorTagModifier = drop 2} ''FunctionVolatility)
 
 funcTypToTxt :: FunctionVolatility -> Text
@@ -97,7 +94,7 @@ instance Show FunctionVolatility where
   show = T.unpack . funcTypToTxt
 
 newtype FunctionArgName = FunctionArgName {getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Cacheable, Hashable, Lift, Data)
+  deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Hashable, Lift, Data)
 
 instance HasCodec FunctionArgName where
   codec = dimapCodec FunctionArgName getFuncArgNameTxt codec
@@ -125,8 +122,6 @@ data FunctionExposedAs = FEAQuery | FEAMutation
 
 instance NFData FunctionExposedAs
 
-instance Cacheable FunctionExposedAs
-
 instance HasCodec FunctionExposedAs where
   codec = stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
 
@@ -139,8 +134,6 @@ newtype FunctionPermissionInfo = FunctionPermissionInfo
   { _fpmRole :: RoleName
   }
   deriving (Show, Eq, Generic)
-
-instance Cacheable FunctionPermissionInfo
 
 instance HasCodec FunctionPermissionInfo where
   codec =
@@ -163,8 +156,6 @@ data FunctionCustomRootFields = FunctionCustomRootFields
   deriving (Show, Eq, Generic)
 
 instance NFData FunctionCustomRootFields
-
-instance Cacheable FunctionCustomRootFields
 
 instance HasCodec FunctionCustomRootFields where
   codec =
@@ -327,8 +318,6 @@ data FunctionConfig = FunctionConfig
 
 instance NFData FunctionConfig
 
-instance Cacheable FunctionConfig
-
 instance HasCodec FunctionConfig where
   codec =
     AC.object "FunctionConfig" $
@@ -362,8 +351,6 @@ data FunctionArgsExpG a = FunctionArgsExp
   deriving stock (Show, Eq, Functor, Foldable, Traversable, Generic)
 
 instance (Hashable a) => Hashable (FunctionArgsExpG a)
-
-instance (Cacheable a) => Cacheable (FunctionArgsExpG a)
 
 instance (NFData a) => NFData (FunctionArgsExpG a)
 

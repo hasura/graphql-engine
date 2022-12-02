@@ -16,13 +16,9 @@ import {
 } from '../constants';
 import extendedGlobals from '../Globals';
 
-const persistFilteredGraphiQLHeaders = (headers) => {
-  const filteredHeaders = headers.filter((header) => {
-    if (
-      extendedGlobals.isAdminSecretSet &&
-      extendedGlobals.adminSecret &&
-      extendedGlobals.consoleType === 'cloud'
-    ) {
+const persistFilteredGraphiQLHeaders = headers => {
+  const filteredHeaders = headers.filter(header => {
+    if (extendedGlobals.isAdminSecretSet && extendedGlobals.adminSecret && extendedGlobals.consoleType === 'cloud') {
       if (header.key.toLowerCase() === HASURA_COLLABORATOR_TOKEN) {
         return false;
       }
@@ -50,7 +46,7 @@ const upsertToLS = (key, value) => {
     if (constantHeaderKeys.length === 0) {
       return {};
     }
-    return constantHeaderKeys.map((c) => {
+    return constantHeaderKeys.map(c => {
       return {
         key: c,
         value: CONSTANT_HEADERS[c],
@@ -74,7 +70,7 @@ const upsertToLS = (key, value) => {
     try {
       let initialHeader = [...HEADER_FROM_LS];
       let isSet = false;
-      initialHeader.forEach((i) => {
+      initialHeader.forEach(i => {
         if (i.key === key) {
           i.value = value;
           isSet = true;
@@ -92,7 +88,7 @@ const upsertToLS = (key, value) => {
       }
 
       const nameHeader = initialHeader.filter(
-        (iH) => iH.key === CLIENT_NAME_HEADER
+        iH => iH.key === CLIENT_NAME_HEADER
       );
       if (nameHeader.length === 0) {
         initialHeader = [
@@ -110,18 +106,18 @@ const upsertToLS = (key, value) => {
        * with admin-secret (this is not applicable for team console)
        */
       if (key.toLowerCase() === adminSecretLabel) {
-        initialHeader = initialHeader.filter((i) => {
+        initialHeader = initialHeader.filter(i => {
           return i.key !== globals.collabLabel;
         });
       } else if (key.toLowerCase() === globals.collabLabel) {
         // The admin secret should not be filtered for team console
         if (extendedGlobals.consoleType !== 'cloud') {
-          initialHeader = initialHeader.filter((i) => {
+          initialHeader = initialHeader.filter(i => {
             return i.key !== adminSecretLabel;
           });
         }
       } else if (key.toLowerCase() === globals.patLabel) {
-        initialHeader = initialHeader.filter((i) => {
+        initialHeader = initialHeader.filter(i => {
           return i.key !== personalAccessTokenLabel;
         });
       }
@@ -135,7 +131,7 @@ const upsertToLS = (key, value) => {
   }
 };
 
-const removeHeaderFromLS = (key) => {
+const removeHeaderFromLS = key => {
   const HEADER_FROM_LS = getPersistedGraphiQLHeaders();
   if (HEADER_FROM_LS) {
     try {

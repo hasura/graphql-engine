@@ -32,20 +32,19 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend as RQL
 import Hasura.RQL.Types.Column as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
-import Hasura.RQL.Types.Source as RQL
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 instance BackendSchema 'MySQL where
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  buildTableRelayQueryFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
-  buildFunctionQueryFields _ _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ = pure []
   relayExtension = Nothing
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
@@ -54,7 +53,7 @@ instance BackendSchema 'MySQL where
   possiblyNullable = possiblyNullable'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = orderByOperators'
-  comparisonExps = const comparisonExps'
+  comparisonExps = comparisonExps'
   countTypeInput = mysqlCountTypeInput
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
@@ -68,12 +67,11 @@ instance BackendTableSelectSchema 'MySQL where
 mysqlTableArgs ::
   forall r m n.
   MonadBuildSchema 'MySQL r m n =>
-  RQL.SourceInfo 'MySQL ->
   TableInfo 'MySQL ->
   SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-mysqlTableArgs sourceInfo tableInfo = do
-  whereParser <- tableWhereArg sourceInfo tableInfo
-  orderByParser <- tableOrderByArg sourceInfo tableInfo
+mysqlTableArgs tableInfo = do
+  whereParser <- tableWhereArg tableInfo
+  orderByParser <- tableOrderByArg tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser

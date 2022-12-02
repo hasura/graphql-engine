@@ -9,20 +9,14 @@ module Harness.Constants
     postgresHost,
     postgresPort,
     postgresqlMetadataConnectionString,
+    postgresMetadataDb,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
     defaultPostgresPort,
-    mysqlLivenessCheckAttempts,
-    mysqlLivenessCheckIntervalSeconds,
-    mysqlPassword,
-    mysqlUser,
-    mysqlDb,
-    mysqlHost,
-    mysqlPort,
-    mysqlConnectInfo,
     sqlserverLivenessCheckAttempts,
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverConnectInfo,
+    sqlserverAdminConnectInfo,
     sqlserverDb,
     bigqueryServiceKeyVar,
     bigqueryProjectIdVar,
@@ -31,6 +25,7 @@ module Harness.Constants
     httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
+    defaultCitusConnectionString,
     cockroachConnectionString,
     defaultCockroachConnectionString,
     cockroachDb,
@@ -44,13 +39,11 @@ where
 
 -------------------------------------------------------------------------------
 
-import Data.Char qualified
 import Data.HashSet qualified as Set
-import Data.UUID (UUID)
+import Data.Text qualified as T
 import Data.Word (Word16)
-import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as PG
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (UniqueTestId)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -132,20 +125,8 @@ defaultPostgresPort :: Word16
 defaultPostgresPort = 5432
 
 -- | return a unique database name from our TestEnvironment's uniqueTestId
-uniqueDbName :: UUID -> String
-uniqueDbName uuid = "test" <> showUUID uuid
-
--- | Sanitise UUID for use in BigQuery dataset name
--- must be alphanumeric (plus underscores)
-showUUID :: UUID -> String
-showUUID =
-  map
-    ( \a ->
-        if Data.Char.isAlphaNum a
-          then a
-          else '_'
-    )
-    . show
+uniqueDbName :: UniqueTestId -> String
+uniqueDbName uniqueTestId = "test" <> show uniqueTestId
 
 -- * Citus
 
@@ -164,8 +145,21 @@ citusHost = "127.0.0.1"
 citusPort :: Word16
 citusPort = 65004
 
-citusConnectionString :: String
-citusConnectionString =
+citusConnectionString :: UniqueTestId -> String
+citusConnectionString uniqueTestId =
+  "postgres://"
+    ++ citusUser
+    ++ ":"
+    ++ citusPassword
+    ++ "@"
+    ++ citusHost
+    ++ ":"
+    ++ show citusPort
+    ++ "/"
+    ++ uniqueDbName uniqueTestId
+
+defaultCitusConnectionString :: String
+defaultCitusConnectionString =
   "postgres://"
     ++ citusUser
     ++ ":"
@@ -191,8 +185,8 @@ cockroachHost = "127.0.0.1"
 cockroachPort :: Word16
 cockroachPort = 65008
 
-cockroachConnectionString :: TestEnvironment -> String
-cockroachConnectionString testEnvironment =
+cockroachConnectionString :: UniqueTestId -> String
+cockroachConnectionString uniqueTestId =
   "postgresql://"
     ++ cockroachUser
     ++ "@"
@@ -200,7 +194,7 @@ cockroachConnectionString testEnvironment =
     ++ ":"
     ++ show cockroachPort
     ++ "/"
-    ++ uniqueDbName (uniqueTestId testEnvironment)
+    ++ uniqueDbName uniqueTestId
     ++ "?sslmode=disable"
 
 defaultCockroachConnectionString :: String
@@ -239,44 +233,21 @@ sqlserverLivenessCheckIntervalSeconds = 1
 
 -- | SQL Server has strict password requirements, that's why it's not
 -- simply @hasura@ like the others.
-sqlserverConnectInfo :: Text
-sqlserverConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=optional"
+-- connection info for admin (with CREATE DATABASE permissions)
+sqlserverAdminConnectInfo :: Text
+sqlserverAdminConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Encrypt=optional"
+
+-- | SQL Server has strict password requirements, that's why it's not
+-- simply @hasura@ like the others.
+sqlserverConnectInfo :: UniqueTestId -> Text
+sqlserverConnectInfo uniqueTestId =
+  let dbName = T.pack (uniqueDbName uniqueTestId)
+   in "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Database="
+        <> dbName
+        <> ";Encrypt=optional"
 
 sqlserverDb :: String
 sqlserverDb = "hasura"
-
-mysqlLivenessCheckAttempts :: Int
-mysqlLivenessCheckAttempts = 5
-
-mysqlLivenessCheckIntervalSeconds :: DiffTime
-mysqlLivenessCheckIntervalSeconds = 1
-
--- * MySQL
-
-mysqlPassword :: String
-mysqlPassword = "hasura"
-
-mysqlUser :: String
-mysqlUser = "hasura"
-
-mysqlDb :: String
-mysqlDb = "hasura"
-
-mysqlHost :: String
-mysqlHost = "127.0.0.1"
-
-mysqlPort :: Word16
-mysqlPort = 65001
-
-mysqlConnectInfo :: Mysql.ConnectInfo
-mysqlConnectInfo =
-  Mysql.defaultConnectInfo
-    { Mysql.connectUser = mysqlUser,
-      Mysql.connectPassword = mysqlPassword,
-      Mysql.connectDatabase = mysqlDb,
-      Mysql.connectHost = mysqlHost,
-      Mysql.connectPort = mysqlPort
-    }
 
 bigqueryServiceKeyVar :: String
 bigqueryServiceKeyVar = "HASURA_BIGQUERY_SERVICE_KEY"
@@ -312,7 +283,7 @@ serveOptions =
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
-      soConsoleAssetsDir = Just "../console/static/dist",
+      soConsoleAssetsDir = Just "../../../console/static/dist",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = False,
       soStringifyNum = Options.Don'tStringifyNumbers,

@@ -46,6 +46,7 @@ export interface MainState {
       version: string;
       is_function_permissions_inferred: boolean;
       is_admin_secret_set: boolean;
+      default_naming_convention: string;
       is_auth_hook_set: boolean;
       is_remote_schema_permissions_enabled: boolean;
       is_jwt_set: boolean;
@@ -92,6 +93,7 @@ const defaultState: MainState = {
       is_auth_hook_set: false,
       is_remote_schema_permissions_enabled: false,
       experimental_features: [],
+      default_naming_convention: '',
       is_jwt_set: false,
       jwt: {
         claims_namespace: '',

@@ -78,6 +78,7 @@ library
     Hasura.Backends.DataConnector.API.V0.ConfigSchema
     Hasura.Backends.DataConnector.API.V0.ErrorResponse
     Hasura.Backends.DataConnector.API.V0.Expression
+    Hasura.Backends.DataConnector.API.V0.Mutations
     Hasura.Backends.DataConnector.API.V0.OrderBy
     Hasura.Backends.DataConnector.API.V0.Query
     Hasura.Backends.DataConnector.API.V0.Explain

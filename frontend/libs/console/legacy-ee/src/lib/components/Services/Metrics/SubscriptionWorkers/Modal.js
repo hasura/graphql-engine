@@ -10,7 +10,7 @@ import styles from '../Metrics.module.scss';
 import { formatRoundNumber } from '../../../../utils/math';
 import inspectRow from '../images/warningNew.svg';
 
-const Modal = (props) => {
+const Modal = props => {
   const { onHide, data } = props;
 
   const websocketData =
@@ -35,6 +35,7 @@ const Modal = (props) => {
     operation_string: operationString,
     variables,
   } = websocketData;
+
 
   const renderWarningSymbol = () => {
     if (

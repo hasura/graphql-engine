@@ -33,18 +33,18 @@ export const useDefaultValues = ({
   );
 
   const manual_relationships = [
-    ...(metadataTable?.object_relationships?.map((rel) => ({
+    ...(metadataTable?.object_relationships?.map(rel => ({
       ...rel,
       type: 'create_object_relationship' as RelationshipType,
     })) ?? []),
-    ...(metadataTable?.array_relationships?.map((rel) => ({
+    ...(metadataTable?.array_relationships?.map(rel => ({
       ...rel,
       type: 'create_array_relationship' as RelationshipType,
     })) ?? []),
   ];
 
   const relationship = manual_relationships?.find(
-    (rel) => rel.name === existingRelationshipName
+    rel => rel.name === existingRelationshipName
   );
 
   const defaultValues: Schema = {

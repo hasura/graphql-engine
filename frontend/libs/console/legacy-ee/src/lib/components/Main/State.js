@@ -7,14 +7,15 @@ const defaultState = {
     sources: [],
     api_limits: {},
     allowlist: null,
-    query_collections: null,
+    query_collections: null
   },
   project: {
     id: '',
     name: '',
     privileges: [],
-    metricsFQDN: '',
-  },
+    metricsFQDN: ''
+  }
+
 };
 
 export default defaultState;

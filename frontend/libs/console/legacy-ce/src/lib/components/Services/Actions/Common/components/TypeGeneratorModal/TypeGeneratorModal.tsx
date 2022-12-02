@@ -44,6 +44,8 @@ export const TypeGeneratorModal = (props: TypeGeneratorModalProps) => {
           onClose={onClose}
           callToDeny="Cancel"
           callToAction="Insert Types"
+          onSubmitAnalyticsName="actions-tab-generate-types-submit"
+          onCancelAnalyticsName="actions-tab-generate-types-cancel"
         />
       }
       title="Type Generator"

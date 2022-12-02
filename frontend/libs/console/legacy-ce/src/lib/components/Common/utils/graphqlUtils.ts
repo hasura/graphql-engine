@@ -40,7 +40,7 @@ export const useIntrospectionSchema = (headers = {}, dispatch: Dispatch) => {
         true
       )
     )
-      .then((response) => {
+      .then(response => {
         if (response.data) {
           setSchema(buildClientSchema(response.data));
           setLoading(false);
@@ -49,7 +49,7 @@ export const useIntrospectionSchema = (headers = {}, dispatch: Dispatch) => {
           setError(response);
         }
       })
-      .catch((e) => {
+      .catch(e => {
         setLoading(false);
         setError(e);
       });

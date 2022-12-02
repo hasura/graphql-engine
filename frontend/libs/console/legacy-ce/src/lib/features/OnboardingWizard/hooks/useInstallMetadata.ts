@@ -56,7 +56,7 @@ export function useInstallMetadata(
   onSuccessCb?: () => void,
   onErrorCb?: (errorMsg?: string) => void
 ): { updateMetadata: () => void } | { updateMetadata: undefined } {
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   // Fetch the metadata to be applied from remote file, or return from react-query cache if present
   const {
@@ -83,7 +83,7 @@ export function useInstallMetadata(
     }
   );
 
-  const oldMetadata = useAppSelector((state) => state.metadata.metadataObject);
+  const oldMetadata = useAppSelector(state => state.metadata.metadataObject);
 
   // only do a 'replace_metadata' call if we have the new metadata from the remote url, and current metadata is not null.
   // otherwise `updateMetadata` will just return an empty function. In that case, error callbacks will have info on what went wrong.

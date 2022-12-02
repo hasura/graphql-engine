@@ -1,0 +1,105 @@
+---
+description: Hasura Pro CLI regression tests
+keywords:
+  - hasura
+  - docs
+  - command line interface
+  - cli
+  - regression tests
+sidebar_label: Regression Tests
+sidebar_position: 4
+---
+
+# Regression Tests
+
+The Hasura CLI Pro plugin can be used to run regression tests from your terminal. This is typically useful in your CI/CD
+workflows when you want to run tests in certain pipelines.
+
+You can temporarily spin up a Hasura instance and then point the CLI to that instance to run tests.
+
+## Setting up the test suite
+
+Before you can run tests, a test suite needs to be set up with operations that have been captured on your Hasura project.
+
+You can read more about setting up a test suite [here](/deployment/hasura-cloud/regression-tests.mdx#manage-test-suites).
+
+## Getting a personal access token
+
+In order to communicate with Hasura's APIs, the CLI needs to be configured with an API access token.
+
+Follow the instructions [here](/hasura-cli/pro-cli/auth.mdx) to get a personal access token (PAT).
+
+E.g. PAT token: `ayrQdBG7UAzl642mLskLDtSuGNe7l9Bh8eIdQOtnXAG1GjxotHT38qOdSXl1smm`
+
+## Running a regression test suite programmatically
+
+### 1. Install the Hasura CLI and Pro add-on for CLI
+
+- [Install](/hasura-cli/install-hasura-cli.mdx) the Hasura CLI
+- Install the Pro add-on for CLI: after installing the CLI, run the following command to install the add-on:
+
+```bash
+hasura plugins install pro
+```
+
+### 2. Configure the CI process
+
+Add the Pro Backend (Lux) URL endpoints and PAT token to the CI environment variables:
+
+```bash
+export HASURA_PRO_METRICS_SERVER_ENDPOINT=<root-domain>/metrics
+export HASURA_PRO_DATA_SERVER_ENDPOINT=<root-domain>/data
+export HASURA_PRO_OAUTH_SERVER_ENDPOINT=<root-domain>/oauth
+export HASURA_ACCOUNT_PAT=<pat-token>
+```
+
+:::info Note
+
+The example assumes that the service URLs are Path based and not sub-domain based. This can be verified from the
+Kubernetes Ingress rules configuration for these services. For example:
+
+```bash
+export HASURA_PRO_METRICS_SERVER_ENDPOINT=mydomain.com/metrics
+export HASURA_PRO_DATA_SERVER_ENDPOINT=mydomain.com/data
+export HASURA_PRO_OAUTH_SERVER_ENDPOINT=mydomain.com/oauth
+export HASURA_ACCOUNT_PAT=ayrQdBG7UAzl642mLskLDtSuGNe7l9Bh8eIdQOtnXAG1GjxotHT38qOdSXl1smmp
+```
+
+:::
+
+## Running tests
+
+1. Head to the `Regression Testing` tab in the Hasura instance's Console.
+2. In the `Run tests` tab, click `Run tests on CLI` to get the partial CLI command for running the regression tests on a
+Hasura instance with the selected test suite (defined on this project or another).
+
+For example:
+
+```bash
+hasura pro regression-tests run --testsuite-id 17609e8f-c976-4d91-818d-235e0ac215e0 --project-id a6b3e7eb-bc46-4340-9ce9-72a0a8991b76
+```
+
+You can run tests using the CLI by adding a Hasura endpoint via the `--endpoint` flag to the above command:
+
+```bash
+hasura pro regression-tests run --testsuite-id <test-suite-id> --project-id <project-id>  --endpoint <hasura-instance-url>
+```
+
+:::info Note
+
+In the hasura-instance-url, the `v1/graphql` suffix should not be present. If your GraphQL API is available at
+`https://65.1.138.103.nip.io/hge/v1/graphql` then the url is `https://65.1.138.103.nip.io/hge/`
+
+The endpoint URL can be an external Hasura instance or a Hasura Community Edition instance running inside the CI
+environment.
+
+:::
+
+This command fetches the entire test suite from Hasura Pro and runs the tests against the given endpoint. The results
+will be reported to the terminal. You can also view the test run and the results later on the Hasura Console in the
+`Regression Tests` menu's `Past Runs` tab.
+
+The report in the terminal lists all the tests in the test-suite and gives the status `success` or `failed` for each of
+them. If there are any errors, the `Error` string is displayed and the count of passed and failed tests is also shown.
+If all the tests pass, the command returns with the `0` exit code. In the event of any test failures, a non-zero exit
+code is returned.

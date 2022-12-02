@@ -68,7 +68,7 @@ export const NumberInputField = ({
           type="number"
           aria-invalid={maybeError ? 'true' : 'false'}
           aria-label={name}
-          onChange={(e) => {
+          onChange={e => {
             setLocalValue(e.target.value);
             setValue(name, parseInt(e.target.value, 10));
           }}

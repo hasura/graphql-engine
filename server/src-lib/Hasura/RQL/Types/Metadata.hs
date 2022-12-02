@@ -52,6 +52,7 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Monoid (Dual (..), Endo (..))
+import Hasura.Incremental qualified as Inc
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (IsPlaceholder (placeholder))
 import Hasura.Prelude
@@ -135,6 +136,8 @@ data Metadata = Metadata
     _metaOpenTelemetryConfig :: OpenTelemetryConfig
   }
   deriving (Show, Eq, Generic)
+
+instance Inc.Select Metadata
 
 $(makeLenses ''Metadata)
 

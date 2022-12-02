@@ -28,10 +28,10 @@ const RedeliverEvent: React.FC<Props> = ({
           eventId,
           'data',
           eventDataSource,
-          (l) => {
+          l => {
             setLogs(l);
           },
-          (e) => {
+          e => {
             setError(e);
           }
         )
@@ -42,7 +42,7 @@ const RedeliverEvent: React.FC<Props> = ({
     };
   }, []);
 
-  const gridHeadings = ['status', 'id', 'created_at'].map((column) => {
+  const gridHeadings = ['status', 'id', 'created_at'].map(column => {
     return {
       Header: column,
       accessor: column,
@@ -78,6 +78,7 @@ const RedeliverEvent: React.FC<Props> = ({
               showPrintMargin={false}
               showGutter={false}
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
+              setOptions={{ useWorker: false }}
             />
           </div>
           <div className="pl-xs w-1/2">
@@ -102,6 +103,7 @@ const RedeliverEvent: React.FC<Props> = ({
                 backgroundColor: '#fdf9ed',
                 marginTop: '10px',
               }}
+              setOptions={{ useWorker: false }}
             />
           </div>
         </div>

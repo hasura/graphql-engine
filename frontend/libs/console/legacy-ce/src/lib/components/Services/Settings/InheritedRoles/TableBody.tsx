@@ -6,7 +6,7 @@ type TableBodyProps = {
   inheritedRoles: InheritedRole[];
 };
 
-const TableBody: React.FC<TableBodyProps> = (props) => {
+const TableBody: React.FC<TableBodyProps> = props => {
   const { inheritedRoles } = props;
 
   return (

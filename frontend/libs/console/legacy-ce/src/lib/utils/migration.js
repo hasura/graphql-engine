@@ -2,7 +2,7 @@ import { showErrorNotification } from '../components/Services/Common/Notificatio
 import globals from '../Globals';
 import { SERVER_CONSOLE_MODE } from '../constants';
 
-export const handleMigrationErrors = (title, errorMsg) => (dispatch) => {
+export const handleMigrationErrors = (title, errorMsg) => dispatch => {
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
     dispatch(showErrorNotification(title, errorMsg.code, errorMsg));

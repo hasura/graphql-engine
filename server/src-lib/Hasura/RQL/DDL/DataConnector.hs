@@ -13,7 +13,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (FromJSON, ToJSON, (.:), (.=))
+import Data.Aeson (FromJSON, ToJSON, (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt (..))
@@ -33,19 +33,26 @@ import Servant.Client qualified as Servant
 
 data DCAddAgent = DCAddAgent
   { _gdcaName :: DC.Types.DataConnectorName,
-    _gdcaUrl :: Servant.BaseUrl
+    _gdcaUrl :: Servant.BaseUrl,
+    _gdcaDisplayName :: Maybe Text
   }
 
 instance FromJSON DCAddAgent where
   parseJSON = Aeson.withObject "DCAddAgent" \o -> do
     _gdcaName <- o .: "name"
     mUri <- o .: "url"
+    _gdcaDisplayName <- o .:? "display_name"
     case mUri of
       Just _gdcaUrl -> pure DCAddAgent {..}
       Nothing -> fail "Failed to parse Agent URL"
 
 instance ToJSON DCAddAgent where
-  toJSON DCAddAgent {..} = Aeson.object ["name" .= _gdcaName, "url" .= show _gdcaUrl]
+  toJSON DCAddAgent {..} =
+    Aeson.object $
+      [ "name" .= _gdcaName,
+        "url" .= show _gdcaUrl
+      ]
+        ++ (if isNothing _gdcaDisplayName then [] else ["display_name" .= _gdcaDisplayName])
 
 -- | Insert a new Data Connector Agent into Metadata.
 runAddDataConnectorAgent ::
@@ -56,8 +63,9 @@ runAddDataConnectorAgent ::
   DCAddAgent ->
   m EncJSON
 runAddDataConnectorAgent DCAddAgent {..} = do
-  let agent = DC.Types.DataConnectorOptions _gdcaUrl
-  sourceKinds <- (:) "postgres" . fmap _skiSourceKind <$> fetchSourceKinds
+  let agent :: DC.Types.DataConnectorOptions
+      agent = DC.Types.DataConnectorOptions _gdcaUrl _gdcaDisplayName
+  sourceKinds <- (:) "postgres" . fmap _skiSourceKind <$> agentSourceKinds
 
   if toTxt _gdcaName `elem` sourceKinds
     then Error.throw400 Error.AlreadyExists $ "SourceKind '" <> toTxt _gdcaName <> "' already exists."

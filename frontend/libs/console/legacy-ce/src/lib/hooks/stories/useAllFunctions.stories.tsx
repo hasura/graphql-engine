@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof AllFunctions>;
 
-export const Playground: ComponentStory<typeof AllFunctions> = (args) => {
+export const Playground: ComponentStory<typeof AllFunctions> = args => {
   return <AllFunctions {...args} />;
 };
 

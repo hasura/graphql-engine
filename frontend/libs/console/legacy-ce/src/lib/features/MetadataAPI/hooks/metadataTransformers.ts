@@ -89,7 +89,7 @@ export namespace MetadataTransformer {
     remote_relationships,
   }: TransformDbToRemoteSchemaArgs): DbToRemoteSchemaRelationship[] => {
     return (
-      remote_relationships?.map((relationship) => {
+      remote_relationships?.map(relationship => {
         const { name, definition } = relationship;
 
         // if to_remote_schema is not defined, it's in the legacy format
@@ -121,7 +121,7 @@ export namespace MetadataTransformer {
     target,
     remote_relationships,
   }: TransformDbToRemoteSchemaArgs): DbToDbRelationship[] => {
-    return remote_relationships.map((relationship) => {
+    return remote_relationships.map(relationship => {
       const { name, definition } = relationship;
 
       return {
@@ -137,7 +137,7 @@ export namespace MetadataTransformer {
 
   export const transformPermissions = (tables: TableEntry[]) => {
     const permissions = tables.reduce((acc, tableEntry) => {
-      const containsPermissions = Object.keys(tableEntry).filter((key) =>
+      const containsPermissions = Object.keys(tableEntry).filter(key =>
         key.match(/permission/)
       );
       if (!containsPermissions) {

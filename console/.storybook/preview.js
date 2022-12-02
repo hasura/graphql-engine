@@ -11,6 +11,10 @@ import '../src/components/Common/Common.module.scss';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 import 'react-loading-skeleton/dist/skeleton.css';
 
+// Needed to use Jest mocks (jest.fn() and so on) in Storybook stories
+import * as jest from 'jest-mock';
+global.jest = jest;
+
 const channel = addons.getChannel();
 initialize();
 

@@ -31,6 +31,11 @@ module Hasura.RQL.Types.Source
     SourceHealthCheckInfo (..),
     BackendSourceHealthCheckInfo,
     SourceHealthCheckCache,
+
+    -- * Source pings
+    SourcePingInfo (..),
+    BackendSourcePingInfo,
+    SourcePingCache,
   )
 where
 
@@ -55,7 +60,7 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
--- Metadata
+-- Metadata (FIXME: this grouping is inaccurate)
 
 data SourceInfo b = SourceInfo
   { _siName :: SourceName,
@@ -126,6 +131,7 @@ data ResolvedSource b = ResolvedSource
     _rsFunctions :: DBFunctionsMetadata b,
     _rsScalars :: ScalarMap b
   }
+  deriving (Eq)
 
 instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
@@ -139,6 +145,8 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
 -- | A map from GraphQL name to equivalent scalar type for a given backend.
 data ScalarMap b where
   ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
+
+deriving stock instance Eq (ScalarMap b)
 
 instance Backend b => Semigroup (ScalarMap b) where
   ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2
@@ -196,3 +204,15 @@ data SourceHealthCheckInfo b = SourceHealthCheckInfo
 type BackendSourceHealthCheckInfo = AB.AnyBackend SourceHealthCheckInfo
 
 type SourceHealthCheckCache = HashMap SourceName BackendSourceHealthCheckInfo
+
+-------------------------------------------------------------------------------
+-- Source pings
+
+data SourcePingInfo b = SourcePingInfo
+  { _spiName :: SourceName,
+    _spiConnection :: SourceConnConfiguration b
+  }
+
+type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
+
+type SourcePingCache = HashMap SourceName BackendSourcePingInfo

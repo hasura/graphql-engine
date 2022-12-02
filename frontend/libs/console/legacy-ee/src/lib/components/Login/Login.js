@@ -42,14 +42,14 @@ class Login extends Component {
     }
   }
 
-  handleAdminSecret = (e) => {
+  handleAdminSecret = e => {
     this.props.dispatch({
       type: UPDATE_ADMIN_SECRET_INPUT,
       data: e.target.value,
     });
   };
 
-  handlePAT = (e) => {
+  handlePAT = e => {
     this.props.dispatch({
       type: UPDATE_PERSONAL_ACCESS_TOKEN,
       data: e.target.value,
@@ -80,7 +80,7 @@ class Login extends Component {
     ];
 
     const renderLogin = () => {
-      // Dont show "login with lux control plane" when running in pro-lite mode
+      // Dont show "login with lux control plane" when running in pro-lite mode 
       if (isClientSet() && globals.consoleType !== 'pro-lite') {
         return (
           <LoginWith location={location}>
@@ -95,7 +95,7 @@ class Login extends Component {
       }
     };
 
-    const handleLoginClick = (e) => {
+    const handleLoginClick = e => {
       e.preventDefault();
       if (this.state.loginMethod === 'admin-secret') {
         dispatch(loginClicked());
@@ -126,7 +126,7 @@ class Login extends Component {
       return `Enter ${globals.patLabel}`;
     };
 
-    const handleInputChange = (e) => {
+    const handleInputChange = e => {
       if (this.state.loginMethod === 'admin-secret') {
         this.handleAdminSecret(e);
       }
@@ -157,7 +157,7 @@ class Login extends Component {
     };
 
     const renderDropdownOptions = () => {
-      return dropdownOptions.map((option) => {
+      return dropdownOptions.map(option => {
         if (option.value === 'access-token' && globals.pro !== true) {
           return null;
         }
@@ -180,7 +180,9 @@ class Login extends Component {
             className={`${styles.display_flex} ${styles.add_mar_bottom_small} relative z-10`}
           >
             Enter your admin secret
-            <IconTooltip message="Admin secret is the secret key to access your GraphQL API in admin mode. If you own this project, you can find the admin secret on the projects dashboard." />
+            <IconTooltip
+              message="Admin secret is the secret key to access your GraphQL API in admin mode. If you own this project, you can find the admin secret on the projects dashboard."
+            />
           </div>
         );
       }
@@ -191,7 +193,7 @@ class Login extends Component {
           <select
             className={styles.form_input + ' form-control'}
             value={this.state.loginMethod}
-            onChange={(e) => {
+            onChange={e => {
               this.setState({ loginMethod: e.target.value });
             }}
             placeholder="Select Login Method"
@@ -232,7 +234,7 @@ Login.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const generatedLoginConnector = (connect) => {
+const generatedLoginConnector = connect => {
   const mapStateToProps = (state, ownProps) => {
     return {
       location: ownProps.location,

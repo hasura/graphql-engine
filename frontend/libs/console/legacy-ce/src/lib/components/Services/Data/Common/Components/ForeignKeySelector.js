@@ -21,7 +21,7 @@ const ForeignKeySelector = ({
   const numOfFks = foreignKeys.length;
   const numColMappings = colMappings.length;
   const refSchemaSelect = () => {
-    const dispatchSetRefSchema = (event) => {
+    const dispatchSetRefSchema = event => {
       const newFks = JSON.parse(JSON.stringify(foreignKeys));
       if (newFks[index].refSchemaName !== event.target.value) {
         newFks[index].refTableName = '';
@@ -72,7 +72,7 @@ const ForeignKeySelector = ({
   // html for ref table dropdown
   const refTableSelect = () => {
     // dispatch action for setting reference table
-    const dispatchSetRefTable = (event) => {
+    const dispatchSetRefTable = event => {
       const newFks = JSON.parse(JSON.stringify(foreignKeys));
       if (newFks[index].refTableName !== event.target.value) {
         newFks[index].colMappings = [{ column: '', refColumn: '' }];
@@ -178,12 +178,12 @@ const ForeignKeySelector = ({
           };
 
           // dispatch action for setting the "from" column
-          const dispatchSetLcol = (event) => {
+          const dispatchSetLcol = event => {
             dispatchSetCols('column', event.target.value);
           };
 
           // dispatch action for setting the "to" column
-          const dispatchSetRcol = (event) => {
+          const dispatchSetRcol = event => {
             dispatchSetCols('refColumn', event.target.value);
           };
 
@@ -230,7 +230,7 @@ const ForeignKeySelector = ({
                       {'-- column --'}
                     </option>
                   )}
-                  {orderedColumns.map((oc) => {
+                  {orderedColumns.map(oc => {
                     return (
                       <option key={oc.name} value={oc.index}>
                         {oc.name}
@@ -254,7 +254,7 @@ const ForeignKeySelector = ({
                     </option>
                   )}
                   {refTables[refTableName] &&
-                    refTables[refTableName].map((rcOpt) => {
+                    refTables[refTableName].map(rcOpt => {
                       return (
                         <option key={rcOpt} value={rcOpt}>
                           {rcOpt}
@@ -279,11 +279,11 @@ const ForeignKeySelector = ({
       : undefined;
     // Generate radios for violation actions
     const violiationActions = dataSource.violationActions;
-    const radios = (action) => {
+    const radios = action => {
       const selected = foreignKey[action];
       return (
         <div>
-          {violiationActions.map((va) => {
+          {violiationActions.map(va => {
             const onCheck = () => {
               const newFks = JSON.parse(JSON.stringify(foreignKeys));
               newFks[index][action] = va;

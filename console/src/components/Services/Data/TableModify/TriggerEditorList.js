@@ -111,6 +111,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
               width="100%"
               showPrintMargin={false}
               className="mt-xs"
+              setOptions={{ useWorker: false }}
             />
             {commentText && (
               <div className="text-gray-500 mt-sm">{commentText}</div>

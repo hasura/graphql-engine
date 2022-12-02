@@ -4,7 +4,7 @@ module Hasura.Backends.DataConnector.API.V0.ScalarSpec (spec, genScalarType) whe
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0.Scalar
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumTextExcluding)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -24,6 +24,12 @@ spec = do
       testToFromJSONToSchema (CustomTy "foo") [aesonQQ|"foo"|]
     jsonOpenApiProperties genScalarType
 
-genScalarType :: MonadGen m => m ScalarType
+genScalarType :: (MonadGen m, GenBase m ~ Identity) => m ScalarType
 genScalarType =
-  Gen.choice [pure StringTy, pure NumberTy, pure BoolTy, CustomTy <$> genArbitraryAlphaNumText defaultRange]
+  Gen.choice
+    [ pure StringTy,
+      pure NumberTy,
+      pure BoolTy,
+      CustomTy
+        <$> genArbitraryAlphaNumTextExcluding ["string", "number", "bool"] defaultRange
+    ]

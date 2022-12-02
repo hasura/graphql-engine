@@ -27,6 +27,7 @@ import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
+import Hasura.ShutdownLatch
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals
@@ -43,11 +44,10 @@ main =
 runApp :: Env.Environment -> HGEOptions (ServeOptions Hasura) -> IO ()
 runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
-  globalCtx@GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-  let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
 
   case hgeCmd of
     HCServe serveOptions -> do
+      globalCtx@GlobalCtx {} <- initGlobalCtx env metadataDbUrl rci
       (ekgStore, serverMetrics) <- liftIO $ do
         store <- EKG.newStore @AppMetricsSpec
         void $ EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
@@ -92,13 +92,17 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
           runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore Nothing prometheusMetrics
     HCExport -> do
+      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
       either (throwErrJExit MetadataExportError) printJSON res
     HCClean -> do
+      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (throwErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
     HCDowngrade opts -> do
+      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
+      let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
       let defaultSourceConfig =
             maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
               let pgSourceConnInfo =

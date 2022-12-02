@@ -15,7 +15,7 @@ type Props = {
   currentTrigger?: ScheduledTrigger;
 };
 
-const ProcessedEvents: React.FC<Props> = (props) => {
+const ProcessedEvents: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
 
   const triggerName = currentTrigger ? currentTrigger.name : '';

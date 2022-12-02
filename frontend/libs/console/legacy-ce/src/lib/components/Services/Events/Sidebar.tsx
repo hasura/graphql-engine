@@ -20,7 +20,7 @@ interface Props {
   service: Exclude<EventKind, 'scheduled'>;
 }
 
-const LeftSidebar: React.FC<Props> = (props) => {
+const LeftSidebar: React.FC<Props> = props => {
   const { triggers, currentTrigger, service } = props;
 
   const getSidebarIcon = () => {

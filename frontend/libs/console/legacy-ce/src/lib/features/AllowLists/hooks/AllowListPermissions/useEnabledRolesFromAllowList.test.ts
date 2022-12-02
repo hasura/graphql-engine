@@ -1,7 +1,6 @@
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
 import { renderHook } from '@testing-library/react-hooks';
-import { metadata, metadata_with_no_query_collections } from './mock/metadata';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 import { useEnabledRolesFromAllowList } from '../../hooks/AllowListPermissions/useEnabledRolesFromAllowList';
 
@@ -12,15 +11,11 @@ afterAll(() => server.close());
 
 describe('useEnabledRolesFromAllowList with valid data', () => {
   beforeEach(() => {
-    server.use(
-      rest.post('/v1/metadata', (req, res, ctx) =>
-        res(ctx.status(200), ctx.json(metadata))
-      )
-    );
+    server.use(...handlers({ url: '' }));
   });
   test('When useEnabledRolesFromAllowList hook is called with query collection Name, then a valid list of enabled roles are returned', async () => {
     const { result, waitForValueToChange } = renderHook(
-      () => useEnabledRolesFromAllowList('allowed-queries'),
+      () => useEnabledRolesFromAllowList('other_queries'),
       { wrapper }
     );
 
@@ -28,17 +23,13 @@ describe('useEnabledRolesFromAllowList with valid data', () => {
 
     const roles = result.current.data!;
 
-    expect(roles).toEqual(['manager']);
+    expect(roles).toEqual(['user']);
   });
 });
 
 describe("useEnabledRolesFromAllowList hooks' with no query collections", () => {
   beforeEach(() => {
-    server.use(
-      rest.post('/v1/metadata', (req, res, ctx) =>
-        res(ctx.status(200), ctx.json(metadata_with_no_query_collections))
-      )
-    );
+    server.use(...handlers({ url: '' }));
   });
   test('When useEnabledRolesFromAllowListn  is called with an invalid query collection, then empty array should be returned', async () => {
     const { result, waitForValueToChange } = renderHook(

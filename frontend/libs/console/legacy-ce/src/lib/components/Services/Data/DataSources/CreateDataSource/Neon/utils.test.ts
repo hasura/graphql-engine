@@ -252,7 +252,7 @@ const transformErrorStatesTestCases: {
 ];
 
 describe('transformNeonIntegrationStatusToNeonBannerProps', () => {
-  transformNeonIntegrationStatusTestCases.forEach((t) => {
+  transformNeonIntegrationStatusTestCases.forEach(t => {
     it(t.name, () => {
       const output = transformNeonIntegrationStatusToNeonBannerProps(t.input);
 
@@ -273,7 +273,7 @@ describe('transformNeonIntegrationStatusToNeonBannerProps', () => {
     });
   });
 
-  transformErrorStatesTestCases.forEach((t) => {
+  transformErrorStatesTestCases.forEach(t => {
     it(t.name, () => {
       const output = transformNeonIntegrationStatusToNeonBannerProps(t.input);
       // assert that the status of the output is as expected

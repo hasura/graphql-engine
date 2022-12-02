@@ -84,16 +84,15 @@ spec = do
     describe "When no aggregation functions are given" do
       it "Yields no parsers" do
         let maybeParser =
-              runSchemaTest $
+              runSchemaTest sourceInfo $
                 defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                   []
-                  sourceInfo
                   albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
 
     describe "When some aggregation functions are given" do
       let maybeParser =
-            runSchemaTest $
+            runSchemaTest sourceInfo $
               defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                 [ FunctionSignature
                     { fnName = "count",
@@ -102,7 +101,6 @@ spec = do
                       fnReturnType = PGInteger
                     }
                 ]
-                sourceInfo
                 albumTableInfo
 
       it "Positively yields a parser" do
@@ -230,7 +228,7 @@ spec = do
     describe "When SchemaOptions dictate exclusion of aggregation predicates" do
       it "Yields no parsers" do
         let maybeParser =
-              runSchemaTest
+              runSchemaTest sourceInfo
                 $ local
                   ( modifier
                       ( \so ->
@@ -247,7 +245,6 @@ spec = do
                         fnReturnType = PGInteger
                       }
                   ]
-                  sourceInfo
                   albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
   where

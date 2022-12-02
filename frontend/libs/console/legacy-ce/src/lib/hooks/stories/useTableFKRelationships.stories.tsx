@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof FKRelationships>;
 
-export const Playground: ComponentStory<typeof FKRelationships> = (args) => {
+export const Playground: ComponentStory<typeof FKRelationships> = args => {
   return <FKRelationships {...args} />;
 };
 

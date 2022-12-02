@@ -25,7 +25,7 @@ export const AllFKRelationships = ({
     }
   }, [currentDatasource, dispatch, driver]);
 
-  const source: string = useAppSelector((s) => s.tables.currentDataSource);
+  const source: string = useAppSelector(s => s.tables.currentDataSource);
 
   const {
     data: schemas,

@@ -25,7 +25,7 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story<RemoteSchemaToDbFormProps> = (args) => (
+export const Primary: Story<RemoteSchemaToDbFormProps> = args => (
   <RemoteSchemaToDbForm {...args} />
 );
 
@@ -34,7 +34,7 @@ Primary.args = {
   closeHandler: () => {},
 };
 
-export const PrimaryWithTest: Story<RemoteSchemaToDbFormProps> = (args) => (
+export const PrimaryWithTest: Story<RemoteSchemaToDbFormProps> = args => (
   <RemoteSchemaToDbForm {...args} />
 );
 
@@ -72,9 +72,8 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   userEvent.click(submitButton);
 };
 
-export const WithExistingRelationship: Story<RemoteSchemaToDbFormProps> = (
-  args
-) => <RemoteSchemaToDbForm {...args} />;
+export const WithExistingRelationship: Story<RemoteSchemaToDbFormProps> =
+  args => <RemoteSchemaToDbForm {...args} />;
 WithExistingRelationship.args = {
   ...Primary.args,
   sourceRemoteSchema: 'with_default_values',

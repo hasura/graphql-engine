@@ -111,6 +111,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
               width="100%"
               mode="graphqlschema"
               readOnly
+              setOptions={{ useWorker: false }}
             />
           </div>
           <div className="h-full w-1/2 pl-xl">

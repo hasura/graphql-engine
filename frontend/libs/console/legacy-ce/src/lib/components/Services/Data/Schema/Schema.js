@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import { BsBoxArrowUpRight } from 'react-icons/bs';
 import _push from '../push';
@@ -193,11 +194,11 @@ class Schema extends Component {
     this.setState({ createSchemaOpen: true });
   };
 
-  setCustomizedTableName = (tableName) => {
+  setCustomizedTableName = tableName => {
     this.setState({ customizedTableName: tableName });
   };
 
-  onChangeSchemaName = (e) => {
+  onChangeSchemaName = e => {
     this.setState({ schemaNameEdit: e.target.value });
   };
 
@@ -266,7 +267,7 @@ class Schema extends Component {
       let createBtn = null;
 
       if (migrationMode && isFeatureSupported('tables.create.enabled')) {
-        const handleClick = (e) => {
+        const handleClick = e => {
           e.preventDefault();
 
           dispatch(
@@ -275,18 +276,22 @@ class Schema extends Component {
         };
 
         createBtn = (
-          <Button
-            mode="primary"
-            size={size}
-            className="p-0 m-0 ml-sm"
-            data-test="data-create-table"
-            onClick={handleClick}
-            iconPosition="start"
-            icon={<FaPlusCircle className="h-3" />}
-            data-trackid="data-tab-create-table-button"
+          <Analytics
+            name="data-tab-create-table-button"
+            passHtmlAttributesToChildren
           >
-            Create Table
-          </Button>
+            <Button
+              mode="primary"
+              size={size}
+              className="p-0 m-0 ml-sm"
+              data-test="data-create-table"
+              onClick={handleClick}
+              iconPosition="start"
+              icon={<FaPlusCircle className="h-3" />}
+            >
+              Create Table
+            </Button>
+          </Analytics>
         );
       }
 
@@ -337,7 +342,7 @@ class Schema extends Component {
 
         let trackAllBtn = null;
 
-        const trackAllTables = (e) => {
+        const trackAllTables = e => {
           e.stopPropagation();
           e.preventDefault();
 
@@ -353,14 +358,18 @@ class Schema extends Component {
 
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
-            <Button
-              size="sm"
-              className={`${styles.display_inline}`}
-              onClick={trackAllTables}
-              data-trackid="data-tab-track-all-button"
+            <Analytics
+              name="data-tab-track-all-button"
+              passHtmlAttributesToChildren
             >
-              Track All
-            </Button>
+              <Button
+                size="sm"
+                className={`${styles.display_inline}`}
+                onClick={trackAllTables}
+              >
+                Track All
+              </Button>
+            </Analytics>
           );
         }
 
@@ -383,7 +392,7 @@ class Schema extends Component {
                 return null;
               }
 
-              const handleTrackTable = (e) => {
+              const handleTrackTable = e => {
                 e.preventDefault();
 
                 this.setCustomizedTableName(tableName);
@@ -400,15 +409,19 @@ class Schema extends Component {
                 <div
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
-                  <Button
-                    size="sm"
-                    className={`${styles.display_inline}`}
-                    data-test={`add-track-table-${tableName}`}
-                    onClick={handleTrackTable}
-                    data-trackid="data-tab-track-table-button"
+                  <Analytics
+                    name="data-tab-track-table-button"
+                    passHtmlAttributesToChildren
                   >
-                    Track
-                  </Button>
+                    <Button
+                      size="sm"
+                      className={`${styles.display_inline}`}
+                      data-test={`add-track-table-${tableName}`}
+                      onClick={handleTrackTable}
+                    >
+                      Track
+                    </Button>
+                  </Analytics>
 
                   <Button
                     title="customize table before tracking"
@@ -466,7 +479,7 @@ class Schema extends Component {
 
         let trackAllBtn = null;
 
-        const trackAllRelations = (e) => {
+        const trackAllRelations = e => {
           e.stopPropagation();
           e.preventDefault();
 
@@ -512,7 +525,7 @@ class Schema extends Component {
                 return null;
               }
 
-              const handleTrackRel = (e) => {
+              const handleTrackRel = e => {
                 e.preventDefault();
 
                 dispatch(autoAddRelName(rel));
@@ -580,7 +593,7 @@ class Schema extends Component {
       );
     };
 
-    const getUntrackedFunctionsSection = (isSupported) => {
+    const getUntrackedFunctionsSection = isSupported => {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
@@ -743,27 +756,29 @@ class Schema extends Component {
             driver={currentDriver}
           />
         )}
-        <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div className={styles.padd_left}>
-            <Helmet title="Schema - Data | Hasura" />
-            <BreadCrumb
-              breadCrumbs={[
-                { url: `/data`, title: 'Data' },
-                {
-                  url: getDataSourceBaseRoute(currentDataSource),
-                  title: currentDataSource,
-                  prefix: <FaDatabase />,
-                },
-                {
-                  url: getSchemaBaseRoute(currentSchema, currentDataSource),
-                  title: currentSchema,
-                  prefix: <FaFolder />,
-                },
-              ]}
-            />
-            {getContent()}
+        <Analytics name="Schema" {...REDACT_EVERYTHING}>
+          <div className={`container-fluid ${styles.padd_left_remove}`}>
+            <div className={styles.padd_left}>
+              <Helmet title="Schema - Data | Hasura" />
+              <BreadCrumb
+                breadCrumbs={[
+                  { url: `/data`, title: 'Data' },
+                  {
+                    url: getDataSourceBaseRoute(currentDataSource),
+                    title: currentDataSource,
+                    prefix: <FaDatabase />,
+                  },
+                  {
+                    url: getSchemaBaseRoute(currentSchema, currentDataSource),
+                    title: currentSchema,
+                    prefix: <FaFolder />,
+                  },
+                ]}
+              />
+              {getContent()}
+            </div>
           </div>
-        </div>
+        </Analytics>
       </RightContainer>
     );
   }
@@ -777,14 +792,14 @@ Schema.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = dispatch => ({
   showTableTrackingModal: () =>
     dispatch(showModal(TableTrackingCustomizationModalKey)),
   hideTableTrackingModal: () => dispatch(hideModal()),
   dispatch: dispatch,
 });
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
@@ -800,7 +815,7 @@ const mapStateToProps = (state) => ({
   modalKey: modalKeySelector(state),
 });
 
-const schemaConnector = (connect) =>
+const schemaConnector = connect =>
   connect(mapStateToProps, mapDispatchToProps)(Schema);
 
 export default schemaConnector;

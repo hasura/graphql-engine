@@ -31,7 +31,7 @@ const transformSinglePK =
   (data: RunSQLResponse): PrimaryKey | null => {
     const res =
       transformPK(driver)(data).find(
-        (key) =>
+        key =>
           key.table_name === table.name && key.table_schema === table.schema
       ) ?? null;
     return res;

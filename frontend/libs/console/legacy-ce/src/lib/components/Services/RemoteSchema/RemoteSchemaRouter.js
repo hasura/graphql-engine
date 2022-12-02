@@ -15,10 +15,10 @@ import { appPrefix } from './constants';
 import RelationshipsConnector from './Relationships';
 import { RemoteSchemaDetails } from '@/features/RemoteSchema/components/Details/RemoteSchemaDetails';
 
-const filterItem = (dispatch) => {
+const filterItem = dispatch => {
   return (dataList, searchVal) => {
     // form new schema
-    const matchedTables = dataList.filter((data) => {
+    const matchedTables = dataList.filter(data => {
       return (
         data.name
           .toLowerCase()
@@ -35,7 +35,7 @@ const filterItem = (dispatch) => {
   };
 };
 
-const leftNavMapStateToProps = (state) => {
+const leftNavMapStateToProps = state => {
   return {
     ...state,
     dataList: state.metadata.metadataObject?.remote_schemas ?? [],
@@ -48,13 +48,13 @@ const leftNavMapStateToProps = (state) => {
   };
 };
 
-const leftNavMapDispatchToProps = (dispatch) => {
+const leftNavMapDispatchToProps = dispatch => {
   return {
     filterItem: filterItem(dispatch),
   };
 };
 
-const getRemoteSchemaRouter = (connect) => {
+const getRemoteSchemaRouter = connect => {
   return (
     <Route
       path="remote-schemas"

@@ -125,7 +125,7 @@ export const canReUseTableTypes = (
     return false;
 
   // make sure all table names and schema names are same in metadata and table_type cache (allSourcesSchemas)
-  return sources.every((sourceFromMetada) =>
+  return sources.every(sourceFromMetada =>
     sourceFromMetada?.tables?.every(
       ({ table: { name, schema } = {} }) =>
         name &&

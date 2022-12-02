@@ -1,6 +1,6 @@
 ---
 sidebar_label: Configuration Reference
-sidebar_position: 2
+sidebar_position: 3
 description: Hasura GraphQL CLI configuration reference
 keywords:
   - hasura
@@ -14,19 +14,27 @@ keywords:
 
 ## Introduction
 
-Hasura CLI commands can get key values from flags, ENV variables, a
-`.env` file or the configuration file `config.yaml`.
+When using the Hasura CLI, you'll pass various values to different commands. These values can be configured using:
+
+- a configuration file
+- a `.env` file
+- environment variables
+- flags to the command itself
 
 :::info Note
 
-Precedence order is flag > ENV vars > `.env` file values >
-configuration file values > default.
+The order of precedence by which the CLI processes these values is flag -> environment variables -> `.env` file
+values -> configuration file values -> default.
+
+In the sections below, we'll explain how to configure the CLI for each of these use cases.
 
 :::
 
 ## Configuration file
 
-In order for the Hasura CLI to work, the `config.yaml` file is required (created automatically via the [hasura init](/hasura-cli/commands/hasura_init.mdx) command). The configuration file can be configured with the following config keys:
+For the Hasura CLI to work, the `config.yaml` file is required and created automatically when running the
+[hasura init](/hasura-cli/commands/hasura_init.mdx) command. You can configure the configuration file with the following
+config keys:
 
 ```yaml
 version:
@@ -82,62 +90,67 @@ actions:
 
 :::info Note
 
-The above structure is for the `config v3` file which is supported since `v2.0.0-alpha.1`. Refer to [this page](/migrations-metadata-seeds/legacy-configs/upgrade-v3.mdx) on how to upgrade to `config v2`.
+The above structure is for the `config v3` file which is supported since `v2.0.0-alpha.1`. Refer to
+[this page](/migrations-metadata-seeds/legacy-configs/upgrade-v3.mdx) on how to upgrade to `config v2`.
 
 :::
 
-## Environment variables
+## A `.env` file
 
-The configuration can also be set in the form of environment variables:
+Alternatively, the Hasura CLI can also read environment variables from a `.env` file, created manually by the user, at
+the project's root directory. A global flag, `--envfile`, is available to explicitly identify the `.env` file which
+defaults to `.env` if you don't provide it.
 
-| ENV variable                                     | Config file key                   | Description                                                                                                                                                                           |
-| ------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HASURA_GRAPHQL_VERSION`                         | `version`                         | Config version to be used.                                                                                                                                                            |
-| `HASURA_GRAPHQL_ENDPOINT`                        | `endpoint`                        | http(s) endpoint for Hasura GraphQL engine.                                                                                                                                           |
-| `HASURA_GRAPHQL_ADMIN_SECRET`                    | `admin_secret`                    | Admin secret for Hasura GraphQL engine.                                                                                                                                               |
-| `HASURA_GRAPHQL_ADMIN_SECRETS`                   | `admin_secrets`                   | [Admin secrets](/security/multiple-admin-secrets.mdx) for Hasura GraphQL engine _(Cloud/EE only)_. eg: `HASURA_GRAPHQL_ADMIN_SECRETS='["foo", "bar", "baz"]'` |
-| `HASURA_GRAPHQL_ACCESS_KEY`                      | `access_key`                      | Access key for Hasura GraphQL engine. Note: Deprecated. Use admin secret instead.                                                                                                     |
-| `HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY`        | `insecure_skip_tls_verify`        | Skip verifying SSL certificate for the Hasura endpoint. Useful if you have a self-singed certificate and don't have access to the CA cert.                                            |
-| `HASURA_GRAPHQL_CERTIFICATE_AUTHORITY`           | `certificate_authority`           | Path to the CA certificate for validating the self-signed certificate for the Hasura endpoint.                                                                                        |
-| `HASURA_GRAPHQL_API_PATHS_QUERY`                 | `api_paths.query`                 | Schema/ metadata API endpoint. More details at [Schema / metadata API (Deprecated)](/api-reference/index.mdx#schema-metadata-api).                                       |
-| `HASURA_GRAPHQL_API_PATHS_GRAPHQL`               | `api_paths.graphql`               | GraphQL API endpoint. More details at [GraphQL API](/api-reference/index.mdx#graphql-api).                                                                               |
-| `HASURA_GRAPHQL_API_PATHS_CONFIG`                | `api_paths.config`                | Config API endpoint. More details at [Config API](/api-reference/index.mdx#config-api)`.                                                                                 |
-| `HASURA_GRAPHQL_API_PATHS_PG_DUMP`               | `api_paths.pg_dump`               | PG Dump API endpoint. More details at [pg_dump API](/api-reference/index.mdx#pg-dump-api).                                                                               |
-| `HASURA_GRAPHQL_API_PATHS_VERSION`               | `api_paths.version`               | Version API endpoint. More details at [RESTified GraphQL API](/api-reference/index.mdx#version-api).                                                                     |
-| `HASURA_GRAPHQL_METADATA_DIRECTORY`              | `metadata_directory`              | Defines the directory where the metadata files were stored.                                                                                                                           |
-| `HASURA_GRAPHQL_MIGRATIONS_DIRECTORY`            | `migrations_directory`            | Defines the directory where the migration files were stored.                                                                                                                          |
-| `HASURA_GRAPHQL_SEEDS_DIRECTORY`                 | `seeds_directory`                 | Defines the directory where the seed files were stored.                                                                                                                               |
-| `HASURA_GRAPHQL_ACTIONS_KIND`                    | `actions.kind`                    | Kind to be used for actions.                                                                                                                                                          |
-| `HASURA_GRAPHQL_ACTIONS_HANDLER_WEBHOOK_BASEURL` | `actions.handler_webhook_baseurl` | Webhook baseurl to be used for actions.                                                                                                                                               |
-| `HASURA_GRAPHQL_ACTIONS_CODEGEN_FRAMEWORK`       | `actions.codegen.framework`       | Framework to codegen for actions.                                                                                                                                                     |
-| `HASURA_GRAPHQL_ACTION_CODEGEN_OUTPUT_DIR`       | `actions.codegen.output_dir`      | Defines the directory to create the codegen files.                                                                                                                                    |
-| `HASURA_GRAPHQL_ACTION_CODEGEN_URI`              | `actions.codegen.uri`             | URI to codegen for actions.                                                                                                                                                           |
+It's important to note that this will not override an environment variable that already exists.
 
-## CLI flags
+As an example, the command below will read environment variables from the `production.env` file present at the
+project's root directory.
 
-The above keys can be set using command-line flags as well. The
-corresponding flag, for the ENV vars or the configuration keys, can be
-found in the respective commands reference manual.
-
-## .env file
-
-Alternatively, environment variables can also be read from the `.env`
-file, created manually by the user, at the project root directory. A
-global flag, `--envfile`, is available to explicitly get the `.env` file
-created by the user, which defaults to `.env` if no flag is provided.
-
-It's important to note that this will not override an ENV variable that
-already exists.
-
-Example:
-
-    hasura console --envfile production.env
-
-The above command will read ENV vars from the `production.env` file
-present at the project root directory.
+```bash
+hasura console --envfile production.env
+```
 
 :::tip Supported from
 
 `.env` file is supported in versions `v1.2.0` and above.
 
 :::
+
+## Environment variables
+
+The following environment variables can be utilized to configure different values on a per-project basis for use with
+the CLI:
+
+| Environment variable                             | Config file key                   | Description                                                                                                                                                   |
+|--------------------------------------------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HASURA_GRAPHQL_VERSION`                         | `version`                         | Config version to be used.                                                                                                                                    |
+| `HASURA_GRAPHQL_ENDPOINT`                        | `endpoint`                        | http(s) endpoint for Hasura GraphQL engine.                                                                                                                   |
+| `HASURA_GRAPHQL_ADMIN_SECRET`                    | `admin_secret`                    | Admin secret for Hasura GraphQL engine.                                                                                                                       |
+| `HASURA_GRAPHQL_ADMIN_SECRETS`                   | `admin_secrets`                   | [Admin secrets](/security/multiple-admin-secrets.mdx) for Hasura GraphQL engine _(Cloud/EE only)_. eg: `HASURA_GRAPHQL_ADMIN_SECRETS='["foo", "bar", "baz"]'` |
+| `HASURA_GRAPHQL_ACCESS_KEY`                      | `access_key`                      | Access key for Hasura GraphQL engine. Note: Deprecated. Use admin secret instead.                                                                             |
+| `HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY`        | `insecure_skip_tls_verify`        | Skip verifying SSL certificate for the Hasura endpoint. Useful if you have a self-singed certificate and don't have access to the CA cert.                    |
+| `HASURA_GRAPHQL_CERTIFICATE_AUTHORITY`           | `certificate_authority`           | Path to the CA certificate for validating the self-signed certificate for the Hasura endpoint.                                                                |
+| `HASURA_GRAPHQL_API_PATHS_QUERY`                 | `api_paths.query`                 | Schema/ metadata API endpoint. More details at [Schema / metadata API (Deprecated)](/api-reference/index.mdx#schema-metadata-api).                            |
+| `HASURA_GRAPHQL_API_PATHS_GRAPHQL`               | `api_paths.graphql`               | GraphQL API endpoint. More details at [GraphQL API](/api-reference/index.mdx#graphql-api).                                                                    |
+| `HASURA_GRAPHQL_API_PATHS_CONFIG`                | `api_paths.config`                | Config API endpoint. More details at [Config API](/api-reference/index.mdx#config-api)`.                                                                      |
+| `HASURA_GRAPHQL_API_PATHS_PG_DUMP`               | `api_paths.pg_dump`               | PG Dump API endpoint. More details at [pg_dump API](/api-reference/index.mdx#pg-dump-api).                                                                    |
+| `HASURA_GRAPHQL_API_PATHS_VERSION`               | `api_paths.version`               | Version API endpoint. More details at [RESTified GraphQL API](/api-reference/index.mdx#version-api).                                                          |
+| `HASURA_GRAPHQL_METADATA_DIRECTORY`              | `metadata_directory`              | Defines the directory where the metadata files were stored.                                                                                                   |
+| `HASURA_GRAPHQL_MIGRATIONS_DIRECTORY`            | `migrations_directory`            | Defines the directory where the migration files were stored.                                                                                                  |
+| `HASURA_GRAPHQL_SEEDS_DIRECTORY`                 | `seeds_directory`                 | Defines the directory where the seed files were stored.                                                                                                       |
+| `HASURA_GRAPHQL_ACTIONS_KIND`                    | `actions.kind`                    | Kind to be used for actions.                                                                                                                                  |
+| `HASURA_GRAPHQL_ACTIONS_HANDLER_WEBHOOK_BASEURL` | `actions.handler_webhook_baseurl` | Webhook baseurl to be used for actions.                                                                                                                       |
+| `HASURA_GRAPHQL_ACTIONS_CODEGEN_FRAMEWORK`       | `actions.codegen.framework`       | Framework to codegen for actions.                                                                                                                             |
+| `HASURA_GRAPHQL_ACTION_CODEGEN_OUTPUT_DIR`       | `actions.codegen.output_dir`      | Defines the directory to create the codegen files.                                                                                                            |
+| `HASURA_GRAPHQL_ACTION_CODEGEN_URI`              | `actions.codegen.uri`             | URI to codegen for actions.                                                                                                                                   |
+
+## Flags
+
+The keys in the previous section can be set using command line flags. The corresponding flag, for the environment
+variable or the configuration keys, can be found in the respective commands reference manual.
+
+As an example, the `--endpoint` flag can be used to set the `HASURA_GRAPHQL_ENDPOINT` environment variable:
+
+```bash
+hasura metadata apply --endpoint "https://my-project.hasura.app"
+```

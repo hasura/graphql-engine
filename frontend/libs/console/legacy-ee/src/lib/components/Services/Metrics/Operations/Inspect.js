@@ -11,7 +11,7 @@ import inspectRow from '../images/usage.svg';
 const defaultState = {
   isInspecting: false,
 };
-const Inspect = (props) => {
+const Inspect = props => {
   const [inspectState, toggle] = useState(defaultState);
   const { isInspecting } = inspectState;
   const { requestId, projectId, time, transport, projectConfigData } = props;

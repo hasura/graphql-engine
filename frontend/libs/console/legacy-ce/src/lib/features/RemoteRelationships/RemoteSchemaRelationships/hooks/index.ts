@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from 'react-query';
 
 export const useAddRemoteSchemaRelationship = () => {
   const queryClient = useQueryClient();
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   return useMutation(
     (rel: any) =>
@@ -26,7 +26,7 @@ export const useAddRemoteSchemaRelationship = () => {
 };
 export const useDropRemoteSchemaRelationship = () => {
   const queryClient = useQueryClient();
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   return useMutation(
     (rel: any) =>
@@ -49,7 +49,7 @@ export const useDropRemoteSchemaRelationship = () => {
 
 export const useUpdateRemoteSchemaRelationship = () => {
   const queryClient = useQueryClient();
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
 
   return useMutation(
     (rel: any) =>

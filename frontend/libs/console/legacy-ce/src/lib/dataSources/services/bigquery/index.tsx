@@ -285,7 +285,7 @@ export const bigquery: DataSourcesAPI = {
     if (schemas) {
       datasets = schemas;
     } else {
-      datasets = tables?.map((t) => t.schema) ?? [];
+      datasets = tables?.map(t => t.schema) ?? [];
     }
 
     const query = (dataset: string) => `
@@ -308,7 +308,7 @@ export const bigquery: DataSourcesAPI = {
   `;
 
     return datasets
-      .map((dataset) => {
+      .map(dataset => {
         return query(dataset);
       })
       .join('union all');
@@ -443,7 +443,7 @@ export const bigquery: DataSourcesAPI = {
     if (!tables.length) return 'select []';
 
     const schemaMap = {} as Record<string, Array<string>>;
-    tables.forEach((t) => {
+    tables.forEach(t => {
       if (!schemaMap[t.schema]) schemaMap[t.schema] = [t.name];
       else schemaMap[t.schema].push(t.name);
     });
@@ -459,7 +459,7 @@ export const bigquery: DataSourcesAPI = {
       from  ${schema}.INFORMATION_SCHEMA.TABLES where table_name in (${schemaMap[
         schema
       ]
-        .map((t) => `'${t}'`)
+        .map(t => `'${t}'`)
         .join(',')})`;
       if (index !== Object.keys(schemaMap).length - 1) query += ` union all`;
     });

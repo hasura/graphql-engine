@@ -28,7 +28,6 @@ import Database.MySQL.Base.Types qualified as MySQLTypes (Type (..))
 import Hasura.Backends.MySQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
-import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
@@ -41,8 +40,6 @@ import Language.Haskell.TH.Syntax
 deriving instance Generic (Countable n)
 
 instance Hashable n => Hashable (Countable n)
-
-instance Cacheable n => Cacheable (Countable n)
 
 deriving instance Eq n => Eq (Countable n)
 
@@ -68,8 +65,6 @@ $( concat <$> for
 
          instance Hashable $(conT name)
 
-         instance Cacheable $(conT name)
-
          deriving instance Data $(conT name)
 
          instance NFData $(conT name)
@@ -83,8 +78,6 @@ $( fmap concat $ for
          deriving instance Generic ($(conT name) a)
 
          instance Hashable a => Hashable ($(conT name) a)
-
-         instance Cacheable a => Cacheable ($(conT name) a)
 
          deriving instance Eq a => Eq ($(conT name) a)
 
@@ -124,8 +117,6 @@ $( concat <$> for
          deriving instance Generic $(conT name)
 
          instance Hashable $(conT name)
-
-         instance Cacheable $(conT name)
 
          deriving instance Eq $(conT name)
 
@@ -272,15 +263,8 @@ instance J.ToJSON (Pool Connection) where
 instance Eq (Pool Connection) where
   _ == _ = True
 
-instance Cacheable SourceConfig where
-  unchanged _ = (==)
-
 deriving instance Eq SourceConfig
 
 deriving instance Generic SourceConfig
 
 deriving instance J.ToJSON SourceConfig
-
-deriving instance Cacheable ConnPoolSettings
-
-deriving instance Cacheable ConnSourceConfig

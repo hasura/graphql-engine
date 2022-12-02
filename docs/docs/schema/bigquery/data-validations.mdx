@@ -142,7 +142,8 @@ authors (id int, name text)
 articles (id int, title text, author_id int, body text)
 ```
 
-Also, suppose there is an [object relationship](/table-relationships/index.mdx) `articles.author` defined as:
+Also, suppose there is an [object relationship](schema/bigquery/table-relationships/index.mdx) `articles.author`
+defined as:
 
 ```sql
 articles.author_id -> authors.id

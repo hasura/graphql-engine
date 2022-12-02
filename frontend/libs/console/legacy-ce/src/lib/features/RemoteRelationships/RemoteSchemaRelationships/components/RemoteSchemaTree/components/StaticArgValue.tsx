@@ -72,7 +72,7 @@ const StaticArgValue = ({
 
     return (
       <div className="flex">
-        {[true, false].map((bool) => (
+        {[true, false].map(bool => (
           <p className="flex items-center font-semibold text-muted">
             <input
               id={`radio-select-${bool}`}
@@ -102,7 +102,7 @@ const StaticArgValue = ({
       id="argValue"
       className={fieldStyle}
       value={localArgValue.value as ReactText}
-      onChange={(e) => onValueChangeHandler(e.target.value)}
+      onChange={e => onValueChangeHandler(e.target.value)}
       data-test="select-static-value"
     />
   );

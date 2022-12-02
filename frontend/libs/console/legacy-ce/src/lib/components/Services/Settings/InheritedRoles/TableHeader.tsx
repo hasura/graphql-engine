@@ -4,7 +4,7 @@ type TableHeaderProps = {
   headings: string[];
 };
 
-const TableHeader: React.FC<TableHeaderProps> = (props) => {
+const TableHeader: React.FC<TableHeaderProps> = props => {
   const { headings } = props;
   return (
     <div>

@@ -17,7 +17,11 @@ const useRedirect = () => {
   const dispatch = useAppDispatch();
   const redirect = async () => {
     await dispatch(exportMetadata());
-    dispatch(push('/data/manage'));
+    dispatch(
+      push({
+        pathname: '/data/manage',
+      })
+    );
   };
 
   return redirect;

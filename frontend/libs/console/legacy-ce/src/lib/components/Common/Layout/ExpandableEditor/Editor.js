@@ -61,7 +61,7 @@ class Editor extends React.Component {
     );
   };
 
-  saveButton = (saveFunc) => {
+  saveButton = saveFunc => {
     const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     const saveWithToggle = () => saveFunc(this.toggleEditor);
@@ -81,7 +81,7 @@ class Editor extends React.Component {
     );
   };
 
-  removeButton = (removeFunc) => {
+  removeButton = removeFunc => {
     const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     const removeWithToggle = () => removeFunc(this.toggleEditor);

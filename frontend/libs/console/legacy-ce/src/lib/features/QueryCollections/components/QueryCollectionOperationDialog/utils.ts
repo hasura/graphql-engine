@@ -13,12 +13,12 @@ export const readFile = (
   callback: (content: string) => void
 ) => {
   const reader = new FileReader();
-  reader.onload = (event) => {
+  reader.onload = event => {
     const content = event.target!.result as string;
     callback(content);
   };
 
-  reader.onerror = (event) => {
+  reader.onerror = event => {
     console.error(`File could not be read! Code ${event.target!.error!.code}`);
   };
 
@@ -56,9 +56,9 @@ const getQueryString = (
 
   const queryFragments = getQueryFragments(queryDef, definitionHash);
 
-  queryFragments.forEach((qf) => {
+  queryFragments.forEach(qf => {
     // eslint-disable-next-line array-callback-return
-    const fragmentDef = fragmentDefs.find((fd) => {
+    const fragmentDef = fragmentDefs.find(fd => {
       if (fd.name) return fd.name.value === qf;
       return undefined;
     });
@@ -94,14 +94,14 @@ export const parseQueryString = (queryString: string) => {
   );
 
   const queryDefs = definitions.filter(
-    (def) => def.kind === 'OperationDefinition'
+    def => def.kind === 'OperationDefinition'
   );
 
   const fragmentDefs = definitions.filter(
-    (def) => def.kind === 'FragmentDefinition'
+    def => def.kind === 'FragmentDefinition'
   );
 
-  queryDefs.forEach((queryDef) => {
+  queryDefs.forEach(queryDef => {
     const queryName = queryDef.name ? queryDef.name.value : `unnamed`;
 
     const query = {
@@ -120,7 +120,7 @@ export const getQueriesInCollection = (
   allowedQueries: AllowedQueriesCollection[]
 ) => {
   const queries: AllowedQueriesCollection[] = [];
-  allowedQueries.forEach((query) => {
+  allowedQueries.forEach(query => {
     if (query.collection === collectionName) {
       queries.push(query);
     }
@@ -140,9 +140,9 @@ export const renameDuplicates = (
   );
 
   const queryNames = new Set();
-  allowListQueries.forEach((query) => queryNames.add(query.name));
+  allowListQueries.forEach(query => queryNames.add(query.name));
 
-  const updatedQueries = fileQueries.map((query) => {
+  const updatedQueries = fileQueries.map(query => {
     let queryName = query.name;
     if (queryNames.has(queryName)) {
       let num = 1;
@@ -166,5 +166,5 @@ export const checkLastQuery = (
 
 // Missing feature in typescript https://stackoverflow.com/questions/33464504/using-spread-syntax-and-new-set-with-typescript/33464709
 export const getCollectionNames = (queries: AllowedQueriesCollection[]) => {
-  return Array.from(new Set(queries.map((query) => query.collection)));
+  return Array.from(new Set(queries.map(query => query.collection)));
 };

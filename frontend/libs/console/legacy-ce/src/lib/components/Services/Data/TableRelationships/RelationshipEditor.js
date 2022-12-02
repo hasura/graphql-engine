@@ -21,7 +21,7 @@ class RelationshipEditor extends React.Component {
     };
   }
 
-  handleTextChange = (e) => {
+  handleTextChange = e => {
     this.setState({
       text: e.target.value,
     });
@@ -33,7 +33,7 @@ class RelationshipEditor extends React.Component {
     });
   };
 
-  handleKeyPress = (e) => {
+  handleKeyPress = e => {
     if (this.state.isEditting) {
       if (e.charCode === 13) {
         this.save();
@@ -77,7 +77,7 @@ class RelationshipEditor extends React.Component {
 
     const { relName } = relConfig;
 
-    const onDelete = (e) => {
+    const onDelete = e => {
       e.preventDefault();
 
       const confirmMessage = `This will delete the relationship "${relName}" from this table`;

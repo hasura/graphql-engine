@@ -71,13 +71,13 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
               <SelectOne
                 options={[
                   ...types.filter(
-                    (t) => !existingMaps.map((x) => x.type).includes(t)
+                    t => !existingMaps.map(x => x.type).includes(t)
                   ),
                   type,
                 ]}
                 value={type}
                 key={i}
-                onChange={(e) => {
+                onChange={e => {
                   onModifyItem(i, {
                     type: e.target.value,
                     custom_name,
@@ -93,7 +93,7 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
                 type="text"
                 value={custom_name}
                 className={`${inputStyles} font-normal`}
-                onChange={(e) => {
+                onChange={e => {
                   onModifyItem(i, { type, custom_name: e.target.value });
                 }}
                 data-test={`remote-schema-customization-${
@@ -114,11 +114,11 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
         <label className="w-2/3">
           <SelectOne
             options={types.filter(
-              (t) => !existingMaps.map((x) => x.type).includes(t)
+              t => !existingMaps.map(x => x.type).includes(t)
             )}
             label={`${label ?? 'no-value'}`}
             value={newMap.type}
-            onChange={(e) => {
+            onChange={e => {
               setNewMap({ ...newMap, type: e.target.value });
               onAddItem({ ...newMap, type: e.target.value });
             }}
@@ -133,7 +133,7 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
             data-test={`remote-schema-customization-${
               label ?? 'no-value'
             }-rhs-input`}
-            onChange={(e) =>
+            onChange={e =>
               setNewMap({ ...newMap, custom_name: e.target.value })
             }
             // onBlur={() => {

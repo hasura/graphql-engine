@@ -14,7 +14,7 @@ const LeftSidebar = ({
 }) => {
   const [searchText, setSearchText] = React.useState('');
 
-  const handleSearch = (e) => setSearchText(e.target.value);
+  const handleSearch = e => setSearchText(e.target.value);
 
   const getSearchInput = () => {
     return (
@@ -39,7 +39,7 @@ const LeftSidebar = ({
     }, []);
   }, [searchText, actions]);
 
-  const getActionIcon = (action) => {
+  const getActionIcon = action => {
     switch (action.definition.type) {
       case 'mutation':
         return <FaEdit className={styles.tableIcon} aria-hidden="true" />;

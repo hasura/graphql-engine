@@ -28,7 +28,7 @@ const StatementTimeout: FC<StatementTimeoutProps> = ({
           type="number"
           className={`${styles.inline_block} ${styles.tableNameInput} ${styles.add_mar_left} form-control`}
           data-test="raw-sql-statement-timeout"
-          onChange={(event) => updateStatementTimeout(event.target.value)}
+          onChange={event => updateStatementTimeout(event.target.value)}
         />
       </label>
     </div>

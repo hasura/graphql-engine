@@ -65,6 +65,7 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
       showPrintMargin={false}
       value={value}
       annotations={annotations}
+      setOptions={{ useWorker: false }}
     />
   );
 };
