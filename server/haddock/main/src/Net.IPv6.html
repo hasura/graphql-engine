@@ -82,30 +82,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </span><span id="line-75"></span><span class="annot"><a href="Net.IPv6.html#parserRange"><span class="hs-identifier hs-type">parserRange</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span>
 </span><span id="line-76"></span><span id="parserRange"><span class="annot"><span class="annottext">parserRange :: Parser Text IPv6Range
 </span><a href="Net.IPv6.html#parserRange"><span class="hs-identifier hs-var hs-var">parserRange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-77"></span><span>  </span><span id="local-6989586621690103459"><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103459"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser IPv6
+</span><span id="line-77"></span><span>  </span><span id="local-6989586621690104385"><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690104385"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser IPv6
 </span><a href="Net.IPv6.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">AT.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'/'</span></span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621690103456"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103456"><span class="hs-identifier hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. Integral a =&gt; Parser a
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621690104382"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621690104382"><span class="hs-identifier hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. Integral a =&gt; Parser a
 </span><span class="hs-identifier hs-var">AT.decimal</span></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall {a} {m :: * -&gt; *}. (Ord a, Num a, MonadFail m) =&gt; a -&gt; m a
-</span><a href="#local-6989586621690103454"><span class="hs-identifier hs-var">limitSize</span></a></span><span>
+</span><a href="#local-6989586621690104380"><span class="hs-identifier hs-var">limitSize</span></a></span><span>
 </span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv6Range -&gt; IPv6Range
 </span><a href="Net.IPv6.html#normalize"><span class="hs-identifier hs-var">normalize</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv6 -&gt; Word8 -&gt; IPv6Range
 </span><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-var">IPv6Range</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103459"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103456"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690104385"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621690104382"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621690103454"><span class="annot"><span class="annottext">limitSize :: a -&gt; m a
-</span><a href="#local-6989586621690103454"><span class="hs-identifier hs-var hs-var">limitSize</span></a></span></span><span> </span><span id="local-6989586621690103442"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690103442"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621690104380"><span class="annot"><span class="annottext">limitSize :: a -&gt; m a
+</span><a href="#local-6989586621690104380"><span class="hs-identifier hs-var hs-var">limitSize</span></a></span></span><span> </span><span id="local-6989586621690104368"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621690104368"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-83"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690103442"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690104368"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-number">128</span></span><span>
 </span><span id="line-84"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -113,22 +113,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </span><span class="hs-string">&quot;An IP range length must be between 0 and 128&quot;</span></span><span>
 </span><span id="line-85"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690103442"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621690104368"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-86"></span><span>
 </span><span id="line-87"></span><span class="hs-comment">-- | An 'IPv6Range'. It is made up of the first 'IPv6' in the range</span><span>
 </span><span id="line-88"></span><span class="hs-comment">--   and its length.</span><span>
-</span><span id="line-89"></span><span id="local-6989586621690103439"><span id="local-6989586621690103440"></span></span><span class="hs-keyword">data</span><span> </span><span id="IPv6Range"><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-var">IPv6Range</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv6Range"><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-var">IPv6Range</span></a></span></span><span>
+</span><span id="line-89"></span><span id="local-6989586621690104365"><span id="local-6989586621690104366"></span></span><span class="hs-keyword">data</span><span> </span><span id="IPv6Range"><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-var">IPv6Range</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv6Range"><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-var">IPv6Range</span></a></span></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ipv6RangeBase"><span class="annot"><span class="annottext">IPv6Range -&gt; IPv6
 </span><a href="Net.IPv6.html#ipv6RangeBase"><span class="hs-identifier hs-var hs-var">ipv6RangeBase</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-type">IPv6</span></a></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ipv6RangeLength"><span class="annot"><span class="annottext">IPv6Range -&gt; Word8
 </span><a href="Net.IPv6.html#ipv6RangeLength"><span class="hs-identifier hs-var hs-var">ipv6RangeLength</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word8</span></a></span><span>
-</span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690103430"><span id="local-6989586621690103435"><span class="annot"><span class="annottext">IPv6Range -&gt; IPv6Range -&gt; Bool
+</span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690104356"><span id="local-6989586621690104361"><span class="annot"><span class="annottext">IPv6Range -&gt; IPv6Range -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: IPv6Range -&gt; IPv6Range -&gt; Bool
 $c/= :: IPv6Range -&gt; IPv6Range -&gt; Bool
 == :: IPv6Range -&gt; IPv6Range -&gt; Bool
 $c== :: IPv6Range -&gt; IPv6Range -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103405"><span id="local-6989586621690103407"><span id="local-6989586621690103410"><span id="local-6989586621690103413"><span id="local-6989586621690103416"><span id="local-6989586621690103420"><span id="local-6989586621690103425"><span class="annot"><span class="annottext">Eq IPv6Range
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104331"><span id="local-6989586621690104333"><span id="local-6989586621690104336"><span id="local-6989586621690104339"><span id="local-6989586621690104342"><span id="local-6989586621690104346"><span id="local-6989586621690104351"><span class="annot"><span class="annottext">Eq IPv6Range
 IPv6Range -&gt; IPv6Range -&gt; Bool
 IPv6Range -&gt; IPv6Range -&gt; Ordering
 IPv6Range -&gt; IPv6Range -&gt; IPv6Range
@@ -156,7 +156,7 @@ $c&lt;= :: IPv6Range -&gt; IPv6Range -&gt; Bool
 $c&lt; :: IPv6Range -&gt; IPv6Range -&gt; Bool
 compare :: IPv6Range -&gt; IPv6Range -&gt; Ordering
 $ccompare :: IPv6Range -&gt; IPv6Range -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103394"><span id="local-6989586621690103396"><span id="local-6989586621690103402"><span class="annot"><span class="annottext">Int -&gt; IPv6Range -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104320"><span id="local-6989586621690104322"><span id="local-6989586621690104328"><span class="annot"><span class="annottext">Int -&gt; IPv6Range -&gt; ShowS
 [IPv6Range] -&gt; ShowS
 IPv6Range -&gt; String
 forall a.
@@ -167,7 +167,7 @@ show :: IPv6Range -&gt; String
 $cshow :: IPv6Range -&gt; String
 showsPrec :: Int -&gt; IPv6Range -&gt; ShowS
 $cshowsPrec :: Int -&gt; IPv6Range -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103373"><span id="local-6989586621690103386"><span id="local-6989586621690103389"><span id="local-6989586621690103391"><span class="annot"><span class="annottext">ReadPrec [IPv6Range]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104299"><span id="local-6989586621690104312"><span id="local-6989586621690104315"><span id="local-6989586621690104317"><span class="annot"><span class="annottext">ReadPrec [IPv6Range]
 ReadPrec IPv6Range
 Int -&gt; ReadS IPv6Range
 ReadS [IPv6Range]
@@ -191,15 +191,15 @@ $cfrom :: forall x. IPv6Range -&gt; Rep IPv6Range x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-comment">-- | A 128-bit Internet Protocol version 6 address.</span><span>
-</span><span id="line-95"></span><span id="local-6989586621690103365"><span id="local-6989586621690103366"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="IPv6"><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-var">IPv6</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv6"><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-var">IPv6</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="getIPv6"><span class="annot"><span class="annottext">IPv6 -&gt; Word128
+</span><span id="line-95"></span><span id="local-6989586621690104291"><span id="local-6989586621690104292"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="IPv6"><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-var">IPv6</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv6"><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-var">IPv6</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="getIPv6"><span class="annot"><span class="annottext">IPv6 -&gt; Word128
 </span><a href="Net.IPv6.html#getIPv6"><span class="hs-identifier hs-var hs-var">getIPv6</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-special">}</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690103356"><span id="local-6989586621690103361"><span class="annot"><span class="annottext">IPv6
+</span><span id="line-96"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690104282"><span id="local-6989586621690104287"><span class="annot"><span class="annottext">IPv6
 forall a. a -&gt; a -&gt; Bounded a
 maxBound :: IPv6
 $cmaxBound :: IPv6
 minBound :: IPv6
 $cminBound :: IPv6
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103322"><span id="local-6989586621690103326"><span id="local-6989586621690103330"><span id="local-6989586621690103334"><span id="local-6989586621690103338"><span id="local-6989586621690103342"><span id="local-6989586621690103346"><span id="local-6989586621690103351"><span class="annot"><span class="annottext">Int -&gt; IPv6
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104248"><span id="local-6989586621690104252"><span id="local-6989586621690104256"><span id="local-6989586621690104260"><span id="local-6989586621690104264"><span id="local-6989586621690104268"><span id="local-6989586621690104272"><span id="local-6989586621690104277"><span class="annot"><span class="annottext">Int -&gt; IPv6
 IPv6 -&gt; Int
 IPv6 -&gt; [IPv6]
 IPv6 -&gt; IPv6
@@ -231,13 +231,13 @@ pred :: IPv6 -&gt; IPv6
 $cpred :: IPv6 -&gt; IPv6
 succ :: IPv6 -&gt; IPv6
 $csucc :: IPv6 -&gt; IPv6
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103311"><span id="local-6989586621690103316"><span class="annot"><span class="annottext">IPv6 -&gt; IPv6 -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104237"><span id="local-6989586621690104242"><span class="annot"><span class="annottext">IPv6 -&gt; IPv6 -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: IPv6 -&gt; IPv6 -&gt; Bool
 $c/= :: IPv6 -&gt; IPv6 -&gt; Bool
 == :: IPv6 -&gt; IPv6 -&gt; Bool
 $c== :: IPv6 -&gt; IPv6 -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103280"><span id="local-6989586621690103284"><span id="local-6989586621690103288"><span id="local-6989586621690103292"><span id="local-6989586621690103296"><span id="local-6989586621690103300"><span id="local-6989586621690103305"><span class="annot"><span class="annottext">Eq IPv6
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104206"><span id="local-6989586621690104210"><span id="local-6989586621690104214"><span id="local-6989586621690104218"><span id="local-6989586621690104222"><span id="local-6989586621690104226"><span id="local-6989586621690104231"><span class="annot"><span class="annottext">Eq IPv6
 IPv6 -&gt; IPv6 -&gt; Bool
 IPv6 -&gt; IPv6 -&gt; Ordering
 IPv6 -&gt; IPv6 -&gt; IPv6
@@ -265,7 +265,7 @@ $c&lt;= :: IPv6 -&gt; IPv6 -&gt; Bool
 $c&lt; :: IPv6 -&gt; IPv6 -&gt; Bool
 compare :: IPv6 -&gt; IPv6 -&gt; Ordering
 $ccompare :: IPv6 -&gt; IPv6 -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103190"><span id="local-6989586621690103194"><span id="local-6989586621690103198"><span id="local-6989586621690103202"><span id="local-6989586621690103206"><span id="local-6989586621690103210"><span id="local-6989586621690103214"><span id="local-6989586621690103218"><span id="local-6989586621690103222"><span id="local-6989586621690103226"><span id="local-6989586621690103230"><span id="local-6989586621690103234"><span id="local-6989586621690103238"><span id="local-6989586621690103242"><span id="local-6989586621690103246"><span id="local-6989586621690103250"><span id="local-6989586621690103254"><span id="local-6989586621690103258"><span id="local-6989586621690103262"><span id="local-6989586621690103266"><span id="local-6989586621690103270"><span id="local-6989586621690103274"><span class="annot"><span class="annottext">Eq IPv6
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104116"><span id="local-6989586621690104120"><span id="local-6989586621690104124"><span id="local-6989586621690104128"><span id="local-6989586621690104132"><span id="local-6989586621690104136"><span id="local-6989586621690104140"><span id="local-6989586621690104144"><span id="local-6989586621690104148"><span id="local-6989586621690104152"><span id="local-6989586621690104156"><span id="local-6989586621690104160"><span id="local-6989586621690104164"><span id="local-6989586621690104168"><span id="local-6989586621690104172"><span id="local-6989586621690104176"><span id="local-6989586621690104180"><span id="local-6989586621690104184"><span id="local-6989586621690104188"><span id="local-6989586621690104192"><span id="local-6989586621690104196"><span id="local-6989586621690104200"><span class="annot"><span class="annottext">Eq IPv6
 IPv6
 Int -&gt; IPv6
 IPv6 -&gt; Bool
@@ -344,7 +344,7 @@ $cxor :: IPv6 -&gt; IPv6 -&gt; IPv6
 $c.|. :: IPv6 -&gt; IPv6 -&gt; IPv6
 .&amp;. :: IPv6 -&gt; IPv6 -&gt; IPv6
 $c.&amp;. :: IPv6 -&gt; IPv6 -&gt; IPv6
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Bits</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103174"><span id="local-6989586621690103178"><span id="local-6989586621690103183"><span class="annot"><span class="annottext">Bits IPv6
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Bits</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104100"><span id="local-6989586621690104104"><span id="local-6989586621690104109"><span class="annot"><span class="annottext">Bits IPv6
 IPv6 -&gt; Int
 forall b.
 Bits b -&gt; (b -&gt; Int) -&gt; (b -&gt; Int) -&gt; (b -&gt; Int) -&gt; FiniteBits b
@@ -360,7 +360,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep IPv6 x -&gt; IPv6
 $cfrom :: forall x. IPv6 -&gt; Rep IPv6 x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span id="local-6989586621690103151"><span id="local-6989586621690103160"><span id="local-6989586621690103163"><span id="local-6989586621690103165"><span class="annot"><span class="annottext">ReadPrec [IPv6]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span id="local-6989586621690104077"><span id="local-6989586621690104086"><span id="local-6989586621690104089"><span id="local-6989586621690104091"><span class="annot"><span class="annottext">ReadPrec [IPv6]
 ReadPrec IPv6
 Int -&gt; ReadS IPv6
 ReadS [IPv6]
@@ -375,7 +375,7 @@ readList :: ReadS [IPv6]
 $creadList :: ReadS [IPv6]
 readsPrec :: Int -&gt; ReadS IPv6
 $creadsPrec :: Int -&gt; ReadS IPv6
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></a></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103141"><span id="local-6989586621690103143"><span id="local-6989586621690103148"><span class="annot"><span class="annottext">Int -&gt; IPv6 -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></a></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104067"><span id="local-6989586621690104069"><span id="local-6989586621690104074"><span class="annot"><span class="annottext">Int -&gt; IPv6 -&gt; ShowS
 [IPv6] -&gt; ShowS
 IPv6 -&gt; String
 forall a.
@@ -386,7 +386,7 @@ show :: IPv6 -&gt; String
 $cshow :: IPv6 -&gt; String
 showsPrec :: Int -&gt; IPv6 -&gt; ShowS
 $cshowsPrec :: Int -&gt; IPv6 -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690103116"><span id="local-6989586621690103120"><span id="local-6989586621690103124"><span id="local-6989586621690103128"><span id="local-6989586621690103132"><span id="local-6989586621690103137"><span class="annot"><span class="annottext">Ord IPv6
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621690104042"><span id="local-6989586621690104046"><span id="local-6989586621690104050"><span id="local-6989586621690104054"><span id="local-6989586621690104058"><span id="local-6989586621690104063"><span class="annot"><span class="annottext">Ord IPv6
 (IPv6, IPv6) -&gt; Int
 (IPv6, IPv6) -&gt; [IPv6]
 (IPv6, IPv6) -&gt; IPv6 -&gt; Bool
@@ -421,20 +421,20 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span id="line-102"></span><span class="annot"><a href="Net.IPv6.html#parser"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-type">IPv6</span></a></span><span>
 </span><span id="line-103"></span><span id="parser"><span class="annot"><span class="annottext">parser :: Parser IPv6
 </span><a href="Net.IPv6.html#parser"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Word16] -&gt; IPv6
-</span><a href="#local-6989586621690103111"><span class="hs-identifier hs-var">makeIP</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690104037"><span class="hs-identifier hs-var">makeIP</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103109"><span class="hs-identifier hs-var">ip</span></a></span><span>
+</span><a href="#local-6989586621690104035"><span class="hs-identifier hs-var">ip</span></a></span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621690103111"><span class="annot"><span class="annottext">makeIP :: [Word16] -&gt; IPv6
-</span><a href="#local-6989586621690103111"><span class="hs-identifier hs-var hs-var">makeIP</span></a></span></span><span> </span><span class="hs-special">[</span><span id="local-6989586621690103106"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103106"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103105"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103105"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103104"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103104"><span class="hs-identifier hs-var">w3</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103103"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103103"><span class="hs-identifier hs-var">w4</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103102"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103102"><span class="hs-identifier hs-var">w5</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103101"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103101"><span class="hs-identifier hs-var">w6</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103100"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103100"><span class="hs-identifier hs-var">w7</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690103099"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103099"><span class="hs-identifier hs-var">w8</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621690104037"><span class="annot"><span class="annottext">makeIP :: [Word16] -&gt; IPv6
+</span><a href="#local-6989586621690104037"><span class="hs-identifier hs-var hs-var">makeIP</span></a></span></span><span> </span><span class="hs-special">[</span><span id="local-6989586621690104032"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104032"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104031"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104031"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104030"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104030"><span class="hs-identifier hs-var">w3</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104029"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104029"><span class="hs-identifier hs-var">w4</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104028"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104028"><span class="hs-identifier hs-var">w5</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104027"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104027"><span class="hs-identifier hs-var">w6</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104026"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104026"><span class="hs-identifier hs-var">w7</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690104025"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104025"><span class="hs-identifier hs-var">w8</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16
 -&gt; Word16
 -&gt; Word16
 -&gt; Word16
@@ -444,39 +444,39 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 -&gt; Word16
 -&gt; IPv6
 </span><a href="Net.IPv6.html#fromWord16s"><span class="hs-identifier hs-var">fromWord16s</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103106"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103105"><span class="hs-identifier hs-var">w2</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103104"><span class="hs-identifier hs-var">w3</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103103"><span class="hs-identifier hs-var">w4</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103102"><span class="hs-identifier hs-var">w5</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103101"><span class="hs-identifier hs-var">w6</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103100"><span class="hs-identifier hs-var">w7</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103099"><span class="hs-identifier hs-var">w8</span></a></span><span>
-</span><span id="line-106"></span><span>  </span><span class="annot"><a href="#local-6989586621690103111"><span class="hs-identifier hs-var">makeIP</span></a></span><span> </span><span class="annot"><span class="annottext">[Word16]
+</span><a href="#local-6989586621690104032"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104031"><span class="hs-identifier hs-var">w2</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104030"><span class="hs-identifier hs-var">w3</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104029"><span class="hs-identifier hs-var">w4</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104028"><span class="hs-identifier hs-var">w5</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104027"><span class="hs-identifier hs-var">w6</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104026"><span class="hs-identifier hs-var">w7</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104025"><span class="hs-identifier hs-var">w8</span></a></span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="#local-6989586621690104037"><span class="hs-identifier hs-var">makeIP</span></a></span><span> </span><span class="annot"><span class="annottext">[Word16]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; String -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Net.IPv6.parser: Implementation error. Please open a bug report.&quot;</span></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621690103109"><span class="annot"><span class="annottext">ip :: Parser Text [Word16]
-</span><a href="#local-6989586621690103109"><span class="hs-identifier hs-var hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Parser Char
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621690104035"><span class="annot"><span class="annottext">ip :: Parser Text [Word16]
+</span><a href="#local-6989586621690104035"><span class="hs-identifier hs-var hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">Atto.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">':'</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">Atto.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">':'</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser Text [Word16]
-</span><a href="#local-6989586621690103093"><span class="hs-identifier hs-var">doubleColon</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690104019"><span class="hs-identifier hs-var">doubleColon</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser Text [Word16]
-</span><a href="#local-6989586621690103091"><span class="hs-identifier hs-var">part</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690104017"><span class="hs-identifier hs-var">part</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-109"></span><span>
-</span><span id="line-110"></span><span>  </span><span class="annot"><a href="#local-6989586621690103091"><span class="hs-identifier hs-type">part</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621690103091"><span class="annot"><span class="annottext">part :: Int -&gt; Parser Text [Word16]
-</span><a href="#local-6989586621690103091"><span class="hs-identifier hs-var hs-var">part</span></a></span></span><span> </span><span id="local-6989586621690103090"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103090"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>  </span><span class="annot"><a href="#local-6989586621690104017"><span class="hs-identifier hs-type">part</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621690104017"><span class="annot"><span class="annottext">part :: Int -&gt; Parser Text [Word16]
+</span><a href="#local-6989586621690104017"><span class="hs-identifier hs-var hs-var">part</span></a></span></span><span> </span><span id="local-6989586621690104016"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690104016"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-112"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103090"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690104016"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-113"></span><span>      </span><span class="hs-comment">-- max 8 parts in an IPv6 address</span><span>
 </span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">7</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -486,15 +486,15 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span id="line-115"></span><span>      </span><span class="hs-comment">-- after 6 parts it could end in IPv4 dotted notation</span><span>
 </span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">6</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103088"><span class="hs-identifier hs-var">ipv4</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><a href="#local-6989586621690104014"><span class="hs-identifier hs-var">ipv4</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103087"><span class="hs-identifier hs-var">hexPart</span></a></span><span>
+</span><a href="#local-6989586621690104013"><span class="hs-identifier hs-var">hexPart</span></a></span><span>
 </span><span id="line-117"></span><span>      </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103087"><span class="hs-identifier hs-var">hexPart</span></a></span><span>
+</span><a href="#local-6989586621690104013"><span class="hs-identifier hs-var">hexPart</span></a></span><span>
 </span><span id="line-118"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-119"></span><span>    </span><span id="local-6989586621690103087"><span class="annot"><span class="annottext">hexPart :: Parser Text [Word16]
-</span><a href="#local-6989586621690103087"><span class="hs-identifier hs-var hs-var">hexPart</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>    </span><span id="local-6989586621690104013"><span class="annot"><span class="annottext">hexPart :: Parser Text [Word16]
+</span><a href="#local-6989586621690104013"><span class="hs-identifier hs-var hs-var">hexPart</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (Integral a, Bits a) =&gt; Parser a
 </span><span class="hs-identifier hs-var">Atto.hexadecimal</span></span><span>
@@ -508,39 +508,39 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span class="hs-identifier hs-var">Atto.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">':'</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser Text [Word16]
-</span><a href="#local-6989586621690103093"><span class="hs-identifier hs-var">doubleColon</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103090"><span class="hs-identifier hs-var">n</span></a></span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690104019"><span class="hs-identifier hs-var">doubleColon</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690104016"><span class="hs-identifier hs-var">n</span></a></span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-124"></span><span>             </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span>
 </span><span id="line-125"></span><span>             </span><span class="annot"><span class="annottext">Int -&gt; Parser Text [Word16]
-</span><a href="#local-6989586621690103091"><span class="hs-identifier hs-var">part</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103090"><span class="hs-identifier hs-var">n</span></a></span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690104017"><span class="hs-identifier hs-var">part</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690104016"><span class="hs-identifier hs-var">n</span></a></span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-128"></span><span>
-</span><span id="line-129"></span><span>  </span><span class="annot"><a href="#local-6989586621690103093"><span class="hs-identifier hs-type">doubleColon</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-130"></span><span>  </span><span id="local-6989586621690103093"><span class="annot"><span class="annottext">doubleColon :: Int -&gt; Parser Text [Word16]
-</span><a href="#local-6989586621690103093"><span class="hs-identifier hs-var hs-var">doubleColon</span></a></span></span><span> </span><span id="local-6989586621690103085"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103085"><span class="hs-identifier hs-var">count</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-131"></span><span>    </span><span id="local-6989586621690103084"><span class="annot"><span class="annottext">[Word16]
-</span><a href="#local-6989586621690103084"><span class="hs-identifier hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103083"><span class="hs-identifier hs-var">afterDoubleColon</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span id="line-129"></span><span>  </span><span class="annot"><a href="#local-6989586621690104019"><span class="hs-identifier hs-type">doubleColon</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621690104019"><span class="annot"><span class="annottext">doubleColon :: Int -&gt; Parser Text [Word16]
+</span><a href="#local-6989586621690104019"><span class="hs-identifier hs-var hs-var">doubleColon</span></a></span></span><span> </span><span id="local-6989586621690104011"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690104011"><span class="hs-identifier hs-var">count</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621690104010"><span class="annot"><span class="annottext">[Word16]
+</span><a href="#local-6989586621690104010"><span class="hs-identifier hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
+</span><a href="#local-6989586621690104009"><span class="hs-identifier hs-var">afterDoubleColon</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-132"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690103082"><span class="annot"><span class="annottext">fillerLength :: Int
-</span><a href="#local-6989586621690103082"><span class="hs-identifier hs-var hs-var">fillerLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><span id="line-132"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690104008"><span class="annot"><span class="annottext">fillerLength :: Int
+</span><a href="#local-6989586621690104008"><span class="hs-identifier hs-var hs-var">fillerLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">8</span></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103085"><span class="hs-identifier hs-var">count</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690104011"><span class="hs-identifier hs-var">count</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">length</span></a></span><span> </span><span class="annot"><span class="annottext">[Word16]
-</span><a href="#local-6989586621690103084"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690104010"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-133"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103082"><span class="hs-identifier hs-var">fillerLength</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690104008"><span class="hs-identifier hs-var">fillerLength</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&lt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-134"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -549,17 +549,17 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span id="line-135"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Int -&gt; a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">replicate</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690103082"><span class="hs-identifier hs-var">fillerLength</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690104008"><span class="hs-identifier hs-var">fillerLength</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">[Word16]
-</span><a href="#local-6989586621690103084"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690104010"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-136"></span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-comment">-- after double colon, IPv4 dotted notation could appear anywhere</span><span>
-</span><span id="line-138"></span><span>  </span><span class="annot"><a href="#local-6989586621690103083"><span class="hs-identifier hs-type">afterDoubleColon</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-139"></span><span>  </span><span id="local-6989586621690103083"><span class="annot"><span class="annottext">afterDoubleColon :: Parser Text [Word16]
-</span><a href="#local-6989586621690103083"><span class="hs-identifier hs-var hs-var">afterDoubleColon</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="#local-6989586621690104009"><span class="hs-identifier hs-type">afterDoubleColon</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-139"></span><span>  </span><span id="local-6989586621690104009"><span class="annot"><span class="annottext">afterDoubleColon :: Parser Text [Word16]
+</span><a href="#local-6989586621690104009"><span class="hs-identifier hs-var hs-var">afterDoubleColon</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103088"><span class="hs-identifier hs-var">ipv4</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><a href="#local-6989586621690104014"><span class="hs-identifier hs-var">ipv4</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span>
 </span><span id="line-141"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (Integral a, Bits a) =&gt; Parser a
@@ -568,27 +568,27 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span class="hs-identifier hs-var">Atto.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">':'</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text [Word16]
-</span><a href="#local-6989586621690103083"><span class="hs-identifier hs-var">afterDoubleColon</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><a href="#local-6989586621690104009"><span class="hs-identifier hs-var">afterDoubleColon</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span>  </span><span class="annot"><a href="#local-6989586621690103088"><span class="hs-identifier hs-type">ipv4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621690103088"><span class="annot"><span class="annottext">ipv4 :: Parser Text [Word16]
-</span><a href="#local-6989586621690103088"><span class="hs-identifier hs-var hs-var">ipv4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IPv4 -&gt; [Word16]
-</span><a href="#local-6989586621690103078"><span class="hs-identifier hs-var">ipv4ToWord16s</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-143"></span><span>  </span><span class="annot"><a href="#local-6989586621690104014"><span class="hs-identifier hs-type">ipv4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Atto.Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621690104014"><span class="annot"><span class="annottext">ipv4 :: Parser Text [Word16]
+</span><a href="#local-6989586621690104014"><span class="hs-identifier hs-var hs-var">ipv4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IPv4 -&gt; [Word16]
+</span><a href="#local-6989586621690104004"><span class="hs-identifier hs-var">ipv4ToWord16s</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser IPv4
 </span><a href="Net.IPv4.html#parser"><span class="hs-identifier hs-var">IPv4.parser</span></a></span><span>
 </span><span id="line-145"></span><span>
-</span><span id="line-146"></span><span>  </span><span class="annot"><a href="#local-6989586621690103078"><span class="hs-identifier hs-type">ipv4ToWord16s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-147"></span><span>  </span><span id="local-6989586621690103078"><span class="annot"><span class="annottext">ipv4ToWord16s :: IPv4 -&gt; [Word16]
-</span><a href="#local-6989586621690103078"><span class="hs-identifier hs-var hs-var">ipv4ToWord16s</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621690103075"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103075"><span class="hs-identifier hs-var">word</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span id="line-146"></span><span>  </span><span class="annot"><a href="#local-6989586621690104004"><span class="hs-identifier hs-type">ipv4ToWord16s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-147"></span><span>  </span><span id="local-6989586621690104004"><span class="annot"><span class="annottext">ipv4ToWord16s :: IPv4 -&gt; [Word16]
+</span><a href="#local-6989586621690104004"><span class="hs-identifier hs-var hs-var">ipv4ToWord16s</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621690104001"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690104001"><span class="hs-identifier hs-var">word</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103075"><span class="hs-identifier hs-var">word</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><a href="#local-6989586621690104001"><span class="hs-identifier hs-var">word</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`unsafeShiftR`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">16</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103075"><span class="hs-identifier hs-var">word</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690104001"><span class="hs-identifier hs-var">word</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.&amp;.</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">0xFFFF</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-148"></span><span>
@@ -613,24 +613,24 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span id="line-167"></span><span class="hs-comment">--   prop&gt; IPv6.normalize r == (IPv6.normalize . IPv6.normalize) r</span><span>
 </span><span id="line-168"></span><span class="annot"><a href="Net.IPv6.html#normalize"><span class="hs-identifier hs-type">normalize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span>
 </span><span id="line-169"></span><span id="normalize"><span class="annot"><span class="annottext">normalize :: IPv6Range -&gt; IPv6Range
-</span><a href="Net.IPv6.html#normalize"><span class="hs-identifier hs-var hs-var">normalize</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span> </span><span id="local-6989586621690103072"><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103072"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span id="local-6989586621690103071"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103071"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-170"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690103070"><span class="annot"><span class="annottext">len' :: Word8
-</span><a href="#local-6989586621690103070"><span class="hs-identifier hs-var hs-var">len'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; a
+</span><a href="Net.IPv6.html#normalize"><span class="hs-identifier hs-var hs-var">normalize</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span> </span><span id="local-6989586621690103998"><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690103998"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span id="local-6989586621690103997"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621690103997"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690103996"><span class="annot"><span class="annottext">len' :: Word8
+</span><a href="#local-6989586621690103996"><span class="hs-identifier hs-var hs-var">len'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">min</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103071"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621690103997"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">128</span></span><span>
-</span><span id="line-171"></span><span>      </span><span id="local-6989586621690103068"><span class="annot"><span class="annottext">ip' :: IPv6
-</span><a href="#local-6989586621690103068"><span class="hs-identifier hs-var hs-var">ip'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103072"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span id="line-171"></span><span>      </span><span id="local-6989586621690103994"><span class="annot"><span class="annottext">ip' :: IPv6
+</span><a href="#local-6989586621690103994"><span class="hs-identifier hs-var hs-var">ip'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690103998"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.&amp;.</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; IPv6
 </span><a href="Net.IPv6.html#mask"><span class="hs-identifier hs-var">mask</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103070"><span class="hs-identifier hs-var">len'</span></a></span><span>
+</span><a href="#local-6989586621690103996"><span class="hs-identifier hs-var">len'</span></a></span><span>
 </span><span id="line-172"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">IPv6 -&gt; Word8 -&gt; IPv6Range
 </span><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-var">IPv6Range</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103068"><span class="hs-identifier hs-var">ip'</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103070"><span class="hs-identifier hs-var">len'</span></a></span><span>
+</span><a href="#local-6989586621690103994"><span class="hs-identifier hs-var">ip'</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621690103996"><span class="hs-identifier hs-var">len'</span></a></span><span>
 </span><span id="line-173"></span><span>
 </span><span id="line-174"></span><span class="annot"><a href="Net.IPv6.html#mask128"><span class="hs-identifier hs-type">mask128</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-type">IPv6</span></a></span><span>
 </span><span id="line-175"></span><span id="mask128"><span class="annot"><span class="annottext">mask128 :: IPv6
@@ -661,15 +661,15 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 -&gt; Word16
 -&gt; Word16
 -&gt; IPv6
-</span><a href="Net.IPv6.html#fromWord16s"><span class="hs-identifier hs-var hs-var">fromWord16s</span></a></span></span><span> </span><span id="local-6989586621690103062"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103062"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103061"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103061"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103060"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103060"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103059"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103059"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621690103058"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103058"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621690103057"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103057"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621690103056"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103056"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621690103055"><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103055"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Net.IPv6.html#fromWord16s"><span class="hs-identifier hs-var hs-var">fromWord16s</span></a></span></span><span> </span><span id="local-6989586621690103988"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103988"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103987"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103987"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103986"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103986"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103985"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103985"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621690103984"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103984"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621690103983"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103983"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621690103982"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103982"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621690103981"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621690103981"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-186"></span><span>  </span><span class="annot"><span class="annottext">Word128 -&gt; IPv6
 </span><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-var">IPv6</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
@@ -684,22 +684,22 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><a href="Net.IPv6.html#fromWord16sWord128"><span class="hs-identifier hs-var">fromWord16sWord128</span></a></span><span>
 </span><span id="line-187"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103062"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103988"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103061"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103987"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103060"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103986"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103059"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690103985"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-188"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103058"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103984"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103057"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103983"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103056"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103982"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
-</span><a href="#local-6989586621690103055"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690103981"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-189"></span><span>
 </span><span id="line-190"></span><span class="annot"><a href="Net.IPv6.html#fromWord16sWord128"><span class="hs-identifier hs-type">fromWord16sWord128</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-191"></span><span>     </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span>
@@ -714,68 +714,68 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 -&gt; Word128
 -&gt; Word128
 -&gt; Word128
-</span><a href="Net.IPv6.html#fromWord16sWord128"><span class="hs-identifier hs-var hs-var">fromWord16sWord128</span></a></span></span><span> </span><span id="local-6989586621690103053"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103053"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103052"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103052"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103051"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103051"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103050"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103050"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621690103049"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103049"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621690103048"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103048"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621690103047"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103047"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621690103046"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103046"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="Net.IPv6.html#fromWord16sWord128"><span class="hs-identifier hs-var hs-var">fromWord16sWord128</span></a></span></span><span> </span><span id="local-6989586621690103979"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103979"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103978"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103978"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103977"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103977"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103976"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103976"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621690103975"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103975"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621690103974"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103974"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621690103973"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103973"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621690103972"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103972"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span>
 </span><span id="line-195"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103053"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103979"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">112</span></span><span>
 </span><span id="line-196"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103052"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103978"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">96</span></span><span>
 </span><span id="line-197"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103051"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103977"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">80</span></span><span>
 </span><span id="line-198"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103050"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103976"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">64</span></span><span>
 </span><span id="line-199"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103049"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103975"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">48</span></span><span>
 </span><span id="line-200"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103048"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103974"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">32</span></span><span>
 </span><span id="line-201"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103047"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103973"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">16</span></span><span>
 </span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103046"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><a href="#local-6989586621690103972"><span class="hs-identifier hs-var">h</span></a></span><span>
 </span><span id="line-203"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span class="hs-comment">-- | Uncurried variant of 'fromWord32s'.</span><span>
 </span><span id="line-206"></span><span class="annot"><a href="Net.IPv6.html#fromTupleWord32s"><span class="hs-identifier hs-type">fromTupleWord32s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span class="hs-special">,</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span class="hs-special">,</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span class="hs-special">,</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-type">IPv6</span></a></span><span>
 </span><span id="line-207"></span><span id="fromTupleWord32s"><span class="annot"><span class="annottext">fromTupleWord32s :: (Word32, Word32, Word32, Word32) -&gt; IPv6
-</span><a href="Net.IPv6.html#fromTupleWord32s"><span class="hs-identifier hs-var hs-var">fromTupleWord32s</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690103043"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103043"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621690103042"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103042"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621690103041"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103041"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621690103040"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103040"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32 -&gt; Word32 -&gt; IPv6
+</span><a href="Net.IPv6.html#fromTupleWord32s"><span class="hs-identifier hs-var hs-var">fromTupleWord32s</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690103969"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103969"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621690103968"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103968"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621690103967"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103967"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621690103966"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103966"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32 -&gt; Word32 -&gt; IPv6
 </span><a href="Net.IPv6.html#fromWord32s"><span class="hs-identifier hs-var">fromWord32s</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103043"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103042"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103041"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103040"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621690103969"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103968"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103967"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103966"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-208"></span><span>
 </span><span id="line-209"></span><span class="hs-comment">-- | This is provided to mirror the interface provided by @Data.Set@. It</span><span>
 </span><span id="line-210"></span><span class="hs-comment">-- behaves just like 'contains' but with flipped arguments.</span><span>
@@ -787,7 +787,7 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6Range -&gt; IPv6 -&gt; Bool
 </span><a href="Net.IPv6.html#contains"><span class="hs-identifier hs-var">contains</span></a></span><span>
 </span><span id="line-215"></span><span>
-</span><span id="line-216"></span><span id="local-6989586621690103697"><span id="local-6989586621690103698"><span class="annot"><a href="Net.IPv6.html#rightToMaybe"><span class="hs-identifier hs-type">rightToMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690103698"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690103697"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690103697"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-216"></span><span id="local-6989586621690104623"><span id="local-6989586621690104624"><span class="annot"><a href="Net.IPv6.html#rightToMaybe"><span class="hs-identifier hs-type">rightToMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690104624"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690104623"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690104623"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
 </span><span id="line-217"></span><span id="rightToMaybe"><span class="annot"><span class="annottext">rightToMaybe :: forall a b. Either a b -&gt; Maybe b
 </span><a href="Net.IPv6.html#rightToMaybe"><span class="hs-identifier hs-var hs-var">rightToMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
@@ -818,75 +818,75 @@ $crange :: (IPv6, IPv6) -&gt; [IPv6]
 </span><span id="line-239"></span><span class="hs-comment">-- They are reused as the list is iterated.</span><span>
 </span><span id="line-240"></span><span class="annot"><a href="Net.IPv6.html#contains"><span class="hs-identifier hs-type">contains</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-type">IPv6</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-241"></span><span id="contains"><span class="annot"><span class="annottext">contains :: IPv6Range -&gt; IPv6 -&gt; Bool
-</span><a href="Net.IPv6.html#contains"><span class="hs-identifier hs-var hs-var">contains</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span> </span><span id="local-6989586621690103034"><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103034"><span class="hs-identifier hs-var">subnet</span></a></span></span><span> </span><span id="local-6989586621690103033"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103033"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-242"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690103032"><span class="annot"><span class="annottext">theMask :: IPv6
-</span><a href="#local-6989586621690103032"><span class="hs-identifier hs-var hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; IPv6
+</span><a href="Net.IPv6.html#contains"><span class="hs-identifier hs-var hs-var">contains</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv6.html#IPv6Range"><span class="hs-identifier hs-type">IPv6Range</span></a></span><span> </span><span id="local-6989586621690103960"><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690103960"><span class="hs-identifier hs-var">subnet</span></a></span></span><span> </span><span id="local-6989586621690103959"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621690103959"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-242"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690103958"><span class="annot"><span class="annottext">theMask :: IPv6
+</span><a href="#local-6989586621690103958"><span class="hs-identifier hs-var hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; IPv6
 </span><a href="Net.IPv6.html#mask"><span class="hs-identifier hs-var">mask</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621690103033"><span class="hs-identifier hs-var">len</span></a></span><span>
-</span><span id="line-243"></span><span>      </span><span id="local-6989586621690103031"><span class="annot"><span class="annottext">subnetNormalized :: IPv6
-</span><a href="#local-6989586621690103031"><span class="hs-identifier hs-var hs-var">subnetNormalized</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103034"><span class="hs-identifier hs-var">subnet</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690103959"><span class="hs-identifier hs-var">len</span></a></span><span>
+</span><span id="line-243"></span><span>      </span><span id="local-6989586621690103957"><span class="annot"><span class="annottext">subnetNormalized :: IPv6
+</span><a href="#local-6989586621690103957"><span class="hs-identifier hs-var hs-var">subnetNormalized</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690103960"><span class="hs-identifier hs-var">subnet</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.&amp;.</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103032"><span class="hs-identifier hs-var">theMask</span></a></span><span>
-</span><span id="line-244"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690103030"><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103030"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103030"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690103958"><span class="hs-identifier hs-var">theMask</span></a></span><span>
+</span><span id="line-244"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690103956"><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690103956"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv6
+</span><a href="#local-6989586621690103956"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.&amp;.</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103032"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690103958"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6
-</span><a href="#local-6989586621690103031"><span class="hs-identifier hs-var">subnetNormalized</span></a></span><span>
+</span><a href="#local-6989586621690103957"><span class="hs-identifier hs-var">subnetNormalized</span></a></span><span>
 </span><span id="line-245"></span><span>
 </span><span id="line-246"></span><span class="hs-comment">-- | Build an 'IPv6' from four 32-bit words. The leftmost argument</span><span>
 </span><span id="line-247"></span><span class="hs-comment">--   is the high word and the rightword is the low word.</span><span>
 </span><span id="line-248"></span><span class="annot"><a href="Net.IPv6.html#fromWord32s"><span class="hs-identifier hs-type">fromWord32s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word32</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-type">IPv6</span></a></span><span>
 </span><span id="line-249"></span><span id="fromWord32s"><span class="annot"><span class="annottext">fromWord32s :: Word32 -&gt; Word32 -&gt; Word32 -&gt; Word32 -&gt; IPv6
-</span><a href="Net.IPv6.html#fromWord32s"><span class="hs-identifier hs-var hs-var">fromWord32s</span></a></span></span><span> </span><span id="local-6989586621690103029"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103029"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103028"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103028"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103027"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103027"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103026"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103026"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Net.IPv6.html#fromWord32s"><span class="hs-identifier hs-var hs-var">fromWord32s</span></a></span></span><span> </span><span id="local-6989586621690103955"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103955"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103954"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103954"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103953"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103953"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103952"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690103952"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-250"></span><span>  </span><span class="annot"><span class="annottext">Word128 -&gt; IPv6
 </span><a href="Net.IPv6.html#IPv6"><span class="hs-identifier hs-var">IPv6</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word128 -&gt; Word128 -&gt; Word128 -&gt; Word128 -&gt; Word128
 </span><a href="Net.IPv6.html#fromWord32sWord128"><span class="hs-identifier hs-var">fromWord32sWord128</span></a></span><span>
 </span><span id="line-251"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103029"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103955"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103028"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103954"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103027"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="#local-6989586621690103953"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690103026"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690103952"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-252"></span><span>
 </span><span id="line-253"></span><span class="annot"><a href="Net.IPv6.html#fromWord32sWord128"><span class="hs-identifier hs-type">fromWord32sWord128</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-254"></span><span>     </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span>
 </span><span id="line-255"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word128</span></span><span>
 </span><span id="line-256"></span><span id="fromWord32sWord128"><span class="annot"><span class="annottext">fromWord32sWord128 :: Word128 -&gt; Word128 -&gt; Word128 -&gt; Word128 -&gt; Word128
-</span><a href="Net.IPv6.html#fromWord32sWord128"><span class="hs-identifier hs-var hs-var">fromWord32sWord128</span></a></span></span><span> </span><span id="local-6989586621690103024"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103024"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103023"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103023"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103022"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103022"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103021"><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103021"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="Net.IPv6.html#fromWord32sWord128"><span class="hs-identifier hs-var hs-var">fromWord32sWord128</span></a></span></span><span> </span><span id="local-6989586621690103950"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103950"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690103949"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103949"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690103948"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103948"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690103947"><span class="annot"><span class="annottext">Word128
+</span><a href="#local-6989586621690103947"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span>
 </span><span id="line-257"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103024"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103950"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">96</span></span><span>
 </span><span id="line-258"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103023"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103949"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">64</span></span><span>
 </span><span id="line-259"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">shiftL</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103022"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690103948"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">32</span></span><span>
 </span><span id="line-260"></span><span>  </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">Word128
-</span><a href="#local-6989586621690103021"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621690103947"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-261"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-262"></span></pre></body></html>
