@@ -146,7 +146,7 @@ const ViewRows = props => {
     } else if (
       _curRelName &&
       parentTableSchema &&
-      parentTableSchema.relationships.find(
+      (parentTableSchema?.relationships || []).find(
         r => r.rel_name === _curRelName && r.rel_type === 'object'
       )
     ) {
@@ -713,7 +713,11 @@ const ViewRows = props => {
     })
     .sort(ordinalColSort);
 
-  const tableRelationships = tableSchema.relationships;
+  if (!tableSchema) {
+    return <p>Loading...</p>;
+  }
+
+  const tableRelationships = tableSchema?.relationships || [];
 
   const hasPrimaryKey = isTableWithPK(tableSchema);
 
@@ -878,7 +882,7 @@ const ViewRows = props => {
       return (
         <div>
           {' '}
-          <Spinner />{' '}
+          <Spinner width="16px" height="16px" />{' '}
         </div>
       );
     }

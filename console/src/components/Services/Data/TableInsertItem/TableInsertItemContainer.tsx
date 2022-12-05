@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { useReadOnlyMode } from '@/hooks';
 import { useMetadata } from '@/features/MetadataAPI';
 import { HasuraMetadataV3 } from '@/metadata/types';
+import Spinner from '@/components/Common/Spinner/Spinner';
 import isObject from 'lodash.isobject';
 
 import { fetchEnumOptions, insertItem } from './InsertActions';
@@ -192,7 +193,12 @@ export const TableInsertItemContainer = (
     });
   };
 
-  if (schemasIsLoading) return <p>Loading...</p>;
+  if (schemasIsLoading)
+    return (
+      <p className="m-4">
+        <Spinner width="16px" height="16px" />
+      </p>
+    );
 
   return (
     <TableInsertItems

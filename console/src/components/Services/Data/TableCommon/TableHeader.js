@@ -32,8 +32,15 @@ const TableHeader = ({
   table,
   tabName,
 }) => {
-  const tableName = table.table_name;
-  const tableSchema = table.table_schema;
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Table', {
+    redactText: true,
+  });
+
+  const tableName = table?.table_name;
+  if (!tableName) {
+    return null;
+  }
+  const tableSchema = table?.table_schema;
   const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
@@ -85,10 +92,6 @@ const TableHeader = ({
       </li>
     );
   };
-
-  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Table', {
-    redactText: true,
-  });
 
   return (
     <div>
