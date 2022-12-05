@@ -7,22 +7,19 @@ module Test.DataConnector.MockAgent.MetadataApiSpec where
 
 --------------------------------------------------------------------------------
 
-import Control.Lens qualified as Lens
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.Lens
 import Data.IORef qualified as IORef
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (defaultBackendCapabilities, defaultBackendServerUrl)
-import Harness.Test.Fixture (defaultBackendDisplayNameString, defaultBackendTypeString, defaultSource)
+import Harness.Test.Fixture (defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
-import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
+import Harness.Yaml (shouldReturnYamlF)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema (Config (..))
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith, shouldBe)

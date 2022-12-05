@@ -17,11 +17,10 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (Permission (..), selectPermission)
+import Harness.Test.Permissions (Permission (SelectPermission), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Permissions qualified as Permission
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName (SchemaName (..))
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -194,9 +193,6 @@ setupMetadata testEnv backend =
 
       source :: String
       source = Fixture.defaultSource backend
-
-      backendPrefix :: String
-      backendPrefix = BackendType.defaultBackendTypeString backend
    in -- Add computed fields and define select permissions
       [ Fixture.SetupAction
           { Fixture.setupAction =
@@ -237,12 +233,13 @@ setupMetadata testEnv backend =
               Permission.createPermission
                 backend
                 testEnv
-                selectPermission
-                  { permissionSource = T.pack source,
-                    permissionTable = "author",
-                    permissionRole = "user_1",
-                    permissionColumns = (["id", "name"] :: [Text])
-                  },
+                $ SelectPermission
+                  selectPermission
+                    { selectPermissionSource = T.pack source,
+                      selectPermissionTable = "author",
+                      selectPermissionRole = "user_1",
+                      selectPermissionColumns = (["id", "name"] :: [Text])
+                    },
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
@@ -250,12 +247,13 @@ setupMetadata testEnv backend =
               Permission.createPermission
                 backend
                 testEnv
-                selectPermission
-                  { permissionSource = T.pack source,
-                    permissionTable = "article",
-                    permissionRole = "user_1",
-                    permissionColumns = (["id", "title", "content", "author_id"] :: [Text])
-                  },
+                $ SelectPermission
+                  selectPermission
+                    { selectPermissionSource = T.pack source,
+                      selectPermissionTable = "article",
+                      selectPermissionRole = "user_1",
+                      selectPermissionColumns = (["id", "title", "content", "author_id"] :: [Text])
+                    },
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
@@ -264,12 +262,13 @@ setupMetadata testEnv backend =
               Permission.createPermission
                 backend
                 testEnv
-                selectPermission
-                  { permissionSource = T.pack source,
-                    permissionTable = "author",
-                    permissionRole = "user_2",
-                    permissionColumns = (["id", "name"] :: [Text])
-                  },
+                $ SelectPermission
+                  selectPermission
+                    { selectPermissionSource = T.pack source,
+                      selectPermissionTable = "author",
+                      selectPermissionRole = "user_2",
+                      selectPermissionColumns = (["id", "name"] :: [Text])
+                    },
             Fixture.teardownAction = \_ -> pure ()
           }
       ]

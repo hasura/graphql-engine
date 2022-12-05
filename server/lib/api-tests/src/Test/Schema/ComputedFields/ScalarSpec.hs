@@ -8,17 +8,15 @@ module Test.Schema.ComputedFields.ScalarSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
-import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName (SchemaName (..))
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude

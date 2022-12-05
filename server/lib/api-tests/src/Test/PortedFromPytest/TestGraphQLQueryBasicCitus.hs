@@ -6,7 +6,6 @@ module Test.PortedFromPytest.TestGraphQLQueryBasicCitus (spec) where
 
 import Data.Aeson qualified as Yaml
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.Citus qualified as Citus
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.PytestPortedCompat (compatSetup)
 import Harness.Quoter.Graphql (graphql)
@@ -15,7 +14,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec
+import Test.Hspec (SpecWith, describe, it)
 
 -- original file: queries/graphql_query/citus/schema_setup_citus.yaml
 schema_setup_Citus :: Yaml.Value
@@ -293,7 +292,7 @@ fixture_Citus =
         [ Fixture.SetupAction
             { Fixture.setupAction = do
                 compatSetup testEnvironment Fixture.Citus
-                GraphqlEngine.postV2Query 200 testEnvironment schema_setup_Citus
+                void $ GraphqlEngine.postV2Query 200 testEnvironment schema_setup_Citus
                 GraphqlEngine.postMetadata_ testEnvironment setup_metadata_Citus,
               Fixture.teardownAction = \_ -> return ()
             }

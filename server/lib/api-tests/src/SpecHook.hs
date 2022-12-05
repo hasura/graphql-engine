@@ -10,17 +10,14 @@ where
 import Data.Char qualified as Char
 import Data.IORef
 import Data.List qualified as List
-import Data.Monoid (getLast)
-import Data.UUID.V4 (nextRandom)
 import Database.PostgreSQL.Simple.Options qualified as Options
-import Harness.Constants qualified as Constants
 import Harness.Exceptions (HasCallStack, bracket)
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestingMode (..), stopServer)
 import Hasura.Prelude
-import System.Environment (getEnvironment, lookupEnv)
+import System.Environment (getEnvironment)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
 import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)

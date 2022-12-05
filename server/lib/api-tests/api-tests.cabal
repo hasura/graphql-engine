@@ -10,6 +10,10 @@ library
   hs-source-dirs: src
   default-language: GHC2021
 
+  ghc-options:
+    -Wall
+    -Werror
+
   default-extensions:
     BlockArguments
     DataKinds

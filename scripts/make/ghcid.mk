@@ -56,7 +56,7 @@ ghcid-tests:
 .PHONY: ghcid-api-tests
 ## ghcid-api-tests: build and watch api-tests in ghcid
 ghcid-api-tests:
-	$(call run_ghcid,api-tests:exe:api-tests)
+	$(call run_ghcid,api-tests:lib:api-tests)
 
 .PHONY: ghcid-test-harness
 ## ghcid-test-harness: build and watch test-harness in ghcid

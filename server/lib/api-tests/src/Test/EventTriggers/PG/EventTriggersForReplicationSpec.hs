@@ -4,7 +4,6 @@
 -- | Test that event triggers are enabled/disabled when logical replication is used
 module Test.EventTriggers.PG.EventTriggersForReplicationSpec (spec) where
 
-import Data.Aeson (Value (..))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -29,7 +28,7 @@ spec =
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
               Fixture.mkLocalTestEnvironment = const Webhook.run,
-              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
+              Fixture.setupTeardown = \(testEnvironment, (_webhookServer, _)) ->
                 [ Postgres.setupTablesAction (schema "authors" "articles") testEnvironment,
                   Fixture.SetupAction
                     { Fixture.setupAction = pure (),
@@ -89,7 +88,7 @@ setTriggerForReplication :: Fixture.Options -> SpecWith (TestEnvironment, (Graph
 setTriggerForReplication opts =
   describe "verify trigger status when logical replication is used" do
     it "verify trigger is enabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue eventsQueue))) -> do
+      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         postgresSetupWithEventTriggers testEnvironment webhookServer "True"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -124,7 +123,7 @@ setTriggerForReplication opts =
           expectedResponseForEnablingTriggers
 
     it "verify trigger is disabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue eventsQueue))) -> do
+      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         postgresSetupWithEventTriggers testEnvironment webhookServer "False"
         let getTriggerInfoQuery =
               [interpolateYaml|

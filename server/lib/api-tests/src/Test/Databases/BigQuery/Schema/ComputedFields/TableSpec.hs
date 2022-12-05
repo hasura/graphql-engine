@@ -9,7 +9,6 @@ module Test.Databases.BigQuery.Schema.ComputedFields.TableSpec (spec) where
 import Data.Aeson as Aeson
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
-import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -19,7 +18,6 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName (SchemaName (..))
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -134,9 +132,6 @@ setupMetadata testEnv backend =
 
       source :: String
       source = Fixture.defaultSource backend
-
-      backendPrefix :: String
-      backendPrefix = BackendType.defaultBackendTypeString backend
    in -- Add computed fields
       [ Fixture.SetupAction
           { Fixture.setupAction =

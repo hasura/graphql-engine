@@ -16,7 +16,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Introspection (introspectEnums, introspectTypes)
-import Harness.Test.Permissions (Permission (..), insertPermission, selectPermission)
+import Harness.Test.Permissions (InsertPermissionDetails (..), Permission (..), SelectPermissionDetails (..), insertPermission, selectPermission)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -73,18 +73,20 @@ schema =
 
 permissions :: Text -> [Permission]
 permissions source =
-  [ selectPermission
-      { permissionTable = "foo",
-        permissionSource = source,
-        permissionRole = "role-select-only",
-        permissionColumns = ["id", "bar"]
-      },
-    insertPermission
-      { permissionTable = "foo",
-        permissionSource = source,
-        permissionRole = "role-insert-only",
-        permissionColumns = ["id", "bar"]
-      }
+  [ SelectPermission
+      selectPermission
+        { selectPermissionTable = "foo",
+          selectPermissionSource = source,
+          selectPermissionRole = "role-select-only",
+          selectPermissionColumns = ["id", "bar"]
+        },
+    InsertPermission
+      insertPermission
+        { insertPermissionTable = "foo",
+          insertPermissionSource = source,
+          insertPermissionRole = "role-insert-only",
+          insertPermissionColumns = ["id", "bar"]
+        }
   ]
 
 --------------------------------------------------------------------------------

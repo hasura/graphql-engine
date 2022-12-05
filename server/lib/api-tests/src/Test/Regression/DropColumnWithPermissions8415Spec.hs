@@ -63,12 +63,13 @@ author =
 
 updatePermission :: Permissions.Permission
 updatePermission =
-  Permissions.updatePermission
-    { Permissions.permissionTable = authorTableName,
-      Permissions.permissionSource = "postgres",
-      Permissions.permissionRole = "user",
-      Permissions.permissionColumns = ["age"]
-    }
+  Permissions.UpdatePermission
+    Permissions.updatePermission
+      { Permissions.updatePermissionTable = authorTableName,
+        Permissions.updatePermissionSource = "postgres",
+        Permissions.updatePermissionRole = "user",
+        Permissions.updatePermissionColumns = ["age"]
+      }
 
 --------------------------------------------------------------------------------
 -- Tests

@@ -33,11 +33,11 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Fixture (Fixture (..), LHSFixture (..), RHSFixture (..))
+import Harness.Test.Fixture (LHSFixture, RHSFixture)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (Permission (..))
+import Harness.Test.Permissions (SelectPermissionDetails (..))
 import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (SchemaName, Table (..))
+import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
@@ -192,7 +192,7 @@ rhsSQLServer =
 -- | LHS
 artist :: Schema.Table
 artist =
-  (Schema.table lhsTableName)
+  (Schema.table lhsTableName_)
     { tableColumns =
         [ Schema.columnNull "id" Schema.TInt,
           Schema.column "name" Schema.TStr
@@ -205,29 +205,31 @@ artist =
         ]
     }
 
-lhsSourceName :: Text
-lhsSourceName = "source"
+lhsSourceName_ :: Text
+lhsSourceName_ = "source"
 
-lhsTableName :: Text
-lhsTableName = "artist"
+lhsTableName_ :: Text
+lhsTableName_ = "artist"
 
 lhsRole1 :: Permissions.Permission
 lhsRole1 =
-  Permissions.selectPermission
-    { permissionRole = "role1",
-      permissionSource = lhsSourceName,
-      permissionTable = lhsTableName,
-      permissionColumns = (["id", "name"] :: [Text])
-    }
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role1",
+        selectPermissionSource = lhsSourceName_,
+        selectPermissionTable = lhsTableName_,
+        selectPermissionColumns = (["id", "name"] :: [Text])
+      }
 
 lhsRole2 :: Permissions.Permission
 lhsRole2 =
-  Permissions.selectPermission
-    { permissionRole = "role2",
-      permissionSource = lhsSourceName,
-      permissionTable = lhsTableName,
-      permissionColumns = (["id", "name"] :: [Text])
-    }
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role2",
+        selectPermissionSource = lhsSourceName_,
+        selectPermissionTable = lhsTableName_,
+        selectPermissionColumns = (["id", "name"] :: [Text])
+      }
 
 createRemoteRelationship :: BackendType -> Value -> TestEnvironment -> IO ()
 createRemoteRelationship backend rhsTableName testEnvironment = do
@@ -238,7 +240,7 @@ createRemoteRelationship backend rhsTableName testEnvironment = do
     [interpolateYaml|
         type: #{ backendType }_create_remote_relationship
         args:
-          source: #{ lhsSourceName }
+          source: #{ lhsSourceName_ }
           table:
             schema: #{ schemaName }
             name: artist
@@ -255,7 +257,7 @@ createRemoteRelationship backend rhsTableName testEnvironment = do
 -- | RHS
 album :: Schema.Table
 album =
-  (Schema.table rhsTableName)
+  (Schema.table rhsTableName_)
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
           Schema.column "title" Schema.TStr,
@@ -270,47 +272,49 @@ album =
         ]
     }
 
-rhsSourceName :: Text
-rhsSourceName = "target"
+rhsSourceName_ :: Text
+rhsSourceName_ = "target"
 
-rhsTableName :: Text
-rhsTableName = "album"
+rhsTableName_ :: Text
+rhsTableName_ = "album"
 
 rhsRole1 :: Permissions.Permission
 rhsRole1 =
-  Permissions.selectPermission
-    { permissionRole = "role1",
-      permissionSource = rhsSourceName,
-      permissionTable = rhsTableName,
-      permissionColumns = (["title", "artist_id"] :: [Text]),
-      permissionRows =
-        [yaml|
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role1",
+        selectPermissionSource = rhsSourceName_,
+        selectPermissionTable = rhsTableName_,
+        selectPermissionColumns = (["title", "artist_id"] :: [Text]),
+        selectPermissionRows =
+          [yaml|
         artist_id:
           _eq: x-hasura-artist-id
       |]
-    }
+      }
 
 rhsRole2 :: Permissions.Permission
 rhsRole2 =
-  Permissions.selectPermission
-    { permissionRole = "role2",
-      permissionSource = rhsSourceName,
-      permissionTable = rhsTableName,
-      permissionColumns = (["id", "title", "artist_id"] :: [Text]),
-      permissionAllowAggregations = True,
-      permissionLimit = Aeson.Number 2,
-      permissionRows =
-        [yaml|
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role2",
+        selectPermissionSource = rhsSourceName_,
+        selectPermissionTable = rhsTableName_,
+        selectPermissionColumns = (["id", "title", "artist_id"] :: [Text]),
+        selectPermissionAllowAggregations = True,
+        selectPermissionLimit = Aeson.Number 2,
+        selectPermissionRows =
+          [yaml|
         artist_id:
           _eq: x-hasura-artist-id
       |]
-    }
+      }
 
 rhsTable :: Aeson.Value
 rhsTable =
   [yaml|
     schema: hasura
-    name: *rhsTableName
+    name: *rhsTableName_
   |]
 
 --------------------------------------------------------------------------------
@@ -321,12 +325,12 @@ lhsPostgresSetup rhsTableName (testEnvironment, _) = do
   let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.Postgres lhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.Postgres lhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   Postgres.createTable testEnvironment artist
   Postgres.insertTable testEnvironment artist
-  Schema.trackTable Fixture.Postgres (Text.unpack lhsSourceName) artist testEnvironment
+  Schema.trackTable Fixture.Postgres (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.Postgres testEnvironment lhsRole1
@@ -339,16 +343,15 @@ lhsPostgresSetup rhsTableName (testEnvironment, _) = do
 
 lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
-      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
+  let sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.Cockroach lhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.Cockroach lhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   Cockroach.createTable testEnvironment artist
   Cockroach.insertTable testEnvironment artist
-  Schema.trackTable Fixture.Cockroach (Text.unpack lhsSourceName) artist testEnvironment
+  Schema.trackTable Fixture.Cockroach (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.Cockroach testEnvironment lhsRole1
@@ -361,16 +364,15 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
 
 lhsCitusSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCitusSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
-      sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+  let sourceConfig = Citus.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.Citus lhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.Citus lhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   Citus.createTable testEnvironment artist
   Citus.insertTable testEnvironment artist
-  Schema.trackTable Fixture.Citus (Text.unpack lhsSourceName) artist testEnvironment
+  Schema.trackTable Fixture.Citus (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.Citus testEnvironment lhsRole1
@@ -383,16 +385,15 @@ lhsCitusSetup rhsTableName (testEnvironment, _) = do
 
 lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
-      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
+  let sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.SQLServer lhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.SQLServer lhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   SQLServer.createTable testEnvironment artist
   SQLServer.insertTable testEnvironment artist
-  Schema.trackTable Fixture.SQLServer (Text.unpack lhsSourceName) artist testEnvironment
+  Schema.trackTable Fixture.SQLServer (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.SQLServer testEnvironment lhsRole1
@@ -593,12 +594,12 @@ rhsPostgresSetup (testEnvironment, _) = do
   let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.Postgres rhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.Postgres rhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   Postgres.createTable testEnvironment album
   Postgres.insertTable testEnvironment album
-  Schema.trackTable Fixture.Postgres (Text.unpack rhsSourceName) album testEnvironment
+  Schema.trackTable Fixture.Postgres (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.Postgres testEnvironment rhsRole1
@@ -612,12 +613,12 @@ rhsCockroachSetup (testEnvironment, _) = do
   let sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.Cockroach rhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.Cockroach rhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   Cockroach.createTable testEnvironment album
   Cockroach.insertTable testEnvironment album
-  Schema.trackTable Fixture.Cockroach (Text.unpack rhsSourceName) album testEnvironment
+  Schema.trackTable Fixture.Cockroach (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.Cockroach testEnvironment rhsRole1
@@ -631,12 +632,12 @@ rhsCitusSetup (testEnvironment, _) = do
   let sourceConfig = Citus.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.Citus rhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.Citus rhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   Citus.createTable testEnvironment album
   Citus.insertTable testEnvironment album
-  Schema.trackTable Fixture.Citus (Text.unpack rhsSourceName) album testEnvironment
+  Schema.trackTable Fixture.Citus (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.Citus testEnvironment rhsRole1
@@ -650,12 +651,12 @@ rhsSQLServerSetup (testEnvironment, _) = do
   let sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
-  Schema.addSource BackendType.SQLServer rhsSourceName sourceConfig testEnvironment
+  Schema.addSource BackendType.SQLServer rhsSourceName_ sourceConfig testEnvironment
 
   -- Setup tables
   SQLServer.createTable testEnvironment album
   SQLServer.insertTable testEnvironment album
-  Schema.trackTable Fixture.SQLServer (Text.unpack rhsSourceName) album testEnvironment
+  Schema.trackTable Fixture.SQLServer (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
   Permissions.createPermission BackendType.SQLServer testEnvironment rhsRole1
