@@ -31,6 +31,7 @@ common common-all
     RankNTypes
     RecordWildCards
     ScopedTypeVariables
+    StandaloneDeriving
     StrictData
     TupleSections
     TypeApplications
@@ -96,30 +97,36 @@ test-suite tests-dc-api
   build-depends:
     Diff,
     aeson,
+    aeson-pretty,
     ansi-terminal,
     autodocodec,
     autodocodec-openapi3,
     base,
     bytestring,
     case-insensitive,
+    containers,
     data-fix,
     deepseq,
     dc-api,
     directory,
+    exceptions,
     file-embed,
     filepath,
+    free,
     graphql-parser,
     hashable,
-    hspec,
-    hspec-core,
     http-client,
+    http-types,
     lens,
     lens-aeson,
+    lifted-base,
+    monad-control,
     mtl,
     network-uri,
     openapi3,
     optparse-applicative,
     scientific,
+    sandwich,
     servant,
     servant-client,
     servant-client-core,
@@ -140,19 +147,22 @@ test-suite tests-dc-api
   other-modules:
     Command
     Paths_dc_api
+    Test.AgentClient
     Test.Data
     Test.DataExport
-    Test.CapabilitiesSpec
     Test.Expectations
-    Test.HealthSpec
-    Test.ConfigSpec
-    Test.MetricsSpec
-    Test.ExplainSpec
-    Test.QuerySpec
-    Test.ErrorSpec
-    Test.QuerySpec.AggregatesSpec
-    Test.QuerySpec.BasicSpec
-    Test.QuerySpec.FilteringSpec
-    Test.QuerySpec.OrderBySpec
-    Test.QuerySpec.RelationshipsSpec
-    Test.SchemaSpec
+    Test.HttpFile
+    Test.Specs.CapabilitiesSpec
+    Test.Specs.ConfigSpec
+    Test.Specs.ErrorSpec
+    Test.Specs.ExplainSpec
+    Test.Specs.HealthSpec
+    Test.Specs.MetricsSpec
+    Test.Specs.QuerySpec
+    Test.Specs.QuerySpec.AggregatesSpec
+    Test.Specs.QuerySpec.BasicSpec
+    Test.Specs.QuerySpec.FilteringSpec
+    Test.Specs.QuerySpec.OrderBySpec
+    Test.Specs.QuerySpec.RelationshipsSpec
+    Test.Specs.SchemaSpec
+    Test.TestHelpers

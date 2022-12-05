@@ -6,6 +6,7 @@ Not all tests will be appropriate for all agents. Agents self-describe their cap
 The executable also has the ability to export the OpenAPI spec of the Data Connector agent API so that customers can use that to ensure their agent complies with the API format. In addition, the Chinook data set can be exported to files on disk in various formats.
 
 ## How to Use
+### Running Tests
 First, start your Data Connector agent and ensure it is populated with the [Chinook data set](https://github.com/lerocha/chinook-database/). For example, you could start the Reference Agent by following the instructions in [its README](../../dc-agents/reference/README.md).
 
 To run the tests against the agent (for example), you must specify the agent's URL on the command line (`-u`), as well as the agent's configuration JSON (`-s`, sent in the `X-Hasura-DataConnector-Config` header):
@@ -14,17 +15,22 @@ To run the tests against the agent (for example), you must specify the agent's U
 cabal run test:tests-dc-api -- test -u "http://localhost:8100" -s '{}'
 ```
 
-By default, the test suite will discover what capabilities the agent exposes by querying it. Otherwise, the user can use command line flags to specify which capabilities their agent has to ensure that it exposes the expected capabilities and that the test suite only runs the tests that correspond to those capabilities.
+The test suite will discover what capabilities the agent has by querying it. It will then tailor the tests that it will run to match only those capabilities that the agent has said it supports.
 
-To set the agent's available the capabilities use `-c` and comma separate them:
+The test suite is implemented using the [Sandwich](https://codedownio.github.io/sandwich/) test framework. The standard Sandwich command line arguments can be passed by suffixing your command line with `sandwich` and then all following args will be passed to Sandwich.
+
+For example, to run the Terminal UI mode of Sandwich, you could run:
 
 ```
-> cabal run test:tests-dc-api -- test -u "http://localhost:8100" -s '{}' -c relationships
+cabal run test:tests-dc-api -- test -u "http://localhost:8100" -s '{}' sandwich --tui
 ```
 
-If `-c` is omitted, the default value is `autodetect`. If you have no capabilities, you can specify `none`.
+By default Sandwich will write test results into a `test_runs` folder. Every test has a folder that will contain debug information, for example:
+- All the HTTP requests that the test made to the agent (`agent-request-[n].http`). These files can be used with a client such as [REST Client (VSCode)](https://github.com/Huachao/vscode-restclient) or [HTTP Client (IntelliJ)](https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html)
+- All the HTTP responses from the agent that matched those requests (`agent-response-[n].http`)
 
-To export the OpenAPI spec, you can run this command, and the spec will be written to stdout.
+### Exporting Data
+To export the Data Connector Agent OpenAPI spec, you can run this command, and the spec will be written to stdout.
 
 ```
 > cabal run test:tests-dc-api -- export-openapi-spec

@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.QuerySpec.AggregatesSpec (spec) where
+module Test.Specs.QuerySpec.AggregatesSpec (spec) where
 
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (%~), (&), (.~), (?~), (^?), _Just)
@@ -16,21 +16,21 @@ import Data.Maybe (fromMaybe, isJust, mapMaybe)
 import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
-import Servant.API (NamedRoutes)
-import Servant.Client (Client)
-import Test.Data (TestData (..), guardedQuery)
+import Test.AgentClient (queryGuarded)
+import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
-import Test.Hspec (Spec, describe, it)
+import Test.Sandwich (describe)
+import Test.TestHelpers (AgentTestSpec, it)
 import Prelude
 
-spec :: TestData -> Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe RelationshipCapabilities -> Spec
-spec TestData {..} api sourceName config relationshipCapabilities = describe "Aggregate Queries" $ do
+spec :: TestData -> SourceName -> Config -> Maybe RelationshipCapabilities -> AgentTestSpec
+spec TestData {..} sourceName config relationshipCapabilities = describe "Aggregate Queries" $ do
   describe "Star Count" $ do
     it "counts all rows" $ do
       let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
       let queryRequest = invoicesQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceCount = length _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
@@ -42,7 +42,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCity" _tdStringType) (ScalarValue (String "Oslo") _tdStringType)
       let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery . qWhere ?~ where'
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceCount = length $ filter ((^? Data.field "BillingCity" . Data._ColumnFieldString) >>> (== Just "Oslo")) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
@@ -55,7 +55,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let limit = 20
       let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qOffset ?~ offset)
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceCount = length . take limit $ drop offset _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
@@ -67,7 +67,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "counts all rows with non-null columns" $ do
       let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") False)]
       let queryRequest = invoicesQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceCount = length $ filter ((^? Data.field "BillingState" . Data._ColumnFieldString) >>> (/= Nothing)) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_cols", Number $ fromIntegral invoiceCount)]
@@ -80,7 +80,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "InvoiceId" _tdIntType) (ScalarValue (Number 380) _tdIntType)
       let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") False)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where')
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceCount =
             _tdInvoicesRows
@@ -97,7 +97,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can count all rows with distinct non-null values in a column" $ do
       let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True)]
       let queryRequest = invoicesQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString)) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_cols", Number $ fromIntegral billingStateCount)]
@@ -112,7 +112,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "InvoiceId" Ascending :| []
       let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let billingStateCount =
             _tdInvoicesRows
@@ -131,7 +131,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can get the max total from all rows" $ do
       let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let maxTotal = maximum $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("max", Number maxTotal)]
@@ -145,7 +145,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingPostalCode" Descending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
       let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let maxTotal =
             _tdInvoicesRows
@@ -167,7 +167,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                 ("max", singleColumnAggregateMax (_tdColumnName "Name"))
               ]
       let queryRequest = artistsQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let names = mapMaybe ((^? Data.field "Name" . Data._ColumnFieldString)) _tdArtistsRows
       let expectedAggregates =
@@ -183,7 +183,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let where' = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "ArtistId" _tdIntType) (ScalarValue (Number 0) _tdIntType)
       let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Name"))]
       let queryRequest = artistsQueryRequest aggregates & qrQuery . qWhere ?~ where'
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let expectedAggregates = Data.mkFieldsMap [("min", Null)]
 
@@ -199,7 +199,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                 ("maxTotal", singleColumnAggregateMax (_tdColumnName "Total"))
               ]
       let queryRequest = invoicesQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceCount = length _tdInvoicesRows
       let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString)) _tdInvoicesRows
@@ -222,7 +222,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                 ("minTotal", singleColumnAggregateMin (_tdColumnName "Total"))
               ]
       let queryRequest = invoicesQueryRequest aggregates
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let maxInvoiceId = aggregate (Number . minimum) $ mapMaybe ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber)) _tdInvoicesRows
       let maxTotal = aggregate (Number . minimum) $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) _tdInvoicesRows
@@ -247,7 +247,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingAddress" Ascending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
       let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let invoiceRows =
             _tdInvoicesRows
@@ -271,7 +271,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
       it "can query aggregates via an array relationship" $ do
         let limit = 5
         let query = artistsWithAlbumsQuery id & qrQuery . qLimit ?~ limit
-        receivedArtists <- guardedQuery api sourceName config query
+        receivedArtists <- queryGuarded sourceName config query
 
         let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
               artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -297,7 +297,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                   ("Title", _tdColumnField "Title" _tdStringType)
                 ]
         let query = artistsWithAlbumsQuery (qFields ?~ albumFields) & qrQuery . qLimit ?~ limit
-        receivedArtists <- guardedQuery api sourceName config query
+        receivedArtists <- queryGuarded sourceName config query
 
         let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
               artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -324,7 +324,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
         Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
       it "can query with many nested relationships, with aggregates at multiple levels, with filtering, pagination and ordering" $ do
-        receivedArtists <- guardedQuery api sourceName config deeplyNestedArtistsQuery
+        receivedArtists <- queryGuarded sourceName config deeplyNestedArtistsQuery
 
         let joinInMediaType (track :: HashMap FieldName FieldValue) = fromMaybe track $ do
               mediaTypeId <- track ^? Data.field "MediaTypeId" . Data._ColumnFieldNumber
@@ -398,7 +398,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                        >>> qOffset ?~ offset
                        >>> qLimit ?~ limit
                    )
-      response <- guardedQuery api sourceName config queryRequest
+      response <- queryGuarded sourceName config queryRequest
 
       let names =
             _tdAlbumsRows
@@ -433,7 +433,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                          >>> qOffset ?~ offset
                          >>> qLimit ?~ limit
                      )
-        response <- guardedQuery api sourceName config queryRequest
+        response <- queryGuarded sourceName config queryRequest
 
         let getRelatedArtist (album :: HashMap FieldName FieldValue) =
               (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
@@ -470,7 +470,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
                          >>> qOffset ?~ offset
                          >>> qLimit ?~ limit
                      )
-        response <- guardedQuery api sourceName config queryRequest
+        response <- queryGuarded sourceName config queryRequest
 
         let getRelatedTracksCount (album :: HashMap FieldName FieldValue) = fromMaybe 0 $ do
               albumId <- (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber)

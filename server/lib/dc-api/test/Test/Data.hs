@@ -27,12 +27,6 @@ module Test.Data
     _ColumnFieldBoolean,
     _RelationshipFieldRows,
     orderByColumn,
-    guardQueryResponse,
-    guardedQuery,
-    guardErrorResponse,
-    guardedCapabilities,
-    guardCapabilitiesResponse,
-    errorQuery,
   )
 where
 
@@ -59,11 +53,7 @@ import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import Hasura.Backends.DataConnector.API (capabilitiesCase, queryCase)
 import Hasura.Backends.DataConnector.API qualified as API
-import Servant.API qualified as Servant
-import Servant.Client ((//))
-import Servant.Client qualified as Servant
 import Text.XML qualified as XML
 import Text.XML.Lens qualified as XML
 import Prelude
@@ -533,33 +523,3 @@ currentComparisonColumn columnName scalarType = API.ComparisonColumn API.Current
 orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
   API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection
-
-guardQueryResponse :: Servant.Union API.QueryResponses -> IO API.QueryResponse
-guardQueryResponse = queryCase defaultAction successAction errorAction
-  where
-    defaultAction = fail "Expected QueryResponse"
-    successAction q = pure q
-    errorAction e = fail $ "Expected QueryResponse, got " <> show e
-
-guardedQuery :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.QueryRequest -> IO API.QueryResponse
-guardedQuery api sourceName config queryRequest = guardQueryResponse =<< (api // API._query) sourceName config queryRequest
-
-guardedCapabilities :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> IO API.CapabilitiesResponse
-guardedCapabilities api = guardCapabilitiesResponse =<< (api // API._capabilities)
-
-guardCapabilitiesResponse :: Servant.Union API.CapabilitiesResponses -> IO API.CapabilitiesResponse
-guardCapabilitiesResponse = capabilitiesCase defaultAction successAction errorAction
-  where
-    defaultAction = fail "Expected QueryResponse"
-    successAction c = pure c
-    errorAction e = fail $ "Expected QueryResponse, got " <> show e
-
-guardErrorResponse :: Servant.Union API.QueryResponses -> IO API.ErrorResponse
-guardErrorResponse = queryCase defaultAction successAction errorAction
-  where
-    defaultAction = fail "Expected ErrorResponse"
-    successAction q = fail $ "Expected ErrorResponse, got " <> show q
-    errorAction e = pure e
-
-errorQuery :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.QueryRequest -> IO API.ErrorResponse
-errorQuery api sourceName config queryRequest = guardErrorResponse =<< (api // API._query) sourceName config queryRequest

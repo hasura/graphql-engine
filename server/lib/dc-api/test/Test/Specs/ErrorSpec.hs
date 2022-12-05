@@ -1,20 +1,18 @@
-module Test.ErrorSpec (spec) where
+module Test.Specs.ErrorSpec (spec) where
 
 import Control.Lens ((&), (?~))
 import Hasura.Backends.DataConnector.API
-import Servant.API (NamedRoutes)
-import Servant.Client (Client)
-import Test.Data (TestData (..), errorQuery)
+import Test.AgentClient (queryExpectError)
+import Test.Data (TestData (..))
 import Test.Data qualified as Data
-import Test.Hspec (Spec, describe, it, shouldBe)
-import Prelude
+import Test.Sandwich (describe, shouldBe)
+import Test.TestHelpers (AgentTestSpec, it)
 
-spec :: TestData -> Client IO (NamedRoutes Routes) -> SourceName -> Config -> a -> Spec
-spec TestData {..} api sourceName config _capabilities = describe "Basic Queries" do
-  describe "Error Protocol" do
-    it "returns a structured error when sending an invalid query" do
-      receivedArtistsError <- errorQuery api sourceName config brokenQueryRequest
-      _crType receivedArtistsError `shouldBe` UncaughtError
+spec :: TestData -> SourceName -> Config -> a -> AgentTestSpec
+spec TestData {..} sourceName config _capabilities = describe "Error Protocol" do
+  it "returns a structured error when sending an invalid query" do
+    receivedArtistsError <- queryExpectError sourceName config brokenQueryRequest
+    _crType receivedArtistsError `shouldBe` UncaughtError
   where
     brokenQueryRequest :: QueryRequest
     brokenQueryRequest =

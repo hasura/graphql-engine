@@ -1,4 +1,4 @@
-module Test.QuerySpec.FilteringSpec (spec) where
+module Test.Specs.QuerySpec.FilteringSpec (spec) where
 
 import Control.Lens ((&), (.~), (<&>), (?~), (^?))
 import Control.Monad (when)
@@ -9,20 +9,20 @@ import Data.HashSet qualified as HashSet
 import Data.List (sortOn)
 import Data.Maybe (isJust, mapMaybe)
 import Hasura.Backends.DataConnector.API
-import Servant.API (NamedRoutes)
-import Servant.Client (Client)
-import Test.Data (TestData (..), guardedQuery)
+import Test.AgentClient (queryGuarded)
+import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
-import Test.Hspec (Spec, describe, it)
+import Test.Sandwich (describe)
+import Test.TestHelpers (AgentTestSpec, it)
 import Prelude
 
-spec :: TestData -> Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe ComparisonCapabilities -> Spec
-spec TestData {..} api sourceName config comparisonCapabilities = describe "Filtering in Queries" $ do
+spec :: TestData -> SourceName -> Config -> Maybe ComparisonCapabilities -> AgentTestSpec
+spec TestData {..} sourceName config comparisonCapabilities = describe "Filtering in Queries" $ do
   it "can filter using an equality expression" $ do
     let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 2) _tdIntType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter ((== Just 2) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -33,7 +33,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter using an inequality expression" $ do
     let where' = Not (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 2) _tdIntType))
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter ((/= Just 2) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -44,7 +44,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter using an in expression" $ do
     let where' = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" _tdIntType) [Number 2, Number 3] _tdIntType
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter (flip elem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -55,7 +55,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can negate an in expression filter using a not expression" $ do
     let where' = Not (ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" _tdIntType) [Number 2, Number 3] _tdIntType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter (flip notElem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -68,7 +68,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
     let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" _tdStringType) (ScalarValue (String "Stormbringer") _tdStringType)
     let where' = And [where1, where2]
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter
@@ -83,7 +83,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "treats an empty and expression as 'true'" $ do
     let where' = And []
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     Data.responseRows receivedAlbums `rowsShouldBe` _tdAlbumsRows
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -93,7 +93,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
     let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 3) _tdIntType)
     let where' = Or [where1, where2]
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter (flip elem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -104,7 +104,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "treats an empty or expression as 'false'" $ do
     let where' = Or []
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- guardedQuery api sourceName config query
+    receivedAlbums <- queryGuarded sourceName config query
 
     Data.responseRows receivedAlbums `rowsShouldBe` []
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -112,7 +112,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter by applying the greater than operator" $ do
     let where' = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 300) _tdIntType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter ((> Just 300) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -123,7 +123,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter by applying the greater than or equal operator" $ do
     let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 300) _tdIntType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter ((>= Just 300) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -134,7 +134,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter by applying the less than operator" $ do
     let where' = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 100) _tdIntType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter ((< Just 100) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -145,7 +145,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter by applying the less than or equal operator" $ do
     let where' = ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (ScalarValue (Number 100) _tdIntType)
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter ((<= Just 100) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -156,7 +156,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
   it "can filter using a greater than operator with a column comparison" $ do
     let where' = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "AlbumId" _tdIntType) (AnotherColumn (_tdCurrentComparisonColumn "ArtistId" _tdIntType))
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
     let expectedAlbums =
           filter (\album -> (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) > (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber)) _tdAlbumsRows
@@ -173,7 +173,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
                   Exists (UnrelatedTable _tdEmployeesTableName) $
                     ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" _tdIntType) (ScalarValue (Number 1) _tdIntType)
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
             let expectedAlbums = _tdAlbumsRows
 
@@ -185,7 +185,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
                   Exists (UnrelatedTable _tdEmployeesTableName) $
                     ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" _tdIntType) (ScalarValue (Number 0) _tdIntType)
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
             Data.responseRows receivedAlbums `rowsShouldBe` []
             _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -199,7 +199,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
                         ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" _tdStringType) (ScalarValue (String "Edmonton") _tdStringType)
                       ]
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
             let expectedAlbums = _tdAlbumsRows
 
@@ -214,7 +214,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
                         ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" _tdStringType) (ScalarValue (String "Calgary") _tdStringType)
                       ]
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
-            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
             Data.responseRows receivedAlbums `rowsShouldBe` []
             _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -229,7 +229,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
               albumsQueryRequest
                 & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
                 & qrQuery . qWhere ?~ where'
-        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> guardedQuery api sourceName config query
+        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
 
         let artistId =
               _tdArtistsRows
@@ -256,7 +256,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
                        Data.onlyKeepRelationships [_tdGenreRelationshipName] _tdTracksTableRelationships
                      ]
                 & qrQuery . qWhere ?~ where'
-        receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> guardedQuery api sourceName config query
+        receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
 
         let genreId =
               _tdGenresRows
@@ -292,7 +292,7 @@ spec TestData {..} api sourceName config comparisonCapabilities = describe "Filt
               artistsQueryRequest
                 & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
                 & qrQuery . qWhere ?~ where'
-        receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> guardedQuery api sourceName config query
+        receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
 
         let albums =
               _tdAlbumsRows

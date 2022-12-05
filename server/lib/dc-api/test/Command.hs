@@ -1,8 +1,16 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Use commaSeparated" #-}
+{-# HLINT ignore "Use tshow" #-}
+
 module Command
   ( Command (..),
-    TestConfig (..),
-    NameCasing (..),
     TestOptions (..),
+    SensitiveOutputHandling (..),
+    SandwichArguments (..),
+    TestConfig (..),
+    AgentOptions (..),
+    NameCasing (..),
     ExportDataConfig (..),
     ExportFormat (..),
     parseCommandLine,
@@ -11,6 +19,7 @@ where
 
 import Control.Arrow (left)
 import Data.Aeson (FromJSON (..), eitherDecodeStrict')
+import Data.List (intercalate)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -22,9 +31,17 @@ import Servant.Client (BaseUrl, parseBaseUrl)
 import Prelude
 
 data Command
-  = Test TestOptions
+  = Test TestOptions SandwichArguments
   | ExportOpenAPISpec
   | ExportData ExportDataConfig
+
+data TestOptions = TestOptions
+  { _toAgentOptions :: AgentOptions,
+    _toTestConfig :: TestConfig,
+    _toSensitiveOutputHandling :: SensitiveOutputHandling
+  }
+
+newtype SandwichArguments = SandwichArguments [String]
 
 data TestConfig = TestConfig
   { _tcTableNamePrefix :: [Text],
@@ -32,22 +49,20 @@ data TestConfig = TestConfig
     _tcColumnNameCasing :: NameCasing
   }
 
+data SensitiveOutputHandling
+  = AllowSensitiveOutput
+  | DisallowSensitiveOutput
+
+data AgentOptions = AgentOptions
+  { _aoAgentBaseUrl :: BaseUrl,
+    _aoAgentConfig :: API.Config
+  }
+
 data NameCasing
   = PascalCase
   | Lowercase
   | Uppercase
-  deriving (Eq, Show, Read)
-
-data TestOptions = TestOptions
-  { _toAgentBaseUrl :: BaseUrl,
-    _toAgentConfig :: API.Config,
-    _toTestConfig :: TestConfig,
-    _toParallelDegree :: Maybe Int,
-    _toMatch :: Maybe String,
-    _toSkip :: [String],
-    _toDryRun :: Bool,
-    _toExportMatchStrings :: Bool
-  }
+  deriving (Eq, Show, Read, Enum, Bounded)
 
 data ExportDataConfig = ExportDataConfig
   { _edcDirectory :: FilePath,
@@ -108,6 +123,26 @@ commandParser =
             (progDesc "Exports the Chinook dataset to files in the specified directory")
         )
 
+testCommandParser :: Parser Command
+testCommandParser = Test <$> testOptionsParser <*> sandwichArgumentsParser
+
+testOptionsParser :: Parser TestOptions
+testOptionsParser =
+  TestOptions
+    <$> agentOptionsParser
+    <*> testConfigParser
+    <*> flag
+      DisallowSensitiveOutput
+      AllowSensitiveOutput
+      ( long "allow-sensitive-output"
+          <> help "Allows sensitive values (such as the X-Hasura-DataConnector-Config header) to appear in test debug output"
+      )
+
+sandwichArgumentsParser :: Parser SandwichArguments
+sandwichArgumentsParser =
+  subparser (command "sandwich" (info (SandwichArguments <$> many (strArgument mempty)) forwardOptions))
+    <|> pure (SandwichArguments [])
+
 testConfigParser :: Parser TestConfig
 testConfigParser =
   TestConfig
@@ -123,20 +158,22 @@ testConfigParser =
       auto
       ( long "table-name-casing"
           <> metavar "CASING"
-          <> help "The casing style to use for table names (PascalCase or Lowercase). Default: PascalCase"
+          <> help ("The casing style to use for table names (" <> casingOptions <> "). Default: PascalCase")
           <> value PascalCase
       )
     <*> option
       auto
       ( long "column-name-casing"
           <> metavar "CASING"
-          <> help "The casing style to use for column names (PascalCase or Lowercase). Default: PascalCase"
+          <> help ("The casing style to use for column names (" <> casingOptions <> "). Default: PascalCase")
           <> value PascalCase
       )
+  where
+    casingOptions = intercalate ", " $ show <$> enumFromTo @NameCasing minBound maxBound
 
-testOptionsParser :: Parser TestOptions
-testOptionsParser =
-  TestOptions
+agentOptionsParser :: Parser AgentOptions
+agentOptionsParser =
+  AgentOptions
     <$> option
       baseUrl
       ( long "agent-base-url"
@@ -151,43 +188,6 @@ testOptionsParser =
           <> metavar "JSON"
           <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
       )
-    <*> testConfigParser
-    <*> optional
-      ( option
-          positiveNonZeroInt
-          ( long "jobs"
-              <> short 'j'
-              <> metavar "INT"
-              <> help "Run at most N parallelizable tests simultaneously (default: number of available processors)"
-          )
-      )
-    <*> optional
-      ( strOption
-          ( long "match"
-              <> short 'm'
-              <> metavar "PATTERN"
-              <> help "Only run tests that match given PATTERN"
-          )
-      )
-    <*> many
-      ( strOption
-          ( long "skip"
-              <> short 's'
-              <> metavar "PATTERN"
-              <> help "Skip tests that match given PATTERN"
-          )
-      )
-    <*> switch
-      ( long "dry-run"
-          <> help "Skip execution of test bodies"
-      )
-    <*> switch
-      ( long "export-match-strings"
-          <> help "Exports the hspec match strings without running the tests"
-      )
-
-testCommandParser :: Parser Command
-testCommandParser = Test <$> testOptionsParser
 
 exportDataConfigParser :: Parser ExportDataConfig
 exportDataConfigParser =
@@ -215,11 +215,6 @@ exportDataConfigParser =
 
 baseUrl :: ReadM BaseUrl
 baseUrl = eitherReader $ left show . parseBaseUrl
-
-positiveNonZeroInt :: ReadM Int
-positiveNonZeroInt =
-  auto >>= \int ->
-    if int <= 0 then readerError "Must be a positive, non-zero integer" else pure int
 
 configValue :: ReadM API.Config
 configValue = fmap API.Config jsonValue
