@@ -28,6 +28,7 @@ import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldReturnYaml)
@@ -134,9 +135,8 @@ track =
 
 lhsPostgresSetupAction :: TestEnvironment -> Fixture.SetupAction
 lhsPostgresSetupAction testEnv =
-  Fixture.SetupAction
+  SetupAction.noTeardown
     (lhsPostgresSetup (testEnv, Nothing))
-    (const $ lhsPostgresTeardown (testEnv, Nothing))
 
 lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
@@ -182,19 +182,13 @@ args:
               album_id: $album_id
   |]
 
-lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (testEnvironment, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Fixture.Postgres sourceName track testEnvironment
-
 --------------------------------------------------------------------------------
 -- LHS Citus
 
 lhsCitusSetupAction :: TestEnvironment -> Fixture.SetupAction
 lhsCitusSetupAction testEnv =
-  Fixture.SetupAction
+  SetupAction.noTeardown
     (lhsCitusSetup (testEnv, Nothing))
-    (const $ lhsCitusTeardown (testEnv, Nothing))
 
 lhsCitusMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCitusMkLocalTestEnvironment _ = pure Nothing
@@ -240,19 +234,13 @@ args:
               album_id: $album_id
   |]
 
-lhsCitusTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCitusTeardown (testEnvironment, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Fixture.Citus sourceName track testEnvironment
-
 --------------------------------------------------------------------------------
 -- LHS Cockroach
 
 lhsCockroachSetupAction :: TestEnvironment -> Fixture.SetupAction
 lhsCockroachSetupAction testEnv =
-  Fixture.SetupAction
+  SetupAction.noTeardown
     (lhsCockroachSetup (testEnv, Nothing))
-    (const $ lhsCockroachTeardown (testEnv, Nothing))
 
 lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCockroachMkLocalTestEnvironment _ = pure Nothing
@@ -297,12 +285,6 @@ lhsCockroachSetup (testEnvironment, _) = do
                     album_id: $album_id
     |]
 
-lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachTeardown (testEnvironment, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Fixture.Cockroach sourceName track testEnvironment
-  Cockroach.dropTable testEnvironment track
-
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
@@ -311,9 +293,8 @@ lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
 lhsSQLServerSetupAction :: TestEnvironment -> Fixture.SetupAction
 lhsSQLServerSetupAction testEnv =
-  Fixture.SetupAction
+  SetupAction.noTeardown
     (lhsSQLServerSetup (testEnv, Nothing))
-    (const $ lhsSQLServerTeardown (testEnv, Nothing))
 
 lhsSQLServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup (testEnvironment, _) = do
@@ -355,12 +336,6 @@ args:
             arguments:
               album_id: $album_id
   |]
-
-lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerTeardown (testEnvironment, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Fixture.SQLServer sourceName track testEnvironment
-  SQLServer.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server

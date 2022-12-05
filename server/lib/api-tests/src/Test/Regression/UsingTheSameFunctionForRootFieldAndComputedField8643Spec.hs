@@ -7,6 +7,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec
@@ -53,24 +54,21 @@ schema =
 functionSetup :: TestEnvironment -> Fixture.SetupAction
 functionSetup testEnvironment =
   let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)
-   in Fixture.SetupAction
-        { setupAction =
-            Postgres.run_ testEnvironment $
-              "CREATE FUNCTION "
-                ++ schemaName
-                ++ ".authors(author_row "
-                ++ schemaName
-                ++ ".author) \
-                   \RETURNS SETOF "
-                ++ schemaName
-                ++ ".author AS $$ \
-                   \  SELECT * \
-                   \  FROM "
-                ++ schemaName
-                ++ ".author \
-                   \$$ LANGUAGE sql STABLE;",
-          teardownAction = \_ -> Postgres.run_ testEnvironment $ "DROP FUNCTION " ++ schemaName ++ ".authors;"
-        }
+   in SetupAction.noTeardown $
+        Postgres.run_ testEnvironment $
+          "CREATE FUNCTION "
+            ++ schemaName
+            ++ ".authors(author_row "
+            ++ schemaName
+            ++ ".author) \
+               \RETURNS SETOF "
+            ++ schemaName
+            ++ ".author AS $$ \
+               \  SELECT * \
+               \  FROM "
+            ++ schemaName
+            ++ ".author \
+               \$$ LANGUAGE sql STABLE;"
 
 --------------------------------------------------------------------------------
 -- Tests

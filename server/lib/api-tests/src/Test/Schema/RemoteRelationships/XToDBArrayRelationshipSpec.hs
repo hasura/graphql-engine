@@ -39,6 +39,7 @@ import Harness.Test.Permissions (SelectPermissionDetails (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
@@ -64,10 +65,7 @@ lhsPostgres tableName =
   (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
     { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+        [ SetupAction.noTeardown (lhsPostgresSetup tableName testEnv)
         ]
     }
 
@@ -76,10 +74,7 @@ lhsCitus tableName =
   (Fixture.fixture $ Fixture.Backend Fixture.Citus)
     { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsCitusSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+        [ SetupAction.noTeardown (lhsCitusSetup tableName testEnv)
         ]
     }
 
@@ -88,10 +83,7 @@ lhsCockroach tableName =
   (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
     { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsCockroachSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+        [ SetupAction.noTeardown (lhsCockroachSetup tableName testEnv)
         ],
       Fixture.customOptions =
         Just
@@ -105,10 +97,7 @@ lhsSQLServer tableName =
   (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
     { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsSQLServerSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+        [ SetupAction.noTeardown (lhsSQLServerSetup tableName testEnv)
         ]
     }
 
@@ -131,10 +120,7 @@ rhsPostgres =
         (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsPostgresSetup testEnv,
-                    Fixture.teardownAction = \_ -> pure ()
-                  }
+              [ SetupAction.noTeardown (rhsPostgresSetup testEnv)
               ]
           }
    in (rhsTable, fixture)
@@ -145,10 +131,7 @@ rhsCockroach =
         (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsCockroachSetup testEnv,
-                    Fixture.teardownAction = \_ -> pure ()
-                  }
+              [ SetupAction.noTeardown (rhsCockroachSetup testEnv)
               ],
             Fixture.customOptions =
               Just
@@ -164,10 +147,7 @@ rhsCitus =
         (Fixture.fixture $ Fixture.Backend Fixture.Citus)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsCitusSetup testEnv,
-                    Fixture.teardownAction = \_ -> pure ()
-                  }
+              [ SetupAction.noTeardown (rhsCitusSetup testEnv)
               ]
           }
    in (rhsTable, fixture)
@@ -178,10 +158,7 @@ rhsSQLServer =
         (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsSQLServerSetup testEnv,
-                    Fixture.teardownAction = \_ -> pure ()
-                  }
+              [ SetupAction.noTeardown (rhsSQLServerSetup testEnv)
               ]
           }
    in (rhsTable, fixture)

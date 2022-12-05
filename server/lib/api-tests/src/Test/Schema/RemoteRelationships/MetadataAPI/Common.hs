@@ -48,6 +48,7 @@ import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Hasura.Prelude
@@ -75,14 +76,8 @@ dbTodbRemoteRelationshipFixture =
             { Fixture.setupAction = rhsPostgresSetup testEnvironment,
               Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnvironment
             },
-          Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnvironment
-            },
-          Fixture.SetupAction
-            { Fixture.setupAction = createSourceRemoteRelationship testEnvironment,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+          SetupAction.noTeardown (lhsPostgresSetup (testEnvironment, Nothing)),
+          SetupAction.noTeardown (createSourceRemoteRelationship testEnvironment)
         ]
     }
 
@@ -98,14 +93,8 @@ dbToRemoteSchemaRemoteRelationshipFixture =
             { Fixture.setupAction = rhsRemoteServerSetup (testEnvironment, rhsServer),
               Fixture.teardownAction = \_ -> rhsRemoteServerTeardown (testEnvironment, rhsServer)
             },
-          Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnvironment
-            },
-          Fixture.SetupAction
-            { Fixture.setupAction = createRemoteSchemaRemoteRelationship testEnvironment,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+          SetupAction.noTeardown (lhsPostgresSetup (testEnvironment, Nothing)),
+          SetupAction.noTeardown (createRemoteSchemaRemoteRelationship testEnvironment)
         ]
     }
 
@@ -276,9 +265,6 @@ args:
         field_mapping:
           id: artist_id
   |]
-
-lhsPostgresTeardown :: TestEnvironment -> IO ()
-lhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- DB to Remote Schema Remote relationship
