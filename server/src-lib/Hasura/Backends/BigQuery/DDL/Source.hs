@@ -26,6 +26,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function (FunctionOverloads (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
@@ -105,7 +106,7 @@ resolveSource sourceConfig customization =
           "unexpected exception while connecting to database: " <> tshow err
       Right (restTables, restRoutines) -> do
         seconds <- liftIO $ fmap systemSeconds getSystemTime
-        let functions = HM.groupOn (routineReferenceToFunctionName . routineReference) restRoutines
+        let functions = FunctionOverloads <$> HM.groupOnNE (routineReferenceToFunctionName . routineReference) restRoutines
         pure
           ( ResolvedSource
               { _rsConfig = sourceConfig,

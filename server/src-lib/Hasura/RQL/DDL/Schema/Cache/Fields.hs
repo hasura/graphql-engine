@@ -257,10 +257,15 @@ buildComputedField ::
 buildComputedField trackedTableNames tableColumns source pgFunctions table cf@ComputedFieldMetadata {..} = do
   let addComputedFieldContext e = "in computed field " <> _cfmName <<> ": " <> e
       function = computedFieldFunction @b _cfmDefinition
-      funcDefs = fromMaybe [] $ M.lookup function pgFunctions
+
   withRecordInconsistencyM (mkComputedFieldMetadataObject source table cf) $
     modifyErr (addTableContext @b table . addComputedFieldContext) $ do
-      rawfi <- handleMultipleFunctions @b (computedFieldFunction @b _cfmDefinition) funcDefs
+      funcDefs <-
+        onNothing
+          (M.lookup function pgFunctions)
+          (throw400 NotExists $ "no such function exists: " <>> function)
+
+      rawfi <- getSingleUniqueFunctionOverload @b (computedFieldFunction @b _cfmDefinition) funcDefs
       buildComputedFieldInfo trackedTableNames table tableColumns _cfmName _cfmDefinition rawfi _cfmComment
 
 mkRemoteRelationshipMetadataObject ::

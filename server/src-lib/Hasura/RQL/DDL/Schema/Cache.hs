@@ -675,11 +675,15 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                         AB.mkAnyBackend $
                           SOIFunction @b qf
                     addFunctionContext e = "in function " <> qf <<> ": " <> e
-                    funcDefs = fromMaybe [] $ M.lookup qf dbFunctions
                     metadataPermissions = mapFromL _fpmRole functionPermissions
                     permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
                 withRecordInconsistencyM metadataObject $ modifyErr addFunctionContext do
-                  rawfunctionInfo <- handleMultipleFunctions @b qf funcDefs
+                  funcDefs <-
+                    onNothing
+                      (M.lookup qf dbFunctions)
+                      (throw400 NotExists $ "no such function exists: " <>> qf)
+
+                  rawfunctionInfo <- getSingleUniqueFunctionOverload @b qf funcDefs
                   (functionInfo, dep) <- buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
                   recordDependenciesM metadataObject schemaObject (Seq.singleton dep)
                   pure functionInfo

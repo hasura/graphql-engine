@@ -22,6 +22,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
+import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
@@ -39,7 +40,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.DDL.Schema.Diff
+import Hasura.RQL.DDL.Schema.Diff qualified as Diff
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -139,7 +140,7 @@ of queries may not modify the schema at all. As a (fairly stupid) heuristic, we
 check if the query contains any keywords for DDL operations, and if not, we skip
 the metadata check as well. -}
 
--- | Fetch metadata of tracked tables/functions and build @'TableMeta'/@'FunctionMeta'
+-- | Fetch metadata of tracked tables/functions and build @'Diff.TableMeta'/@'Diff.FunctionMeta'
 -- to calculate diff later in @'withMetadataCheck'.
 fetchTablesFunctionsMetadata ::
   forall pgKind m.
@@ -150,30 +151,47 @@ fetchTablesFunctionsMetadata ::
     MonadTx m
   ) =>
   TableCache ('Postgres pgKind) ->
-  [TableName ('Postgres pgKind)] ->
+  HS.HashSet (TableName ('Postgres pgKind)) ->
   HS.HashSet (FunctionName ('Postgres pgKind)) ->
-  m ([TableMeta ('Postgres pgKind)], [FunctionMeta ('Postgres pgKind)])
+  m ([Diff.TableMeta ('Postgres pgKind)], [Diff.FunctionMeta ('Postgres pgKind)])
 fetchTablesFunctionsMetadata tableCache tables functions = do
   tableMetaInfos <- fetchTableMetadata tables
   functionMetaInfos <- fetchFunctionMetadata @pgKind functions
-  pure (buildTableMeta tableMetaInfos functionMetaInfos, buildFunctionMeta functionMetaInfos)
+
+  let functionMetas =
+        [ functionMeta
+          | function <- HS.toList functions,
+            functionMeta <- mkFunctionMetas functionMetaInfos function
+        ]
+  let tableMetas =
+        [ Diff.TableMeta table tableMetaInfo computedFieldInfos
+          | (table, tableMetaInfo) <- M.toList tableMetaInfos,
+            let computedFieldInfos =
+                  [ computedFieldMeta
+                    | Just tableInfo <- pure (M.lookup table tableCache),
+                      computedField <- getComputedFields tableInfo,
+                      computedFieldMeta <-
+                        [ Diff.ComputedFieldMeta fieldName functionMeta
+                          | let fieldName = _cfiName computedField
+                                function = _cffName $ _cfiFunction computedField,
+                            functionMeta <- mkFunctionMetas functionMetaInfos function
+                        ]
+                  ]
+        ]
+
+  pure (tableMetas, functionMetas)
   where
-    buildTableMeta tableMetaInfos functionMetaInfos =
-      flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
-        TableMeta table tableMetaInfo $
-          foldMap @Maybe (concatMap (mkComputedFieldMeta functionMetaInfos) . getComputedFields) (M.lookup table tableCache)
-
-    buildFunctionMeta functionMetaInfos =
-      concatMap (getFunctionMetas functionMetaInfos) functions
-
-    mkComputedFieldMeta functionMetaInfos computedField =
-      let function = _cffName $ _cfiFunction computedField
-       in map (ComputedFieldMeta (_cfiName computedField)) $ getFunctionMetas functionMetaInfos function
-
-    getFunctionMetas functionMetaInfos function =
-      let mkFunctionMeta rawInfo =
-            FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
-       in foldMap @Maybe (map mkFunctionMeta) $ M.lookup function functionMetaInfos
+    mkFunctionMetas ::
+      HashMap QualifiedFunction (FunctionOverloads ('Postgres pgKind)) ->
+      QualifiedFunction ->
+      [Diff.FunctionMeta ('Postgres pgKind)]
+    mkFunctionMetas functionMetaInfos function =
+      [ Diff.FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
+        | -- It would seem like we could feasibly detect function overloads here already,
+          -- But that is handled elsewhere.
+          Just overloads <- pure (M.lookup function functionMetaInfos),
+          rawInfo <- NE.toList $ getFunctionOverloads overloads
+      ]
 
 -- | Used as an escape hatch to run raw SQL against a database.
 runRunSQL ::
@@ -296,16 +314,16 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         -- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions
 
         -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
-        let tableNames = M.keys tableCache
-            computedFieldFunctions = HS.fromList $ concatMap getComputedFieldFunctions (M.elems tableCache)
+        let tableNames = M.keysSet tableCache
+            computedFieldFunctions = mconcat $ map getComputedFieldFunctions (M.elems tableCache)
             functionNames = M.keysSet functionCache <> computedFieldFunctions
         (preTxTablesMeta, preTxFunctionsMeta) <- fetchTablesFunctionsMetadata tableCache tableNames functionNames
 
         -- Since the @'tx' may alter table/function names we use the OIDs of underlying tables
         -- (sourced from 'pg_class' for tables and 'pg_proc' for functions), which remain unchanged in the
         -- case if a table/function is renamed.
-        let tableOids = map (_ptmiOid . tmInfo) preTxTablesMeta
-            functionOids = map fmOid preTxFunctionsMeta
+        let tableOids = HS.fromList $ map (_ptmiOid . Diff.tmInfo) preTxTablesMeta
+            functionOids = HS.fromList $ map Diff.fmOid preTxFunctionsMeta
 
         -- Run the transaction
         txResult <- tx
@@ -316,26 +334,26 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
             =<< fetchTablesFunctionsFromOids tableOids functionOids
 
         -- Calculate the tables diff (dropped & altered tables)
-        let tablesDiff = getTablesDiff preTxTablesMeta postTxTablesMeta
+        let tablesDiff = Diff.getTablesDiff preTxTablesMeta postTxTablesMeta
             -- Calculate the functions diff. For calculating diff for functions, only consider
             -- query/mutation functions and exclude functions underpinning computed fields.
             -- Computed field functions are being processed under each table diff.
-            -- See @'getTablesDiff' and @'processTablesDiff'
-            excludeComputedFieldFunctions = filter ((`M.member` functionCache) . fmFunction)
+            -- See @'getTablesDiff' and @'Diff.processTablesDiff'
+            excludeComputedFieldFunctions = filter ((`M.member` functionCache) . Diff.fmFunction)
             functionsDiff =
-              getFunctionsDiff
+              Diff.getFunctionsDiff
                 (excludeComputedFieldFunctions preTxFunctionsMeta)
                 (excludeComputedFieldFunctions postTxFunctionMeta)
 
         dontAllowFunctionOverloading $
-          getOverloadedFunctions
+          Diff.getOverloadedFunctions
             (M.keys functionCache)
             (excludeComputedFieldFunctions postTxFunctionMeta)
 
         -- Update metadata with schema change caused by @'tx'
         metadataUpdater <- execWriterT do
           -- Collect indirect dependencies of altered tables
-          tableIndirectDeps <- getIndirectDependenciesFromTableDiff source tablesDiff
+          tableIndirectDeps <- Diff.getIndirectDependenciesFromTableDiff source tablesDiff
 
           -- If table indirect dependencies exist and cascading is not enabled then report an exception
           unless (null tableIndirectDeps || cascadeDependencies) $ reportDependentObjectsExist tableIndirectDeps
@@ -345,7 +363,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
 
           -- Collect function names from purged table dependencies
           let purgedFunctions = collectFunctionsInDeps tableIndirectDeps
-              FunctionsDiff droppedFunctions alteredFunctions = functionsDiff
+              Diff.FunctionsDiff droppedFunctions alteredFunctions = functionsDiff
 
           -- Drop functions in metadata. Exclude functions that were already dropped as part of table indirect dependencies
           purgeFunctionsFromMetadata $ droppedFunctions \\ purgedFunctions
@@ -354,7 +372,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
           dontAllowFunctionAlteredVolatile alteredFunctions
 
           -- Propagate table changes to metadata
-          processTablesDiff source tableCache tablesDiff
+          Diff.processTablesDiff source tableCache tablesDiff
 
         pure (txResult, metadataUpdater)
   where
@@ -396,9 +414,14 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
 -- | Fetch list of tables and functions with provided oids
 fetchTablesFunctionsFromOids ::
   (MonadIO m) =>
-  [OID] ->
-  [OID] ->
-  PG.TxET QErr m ([TableName ('Postgres pgKind)], HS.HashSet (FunctionName ('Postgres pgKind)))
+  HashSet OID ->
+  HashSet OID ->
+  PG.TxET
+    QErr
+    m
+    ( HS.HashSet (TableName ('Postgres pgKind)),
+      HS.HashSet (FunctionName ('Postgres pgKind))
+    )
 fetchTablesFunctionsFromOids tableOids functionOids =
   ((PG.getViaJSON *** PG.getViaJSON) . PG.getRow)
     <$> PG.withQE
@@ -443,7 +466,7 @@ fetchTablesFunctionsFromOids tableOids functionOids =
         '[]'
       ) AS "functions"
   |]
-      (PG.ViaJSON $ map mkOidObject tableOids, PG.ViaJSON $ map mkOidObject functionOids)
+      (PG.ViaJSON $ map mkOidObject $ HS.toList tableOids, PG.ViaJSON $ map mkOidObject $ HS.toList $ functionOids)
       True
   where
     mkOidObject oid = object ["oid" .= oid]
@@ -453,5 +476,5 @@ fetchTablesFunctionsFromOids tableOids functionOids =
 getComputedFields :: TableInfo ('Postgres pgKind) -> [ComputedFieldInfo ('Postgres pgKind)]
 getComputedFields = getComputedFieldInfos . _tciFieldInfoMap . _tiCoreInfo
 
-getComputedFieldFunctions :: TableInfo ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]
-getComputedFieldFunctions = map (_cffName . _cfiFunction) . getComputedFields
+getComputedFieldFunctions :: TableInfo ('Postgres pgKind) -> HashSet (FunctionName ('Postgres pgKind))
+getComputedFieldFunctions = HS.fromList . map (_cffName . _cfiFunction) . getComputedFields

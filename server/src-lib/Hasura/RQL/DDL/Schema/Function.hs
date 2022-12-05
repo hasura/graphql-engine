@@ -9,7 +9,7 @@ module Hasura.RQL.DDL.Schema.Function
     doesFunctionPermissionExist,
     dropFunctionInMetadata,
     dropFunctionPermissionInMetadata,
-    handleMultipleFunctions,
+    getSingleUniqueFunctionOverload,
     runCreateFunctionPermission,
     runDropFunctionPermission,
     runSetFunctionCustomization,
@@ -87,15 +87,14 @@ trackFunctionP2 sourceName qf config comment = do
       %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
   pure successMsg
 
-handleMultipleFunctions ::
-  forall b m a.
+getSingleUniqueFunctionOverload ::
+  forall b m.
   (QErrM m, Backend b) =>
   FunctionName b ->
-  [a] ->
-  m a
-handleMultipleFunctions qf = \case
-  [fi] -> return fi
-  [] -> throw400 NotExists $ "no such function exists: " <>> qf
+  FunctionOverloads b ->
+  m (RawFunctionInfo b)
+getSingleUniqueFunctionOverload qf = \case
+  FunctionOverloads (fi :| []) -> return fi
   _ -> throw400 NotSupported $ "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
 runTrackFunc ::
