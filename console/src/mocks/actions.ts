@@ -31,7 +31,7 @@ const metadataHandlers: Partial<Record<allowedMetadataTypes, MetadataReducer>> =
   };
 
 export const metadataReducer: MetadataReducer = (state, action) => {
-  if (action.type === 'bulk') {
+  if (action.type === 'bulk' || action.type === 'concurrent_bulk') {
     let reduceFirstError: ResponseBodyMetadataTypeError;
     return action.args.reduce((currentState: Metadata, arg: MetadataAction) => {
       if (reduceFirstError) {

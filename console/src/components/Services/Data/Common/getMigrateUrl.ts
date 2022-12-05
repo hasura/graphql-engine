@@ -33,7 +33,7 @@ const returnMigrateUrl = (migrationMode: boolean, upQueries?: Query[]) => {
   let endpoint = Endpoints.metadata;
   upQueries.forEach(query => {
     let type = '';
-    if (query.type === 'bulk') {
+    if (query.type === 'bulk' || query.type === 'concurrent_bulk') {
       type = query?.args?.[0]?.type;
     } else {
       type = query.type;

@@ -13,6 +13,7 @@ export const handlers = () => [
       // currently, in most cases server accepts anything, and it could be tech dept for us to maintain such checks
       if (
         body.type === 'bulk' ||
+        body.type === 'concurrent_bulk' ||
         body.type === 'create_cron_trigger' ||
         body.type === 'delete_cron_trigger'
       ) {

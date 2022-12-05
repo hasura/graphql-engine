@@ -65,6 +65,7 @@ library
   exposed-modules:
     Spec
     SpecHook
+    Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
