@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
 import { GraphQLSchema } from 'graphql';
 import { useGetAnalyticsAttributes } from '@/features/Analytics';
+import { useInconsistentObject } from '@/features/MetadataAPI';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
@@ -15,6 +16,7 @@ import {
 } from './types';
 import BulkSelect from './BulkSelect';
 import { Dispatch } from '../../../../types';
+import { InconsistentBadge } from '../Common/GraphQLCustomization/InconsistentBadge';
 
 export type PermissionsProps = {
   allRoles: string[];
@@ -73,6 +75,8 @@ const Permissions: React.FC<PermissionsProps> = props => {
     RemoteSchemaFields[]
   >([]);
 
+  const inconsistentObjects = useInconsistentObject();
+
   React.useEffect(() => {
     return () => {
       setDefaults();
@@ -111,15 +115,26 @@ const Permissions: React.FC<PermissionsProps> = props => {
     { redactText: true }
   );
 
+  const inconsistencyDetails = inconsistentObjects?.find(
+    inconObj =>
+      inconObj.type === 'remote_schema' &&
+      inconObj?.name === `remote_schema ${currentRemoteSchema?.name}`
+  );
+
   if (error || !schema) {
     return (
-      <div>
-        Error introspecting remote schema.{' '}
-        <a onClick={introspect} className="cursor-pointer" role="button">
-          {' '}
-          Try again{' '}
-        </a>
-      </div>
+      <>
+        {inconsistencyDetails && (
+          <InconsistentBadge inconsistencyDetails={inconsistencyDetails} />
+        )}
+        <div>
+          Error introspecting remote schema.{' '}
+          <a onClick={introspect} className="cursor-pointer" role="button">
+            {' '}
+            Try again{' '}
+          </a>
+        </div>
+      </>
     );
   }
 
