@@ -39,6 +39,7 @@ export {
   establishWebSocketConn,
   permanentWebSocketConn,
 } from './websockets';
+export { makeDriverNameReadable } from './makeDriverNameReadable';
 export type { ConsoleType } from './envUtils';
 export type {
   IntegerColumnType,

@@ -1,15 +1,16 @@
-import React, { FormEvent } from 'react';
 import { LabeledInput } from '@/components/Common/LabeledInput';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Connect, useAvailableDrivers } from '@/features/ConnectDB';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
+import { makeDriverNameReadable } from '@/utils';
+import React, { FormEvent } from 'react';
+import { Driver } from '../../../../dataSources';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
-import { Driver } from '../../../../dataSources';
 import { isDBSupported } from './utils';
 
 interface DataSourceFormWrapperProps extends ConnectDatabaseFormProps {
@@ -155,10 +156,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
                       )
                       .map(driver => (
                         <option key={driver.name} value={driver.name}>
-                          {driver.displayName?.replace(
-                            'athena',
-                            'Amazon Athena'
-                          )}{' '}
+                          {makeDriverNameReadable(driver.displayName)}{' '}
                           {driver.release === 'GA'
                             ? null
                             : `(${driver.release})`}

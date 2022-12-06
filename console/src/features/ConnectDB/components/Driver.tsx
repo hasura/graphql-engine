@@ -1,4 +1,5 @@
 import { Select } from '@/new-components/Form';
+import { makeDriverNameReadable } from '@/utils';
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useAvailableDrivers } from '../hooks';
@@ -24,7 +25,7 @@ export const Driver = (props: DriverProps) => {
 
   const options = availableDrivers.map(d => ({
     value: d.name,
-    label: `${d.displayName?.replace('athena', 'Amazon Athena')} ${
+    label: `${makeDriverNameReadable(d.displayName)} ${
       d.release === 'GA' ? '' : `(${d.release})`
     }`,
   }));
