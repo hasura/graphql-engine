@@ -1,0 +1,107 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: Hasura Cloud for Snowflake
+keywords:
+  - hasura
+  - docs
+  - databases
+  - snowflake
+  - hasura cloud
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Hasura Cloud and Snowflake
+
+## Try it out
+
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail src='/img/databases/data-connector/create-project.png' alt='Connect new or existing database' width='1000px' />
+
+### Step 2: Add your Snowflake database as a source to Hasura
+
+:::info Note
+
+** Step 2 Prerequisite: Turn on the experimental features for GDC**.
+
+While the Snowflake Connector is in beta, the feature can only be enabled by turning on the _Experimental features
+for GDC_ under the _Feature Flags_ section of the Console configuration page.
+
+1) Click the gear icon in the top-right corner of your Cloud project <br/>
+2) In the side navigation, click "Feature Flags" <br/>
+3) Finally, toggle the "Experimental features for GDC" switch to enable <br/>
+
+<Thumbnail src='/img/databases/data-connector/settings-feature-flags.png' alt='Turning on experimental features.' width='1000px' />
+
+:::
+
+Head to the `Data > Manage databases` section on the Console to add your Snowflake database as a source to Hasura.
+
+:::info Make sure your Snowflake service is reachable by Hasura Cloud:
+
+1.  **Allow public connections or
+    [whitelist the Hasura Cloud IP](/projects/create.mdx#cloud-projects-create-allow-nat-ip) on your Snowflake
+    firewall:** This is good for testing and will allow you to quickly try out Hasura with your database!
+2.  **VPC peering:** VPC peering and private network access is available on Hasura Cloud paid tiers and is
+    recommended for production. Get in touch with us if you'd like to try this out against your existing databases.
+
+:::
+
+#### Step 2.1: Begin by clicking "Connect Database"
+
+<Thumbnail src='/img/databases/data-connector/manage-databases.png' alt='Manage databases' width='1000px' />
+
+#### Step 2.2: Next, choose the `snowflake (Beta)` driver
+
+<Thumbnail src='/img/databases/snowflake/choose-snowflake.png' alt='temp' width='1000px' />
+
+#### Step 2.3: Enter your Snowflake database URL
+
+<Thumbnail
+  src='/img/databases/snowflake/database-config.png'
+  alt='Setting the Snowflake connection details.'
+  width='1000px'
+/>
+
+Once you add the Snowflake service, you will find it listed as an available database on the sidebar.
+
+### Step 3: Track existing tables
+
+To query your Snowflake service using Hasura, you'll need to have existing tables to select. Those tables
+will appear under the database as shown.
+
+<Thumbnail src='/img/databases/snowflake/track-tables-1.png' alt='Tracking tables.' width='1000px' />
+
+You can select all or select individual tables to track.  Click "Track Selected" for Hasura to introspect them and
+create the corresponding GraphQL schema.
+
+<Thumbnail src='/img/databases/snowflake/track-tables-2.png' alt='Tracking tables selected.' width='1000px' />
+
+### Step 4: Try out a GraphQL query
+
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+creating a GraphQL query.
+
+<Thumbnail src='/img/databases/snowflake/query.png' alt='Try a GraphQL query' width='1000px' />
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries, relationships, and permissions on Snowflake.
+
+:::
+
+If you'd like to stay informed about the status of Snowflake support, subscribe to our newsletter and join our
+discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

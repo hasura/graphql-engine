@@ -1,0 +1,51 @@
+---
+sidebar_label: Docker
+sidebar_position: 2
+description: Hasura with Docker for Snowflake
+keywords:
+  - hasura
+  - docs
+  - databases
+  - snowflake
+  - docker
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Docker and Snowflake
+
+Testing is currently underway on the Snowflake connector for use in self-hosted environments. Our suggested
+installation method is to use Docker Compose to deploy a working deployment of Hasura with the Snowflake Connector
+enabled.
+
+In order to do this, follow the instructions for
+[Hasura Enterprise Edition](/enterprise/getting-started/quickstart-docker.mdx), but change out the Docker Compose files
+listed in that documentation to these values:
+
+```bash
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/snowflake/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/snowflake/docker-compose.yaml -o docker-compose.yml
+```
+
+When you use these to launch the services, you'll see three containers running instead of two. The third container is
+the Snowflake GraphQL Connector agent. By navigating to the Hasura Console after execution, you'll find the Snowflake
+data source as a type that can now be added to your Hasura GraphQL Service instance.
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries, relationships, and permissions on Snowflake.
+
+:::
+
+Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
+metadata in JSON/YAML directly.
+
+If you'd like to stay informed about the status of Snowflake support, subscribe to our newsletter and join our
+discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)
