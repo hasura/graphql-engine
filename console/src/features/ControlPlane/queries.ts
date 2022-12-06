@@ -156,3 +156,15 @@ mutation (
   }
 }
 `);
+
+export const updateUserClickedChangeProjectRegion = gql(`
+mutation ($rowId: uuid!, $isChangeRegionClicked: Boolean!) {
+  update_db_latency(where: {id: {_eq: $rowId}}, _set: {is_change_region_clicked: $isChangeRegionClicked}) {
+    affected_rows
+    returning {
+      id
+      is_change_region_clicked
+    }
+  }
+}
+`);

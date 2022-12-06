@@ -26,7 +26,7 @@ export type TaskEvent = {
         avg_latency: number;
         error: string;
       };
-    };
+    } | null;
   };
   error: string;
 };
@@ -43,6 +43,17 @@ type LatencyJobResponse = {
       id: string;
       status: 'failed' | 'success' | 'running';
       tasks: Task[];
+    };
+  };
+};
+
+export type CheckDatabaseLatencyResponse = {
+  taskEvent: TaskEvent;
+  insertDbLatencyData: {
+    data: {
+      insert_db_latency_one: {
+        id: string;
+      };
     };
   };
 };
@@ -77,7 +88,9 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
       'latencyCheckJobSetup',
       jobIdResponse?.data?.checkDBLatency?.db_latency_job_id,
     ],
-    queryFn: async () => {
+    queryFn: async (): Promise<
+      CheckDatabaseLatencyResponse | string | undefined
+    > => {
       const dateStartRequest = new Date();
 
       const jobId = jobIdResponse?.data?.checkDBLatency?.db_latency_job_id;
@@ -118,14 +131,16 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
 
       const dateDiff = new Date().getTime() - dateStartRequest.getTime();
 
-      await client.query(insertInfoIntoDBLatencyQuery, {
+      const insertData = await client.query<
+        CheckDatabaseLatencyResponse['insertDbLatencyData']
+      >(insertInfoIntoDBLatencyQuery, {
         jobId,
         projectId,
         isLatencyDisplayed: true,
         datasDifferenceInMilliseconds: dateDiff,
       });
 
-      return successTaskEvent;
+      return { taskEvent: successTaskEvent, insertDbLatencyData: insertData };
     },
     enabled: isSuccess,
     retryDelay: 125,
