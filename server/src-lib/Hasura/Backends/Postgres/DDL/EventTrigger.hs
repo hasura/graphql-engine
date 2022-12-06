@@ -435,12 +435,12 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
                     ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
       |]
       (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created, retryAt) =
       Event
         { eId = id',
           eSource = source,
@@ -448,7 +448,8 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
           eTrigger = TriggerMetadata triggerName,
           eEvent = payload,
           eTries = tries,
-          eCreatedAt = created
+          eCreatedAt = created,
+          eRetryAt = retryAt
         }
     limit = fromIntegral fetchBatchSize :: Word64
 
@@ -471,12 +472,12 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
                       ORDER BY created_at
                       LIMIT $1
                       FOR UPDATE SKIP LOCKED )
-        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
         |]
         (Identity limit)
         True
     where
-      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created) =
+      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created, retryAt) =
         Event
           { eId = id',
             eSource = SNDefault, -- in v1, there'll only be the default source
@@ -484,7 +485,8 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
             eTrigger = TriggerMetadata trn,
             eEvent = payload,
             eTries = tries,
-            eCreatedAt = created
+            eCreatedAt = created,
+            eRetryAt = retryAt
           }
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
   CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize

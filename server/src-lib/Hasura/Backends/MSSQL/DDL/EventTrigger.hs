@@ -442,9 +442,10 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- 'IN' MSSQL operator.
     triggerNamesTxt = "(" <> commaSeparated (map (\t -> "'" <> toTxt t <> "'") triggerNames) <> ")"
 
-    uncurryEvent (id', sn, tn, trn, payload' :: BL.ByteString, tries, created_at :: B.ByteString) = do
+    uncurryEvent (id', sn, tn, trn, payload' :: BL.ByteString, tries, created_at :: B.ByteString, next_retry_at :: Maybe B.ByteString) = do
       payload <- encodePayload payload'
       createdAt <- convertTime created_at
+      retryAt <- traverse convertTime next_retry_at
 
       pure $
         Event
@@ -454,7 +455,8 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
             eTrigger = TriggerMetadata (TriggerName $ mkNonEmptyTextUnsafe trn),
             eEvent = payload,
             eTries = tries,
-            eCreatedAt = createdAt
+            eCreatedAt = createdAt,
+            eRetryAt = retryAt
           }
 
     -- Note: We do not have JSON datatype in SQL Server. But since in

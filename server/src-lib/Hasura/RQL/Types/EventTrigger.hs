@@ -404,7 +404,8 @@ data Event (b :: BackendType) = Event
     eTrigger :: TriggerMetadata,
     eEvent :: Value,
     eTries :: Int,
-    eCreatedAt :: Time.UTCTime
+    eCreatedAt :: Time.UTCTime,
+    eRetryAt :: Maybe Time.UTCTime
   }
   deriving (Generic)
 
