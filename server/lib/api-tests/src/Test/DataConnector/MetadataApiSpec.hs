@@ -229,6 +229,9 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               - builtin: false
                 kind: *backendString
                 display_name: *backendDisplayName
+              - builtin: false
+                display_name: "FOOBARDB (foobar)"
+                kind: foobar
             |]
 
   describe "<kind>_add_source" $ do

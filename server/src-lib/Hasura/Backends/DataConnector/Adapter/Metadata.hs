@@ -24,7 +24,7 @@ import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourc
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
-import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw400WithDetail, throw500, withPathK)
+import Hasura.Base.Error (Code (..), QErr (..), decodeValue, throw400, throw400WithDetail, throw500, withPathK)
 import Hasura.Incremental qualified as Inc
 import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)

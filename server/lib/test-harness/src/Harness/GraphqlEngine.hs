@@ -44,7 +44,8 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
-import Data.Aeson
+-- import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Data.Aeson (Value, fromJSON, object, (.=))
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
 import Data.Environment qualified as Env
@@ -54,7 +55,7 @@ import Harness.Constants qualified as Constants
 import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (fromYaml, yaml)
 import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogMessage)
 import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
@@ -267,8 +268,21 @@ startServerThread :: IO Server
 startServerThread = do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   let urlPrefix = "http://127.0.0.1"
+      backendConfigs =
+        [fromYaml|
+        backend_configs:
+          dataconnector:
+            foobar:
+              display_name: FOOBARDB
+              uri: "http://localhost:65007" |]
   thread <-
-    Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
+    Async.async
+      ( runApp
+          Constants.serveOptions
+            { soPort = unsafePort port,
+              soMetadataDefaults = backendConfigs
+            }
+      )
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck (serverUrl server)
   pure server

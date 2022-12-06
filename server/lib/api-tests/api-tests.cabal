@@ -69,6 +69,7 @@ library
     Test.API.ExplainSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.TransparentDefaultsSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
@@ -185,6 +186,7 @@ library
 
 executable api-tests
   build-depends:
+    , lens-aeson
     , api-tests
     , base
     , hspec
