@@ -1,7 +1,7 @@
 import { NetworkArgs, runMetadataQuery } from '../../api';
 
 type SourceKindsResponse = {
-  sources: { builtin: boolean; kind: string }[];
+  sources: { builtin: boolean; kind: string; display_name: string }[];
 };
 export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {
   const result = await runMetadataQuery<SourceKindsResponse>({
