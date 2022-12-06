@@ -14,15 +14,22 @@ sidebar_position: 19
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Timescale Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to a Timescale Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Timescale Postgres database to a Hasura Cloud project. If you're
-exploring Timescale Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
-out their [docs](https://docs.timescale.com/timescaledb/latest/how-to-guides/migrate-data/) before continuing below.
+This guide explains how to connect a new or existing [Timescale Postgres](https://www.timescale.com/) database to a
+Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our [self-hosted]
+(/deployment/deployment-guides/index.mdx) solutions. If you're exploring Timescale Postgres and are interested in
+migrating an existing Postgres database - such as from Heroku - check out their
+[docs](https://docs.timescale.com/timescaledb/latest/how-to-guides/migrate-data/) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-timescale).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -33,37 +40,37 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
 
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
-After the project is initialized successfully, click on `Launch console` to open the Hasura console in your browser.
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
-## Step 3: Create a Postgres DB on Timescale (skip if you have an existing DB) {#create-pg-db-timescale}
+## Step 3: Create a Postgres DB on Timescale Cloud {#create-pg-db-timescale}
 
 Log into the [Timescale Cloud portal](https://portal.timescale.cloud/login).
 
 On the Timescale dashboard, under `Services`, click on `+ Create new service`:
 
 <Thumbnail
-  src='/img/cloud-dbs/timescale/create-new-service.png'
-  alt='Create a new service on Timescale'
-  width='1000px'
+  src="/img/cloud-dbs/timescale/create-new-service.png"
+  alt="Create a new service on Timescale"
+  width="1000px"
 />
 
 Select the Postgres option:
 
-<Thumbnail src='/img/cloud-dbs/timescale/select-postgres.png' alt='Select Postgres on Timescale' width='700px' />
+<Thumbnail src="/img/cloud-dbs/timescale/select-postgres.png" alt="Select Postgres on Timescale" width="700px" />
 
 Scroll down and select the `Cloud Provider`, `Region` and `Service Plan` based on your requirements.
 
 In the end, enter a `Name` for the service:
 
-<Thumbnail src='/img/cloud-dbs/timescale/create-service.png' alt='Create a service on Timescale' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/timescale/create-service.png" alt="Create a service on Timescale" width="1000px" />
 
 Then click `Create service`.
 
@@ -74,27 +81,34 @@ If you're using a database user other than the default one, make sure to give it
 
 :::
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura
 
 On the `Services` dashboard, click on your DB:
 
-<Thumbnail src='/img/cloud-dbs/timescale/select-db.png' alt='Select DB on Timescale' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/timescale/select-db.png" alt="Select DB on Timescale" width="1000px" />
 
 Scroll down to `Allowed IP Addresses` and click on `Change`:
 
 <Thumbnail
-  src='/img/cloud-dbs/timescale/change-allowed-ip-addresses.png'
-  alt='Change allowed IP addresses on Timescale'
-  width='1000px'
+  src="/img/cloud-dbs/timescale/change-allowed-ip-addresses.png"
+  alt="Change allowed IP addresses on Timescale"
+  width="1000px"
 />
 
-Copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's details view on Hasura Cloud.
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
 
-<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
 
 Add the Hasura IP address that you copied, click on the `+` and then click on `Save changes`:
 
-<Thumbnail src='/img/cloud-dbs/timescale/add-hasura-ip.png' alt='Add the Hasura IP on Timescale' width='500px' />
+<Thumbnail src="/img/cloud-dbs/timescale/add-hasura-ip.png" alt="Add the Hasura IP on Timescale" width="500px" />
 
 ## Step 5: Get the database connection URL {#get-db-url-timescale}
 
@@ -106,13 +120,13 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>?sslmode=req
 
 To get it, navigate to the `Overview` tab of your database dashboard and copy the `Service URI`:
 
-<Thumbnail src='/img/cloud-dbs/timescale/copy-service-uri.png' alt='Copy the service URI on Timescale' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/timescale/copy-service-uri.png" alt="Copy the service URI on Timescale" width="1000px" />
 
 ## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-timescale):
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-timescale):
 
-<Thumbnail src='/img/cloud-dbs/timescale/TS-complete.png' alt='Database setup' width='600px' />
+<Thumbnail src="/img/cloud-dbs/timescale/TS-complete.png" alt="Database setup" width="600px" />
 
 Then click `Connect Database`.
 
@@ -125,18 +139,18 @@ vars to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura console' width='1100px' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura console" width="1100px" />
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
-[custom domains](/projects/domains.mdx)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
+  [custom domains](/projects/domains.mdx)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

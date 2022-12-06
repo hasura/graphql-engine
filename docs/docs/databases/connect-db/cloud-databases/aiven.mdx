@@ -14,15 +14,22 @@ sidebar_position: 2
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with an Aiven Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to an Aiven Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Aiven Postgres database to a Hasura Cloud project. If you're
-exploring Aiven and are interested in migrating an existing Postgres database - such as from Heroku - check out their
+This guide explains how to connect a new or existing [Aiven Postgres](https://aiven.io/postgresql) database to a Hasura
+instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Aiven and are interested in
+migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://docs.aiven.io/docs/products/postgresql/howto/migrate-pg-dump-restore.html) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-aiven).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -35,15 +42,20 @@ On the Hasura Cloud dashboard, create a new project:
 
 <Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
 
-After the project is initialized successfully, click on `Launch console` to open the Hasura console in your browser.
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
-
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 3: Create a Postgres DB on Aiven (skip if you have an existing DB) {#create-pg-db-aiven}
+## Step 3: Create a Postgres DB on Aiven {#create-pg-db-aiven}
+
+:::info Note
+
+If you have an existing Aiven Postgres database, you can skip this step and move on to [step 4](#connect-hasura-aiven).
+
+:::
 
 Log into the [Aiven console](https://console.aiven.io/login).
 
@@ -70,7 +82,7 @@ If you're using a database user other than the default one, make sure to give it
 
 :::
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura {#connect-hasura-aiven}
 
 On the `Services` dashboard, click on your DB:
 
@@ -84,9 +96,17 @@ Scroll down to `Allowed IP Addresses` and click on `Change`:
   width='1000px'
 />
 
-Copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's details view on Hasura Cloud.
+If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
+details view:
 
 <Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
 
 Add the Hasura IP address that you copied, click on the `+`:
 
@@ -108,7 +128,7 @@ To get it, navigate to the `Overview` tab of your database dashboard and copy th
 
 ## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-aiven):
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-aiven):
 
 <Thumbnail src='/img/cloud-dbs/aiven/Aiven-complete.png' alt='Database setup' width='600px' />
 
@@ -127,12 +147,12 @@ Voilà. You are ready to start developing.
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
-[custom domains](/projects/domains.mdx)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
+  [custom domains](/projects/domains.mdx)).
 
 <Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
 

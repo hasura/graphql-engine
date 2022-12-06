@@ -3,7 +3,7 @@ description: Use an existing database with Hasura Cloud
 title: 'Cloud: Guides for connecting Hasura Cloud with different cloud databases'
 keywords:
   - hasura
-  - cloud
+  - cloud databases
   - docs
   - existing database
 slug: index
@@ -32,160 +32,158 @@ import Supabase from '@site/static/img/cloud-dbs/logos/supabase.png';
 import Timescale from '@site/static/img/cloud-dbs/logos/timescaledb.png';
 import Yugabyte from '@site/static/img/cloud-dbs/logos/yugabyte.png';
 
-# Guides for connecting Hasura Cloud with different cloud databases
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Guides for connecting Hasura with different cloud databases
 
 ## Overview
 
-Check out the following guides for tutorials on how to use Hasura Cloud with a new or existing database provided by
+Check out the following guides for tutorials on how to use Hasura with a new or existing database provided by
 specific cloud vendors.
 
-<div className='vendor-table'>
-  <VersionedLink to='/databases/connect-db/cloud-databases/aiven'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Aiven} title='Aiven Postgres' alt='Connect Postgres DB to Hasura' />
+<div className="vendor-table">
+  <VersionedLink to="/databases/connect-db/cloud-databases/aiven">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Aiven} title="Aiven Postgres" alt="Connect Postgres DB to Hasura" />
       </div>
       <h5>Aiven</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/alloy'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Alloy} title='Google AlloyDB Postgres' alt='Connect Google AlloyDB to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/alloy">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Alloy} title="Google AlloyDB Postgres" alt="Connect Google AlloyDB to Hasura" />
       </div>
       <h5>AlloyDB</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/aws-aurora'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Aurora} title='AWS Aurora Postgres' alt='Connect AWS Aurora Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/aws-aurora">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Aurora} title="AWS Aurora Postgres" alt="Connect AWS Aurora Postgres to Hasura" />
       </div>
       <h5>AWS RDS Aurora Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/aws-postgres'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={RDS} title='AWS RDS Postgres' alt='Connect AWS RDS Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/aws-postgres">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={RDS} title="AWS RDS Postgres" alt="Connect AWS RDS Postgres to Hasura" />
       </div>
       <h5>AWS RDS Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/azure-cosmos'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Cosmos} title='Azure Cosmos DB' alt='Connect Azure Cosmos to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/azure-cosmos">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Cosmos} title="Azure Cosmos DB" alt="Connect Azure Cosmos to Hasura" />
       </div>
       <h5>Azure Cosmos</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/mssql'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={MSSQL} title='MS SQL on Azure' alt='Connect MS SQL on Azure to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/mssql">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={MSSQL} title="MS SQL on Azure" alt="Connect MS SQL on Azure to Hasura" />
       </div>
       <h5>Azure MS SQL</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/azure'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Azure} title='Azure Postgres' alt='Connect Azure Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/azure">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Azure} title="Azure Postgres" alt="Connect Azure Postgres to Hasura" />
       </div>
       <h5>Azure Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/crunchy'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={RollTide} title='Crunchy Postgres' alt='Connect Crunchy Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/crunchy">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={RollTide} title="Crunchy Postgres" alt="Connect Crunchy Postgres to Hasura" />
       </div>
       <h5>Crunchy Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/digital-ocean'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={DO} title='Digital Ocean Postgres' alt='Connect DO Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/digital-ocean">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={DO} title="Digital Ocean Postgres" alt="Connect DO Postgres to Hasura" />
       </div>
       <h5>Digital Ocean Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/elephant'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Elephant} title='ElephantSQL Postgres' alt='Connect ElephantSQL Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/elephant">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Elephant} title="ElephantSQL Postgres" alt="Connect ElephantSQL Postgres to Hasura" />
       </div>
       <h5>ElephantSQL</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/enterprisedb'>
-    <div className='card-wrapper'>
-      <div className='card'>
+  <VersionedLink to="/databases/connect-db/cloud-databases/enterprisedb">
+    <div className="card-wrapper">
+      <div className="card">
         <img
           src={Enterprise}
-          title='EnterpriseDB BigAnimal Postgres'
-          alt='Connect EnterpriseDB BigAnimal Postgres to Hasura'
+          title="EnterpriseDB BigAnimal Postgres"
+          alt="Connect EnterpriseDB BigAnimal Postgres to Hasura"
         />
       </div>
       <h5>EnterpriseDB</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/gcp'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={GCP} title='GCP Postgres' alt='Connect GCP Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/gcp">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={GCP} title="GCP Postgres" alt="Connect GCP Postgres to Hasura" />
       </div>
       <h5>GCP Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/neon'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Neon} title='Neon Postgres' alt='Connect Neon Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/neon">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Neon} title="Neon Postgres" alt="Connect Neon Postgres to Hasura" />
       </div>
       <h5>Neon Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/railway'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Railway} title='Railway Postgres' alt='Connect Railway Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/railway">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Railway} title="Railway Postgres" alt="Connect Railway Postgres to Hasura" />
       </div>
       <h5>Railway Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/render'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Render} title='Render Postgres' alt='Connect Render Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/render">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Render} title="Render Postgres" alt="Connect Render Postgres to Hasura" />
       </div>
       <h5>Render Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/supabase'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Supabase} title='Supabase Postgres' alt='Connect Supabase Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/supabase">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Supabase} title="Supabase Postgres" alt="Connect Supabase Postgres to Hasura" />
       </div>
       <h5>Supabase Postgres</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/timescale-cloud'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Timescale} title='TimescaleDB Postgres' alt='Connect TimescaleDB Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/timescale-cloud">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Timescale} title="TimescaleDB Postgres" alt="Connect TimescaleDB Postgres to Hasura" />
       </div>
       <h5>TimescaleDB</h5>
     </div>
   </VersionedLink>
-  <VersionedLink to='/databases/connect-db/cloud-databases/yugabyte'>
-    <div className='card-wrapper'>
-      <div className='card'>
-        <img src={Yugabyte} title='YugabyteDB Postgres' alt='Connect YugabyteDB Postgres to Hasura' />
+  <VersionedLink to="/databases/connect-db/cloud-databases/yugabyte">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Yugabyte} title="YugabyteDB Postgres" alt="Connect YugabyteDB Postgres to Hasura" />
       </div>
       <h5>YugabyteDB</h5>
     </div>

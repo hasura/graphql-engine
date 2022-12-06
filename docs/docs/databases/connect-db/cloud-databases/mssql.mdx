@@ -17,15 +17,22 @@ sidebar_position: 7
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura with an MS SQL on Azure Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to an MS SQL on Azure Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing MS SQL database on Azure to a Hasura Cloud project. If you're
-exploring MS SQL on Azure, and are interested in migrating an existing MS SQL database, check out their
-[docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-sql-server-to-azure-sql) before continuing below.
+This guide explains how to connect a new or existing
+[MS SQL database on Azure](https://azure.microsoft.com/en-us/products/azure-sql/database/) to a Hasura instance, either
+on [Hasura Cloud](https://cloud.hasura.io) or via one of our [self-hosted](/deployment/deployment-guides/index.mdx)
+solutions. If you're exploring MS SQL on Azure, and are interested in migrating an existing MS SQL database, check out
+their [docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-sql-server-to-azure-sql) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-mssql).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -36,7 +43,7 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
@@ -44,31 +51,31 @@ On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connec
 
 You will get prompted for a MS SQL Database URL. We will create this in the next step and then come back here.
 
-<Thumbnail src='/img/cloud-dbs/mssql/existing-mssql-setup.png' alt='Hasura Cloud database setup' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/existing-mssql-setup.png" alt="Hasura Cloud database setup" width="1000px" />
 
-## Step 3: Create an MS SQL Instance on Azure (skip if you have an existing DB) {#create-mssql-server-instance}
+## Step 3: Create an MS SQL Instance on Azure {#create-pg-db-mssql}
 
 Log into the [Azure Console](https://portal.azure.com/#home).
 
 On the top, click on `Search` and type "SQL Server" into the search field. Then click on `SQL Servers`:
 
 <Thumbnail
-  src='/img/cloud-dbs/mssql/select-sql-server-step-1.png'
-  alt='Navigate to SQL Servers on Azure'
-  width='1000px'
+  src="/img/cloud-dbs/mssql/select-sql-server-step-1.png"
+  alt="Navigate to SQL Servers on Azure"
+  width="1000px"
 />
 
 Click on the `Create` button:
 
-<Thumbnail src='/img/cloud-dbs/mssql/click-on-create-step-2.png' alt='Create database in Azure' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/click-on-create-step-2.png" alt="Create database in Azure" width="1000px" />
 
 Select the current `Subscription` (Billing Account) and the resource group. Fill in all the necessary fields. In the
 Authentication part, select `Use SQL Authentication` and fill the username and password for the SQL user.
 
 <Thumbnail
-  src='/img/cloud-dbs/mssql/fill-required-fields-step-3.png'
-  alt='Fill all required fields to create database'
-  width='1000px'
+  src="/img/cloud-dbs/mssql/fill-required-fields-step-3.png"
+  alt="Fill all required fields to create database"
+  width="1000px"
 />
 
 Change additional settings or add tags to the instance if required. Once you reach to `Review + Create` tab, review all
@@ -76,27 +83,34 @@ the fields. You can go back and change any field if required. Then, click on `Cr
 instance.
 
 <Thumbnail
-  src='/img/cloud-dbs/mssql/review-and-create-step-4.png'
-  alt='Review and create SQL Server instance'
-  width='1000px'
+  src="/img/cloud-dbs/mssql/review-and-create-step-4.png"
+  alt="Review and create SQL Server instance"
+  width="1000px"
 />
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura
 
 Once Azure provisions the server, navigate to the server instance page and click on `Show networking settings`.
 
-<Thumbnail src='/img/cloud-dbs/mssql/server-created-go-to-network.png' alt='Go to networking settings' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/server-created-go-to-network.png" alt="Go to networking settings" width="1000px" />
 
-Back on Hasura Cloud, copy the IP address in the `Hasura Cloud IP` field on the project's details view.
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
 
-<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
 
 On Azure, under `Firewell rules` in networking settings, click on `Add a firewall rule`. Name the firewall rule and
-paste the Hasura cloud IP on both the `Start IP` and `End IP` input boxes:
+paste the Hasura instance's IP address on both the `Start IP` and `End IP` input boxes:
 
-<Thumbnail src='/img/cloud-dbs/mssql/add-ip-and-save.png' alt='Add IP to firewall' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/add-ip-and-save.png" alt="Add IP to firewall" width="1000px" />
 
-After entering the IP of your Hasura Cloud project, click on `OK` and then click on `Save` at end of the page for the
+After entering the IP of your Hasura instance, click on `OK` and then click on `Save` at end of the page for the
 changes to take effect.
 
 ## Step 5: Create database {#create-db-on-mssql-instance}
@@ -104,14 +118,14 @@ changes to take effect.
 Go to the SQL Server instance's home and click on `Create Database`
 
 <Thumbnail
-  src='/img/cloud-dbs/mssql/click-on-create-db-step-6.png'
-  alt='Create Database on SQL Server'
-  width='1000px'
+  src="/img/cloud-dbs/mssql/click-on-create-db-step-6.png"
+  alt="Create Database on SQL Server"
+  width="1000px"
 />
 
 Fill in all the required fields and additional settings if required. Click on `Review + create` and create the database.
 
-<Thumbnail src='/img/cloud-dbs/mssql/create-db-step-7.png' alt='Review and create database' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/create-db-step-7.png" alt="Review and create database" width="1000px" />
 
 ## Step 6: Construct the database connection URL {#construct-db-url-mssql}
 
@@ -126,7 +140,7 @@ as a template. Using the information below, you can modify the attributes to mee
 
 Copy the server name from instance home.
 
-<Thumbnail src='/img/cloud-dbs/mssql/copy-server-name.png' alt='Copy server name' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/copy-server-name.png" alt="Copy server name" width="1000px" />
 
 - `Driver`: Driver to use for connection to the SQL Server. If you are not sure, use `ODBC Driver 17 for SQL Server`.
 - `Server`: The server name copied from the instance page.
@@ -136,9 +150,10 @@ Copy the server name from instance home.
 
 ## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter and modify the connection string that we referenced in [step 6](#construct-db-url-mssql):
+Back on the Hasura Console, enter and modify the connection string that we referenced in
+[step 6](#construct-db-url-mssql):
 
-<Thumbnail src='/img/cloud-dbs/mssql/connect-to-hasura-step-8.png' alt='Database setup' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/mssql/connect-to-hasura-step-8.png" alt="Database setup" width="1000px" />
 
 Then click `Connect Database`.
 
@@ -151,18 +166,18 @@ vars to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura console' width='1100px' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura console" width="1100px" />
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
-[custom domains](/projects/domains.mdx)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
+  [custom domains](/projects/domains.mdx)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

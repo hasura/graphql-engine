@@ -16,15 +16,21 @@ sidebar_position: 3
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Google AlloyDB Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to a Google AlloyDB Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Google AlloyDB Postgres database to a Hasura Cloud project. If
-you're exploring AlloyDB Postgres, check out their [docs](https://cloud.google.com/alloydb/docs) before continuing
-below.
+This guide explains how to connect a new or existing [Google AlloyDB Postgres](https://cloud.google.com/alloydb)
+database to a Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring AlloyDB Postgres, check out
+their [docs](https://cloud.google.com/alloydb/docs) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-alloy).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -39,9 +45,8 @@ On the Hasura Cloud dashboard, create a new project:
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
-
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
 <Thumbnail src='/img/cloud-dbs/alloy/alloy-existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
@@ -121,7 +126,7 @@ Provide a name for this instance and set the following properties:
 
   :::tip Tip
 
-  For the best performance, select the GCE region as the same or closest to your Hasura Cloud project's region.
+  For the best performance, select the GCE region as the same or closest to whichever region hosts your Hasura instance.
 
   :::
 
@@ -156,16 +161,24 @@ Additionally, you may have to specify a different version of the auth proxy, suc
 
 ## Step 5: Add a firewall rule
 
-With our auth proxy now running, you'll need to create a firewall rule that allows a connection from your Hasura Cloud
-project. From your project's dashboard, copy the Hasura Cloud IP address:
+With our auth proxy now running, you'll need to create a firewall rule that allows a connection from your Hasura
+instance. If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
 
 <Thumbnail src='/img/cloud-dbs/alloy/alloy-hasura-ip.png' alt='AlloyDB get IP of Hasura Cloud project' width='1000px' />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
 
 Within the **VPC Firewall settings**, add a new rule by clicking, `CREATE FIREWALL RULE`:
 
 <Thumbnail src='/img/cloud-dbs/alloy/alloy-create-firewall.png' alt='AlloyDB create firewall rule' width='1000px' />
 
-Permit connections to port `5432` and specify the Hasura Cloud IP address in the IPv4 range and click `CREATE`:
+Permit connections to port `5432` and specify the IP address of your Hasura instance in the IPv4 range and click
+`CREATE`:
 
 <Thumbnail src='/img/cloud-dbs/alloy/alloy-firewall-settings.png' alt='AlloyDB firewall rule settings' width='1000px' />
 
@@ -182,7 +195,7 @@ postgresql://<database-user>:<postgres-password>@<ip-address-of-gce-instance>:54
   [step 3](#create-pg-db-alloy).
 - The `ip-address-of-gce-instance` is from [step 4](#create-gce-instance) when you created a GCE VM instance.
 
-Back on Hasura Console, enter the database URL:
+Back on the Hasura Console, enter the database URL:
 
 <Thumbnail src='/img/cloud-dbs/alloy/alloy-connect-db.png' alt='AlloyDB connect db' width='1000px' />
 
@@ -201,12 +214,12 @@ Voilà. You are ready to start developing.
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
-[custom domains](/projects/domains.mdx)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
+  [custom domains](/projects/domains.mdx)).
 
 <Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
 

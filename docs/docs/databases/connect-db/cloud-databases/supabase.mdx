@@ -14,15 +14,22 @@ sidebar_position: 18
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Supabase Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to a Supabase Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Supabase Postgres database to a Hasura Cloud project. If you're
-exploring Supabase Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
-out their [docs](https://supabase.com/docs/guides/migrations/heroku) before continuing below.
+This guide explains how to connect a new or existing [Supabase Postgres database](https://supabase.com/database) to a
+Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Supabase Postgres and are
+interested in migrating an existing Postgres database - such as from Heroku - check out their
+[docs](https://supabase.com/docs/guides/migrations/heroku) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-supabase).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -33,68 +40,67 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
-
-## Step 3: Create a Postgres DB on Supabase ([skip if you have an existing DB](#get-db-url))
+## Step 3: Create a Postgres DB on Supabase {#create-pg-db-supabase}
 
 Log into [Supabase](https://app.supabase.com/) using your GitHub login.
 
 From your dashboard, click `New project`:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-create-new-project.png'
-  alt='Create a new project with Supabase'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-create-new-project.png"
+  alt="Create a new project with Supabase"
+  width="700px"
 />
 
 If you don't already have an organization within Supabase, you'll need to create a one. Click `New organization`:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-create-new-organization.png'
-  alt='Create a new organization with Supabase'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-create-new-organization.png"
+  alt="Create a new organization with Supabase"
+  width="700px"
 />
 
 Fill in a name and click `Create organization`:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-new-organization-name.png'
-  alt='Name your organization with Supabase'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-new-organization-name.png"
+  alt="Name your organization with Supabase"
+  width="700px"
 />
 
 After creating your organization, you'll be presented with the `Create a new project` view. Fill in the necessary
 information and click `Create new project`:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-create-new-project-confirm.png'
-  alt='Confirm project creation'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-create-new-project-confirm.png"
+  alt="Confirm project creation"
+  width="700px"
 />
 
 You'll be redirected to your project's dashboard. After a few minutes, your database should be provisioned. You'll know
 you're ready once your dashboard changes from this:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-dashboard-provisioning.png'
-  alt='Dashboard as project is being provisioned'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-dashboard-provisioning.png"
+  alt="Dashboard as project is being provisioned"
+  width="700px"
 />
 
 To this:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-dashboard-ready.png'
-  alt='Dashboard view after provisioning is complete'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-dashboard-ready.png"
+  alt="Dashboard view after provisioning is complete"
+  width="700px"
 />
 
 Congratulations! You've now created a Postgres instance on Supabase which you can use with Hasura GraphQL Engine. Follow
@@ -111,22 +117,22 @@ postgresql://<user-name>:<password>@<host-server>:<port>/<database-name>
 From your database's dashboard, click the `Settings` icon on the side navigation:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-dashboard-settings.png'
-  alt='From dashboard, choose settings on the left-hand side'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-dashboard-settings.png"
+  alt="From dashboard, choose settings on the left-hand side"
+  width="700px"
 />
 
 Choose `Database`:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-database-view.png'
-  alt='Database information within the settings view'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-database-view.png"
+  alt="Database information within the settings view"
+  width="700px"
 />
 
 Then scroll down to find the `Connection string` section. Select the `URI` option and copy the string:
 
-<Thumbnail src='/img/cloud-dbs/supabase/supabase-copy-uri.png' alt='Grab the PG db connection string' width='700px' />
+<Thumbnail src="/img/cloud-dbs/supabase/supabase-copy-uri.png" alt="Grab the PG db connection string" width="700px" />
 
 :::info Note
 
@@ -139,9 +145,9 @@ You'll need to replace `[YOUR-PASSWORD]` with your project's password.
 Back on the Hasura Console, enter the database URI that we retrieved in the previous step:
 
 <Thumbnail
-  src='/img/cloud-dbs/supabase/supabase-connected-db.png'
-  alt='Connect the database on Hasura Console'
-  width='700px'
+  src="/img/cloud-dbs/supabase/supabase-connected-db.png"
+  alt="Connect the database on Hasura Console"
+  width="700px"
 />
 
 Then click `Connect Database`.
@@ -156,19 +162,19 @@ of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
-[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
-[custom domains](/projects/domains.mdx#manage-project-domains)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+  [env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+  [custom domains](/projects/domains.mdx#manage-project-domains)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

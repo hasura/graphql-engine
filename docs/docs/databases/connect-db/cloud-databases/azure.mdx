@@ -14,16 +14,24 @@ sidebar_position: 8
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with an Azure Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to an Azure Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Azure Postgres database to a Hasura Cloud project. If you're
-exploring Azure Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check out
-their [docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-postgresql-azure-postgresql-online-portal) before
-continuing below.
+This guide explains how to connect a new or existing
+[Azure Postgres database](https://azure.microsoft.com/en-us/products/postgresql/) to a Hasura instance, either on
+[Hasura Cloud](https://cloud.hasura.io) or via one of our [self-hosted](/deployment/deployment-guides/index.mdx)
+solutions. If you're exploring Azure Postgres and are interested in migrating an existing Postgres database - such as
+from Heroku - check out their
+[docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-postgresql-azure-postgresql-online-portal) before continuing
+below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-azure).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -36,15 +44,14 @@ On the Hasura Cloud dashboard, create a new project:
 
 <Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
 
-After the project is initialized successfully, click on `Launch console` to open the Hasura console in your browser.
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
-
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 3: Create a Postgres DB on Azure (skip if you have an existing DB)
+## Step 3: Create a Postgres DB on Azure {#create-pg-db-azure}
 
 Log into the [Azure portal](https://portal.azure.com).
 
@@ -81,15 +88,23 @@ console. Hasura v2.x works fine with JIT enabled.
 
 :::
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura
 
 On the database dashboard, click on `Connection security` under `Settings` on the left navigation bar.
 
 On `Allow access to Azure services`, click the `Yes` button. Then add a Firewall rule for Hasura.
 
-Copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's details view on Hasura Cloud.
+If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
+details view:
 
-<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' />
+<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
 
 Add the Hasura IP address that you copied:
 
@@ -122,7 +137,7 @@ On the database dashboard, click on `Overview`:
 
 ## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-azure):
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-azure):
 
 <Thumbnail src='/img/cloud-dbs/azure/azure-complete.png' alt='Database setup' width='600px' />
 
@@ -142,13 +157,13 @@ Voilà. You are ready to start developing.
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
-[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
-[custom domains](/projects/domains.mdx#manage-project-domains)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+  [env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+  [custom domains](/projects/domains.mdx#manage-project-domains)).
 
 <Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
 
