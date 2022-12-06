@@ -99,11 +99,12 @@ splitOnHspec = \case
 --   feature matrix, and whether the run was successful.
 runSuite :: String -> [String] -> IO (BS.ByteString, Bool)
 runSuite uri hspecArgs = do
+  putStrLn $ "Running suite against: " <> show uri <> "."
   Environment.withArgs hspecArgs $ do
     -- write the logs to this queue
     queue <- newTQueueIO
     -- setup mode and logging
-    postgresOptions <- Options.parseConnectionString uri `onLeft` fail
+    postgresOptions <- Options.parseConnectionString uri `onLeft` error
     SpecHook.setupGlobalConfig
       (TestEnvironment.TestNewPostgresVariant postgresOptions)
       (FL.LogCallback (atomically . writeTQueue queue) (pure ()))
