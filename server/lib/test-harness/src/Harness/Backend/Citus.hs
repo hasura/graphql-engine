@@ -4,7 +4,8 @@
 -- | CitusQL helpers. Pretty much the same as postgres. Could refactor
 -- if we add more things here.
 module Harness.Backend.Citus
-  ( livenessCheck,
+  ( backendTypeMetadata,
+    livenessCheck,
     run_,
     defaultSourceMetadata,
     defaultSourceConfiguration,
@@ -21,6 +22,8 @@ module Harness.Backend.Citus
     setupPermissionsAction,
   )
 where
+
+--------------------------------------------------------------------------------
 
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
@@ -44,7 +47,8 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (Citus), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
@@ -52,6 +56,22 @@ import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.Citus,
+      backendSourceName = "citus",
+      backendCapabilities = Nothing,
+      backendTypeString = "citus",
+      backendDisplayNameString = "citus",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "schema"
+    }
+
+--------------------------------------------------------------------------------
 
 -- | Check the citus server is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
@@ -111,8 +131,8 @@ runInternal testEnvironment connectionString query = do
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
   [interpolateYaml|
-    name: #{ defaultSource Citus }
-    kind: #{ defaultBackendTypeString Citus }
+    name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
     tables: []
     configuration: #{ defaultSourceConfiguration testEnvironment }
   |]
@@ -205,12 +225,12 @@ dropTable testEnvironment Schema.Table {tableName} = do
 -- | Post an http request to start tracking the table
 trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
-  Schema.trackTable Citus (defaultSource Citus) table testEnvironment
+  Schema.trackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
 untrackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
-  Schema.untrackTable Citus (defaultSource Citus) table testEnvironment
+  Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -282,8 +302,8 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships Citus table testEnvironment
-    Schema.trackArrayRelationships Citus table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =
@@ -305,8 +325,8 @@ teardown _ (testEnvironment, _) =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup Citus permissions env
+setupPermissions permissions env = Permissions.setup permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown Citus permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env

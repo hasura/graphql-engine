@@ -65,7 +65,7 @@ data TestEnvironment = TestEnvironment
     uniqueTestId :: UniqueTestId,
     -- | the main backend type of the test, if applicable (ie, where we are not
     -- testing `remote <-> remote` joins or someting similarly esoteric)
-    backendType :: Maybe BackendType
+    backendTypeConfig :: Maybe BackendTypeConfig
   }
 
 instance Show TestEnvironment where

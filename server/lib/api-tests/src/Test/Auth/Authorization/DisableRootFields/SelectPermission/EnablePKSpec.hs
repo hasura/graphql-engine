@@ -23,14 +23,14 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith GlobalTestEnvironment
 spec = do
   let pgFixture =
-        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
           { Fixture.setupTeardown = \(testEnv, _) ->
               [ Postgres.setupTablesAction schema testEnv,
                 postgresSetupPermissions testEnv
               ]
           }
       sqlServerFixture =
-        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
           { Fixture.setupTeardown = \(testEnv, _) ->
               [ SQLServer.setupTablesAction schema testEnv,
                 sqlserverSetupPermissions testEnv

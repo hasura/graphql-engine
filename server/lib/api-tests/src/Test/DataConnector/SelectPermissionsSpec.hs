@@ -14,7 +14,8 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -27,13 +28,13 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction (sourceConfig Fixture.DataConnectorReference Reference.sourceConfiguration) Reference.agentConfig testEnv]
+                [Chinook.setupAction (sourceConfig Reference.backendTypeMetadata Reference.sourceConfiguration) Reference.agentConfig testEnv]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction (sourceConfig Fixture.DataConnectorSqlite Sqlite.sourceConfiguration) Sqlite.agentConfig testEnv]
+                [Chinook.setupAction (sourceConfig Sqlite.backendTypeMetadata Sqlite.sourceConfiguration) Sqlite.agentConfig testEnv]
             }
         ]
     )
@@ -44,10 +45,10 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceConfig :: BackendType -> Value -> Value
-sourceConfig backendType config =
-  let source = defaultSource backendType
-      backendTypeString = defaultBackendTypeString backendType
+sourceConfig :: BackendTypeConfig -> Value -> Value
+sourceConfig backendTypeMetadata config =
+  let source = BackendType.backendSourceName backendTypeMetadata
+      backendTypeString = BackendType.backendTypeString backendTypeMetadata
    in [yaml|
         name : *source
         kind: *backendTypeString

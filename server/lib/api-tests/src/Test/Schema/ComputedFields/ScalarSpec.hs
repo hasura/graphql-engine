@@ -12,12 +12,11 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -28,12 +27,12 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
                   <> setupFunction testEnv
-                  <> setupMetadata testEnv BackendType.Postgres
+                  <> setupMetadata testEnv
             }
         ]
     )
@@ -90,20 +89,22 @@ setupFunction testEnv =
           }
       ]
 
-setupMetadata :: TestEnvironment -> BackendType -> [Fixture.SetupAction]
-setupMetadata testEnv backend =
-  let schemaName :: Schema.SchemaName
-      schemaName = Schema.getSchemaName testEnv
+setupMetadata :: TestEnvironment -> [Fixture.SetupAction]
+setupMetadata testEnvironment =
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+
+      schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
 
       source :: String
-      source = Fixture.defaultSource backend
+      source = Fixture.backendSourceName backendTypeMetadata
 
       backendPrefix :: String
-      backendPrefix = BackendType.defaultBackendTypeString backend
+      backendPrefix = BackendType.backendTypeString backendTypeMetadata
    in [ Fixture.SetupAction
           { Fixture.setupAction =
               GraphqlEngine.postMetadata_
-                testEnv
+                testEnvironment
                 [interpolateYaml|
               type: #{ backendPrefix }_add_computed_field
               args:

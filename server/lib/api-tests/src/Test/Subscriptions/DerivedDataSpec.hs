@@ -26,25 +26,25 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupPostgres testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata Postgres.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
                   setupCitus testEnvironment,
-                  setupMetadata Fixture.Citus testEnvironment
+                  setupMetadata Citus.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   setupCockroach testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
+                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -260,9 +260,9 @@ setupCockroach testEnvironment =
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backend testEnvironment = do
-  let backendPrefix = Fixture.defaultBackendTypeString backend
+setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendMetadata testEnvironment = do
+  let backendPrefix = Fixture.backendTypeString backendMetadata
   Fixture.SetupAction
     { Fixture.setupAction =
         postMetadata_
@@ -320,7 +320,7 @@ setupMetadata backend testEnvironment = do
     }
   where
     source :: String
-    source = Fixture.defaultSource backend
+    source = Fixture.backendSourceName backendMetadata
 
     schemaName :: Schema.SchemaName
     schemaName = Schema.getSchemaName testEnvironment

@@ -23,25 +23,25 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupPostgres testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata Postgres.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
                   setupCitus testEnvironment,
-                  setupMetadata Fixture.Citus testEnvironment
+                  setupMetadata Citus.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   setupCockroach testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
+                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -159,14 +159,14 @@ setupCockroach testEnvironment = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backend testEnvironment = do
+setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendMetadata testEnvironment =
   let schemaName = Schema.getSchemaName testEnvironment
-  Fixture.SetupAction
-    { Fixture.setupAction =
-        postMetadata_
-          testEnvironment
-          [yaml|
+   in Fixture.SetupAction
+        { Fixture.setupAction =
+            postMetadata_
+              testEnvironment
+              [yaml|
             type: *track
             args:
               source: *source
@@ -174,10 +174,10 @@ setupMetadata backend testEnvironment = do
                 name: author_view
                 schema: *schemaName
           |],
-      Fixture.teardownAction = \_ ->
-        postMetadata_
-          testEnvironment
-          [yaml|
+          Fixture.teardownAction = \_ ->
+            postMetadata_
+              testEnvironment
+              [yaml|
             type: *untrack
             args:
               source: *source
@@ -185,13 +185,13 @@ setupMetadata backend testEnvironment = do
                 name: author_view
                 schema: *schemaName
           |]
-    }
+        }
   where
     label :: String
-    label = Fixture.defaultBackendTypeString backend
+    label = Fixture.backendTypeString backendMetadata
 
     source :: String
-    source = Fixture.defaultSource backend
+    source = Fixture.backendSourceName backendMetadata
 
     track :: String
     track = label <> "_track_table"

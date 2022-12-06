@@ -12,6 +12,7 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
@@ -23,17 +24,17 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment
                 ]
@@ -43,7 +44,7 @@ spec = do
     (tests postgresRunSqlQuery)
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment
                 ]
@@ -89,10 +90,10 @@ tests query opts = do
 
 postgresRunSqlQuery :: TestEnvironment -> String -> IO Value
 postgresRunSqlQuery testEnvironment bulkType = do
-  let backend = fromMaybe (error "Expected a backend type but got nothing") (backendType testEnvironment)
-      sourceName = Fixture.defaultSource backend
+  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ backendTypeConfig testEnvironment
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix =
-        case Fixture.defaultBackendTypeString backend of
+        case BackendType.backendTypeString backendTypeMetadata of
           "pg" -> ""
           x -> x <> "_"
   postV2Query 200 testEnvironment $
@@ -135,10 +136,10 @@ postgresRunSqlQuery testEnvironment bulkType = do
 
 runSqlDrop :: TestEnvironment -> IO Value
 runSqlDrop testEnvironment = do
-  let backend = fromMaybe (error "Expected a backend type but got nothing") (backendType testEnvironment)
-      sourceName = Fixture.defaultSource backend
+  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ backendTypeConfig testEnvironment
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix =
-        case Fixture.defaultBackendTypeString backend of
+        case BackendType.backendTypeString backendTypeMetadata of
           "pg" -> ""
           x -> x <> "_"
   postV2Query
@@ -158,10 +159,10 @@ runSqlDrop testEnvironment = do
 
 mssqlRunSqlQuery :: TestEnvironment -> String -> IO Value
 mssqlRunSqlQuery testEnvironment bulkType = do
-  let backend = fromMaybe (error "Expected a backend type but got nothing") (backendType testEnvironment)
-      sourceName = Fixture.defaultSource backend
+  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ backendTypeConfig testEnvironment
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix =
-        case Fixture.defaultBackendTypeString backend of
+        case BackendType.backendTypeString backendTypeMetadata of
           "pg" -> ""
           x -> x <> "_"
   postV2Query 200 testEnvironment $

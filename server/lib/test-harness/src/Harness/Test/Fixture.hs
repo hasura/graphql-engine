@@ -13,13 +13,10 @@ module Harness.Test.Fixture
     fixture,
     FixtureName (..),
     BackendType (..),
+    BackendTypeConfig (..),
     pattern DataConnectorMock,
     pattern DataConnectorReference,
     pattern DataConnectorSqlite,
-    defaultSource,
-    defaultBackendDisplayNameString,
-    defaultBackendTypeString,
-    schemaKeyword,
     noLocalTestEnvironment,
     SetupAction (..),
     Options (..),
@@ -231,7 +228,7 @@ setupTestEnvironment name globalTestEnvironment = do
 
   let testEnvironment =
         TestEnvironment
-          { backendType = case name of
+          { backendTypeConfig = case name of
               Backend db -> Just db
               _ -> Nothing,
             uniqueTestId = uniqueTestId,
@@ -343,18 +340,18 @@ fixture name = Fixture {..}
 
 -- | A name describing the given context.
 data FixtureName
-  = Backend BackendType
+  = Backend BackendTypeConfig
   | RemoteGraphQLServer
   | Combine FixtureName FixtureName
 
 backendTypesForFixture :: FixtureName -> S.Set BackendType
-backendTypesForFixture (Backend be) = S.singleton be
+backendTypesForFixture (Backend be) = S.singleton (backendType be)
 backendTypesForFixture RemoteGraphQLServer = mempty
 backendTypesForFixture (Combine a b) =
   backendTypesForFixture a <> backendTypesForFixture b
 
 instance Show FixtureName where
-  show (Backend backend) = show backend
+  show (Backend backend) = show (backendType backend)
   show RemoteGraphQLServer = "RemoteGraphQLServer"
   show (Combine name1 name2) = show name1 ++ "-" ++ show name2
 

@@ -21,7 +21,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+        [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ BigQuery.setupTablesAction schema testEnvironment
                 ]

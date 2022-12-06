@@ -95,7 +95,7 @@ type LHSFixture = Value -> Fixture.Fixture (Maybe Server)
 
 lhsPostgres :: LHSFixture
 lhsPostgres tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+  (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
         [ SetupAction.noTeardown (lhsPostgresSetup tableName testEnv)
@@ -104,7 +104,7 @@ lhsPostgres tableName =
 
 lhsCitus :: LHSFixture
 lhsCitus tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+  (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsCitusMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
         [ SetupAction.noTeardown (lhsCitusSetup tableName testEnv)
@@ -113,7 +113,7 @@ lhsCitus tableName =
 
 lhsCockroach :: LHSFixture
 lhsCockroach tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+  (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
         [ SetupAction.noTeardown (lhsCockroachSetup tableName testEnv)
@@ -123,7 +123,7 @@ lhsCockroach tableName =
 
 lhsSQLServer :: LHSFixture
 lhsSQLServer tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+  (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
         [ SetupAction.noTeardown (lhsSQLServerSetup tableName testEnv)
@@ -158,7 +158,7 @@ rhsPostgres =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
               [ SetupAction.noTeardown (rhsPostgresSetup testEnv)
               ]
@@ -173,7 +173,7 @@ rhsCitus =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+        (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
               [ SetupAction.noTeardown (rhsCitusSetup testEnv)
               ]
@@ -188,7 +188,7 @@ rhsCockroach =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+        (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
               [ SetupAction.noTeardown (rhsCockroachSetup testEnv)
               ],
@@ -204,7 +204,7 @@ rhsSQLServer =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
               [ SetupAction.noTeardown (rhsSQLServerSetup testEnv)
               ]
@@ -276,7 +276,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -341,7 +341,7 @@ args:
   -- setup tables only
   Citus.createTable testEnvironment track
   Citus.insertTable testEnvironment track
-  Schema.trackTable Fixture.Citus sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -406,7 +406,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
   -- setup tables only
   Cockroach.createTable testEnvironment track
   Cockroach.insertTable testEnvironment track
-  Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -472,7 +472,7 @@ args:
   -- setup tables only
   SQLServer.createTable testEnvironment track
   SQLServer.insertTable testEnvironment track
-  Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -733,7 +733,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment album
   Postgres.insertTable testEnvironment album
-  Schema.trackTable Fixture.Postgres sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -791,7 +791,7 @@ args:
   -- setup tables only
   Citus.createTable testEnvironment album
   Citus.insertTable testEnvironment album
-  Schema.trackTable Fixture.Citus sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -849,7 +849,7 @@ rhsCockroachSetup (testEnvironment, _) = do
   -- setup tables only
   Cockroach.createTable testEnvironment album
   Cockroach.insertTable testEnvironment album
-  Schema.trackTable Fixture.Cockroach sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -907,7 +907,7 @@ args:
   -- setup tables only
   SQLServer.createTable testEnvironment album
   SQLServer.insertTable testEnvironment album
-  Schema.trackTable Fixture.SQLServer sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment

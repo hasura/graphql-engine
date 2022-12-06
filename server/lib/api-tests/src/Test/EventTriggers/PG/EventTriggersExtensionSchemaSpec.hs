@@ -31,7 +31,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
               Fixture.mkLocalTestEnvironment = const Webhook.run,
@@ -177,7 +177,7 @@ postgresSetup :: HasCallStack => TestEnvironment -> GraphqlEngine.Server -> IO (
 postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
-      defaultSourceName = BackendType.defaultSource BackendType.Postgres
+      defaultSourceName = BackendType.backendSourceName Postgres.backendTypeMetadata
       sourceName = "hge_test"
       databaseUrl = Postgres.makeFreshDbConnectionString testEnvironment
       sourceConfig =
@@ -200,8 +200,8 @@ postgresSetup testEnvironment webhookServer = do
 
   -- track table(s) with the new source
   forM_ schema \theTable -> do
-    Schema.untrackTable Fixture.Postgres defaultSourceName theTable testEnvironment
-    Schema.trackTable Fixture.Postgres sourceName theTable testEnvironment
+    Schema.untrackTable defaultSourceName theTable testEnvironment
+    Schema.trackTable sourceName theTable testEnvironment
 
   -- create the event trigger
   GraphqlEngine.postMetadata_ testEnvironment $

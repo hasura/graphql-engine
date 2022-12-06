@@ -6,6 +6,7 @@
 module Harness.Backend.DataConnector.Chinook.Sqlite
   ( agentConfig,
     sourceConfiguration,
+    backendTypeMetadata,
   )
 where
 
@@ -13,14 +14,45 @@ where
 
 import Data.Aeson qualified as Aeson
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.BackendType qualified as BackendType
+import Hasura.Prelude
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendType.BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.DataConnectorSqlite,
+      backendSourceName = "chinook_sqlite",
+      backendCapabilities =
+        Just
+          [yaml|
+            data_schema:
+              supports_primary_keys: true
+              supports_foreign_keys: true
+            scalar_types:
+              DateTime: {}
+            queries: {}
+            relationships: {}
+            comparisons:
+              subquery:
+                supports_relations: true
+            explain: {}
+            metrics: {}
+            raw: {}
+        |],
+      backendTypeString = "sqlite",
+      backendDisplayNameString = "Hasura SQLite (sqlite)",
+      backendServerUrl = Just "http://localhost:65007",
+      backendSchemaKeyword = "schema"
+    }
 
 --------------------------------------------------------------------------------
 
 -- | Reference Agent @backend_configs@ field.
 agentConfig :: Aeson.Value
 agentConfig =
-  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorSqlite
+  let backendType = BackendType.backendTypeString backendTypeMetadata
    in [yaml|
 dataconnector:
   *backendType:

@@ -37,7 +37,7 @@ spec = do
           --       [ Mysql.setupTablesAction schema testEnv
           --       ]
           --   },
-          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
@@ -45,22 +45,22 @@ spec = do
           -- Create table fails currently on a weird error:
           -- > relation "i_need_a_table_with_a_long_na_i_need_a_column_with_a_long_n_seq" already exists
           --
-          -- (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          -- (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
           --   { Fixture.setupTeardown = \(testEnv, _) ->
           --       [ Citus.setupTablesAction schema testEnv
           --       ]
           --   },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
@@ -75,7 +75,7 @@ spec = do
     tests
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
@@ -85,7 +85,7 @@ spec = do
     (testInsert "Int")
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+        [ (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]

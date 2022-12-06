@@ -45,23 +45,23 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
       NE.fromList $
         map
           mkFixture
-          [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsPostgresSetupAction testEnv]
               },
-            (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.mkLocalTestEnvironment = lhsCitusMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsCitusSetupAction testEnv]
               },
-            (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
               { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsCockroachSetupAction testEnv],
                 Fixture.customOptions = Nothing
               },
-            (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+            (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
               { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsSQLServerSetupAction testEnv]
@@ -159,7 +159,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -211,7 +211,7 @@ args:
   -- setup tables only
   Citus.createTable testEnvironment track
   Citus.insertTable testEnvironment track
-  Schema.trackTable Fixture.Citus sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -262,7 +262,7 @@ lhsCockroachSetup (testEnvironment, _) = do
   -- setup tables only
   Cockroach.createTable testEnvironment track
   Cockroach.insertTable testEnvironment track
-  Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -314,7 +314,7 @@ args:
   -- setup tables only
   SQLServer.createTable testEnvironment track
   SQLServer.insertTable testEnvironment track
-  Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|

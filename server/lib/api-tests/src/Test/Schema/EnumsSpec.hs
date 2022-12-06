@@ -26,7 +26,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Fixture.SetupAction
                     { Fixture.setupAction =
@@ -36,7 +36,7 @@ spec =
                   Postgres.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Fixture.SetupAction
                     { Fixture.setupAction =
@@ -46,7 +46,7 @@ spec =
                   Cockroach.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Fixture.SetupAction
                     { Fixture.setupAction =

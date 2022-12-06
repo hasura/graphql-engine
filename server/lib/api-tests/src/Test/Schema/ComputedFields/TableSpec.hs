@@ -14,14 +14,13 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
-import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions (Permission (SelectPermission), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Permissions qualified as Permission
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -32,19 +31,19 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
                   <> postgresSetupFunctions testEnv
-                  <> setupMetadata testEnv BackendType.Postgres
+                  <> setupMetadata testEnv
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ]
                   <> bigquerySetupFunctions testEnv
-                  <> setupMetadata testEnv BackendType.BigQuery,
+                  <> setupMetadata testEnv,
               Fixture.customOptions =
                 Just $
                   Fixture.defaultOptions
@@ -186,18 +185,18 @@ fetch_articles_no_user_args :: SchemaName -> T.Text
 fetch_articles_no_user_args schemaName =
   unSchemaName schemaName <> ".fetch_articles_no_user_args"
 
-setupMetadata :: TestEnvironment -> BackendType -> [Fixture.SetupAction]
-setupMetadata testEnv backend =
-  let schemaName :: Schema.SchemaName
-      schemaName = Schema.getSchemaName testEnv
+setupMetadata :: TestEnvironment -> [Fixture.SetupAction]
+setupMetadata testEnvironment =
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+      schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
 
       source :: String
-      source = Fixture.defaultSource backend
+      source = BackendType.backendSourceName backendTypeMetadata
    in -- Add computed fields and define select permissions
       [ Fixture.SetupAction
           { Fixture.setupAction =
               Schema.trackComputedField
-                backend
                 source
                 authorTable
                 "fetch_articles"
@@ -207,13 +206,12 @@ setupMetadata testEnv backend =
                 name: article
                 dataset: *schemaName
               |]
-                testEnv,
+                testEnvironment,
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
           { Fixture.setupAction =
               Schema.trackComputedField
-                backend
                 source
                 authorTable
                 "fetch_articles_no_user_args"
@@ -223,7 +221,7 @@ setupMetadata testEnv backend =
                   name: article
                   dataset: *schemaName
                 |]
-                testEnv,
+                testEnvironment,
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
@@ -231,8 +229,7 @@ setupMetadata testEnv backend =
               -- Role user_1 has select permissions on author and article tables.
               -- user_1 can query search_articles computed field.
               Permission.createPermission
-                backend
-                testEnv
+                testEnvironment
                 $ SelectPermission
                   selectPermission
                     { selectPermissionSource = T.pack source,
@@ -245,8 +242,7 @@ setupMetadata testEnv backend =
         Fixture.SetupAction
           { Fixture.setupAction =
               Permission.createPermission
-                backend
-                testEnv
+                testEnvironment
                 $ SelectPermission
                   selectPermission
                     { selectPermissionSource = T.pack source,
@@ -260,8 +256,7 @@ setupMetadata testEnv backend =
           { Fixture.setupAction =
               -- Role user_2 has select permissions only on author table.
               Permission.createPermission
-                backend
-                testEnv
+                testEnvironment
                 $ SelectPermission
                   selectPermission
                     { selectPermissionSource = T.pack source,

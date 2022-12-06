@@ -11,6 +11,7 @@ import Harness.Backend.DataConnector.Mock (TestCase (..))
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -24,7 +25,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
+        [ (Fixture.fixture $ Fixture.Backend Mock.backendTypeMetadata)
             { Fixture.mkLocalTestEnvironment =
                 Mock.mkLocalTestEnvironment,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
@@ -38,8 +39,8 @@ spec =
 
 sourceMetadata :: Aeson.Value
 sourceMetadata =
-  let source = Fixture.defaultSource Fixture.DataConnectorMock
-      backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorMock
+  let source = BackendType.backendSourceName Mock.backendTypeMetadata
+      backendType = BackendType.backendTypeString Mock.backendTypeMetadata
    in [yaml|
         name : *source
         kind: *backendType

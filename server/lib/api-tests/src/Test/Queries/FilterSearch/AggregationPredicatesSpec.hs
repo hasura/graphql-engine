@@ -19,7 +19,6 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postGraphqlWithHeaders)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
-import Harness.Test.BackendType (BackendType)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions (Permission (SelectPermission), SelectPermissionDetails (..), selectPermission)
@@ -37,10 +36,10 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend BackendType.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  Postgres.setupPermissionsAction (permissions BackendType.Postgres) testEnv
+                  Postgres.setupPermissionsAction (permissions Postgres.backendTypeMetadata) testEnv
                 ]
             }
         ]
@@ -81,19 +80,19 @@ schema =
       }
   ]
 
-permissions :: BackendType -> [Permission]
+permissions :: BackendType.BackendTypeConfig -> [Permission]
 permissions backend =
   [ SelectPermission
       selectPermission
         { selectPermissionTable = "author",
-          selectPermissionSource = Text.pack $ BackendType.defaultSource backend,
+          selectPermissionSource = Text.pack $ BackendType.backendSourceName backend,
           selectPermissionRole = "role-select-author-name-only",
           selectPermissionColumns = ["id", "name"]
         },
     SelectPermission
       selectPermission
         { selectPermissionTable = "article",
-          selectPermissionSource = Text.pack $ BackendType.defaultSource backend,
+          selectPermissionSource = Text.pack $ BackendType.backendSourceName backend,
           selectPermissionRole = "role-select-author-name-only",
           selectPermissionColumns = ["id", "title", "author_id"],
           selectPermissionRows =
@@ -105,14 +104,14 @@ permissions backend =
     SelectPermission
       selectPermission
         { selectPermissionTable = "author",
-          selectPermissionSource = Text.pack $ BackendType.defaultSource backend,
+          selectPermissionSource = Text.pack $ BackendType.backendSourceName backend,
           selectPermissionRole = "disallow-aggregation-queries",
           selectPermissionColumns = ["id", "name"]
         },
     SelectPermission
       selectPermission
         { selectPermissionTable = "article",
-          selectPermissionSource = Text.pack $ BackendType.defaultSource backend,
+          selectPermissionSource = Text.pack $ BackendType.backendSourceName backend,
           selectPermissionRole = "disallow-aggregation-queries",
           selectPermissionColumns = ["id", "title", "author_id"],
           selectPermissionAllowAggregations = False

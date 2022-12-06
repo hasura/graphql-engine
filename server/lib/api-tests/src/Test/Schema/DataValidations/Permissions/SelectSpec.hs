@@ -28,28 +28,28 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata Postgres.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Citus testEnvironment
+                  setupMetadata Citus.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
+                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ BigQuery.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.BigQuery testEnvironment
+                  setupMetadata BigQuery.backendTypeMetadata testEnvironment
                 ],
               Fixture.customOptions =
                 Just $
@@ -209,19 +209,19 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backendType testEnvironment = do
+setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendTypeMetadata testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
       schemaKeyword :: String
-      schemaKeyword = Key.toString $ Fixture.schemaKeyword backendType
+      schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
 
       backendPrefix :: String
-      backendPrefix = Fixture.defaultBackendTypeString backendType
+      backendPrefix = Fixture.backendTypeString backendTypeMetadata
 
       source :: String
-      source = Fixture.defaultSource backendType
+      source = Fixture.backendSourceName backendTypeMetadata
 
       setup :: IO ()
       setup =

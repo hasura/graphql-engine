@@ -15,7 +15,7 @@ import Test.Hspec
 spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
-    ( (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+    ( (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
         { Fixture.setupTeardown = \(testEnvironment, _) ->
             [ Postgres.setupTablesAction schema testEnvironment,
               functionSetup testEnvironment,

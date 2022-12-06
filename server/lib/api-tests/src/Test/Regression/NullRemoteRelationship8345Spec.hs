@@ -58,7 +58,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
             Fixture.customOptions = Nothing
           }
     lhsPostgres =
-      ( Fixture.Backend Fixture.Postgres,
+      ( Fixture.Backend Postgres.backendTypeMetadata,
         lhsPostgresMkLocalTestEnvironment,
         lhsPostgresSetup,
         lhsPostgresTeardown
@@ -70,7 +70,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
         lhsRemoteServerTeardown
       )
     rhsPostgres =
-      ( Fixture.Backend Fixture.Postgres,
+      ( Fixture.Backend Postgres.backendTypeMetadata,
         rhsPostgresMkLocalTestEnvironment,
         rhsPostgresSetup,
         rhsPostgresTeardown,
@@ -196,7 +196,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment lhsTrack
   Postgres.insertTable testEnvironment lhsTrack
-  Schema.trackTable Fixture.Postgres sourceName lhsTrack testEnvironment
+  Schema.trackTable sourceName lhsTrack testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -245,8 +245,8 @@ args:
   Postgres.createTable testEnvironment rhsArtist
   Postgres.insertTable testEnvironment rhsAlbum
   Postgres.insertTable testEnvironment rhsArtist
-  Schema.trackTable Fixture.Postgres sourceName rhsAlbum testEnvironment
-  Schema.trackTable Fixture.Postgres sourceName rhsArtist testEnvironment
+  Schema.trackTable sourceName rhsAlbum testEnvironment
+  Schema.trackTable sourceName rhsArtist testEnvironment
 
 rhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 rhsPostgresTeardown (_testEnvironment, _) =

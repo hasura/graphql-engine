@@ -151,7 +151,7 @@ you can modify your test module to prevent teardown. Example:
 spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
-    [ Fixture.fixture (Fixture.Backend Fixture.SQLServer)
+    [ Fixture.fixture (Fixture.Backend Sqlserver.backendTypeMetadata)
         { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
           setupTeardown = \testEnv ->
             [ Fixture.SetupAction

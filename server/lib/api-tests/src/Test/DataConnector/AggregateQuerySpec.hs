@@ -10,7 +10,7 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
@@ -22,24 +22,24 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Fixture.DataConnectorReference Reference.sourceConfiguration) Reference.agentConfig testEnvironment
+                [ Chinook.setupAction (sourceMetadata Reference.backendTypeMetadata Reference.sourceConfiguration) Reference.agentConfig testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Fixture.DataConnectorSqlite Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
+                [ Chinook.setupAction (sourceMetadata Sqlite.backendTypeMetadata Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
                 ]
             }
         ]
     )
     tests
 
-sourceMetadata :: BackendType -> Aeson.Value -> Aeson.Value
-sourceMetadata backendType config =
-  let source = defaultSource backendType
-      backendTypeString = defaultBackendTypeString backendType
+sourceMetadata :: BackendTypeConfig -> Aeson.Value -> Aeson.Value
+sourceMetadata backendTypeMetadata config =
+  let source = Fixture.backendSourceName backendTypeMetadata
+      backendTypeString = Fixture.backendTypeString backendTypeMetadata
    in [yaml|
         name : *source
         kind: *backendTypeString
@@ -170,7 +170,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                     Name: Accept
         |]
 
-    it "works with array relations" $ \(testEnvironment, _) ->
+    it "works with array relations" $ \(testEnvironment, _) -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
@@ -306,7 +306,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                   Total: 2328.6
         |]
 
-      if (TE.backendType testEnvironment == Just Fixture.DataConnectorReference)
+      if (fmap Fixture.backendType (TE.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorReference)
         then
           shouldReturnYaml
             opts
@@ -445,8 +445,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                       count: 14
         |]
     it "works for custom aggregate functions" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) do
-        pendingWith "SQLite DataConnector does not support 'longest' and 'shortest' custom aggregate functions"
+      when (fmap Fixture.backendType (TE.backendTypeConfig testEnvironment) /= Just Fixture.DataConnectorReference) do
+        pendingWith "Agent does not support 'longest' and 'shortest' custom aggregate functions"
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql

@@ -12,6 +12,7 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
@@ -26,11 +27,11 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
             }
@@ -447,24 +448,24 @@ tests opts = describe "Queries" $ do
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-              query getAlbum {
-                Album(limit: 3, order_by: {AlbumId: asc}) {
-                  AlbumId
-                  Title
+                query getAlbum {
+                  Album(limit: 3, order_by: {AlbumId: asc}) {
+                    AlbumId
+                    Title
+                  }
                 }
-              }
-            |]
+              |]
         )
         [yaml|
-          data:
-            Album:
-              - AlbumId: 1
-                Title: For Those About To Rock We Salute You
-              - AlbumId: 2
-                Title: Balls to the Wall
-              - AlbumId: 3
-                Title: Restless and Wild
-        |]
+            data:
+              Album:
+                - AlbumId: 1
+                  Title: For Those About To Rock We Salute You
+                - AlbumId: 2
+                  Title: Balls to the Wall
+                - AlbumId: 3
+                  Title: Restless and Wild
+          |]
 
     it "works with order_by id desc" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -472,24 +473,24 @@ tests opts = describe "Queries" $ do
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-              query getAlbum {
-                Album(limit: 3, order_by: {AlbumId: desc}) {
-                  AlbumId
-                  Title
+                query getAlbum {
+                  Album(limit: 3, order_by: {AlbumId: desc}) {
+                    AlbumId
+                    Title
+                  }
                 }
-              }
-            |]
+              |]
         )
         [yaml|
-          data:
-            Album:
-              - AlbumId: 347
-                Title: Koyaanisqatsi (Soundtrack from the Motion Picture)
-              - AlbumId: 346
-                Title: 'Mozart: Chamber Music'
-              - AlbumId: 345
-                Title: 'Monteverdi: L''Orfeo'
-        |]
+            data:
+              Album:
+                - AlbumId: 347
+                  Title: Koyaanisqatsi (Soundtrack from the Motion Picture)
+                - AlbumId: 346
+                  Title: 'Mozart: Chamber Music'
+                - AlbumId: 345
+                  Title: 'Monteverdi: L''Orfeo'
+          |]
 
     it "can order by an aggregate" $ \(testEnvironment, _) -> do
       shouldReturnYaml
@@ -560,7 +561,7 @@ tests opts = describe "Queries" $ do
         |]
   describe "Custom scalar types and operators" $ do
     it "works with custom scalar types and comparison operators" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) do
+      when (fmap BackendType.backendType (TE.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) do
         pendingWith "TODO: Test currently broken for SQLite DataConnector"
       shouldReturnYaml
         opts

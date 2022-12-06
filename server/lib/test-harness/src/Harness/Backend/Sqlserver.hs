@@ -3,7 +3,8 @@
 
 -- | SQLServer helpers.
 module Harness.Backend.Sqlserver
-  ( livenessCheck,
+  ( backendTypeMetadata,
+    livenessCheck,
     run_,
     defaultSourceMetadata,
     defaultSourceConfiguration,
@@ -19,6 +20,8 @@ module Harness.Backend.Sqlserver
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
@@ -33,7 +36,7 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (SQLServer), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
@@ -41,6 +44,22 @@ import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendTypeConfig
+    { backendType = SQLServer,
+      backendSourceName = "mssql",
+      backendCapabilities = Nothing,
+      backendTypeString = "mssql",
+      backendDisplayNameString = "mssql",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "schema"
+    }
+
+--------------------------------------------------------------------------------
 
 -- | Check that the SQLServer service is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
@@ -95,8 +114,8 @@ runInternal testEnvironment connectionString query' = do
 -- | Metadata source information for the default MSSQL instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
-  let source = defaultSource SQLServer
-      backendType = defaultBackendTypeString SQLServer
+  let source = backendSourceName backendTypeMetadata
+      backendType = backendTypeString backendTypeMetadata
       sourceConfiguration = defaultSourceConfiguration testEnvironment
    in [yaml|
 name: *source
@@ -245,12 +264,12 @@ dropTable testEnvironment Schema.Table {tableName} = do
 -- | Post an http request to start tracking the table
 trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
-  Schema.trackTable SQLServer (defaultSource SQLServer) table testEnvironment
+  Schema.trackTable (backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
 untrackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
-  Schema.untrackTable SQLServer (defaultSource SQLServer) table testEnvironment
+  Schema.untrackTable (backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | create a database to use and later drop for these tests
 -- note we use the 'initial' connection string here, ie, the one we started
@@ -298,8 +317,8 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships SQLServer table testEnvironment
-    Schema.trackArrayRelationships SQLServer table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
@@ -321,8 +340,8 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup SQLServer permissions env
+setupPermissions permissions env = Permissions.setup permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown SQLServer permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env

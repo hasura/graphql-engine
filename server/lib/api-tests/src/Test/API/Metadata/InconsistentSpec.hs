@@ -8,6 +8,7 @@ import Data.Maybe qualified as Maybe
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postMetadata, postMetadata_)
 import Harness.Quoter.Yaml
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
@@ -19,11 +20,11 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction [] testEnvironment,
                   dropTablesBeforeAndAfter testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata testEnvironment
                 ]
             }
         ]
@@ -111,9 +112,9 @@ replaceMetadataWithTable testEnvironment =
             configuration: *sourceConfiguration
   |]
   where
-    backend = Maybe.fromMaybe (error "Unknown backend") $ backendType testEnvironment
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
     sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
-    sourceName = Fixture.defaultSource backend
+    sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
 
@@ -132,14 +133,15 @@ expectedInconsistentYaml message testEnvironment =
   |]
   where
     messageYaml = maybe "" ("message: " <>) message
-    backend = Maybe.fromMaybe (error "Unknown backend") $ backendType testEnvironment
-    sourceName = Fixture.defaultSource backend
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backendType testEnvironment = do
-  let sourceName = Fixture.defaultSource backendType
+setupMetadata :: TestEnvironment -> Fixture.SetupAction
+setupMetadata testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+      sourceName = Fixture.backendSourceName backendTypeMetadata
       sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
 
       setup :: IO ()
@@ -167,7 +169,7 @@ dropTablesBeforeAndAfter :: TestEnvironment -> Fixture.SetupAction
 dropTablesBeforeAndAfter testEnvironment = do
   Fixture.SetupAction action (const action)
   where
-    action = case backendType testEnvironment of
+    action = case BackendType.backendType <$> (backendTypeConfig testEnvironment) of
       Just Fixture.Postgres -> Postgres.dropTableIfExists testEnvironment table
       Just b -> fail $ "Unknown backend:" <> show b
       Nothing -> fail $ "Unknown backend."

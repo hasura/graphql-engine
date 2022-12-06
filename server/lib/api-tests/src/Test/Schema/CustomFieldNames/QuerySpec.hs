@@ -10,6 +10,7 @@ module Test.Schema.CustomFieldNames.QuerySpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
+import Data.Maybe (fromMaybe)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
@@ -20,7 +21,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
@@ -29,28 +30,28 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  setupTeardown testEnv Fixture.Postgres
+                  setupTeardown testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv,
-                  setupTeardown testEnv Fixture.Citus
+                  setupTeardown testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv,
-                  setupTeardown testEnv Fixture.Cockroach
+                  setupTeardown testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv,
-                  setupTeardown testEnv Fixture.SQLServer
+                  setupTeardown testEnv
                 ]
             }
         ]
@@ -113,11 +114,12 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupTeardown :: TestEnvironment -> Fixture.BackendType -> Fixture.SetupAction
-setupTeardown testEnvironment backend = Fixture.SetupAction setupAction mempty
+setupTeardown :: TestEnvironment -> Fixture.SetupAction
+setupTeardown testEnvironment = Fixture.SetupAction setupAction mempty
   where
-    backendPrefix = Fixture.defaultBackendTypeString backend
-    source = Fixture.defaultSource backend
+    backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendPrefix = Fixture.backendTypeString backendTypeMetadata
+    source = Fixture.backendSourceName backendTypeMetadata
     config = backendPrefix <> "_set_table_customization"
 
     setupAction =

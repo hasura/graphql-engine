@@ -6,6 +6,7 @@ module Test.PortedFromPytest.TestGraphQLQueryBasicCitus (spec) where
 
 import Data.Aeson qualified as Yaml
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Citus qualified as Citus
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.PytestPortedCompat (compatSetup)
 import Harness.Quoter.Graphql (graphql)
@@ -287,7 +288,7 @@ setup_metadata_Citus =
 
 fixture_Citus :: Fixture.Fixture ()
 fixture_Citus =
-  (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+  (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
     { Fixture.setupTeardown = \(testEnvironment, _) ->
         [ Fixture.SetupAction
             { Fixture.setupAction = do

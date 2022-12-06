@@ -3,7 +3,8 @@
 
 -- | PostgreSQL helpers.
 module Harness.Backend.Postgres
-  ( livenessCheck,
+  ( backendTypeMetadata,
+    livenessCheck,
     makeFreshDbConnectionString,
     metadataLivenessCheck,
     run_,
@@ -32,6 +33,8 @@ module Harness.Backend.Postgres
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
@@ -53,7 +56,8 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
@@ -67,6 +71,22 @@ import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..)
 import Hasura.Prelude
 import System.Process.Typed
 import Text.Pretty.Simple (pShow)
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.Postgres,
+      backendSourceName = "postgres",
+      backendCapabilities = Nothing,
+      backendTypeString = "pg",
+      backendDisplayNameString = "pg",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "schema"
+    }
+
+--------------------------------------------------------------------------------
 
 -- | The default connection information based on the 'TestingMode'. The
 -- interesting thing here is the database: in both modes, we specify an
@@ -205,14 +225,14 @@ queryInternal testEnvironment connectionString query = do
     )
 
 runSQL :: String -> TestEnvironment -> IO ()
-runSQL = Schema.runSQL Postgres (defaultSource Postgres)
+runSQL = Schema.runSQL (BackendType.backendSourceName backendTypeMetadata)
 
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnv =
   [interpolateYaml|
-    name: #{ defaultSource Postgres }
-    kind: #{ defaultBackendTypeString Postgres }
+    name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
     tables: []
     configuration: #{ defaultSourceConfiguration testEnv }
   |]
@@ -360,12 +380,12 @@ dropTableIfExists testEnv Schema.Table {tableName} = do
 -- | Post an http request to start tracking the table
 trackTable :: TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
-  Schema.trackTable Postgres (defaultSource Postgres) table testEnvironment
+  Schema.trackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
 untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
-  Schema.untrackTable Postgres (defaultSource Postgres) table testEnvironment
+  Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | create a database to use and later drop for these tests
 -- note we use the 'initial' connection string here, ie, the one we started
@@ -435,8 +455,8 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships Postgres table testEnvironment
-    Schema.trackArrayRelationships Postgres table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
@@ -459,25 +479,23 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup Postgres permissions env
+setupPermissions permissions env = Permissions.setup permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown Postgres permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
 
 setupFunctionRootFieldAction :: String -> TestEnvironment -> SetupAction
 setupFunctionRootFieldAction functionName env =
   SetupAction
     ( Schema.trackFunction
-        Postgres
-        (defaultSource Postgres)
+        (BackendType.backendSourceName backendTypeMetadata)
         functionName
         env
     )
     ( \_ ->
         Schema.untrackFunction
-          Postgres
-          (defaultSource Postgres)
+          (BackendType.backendSourceName backendTypeMetadata)
           functionName
           env
     )
@@ -486,8 +504,7 @@ setupComputedFieldAction :: Schema.Table -> String -> String -> TestEnvironment 
 setupComputedFieldAction table functionName asFieldName env =
   SetupAction
     ( Schema.trackComputedField
-        Postgres
-        (defaultSource Postgres)
+        (BackendType.backendSourceName backendTypeMetadata)
         table
         functionName
         asFieldName
@@ -497,8 +514,7 @@ setupComputedFieldAction table functionName asFieldName env =
     )
     ( \_ ->
         Schema.untrackComputedField
-          Postgres
-          (defaultSource Postgres)
+          (BackendType.backendSourceName backendTypeMetadata)
           table
           asFieldName
           env

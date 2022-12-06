@@ -65,8 +65,8 @@ dbTodbRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 dbTodbRemoteRelationshipFixture =
   ( Fixture.fixture $
       Fixture.Combine
-        (Fixture.Backend Fixture.Postgres)
-        (Fixture.Backend Fixture.Postgres)
+        (Fixture.Backend Postgres.backendTypeMetadata)
+        (Fixture.Backend Postgres.backendTypeMetadata)
   )
     { Fixture.mkLocalTestEnvironment = \_testEnvironment ->
         pure $ LocalTestTestEnvironment Nothing Nothing,
@@ -83,7 +83,7 @@ dbTodbRemoteRelationshipFixture =
 
 dbToRemoteSchemaRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 dbToRemoteSchemaRemoteRelationshipFixture =
-  (Fixture.fixture $ Fixture.Combine (Fixture.Backend Fixture.Postgres) Fixture.RemoteGraphQLServer)
+  (Fixture.fixture $ Fixture.Combine (Fixture.Backend Postgres.backendTypeMetadata) Fixture.RemoteGraphQLServer)
     { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment Nothing rhsServer,
@@ -100,7 +100,7 @@ dbToRemoteSchemaRemoteRelationshipFixture =
 
 remoteSchemaToDBRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 remoteSchemaToDBRemoteRelationshipFixture =
-  (Fixture.fixture $ Fixture.Combine Fixture.RemoteGraphQLServer (Fixture.Backend Fixture.Postgres))
+  (Fixture.fixture $ Fixture.Combine Fixture.RemoteGraphQLServer (Fixture.Backend Postgres.backendTypeMetadata))
     { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         lhsServer <- lhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment lhsServer Nothing,
@@ -216,7 +216,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment albumTable
   Postgres.insertTable testEnvironment albumTable
-  Schema.trackTable Fixture.Postgres sourceName albumTable testEnvironment
+  Schema.trackTable sourceName albumTable testEnvironment
 
 rhsPostgresTeardown :: TestEnvironment -> IO ()
 rhsPostgresTeardown _testEnvironment = pure ()
@@ -238,7 +238,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
 
 createSourceRemoteRelationship :: TestEnvironment -> IO ()
 createSourceRemoteRelationship testEnvironment = do

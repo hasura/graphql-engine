@@ -5,7 +5,8 @@
 -- setup/teardown functions because BigQuery API has a different API
 -- (dataset field, manual_configuration field etc)
 module Harness.Backend.BigQuery
-  ( run_,
+  ( backendTypeMetadata,
+    run_,
     getServiceAccount,
     getProjectId,
     createTable,
@@ -17,6 +18,8 @@ module Harness.Backend.BigQuery
     setupPermissionsAction,
   )
 where
+
+--------------------------------------------------------------------------------
 
 import Control.Concurrent.Async (concurrently_)
 import Control.Concurrent.Extended
@@ -31,8 +34,9 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (BigQuery))
-import Harness.Test.Fixture (SetupAction (..), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
@@ -47,6 +51,22 @@ import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (BigQueryConnection, ServiceAccount)
 import Hasura.Prelude
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.BigQuery,
+      backendSourceName = "bigquery",
+      backendCapabilities = Nothing,
+      backendTypeString = "bigquery",
+      backendDisplayNameString = "bigquery",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "dataset"
+    }
+
+--------------------------------------------------------------------------------
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
 getServiceAccount = getEnvJson Constants.bigqueryServiceKeyVar
@@ -168,7 +188,7 @@ dropTable schemaName Schema.Table {tableName} = do
 -- Overriding here because bigquery's API is uncommon
 trackTable :: TestEnvironment -> SchemaName -> Schema.Table -> IO ()
 trackTable testEnvironment schemaName Schema.Table {tableName} = do
-  let source = defaultSource BigQuery
+  let source = BackendType.backendSourceName backendTypeMetadata
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -184,7 +204,7 @@ trackTable testEnvironment schemaName Schema.Table {tableName} = do
 -- Overriding `Schema.trackTable` here because bigquery's API expects a `dataset` key
 untrackTable :: TestEnvironment -> SchemaName -> Schema.Table -> IO ()
 untrackTable testEnvironment schemaName Schema.Table {tableName} = do
-  let source = defaultSource BigQuery
+  let source = BackendType.backendSourceName backendTypeMetadata
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -200,8 +220,8 @@ untrackTable testEnvironment schemaName Schema.Table {tableName} = do
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables' (testEnvironment, _) = do
-  let source = defaultSource BigQuery
-      backendType = defaultBackendTypeString BigQuery
+  let source = BackendType.backendSourceName backendTypeMetadata
+      backendType = BackendType.backendTypeString backendTypeMetadata
       schemaName = Schema.getSchemaName testEnvironment
       tables =
         map
@@ -238,8 +258,8 @@ setup tables' (testEnvironment, _) = do
     trackTable testEnvironment schemaName table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships BigQuery table testEnvironment
-    Schema.trackArrayRelationships BigQuery table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
@@ -264,11 +284,11 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup BigQuery permissions env
+setupPermissions permissions env = Permissions.setup permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown BigQuery permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
 
 -- | We get @jobRateLimitExceeded@ errors from BigQuery if we run too many DML operations in short intervals.
 --   This functions tries to fix that by retrying after a few seconds if there's an error.

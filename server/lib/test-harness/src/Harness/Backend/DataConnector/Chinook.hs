@@ -23,16 +23,16 @@ import Hasura.Prelude
 --------------------------------------------------------------------------------
 
 setupAction :: Aeson.Value -> Aeson.Value -> TestEnvironment -> Fixture.SetupAction
-setupAction sourceMetadata backendConfig testEnv =
+setupAction sourceMetadata backendConfig' testEnv =
   Fixture.SetupAction
-    (setup sourceMetadata backendConfig (testEnv, ()))
+    (setup sourceMetadata backendConfig' (testEnv, ()))
     (const $ teardown (testEnv, ()))
 
 -- | Setup the schema given source metadata and backend config.
 setup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, ()) -> IO ()
-setup sourceMetadata backendConfig (testEnvironment, _) = do
+setup sourceMetadata backendConfig' (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig)
+  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig')
 
 -- | Teardown the schema and tracking in the most expected way.
 teardown :: (TestEnvironment, ()) -> IO ()
@@ -42,16 +42,16 @@ teardown (testEnvironment, _) = do
 --------------------------------------------------------------------------------
 
 referenceSourceConfig :: Aeson.Value
-referenceSourceConfig = mkChinookSourceConfig Fixture.DataConnectorReference Reference.sourceConfiguration
+referenceSourceConfig = mkChinookSourceConfig Reference.backendTypeMetadata Reference.sourceConfiguration
 
 sqliteSourceConfig :: Aeson.Value
-sqliteSourceConfig = mkChinookSourceConfig Fixture.DataConnectorSqlite Sqlite.sourceConfiguration
+sqliteSourceConfig = mkChinookSourceConfig Sqlite.backendTypeMetadata Sqlite.sourceConfiguration
 
 -- | Build a standard Chinook Source given an Agent specific @configuration@ field.
-mkChinookSourceConfig :: Fixture.BackendType -> Aeson.Value -> Aeson.Value
-mkChinookSourceConfig backendType config =
-  let source = Fixture.defaultSource backendType
-      backendTypeString = Fixture.defaultBackendTypeString backendType
+mkChinookSourceConfig :: Fixture.BackendTypeConfig -> Aeson.Value -> Aeson.Value
+mkChinookSourceConfig backendTypeMetadata config =
+  let source = Fixture.backendSourceName backendTypeMetadata
+      backendTypeString = Fixture.backendTypeString backendTypeMetadata
    in [yaml|
 name : *source
 kind: *backendTypeString

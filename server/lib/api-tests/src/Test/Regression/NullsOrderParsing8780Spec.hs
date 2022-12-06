@@ -23,7 +23,7 @@ spec = do
   -- Postgres
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
@@ -60,7 +60,7 @@ postgresTests :: Fixture.Options -> SpecWith TestEnvironment
 postgresTests opts = do
   it "Browse table rows using nulls_first" \testEnvironment -> do
     let schemaName = getSchemaName testEnvironment
-        source = Fixture.defaultSource Fixture.Postgres
+        source = Fixture.backendSourceName Postgres.backendTypeMetadata
 
     let queryYaml =
           [interpolateYaml|
@@ -102,7 +102,7 @@ postgresTests opts = do
 
   it "Browse table rows using nulls_last" \testEnvironment -> do
     let schemaName = getSchemaName testEnvironment
-        source = Fixture.defaultSource Fixture.Postgres
+        source = Fixture.backendSourceName Postgres.backendTypeMetadata
 
     let queryYaml :: Value
         queryYaml =

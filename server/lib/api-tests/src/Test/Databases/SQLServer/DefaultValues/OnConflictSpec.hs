@@ -28,7 +28,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runSingleSetup
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
                 ]

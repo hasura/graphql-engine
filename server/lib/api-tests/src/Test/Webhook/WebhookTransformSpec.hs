@@ -4,6 +4,7 @@
 module Test.Webhook.WebhookTransformSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
@@ -16,7 +17,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(_testEnvironment, _) -> []
             }
         ]

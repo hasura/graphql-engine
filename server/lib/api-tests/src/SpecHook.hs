@@ -7,6 +7,8 @@ module SpecHook
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Char qualified as Char
 import Data.IORef
 import Data.List qualified as List
@@ -22,6 +24,8 @@ import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
 import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)
 import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, modifyConfig)
+
+--------------------------------------------------------------------------------
 
 -- | Establish the mode in which we're running the tests. Currently, there are
 -- four modes:

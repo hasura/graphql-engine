@@ -13,7 +13,6 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Introspection (introspectEnums, introspectTypes)
 import Harness.Test.Permissions (InsertPermissionDetails (..), Permission (..), SelectPermissionDetails (..), insertPermission, selectPermission)
@@ -27,19 +26,19 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend BackendType.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   Postgres.setupPermissionsAction (permissions "postgres") testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend BackendType.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
                   Citus.setupPermissionsAction (permissions "citus") testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend BackendType.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   Cockroach.setupPermissionsAction (permissions "cockroach") testEnvironment
