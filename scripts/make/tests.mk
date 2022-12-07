@@ -85,3 +85,9 @@ test-integration-postgres: remove-tix-file
 	$(call stop_after, \
 		HASURA_GRAPHQL_DATABASE_URL='$(TEST_POSTGRES_URL)' \
 			cabal run graphql-engine:test:graphql-engine-test-postgres)
+
+.PHONY: py-tests
+## py-tests: run the python-based test suite
+py-tests:
+	$(call stop_after, \
+		./server/tests-py/run-new.sh)

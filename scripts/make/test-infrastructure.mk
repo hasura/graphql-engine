@@ -36,6 +36,7 @@ start-backends: build-backends
 ## stop-everything: tear down test databases
 stop-everything:
 	docker compose down --volumes
+	cd server/tests-py && docker compose down --volumes
 
 .PHONY: remove-tix-file
 remove-tix-file:
