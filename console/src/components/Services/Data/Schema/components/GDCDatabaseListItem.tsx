@@ -26,7 +26,7 @@ export const GDCDatabaseListItem: React.FC<GDCDatabaseListItemItemProps> = ({
   const { dropSource, isLoading: isDropSourceInProgress } = useDropSource({
     customOnSuccess: () => {
       dispatch(exportMetadata());
-      queryClient.invalidateQueries('treeview');
+      queryClient.invalidateQueries(['export_metadata']);
     },
   });
 

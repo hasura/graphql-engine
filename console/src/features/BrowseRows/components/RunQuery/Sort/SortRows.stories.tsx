@@ -9,7 +9,7 @@ import { action } from '@storybook/addon-actions';
 import { SortRows } from './SortRows';
 
 export default {
-  title: 'Browse Rows/Run Query 📁/Sort 🧬',
+  title: 'GDC Console/Browse Rows/parts/Run Query 📁/Sort 🧬',
   component: SortRows,
   decorators: [FormDecorator()],
 } as ComponentMeta<typeof SortRows>;

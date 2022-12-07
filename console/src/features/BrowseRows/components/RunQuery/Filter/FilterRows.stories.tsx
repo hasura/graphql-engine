@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { FilterRows } from './FilterRows';
 
 export default {
-  title: 'Browse Rows/Run Query 📁/Filters 🧬',
+  title: 'GDC Console/Browse Rows/parts/Run Query 📁/Filters 🧬',
   component: FilterRows,
 } as ComponentMeta<typeof FilterRows>;
 

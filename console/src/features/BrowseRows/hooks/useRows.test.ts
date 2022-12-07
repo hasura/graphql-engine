@@ -1,11 +1,10 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { wrapper } from '../../../../../hooks/__tests__/common/decorator';
-import { useRows } from '.';
-import { UseRowsPropType } from './useRows';
-import { TableRow } from '../../../../../features/DataSource';
-import { Metadata } from '../../../../../features/hasura-metadata-types';
+import { wrapper } from '../../../hooks/__tests__/common/decorator';
+import { useRows, UseRowsPropType } from './useRows';
+import { TableRow } from '../../DataSource';
+import { Metadata } from '../../hasura-metadata-types';
 
 describe('Postgres browse rows data', () => {
   const mockMetadata: Metadata = {

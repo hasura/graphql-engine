@@ -7,7 +7,7 @@ import { UseFormTrigger } from 'react-hook-form';
 import { z } from 'zod';
 import { FilterRows } from '../RunQuery/Filter';
 import { SortRows } from '../RunQuery/Sort';
-import { useTableColumns } from './useTableColumns';
+import { useTableColumns } from '../../hooks/useTableColumns';
 
 interface QueryDialogProps {
   table: Table;

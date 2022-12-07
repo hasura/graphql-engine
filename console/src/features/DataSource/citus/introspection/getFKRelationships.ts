@@ -35,7 +35,6 @@ const adaptFkRelationships = (
     };
   });
 
-  console.log('!!!', adaptedResult);
   return adaptedResult;
 };
 

@@ -1,6 +1,7 @@
 import { Operator, OrderBy, WhereClause } from '@/features/DataSource';
 import { Badge } from '@/new-components/Badge';
 import { Button } from '@/new-components/Button';
+import clsx from 'clsx';
 import React from 'react';
 import {
   FaChevronLeft,
@@ -22,6 +23,7 @@ interface DataTableOptionsProps {
     supportedOperators: Operator[];
     removeWhereClause: (id: number) => void;
     removeOrderByClause: (id: number) => void;
+    disableRunQuery?: boolean;
   };
   pagination: {
     goToPreviousPage: () => void;
@@ -48,7 +50,7 @@ const DisplayWhereClauses = ({
         const [columnName, rest] = Object.entries(whereClause)[0];
         const [operator, value] = Object.entries(rest)[0];
         return (
-          <Badge color="indigo" className="mb-3">
+          <Badge color="indigo" className="mb-3 mr-sm" key={id}>
             <div className="flex gap-3 items-center">
               <FaFilter />
               <span>
@@ -77,24 +79,22 @@ const DisplayOrderByClauses = ({
 }) => {
   return (
     <>
-      {orderByClauses.map((orderByClause, id) => {
-        return (
-          <Badge color="yellow" className="mb-3">
-            <div className="flex gap-3 items-center">
-              <FaSortAmountUpAlt />
-              <span>
-                {orderByClause.column} ({orderByClause.type})
-              </span>
-              <FaRegTimesCircle
-                className="cursor-pointer"
-                onClick={() => {
-                  removeOrderByClause(id);
-                }}
-              />
-            </div>
-          </Badge>
-        );
-      })}
+      {orderByClauses.map((orderByClause, id) => (
+        <Badge color="yellow" className="mb-3 mr-sm" key={id}>
+          <div className="flex gap-3 items-center">
+            <FaSortAmountUpAlt />
+            <span>
+              {orderByClause.column} ({orderByClause.type})
+            </span>
+            <FaRegTimesCircle
+              className="cursor-pointer"
+              onClick={() => {
+                removeOrderByClause(id);
+              }}
+            />
+          </div>
+        </Badge>
+      ))}
     </>
   );
 };
@@ -112,39 +112,49 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
     query.whereClauses.length + query.orderByClauses.length;
   return (
     <div
-      className="flex items-center justify-between p-4 bg-white border"
+      className={clsx(
+        'flex items-center p-4 bg-white border',
+        query.disableRunQuery ? 'justify-end' : ' justify-between'
+      )}
       id="query-options"
     >
-      <div className="flex space-x-1.5">
-        <Button
-          type="button"
-          mode="primary"
-          icon={<FaSearch />}
-          onClick={query.onQuerySearch}
-          data-testid="@runQueryBtn"
-        >
-          Query{' '}
-          <span>{totalQueriesApplied ? `(${totalQueriesApplied})` : ''}</span>
-        </Button>
-        <Button
-          type="button"
-          mode="default"
-          onClick={query.onRefreshQueryOptions}
-          icon={<FaUndo />}
-          data-testid="@resetBtn"
-        />
-        <div className="flex-wrap pl-3">
-          <DisplayWhereClauses
-            operatorMap={operatorMap}
-            whereClauses={query.whereClauses}
-            removeWhereClause={query.removeWhereClause}
+      {!query.disableRunQuery && (
+        <div className="flex space-x-1.5">
+          <Button
+            type="button"
+            mode="primary"
+            icon={<FaSearch />}
+            onClick={query.onQuerySearch}
+            data-testid="@runQueryBtn"
+            disabled={query.disableRunQuery}
+            title="Update filters and sorts on your row data"
+          >
+            {`Query ${`(${totalQueriesApplied})` || ''}`}
+          </Button>
+          <Button
+            type="button"
+            mode="default"
+            onClick={query.onRefreshQueryOptions}
+            icon={<FaUndo />}
+            data-testid="@resetBtn"
+            disabled={query.disableRunQuery}
+            title="Reset all filters"
           />
-          <DisplayOrderByClauses
-            orderByClauses={query.orderByClauses}
-            removeOrderByClause={query.removeOrderByClause}
-          />
+          {!query.disableRunQuery && (
+            <div className="flex-wrap pl-3">
+              <DisplayWhereClauses
+                operatorMap={operatorMap}
+                whereClauses={query.whereClauses}
+                removeWhereClause={query.removeWhereClause}
+              />
+              <DisplayOrderByClauses
+                orderByClauses={query.orderByClauses}
+                removeOrderByClause={query.removeOrderByClause}
+              />
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       <div className="flex gap-2 items-center min-w-max">
         <Button
@@ -153,6 +163,7 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
           onClick={pagination.goToPreviousPage}
           disabled={pagination.isPreviousPageDisabled}
           data-testid="@prevPageBtn"
+          title="Previous page"
         />
 
         <select
@@ -175,6 +186,7 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
           onClick={pagination.goToNextPage}
           disabled={pagination.isNextPageDisabled}
           data-testid="@nextPageBtn"
+          title="Next page"
         />
       </div>
     </div>

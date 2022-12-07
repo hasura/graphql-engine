@@ -1,3 +1,4 @@
+import { DEFAULT_STALE_TIME } from '@/features/DatabaseRelationships';
 import { DataSource, OrderBy, WhereClause } from '@/features/DataSource';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
@@ -50,5 +51,6 @@ export const useRows = ({
       }
     },
     refetchOnWindowFocus: false,
+    staleTime: DEFAULT_STALE_TIME,
   });
 };

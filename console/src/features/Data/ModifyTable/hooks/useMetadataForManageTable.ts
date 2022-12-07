@@ -6,7 +6,7 @@ import isEqual from 'lodash.isequal';
 import React from 'react';
 import { useQuery } from 'react-query';
 // eslint-disable-next-line no-restricted-imports
-import { useTableColumns } from '@/features/BrowseRows/components/DataGrid/useTableColumns';
+import { useTableColumns } from '@/features/BrowseRows/hooks/useTableColumns';
 
 export const getTableFromMetadata = (
   metadata: Source | undefined,
