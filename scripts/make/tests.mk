@@ -45,7 +45,7 @@ test-cockroach: remove-tix-file
 # we have a few tests labeled with 'Postgres' which test their variants, too,
 # so this also starts containers for Postgres variants
 test-postgres: remove-tix-file
-	docker compose up -d --wait postgres cockroach citus
+	docker compose up -d --wait postgres cockroach citus dc-sqlite-agent
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
 		cabal run api-tests:exe:api-tests)
