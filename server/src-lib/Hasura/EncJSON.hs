@@ -27,6 +27,8 @@ import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.ByteString qualified as B
 import Data.ByteString.Builder qualified as BB
+import Data.ByteString.Builder.Extra qualified as BB
+import Data.ByteString.Builder.Internal qualified as BB
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Encoding qualified as TE
@@ -89,8 +91,30 @@ removeSOH uncons bs =
 -- - `Show`: unused.
 
 encJToLBS :: EncJSON -> BL.ByteString
-encJToLBS = BB.toLazyByteString . unEncJSON
 {-# INLINE encJToLBS #-}
+encJToLBS = BB.toLazyByteStringWith outputAllocationStrategy mempty . unEncJSON
+  where
+    -- this is a modification of 'untrimmedStrategy' tuned for typical request sizes.
+    -- There's no point to trimming; that's just going to create more garbage
+    -- that will be collected immediately.
+    outputAllocationStrategy =
+      BB.customStrategy nextBuffer bufSize0 (\_ _ -> False)
+      where
+        -- NOTE: on cloud we see uncompressed response body sizes like:
+        --   P50:   150 bytes
+        --   P75:  1200
+        --   P90: 17000
+        --   P99: 95000
+        bufSize0 = 200 -- bytes
+        bufGrowthFactor = 5
+
+        {-# INLINE nextBuffer #-}
+        nextBuffer Nothing = BB.newBuffer bufSize0
+        -- FYI: minSize == bufSize0, except e.g. where `ensureFree` is used (and maybe other situations)
+        nextBuffer (Just (prevBuf, minSize)) =
+          -- nextBufSize grows exponentially, up to defaultChunkSize; but always at least minSize
+          let nextBufSize = max minSize (min BB.defaultChunkSize (BB.bufferSize prevBuf * bufGrowthFactor))
+           in BB.newBuffer nextBufSize
 
 encJToBS :: EncJSON -> B.ByteString
 encJToBS = BL.toStrict . encJToLBS

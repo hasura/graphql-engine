@@ -58,8 +58,6 @@ import Data.Aeson.Casing (aesonDrop, snakeCase)
 import Data.Aeson.TH (mkToJSON)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
-import Data.ByteString.Builder qualified as BSB
-import Data.ByteString.Lazy qualified as LBS
 import Data.Foldable (for_)
 import Data.HashTable.IO qualified as HIO
 import Data.Hashable (Hashable (hashWithSalt))
@@ -199,9 +197,9 @@ initPQConn ci logger =
       -- Set some parameters and check the response
       mRes <-
         PQ.exec conn $
-          LBS.toStrict . BSB.toLazyByteString . mconcat $
-            [ BSB.string7 "SET client_encoding = 'UTF8';",
-              BSB.string7 "SET client_min_messages TO WARNING;"
+          mconcat $
+            [ "SET client_encoding = 'UTF8';",
+              "SET client_min_messages TO WARNING;"
             ]
       case mRes of
         Just res -> do
