@@ -3,6 +3,7 @@
 module Hasura.Server.App
   ( APIResp (JSONResp, RawResp),
     ConsoleRenderer (..),
+    MonadVersionAPIWithExtraData (..),
     Handler,
     HandlerCtx (hcReqHeaders, hcServerCtx, hcUser),
     HasuraApp (HasuraApp),
@@ -29,6 +30,7 @@ import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Types qualified as J
 import Data.ByteString.Char8 qualified as B8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
@@ -693,6 +695,10 @@ class (Monad m) => ConsoleRenderer m where
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
   renderConsole a b c d e = lift $ renderConsole a b c d e
 
+-- Type class to get any extra [Pair] for the version API
+class (Monad m) => MonadVersionAPIWithExtraData m where
+  getExtraDataForVersionAPI :: m [J.Pair]
+
 renderHtmlTemplate :: M.Template -> Value -> Either String Text
 renderHtmlTemplate template jVal =
   bool (Left errMsg) (Right res) $ null errs
@@ -742,6 +748,7 @@ mkWaiApp ::
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
     ConsoleRenderer m,
+    MonadVersionAPIWithExtraData m,
     HttpLog m,
     UserAuthentication (Tracing.TraceT m),
     MonadMetadataApiAuthorization m,
@@ -911,6 +918,7 @@ httpApp ::
     MonadFix m,
     MonadBaseControl IO m,
     ConsoleRenderer m,
+    MonadVersionAPIWithExtraData m,
     HttpLog m,
     UserAuthentication (Tracing.TraceT m),
     MonadMetadataApiAuthorization m,
@@ -970,8 +978,9 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
 
   Spock.get "v1/version" $ do
     logSuccess $ "version: " <> convertText currentVersion
+    extraData <- lift $ getExtraDataForVersionAPI
     setHeader jsonHeader
-    Spock.lazyBytes $ encode $ object ["version" .= currentVersion]
+    Spock.lazyBytes $ encode $ object $ ["version" .= currentVersion] <> extraData
 
   let customEndpointHandler ::
         forall n.

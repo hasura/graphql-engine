@@ -538,6 +538,7 @@ runHGEServer ::
     UserAuthentication (Tracing.TraceT m),
     HttpLog m,
     ConsoleRenderer m,
+    MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
     MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
@@ -632,6 +633,7 @@ mkHGEServer ::
     UserAuthentication (Tracing.TraceT m),
     HttpLog m,
     ConsoleRenderer m,
+    MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
     MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
@@ -1078,6 +1080,9 @@ instance (Monad m) => MonadMetadataApiAuthorization (PGMetadataStorageAppT m) wh
 instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
   renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
+
+instance (Monad m) => MonadVersionAPIWithExtraData (PGMetadataStorageAppT m) where
+  getExtraDataForVersionAPI = return []
 
 instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
   checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
