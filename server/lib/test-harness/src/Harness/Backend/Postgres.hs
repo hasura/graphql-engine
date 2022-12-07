@@ -12,7 +12,9 @@ module Harness.Backend.Postgres
     runSQL,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    createMetadataDatabase,
     createDatabase,
+    dropMetadataDatabase,
     dropDatabase,
     createTable,
     insertTable,
@@ -67,7 +69,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), testLogMessage)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), UniqueTestId, testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
 import Text.Pretty.Simple (pShow)
@@ -131,10 +133,12 @@ makeFreshDbConnectionString testEnvironment =
       { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
       }
 
-metadataLivenessCheck :: HasCallStack => IO ()
+metadataLivenessCheck :: HasCallStack => TestEnvironment -> IO ()
 metadataLivenessCheck =
-  doLivenessCheck $
-    fromString postgresqlMetadataConnectionString
+  doLivenessCheck
+    . fromString
+    . postgresqlMetadataConnectionString
+    . uniqueTestId
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
@@ -182,36 +186,6 @@ runInternal globalTestEnvironment connectionString query = do
         )
         Postgres.close
         (\conn -> void (Postgres.execute_ conn (fromString query)))
-    )
-    ( \(e :: Postgres.SqlError) ->
-        error
-          ( unlines
-              [ "PostgreSQL query error:",
-                S8.unpack (Postgres.sqlErrorMsg e),
-                "SQL was:",
-                query
-              ]
-          )
-    )
-
--- | when we are creating databases, we want to connect with the 'original' DB
--- we started with
-queryWithInitialDb :: (Postgres.FromRow a, HasCallStack) => TestEnvironment -> String -> IO [a]
-queryWithInitialDb testEnvironment =
-  queryInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
-
---- | Run a plain SQL query.
--- On error, print something useful for debugging.
-queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
-queryInternal testEnvironment connectionString query = do
-  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
-  catch
-    ( bracket
-        ( Postgres.connectPostgreSQL
-            connectionString
-        )
-        Postgres.close
-        (\conn -> Postgres.query_ conn (fromString query))
     )
     ( \(e :: Postgres.SqlError) ->
         error
@@ -387,6 +361,17 @@ untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
   Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
+createMetadataDatabase :: GlobalTestEnvironment -> UniqueTestId -> IO ()
+createMetadataDatabase globalTestEnvironment uniqueTestId =
+  runWithInitialDb_
+    globalTestEnvironment
+    ("CREATE DATABASE " <> Constants.postgresMetadataDb uniqueTestId <> ";")
+
+dropMetadataDatabase :: TestEnvironment -> IO ()
+dropMetadataDatabase testEnvironment = do
+  let dbName = postgresMetadataDb (uniqueTestId testEnvironment)
+  dropDatabaseInternal dbName testEnvironment
+
 -- | create a database to use and later drop for these tests
 -- note we use the 'initial' connection string here, ie, the one we started
 -- with.
@@ -407,16 +392,6 @@ dropDatabase testEnvironment = do
 -- < 13 in CI so instead we boot all the active users then drop as normal.
 dropDatabaseInternal :: String -> TestEnvironment -> IO ()
 dropDatabaseInternal dbName testEnvironment = do
-  void $
-    queryWithInitialDb @(Postgres.Only Bool)
-      testEnvironment
-      [i|
-      SELECT pg_terminate_backend(pg_stat_activity.pid)
-      FROM pg_stat_activity
-      WHERE pg_stat_activity.datname = '#{dbName}'
-      AND pid <> pg_backend_pid();
-    |]
-
   -- if this fails, don't make the test fail
   runWithInitialDb_
     (globalEnvironment testEnvironment)
@@ -462,8 +437,7 @@ setup tables (testEnvironment, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 -- we replace metadata with nothing.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown _ (testEnvironment, _) =
-  GraphqlEngine.setSources testEnvironment mempty Nothing
+teardown _ _ = pure ()
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

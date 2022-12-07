@@ -29,11 +29,7 @@ spec =
               -- so that the server can be referenced while testing
               Fixture.mkLocalTestEnvironment = const Webhook.run,
               Fixture.setupTeardown = \(testEnvironment, (_webhookServer, _)) ->
-                [ Postgres.setupTablesAction (schema "authors" "articles") testEnvironment,
-                  Fixture.SetupAction
-                    { Fixture.setupAction = pure (),
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
-                    }
+                [ Postgres.setupTablesAction (schema "authors" "articles") testEnvironment
                 ]
             }
         ]
@@ -184,13 +180,3 @@ postgresSetupWithEventTriggers testEnvironment webhookServer triggerOnReplicatio
         update:
           columns: "*"
       |]
-
-postgresTeardown :: TestEnvironment -> IO ()
-postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-      type: pg_delete_event_trigger
-      args:
-        name: author_trigger
-        source: postgres
-    |]

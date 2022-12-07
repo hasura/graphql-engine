@@ -15,6 +15,8 @@ module Harness.Logging.Messages
     LogDropDBFailedWarning (..),
     LogSubscriptionInit (..),
     LogSubscriptionResponse (..),
+    LogServerSetupDuration (..),
+    LogServerTeardownDuration (..),
     LogFixtureTestStart (..),
     LogFixtureSetupFailed (..),
     LogFixtureSetupSucceeded (..),
@@ -35,6 +37,7 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.Text qualified as T
 import Data.Text.Encoding
 import Data.Text.Lazy qualified as LT
+import Data.Time (NominalDiffTime)
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Prelude hiding (Seconds)
 import System.Log.FastLogger qualified as FL
@@ -315,6 +318,26 @@ instance LoggableMessage LogFixtureTeardownFailed where
     object
       [ ("type", String "LogFixtureTeardownFailed"),
         ("step", Number (fromIntegral lftfStep))
+      ]
+
+data LogServerSetupDuration = LogServerSetupDuration
+  {lssdDuration :: NominalDiffTime}
+
+instance LoggableMessage LogServerSetupDuration where
+  fromLoggableMessage LogServerSetupDuration {..} =
+    object
+      [ ("type", String "LogServerSetupDuration"),
+        ("duration", Number (realToFrac lssdDuration))
+      ]
+
+data LogServerTeardownDuration = LogServerTeardownDuration
+  {lstdDuration :: NominalDiffTime}
+
+instance LoggableMessage LogServerTeardownDuration where
+  fromLoggableMessage LogServerTeardownDuration {..} =
+    object
+      [ ("type", String "LogServerTeardownDuration"),
+        ("duration", Number (realToFrac lstdDuration))
       ]
 
 -- | Temporary message type for messages logged from within the Harness modules.

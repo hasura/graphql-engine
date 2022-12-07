@@ -19,6 +19,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -256,27 +257,4 @@ setupMetadata backendTypeMetadata testEnvironment = do
                   columns: "*"
           |]
 
-      teardown :: IO ()
-      teardown =
-        postMetadata_
-          testEnvironment
-          [interpolateYaml|
-            type: bulk
-            args:
-            - type: #{backendPrefix}_drop_select_permission
-              args:
-                source: #{source}
-                table:
-                  name: article
-                  #{schemaKeyword}: #{schemaName}
-                role: author
-            - type: #{backendPrefix}_drop_select_permission
-              args:
-                source: #{source}
-                table:
-                  name: article
-                  #{schemaKeyword}: #{schemaName}
-                role: user
-          |]
-
-  Fixture.SetupAction setup \_ -> teardown
+  SetupAction.noTeardown setup

@@ -314,8 +314,7 @@ setup tables (testEnvironment, _) = do
 -- Because the Fixture takes care of dropping the DB, all we do here is
 -- clear the metadata with `replace_metadata`.
 teardown :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown _ (testEnvironment, _) =
-  GraphqlEngine.setSources testEnvironment mempty Nothing
+teardown _ _ = pure ()
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

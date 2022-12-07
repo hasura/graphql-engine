@@ -14,6 +14,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
@@ -31,10 +32,7 @@ spec =
             { Fixture.mkLocalTestEnvironment = const Webhook.run,
               Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnvironment,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
-                    }
+                  SetupAction.noTeardown (postgresSetup testEnvironment)
                 ]
             }
         ]
@@ -160,23 +158,6 @@ postgresSetup testEnvironment = do
 
            CREATE EVENT TRIGGER pg_get_ddl_command on ddl_command_end EXECUTE PROCEDURE #{schemaName}.log_ddl_command();
     |]
-
-postgresTeardown :: TestEnvironment -> IO ()
-postgresTeardown testEnvironment = do
-  let schemaName :: Schema.SchemaName
-      schemaName = Schema.getSchemaName testEnvironment
-  GraphqlEngine.postV2Query_ testEnvironment $
-    [interpolateYaml|
-type: run_sql
-args:
-  source: postgres
-  sql: |
-    DROP EVENT TRIGGER pg_get_ddl_command;
-
-    DROP FUNCTION #{schemaName}.log_ddl_command;
-
-    DROP TABLE #{schemaName}.ddl_history;
-|]
 
 --------------------------------------------------------------------------------
 

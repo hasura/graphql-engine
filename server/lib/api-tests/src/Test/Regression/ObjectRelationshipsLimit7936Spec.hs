@@ -15,6 +15,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnOneOfYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -292,18 +293,4 @@ setupMetadata testEnvironment = do
                        author_name: name
             |]
 
-      teardown :: IO ()
-      teardown =
-        postMetadata_
-          testEnvironment
-          [yaml|
-              type: pg_drop_relationship
-              args:
-                source: postgres
-                table:
-                  schema: hasura
-                  name: article
-                relationship: author
-            |]
-
-  Fixture.SetupAction setup \_ -> teardown
+  SetupAction.noTeardown setup

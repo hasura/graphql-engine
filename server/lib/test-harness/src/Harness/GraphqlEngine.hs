@@ -56,7 +56,7 @@ import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
-import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogMessage)
+import Harness.TestEnvironment (Server (..), TestEnvironment (..), UniqueTestId, getServer, serverUrl, testLogMessage)
 import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
@@ -264,8 +264,8 @@ args:
 -- available before returning.
 --
 -- The port availability is subject to races.
-startServerThread :: IO Server
-startServerThread = do
+startServerThread :: UniqueTestId -> IO Server
+startServerThread uniqueTestId = do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   let urlPrefix = "http://127.0.0.1"
       backendConfigs =
@@ -278,6 +278,7 @@ startServerThread = do
   thread <-
     Async.async
       ( runApp
+          uniqueTestId
           Constants.serveOptions
             { soPort = unsafePort port,
               soMetadataDefaults = backendConfigs
@@ -290,14 +291,14 @@ startServerThread = do
 -------------------------------------------------------------------------------
 
 -- | Run the graphql-engine server.
-runApp :: ServeOptions Hasura.Logging.Hasura -> IO ()
-runApp serveOptions = do
+runApp :: UniqueTestId -> ServeOptions Hasura.Logging.Hasura -> IO ()
+runApp uniqueTestId serveOptions = do
   let rci =
         PostgresConnInfo
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString
+      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString uniqueTestId
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci

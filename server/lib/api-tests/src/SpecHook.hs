@@ -14,15 +14,14 @@ import Data.IORef
 import Data.List qualified as List
 import Database.PostgreSQL.Simple.Options qualified as Options
 import Harness.Exceptions (HasCallStack, bracket)
-import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestingMode (..))
 import Hasura.Prelude
 import System.Environment (getEnvironment)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
-import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)
+import Test.Hspec (Spec, SpecWith, aroundAllWith, parallel, runIO)
 import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, modifyConfig)
 
 --------------------------------------------------------------------------------
@@ -69,19 +68,16 @@ parseBackendType backendType =
     _ -> Nothing
 
 setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
-setupTestEnvironment testingMode logger = do
-  server <- startServerThread
-
+setupTestEnvironment testingMode logger =
   pure
     GlobalTestEnvironment
       { logger = logger,
-        testingMode = testingMode,
-        server = server
+        testingMode = testingMode
       }
 
--- | tear down the shared server
+-- | this used to teardown the server, but now that's the concern of each test
 teardownTestEnvironment :: GlobalTestEnvironment -> IO ()
-teardownTestEnvironment (GlobalTestEnvironment {server}) = stopServer server
+teardownTestEnvironment _ = pure ()
 
 -- | allow setting log output type
 setupLogType :: IO FL.LogType
@@ -121,8 +117,9 @@ hook specs = do
         TestNoBackends -> True -- this is for catching "everything else"
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 
-  aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $
-    mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
+  parallel $
+    aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $
+      mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
 
 {-# NOINLINE globalConfigRef #-}
 globalConfigRef :: IORef (Maybe (TestingMode, FL.LogType))

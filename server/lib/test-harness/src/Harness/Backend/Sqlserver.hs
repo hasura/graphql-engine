@@ -323,8 +323,7 @@ setup tables (testEnvironment, _) = do
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown _ (testEnvironment, _) =
-  GraphqlEngine.setSources testEnvironment mempty Nothing
+teardown _ _ = pure ()
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

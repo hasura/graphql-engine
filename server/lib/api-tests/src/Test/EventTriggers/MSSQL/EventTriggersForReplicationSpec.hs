@@ -29,11 +29,7 @@ spec =
               -- so that the server can be referenced while testing
               Fixture.mkLocalTestEnvironment = const Webhook.run,
               Fixture.setupTeardown = \(testEnvironment, (_webhookServer, _)) ->
-                [ Sqlserver.setupTablesAction (schema "authors" "articles") testEnvironment,
-                  Fixture.SetupAction
-                    { Fixture.setupAction = pure (),
-                      Fixture.teardownAction = \_ -> mssqlTeardown testEnvironment
-                    }
+                [ Sqlserver.setupTablesAction (schema "authors" "articles") testEnvironment
                 ]
             }
         ]
@@ -182,13 +178,3 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer triggerOnReplication =
           update:
             columns: "*"
       |]
-
-mssqlTeardown :: TestEnvironment -> IO ()
-mssqlTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-      type: mssql_delete_event_trigger
-      args:
-        name: author_trigger
-        source: mssql
-    |]
