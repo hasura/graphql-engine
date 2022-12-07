@@ -45,7 +45,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
 			// exit if user inputs n for clearing migrations
-			if cmd.Flags().Changed("all") && !opts.force && opts.EC.IsTerminal {
+			if cmd.Flags().Changed("all") && !opts.Force && opts.EC.IsTerminal {
 				confirmation, err := util.GetYesNoPrompt("clear all migrations of database and it's history on the server?")
 				if err != nil {
 					return errors.E(op, fmt.Errorf("error getting user input: %w", err))
@@ -55,7 +55,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}
 
-			if ec.AllDatabases && !opts.force {
+			if ec.AllDatabases && !opts.Force {
 				confirmation, err := util.GetYesNoPrompt("clear all mentioned migrations of all databases and it's history on the server?")
 				if err != nil {
 					return errors.E(op, fmt.Errorf("error getting user input: %w", err))
@@ -73,20 +73,20 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := migrateDeleteCmd.Flags()
-	f.Uint64Var(&opts.version, "version", 0, "deletes the specified version in migrations")
-	f.BoolVar(&opts.all, "all", false, "clears all migrations for selected database")
-	f.BoolVar(&opts.force, "force", false, "when set executes operation without any confirmation")
-	f.BoolVar(&opts.onlyServer, "server", false, "to reset migrations only on server")
+	f.Uint64Var(&opts.Version, "version", 0, "deletes the specified version in migrations")
+	f.BoolVar(&opts.All, "all", false, "clears all migrations for selected database")
+	f.BoolVar(&opts.Force, "force", false, "when set executes operation without any confirmation")
+	f.BoolVar(&opts.OnlyServer, "server", false, "to reset migrations only on server")
 
 	return migrateDeleteCmd
 }
 
 type MigrateDeleteOptions struct {
 	EC         *cli.ExecutionContext
-	version    uint64
-	all        bool
-	force      bool
-	onlyServer bool
+	Version    uint64
+	All        bool
+	Force      bool
+	OnlyServer bool
 
 	Source cli.Source
 }
@@ -95,7 +95,7 @@ func (o *MigrateDeleteOptions) Run() error {
 	var op errors.Op = "commands.MigrateDeleteOptions.Run"
 	o.EC.Spin("Removing migrations")
 	defer o.EC.Spinner.Stop()
-	if ec.AllDatabases {
+	if o.EC.AllDatabases {
 		sourcesAndKind, err := metadatautil.GetSourcesAndKind(o.EC.APIClient.V1Metadata.ExportMetadata)
 		if err != nil {
 			return errors.E(op, fmt.Errorf("got error while getting the sources list : %v", err))
@@ -109,7 +109,7 @@ func (o *MigrateDeleteOptions) Run() error {
 		}
 		return nil
 	}
-	o.Source = ec.Source
+	o.Source = o.EC.Source
 	if err := o.RunOnSource(); err != nil {
 		return errors.E(op, err)
 	}
@@ -133,14 +133,14 @@ func (o *MigrateDeleteOptions) RunOnSource() error {
 	// sourceVersions migration versions in source to be deleted similarly with serverVersions
 	var sourceVersions, serverVersions []uint64
 
-	if !o.all {
+	if !o.All {
 		// if o.version isn't present on source and on server return error version isn't present.
-		if _, ok := status.Migrations[o.version]; !ok {
-			return errors.E(op, fmt.Errorf("version %v not found", o.version))
+		if _, ok := status.Migrations[o.Version]; !ok {
+			return errors.E(op, fmt.Errorf("version %v not found", o.Version))
 		}
-		sourceVersions = []uint64{o.version}
-		serverVersions = []uint64{o.version}
-	} else if o.all {
+		sourceVersions = []uint64{o.Version}
+		serverVersions = []uint64{o.Version}
+	} else if o.All {
 		for k, v := range status.Migrations {
 			if v.IsApplied {
 				serverVersions = append(serverVersions, k)
@@ -158,7 +158,7 @@ func (o *MigrateDeleteOptions) RunOnSource() error {
 	}
 
 	// removes the migrations on source
-	if !o.onlyServer {
+	if !o.OnlyServer {
 		err = DeleteVersions(o.EC, sourceVersions, o.Source)
 		if err != nil {
 			return errors.E(op, fmt.Errorf("error removing migrations from project: %w", err))
