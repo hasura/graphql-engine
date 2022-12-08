@@ -85,6 +85,26 @@ tests opts = do
           is_consistent: true
           inconsistent_objects: []
         |]
+      Postgres.dropTable testEnvironment table
+
+  describe "replacing metadata with already present inconsistency" do
+    it "drop table for an already inconsistent table with event trigger" \testEnvironment -> do
+      Postgres.createTable testEnvironment table
+      _ <- postMetadata testEnvironment (setupMetadataWithTableAndEventTrigger testEnvironment)
+      Postgres.dropTable testEnvironment table
+      postMetadata testEnvironment (replaceMetadataDropInconsistentTable testEnvironment)
+        `shouldReturnYaml` [yaml|
+          is_consistent: true
+          inconsistent_objects: []
+        |]
+
+    it "drop source for an already inconsistent source" \testEnvironment -> do
+      _ <- postMetadata testEnvironment (setupMetadataWithInconsistentSource testEnvironment)
+      postMetadata testEnvironment repaceMetadataRemoveInconsistentSource
+        `shouldReturnYaml` [yaml|
+          is_consistent: true
+          inconsistent_objects: []
+        |]
 
 reloadMetadata :: Value
 reloadMetadata =
@@ -117,6 +137,96 @@ replaceMetadataWithTable testEnvironment =
     sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
+
+setupMetadataWithInconsistentSource :: TestEnvironment -> Value
+setupMetadataWithInconsistentSource testEnvironment =
+  [yaml|
+    type: replace_metadata
+    args:
+      allow_inconsistent_metadata: true
+      metadata:
+        version: 3
+        sources:
+          - name: *sourceName
+            kind: postgres
+            tables:
+              - table:
+                  schema: *schemaName
+                  name: *tableName
+            configuration:
+              connection_info:
+                database_url: postgres://postgres:postgres@postgres:5432/non_existent_db
+                pool_settings: {}
+  |]
+  where
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    sourceName = Fixture.backendSourceName backendTypeMetadata
+    schemaName = Schema.getSchemaName testEnvironment
+    tableName = Schema.tableName table
+
+repaceMetadataRemoveInconsistentSource :: Value
+repaceMetadataRemoveInconsistentSource =
+  [yaml|
+    type: replace_metadata
+    args:
+      allow_inconsistent_metadata: true
+      metadata:
+        version: 3
+        sources: []
+  |]
+
+setupMetadataWithTableAndEventTrigger :: TestEnvironment -> Value
+setupMetadataWithTableAndEventTrigger testEnvironment =
+  [yaml|
+    type: replace_metadata
+    args:
+      allow_inconsistent_metadata: true
+      metadata:
+        version: 3
+        sources:
+          - name: *sourceName
+            kind: postgres
+            tables:
+              - table:
+                  schema: *schemaName
+                  name: *tableName
+                event_triggers:
+                  - name: foo-trigger
+                    definition:
+                      insert:
+                        columns: '*'
+                    retry_conf:
+                      interval_sec: 10
+                      num_retries: 0
+                      timeout_sec: 60
+                    webhook: https://httpbin.org/post
+            configuration: *sourceConfiguration
+  |]
+  where
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
+    sourceName = Fixture.backendSourceName backendTypeMetadata
+    schemaName = Schema.getSchemaName testEnvironment
+    tableName = Schema.tableName table
+
+replaceMetadataDropInconsistentTable :: TestEnvironment -> Value
+replaceMetadataDropInconsistentTable testEnvironment =
+  [yaml|
+    type: replace_metadata
+    args:
+      allow_inconsistent_metadata: true
+      metadata:
+        version: 3
+        sources:
+          - name: *sourceName
+            kind: postgres
+            tables: []
+            configuration: *sourceConfiguration
+  |]
+  where
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
+    sourceName = Fixture.backendSourceName backendTypeMetadata
 
 expectedInconsistentYaml :: Maybe Text -> TestEnvironment -> Value
 expectedInconsistentYaml message testEnvironment =

@@ -774,5 +774,5 @@ runMetadataQueryV2M ::
   RQLMetadataV2 ->
   m EncJSON
 runMetadataQueryV2M currentResourceVersion = \case
-  RMV2ReplaceMetadata q -> runReplaceMetadataV2 q
+  RMV2ReplaceMetadata q -> runReplaceMetadataV2 DeleteEventTriggerCleanupSchedules q
   RMV2ExportMetadata q -> runExportMetadataV2 currentResourceVersion q
