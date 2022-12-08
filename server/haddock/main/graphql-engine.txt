@@ -18444,12 +18444,14 @@ type InheritedRolesCache = HashMap RoleName (HashSet RoleName)
 --   not match the expected type 3. The named source exists, and is of the
 --   expected type, but is inconsistent
 askSourceInfo :: forall b m. (CacheRM m, MetadataM m, MonadError QErr m, Backend b) => SourceName -> m (SourceInfo b)
+askSourceInfoMaybe :: forall b m. (CacheRM m, Backend b) => SourceName -> m (Maybe (SourceInfo b))
 
 -- | Retrieves the source config for a given source name.
 --   
 --   This function relies on <a>askSourceInfo</a> and similarly throws an
 --   error if the source isn't found.
 askSourceConfig :: forall b m. (CacheRM m, MonadError QErr m, Backend b, MetadataM m) => SourceName -> m (SourceConfig b)
+askSourceConfigMaybe :: forall b m. (CacheRM m, Backend b) => SourceName -> m (Maybe (SourceConfig b))
 
 -- | Retrieves the table cache for a given source cache and source name.
 --   
@@ -22428,22 +22430,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) TriggerOnReplication
-cteqCleanupConfig :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe Text)
-cetqWebhook :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe InputWebhook)
-cetqUpdate :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe (SubscribeOpSpec b_aBZ0B))
-cetqTable :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (TableName b_aBZ0B)
-cetqSource :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) SourceName
-cetqRetryConf :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe RequestTransform)
-cetqReplace :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) Bool
-cetqName :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) TriggerName
-cetqInsert :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe (SubscribeOpSpec b_aBZ0B))
-cetqHeaders :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe Bool)
-cetqDelete :: forall b_aBZ0B. Lens' (CreateEventTriggerQuery b_aBZ0B) (Maybe (SubscribeOpSpec b_aBZ0B))
+cteqTriggerOnReplication :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) TriggerOnReplication
+cteqCleanupConfig :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe Text)
+cetqWebhook :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe InputWebhook)
+cetqUpdate :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe (SubscribeOpSpec b_aBZo7))
+cetqTable :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (TableName b_aBZo7)
+cetqSource :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) SourceName
+cetqRetryConf :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe RequestTransform)
+cetqReplace :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) Bool
+cetqName :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) TriggerName
+cetqInsert :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe (SubscribeOpSpec b_aBZo7))
+cetqHeaders :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe Bool)
+cetqDelete :: forall b_aBZo7. Lens' (CreateEventTriggerQuery b_aBZo7) (Maybe (SubscribeOpSpec b_aBZo7))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -22457,13 +22459,13 @@ runCreateEventTriggerQuery :: forall b m r. (BackendMetadata b, BackendEventTrig
 runDeleteEventTriggerQuery :: forall b m. (BackendEventTrigger b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) => DeleteEventTriggerQuery b -> m EncJSON
 runRedeliverEvent :: forall b m. (BackendEventTrigger b, MonadIO m, CacheRM m, QErrM m, MetadataM m) => RedeliverEventQuery b -> m EncJSON
 runInvokeEventTrigger :: forall b m. (MonadIO m, QErrM m, CacheRM m, MetadataM m, MonadTrace m, UserInfoM m, BackendEventTrigger b) => InvokeEventTriggerQuery b -> m EncJSON
-getTabInfoFromSchemaCache :: (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (TableInfo b)
+getTabInfoFromSchemaCache :: (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (Maybe (TableInfo b))
 getHeaderInfosFromConf :: QErrM m => Environment -> [HeaderConf] -> m [EventHeaderInfo]
 getWebhookInfoFromConf :: QErrM m => Environment -> WebhookConf -> m WebhookConfInfo
 buildEventTriggerInfo :: forall b m. (Backend b, QErrM m) => Environment -> SourceName -> TableName b -> EventTriggerConf b -> m (EventTriggerInfo b, Seq SchemaDependency)
 getTriggersMap :: SourceMetadata b -> InsOrdHashMap TriggerName (EventTriggerConf b)
 getTriggerNames :: SourceMetadata b -> HashSet TriggerName
-getTableNameFromTrigger :: forall b m. (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (TableName b)
+getTableNameFromTrigger :: forall b m. (Backend b, QErrM m) => SchemaCache -> SourceName -> TriggerName -> m (Maybe (TableName b))
 runCleanupEventTriggerLog :: (MonadEventLogCleanup m, MonadError QErr m) => TriggerLogCleanupConfig -> m EncJSON
 runEventTriggerResumeCleanup :: forall m. (MonadIO m, QErrM m, CacheRWM m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
 runEventTriggerPauseCleanup :: (MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
@@ -25088,12 +25090,15 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.RenameS
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.SQL.Backend.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.AddSource b)
 
 module Hasura.RQL.DDL.Metadata
+data ShouldDeleteEventTriggerCleanupSchedules
+DeleteEventTriggerCleanupSchedules :: ShouldDeleteEventTriggerCleanupSchedules
+DontDeleteEventTriggerCleanupSchedules :: ShouldDeleteEventTriggerCleanupSchedules
 runClearMetadata :: forall m r. (MonadIO m, CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m, MonadBaseControl IO m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ClearMetadata -> m EncJSON
 
 -- | Replace the 'current metadata' with the 'new metadata' The 'new
 --   metadata' might come via the 'Import Metadata' in console
 runReplaceMetadata :: (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ReplaceMetadata -> m EncJSON
-runReplaceMetadataV2 :: forall m r. (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ReplaceMetadataV2 -> m EncJSON
+runReplaceMetadataV2 :: forall m r. (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ShouldDeleteEventTriggerCleanupSchedules -> ReplaceMetadataV2 -> m EncJSON
 runExportMetadata :: forall m. (QErrM m, MetadataM m) => ExportMetadata -> m EncJSON
 runExportMetadataV2 :: forall m. (QErrM m, MetadataM m) => MetadataResourceVersion -> ExportMetadata -> m EncJSON
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
@@ -25105,6 +25110,8 @@ runSetCatalogState :: MonadMetadataStorageQueryAPI m => SetCatalogState -> m Enc
 runSetMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) => MetricsConfig -> m EncJSON
 runRemoveMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) => m EncJSON
 runTestWebhookTransform :: QErrM m => TestWebhookTransform -> m EncJSON
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.ShouldDeleteEventTriggerCleanupSchedules
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.ShouldDeleteEventTriggerCleanupSchedules
 
 
 -- | The RQL query ('<i>v1</i>query')
