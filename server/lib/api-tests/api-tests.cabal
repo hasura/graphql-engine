@@ -315,6 +315,6 @@ executable produce-feature-matrix
     -Wall
     -Werror
     -threaded
-    -rtsopts "-with-rtsopts=-N"
+    -rtsopts "-with-rtsopts=-N4"
 
   main-is: Main.hs
