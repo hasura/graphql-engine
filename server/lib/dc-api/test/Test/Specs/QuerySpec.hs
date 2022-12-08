@@ -7,6 +7,7 @@ import Test.Data (TestData)
 import Test.Sandwich (describe)
 import Test.Specs.QuerySpec.AggregatesSpec qualified as Test.QuerySpec.AggregatesSpec
 import Test.Specs.QuerySpec.BasicSpec qualified as Test.QuerySpec.BasicSpec
+import Test.Specs.QuerySpec.CustomOperatorsSpec qualified as Test.QuerySpec.CustomOperatorsSpec
 import Test.Specs.QuerySpec.FilteringSpec qualified as Test.QuerySpec.FilteringSpec
 import Test.Specs.QuerySpec.OrderBySpec qualified as Test.QuerySpec.OrderBySpec
 import Test.Specs.QuerySpec.RelationshipsSpec qualified as Test.QuerySpec.RelationshipsSpec
@@ -17,6 +18,7 @@ spec :: TestData -> SourceName -> Config -> Capabilities -> AgentTestSpec
 spec testData sourceName config capabilities@Capabilities {..} = do
   describe "query API" do
     Test.QuerySpec.BasicSpec.spec testData sourceName config
+    Test.QuerySpec.CustomOperatorsSpec.spec testData sourceName config _cScalarTypes
     Test.QuerySpec.FilteringSpec.spec testData sourceName config _cComparisons
     Test.QuerySpec.OrderBySpec.spec testData sourceName config capabilities
     when (isJust _cRelationships) $

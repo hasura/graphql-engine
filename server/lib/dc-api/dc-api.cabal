@@ -161,6 +161,7 @@ test-suite tests-dc-api
     Test.Specs.QuerySpec
     Test.Specs.QuerySpec.AggregatesSpec
     Test.Specs.QuerySpec.BasicSpec
+    Test.Specs.QuerySpec.CustomOperatorsSpec
     Test.Specs.QuerySpec.FilteringSpec
     Test.Specs.QuerySpec.OrderBySpec
     Test.Specs.QuerySpec.RelationshipsSpec

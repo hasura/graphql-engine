@@ -1,6 +1,6 @@
 import { Config }  from "./config";
 import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable, envToNum, stringArrayEquals } from "./util";
+import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -26,6 +26,7 @@ import {
     OrderByTarget,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
+import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
 
 const SqlString = require('sqlstring-sqlite');
 
@@ -130,7 +131,19 @@ function where_clause(relationships: TableRelationships[], expression: Expressio
         const bopLhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
         const bop = bop_op(expression.operator);
         const bopRhs = generateComparisonValueFragment(expression.value, queryTableAlias, currentTableAlias);
-        return `${bopLhs} ${bop} ${bopRhs}`;
+        if(expression.operator == '_in_year') {
+          return `cast(strftime('%Y', ${bopLhs}) as integer) = ${bopRhs}`;
+        } else if(expression.operator == '_modulus_is_zero') {
+          return `cast(${bopLhs} as integer) % ${bopRhs} = 0`;
+        } else if(expression.operator == '_nand') {
+          return `NOT (${bopLhs} AND ${bopRhs})`;
+        } else if(expression.operator == '_nor') {
+          return `NOT (${bopLhs} OR ${bopRhs})`;
+        } else if(expression.operator == '_xor') {
+          return `(${bopLhs} AND (NOT ${bopRhs})) OR ((NOT${bopRhs}) AND ${bopRhs})`;
+        } else {
+          return `${bopLhs} ${bop} ${bopRhs}`;
+        }
 
       case "binary_arr_op":
         const bopALhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
@@ -365,19 +378,34 @@ function bop_array(o: BinaryArrayComparisonOperator): string {
 function bop_op(o: BinaryComparisonOperator): string {
   let result = o;
   switch(o) {
-    case 'equal':                 result = "="; break;
-    case 'greater_than':          result = ">"; break;
-    case 'greater_than_or_equal': result = ">="; break;
-    case 'less_than':             result = "<"; break;
-    case 'less_than_or_equal':    result = "<="; break;
+    // TODO: Check for coverage of these operators
+    case 'equal':                 result = '='; break;
+    case 'greater_than':          result = '>'; break;
+    case 'greater_than_or_equal': result = '>='; break;
+    case 'less_than':             result = '<'; break;
+    case 'less_than_or_equal':    result = '<='; break;
+    case '_eq':                   result = '='; break; // Why is this required?
+    case '_gt':                   result = '>'; break; // Why is this required?
+    case '_gte':                  result = '>='; break; // Why is this required?
+    case '_lt':                   result = '<'; break; // Why is this required?
+    case '_lte':                  result = '<='; break; // Why is this required?
+    case '_like':                 result = 'LIKE'; break;
+    case '_glob':                 result = 'GLOB'; break;
+    case '_regexp':               result = 'REGEXP'; break; // TODO: Have capabilities detect if REGEXP support is enabled
+    case '_neq':                  result = '<>'; break;
+    case '_nlt':                  result = '!<'; break;
+    case '_ngt':                  result = '!>'; break;
+    case '_and':                  result = 'AND'; break;
+    case '_or':                   result = 'OR'; break;
   }
+  // TODO: We can't always assume that we can include the operator here verbatim.
   return tag('bop_op',result);
 }
 
 function uop_op(o: UnaryComparisonOperator): string {
   let result = o;
   switch(o) {
-    case 'is_null':               result = "IS NULL"; break;
+    case 'is_null': result = "IS NULL"; break;
   }
   return tag('uop_op',result);
 }
@@ -630,7 +658,6 @@ function output(rows: any): QueryResponse {
   return JSON.parse(rows[0].data);
 }
 
-const DEBUGGING_TAGS = envToBool('DEBUGGING_TAGS');
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
  *
  * comment('a','b') => '/*\<a>\*\/ b /*\</a>*\/'
@@ -693,14 +720,13 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
   const db = connect(config, sqlLogger); // TODO: Should this be cached?
   const q = query(queryRequest);
 
-  const query_length_limit = envToNum('QUERY_LENGTH_LIMIT', Infinity);
-  if(q.length > query_length_limit) {
+  if(q.length > QUERY_LENGTH_LIMIT) {
     const result: ErrorResponse =
       {
-        message: `Generated SQL Query was too long (${q.length} > ${query_length_limit})`,
+        message: `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
         details: {
           "query.length": q.length,
-          "limit": query_length_limit
+          "limit": QUERY_LENGTH_LIMIT
         }
       };
     return result;

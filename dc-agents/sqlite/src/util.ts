@@ -21,24 +21,6 @@ export const crossProduct = <T, U>(arr1: T[], arr2: U[]): [T,U][] => {
   return arr1.flatMap(a1 => arr2.map<[T,U]>(a2 => [a1, a2]));
 };
 
-export function stringToBool(x: string | null | undefined): boolean {
-  return (/1|true|t|yes|y/i).test(x || '');
-}
-
-export function envToBool(envVarName: string): boolean {
-  return stringToBool(process.env[envVarName]);
-}
-
-export function envToString(envVarName: string, defaultValue: string): string {
-  const val = process.env[envVarName];
-  return val === undefined ? defaultValue : val;
-}
-
-export function envToNum(envVarName: string, defaultValue: number): number {
-  const val = process.env[envVarName];
-  return val === undefined ? defaultValue : Number(val);
-}
-
 export function last<T>(x: T[]): T {
   return x[x.length - 1];
 }

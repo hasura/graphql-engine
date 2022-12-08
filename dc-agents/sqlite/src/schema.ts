@@ -1,7 +1,8 @@
 import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
+import { ScalarTypeKey } from "./capabilities";
 import { Config } from "./config";
 import { connect, SqlLogger } from './db';
-import { envToBool } from "./util";
+import { MUTATIONS } from "./environment";
 
 var sqliteParser = require('sqlite-parser');
 
@@ -18,7 +19,9 @@ type Datatype = {
   variant: string, // Declared type, lowercased
 }
 
-function determineScalarType(datatype: Datatype): ScalarType {
+// Note: Using ScalarTypeKey here instead of ScalarType to show that we have only used
+//       the capability documented types, and that ScalarTypeKey is a subset of ScalarType
+function determineScalarType(datatype: Datatype): ScalarTypeKey {
   switch (datatype.variant) {
     case "bool": return "bool";
     case "boolean": return "bool";
@@ -35,7 +38,7 @@ function determineScalarType(datatype: Datatype): ScalarType {
   }
 }
 
-function getColumns(ast: any[], primaryKeys: string[], mutationsEnabled: boolean) : ColumnInfo[] {
+function getColumns(ast: any[], primaryKeys: string[]) : ColumnInfo[] {
   return ast.map(c => {
     const isPrimaryKey = primaryKeys.includes(c.name);
 
@@ -43,8 +46,8 @@ function getColumns(ast: any[], primaryKeys: string[], mutationsEnabled: boolean
       name: c.name,
       type: determineScalarType(c.datatype),
       nullable: nullableCast(c.definition),
-      insertable: mutationsEnabled,
-      updatable: mutationsEnabled && !isPrimaryKey,
+      insertable: MUTATIONS,
+      updatable: MUTATIONS && !isPrimaryKey,
     };
   })
 }
@@ -67,18 +70,16 @@ const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo
   const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
   const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
-  const mutationsEnabled = envToBool('MUTATIONS');
-
   return {
     name: tableName,
     type: "table",
     ...primaryKey,
     ...foreignKey,
     description: info.sql,
-    columns: getColumns(columnsDdl, primaryKeys, mutationsEnabled),
-    insertable: mutationsEnabled,
-    updatable: mutationsEnabled,
-    deletable: mutationsEnabled,
+    columns: getColumns(columnsDdl, primaryKeys),
+    insertable: MUTATIONS,
+    updatable: MUTATIONS,
+    deletable: MUTATIONS,
   }
 }
 

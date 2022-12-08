@@ -5,6 +5,7 @@
 module Hasura.Backends.DataConnector.API.V0.Table
   ( TableName (..),
     TableInfo (..),
+    tableNameToText,
     tiName,
     tiType,
     tiColumns,
@@ -33,9 +34,9 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
 import Data.Hashable (Hashable)
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.OpenApi (ToSchema)
-import Data.Text (Text)
+import Data.Text (Text, intercalate)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Prelude
@@ -45,10 +46,13 @@ import Prelude
 -- | The fully qualified name of a table. The last element in the list is the table name
 -- and all other elements represent namespacing of the table name.
 -- For example, for a database that has schemas, the name would be '[<schema>,<table name>]'
-newtype TableName = TableName {unTableName :: NonEmpty Text}
+newtype TableName = TableName {unTableName :: NonEmpty.NonEmpty Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
+
+tableNameToText :: TableName -> Text
+tableNameToText (TableName tns) = intercalate "." (NonEmpty.toList tns)
 
 instance HasCodec TableName where
   codec =
