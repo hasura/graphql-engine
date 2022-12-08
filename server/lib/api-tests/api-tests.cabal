@@ -163,6 +163,7 @@ library
     Test.Schema.CustomFieldsSpec
     Test.Schema.DataValidations.Permissions.InsertSpec
     Test.Schema.DataValidations.Permissions.SelectSpec
+    Test.Schema.DataValidations.Permissions.UpdateSpec
     Test.Schema.DefaultValues.DefaultValuesSpec
     Test.Schema.DefaultValues.OnConflictSpec
     Test.Schema.EnumsSpec
