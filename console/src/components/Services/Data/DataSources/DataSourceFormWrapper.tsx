@@ -155,10 +155,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
                       )
                       .map(driver => (
                         <option key={driver.name} value={driver.name}>
-                          {driver.displayName?.replace(
-                            'athena',
-                            'Amazon Athena'
-                          )}{' '}
+                          {driver.displayName}{' '}
                           {driver.release === 'GA'
                             ? null
                             : `(${driver.release})`}
