@@ -11,6 +11,7 @@ import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
+import Data.Aeson.Types qualified as J
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
@@ -24,6 +25,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TestEnvironment
 import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
 
@@ -103,6 +105,14 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
       let removeDescriptions (J.Object o) = J.Object (KM.delete "description" (removeDescriptions <$> o))
           removeDescriptions (J.Array a) = J.Array (removeDescriptions <$> a)
           removeDescriptions x = x
+      let mutationsCapabilities =
+            TestEnvironment.backendTypeConfig testEnvironment
+              >>= BackendType.backendCapabilities
+              >>= J.parseMaybe J.parseJSON
+              >>= API._cMutations
+      let supportsInserts = isJust $ mutationsCapabilities >>= API._mcInsertCapabilities
+      let supportsUpdates = isJust $ mutationsCapabilities >>= API._mcUpdateCapabilities
+      let supportsDeletes = isJust $ mutationsCapabilities >>= API._mcDeleteCapabilities
 
       case BackendType.backendSourceName <$> TestEnvironment.backendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
@@ -125,13 +135,21 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               - name: GenreId
                 nullable: false
                 type: number
+                insertable: *supportsInserts
+                updatable: false
               - name: Name
                 nullable: true
                 type: string
+                insertable: *supportsInserts
+                updatable: *supportsUpdates
               name:
               - Genre
+              type: table
               primary_key:
               - GenreId
+              insertable: *supportsInserts
+              updatable: *supportsUpdates
+              deletable: *supportsDeletes
             |]
 
   describe "get_source_kind_capabilities" $ do

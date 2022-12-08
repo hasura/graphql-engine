@@ -1,7 +1,7 @@
 import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
 import { Config } from "./config";
 import { connect, SqlLogger } from './db';
-import { logDeep } from "./util";
+import { envToBool } from "./util";
 
 var sqliteParser = require('sqlite-parser');
 
@@ -35,13 +35,17 @@ function determineScalarType(datatype: Datatype): ScalarType {
   }
 }
 
-function getColumns(ast: any[]) : ColumnInfo[] {
+function getColumns(ast: any[], primaryKeys: string[], mutationsEnabled: boolean) : ColumnInfo[] {
   return ast.map(c => {
-    return ({
+    const isPrimaryKey = primaryKeys.includes(c.name);
+
+    return {
       name: c.name,
       type: determineScalarType(c.datatype),
-      nullable: nullableCast(c.definition)
-    })
+      nullable: nullableCast(c.definition),
+      insertable: mutationsEnabled,
+      updatable: mutationsEnabled && !isPrimaryKey,
+    };
   })
 }
 
@@ -56,20 +60,25 @@ function nullableCast(ds: any[]): boolean {
 
 const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
   const ast = sqliteParser(info.sql);
-  const ddl = ddlColumns(ast);
+  const columnsDdl = getColumnsDdl(ast);
   const primaryKeys = ddlPKs(ast);
   const foreignKeys = ddlFKs(config, ast);
   const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
   const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
   const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
-  // TODO: Should we include something for the description here?
+  const mutationsEnabled = envToBool('MUTATIONS');
+
   return {
     name: tableName,
+    type: "table",
     ...primaryKey,
     ...foreignKey,
     description: info.sql,
-    columns: getColumns(ddl)
+    columns: getColumns(columnsDdl, primaryKeys, mutationsEnabled),
+    insertable: mutationsEnabled,
+    updatable: mutationsEnabled,
+    deletable: mutationsEnabled,
   }
 }
 
@@ -100,7 +109,7 @@ function includeTable(config: Config, table: TableInfoInternal): boolean {
  * @param ddl - The output of sqlite-parser
  * @returns - List of columns as present in the output of sqlite-parser.
  */
-function ddlColumns(ddl: any): any[] {
+function getColumnsDdl(ddl: any): any[] {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list when parsing DDL for table.");
   }

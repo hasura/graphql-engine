@@ -267,6 +267,7 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
   "tables": [
     {
       "name": ["Artist"],
+      "type": "table",
       "primary_key": ["ArtistId"],
       "description": "Collection of artists of music",
       "columns": [
@@ -274,18 +275,26 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
           "name": "ArtistId",
           "type": "number",
           "nullable": false,
-          "description": "Artist primary key identifier"
+          "description": "Artist primary key identifier",
+          "insertable": true,
+          "updatable": false
         },
         {
           "name": "Name",
           "type": "string",
           "nullable": true,
-          "description": "The name of the artist"
+          "description": "The name of the artist",
+          "insertable": true,
+          "updatable": true
         }
-      ]
+      ],
+      "insertable": true,
+      "updatable": true,
+      "deletable": true
     },
     {
       "name": ["Album"],
+      "type": "table",
       "primary_key": ["AlbumId"],
       "description": "Collection of music albums created by artists",
       "columns": [
@@ -293,31 +302,48 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
           "name": "AlbumId",
           "type": "number",
           "nullable": false,
-          "description": "Album primary key identifier"
+          "description": "Album primary key identifier",
+          "insertable": true,
+          "updatable": false,
         },
         {
           "name": "Title",
           "type": "string",
           "nullable": false,
-          "description": "The title of the album"
+          "description": "The title of the album",
+          "insertable": true,
+          "updatable": true
         },
         {
           "name": "ArtistId",
           "type": "number",
           "nullable": false,
-          "description": "The ID of the artist that created this album"
+          "description": "The ID of the artist that created this album",
+          "insertable": true,
+          "updatable": true
         }
-      ]
+      ],
+      "insertable": true,
+      "updatable": true,
+      "deletable": true
     }
   ]
 }
 ```
 
-The `tables` section describes the two available tables, as well as their columns, including types and nullability information.
+The `tables` section describes two available tables, as well as their columns, including types and nullability information.
 
 Notice that the names of tables and columns are used in the metadata document to describe tracked tables and relationships.
 
 Table names are described as an array of strings. This allows agents to fully qualify their table names with whatever namespacing requirements they have. For example, if the agent connects to a database that puts tables inside schemas, the agent could use table names such as `["my_schema", "my_table"]`.
+
+The `type` of a table can be either a "table" or a "view".
+
+Tables have mutability properties, namely, whether they are "insertable", "updatable" and "deletable", which refers to whether rows can be inserted/updated/deleted from the table. Typically, in an RDBMS, tables are insertable, updatable and deletable, but views may not be. However, an agent may declare the mutability properties in any combination that suits its data source.
+
+Columns also have "insertable" and "updatable" mutability properties. Typically, in an RDBMS, computed columns are neither insertable not updatable, primary keys are insertable but not updatable and normal columns are insertable and updatable. Agents may declare whatever combination suits their data source.
+
+If the agent declares a lack of mutability support in its capabilities, it should not declare tables/columns as mutable in its schema here.
 
 #### Type definitions
 
@@ -2134,4 +2160,3 @@ Breaking down the properties in the `delete`-typed mutation operation:
 * `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the deletion (ie. all deleted rows).
 
 Delete operations return responses that are the same as insert and update operations, except the affected rows in `returning` are the deleted rows instead.
-

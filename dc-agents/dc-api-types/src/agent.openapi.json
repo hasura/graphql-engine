@@ -934,12 +934,24 @@
         },
         "type": "array"
       },
+      "TableType": {
+        "enum": [
+          "table",
+          "view"
+        ],
+        "type": "string"
+      },
       "ColumnInfo": {
         "properties": {
           "description": {
             "description": "Column description",
             "nullable": true,
             "type": "string"
+          },
+          "insertable": {
+            "default": false,
+            "description": "Whether or not the column can be inserted into",
+            "type": "boolean"
           },
           "name": {
             "description": "Column name",
@@ -951,6 +963,11 @@
           },
           "type": {
             "$ref": "#/components/schemas/ScalarType"
+          },
+          "updatable": {
+            "default": false,
+            "description": "Whether or not the column can be updated",
+            "type": "boolean"
           }
         },
         "required": [
@@ -988,6 +1005,11 @@
             },
             "type": "array"
           },
+          "deletable": {
+            "default": false,
+            "description": "Whether or not existing rows can be deleted in the table",
+            "type": "boolean"
+          },
           "description": {
             "description": "Description of the table",
             "nullable": true,
@@ -1001,6 +1023,11 @@
             "description": "Foreign key constraints",
             "type": "object"
           },
+          "insertable": {
+            "default": false,
+            "description": "Whether or not new rows can be inserted into the table",
+            "type": "boolean"
+          },
           "name": {
             "$ref": "#/components/schemas/TableName"
           },
@@ -1011,6 +1038,14 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TableType"
+          },
+          "updatable": {
+            "default": false,
+            "description": "Whether or not existing rows can be updated in the table",
+            "type": "boolean"
           }
         },
         "required": [

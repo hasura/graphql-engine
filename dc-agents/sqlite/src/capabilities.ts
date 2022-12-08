@@ -22,6 +22,19 @@ export const capabilitiesResponse: CapabilitiesResponse = {
         supports_relations: true
       }
     },
+    ... (
+      envToBool('MUTATIONS')
+        ? {
+          mutations: {
+            atomicity_support_level: "heterogeneous_operations",
+            insert: { supports_nested_inserts: true },
+            update: {},
+            delete: {},
+            returning: {},
+          }
+        }
+        : {}
+    ),
     explain: {},
     raw: {},
     ... ( envToBool('METRICS') ?  { metrics: {} } : {} )

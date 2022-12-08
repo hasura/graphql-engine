@@ -101,6 +101,7 @@ export type { TableInfo } from './models/TableInfo';
 export type { TableInsertSchema } from './models/TableInsertSchema';
 export type { TableName } from './models/TableName';
 export type { TableRelationships } from './models/TableRelationships';
+export type { TableType } from './models/TableType';
 export type { UnaryComparisonOperator } from './models/UnaryComparisonOperator';
 export type { UnrelatedTable } from './models/UnrelatedTable';
 export type { UpdateCapabilities } from './models/UpdateCapabilities';
