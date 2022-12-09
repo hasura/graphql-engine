@@ -1147,6 +1147,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
+    Hasura.Server.CompressionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
     Hasura.Server.Migrate.VersionSpec
