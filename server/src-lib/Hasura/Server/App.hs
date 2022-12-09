@@ -386,11 +386,11 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       let (respBytes, respHeaders) = case result of
             JSONResp (HttpResponse encJson h) -> (encJToLBS encJson, pure jsonHeader <> h)
             RawResp (HttpResponse rawBytes h) -> (rawBytes, h)
-          (compressedResp, mEncodingHeader, mCompressionType) = compressResponse (Wai.requestHeaders waiReq) respBytes
-          encodingHeader = onNothing mEncodingHeader []
+          (compressedResp, encodingType) = compressResponse (Wai.requestHeaders waiReq) respBytes
+          encodingHeader = maybeToList (contentEncodingHeader <$> encodingType)
           reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
           allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders <> authHdrs
-      lift $ logHttpSuccess scLogger scLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime mCompressionType reqHeaders httpLoggingMetadata
+      lift $ logHttpSuccess scLogger scLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp
 
