@@ -46,7 +46,7 @@ const useLoadData = (sourceRemoteSchema: string) => {
   }, [fetchSchema, sourceRemoteSchema]);
 
   const remoteSchemaList = React.useMemo(() => {
-    return data?.filter((schemaName) => schemaName !== sourceRemoteSchema);
+    return data?.filter(schemaName => schemaName !== sourceRemoteSchema);
   }, [data, sourceRemoteSchema]);
 
   const remoteSchemaTypes = (rsData && getTypesFromIntrospection(rsData)) ?? [];
@@ -124,7 +124,7 @@ export const FormElements = ({
       <div className="grid grid-cols-12">
         <div className="col-span-5">
           <RsSourceTypeSelector
-            types={remoteSchemaTypes.map((t) => t.typeName).sort()}
+            types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey={rsSourceTypeKey}
           />
         </div>

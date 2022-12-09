@@ -23,7 +23,7 @@ export const Playground: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'chinook', schema: 'public', table: 'Album' }}
-      onChange={(v) => console.log(v)}
+      onChange={v => console.log(v)}
       name="source"
       className="border-l-4 border-l-green-600"
       labels={{
@@ -40,7 +40,7 @@ export const WithDisabledInputs: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'chinook', schema: 'public', table: 'Album' }}
-      onChange={(v) => console.log(v)}
+      onChange={v => console.log(v)}
       name="source"
       className="border-l-4 border-l-green-600"
       disabledKeys={['database', 'schema', 'table']}
@@ -52,7 +52,7 @@ export const BqWithDisabledInputs: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'bigquery_test', dataset: 'sensei', table: 'table1' }}
-      onChange={(v) => console.log(v)}
+      onChange={v => console.log(v)}
       name="source"
       className="border-l-4 border-l-green-600"
       disabledKeys={['database', 'schema', 'table']}
@@ -64,7 +64,7 @@ export const WithHiddenInputs: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'bigquery_test', dataset: 'sensei', table: '' }}
-      onChange={(v) => console.log(v)}
+      onChange={v => console.log(v)}
       name="source"
       className="border-l-4 border-l-green-600"
       hiddenKeys={['database']}
@@ -124,6 +124,7 @@ export const WithReactFormHookNested: Story = () => {
       }}
       onSubmit={submit}
       schema={schema}
+      className="p-4"
     >
       {() => {
         return (

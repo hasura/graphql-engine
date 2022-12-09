@@ -27,7 +27,7 @@ function GetRemoteSchemaRelationshipsComponent({
 
 export const GetRemoteSchemaRelationships: ComponentStory<
   typeof GetRemoteSchemaRelationshipsComponent
-> = (args) => {
+> = args => {
   return <GetRemoteSchemaRelationshipsComponent {...args} />;
 };
 

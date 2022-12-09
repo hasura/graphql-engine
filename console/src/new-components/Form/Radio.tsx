@@ -1,4 +1,4 @@
-import React, { ReactText } from 'react';
+import React, { ReactNode, ReactText } from 'react';
 import clsx from 'clsx';
 import { v4 as uuid } from 'uuid';
 import get from 'lodash.get';
@@ -6,7 +6,7 @@ import { FieldError, useFormContext } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 type RadioItem = {
-  label: ReactText;
+  label: ReactNode;
   value: ReactText;
   disabled?: boolean;
 };

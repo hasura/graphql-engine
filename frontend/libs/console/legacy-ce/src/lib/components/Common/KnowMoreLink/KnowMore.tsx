@@ -4,7 +4,7 @@ type KnowMoreProps = {
   url: string;
 };
 
-const KnowMore: React.FC<KnowMoreProps> = (props) => {
+const KnowMore: React.FC<KnowMoreProps> = props => {
   const { url } = props;
   return (
     <a

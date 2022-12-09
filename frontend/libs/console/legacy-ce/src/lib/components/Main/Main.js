@@ -52,11 +52,11 @@ import {
 } from './utils';
 import { isBlockActive } from './Main.utils';
 
-export const updateRequestHeaders = (props) => {
+export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
 
   const collabTokenKey = Object.keys(requestHeaders).find(
-    (hdr) => hdr.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    hdr => hdr.toLowerCase() === HASURA_COLLABORATOR_TOKEN
   );
 
   if (collabTokenKey) {
@@ -79,7 +79,7 @@ export const updateRequestHeaders = (props) => {
   }
 };
 
-const getSettingsSelectedMarker = (pathname) => {
+const getSettingsSelectedMarker = pathname => {
   const currentActiveBlock = getPathRoot(pathname);
 
   if (currentActiveBlock === 'settings') {
@@ -171,7 +171,7 @@ class Main extends React.Component {
 
     if (
       prevHeaders.length !== currHeaders.length ||
-      prevHeaders.filter((hdr) => !currHeaders.includes(hdr)).length
+      prevHeaders.filter(hdr => !currHeaders.includes(hdr)).length
     ) {
       updateRequestHeaders(this.props);
     }
@@ -219,7 +219,7 @@ class Main extends React.Component {
   };
 
   toggleDropDown = () => {
-    this.setState((prevState) => ({
+    this.setState(prevState => ({
       isDropdownOpen: !prevState.isDropdownOpen,
     }));
   };
@@ -237,7 +237,7 @@ class Main extends React.Component {
   };
 
   toggleLoveSection = () => {
-    this.setState((prevState) => ({
+    this.setState(prevState => ({
       isLoveSectionOpen: !prevState.isLoveSectionOpen,
     }));
   };

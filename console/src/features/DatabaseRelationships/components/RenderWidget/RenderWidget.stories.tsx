@@ -12,7 +12,7 @@ export default {
    * See https://storybook.js.org/docs/react/configure/overview#configure-story-loading
    * to learn how to generate automatic titles
    */
-  title: 'GDC Console/Create Relationship',
+  title: 'GDC Console/Relationships/Create Relationship',
   component: RenderWidget,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof RenderWidget>;

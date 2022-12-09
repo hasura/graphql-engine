@@ -156,7 +156,7 @@ data RestType
   | DECIMAL
   | BIGDECIMAL
   | STRUCT -- (same as RECORD).
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance FromJSON RestType where
   parseJSON j = do
@@ -307,7 +307,7 @@ data RestArgument = RestArgument
     _raName :: Maybe Text,
     _raDataType :: Maybe RestType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestArgument where
   parseJSON =
@@ -334,7 +334,7 @@ data RestStandardSqlField = RestStandardSqlField
     _rssfName :: Maybe Text,
     _rssType :: Maybe RestType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestStandardSqlField where
   parseJSON =
@@ -359,7 +359,7 @@ instance FromJSON RestStandardSqlField where
 data RestStandardSqlTableType = RestStandardSqlTableType
   { _rrttColumns :: [RestStandardSqlField]
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestStandardSqlTableType where
   parseJSON = genericParseJSON hasuraJSON
@@ -371,7 +371,7 @@ data RestRoutineReference = RestRoutineReference
     projectId :: Text,
     routineId :: Text
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestRoutineReference
 
@@ -391,7 +391,7 @@ data RestRoutine = RestRoutine
     -- | Routines defined with 'RETURNS TABLE' clause has this information
     returnTableType :: Maybe RestStandardSqlTableType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestRoutine
 

@@ -12,7 +12,7 @@ export const useMetadataSource = (dataSourceName: string) => {
       if (!result) throw Error('useMetadataSource: cannot export metadata');
 
       const driver = result.metadata.sources.find(
-        (source) => source.name === dataSourceName
+        source => source.name === dataSourceName
       )?.kind;
 
       if (!driver)

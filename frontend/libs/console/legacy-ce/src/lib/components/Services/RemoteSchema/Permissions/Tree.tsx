@@ -21,7 +21,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   const [expandedItems, setExpandedItems] = useState<ExpandedItems>({});
   const prevIsNewRole = useRef(false);
   const onCheck = useCallback(
-    (ix) => (e: React.FormEvent<HTMLInputElement>) => {
+    ix => (e: React.FormEvent<HTMLInputElement>) => {
       const newList = [...list] as FieldType[];
       const target = e.target as HTMLInputElement;
       newList[ix] = { ...list[ix], checked: target.checked };
@@ -39,7 +39,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
     [setState, list]
   );
   const setValue = useCallback(
-    (ix) => (newState: FieldType[], field?: FieldType) => {
+    ix => (newState: FieldType[], field?: FieldType) => {
       let newList = [...list];
       newList[ix] = { ...list[ix], children: [...newState] };
 
@@ -69,7 +69,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   }, [permissionEdit]);
 
   const toggleExpand = (ix: number) => () => {
-    setExpandedItems((oldExpandedItems) => {
+    setExpandedItems(oldExpandedItems => {
       const newState = !oldExpandedItems[ix];
       const newExpandeditems = { ...oldExpandedItems, [ix]: newState };
       return newExpandeditems;

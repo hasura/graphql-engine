@@ -123,7 +123,7 @@ export const Collapse = ({
   const [open, setOpen] = React.useState(defaultOpen);
 
   const onOpenChange = () => {
-    setOpen((prev) => !prev);
+    setOpen(prev => !prev);
   };
 
   return (

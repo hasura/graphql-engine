@@ -87,11 +87,10 @@ const TextInput = props => {
     }
   };
 
-  const handleTextAreaChangeAndPropagate = (value, e) => {
-    const val = value;
-    updateState(currentState => updateData(val, currentState));
+  const handleTextAreaChangeAndPropagate = value => {
+    updateState(currentState => updateData(value, currentState));
     if (onChange) {
-      onChange(e, value);
+      onChange({ target: { value } });
     }
   };
 

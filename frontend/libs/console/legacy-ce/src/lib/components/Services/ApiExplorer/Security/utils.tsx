@@ -64,7 +64,7 @@ const prepareApiLimits = (
 export const getLimitsforRole =
   (metadata: HasuraMetadataV3) => (role: string) => {
     const limits = prepareApiLimits(getApiLimits(metadata));
-    return Object.values(limits).map((value) => {
+    return Object.values(limits).map(value => {
       if (role !== 'global') {
         const global = value.global;
         const per_role = value?.per_role?.[role];
@@ -87,7 +87,7 @@ export const getLimitsforRole =
 
 export const getLimitsforUnknownRole = (metadata: HasuraMetadataV3) => {
   const limits = prepareApiLimits(getApiLimits(metadata));
-  return Object.values(limits).map((value) => {
+  return Object.values(limits).map(value => {
     const global = value.global;
     return {
       global,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { handlers } from '@/mocks/metadata.mock';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta, Story } from '@storybook/react';
@@ -7,7 +8,6 @@ import { expect } from '@storybook/jest';
 import { waitForElementToBeRemoved } from '@testing-library/react';
 
 import { QueryCollectionsOperations } from './QueryCollectionOperations';
-import { handlers } from './mocks/handlers.mock';
 
 export default {
   title: 'Features/Query Collections/Query Collections Operations',
@@ -17,7 +17,7 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
 } as ComponentMeta<typeof QueryCollectionsOperations>;
 
@@ -57,30 +57,30 @@ Primary.play = async ({ canvasElement }) => {
   // click the move feature
   await userEvent.click(canvas.getByText('Move'));
   // the submenu should be visible
-  expect(screen.queryByText('other-queries')).toBeInTheDocument();
+  expect(screen.queryByText('other_queries')).toBeInTheDocument();
   // click the submenu item
-  await userEvent.click(screen.getByText('other-queries'));
+  await userEvent.click(screen.getByText('other_queries'));
   // the submenu should be hidden
-  expect(screen.queryByText('other-queries')).not.toBeInTheDocument();
+  expect(screen.queryByText('other_queries')).not.toBeInTheDocument();
 
   // click the copy feature
   await userEvent.click(canvas.getByText('Copy'));
   // the submenu should be visible
-  expect(screen.queryByText('other-queries')).toBeInTheDocument();
+  expect(screen.queryByText('other_queries')).toBeInTheDocument();
   // click the submenu item
-  await userEvent.click(screen.getByText('other-queries'));
+  await userEvent.click(screen.getByText('other_queries'));
   // the submenu should be hidden
-  expect(screen.queryByText('other-queries')).not.toBeInTheDocument();
+  expect(screen.queryByText('other_queries')).not.toBeInTheDocument();
 
   // test the search feature
-  await userEvent.type(canvas.getByTestId('search'), 'mutation');
+  await userEvent.type(canvas.getByTestId('search'), 'query2');
   // the right rows should be visible
-  expect(canvas.queryByTestId('operation-MyQuery')).not.toBeInTheDocument();
-  expect(canvas.queryByTestId('operation-MyMutation')).toBeInTheDocument();
+  expect(canvas.queryByTestId('operation-MyQuery3')).not.toBeInTheDocument();
+  expect(canvas.queryByTestId('operation-MyQuery2')).toBeInTheDocument();
   // clear the search
   await userEvent.clear(canvas.getByTestId('search'));
   // all the rows should be visible
-  expect(canvas.queryByTestId('operation-MyQuery')).toBeInTheDocument();
+  expect(canvas.queryByTestId('operation-MyQuery2')).toBeInTheDocument();
 
   // click the select all feature
   await userEvent.click(canvas.getByTestId('query-collections-select-all'));

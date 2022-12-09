@@ -42,7 +42,7 @@ app.use((req, res) => {
 });
 
 if (config.port) {
-  server.listen(config.port, config.host, (err) => {
+  server.listen(config.port, config.host, err => {
     if (err) {
       console.error(err);
     }

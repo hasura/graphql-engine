@@ -164,7 +164,7 @@ resolveDatabaseMetadata ::
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) PG.ReadOnly $ do
-    tablesMeta <- fetchTableMetadata $ OMap.keys $ _smTables sourceMetadata
+    tablesMeta <- fetchTableMetadata $ HM.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
     let allFunctions =
           Set.fromList $
             OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
@@ -351,7 +351,7 @@ class FetchTableMetadata (pgKind :: PostgresKind) where
       ToMetadataFetchQuery pgKind,
       MonadTx m
     ) =>
-    [QualifiedTable] ->
+    Set.HashSet QualifiedTable ->
     m (DBTablesMetadata ('Postgres pgKind))
 
 instance FetchTableMetadata 'Vanilla where
@@ -367,7 +367,7 @@ instance FetchTableMetadata 'Cockroach where
 pgFetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
-  [QualifiedTable] ->
+  Set.HashSet QualifiedTable ->
   m (DBTablesMetadata ('Postgres pgKind))
 pgFetchTableMetadata tables = do
   results <-
@@ -375,7 +375,7 @@ pgFetchTableMetadata tables = do
       PG.withQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
-        [PG.ViaJSON $ LE.uniques tables]
+        [PG.ViaJSON $ LE.uniques $ Set.toList tables]
         True
   pure $
     Map.fromList $
@@ -386,7 +386,7 @@ pgFetchTableMetadata tables = do
 cockroachFetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
-  [QualifiedTable] ->
+  Set.HashSet QualifiedTable ->
   m (DBTablesMetadata ('Postgres pgKind))
 cockroachFetchTableMetadata _tables = do
   results <-

@@ -6,7 +6,7 @@ import { inputStyles } from '../constants';
 
 type Props = { setToggle: any; dispatch: any };
 
-const AddDomain: React.FC<Props> = (props) => {
+const AddDomain: React.FC<Props> = props => {
   const { setToggle, dispatch } = props;
   const [domainName, setDomainName] = useState('');
 

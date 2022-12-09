@@ -57,10 +57,17 @@ restrictions:
 -   Fetching relationship data as part of `returning` is not yet
     supported
 
+## Subscriptions
+
+Live Queries and Streaming Subscriptions are supported with Citus.
+
 ## Event triggers
 
 Citus does not yet support creating triggers ([See issue](https://github.com/citusdata/citus/issues/4425)) on reference
 tables. Hence this is currently not supported.
+
+## Computed fields
+Computed fields are currently supported on Postgres and BigQuery only. [Raise a GitHub issue](https://github.com/hasura/graphql-engine/issues/new?assignees=&labels=k%2Fenhancement&template=02_feature_request.md) to request support for computed fields on Citus sources.
 
 ## Naming conventions
 

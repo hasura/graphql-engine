@@ -62,7 +62,7 @@ export const TextArrayInputField = ({
           type="text"
           aria-invalid={maybeError ? 'true' : 'false'}
           aria-label={name}
-          onChange={(e) => {
+          onChange={e => {
             const val = e.target.value;
             setLocalValue(e.target.value);
             setValue(name, val ? val.split(',') : []);

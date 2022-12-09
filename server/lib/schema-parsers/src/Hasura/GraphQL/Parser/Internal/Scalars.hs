@@ -3,7 +3,13 @@
 -- | This module defines all backend-agnostic scalars we use throughout the
 -- schema. This includes GraphQL scalars, and several other custom ones.
 module Hasura.GraphQL.Parser.Internal.Scalars
-  ( -- built-in types
+  ( -- functions for constructing named scalar type parsers based on built-in types
+    namedBoolean,
+    namedInt,
+    namedFloat,
+    namedString,
+    namedIdentifier,
+    -- built-in types
     boolean,
     int,
     float,
@@ -54,42 +60,57 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --------------------------------------------------------------------------------
 -- Built-in scalars
 
-boolean :: MonadParse m => Parser origin 'Both m Bool
-boolean = mkScalar GName._Boolean \case
+namedBoolean :: MonadParse m => Name -> Parser origin 'Both m Bool
+namedBoolean name = mkScalar name \case
   GraphQLValue (VBoolean b) -> pure b
   JSONValue (A.Bool b) -> pure b
-  v -> typeMismatch GName._Boolean "a boolean" v
+  v -> typeMismatch name "a boolean" v
 
-int :: MonadParse m => Parser origin 'Both m Int32
-int = mkScalar GName._Int \case
+boolean :: MonadParse m => Parser origin 'Both m Bool
+boolean = namedBoolean GName._Boolean
+
+namedInt :: MonadParse m => Name -> Parser origin 'Both m Int32
+namedInt name = mkScalar name \case
   GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
   JSONValue (A.Number n) -> scientificToInteger n
-  v -> typeMismatch GName._Int "a 32-bit integer" v
+  v -> typeMismatch name "a 32-bit integer" v
 
-float :: MonadParse m => Parser origin 'Both m Double
-float = mkScalar GName._Float \case
+int :: MonadParse m => Parser origin 'Both m Int32
+int = namedInt GName._Int
+
+namedFloat :: MonadParse m => Name -> Parser origin 'Both m Double
+namedFloat name = mkScalar name \case
   GraphQLValue (VFloat f) -> scientificToFloat f
   GraphQLValue (VInt i) -> scientificToFloat $ fromInteger i
   JSONValue (A.Number n) -> scientificToFloat n
-  v -> typeMismatch GName._Float "a float" v
+  v -> typeMismatch name "a float" v
 
-string :: MonadParse m => Parser origin 'Both m Text
-string = mkScalar GName._String \case
+float :: MonadParse m => Parser origin 'Both m Double
+float = namedFloat GName._Float
+
+namedString :: MonadParse m => Name -> Parser origin 'Both m Text
+namedString name = mkScalar name \case
   GraphQLValue (VString s) -> pure s
   JSONValue (A.String s) -> pure s
-  v -> typeMismatch GName._String "a string" v
+  v -> typeMismatch name "a string" v
+
+string :: MonadParse m => Parser origin 'Both m Text
+string = namedString GName._String
 
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
-identifier :: MonadParse m => Parser origin 'Both m Text
-identifier = mkScalar GName._ID \case
+namedIdentifier :: MonadParse m => Name -> Parser origin 'Both m Text
+namedIdentifier name = mkScalar name \case
   GraphQLValue (VString s) -> pure s
   GraphQLValue (VInt i) -> pure . Text.pack $ show i
   JSONValue (A.String s) -> pure s
   JSONValue (A.Number n) -> parseScientific n
-  v -> typeMismatch GName._ID "a String or a 32-bit integer" v
+  v -> typeMismatch name "a String or a 32-bit integer" v
   where
     parseScientific = fmap (Text.pack . show @Int) . scientificToInteger
+
+identifier :: MonadParse m => Parser origin 'Both m Text
+identifier = namedIdentifier GName._ID
 
 --------------------------------------------------------------------------------
 -- Custom scalars

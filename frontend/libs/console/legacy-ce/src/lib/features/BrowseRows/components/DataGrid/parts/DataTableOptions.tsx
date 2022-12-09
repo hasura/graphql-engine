@@ -55,6 +55,7 @@ const DisplayWhereClauses = ({
                 {columnName} {operatorMap[operator]} {value}
               </span>
               <FaRegTimesCircle
+                className="cursor-pointer"
                 onClick={() => {
                   removeWhereClause(id);
                 }}
@@ -85,6 +86,7 @@ const DisplayOrderByClauses = ({
                 {orderByClause.column} ({orderByClause.type})
               </span>
               <FaRegTimesCircle
+                className="cursor-pointer"
                 onClick={() => {
                   removeOrderByClause(id);
                 }}
@@ -155,13 +157,13 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
 
         <select
           value={pagination.pageSize}
-          onChange={(e) => {
+          onChange={e => {
             pagination.setPageSize(Number(e.target.value));
           }}
           data-testid="@rowSizeSelectInput"
           className="block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400"
         >
-          {DEFAULT_PAGE_SIZES.map((pageSize) => (
+          {DEFAULT_PAGE_SIZES.map(pageSize => (
             <option key={pageSize} value={pageSize}>
               Show {pageSize} rows
             </option>

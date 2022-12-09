@@ -4,6 +4,7 @@
 --
 module Hasura.Backends.DataConnector.API.V0.Scalar
   ( ScalarType (..),
+    scalarTypeToText,
   )
 where
 

@@ -11,6 +11,7 @@ import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
+import Data.Aeson.Types qualified as J
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
@@ -18,27 +19,28 @@ import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (defaultBackendCapabilities, defaultBackendServerUrl)
-import Harness.Test.Fixture (defaultBackendDisplayNameString, defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig (..))
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
-import Harness.TestEnvironment qualified as TE
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment qualified as TestEnvironment
 import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 --------------------------------------------------------------------------------
 -- DataConnector Agent Query Tests
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [emptySetupAction testEnv]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [emptySetupAction testEnv]
             }
@@ -48,11 +50,11 @@ spec = do
 
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
             }
@@ -70,7 +72,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
           sortYamlArray (J.Array a) = pure $ J.Array (Vector.fromList (sort (Vector.toList a)))
           sortYamlArray _ = fail "Should return Array"
 
-      case defaultSource <$> TE.backendType testEnvironment of
+      case BackendType.backendSourceName <$> TestEnvironment.backendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
           shouldReturnYamlF
@@ -103,8 +105,16 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
       let removeDescriptions (J.Object o) = J.Object (KM.delete "description" (removeDescriptions <$> o))
           removeDescriptions (J.Array a) = J.Array (removeDescriptions <$> a)
           removeDescriptions x = x
+      let mutationsCapabilities =
+            TestEnvironment.backendTypeConfig testEnvironment
+              >>= BackendType.backendCapabilities
+              >>= J.parseMaybe J.parseJSON
+              >>= API._cMutations
+      let supportsInserts = isJust $ mutationsCapabilities >>= API._mcInsertCapabilities
+      let supportsUpdates = isJust $ mutationsCapabilities >>= API._mcUpdateCapabilities
+      let supportsDeletes = isJust $ mutationsCapabilities >>= API._mcDeleteCapabilities
 
-      case defaultSource <$> TE.backendType testEnvironment of
+      case BackendType.backendSourceName <$> TestEnvironment.backendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
           shouldReturnYamlF
@@ -125,19 +135,27 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               - name: GenreId
                 nullable: false
                 type: number
+                insertable: *supportsInserts
+                updatable: false
               - name: Name
                 nullable: true
                 type: string
+                insertable: *supportsInserts
+                updatable: *supportsUpdates
               name:
               - Genre
+              type: table
               primary_key:
               - GenreId
+              insertable: *supportsInserts
+              updatable: *supportsUpdates
+              deletable: *supportsDeletes
             |]
 
   describe "get_source_kind_capabilities" $ do
     it "success" $ \(testEnvironment, _) -> do
-      case ( defaultBackendCapabilities =<< TE.backendType testEnvironment,
-             defaultBackendTypeString <$> TE.backendType testEnvironment
+      case ( BackendType.backendCapabilities =<< TestEnvironment.backendTypeConfig testEnvironment,
+             BackendType.backendTypeString <$> TestEnvironment.backendTypeConfig testEnvironment
            ) of
         (Nothing, _) -> pendingWith "Capabilities not found in testEnvironment"
         (_, Nothing) -> pendingWith "Backend Type not found in testEnvironment"
@@ -171,8 +189,8 @@ schemaCrudTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 schemaCrudTests opts = describe "A series of actions to setup and teardown a source with tracked tables and relationships" $ do
   describe "dc_add_agent" $ do
     it "Success" $ \(testEnvironment, _) -> do
-      case ( defaultBackendServerUrl =<< TE.backendType testEnvironment,
-             defaultBackendTypeString <$> TE.backendType testEnvironment
+      case ( backendServerUrl =<< TestEnvironment.backendTypeConfig testEnvironment,
+             backendTypeString <$> TestEnvironment.backendTypeConfig testEnvironment
            ) of
         (Nothing, _) -> pendingWith "Capabilities not found in testEnvironment"
         (_, Nothing) -> pendingWith "Backend Type not found in testEnvironment"
@@ -194,7 +212,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "list_source_kinds" $ do
     it "success" $ \(testEnvironment, _) -> do
-      case (defaultBackendTypeString &&& defaultBackendDisplayNameString) <$> TE.backendType testEnvironment of
+      case (backendTypeString &&& backendDisplayNameString) <$> TestEnvironment.backendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendString, backendDisplayName) -> do
           shouldReturnYaml
@@ -229,17 +247,21 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               - builtin: false
                 kind: *backendString
                 display_name: *backendDisplayName
+              - builtin: false
+                display_name: "FOOBARDB (foobar)"
+                kind: foobar
             |]
 
   describe "<kind>_add_source" $ do
-    it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+    it "success" $ \(testEnvironment@TestEnvironment.TestEnvironment {..}, _) -> do
+      let actionType = foldMap BackendType.backendTypeString backendTypeConfig <> "_add_source"
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-            type: reference_add_source
+            type: *actionType
             args:
               name: chinook
               configuration:
@@ -252,7 +274,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "<kind>_track_table" $ do
     it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -270,7 +292,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "<kind>_create_object_relationship" $ do
     it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       GraphqlEngine.postMetadata_
         testEnvironment
         [yaml|
@@ -301,7 +323,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "<kind>_create_array_relationship" $ do
     it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -325,7 +347,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "export_metadata" $ do
     it "produces the expected metadata structure" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -368,7 +390,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "<kind>_drop_relationship" $ do
     it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -387,7 +409,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "<kind>_untrack_table" $ do
     it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -406,7 +428,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "<kind>_drop_source" $ do
     it "success" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
+      when (fmap backendType (TestEnvironment.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadata
@@ -424,7 +446,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
 
   describe "dc_delete_agent" $ do
     it "success" $ \(testEnvironment, _) -> do
-      case defaultBackendTypeString <$> TE.backendType testEnvironment of
+      case BackendType.backendTypeString <$> TestEnvironment.backendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just backendString -> do
           shouldReturnYaml

@@ -6,7 +6,7 @@ export const isUpdateIDsEqual = (
   arr2: NotificationsState['read']
 ) => {
   if (Array.isArray(arr2) && arr1.length) {
-    return arr1.every((notif) => {
+    return arr1.every(notif => {
       if (!notif.id) {
         return false;
       }

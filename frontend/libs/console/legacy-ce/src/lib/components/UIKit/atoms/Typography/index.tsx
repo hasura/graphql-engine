@@ -33,7 +33,7 @@ export type TextProps = {
   py?: keyof Theme['space'];
 };
 
-export const Text: React.FC<TextProps> = (props) => {
+export const Text: React.FC<TextProps> = props => {
   const { children, type, fontWeight, fontSize } = props;
 
   const lineHeight = type === 'explain' ? 'body' : 'explain';
@@ -82,7 +82,7 @@ type TextLinkProps = {
   color: string;
 };
 
-export const TextLink: React.FC<TextLinkProps> = (props) => {
+export const TextLink: React.FC<TextLinkProps> = props => {
   const { children, underline } = props;
 
   return (

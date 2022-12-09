@@ -5,7 +5,7 @@ import Modal from '../Common/Modal';
 
 import { fetchOperationById, fetchSpansByRequestId } from './graphql.queries';
 
-const LoadInspector = (props) => {
+const LoadInspector = props => {
   const { projectId, requestId, time, transport, onHide, configData } = props;
   const variables = {
     variables: {
@@ -22,9 +22,13 @@ const LoadInspector = (props) => {
       requestId,
       ...(time
         ? {
-            fromTime: moment(time).subtract(5, 'minutes').toISOString(),
-            toTime: moment(time).add(5, 'minutes').toISOString(),
-          }
+          fromTime: moment(time)
+            .subtract(5, 'minutes')
+            .toISOString(),
+          toTime: moment(time)
+            .add(5, 'minutes')
+            .toISOString(),
+        }
         : {}),
     },
   });

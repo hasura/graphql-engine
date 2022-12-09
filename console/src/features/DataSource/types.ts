@@ -115,7 +115,7 @@ export type GetTableRowsProps = {
     order_by?: OrderBy[];
   };
 } & NetworkArgs;
-export type TableRow = Record<string, unknown>;
+export type TableRow = Record<string, string | number | boolean>;
 
 export type validOperators = string;
 type columnName = string;

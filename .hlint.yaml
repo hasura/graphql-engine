@@ -50,6 +50,38 @@
         within: []
         message: "Specs with focusing should only be used during development"
 
+      - name: "Harness.TestEnvironment.testLogHarness"
+        within: []
+        message: "testLogHarness should only be ad-hoc during development. Please define proper log message data types for published code"
+
+      - name: "Harness.Logging.LogHarness"
+        within: []
+        message: "LogHarness should only be ad-hoc during development. Please define proper log message data types for published code"
+
+      - name: "Harness.Logging.Messages.LogHarness"
+        within: []
+        message: "LogHarness should only be ad-hoc during development. Please define proper log message data types for published code"
+
+      - name: "Harness.TestEnvironment.testLogTrace"
+        within: ["Test.**"]
+        message: "testLogTrace should only be used outside the test-harness package"
+
+      - name: "Harness.Logging.LogTrace"
+        within: ["Test.**"]
+        message: "LogTrace should only be used outside the test-harness package"
+
+      - name: "Harness.Logging.Messages.LogTrace"
+        within: ["Test.**"]
+        message: "LogTrace should only be used outside the test-harness package"
+
+      - name: "Harness.Logging.logTrace"
+        within: ["Test.**"]
+        message: "logTrace should only be used outside the test-harness package"
+
+      - name: "Harness.Logging.Messages.logTrace"
+        within: ["Test.**"]
+        message: "logTrace should only be used outside the test-harness package"
+
 # Add custom hints for this project
 #
 # Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"

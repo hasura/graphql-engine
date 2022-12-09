@@ -21,7 +21,7 @@ import transfer from './images/transfer.svg';
 import regressionTest from './images/check-circle.svg';
 import styles from './Metrics.module.scss';
 
-const LeftPanel = (props) => {
+const LeftPanel = props => {
   const { location } = props;
   const { pathname } = location;
   const strippedUrl = strippedCurrUrl(pathname);

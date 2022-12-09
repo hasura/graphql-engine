@@ -31,7 +31,7 @@ export function useRunSQL<K extends readonly unknown[], D>({
   dataSource,
   fallBack,
 }: UseRunSQLArg<K, D>) {
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
   const { source, driver } = dataSource;
 
   return useQuery({
@@ -60,21 +60,19 @@ export const transformMssqlConstraint = (data: RunSQLResponse) => {
     const { table_name, table_schema, constraints } = pk;
 
     const columnsByConstraintName: { [name: string]: string[] } = {};
-    constraints.forEach((c) => {
+    constraints.forEach(c => {
       columnsByConstraintName[c.constraint_name] = [
         ...(columnsByConstraintName[c.constraint_name] || []),
         c.name,
       ];
     });
 
-    const constraintInfo = Object.keys(columnsByConstraintName).map(
-      (pkName) => ({
-        table_schema,
-        table_name,
-        constraint_name: pkName,
-        columns: columnsByConstraintName[pkName],
-      })
-    );
+    const constraintInfo = Object.keys(columnsByConstraintName).map(pkName => ({
+      table_schema,
+      table_name,
+      constraint_name: pkName,
+      columns: columnsByConstraintName[pkName],
+    }));
     return [...acc, ...constraintInfo];
   }, []);
 };

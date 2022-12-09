@@ -42,7 +42,7 @@ export const showNotification = (
   level: NotificationLevel,
   noDismissNotifications?: boolean
 ): Thunk => {
-  return (dispatch) => {
+  return dispatch => {
     if (level === 'success' && !noDismissNotifications) {
       dispatch(removeNotifications());
     }
@@ -92,6 +92,7 @@ export const getNotificationDetails = (
         minLines={1}
         maxLines={25}
         width="100%"
+        setOptions={{ useWorker: false }}
       />
       {children}
     </div>
@@ -231,7 +232,7 @@ const showErrorNotification = (
         <Button
           mode="primary"
           className={styles.add_mar_top_small}
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             window.location.reload();
           }}
@@ -262,7 +263,7 @@ const showErrorNotification = (
   const errorMessage = getErrorMessage(message || '', error);
   const errorJson = getErrorJson();
 
-  return (dispatch) => {
+  return dispatch => {
     const getNotificationAction = () => {
       if (errorJson) {
         const errorDetails = [
@@ -331,7 +332,7 @@ const showSuccessNotification = (
   message?: string,
   noDismiss?: boolean
 ): Thunk => {
-  return (dispatch) => {
+  return dispatch => {
     dispatch(
       showNotification(
         {
@@ -347,7 +348,7 @@ const showSuccessNotification = (
 };
 
 const showInfoNotification = (title: string): Thunk => {
-  return (dispatch) => {
+  return dispatch => {
     dispatch(
       showNotification(
         {
@@ -374,7 +375,7 @@ const showWarningNotification = (
     children.push(child);
   }
 
-  return (dispatch) => {
+  return dispatch => {
     dispatch(
       showNotification(
         {

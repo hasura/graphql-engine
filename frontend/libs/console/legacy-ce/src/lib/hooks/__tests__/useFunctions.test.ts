@@ -57,7 +57,7 @@ describe("useFunctions hooks' postgres test", () => {
 
     expect(result.current.data!.length).toBeGreaterThan(0);
 
-    result.current.data!.forEach((fn) => {
+    result.current.data!.forEach(fn => {
       expect(schemas).toContain(fn.function_schema);
     });
 
@@ -85,7 +85,7 @@ describe("useFunctions hooks' postgres test", () => {
 
     expect(result.current.data!.length).toBeGreaterThan(0);
 
-    result.current.data!.forEach((fn) => {
+    result.current.data!.forEach(fn => {
       expect(schemas).toContain(fn.function_schema);
     });
 
@@ -113,7 +113,7 @@ describe("useFunctions hooks' postgres test", () => {
 
     expect(result.current.data!.length).toBeGreaterThan(0);
 
-    result.current.data!.forEach((fn) => {
+    result.current.data!.forEach(fn => {
       expect(schemas).toContain(fn.function_schema);
     });
 

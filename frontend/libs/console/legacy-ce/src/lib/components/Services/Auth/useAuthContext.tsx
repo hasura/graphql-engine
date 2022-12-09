@@ -56,7 +56,7 @@ const AuthContext = createContext<
 
 // export const useAuth = () => useContext(Context);
 
-export const AuthContextProvider: React.FC = (props) => {
+export const AuthContextProvider: React.FC = props => {
   const value = useAuthContextValue();
   if (value.isAuthenticated)
     return <AuthContext.Provider value={value} {...props} />;

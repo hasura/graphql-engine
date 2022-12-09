@@ -33,7 +33,7 @@ export const removeExistingRelationships = ({
 }: RemoveExistingRelationshipsArgs) => {
   return foreignKeyConstraints?.reduce<TableRelationshipCoreData[]>(
     (acc, { from, to }) => {
-      const relationshipExists = allExistingRelationships.find((existing) => {
+      const relationshipExists = allExistingRelationships.find(existing => {
         const fromTableIsReference =
           from?.table === existing?.referenceTable &&
           to?.table === existing?.targetTable;

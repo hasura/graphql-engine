@@ -57,7 +57,7 @@ export const verifyLogin = ({
         successCallback();
       }
     },
-    (error) => {
+    error => {
       errorCallback(error);
     }
   );

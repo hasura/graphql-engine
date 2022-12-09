@@ -10,12 +10,12 @@ const generateWhereClause = (
 
   const whereCondtions: string[] = [];
   if (options.schemas) {
-    options.schemas.forEach((schemaName) => {
+    options.schemas.forEach(schemaName => {
       whereCondtions.push(`(${sqlSchemaName}='${schemaName}')`);
     });
   }
   if (options.tables) {
-    options.tables.forEach((tableInfo) => {
+    options.tables.forEach(tableInfo => {
       whereCondtions.push(
         `(${sqlSchemaName}='${tableInfo.schema}' and ${sqlTableName}='${tableInfo.name}')`
       );

@@ -9,7 +9,7 @@ class Heading extends React.Component {
     isEditting: false,
   };
 
-  handleTextChange = (e) => {
+  handleTextChange = e => {
     this.setState({ text: e.target.value });
   };
 
@@ -17,7 +17,7 @@ class Heading extends React.Component {
     this.setState({ isEditting: !this.state.isEditting });
   };
 
-  handleKeyPress = (e) => {
+  handleKeyPress = e => {
     if (this.state.isEditting) {
       if (e.charCode === 13) {
         this.save();

@@ -20,7 +20,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
   },
 } as ComponentMeta<typeof CodeEditorField>;
 
-export const ApiPlayground: ComponentStory<typeof CodeEditorField> = (args) => {
+export const ApiPlayground: ComponentStory<typeof CodeEditorField> = args => {
   const validationSchema = z.object({});
 
   return (
@@ -56,23 +56,22 @@ Basic.parameters = {
   },
 };
 
-export const VariantWithDescription: ComponentStory<
-  typeof CodeEditorField
-> = () => {
-  const validationSchema = z.object({});
+export const VariantWithDescription: ComponentStory<typeof CodeEditorField> =
+  () => {
+    const validationSchema = z.object({});
 
-  return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-          description="CodeEditorField description"
-        />
-      )}
-    </Form>
-  );
-};
+    return (
+      <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+        {() => (
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The codeEditor label"
+            description="CodeEditorField description"
+          />
+        )}
+      </Form>
+    );
+  };
 VariantWithDescription.storyName = '🎭 Variant - With description';
 VariantWithDescription.parameters = {
   docs: {
@@ -80,23 +79,22 @@ VariantWithDescription.parameters = {
   },
 };
 
-export const VariantWithTooltip: ComponentStory<
-  typeof CodeEditorField
-> = () => {
-  const validationSchema = z.object({});
+export const VariantWithTooltip: ComponentStory<typeof CodeEditorField> =
+  () => {
+    const validationSchema = z.object({});
 
-  return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-          tooltip="CodeEditorField tooltip"
-        />
-      )}
-    </Form>
-  );
-};
+    return (
+      <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+        {() => (
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The codeEditor label"
+            tooltip="CodeEditorField tooltip"
+          />
+        )}
+      </Form>
+    );
+  };
 VariantWithTooltip.storyName = '🎭 Variant - With tooltip';
 VariantWithTooltip.parameters = {
   docs: {
@@ -148,9 +146,38 @@ VariantSizeMedium.parameters = {
   },
 };
 
-export const StateWithDefaultValue: ComponentStory<
-  typeof CodeEditorField
-> = () => {
+export const StateWithDefaultValue: ComponentStory<typeof CodeEditorField> =
+  () => {
+    const defaultValues = { codeEditorFieldName: '{ "prop": "value"}' };
+
+    const validationSchema = z.object({});
+
+    return (
+      <Form
+        schema={validationSchema}
+        options={{ defaultValues }}
+        onSubmit={action('onSubmit')}
+      >
+        {() => (
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The codeEditor label"
+          />
+        )}
+      </Form>
+    );
+  };
+StateWithDefaultValue.storyName = '🔁 State - With default value';
+StateWithDefaultValue.parameters = {
+  docs: {
+    description: {
+      story: `Use \`<Form>\` options to set default value.`,
+    },
+    source: { state: 'open' },
+  },
+};
+
+export const StateLoading: ComponentStory<typeof CodeEditorField> = () => {
   const defaultValues = { codeEditorFieldName: '{ "prop": "value"}' };
 
   const validationSchema = z.object({});
@@ -165,17 +192,15 @@ export const StateWithDefaultValue: ComponentStory<
         <CodeEditorField
           name="codeEditorFieldName"
           label="The codeEditor label"
+          loading
         />
       )}
     </Form>
   );
 };
-StateWithDefaultValue.storyName = '🔁 State - With default value';
-StateWithDefaultValue.parameters = {
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
   docs: {
-    description: {
-      story: `Use \`<Form>\` options to set default value.`,
-    },
     source: { state: 'open' },
   },
 };
@@ -208,30 +233,33 @@ StateDisabled.parameters = {
   },
 };
 
-export const StateWithErrorMessage: ComponentStory<
-  typeof CodeEditorField
-> = () => {
-  const formRef = React.useRef<UseFormReturn>();
+export const StateWithErrorMessage: ComponentStory<typeof CodeEditorField> =
+  () => {
+    const formRef = React.useRef<UseFormReturn>();
 
-  React.useEffect(() => {
-    formRef?.current?.trigger();
-  });
+    React.useEffect(() => {
+      formRef?.current?.trigger();
+    });
 
-  const validationSchema = z.object({
-    codeEditorFieldName: z.enum(['value0', 'value1']),
-  });
+    const validationSchema = z.object({
+      codeEditorFieldName: z.enum(['value0', 'value1']),
+    });
 
-  return (
-    <Form ref={formRef} schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-        />
-      )}
-    </Form>
-  );
-};
+    return (
+      <Form
+        ref={formRef}
+        schema={validationSchema}
+        onSubmit={action('onSubmit')}
+      >
+        {() => (
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The codeEditor label"
+          />
+        )}
+      </Form>
+    );
+  };
 StateWithErrorMessage.storyName = '🔁 State - With error message';
 StateWithErrorMessage.parameters = {
   docs: {
@@ -242,24 +270,23 @@ StateWithErrorMessage.parameters = {
   },
 };
 
-export const TestingScalability: ComponentStory<
-  typeof CodeEditorField
-> = () => {
-  const validationSchema = z.object({});
+export const TestingScalability: ComponentStory<typeof CodeEditorField> =
+  () => {
+    const validationSchema = z.object({});
 
-  return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-          tooltip="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-        />
-      )}
-    </Form>
-  );
-};
+    return (
+      <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+        {() => (
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+            description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+            tooltip="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+          />
+        )}
+      </Form>
+    );
+  };
 TestingScalability.storyName = '🧪 Testing - Scalability';
 TestingScalability.parameters = {
   docs: {

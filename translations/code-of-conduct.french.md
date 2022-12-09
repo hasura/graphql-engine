@@ -56,7 +56,7 @@ définie plus précisément par les mainteneurs de ce projet.
 ## Mise en application
 
 Les occurences de comportement abusif, de harcellement ou de tout autre comportement
-inacceptable, peuvent être rapportés en contactant l'équipe du projet via build@hasura.io.
+inacceptable, peuvent être rapportés en contactant l'équipe du projet via security@hasura.io.
 Toute plainte sera revue, examinée et débouchera sur une réponse jugée nécessaire et
 appropriée au regard des circonstances. L'équipe du projet est obligée de maintenir
 la confidentialité en ce qui concerne le rapporteur d'un incident.

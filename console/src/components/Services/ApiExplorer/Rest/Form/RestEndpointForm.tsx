@@ -84,14 +84,14 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
     <Form
       ref={restEndpointFormRef}
       schema={validationSchema}
-      className="p-4"
+      className="p-9"
       options={{
         defaultValues: formState,
       }}
       onSubmit={onSubmit}
     >
       {() => (
-        <div className="space-y-2">
+        <div className="space-y-2 w-full max-w-xl">
           <h1 className="text-xl font-semibold mb-sm">
             {{ create: 'Create', edit: 'Edit' }[mode]} Endpoint
           </h1>

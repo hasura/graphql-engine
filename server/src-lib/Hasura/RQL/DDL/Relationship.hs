@@ -18,6 +18,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Tuple (swap)
 import Hasura.Base.Error
@@ -100,7 +101,7 @@ objRelP2Setup ::
   TableName b ->
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
   RelDef (ObjRelUsing b) ->
-  m (RelInfo b, [SchemaDependency])
+  m (RelInfo b, Seq SchemaDependency)
 objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
@@ -115,8 +116,8 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
             )
             reason
         dependencies =
-          map (mkDependency qt DRLeftColumn) lCols
-            <> map (mkDependency refqt DRRightColumn) rCols
+          (mkDependency qt DRLeftColumn <$> Seq.fromList lCols)
+            <> (mkDependency refqt DRRightColumn <$> Seq.fromList rCols)
     pure (RelInfo rn ObjRel (rmColumns rm) refqt True io, dependencies)
   RUFKeyOn (SameTable columns) -> do
     foreignTableForeignKeys <-
@@ -124,23 +125,24 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
         `onNothing` throw400 NotFound ("table " <> qt <<> " does not exist in source: " <> sourceNameToText source)
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columns (Set.toList foreignTableForeignKeys)
     let dependencies =
-          [ SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b qt $
-                      TOForeignKey @b (_cName constraint)
-              )
-              DRFkey,
-            -- this needs to be added explicitly to handle the remote table being untracked. In this case,
-            -- neither the using_col nor the constraint name will help.
-            SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITable @b foreignTable
-              )
-              DRRemoteTable
-          ]
-            <> fmap (drUsingColumnDep @b source qt) (toList columns)
+          Seq.fromList
+            [ SchemaDependency
+                ( SOSourceObj source $
+                    AB.mkAnyBackend $
+                      SOITableObj @b qt $
+                        TOForeignKey @b (_cName constraint)
+                )
+                DRFkey,
+              -- this needs to be added explicitly to handle the remote table being untracked. In this case,
+              -- neither the using_col nor the constraint name will help.
+              SchemaDependency
+                ( SOSourceObj source $
+                    AB.mkAnyBackend $
+                      SOITable @b foreignTable
+                )
+                DRRemoteTable
+            ]
+            <> (drUsingColumnDep @b source qt <$> Seq.fromList (toList columns))
     pure (RelInfo rn ObjRel (NEHashMap.toHashMap colMap) foreignTable False BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
@@ -152,24 +154,25 @@ arrRelP2Setup ::
   SourceName ->
   TableName b ->
   ArrRelDef b ->
-  m (RelInfo b, [SchemaDependency])
+  m (RelInfo b, Seq SchemaDependency)
 arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ Map.toList $ rmColumns rm
         deps =
-          map
-            ( \c ->
-                SchemaDependency
-                  ( SOSourceObj source $
-                      AB.mkAnyBackend $
-                        SOITableObj @b qt $
-                          TOCol @b c
-                  )
-                  DRLeftColumn
-            )
-            lCols
-            <> map
+          ( fmap
+              ( \c ->
+                  SchemaDependency
+                    ( SOSourceObj source $
+                        AB.mkAnyBackend $
+                          SOITableObj @b qt $
+                            TOCol @b c
+                    )
+                    DRLeftColumn
+              )
+              (Seq.fromList lCols)
+          )
+            <> fmap
               ( \c ->
                   SchemaDependency
                     ( SOSourceObj source $
@@ -179,7 +182,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                     )
                     DRRightColumn
               )
-              rCols
+              (Seq.fromList rCols)
     pure (RelInfo rn ArrRel (rmColumns rm) refqt True AfterParent, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCols) ->
     mkFkeyRel ArrRel AfterParent source rn qt refqt refCols foreignKeys
@@ -196,7 +199,7 @@ mkFkeyRel ::
   TableName b ->
   NonEmpty (Column b) ->
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
-  m (RelInfo b, [SchemaDependency])
+  m (RelInfo b, Seq SchemaDependency)
 mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys = do
   foreignTableForeignKeys <-
     Map.lookup remoteTable foreignKeys
@@ -204,21 +207,24 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
   let keysThatReferenceUs = filter ((== sourceTable) . _fkForeignTable) (Set.toList foreignTableForeignKeys)
   ForeignKey constraint _foreignTable colMap <- getRequiredFkey remoteColumns keysThatReferenceUs
   let dependencies =
-        [ SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITableObj @b remoteTable $
-                    TOForeignKey @b (_cName constraint)
-            )
-            DRRemoteFkey,
-          SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITable @b remoteTable
-            )
-            DRRemoteTable
-        ]
-          <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
+        Seq.fromList
+          [ SchemaDependency
+              ( SOSourceObj source $
+                  AB.mkAnyBackend $
+                    SOITableObj @b remoteTable $
+                      TOForeignKey @b (_cName constraint)
+              )
+              DRRemoteFkey,
+            SchemaDependency
+              ( SOSourceObj source $
+                  AB.mkAnyBackend $
+                    SOITable @b remoteTable
+              )
+              DRRemoteTable
+          ]
+          <> ( drUsingColumnDep @b source remoteTable
+                 <$> Seq.fromList (toList remoteColumns)
+             )
   pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) remoteTable False io, dependencies)
   where
     reverseMap :: Hashable y => HashMap x y -> HashMap y x

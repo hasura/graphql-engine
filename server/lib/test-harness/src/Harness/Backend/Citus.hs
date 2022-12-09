@@ -4,9 +4,11 @@
 -- | CitusQL helpers. Pretty much the same as postgres. Could refactor
 -- if we add more things here.
 module Harness.Backend.Citus
-  ( livenessCheck,
+  ( backendTypeMetadata,
+    livenessCheck,
     run_,
     defaultSourceMetadata,
+    defaultSourceConfiguration,
     createTable,
     insertTable,
     createDatabase,
@@ -20,6 +22,8 @@ module Harness.Backend.Citus
     setupPermissionsAction,
   )
 where
+
+--------------------------------------------------------------------------------
 
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
@@ -41,15 +45,33 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (Citus), defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
+import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.Citus,
+      backendSourceName = "citus",
+      backendCapabilities = Nothing,
+      backendTypeString = "citus",
+      backendDisplayNameString = "citus",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "schema"
+    }
+
+--------------------------------------------------------------------------------
 
 -- | Check the citus server is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
@@ -79,20 +101,13 @@ runWithInitialDb_ testEnvironment =
 -- | Run a plain SQL query.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (Constants.citusConnectionString testEnvironment)
+  runInternal testEnvironment (Constants.citusConnectionString (uniqueTestId testEnvironment))
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Executing connection string: "
-        <> connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+  testLogMessage testEnvironment $ LogDBQuery (T.pack connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -115,16 +130,21 @@ runInternal testEnvironment connectionString query = do
 -- | Metadata source information for the default Citus instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
-  let databaseUrl = citusConnectionString testEnvironment
+  [interpolateYaml|
+    name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnvironment }
+  |]
+
+defaultSourceConfiguration :: TestEnvironment -> Value
+defaultSourceConfiguration testEnvironment =
+  let databaseUrl = citusConnectionString (uniqueTestId testEnvironment)
    in [interpolateYaml|
-        name: citus
-        kind: citus
-        tables: []
-        configuration:
-          connection_info:
-            database_url: #{databaseUrl}
-            pool_settings: {}
-     |]
+    connection_info:
+      database_url: #{ databaseUrl }
+      pool_settings: {}
+  |]
 
 -- | Serialize Table into a Citus-SQL statement, as needed, and execute it on the Citus backend
 createTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
@@ -147,7 +167,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
-  Schema.TInt -> "SERIAL"
+  Schema.TInt -> "INT"
   Schema.TStr -> "VARCHAR"
   Schema.TUTCTime -> "TIMESTAMP"
   Schema.TBool -> "BOOLEAN"
@@ -205,12 +225,12 @@ dropTable testEnvironment Schema.Table {tableName} = do
 -- | Post an http request to start tracking the table
 trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
-  Schema.trackTable Citus (defaultSource Citus) table testEnvironment
+  Schema.trackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
 untrackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
-  Schema.untrackTable Citus (defaultSource Citus) table testEnvironment
+  Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -250,10 +270,11 @@ createDatabase testEnvironment = do
 -- up.
 dropDatabase :: TestEnvironment -> IO ()
 dropDatabase testEnvironment = do
+  let dbName = uniqueDbName (uniqueTestId testEnvironment)
   runWithInitialDb_
     testEnvironment
-    ("DROP DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> " WITH (FORCE);")
-    `catch` \(ex :: SomeException) -> testLogHarness testEnvironment ("Failed to drop the database: " <> show ex)
+    ("DROP DATABASE " <> dbName <> " WITH (FORCE);")
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
@@ -281,8 +302,8 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships Citus table testEnvironment
-    Schema.trackArrayRelationships Citus table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =
@@ -299,23 +320,12 @@ setupPermissionsAction permissions env =
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown (reverse -> tables) (testEnvironment, _) = do
-  finally
-    -- Teardown relationships first
-    ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships Citus table testEnvironment
-    )
-    -- Then teardown tables
-    ( forFinally_ tables $ \table ->
-        finally
-          (untrackTable testEnvironment table)
-          (dropTable testEnvironment table)
-    )
+teardown _ _ = pure ()
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup Citus permissions env
+setupPermissions permissions env = Permissions.setup permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown Citus permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env

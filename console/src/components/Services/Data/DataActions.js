@@ -180,7 +180,7 @@ const loadSchema = (configOptions = {}) => {
     }
 
     const body = {
-      type: 'bulk',
+      type: 'concurrent_bulk',
       source,
       args: [
         fetchTableListQuery(configOptions, source),
@@ -411,7 +411,7 @@ const fetchFunctionInit =
 
     if (!source || !dataSource.getFunctionDefinitionSql) return;
     const body = {
-      type: 'bulk',
+      type: 'concurrent_bulk',
       source,
       args: [
         getRunSqlQuery(
@@ -626,7 +626,7 @@ export const getDatabaseTableTypeInfoForAllSources =
         );
       }
     );
-    const query = { type: 'bulk', version: 1, args: bulkQueries };
+    const query = { type: 'concurrent_bulk', version: 1, args: bulkQueries };
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',

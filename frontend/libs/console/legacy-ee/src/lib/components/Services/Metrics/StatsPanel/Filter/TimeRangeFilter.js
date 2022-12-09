@@ -14,12 +14,12 @@ const TimeRangeFilter = ({ onChange, filters, id, title, options }) => {
       filterId: `${id}-${i}`,
     };
   });
-  const customOnChange = (value) => {
+  const customOnChange = value => {
     if (value !== 'custom') {
       onChange(value);
     }
   };
-  const applyFilter = (value) => {
+  const applyFilter = value => {
     onChange(value);
   };
   const getDisplayValue = () => {

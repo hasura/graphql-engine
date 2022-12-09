@@ -17,7 +17,7 @@ The Hasura CLI utilizes a typical command / flag syntax enabling you to quickly 
 command structure will follow this pattern:
 
 ```bash
-hasura <command_category> <specific_command> --<optional_flag> "<optional_flag_value>"
+hasura <command> <subcommand> --<optional_flag> "<optional_flag_value>"
 ```
 
 A real-world example following this structure would be:
@@ -26,9 +26,12 @@ A real-world example following this structure would be:
 hasura migrate apply --admin-secret "<admin-secret>"
 ```
 
+This snippet illustrates the `migrate` command used in conjunction with the `apply` subcommand, the `admin-secret` flag,
+and the value of the `admin-secret`.
+
 ## Getting help
 
-At any time, you may use the `--help` flag on either the CLI itself or specific to a certain command. Writing
+At any time, you can use the `--help` flag on either the CLI itself or specific to a certain command. Running
 `hasura --help` will return information on available commands and flags:
 
 ```
@@ -69,7 +72,7 @@ Flags:
 Use "hasura [command] --help" for more information about a command.
 ```
 
-Whereas writing `hasura actions --help` will return commands and flags specific to the `actions` category of commands:
+Whereas running `hasura actions --help` will return commands and flags specific to the `actions` category of commands:
 
 ```
 Manage Hasura actions
@@ -99,5 +102,9 @@ Global Flags:
 Use "hasura actions [command] --help" for more information about a command.
 ```
 
+:::info Note
+
 A complete list of all CLI commands, including details and examples, can be found in the side navigation to the left
 under the Commands heading.
+
+:::

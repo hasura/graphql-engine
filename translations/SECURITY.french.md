@@ -2,7 +2,7 @@
 
 Nous sommes extrêmement reconaissant envers les chercheurs en sécurité et les utilisateurs qui rapportent des vulnérabilités à la Communauté Hasura. Tous les rapports sont minutieusement examinés par un ensemble de volontaires de la communauté et par l'équipe Hasura.
 
-Pour rapporter un problème de sécurité, veuillez nous envoyer un email à [build@hasura.io](mailto:build@hasura.io) avec tous les détails, en y attachant toutes les informations nécessaires.
+Pour rapporter un problème de sécurité, veuillez nous envoyer un email à [security@hasura.io](mailto:security@hasura.io) avec tous les détails, en y attachant toutes les informations nécessaires.
 
 ### Quand Rapporter une Vulnérabilité?
 

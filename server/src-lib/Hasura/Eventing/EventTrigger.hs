@@ -436,8 +436,18 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                   processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
                   eventExecutionFinishTime <- liftIO getCurrentTime
                   let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
-                  _ <- liftIO $ EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
-                  liftIO $ Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
+                      -- For event_processing_time, the start time is defined as the expected delivery time for an event, i.e.:
+                      --  - For event with no retries: created_at time
+                      --  - For event with retries: next_retry_at time
+                      eventStartTime = fromMaybe (eCreatedAt e) (eRetryAt e)
+                      -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
+                      -- `eventStartTime`) used here in calculation are all UTC time.
+                      eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
+                  liftIO $ do
+                    EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
+                    Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
+                    EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
+                    Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
                 Left (HTTPError reqBody err) ->
                   processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
                 Left (TransformationError _ err) -> do

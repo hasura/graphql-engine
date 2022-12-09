@@ -312,12 +312,10 @@ ORDER BY
     let whereClause = '';
 
     if (schemas) {
-      whereClause = `AND sch.name IN (${schemas
-        .map((s) => `'${s}'`)
-        .join(',')})`;
+      whereClause = `AND sch.name IN (${schemas.map(s => `'${s}'`).join(',')})`;
     } else if (tables) {
       whereClause = `AND obj.name IN (${tables
-        .map((t) => `'${t.name}'`)
+        .map(t => `'${t.name}'`)
         .join(',')})`;
     }
     // ## Note on fetching MSSQL table comments
@@ -428,12 +426,12 @@ FROM sys.objects as obj
     checkConstraints: any[],
     tableComment?: string | undefined
   ) => {
-    const currentCols = columns.filter((c) => c.name !== '');
+    const currentCols = columns.filter(c => c.name !== '');
     const flatUniqueKeys = uniqueKeys.reduce((acc, val) => acc.concat(val), []);
 
     const pKeys = primaryKeys
-      .filter((p) => p !== '')
-      .map((p) => currentCols[p as number].name);
+      .filter(p => p !== '')
+      .map(p => currentCols[p as number].name);
 
     let tableDefSql = '';
     for (let i = 0; i < currentCols.length; i++) {
@@ -468,7 +466,7 @@ FROM sys.objects as obj
     // add primary key
     if (pKeys.length > 0) {
       tableDefSql += ', PRIMARY KEY (';
-      tableDefSql += pKeys.map((col) => `${col}`).join(',');
+      tableDefSql += pKeys.map(col => `${col}`).join(',');
       tableDefSql += ') ';
     }
 
@@ -517,7 +515,7 @@ FROM sys.objects as obj
 
     // add check constraints
     if (checkConstraints.length > 0) {
-      checkConstraints.forEach((constraint) => {
+      checkConstraints.forEach(constraint => {
         if (!constraint.name || !constraint.check) {
           return;
         }
@@ -747,7 +745,7 @@ FROM sys.objects as obj
   }) => {
     return `ALTER TABLE "${schemaName}"."${tableName}"
     ADD CONSTRAINT "${constraintName}"
-    PRIMARY KEY (${selectedPkColumns.map((pkc) => `"${pkc}"`).join(',')})`;
+    PRIMARY KEY (${selectedPkColumns.map(pkc => `"${pkc}"`).join(',')})`;
   },
   getAlterPkSql: ({
     schemaName,
@@ -764,7 +762,7 @@ FROM sys.objects as obj
     ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
     ALTER TABLE "${schemaName}"."${tableName}"
       ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-      .map((pkc) => `"${pkc}"`)
+      .map(pkc => `"${pkc}"`)
       .join(', ')});
     
     COMMIT TRANSACTION;`;
@@ -775,7 +773,7 @@ FROM sys.objects as obj
 
     if (schemas) {
       whereClause = `WHERE schema_name (schema_id) in (${schemas
-        .map((s) => `'${s}'`)
+        .map(s => `'${s}'`)
         .join(',')})`;
     }
     return `
@@ -811,7 +809,7 @@ FROM sys.objects as obj
 
     if (schemas) {
       whereClause = `WHERE schema_name (t.schema_id) in (${schemas
-        .map((s) => `'${s}'`)
+        .map(s => `'${s}'`)
         .join(',')})`;
     }
     return `
@@ -836,7 +834,7 @@ FOR JSON PATH;
 
     if (schemas) {
       whereClause = `WHERE schema_name (schema_id) in (${schemas
-        .map((s) => `'${s}'`)
+        .map(s => `'${s}'`)
         .join(',')})`;
     }
     return `
@@ -964,7 +962,7 @@ FROM
 	sys.objects AS o
 	JOIN sys.schemas AS s ON (o.schema_id = s.schema_id)
 WHERE
-	o.name in (${tables.map((t) => `'${t.name}'`).join(',')}) for json path;
+	o.name in (${tables.map(t => `'${t.name}'`).join(',')}) for json path;
   `,
   getDatabaseVersionSql: 'SELECT @@VERSION;',
   permissionColumnDataTypes,

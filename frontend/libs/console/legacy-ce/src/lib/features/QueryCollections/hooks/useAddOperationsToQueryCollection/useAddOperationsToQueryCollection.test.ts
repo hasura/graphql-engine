@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useAddOperationsToQueryCollection } from '.';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -11,7 +11,7 @@ afterAll(() => server.close());
 
 describe('useAddOperationsToQueryCollection', () => {
   beforeEach(() => {
-    server.use(...handlers(1, ''));
+    server.use(...handlers({ url: '' }));
   });
 
   test('When useAddOperationsToQueryCollection is used with a valid QueryCollection Then it should call the API with correct payload', async () => {
@@ -20,10 +20,10 @@ describe('useAddOperationsToQueryCollection', () => {
       { wrapper }
     );
 
-    await result.current.addOperationToQueryCollection('testCollection', [
+    await result.current.addOperationToQueryCollection('other_queries', [
       {
-        name: 'MyQuery33',
-        query: 'query MyQuery { user { email name}}',
+        name: 'MyQuery7',
+        query: 'query MyQuery7 { user { email name}}',
       },
     ]);
 

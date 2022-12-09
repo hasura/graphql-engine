@@ -16,6 +16,7 @@
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 
 with-compiler: ghc-9.2.5
+-- TODO WHEN WE NEXT UPGRADE GHC: move `-split-sections/--gc-sections` from ci.project.local into this file
 
 -- package-level parallelism:
 jobs: $ncpus

@@ -46,7 +46,7 @@ const ActionContainer = ({
     },
   ];
 
-  const childrenWithProps = React.Children.map(children, (child) =>
+  const childrenWithProps = React.Children.map(children, child =>
     React.cloneElement(child, { currentAction })
   );
 

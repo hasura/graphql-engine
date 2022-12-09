@@ -13,7 +13,10 @@ import {
 import { driverToLabel } from '../../../../dataSources';
 import { DataSource } from '../../../../metadata/types';
 
-type LatencyData = TaskEvent['public_event_data']['sources'][number];
+type LatencyData = Exclude<
+  TaskEvent['public_event_data']['sources'],
+  null
+>[number];
 
 type CollapsibleToggleProps = {
   dataSource: DataSource;

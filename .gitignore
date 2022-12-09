@@ -57,6 +57,9 @@ ChinookData.xml
 # log output from tests-hspec runs
 tests-hspec.log
 
+# Test run results from Sandwich-powered tests
+test_runs/
+
 # Build artifacts
 pipeline-gen
 !pipeline-gen/

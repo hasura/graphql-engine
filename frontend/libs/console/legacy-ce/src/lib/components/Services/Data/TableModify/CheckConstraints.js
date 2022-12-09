@@ -15,7 +15,7 @@ const CheckConstraints = ({
   readOnlyMode,
 }) => {
   const init = () => {
-    const checkConstraintsState = constraints.map((c) => ({
+    const checkConstraintsState = constraints.map(c => ({
       name: c.constraint_name,
       check: getCheckConstraintBoolExp(c.check),
     }));
@@ -34,7 +34,7 @@ const CheckConstraints = ({
 
   // map over constraints
   return checkConstraintsModify.map((constraint, i) => {
-    const nameOnChange = (e) => {
+    const nameOnChange = e => {
       setCheckConstraint(
         {
           ...constraint,
@@ -44,7 +44,7 @@ const CheckConstraints = ({
       );
     };
 
-    const checkOnChange = (v) => {
+    const checkOnChange = v => {
       setCheckConstraint(
         {
           ...constraint,
@@ -99,7 +99,7 @@ const CheckConstraints = ({
 
     let saveFunc;
     if (name && check) {
-      saveFunc = (toggle) => {
+      saveFunc = toggle => {
         dispatch(saveCheckConstraint(i, toggle));
       };
     }
@@ -107,7 +107,7 @@ const CheckConstraints = ({
     // function to remove the check constraint
     let removeFunc;
     if (!isLast) {
-      removeFunc = (toggle) => {
+      removeFunc = toggle => {
         dispatch(removeCheckConstraint(existingConstraintName, toggle));
       };
     }

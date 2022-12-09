@@ -47,7 +47,7 @@ export const SuggestedRelationships = ({
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {data.map((relationship) => {
+          {data.map(relationship => {
             // create a unique key
             const key = `${relationship.to.table}-${relationship.to.column}-${relationship.from.table}-${relationship.from.column}`;
 

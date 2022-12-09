@@ -43,7 +43,7 @@ const ArgValueElement: React.FC<Props> = ({
             </option>
           )}
           <optgroup label="Columns">
-            {columns.columns.map((o) => {
+            {columns.columns.map(o => {
               return (
                 <option key={o} value={o}>
                   {o}
@@ -53,7 +53,7 @@ const ArgValueElement: React.FC<Props> = ({
           </optgroup>
           {columns.computedFields.length ? (
             <optgroup label="Computed Fields">
-              {columns.computedFields.map((o) => {
+              {columns.computedFields.map(o => {
                 return (
                   <option key={o} value={o}>
                     {o}

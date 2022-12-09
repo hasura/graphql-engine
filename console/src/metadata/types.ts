@@ -1094,7 +1094,7 @@ export type GraphQLFieldCustomization = {
     prefix?: string;
     suffix?: string;
   };
-  namingConvention?: NamingConventionOptions;
+  namingConvention?: NamingConventionOptions | null;
 };
 
 export interface SourceConnectionInfo {

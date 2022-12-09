@@ -41,7 +41,7 @@ export const ColumnTypeSelector: React.FC<ColumnTypeSelectorProps> = ({
       isCreatable
       createNewOption={createOpt}
       options={options}
-      onChange={(op) => {
+      onChange={op => {
         onChange(op as Option);
       }}
       value={value}

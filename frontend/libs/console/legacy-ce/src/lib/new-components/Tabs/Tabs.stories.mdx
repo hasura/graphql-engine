@@ -11,7 +11,7 @@ import { Tabs } from '@/new-components/Tabs';
     docs: { source: { type: 'code' } },
     chromatic: { disableSnapshot: true },
   }}
-  decorators={[(Story) => <div className={'p-4'}>{Story()}</div>]}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
   argTypes={{
     value: {
       defaultValue: 'tab-1',
@@ -42,7 +42,7 @@ import { Tabs } from '@/new-components/Tabs';
 ```tsx
 <Tabs
   value={value}
-  onValueChange={(value) => setValue(value)}
+  onValueChange={value => setValue(value)}
   items={[
     { value: 'tab-1', label: 'Tab 1', content: 'Content 1' },
     { value: 'tab-2', label: 'Tab 2', content: 'Content 2' },

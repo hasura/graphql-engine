@@ -28,7 +28,7 @@ where
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
-import Data.ByteString.Builder (toLazyByteString)
+import Data.ByteString.Builder.Extra (toLazyByteStringWith, untrimmedStrategy)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
 import Data.Kind (Constraint, Type)
@@ -177,7 +177,8 @@ encodeScalar ::
 encodeScalar = \case
   J.String str -> pure $ encodeUtf8 str
   J.Number num ->
-    pure . LBS.toStrict . toLazyByteString $ scientificBuilder num
+    -- like toLazyByteString, but tuned for output and for common small size:
+    pure . LBS.toStrict . toLazyByteStringWith (untrimmedStrategy 24 1024) "" $ scientificBuilder num
   J.Bool True -> pure "true"
   J.Bool False -> pure "false"
   val ->

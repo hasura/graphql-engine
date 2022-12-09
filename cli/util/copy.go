@@ -159,12 +159,12 @@ func CopyFileAfero(fs afero.Fs, src, dst string) error {
 }
 
 // CopyDir but with afero
-func CopyDirAfero(fs afero.Fs, src string, dst string) error {
+func CopyDirAfero(afs afero.Fs, src string, dst string) error {
 	var op errors.Op = "util.CopyDirAfero"
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 
-	si, err := fs.Stat(src)
+	si, err := afs.Stat(src)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -172,20 +172,20 @@ func CopyDirAfero(fs afero.Fs, src string, dst string) error {
 		return errors.E(op, fmt.Errorf("source is not a directory"))
 	}
 
-	_, err = fs.Stat(dst)
-	if err != nil && !os.IsNotExist(err) {
+	_, err = afs.Stat(dst)
+	if err != nil && !stderrors.Is(err, fs.ErrNotExist) {
 		return errors.E(op, err)
 	}
 	if err == nil {
 		return errors.E(op, fmt.Errorf("destination already exists"))
 	}
 
-	err = fs.MkdirAll(dst, si.Mode())
+	err = afs.MkdirAll(dst, si.Mode())
 	if err != nil {
 		return errors.E(op, err)
 	}
 
-	entries, err := afero.ReadDir(fs, src)
+	entries, err := afero.ReadDir(afs, src)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -195,7 +195,7 @@ func CopyDirAfero(fs afero.Fs, src string, dst string) error {
 		dstPath := filepath.Join(dst, entry.Name())
 
 		if entry.IsDir() {
-			err = CopyDirAfero(fs, srcPath, dstPath)
+			err = CopyDirAfero(afs, srcPath, dstPath)
 			if err != nil {
 				return errors.E(op, err)
 			}
@@ -205,7 +205,7 @@ func CopyDirAfero(fs afero.Fs, src string, dst string) error {
 				continue
 			}
 
-			err = CopyFileAfero(fs, srcPath, dstPath)
+			err = CopyFileAfero(afs, srcPath, dstPath)
 			if err != nil {
 				return errors.E(op, err)
 			}

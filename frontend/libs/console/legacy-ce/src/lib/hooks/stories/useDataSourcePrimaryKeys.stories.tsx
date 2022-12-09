@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof AllPrimaryKeys>;
 
-export const Playground: ComponentStory<typeof AllPrimaryKeys> = (args) => {
+export const Playground: ComponentStory<typeof AllPrimaryKeys> = args => {
   return <AllPrimaryKeys {...args} />;
 };
 

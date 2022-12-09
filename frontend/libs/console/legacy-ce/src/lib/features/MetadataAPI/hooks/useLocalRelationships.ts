@@ -52,8 +52,8 @@ const getRelationshipMap = (
   tableRlns: TableRelationshipsType[],
   fkConstraint?: string
 ) => {
-  const destination = tableRlns.find((tr) => {
-    return tr.from.column.find((c) => c?.replace(/"/g, '') === fkConstraint);
+  const destination = tableRlns.find(tr => {
+    return tr.from.column.find(c => c?.replace(/"/g, '') === fkConstraint);
   });
   return destination;
 };
@@ -79,7 +79,7 @@ export const useLocalRelationships = (relDef: DataTarget) => {
   } = useTableRelationships({ target: relDef });
 
   const objRlnsData: RowData[] =
-    objRlns?.map((relationship) => {
+    objRlns?.map(relationship => {
       if (relationship?.using?.foreign_key_constraint_on) {
         const relationshipMap = getRelationshipMap(
           tableRlns ?? [],
@@ -125,7 +125,7 @@ export const useLocalRelationships = (relDef: DataTarget) => {
     }) || [];
 
   const arrRlnsData: RowData[] =
-    arrRlns?.map((relationship) => {
+    arrRlns?.map(relationship => {
       if (relationship?.using?.foreign_key_constraint_on) {
         const relationshipMap = getRelationshipMap(
           tableRlns ?? [],

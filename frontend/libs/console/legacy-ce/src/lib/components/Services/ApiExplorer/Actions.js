@@ -49,13 +49,13 @@ const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 const TRACK_RESPONSE_DETAILS = 'ApiExplorer/TRACK_RESPONSE_DETAILS';
 
 const SET_FORCE_INTROSPECT_AT = 'ApiExplorer/FORCE_INTROSPECTION_AT';
-export const setForceIntrospectAt = (data) => ({
+export const setForceIntrospectAt = data => ({
   type: SET_FORCE_INTROSPECT_AT,
   data,
 });
 
 const SET_GRAPHIQL_QUERY = 'ApiExplorer/SET_GRAPHIQL_QUERY';
-export const setGraphiQLQuery = (data) => ({
+export const setGraphiQLQuery = data => ({
   type: SET_GRAPHIQL_QUERY,
   data,
 });
@@ -75,13 +75,13 @@ const getSubscriptionInstance = (url, headers) => {
 };
 
 const SET_LOADING = 'ApiExplorer/SET_LOADING';
-export const setLoading = (isLoading) => ({
+export const setLoading = isLoading => ({
   type: SET_LOADING,
   data: isLoading,
 });
 
 const SWITCH_GRAPHIQL_MODE = 'ApiExplorer/SWITCH_GRAPHIQL_MODE';
-export const switchGraphiQLMode = (mode) => ({
+export const switchGraphiQLMode = mode => ({
   type: SWITCH_GRAPHIQL_MODE,
   mode,
 });
@@ -115,7 +115,7 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   newHeaders[changedHeaderIndex].isDisabled =
     changedHeaderDetails.isDisabled === true;
 
-  const nonEmptyHeaders = newHeaders.filter((header) => {
+  const nonEmptyHeaders = newHeaders.filter(header => {
     return !header.isNewHeader;
   });
 
@@ -130,7 +130,7 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   return nonEmptyHeaders;
 };
 
-const verifyJWTToken = (token) => (dispatch, getState) => {
+const verifyJWTToken = token => (dispatch, getState) => {
   const { mode: graphiqlMode } = getState().apiexplorer;
   const url = getGraphQLEndpoint(graphiqlMode);
   const body = {
@@ -147,43 +147,43 @@ const verifyJWTToken = (token) => (dispatch, getState) => {
   return dispatch(requestAction(url, options));
 };
 
-const updateFileObject = (fileObj) => {
+const updateFileObject = fileObj => {
   return { type: UPDATE_FILE_OBJECT, data: fileObj };
 };
 
 const focusHeaderTextbox = () => ({ type: FOCUS_ROLE_HEADER });
 const unfocusTypingHeader = () => ({ type: UNFOCUS_ROLE_HEADER });
 
-const copyCodeToClipboard = (isCopying) => {
+const copyCodeToClipboard = isCopying => {
   return {
     type: CODE_GENERATOR_COPY_TO_CLIPBOARD,
     data: isCopying,
   };
 };
 
-const changeCodeGeneratorSelection = (newSelection) => {
+const changeCodeGeneratorSelection = newSelection => {
   return {
     type: CODE_GENERATOR_CHANGE_SELECTION,
     data: newSelection,
   };
 };
 
-const changeRequestMethod = (newMethod) => {
+const changeRequestMethod = newMethod => {
   return {
     type: REQUEST_METHOD_CHANGED,
     data: newMethod,
   };
 };
 
-const changeRequestUrl = (newUrl) => {
+const changeRequestUrl = newUrl => {
   return {
     type: REQUEST_URL_CHANGED,
     data: newUrl,
   };
 };
 
-const changeRequestParams = (newParams) => {
-  return (dispatch) => {
+const changeRequestParams = newParams => {
+  return dispatch => {
     dispatch({ type: REQUEST_PARAMS_CHANGED, data: newParams });
   };
 };
@@ -207,7 +207,7 @@ const createWsClient = (url, headers) => {
 const graphqlSubscriber = (graphQLParams, url, headers) => {
   const link = new WebSocketLink(createWsClient(url, headers));
   try {
-    const fetcher = (operation) => {
+    const fetcher = operation => {
       operation.query = parse(operation.query);
       return execute(link, operation);
     };
@@ -217,7 +217,7 @@ const graphqlSubscriber = (graphQLParams, url, headers) => {
   }
 };
 
-const isSubscription = (graphQlParams) => {
+const isSubscription = graphQlParams => {
   const queryDoc = parse(graphQlParams.query);
   for (const definition of queryDoc.definitions) {
     if (definition.kind === 'OperationDefinition') {
@@ -273,7 +273,7 @@ const analyzeFetcher = (headers, mode) => {
 
     // Check if x-hasura-role is available in some form in the headers
     const totalHeaders = Object.keys(reqHeaders);
-    totalHeaders.forEach((t) => {
+    totalHeaders.forEach(t => {
       // If header has x-hasura-*
       const lHead = t.toLowerCase();
       if (
@@ -296,7 +296,7 @@ const analyzeFetcher = (headers, mode) => {
       })
     )
       .then(JSON.parse)
-      .catch((errorPayload) => {
+      .catch(errorPayload => {
         let error;
         try {
           error = JSON.parse(errorPayload).error;
@@ -338,12 +338,12 @@ const changeRequestHeader = (index, key, newValue, isDisabled) => {
   };
 };
 
-const setHeadersBulk = (headers) => ({
+const setHeadersBulk = headers => ({
   type: SET_REQUEST_HEADERS_BULK,
   headers,
 });
 
-const removeRequestHeader = (index) => {
+const removeRequestHeader = index => {
   return (dispatch, getState) => {
     const currentState = getState().apiexplorer;
 
@@ -383,7 +383,7 @@ const closeCodeGeneratorClicked = () => {
   };
 };
 
-const changeTabSelection = (newSelectionIndex) => {
+const changeTabSelection = newSelectionIndex => {
   return {
     type: CHANGE_TAB,
     data: newSelectionIndex,
@@ -415,7 +415,7 @@ const editGeneratedJson = () => {
   };
 };
 
-const expandAuthApi = (index) => {
+const expandAuthApi = index => {
   return {
     type: EXPAND_AUTH_API,
     data: index,
@@ -424,7 +424,7 @@ const expandAuthApi = (index) => {
 
 // This method adds the new header and moves the empty header to the bottom of the list
 const getHeadersAfterAddingNewHeader = (headers, newHeader) => {
-  const nonEmptyHeaders = headers.filter((header) => {
+  const nonEmptyHeaders = headers.filter(header => {
     return !header.isNewHeader;
   });
   nonEmptyHeaders.push(newHeader);
@@ -437,7 +437,7 @@ const getHeadersAfterAddingNewHeader = (headers, newHeader) => {
   return nonEmptyHeaders;
 };
 
-const getStateAfterAddingRequestToHistory = (oldState) => {
+const getStateAfterAddingRequestToHistory = oldState => {
   const newState = Object.assign({}, oldState);
   // Check if history is present
   const isHistoryPresent = newState.tabs[1].content.length > 0;
@@ -470,7 +470,7 @@ const getStateAfterAddingRequestToHistory = (oldState) => {
   return newState;
 };
 
-const getStateAfterClearingHistory = (state) => {
+const getStateAfterClearingHistory = state => {
   clearState();
   return {
     ...state,
@@ -487,12 +487,12 @@ const getStateAfterClearingHistory = (state) => {
 const getRemoteQueries = (queryUrl, cb, dispatch) => {
   dispatch(requestActionPlain(queryUrl))
     .then(cb)
-    .catch((e) => console.error('Invalid query file URL: ', e));
+    .catch(e => console.error('Invalid query file URL: ', e));
 };
 
 const processResponseDetails =
   (responseTime, responseSize, isResponseCached, responseTrackingId) =>
-  (dispatch) => {
+  dispatch => {
     dispatch({
       type: TRACK_RESPONSE_DETAILS,
       data: {

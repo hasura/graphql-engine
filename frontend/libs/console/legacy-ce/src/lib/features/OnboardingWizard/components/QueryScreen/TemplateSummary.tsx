@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
-import { tracingTools } from '@/features/TracingTools';
+import { programmaticallyTraceError } from '@/features/Analytics';
 import { Dispatch } from '@/types';
 import {
   staleTime,
@@ -62,13 +62,11 @@ export function TemplateSummary(props: Props) {
     staleTime,
     onError: (e: any) => {
       // this is unexpected; so get alerted
-      tracingTools.sentry.captureException(
-        new Error('failed to fetch sample queries in template summary'),
+      programmaticallyTraceError(
+        new Error('failed to get a sample query in template summary'),
         {
-          debug: {
-            error: 'message' in e ? e.message : e,
-            trace: 'OnboardingWizard/TemplateSummary',
-          },
+          sourceError: e,
+          errorMessage: e.message ?? '',
         }
       );
     },

@@ -38,7 +38,7 @@ function DeleteRemoteSchemaRelationshipComponent({
 
 export const DeleteRemoteSchemaRelationship: ComponentStory<
   typeof DeleteRemoteSchemaRelationshipComponent
-> = (args) => {
+> = args => {
   return <DeleteRemoteSchemaRelationshipComponent {...args} />;
 };
 

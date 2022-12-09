@@ -31,7 +31,7 @@ const getFunctionPermissions = (
   currentFunctionName: string
 ) =>
   allFunctions.find(
-    (fn) =>
+    fn =>
       fn.function_name === currentFunctionName &&
       fn.function_schema === currentFunctionSchema
   )?.permissions;
@@ -43,7 +43,7 @@ const findFunctionPermissions = (
   if (!allPermissions) {
     return undefined;
   }
-  return allPermissions.find((permRole) => permRole.role === userRole);
+  return allPermissions.find(permRole => permRole.role === userRole);
 };
 
 const getRoleQueryPermissionSymbol = (
@@ -63,7 +63,7 @@ const getRoleQueryPermissionSymbol = (
   if (
     selectPermissionsForTable &&
     selectPermissionsForTable.find(
-      (selectPermissionEntry) => selectPermissionEntry.role === permissionRole
+      selectPermissionEntry => selectPermissionEntry.role === permissionRole
     )
   ) {
     isTableSelectPermissionsEnabled = true;
@@ -167,7 +167,7 @@ const PermissionsTableBody: React.FC<PermissionTableProps> = ({
   const { isEditing, role: permEditRole } = permissionsEditState;
 
   const getQueryTypes = (role: string) =>
-    queryTypes.map((queryType) => {
+    queryTypes.map(queryType => {
       const dispatchOpenEdit = (r: string) => () => {
         if (r) {
           permOpenEdit(r);
@@ -211,7 +211,7 @@ const PermissionsTableBody: React.FC<PermissionTableProps> = ({
     });
 
   const roleList = ['admin', ...allRoles];
-  const rolePermissions = roleList.map((r) => ({
+  const rolePermissions = roleList.map(r => ({
     roleName: r,
     permTypes: getQueryTypes(r),
   }));
@@ -234,7 +234,7 @@ type PermissionTableProps = {
   isEditable: boolean;
   selectRoles: SelectPermissionEntry[] | null;
 };
-const PermissionsTable: React.FC<PermissionTableProps> = (props) => (
+const PermissionsTable: React.FC<PermissionTableProps> = props => (
   <>
     <PermissionsLegend />
     <table className={`table table-bordered ${styles.permissionsTable}`}>

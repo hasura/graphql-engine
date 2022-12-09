@@ -41,13 +41,13 @@ const ColumnEditorList = ({
   if (tableSchema.primary_key) {
     pkLength = tableSchema.primary_key.columns.length;
 
-    tableSchema.primary_key.columns.forEach((col) => {
+    tableSchema.primary_key.columns.forEach(col => {
       columnPKConstraints[col] = tableSchema.primary_key.constraint_name;
     });
   }
 
   const columnUniqueConstraints = {};
-  tableSchema.unique_constraints.forEach((uConst) => {
+  tableSchema.unique_constraints.forEach(uConst => {
     if (uConst.columns.length === 1) {
       columnUniqueConstraints[uConst.columns[0]] = uConst.constraint_name;
     }
@@ -90,7 +90,7 @@ const ColumnEditorList = ({
       isOnlyPrimaryKey: columnPKConstraints[colName] && pkLength === 1,
     };
 
-    const onSubmit = (toggleEditor) => {
+    const onSubmit = toggleEditor => {
       dispatch(saveColumnChangesSql(colName, col, toggleEditor));
     };
 
@@ -184,7 +184,7 @@ const ColumnEditorList = ({
     /* If the dataTypeIndexMap is not loaded, then just load the current type information
      * */
 
-    const getValidTypeCasts = (udtName) => {
+    const getValidTypeCasts = udtName => {
       if (isArrayDataType) {
         udtName = udtName.replace('_', '');
       }
@@ -201,7 +201,7 @@ const ColumnEditorList = ({
       return [lowerUdtName, lowerUdtName, ''];
     };
 
-    const getValidDefaultTypes = (udtName) => {
+    const getValidDefaultTypes = udtName => {
       const lowerUdtName = udtName.toLowerCase();
       let defaultOptions = [];
       if (lowerUdtName in columnDefaultFunctions) {

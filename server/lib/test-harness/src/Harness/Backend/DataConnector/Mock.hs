@@ -3,6 +3,7 @@
 -- | GDC Mock Agent Fixture and test helpers
 module Harness.Backend.DataConnector.Mock
   ( -- * Mock Fixture
+    backendTypeMetadata,
     setupAction,
     setup,
     teardown,
@@ -28,9 +29,11 @@ import Control.Concurrent.Async qualified as Async
 import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.Mock.Server
+import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (TestEnvironment (..))
@@ -38,6 +41,20 @@ import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (shouldBe)
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendType.BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.DataConnectorReference,
+      backendSourceName = "mock",
+      backendCapabilities = Nothing,
+      backendTypeString = "mock",
+      backendDisplayNameString = "mock",
+      backendServerUrl = Just "http://localhost:65006",
+      backendSchemaKeyword = "schema"
+    }
 
 --------------------------------------------------------------------------------
 
@@ -64,7 +81,7 @@ teardown (testEnvironment, MockAgentEnvironment {..}) = do
 -- | Mock Agent @backend_configs@ field
 agentConfig :: Aeson.Value
 agentConfig =
-  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorMock
+  let backendType = BackendType.backendTypeString backendTypeMetadata
       agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
    in [yaml|
 dataconnector:
@@ -168,7 +185,7 @@ defaultTestCase TestCaseRequired {..} =
 -- | Test runner for the Mock Agent. 'runMockedTest' sets the mocked
 -- value in the agent, fires a GQL request, then asserts on the
 -- expected response and 'API.Query' value.
-runTest :: Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
+runTest :: HasCallStack => Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
 runTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
   -- Set the Agent with the 'MockConfig'
   I.writeIORef maeConfig _given

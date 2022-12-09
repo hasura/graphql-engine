@@ -22,7 +22,7 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -30,26 +30,26 @@ import Test.Hspec (SpecWith, describe, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
@@ -59,12 +59,12 @@ spec = do
                     { Fixture.stringifyNumbers = True
                     }
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlite.setupTablesAction schema testEnvironment
                 ]

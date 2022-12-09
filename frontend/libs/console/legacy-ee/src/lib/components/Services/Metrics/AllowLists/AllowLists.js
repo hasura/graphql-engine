@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
 
 import { allowListOperationGroupName } from './constants';
 
@@ -95,7 +96,7 @@ const defaultMetadata = {
   newListCount: null,
 };
 
-const AllowLists = (props) => {
+const AllowLists = props => {
   const [tabIndex, updateTabIndex] = useState(0);
   const [metadataState, updateMetadata] = useState(defaultMetadata);
 
@@ -139,68 +140,70 @@ const AllowLists = (props) => {
 
   const { id: projectId, name: projectName } = projectInfo;
   return (
-    <div className="infoWrapper">
-      <Tabs
-        selectedIndex={tabIndex}
-        onSelect={(t) => updateTabIndex(t)}
-        className={styles.tabWrapper}
-      >
-        <TabList className={styles.tabListWrapper}>
-          <Tab
-            className={
-              styles.tabList +
-              ' ' +
-              (tabIndex === 0 ? styles.tabListActive : '')
-            }
-          >
-            Allowed Operations{' '}
-            {allowedListCount !== null && `(${allowedListCount})`}
-          </Tab>
-          <Tab
-            className={
-              styles.tabList +
-              ' ' +
-              (tabIndex === 1 ? styles.tabListActive : '')
-            }
-          >
-            New Operations {newListCount !== null && `(${newListCount})`}
-          </Tab>
-        </TabList>
-        <TabPanel>
-          <ExistingAllowlists
-            {...props}
-            dispatch={dispatch}
-            collectionName={allowListOperationGroupName}
-            projectId={projectId}
-            projectName={projectName}
-            RenderLink={RenderLink}
-            {...refetchMeta}
-            {...changeTabs}
-            updateMetadata={(d) =>
-              updateMetadata((s) => {
-                return { ...s, allowedListCount: d };
-              })
-            }
-          />
-        </TabPanel>
-        <TabPanel>
-          <AddOperations
-            collectionName={allowListOperationGroupName}
-            projectId={projectId}
-            projectName={projectName}
-            RenderLink={RenderLink}
-            {...props}
-            {...refetchMeta}
-            {...changeTabs}
-            updateMetadata={(d) =>
-              updateMetadata((s) => {
-                return { ...s, newListCount: d };
-              })
-            }
-          />
-        </TabPanel>
-      </Tabs>
-    </div>
+    <Analytics name="MonitoringAllowLists" {...REDACT_EVERYTHING}>
+      <div className="infoWrapper">
+        <Tabs
+          selectedIndex={tabIndex}
+          onSelect={t => updateTabIndex(t)}
+          className={styles.tabWrapper}
+        >
+          <TabList className={styles.tabListWrapper}>
+            <Tab
+              className={
+                styles.tabList +
+                ' ' +
+                (tabIndex === 0 ? styles.tabListActive : '')
+              }
+            >
+              Allowed Operations{' '}
+              {allowedListCount !== null && `(${allowedListCount})`}
+            </Tab>
+            <Tab
+              className={
+                styles.tabList +
+                ' ' +
+                (tabIndex === 1 ? styles.tabListActive : '')
+              }
+            >
+              New Operations {newListCount !== null && `(${newListCount})`}
+            </Tab>
+          </TabList>
+          <TabPanel>
+            <ExistingAllowlists
+              {...props}
+              dispatch={dispatch}
+              collectionName={allowListOperationGroupName}
+              projectId={projectId}
+              projectName={projectName}
+              RenderLink={RenderLink}
+              {...refetchMeta}
+              {...changeTabs}
+              updateMetadata={d =>
+                updateMetadata(s => {
+                  return { ...s, allowedListCount: d };
+                })
+              }
+            />
+          </TabPanel>
+          <TabPanel>
+            <AddOperations
+              collectionName={allowListOperationGroupName}
+              projectId={projectId}
+              projectName={projectName}
+              RenderLink={RenderLink}
+              {...props}
+              {...refetchMeta}
+              {...changeTabs}
+              updateMetadata={d =>
+                updateMetadata(s => {
+                  return { ...s, newListCount: d };
+                })
+              }
+            />
+          </TabPanel>
+        </Tabs>
+      </div>
+    </Analytics>
   );
 };
 
@@ -220,12 +223,12 @@ const mapStateToProps = (state, ownProps) => {
     metadata,
   };
 };
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = dispatch => ({
   refetchMetadata: () => dispatch(refetchMetadataAction()),
   dispatch,
 });
 
-const allowListsConnector = (connect) =>
+const allowListsConnector = connect =>
   connect(mapStateToProps, mapDispatchToProps)(AllowLists);
 
 export default allowListsConnector;

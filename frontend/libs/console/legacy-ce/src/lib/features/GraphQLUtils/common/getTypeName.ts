@@ -1,4 +1,4 @@
-import { MetadataTable, Source } from '@/features/MetadataAPI';
+import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { AllowedQueryOperation } from '../query';
 
 export const getTypeName = ({

@@ -9,7 +9,7 @@ import {
 } from './ColumnPresets';
 
 export default {
-  title: 'Features/Permissions Form/Components/Presets Section',
+  title: 'Features/Permissions Tab/Permissions Form/Components/Presets Section',
   component: ColumnPresetsSection,
   decorators: [
     (StoryComponent: React.FC) => (
@@ -22,6 +22,7 @@ export default {
           },
         }}
         onSubmit={() => {}}
+        className="p-4"
       >
         {() => <StoryComponent />}
       </Form>
@@ -32,7 +33,7 @@ export default {
 
 const columns = ['id', 'name', 'description'];
 
-export const Insert: Story<ColumnPresetsSectionProps> = (args) => (
+export const Insert: Story<ColumnPresetsSectionProps> = args => (
   <ColumnPresetsSection {...args} />
 );
 Insert.args = {
@@ -40,7 +41,7 @@ Insert.args = {
   columns,
 };
 
-export const Update: Story<ColumnPresetsSectionProps> = (args) => (
+export const Update: Story<ColumnPresetsSectionProps> = args => (
   <ColumnPresetsSection {...args} />
 );
 Update.args = {
@@ -48,7 +49,7 @@ Update.args = {
   queryType: 'update',
 };
 
-export const WithPartialPresets: Story<ColumnPresetsSectionProps> = (args) => (
+export const WithPartialPresets: Story<ColumnPresetsSectionProps> = args => (
   <ColumnPresetsSection {...args} />
 );
 WithPartialPresets.args = {
@@ -75,13 +76,14 @@ WithPartialPresets.decorators = [
         },
       }}
       onSubmit={() => {}}
+      className="p-4"
     >
       {() => <S />}
     </Form>
   ),
 ];
 
-export const WithAllPresets: Story<ColumnPresetsSectionProps> = (args) => (
+export const WithAllPresets: Story<ColumnPresetsSectionProps> = args => (
   <ColumnPresetsSection {...args} />
 );
 WithAllPresets.args = {
@@ -127,6 +129,7 @@ WithAllPresets.decorators = [
         },
       }}
       onSubmit={() => {}}
+      className="p-4"
     >
       {() => <S />}
     </Form>
@@ -135,7 +138,7 @@ WithAllPresets.decorators = [
 
 type ShowcaseProps = Record<string, ColumnPresetsSectionProps>;
 
-export const Showcase: Story<ShowcaseProps> = (args) => (
+export const Showcase: Story<ShowcaseProps> = args => (
   <>
     <Insert {...args.insert} />
     <Update {...args.update} />

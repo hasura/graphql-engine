@@ -56,7 +56,7 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries('treeview');
+      queryClient.invalidateQueries(['export_metadata']);
 
       fireNotification({
         type: 'success',

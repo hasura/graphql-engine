@@ -8,20 +8,20 @@ export const inbuiltTypes = {
   ID: true,
 };
 
-const singularize = (kind) => {
+const singularize = kind => {
   return kind.substr(0, kind.length - 1);
 };
 
-export const filterNameLessTypeLess = (arr) => {
-  return arr.filter((item) => !!item.name && !!item.type);
+export const filterNameLessTypeLess = arr => {
+  return arr.filter(item => !!item.name && !!item.type);
 };
 
-export const filterNameless = (arr) => {
-  return arr.filter((item) => !!item.name);
+export const filterNameless = arr => {
+  return arr.filter(item => !!item.name);
 };
 
-export const filterValueLess = (arr) => {
-  return arr.filter((item) => !!item.value);
+export const filterValueLess = arr => {
+  return arr.filter(item => !!item.value);
 };
 
 export const mergeCustomTypes = (newTypesList, existingTypesList) => {
@@ -33,7 +33,7 @@ export const mergeCustomTypes = (newTypesList, existingTypesList) => {
     existingTypeIndexMap[et.name] = i;
   });
 
-  newTypesList.forEach((nt) => {
+  newTypesList.forEach(nt => {
     if (existingTypeIndexMap[nt.name] !== undefined) {
       mergedTypes[existingTypeIndexMap[nt.name]] = nt;
       overlappingTypenames.push(nt.name);
@@ -48,9 +48,9 @@ export const mergeCustomTypes = (newTypesList, existingTypesList) => {
   };
 };
 
-export const reformCustomTypes = (typesFromState) => {
+export const reformCustomTypes = typesFromState => {
   const sanitisedTypes = [];
-  typesFromState.forEach((t) => {
+  typesFromState.forEach(t => {
     if (!t.name) {
       return;
     }
@@ -72,7 +72,7 @@ export const reformCustomTypes = (typesFromState) => {
     enums: [],
   };
 
-  sanitisedTypes.forEach((_type) => {
+  sanitisedTypes.forEach(_type => {
     const type = JSON.parse(JSON.stringify(_type));
     delete type.kind;
     switch (_type.kind) {
@@ -96,12 +96,12 @@ export const reformCustomTypes = (typesFromState) => {
   return customTypes;
 };
 
-export const parseCustomTypes = (customTypesServer) => {
+export const parseCustomTypes = customTypesServer => {
   const customTypesClient = [];
-  Object.keys(customTypesServer).forEach((tk) => {
+  Object.keys(customTypesServer).forEach(tk => {
     const types = customTypesServer[tk];
     if (types) {
-      types.forEach((t) => {
+      types.forEach(t => {
         customTypesClient.push({
           ...t,
           kind: singularize(tk),
@@ -116,21 +116,21 @@ export const getActionTypes = (actionDef, allTypes) => {
   const usedTypes = {};
   const actionTypes = [];
 
-  const getDependentTypes = (typename) => {
+  const getDependentTypes = typename => {
     if (usedTypes[typename]) return;
-    const type = allTypes.find((t) => t.name === typename);
+    const type = allTypes.find(t => t.name === typename);
     if (!type) return;
     actionTypes.push(type);
     usedTypes[typename] = true;
     if (type.kind === 'input_object' || type.kind === 'object') {
-      type.fields.forEach((f) => {
+      type.fields.forEach(f => {
         const { typename: _typename } = unwrapType(f.type);
         getDependentTypes(_typename);
       });
     }
   };
 
-  actionDef.arguments.forEach((a) => {
+  actionDef.arguments.forEach(a => {
     const { typename } = unwrapType(a.type);
     getDependentTypes(typename);
   });
@@ -142,11 +142,11 @@ export const getActionTypes = (actionDef, allTypes) => {
 
 export const hydrateTypeRelationships = (newTypes, existingTypes) => {
   const typeMap = {};
-  existingTypes.forEach((t) => {
+  existingTypes.forEach(t => {
     typeMap[t.name] = t;
   });
 
-  return newTypes.map((t) => {
+  return newTypes.map(t => {
     if (t.kind === 'object' && typeMap[t.name]) {
       return {
         ...t,

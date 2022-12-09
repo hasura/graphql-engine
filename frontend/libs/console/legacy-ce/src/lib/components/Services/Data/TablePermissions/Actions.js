@@ -95,35 +95,35 @@ const permToggleSelectField = (fieldType, fieldName) => ({
   fieldType,
   fieldName,
 });
-const permToggleAllFields = (allFields) => ({
+const permToggleAllFields = allFields => ({
   type: PERM_TOGGLE_ALL_FIELDS,
   allFields,
 });
-const permAllowAll = (filterType) => ({ type: PERM_ALLOW_ALL, filterType });
+const permAllowAll = filterType => ({ type: PERM_ALLOW_ALL, filterType });
 const permCloseEdit = () => ({ type: PERM_CLOSE_EDIT });
-const permSetRoleName = (roleName) => ({
+const permSetRoleName = roleName => ({
   type: PERM_SET_ROLE_NAME,
   data: roleName,
 });
 const _permSavePermissions = () => ({ type: PERM_SAVE_PERMISSIONS });
 const _permRemoveAccess = () => ({ type: PERM_REMOVE_ACCESS });
-const permToggleAllowUpsert = (checked) => ({
+const permToggleAllowUpsert = checked => ({
   type: PERM_TOGGLE_ALLOW_UPSERT,
   data: checked,
 });
-const permToggleAllowAggregation = (checked) => ({
+const permToggleAllowAggregation = checked => ({
   type: PERM_TOGGLE_ALLOW_AGGREGATION,
   data: checked,
 });
 export const permToggleBackendOnly = () => ({
   type: PERM_TOGGLE_BACKEND_ONLY,
 });
-const permToggleModifyLimit = (limit) => ({
+const permToggleModifyLimit = limit => ({
   type: PERM_TOGGLE_MODIFY_LIMIT,
   data: limit,
 });
 const permSetBulkSelect = (isChecked, selectedRole) => {
-  return (dispatch) => {
+  return dispatch => {
     if (isChecked) {
       dispatch({ type: PERM_SELECT_BULK, data: selectedRole });
     } else {
@@ -133,16 +133,16 @@ const permSetBulkSelect = (isChecked, selectedRole) => {
 };
 const permSetApplySamePerm = (index, key, value) => {
   const data = { index, key, value };
-  return (dispatch) => {
+  return dispatch => {
     dispatch({ type: PERM_SET_APPLY_SAME_PERM, data: data });
   };
 };
-const permDelApplySamePerm = (index) => {
-  return (dispatch) => {
+const permDelApplySamePerm = index => {
+  return dispatch => {
     dispatch({ type: PERM_DEL_APPLY_SAME_PERM, data: index });
   };
 };
-const permCustomChecked = (filterType) => ({
+const permCustomChecked = filterType => ({
   type: PERM_CUSTOM_CHECKED,
   filterType,
 });
@@ -155,11 +155,11 @@ const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   _permissions.query = query;
 
   const rolePermissions = tableSchema.permissions.find(
-    (p) => p.role_name === role
+    p => p.role_name === role
   );
 
   if (rolePermissions) {
-    Object.keys(rolePermissions.permissions).forEach((q) => {
+    Object.keys(rolePermissions.permissions).forEach(q => {
       _permissions[q] = rolePermissions.permissions[q];
 
       if (q === 'insert' || q === 'update') {
@@ -189,7 +189,7 @@ export const modifyRootPermissionState = (
   const subscription_root_fields = state.select?.subscription_root_fields;
   const query_root_fields = state.select?.query_root_fields;
 
-  return produce(state, (draft) => {
+  return produce(state, draft => {
     if (query_root_fields !== null)
       draft.select.query_root_fields = getNewRootPermissionState(
         query_root_fields,
@@ -222,7 +222,7 @@ const updateBulkSelect = (permissionsState, selectedRole, isAdd) => {
   if (isAdd) {
     bulkRes.push(selectedRole);
   } else {
-    bulkRes = bulkRes.filter((e) => e !== selectedRole);
+    bulkRes = bulkRes.filter(e => e !== selectedRole);
   }
   return bulkRes;
 };
@@ -248,7 +248,7 @@ const updateApplySamePerms = (permissionsState, data, isDelete) => {
   return applySamePerms;
 };
 
-const deleteFromPermissionsState = (permissions) => {
+const deleteFromPermissionsState = permissions => {
   const _permissions = JSON.parse(JSON.stringify(permissions));
 
   const query = permissions.query;
@@ -262,7 +262,7 @@ const deleteFromPermissionsState = (permissions) => {
 const toggleAllFields = (permissions, allFields, fieldType) => {
   let allFieldsSelected = true;
 
-  Object.keys(allFields).forEach((fType) => {
+  Object.keys(allFields).forEach(fType => {
     const currSelected =
       permissions && permissions[fType] ? permissions[fType] : [];
 
@@ -302,7 +302,7 @@ const permRemoveRole = (tableSchema, roleName) => {
     const role = roleName;
 
     const currRolePermissions = tableSchema.permissions.find(
-      (p) => p.role_name === role
+      p => p.role_name === role
     );
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -316,7 +316,7 @@ const permRemoveRole = (tableSchema, roleName) => {
     );
 
     if (currRolePermissions && currRolePermissions.permissions) {
-      Object.keys(currRolePermissions.permissions).forEach((type) => {
+      Object.keys(currRolePermissions.permissions).forEach(type => {
         const deleteQuery = getDropPermissionQuery(
           type,
           tableDef,
@@ -367,7 +367,7 @@ const permRemoveRole = (tableSchema, roleName) => {
   };
 };
 
-const permRemoveMultipleRoles = (tableSchema) => {
+const permRemoveMultipleRoles = tableSchema => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
@@ -389,11 +389,11 @@ const permRemoveMultipleRoles = (tableSchema) => {
       currentDriver
     );
 
-    roles.map((role) => {
-      const currentRolePermission = currentPermissions.filter((el) => {
+    roles.map(role => {
+      const currentRolePermission = currentPermissions.filter(el => {
         return el.role_name === role;
       });
-      Object.keys(currentRolePermission[0].permissions).forEach((type) => {
+      Object.keys(currentRolePermission[0].permissions).forEach(type => {
         const deleteQuery = getDropPermissionQuery(
           type,
           tableDef,
@@ -453,7 +453,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
     const toBeAppliedPermission = permissionsState[currentQueryType];
 
     const permApplyToList = permissionsState.applySamePermissions.filter(
-      (applyTo) => applyTo.table && applyTo.action && applyTo.role
+      applyTo => applyTo.table && applyTo.action && applyTo.role
     );
 
     const tableDef = getQualifiedTableDef(
@@ -476,7 +476,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
-    permApplyToList.map((applyTo) => {
+    permApplyToList.map(applyTo => {
       const currTableSchema = findTable(
         allSchemas,
         generateTableDef(applyTo.table, currentSchema)
@@ -487,7 +487,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
       };
 
       const currentPermPermission = currTableSchema.permissions.find(
-        (el) => el.role_name === applyTo.role
+        el => el.role_name === applyTo.role
       );
 
       if (
@@ -575,7 +575,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
   };
 };
 
-export const isQueryTypeBackendOnlyCompatible = (queryType) => {
+export const isQueryTypeBackendOnlyCompatible = queryType => {
   return ['insert', 'update', 'delete'].includes(queryType);
 };
 
@@ -601,7 +601,7 @@ const copyRolePermissions = (
       tables = [findTable(allSchemas, fromTableDef)];
     }
 
-    tables.forEach((table) => {
+    tables.forEach(table => {
       const tableDef = getTableDef(table);
 
       let actions;
@@ -611,8 +611,8 @@ const copyRolePermissions = (
         actions = [action];
       }
 
-      toRoles.forEach((toRole) => {
-        actions.forEach((_action) => {
+      toRoles.forEach(toRole => {
+        actions.forEach(_action => {
           const currPermissions = getTablePermissions(table, toRole, _action);
           const toBeAppliedPermissions = getTablePermissions(
             table,
@@ -695,7 +695,7 @@ const copyRolePermissions = (
   };
 };
 
-const deleteRoleGlobally = (roleName) => {
+const deleteRoleGlobally = roleName => {
   return (dispatch, getState) => {
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -706,12 +706,12 @@ const deleteRoleGlobally = (roleName) => {
 
     const tables = getSchemaTables(allSchemas, currentSchema);
 
-    tables.forEach((table) => {
+    tables.forEach(table => {
       const tableDef = getTableDef(table);
 
       const actions = ['select', 'insert', 'update', 'delete'];
 
-      actions.forEach((_action) => {
+      actions.forEach(_action => {
         const currPermissions = getTablePermissions(table, roleName, _action);
 
         if (currPermissions) {
@@ -765,7 +765,7 @@ const deleteRoleGlobally = (roleName) => {
   };
 };
 
-const permChangePermissions = (changeType) => {
+const permChangePermissions = changeType => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
@@ -783,10 +783,10 @@ const permChangePermissions = (changeType) => {
     const query = permissionsState.query;
 
     const tableSchema = allSchemas.find(
-      (t) => t.table_name === table && t.table_schema === currentSchema
+      t => t.table_name === table && t.table_schema === currentSchema
     );
     const currRolePermissions = tableSchema.permissions.find(
-      (p) => p.role_name === role
+      p => p.role_name === role
     );
     if (query === 'select' && !limitEnabled) {
       delete permissionsState[query].limit;

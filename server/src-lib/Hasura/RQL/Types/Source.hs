@@ -131,6 +131,7 @@ data ResolvedSource b = ResolvedSource
     _rsFunctions :: DBFunctionsMetadata b,
     _rsScalars :: ScalarMap b
   }
+  deriving (Eq)
 
 instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
@@ -144,6 +145,8 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
 -- | A map from GraphQL name to equivalent scalar type for a given backend.
 data ScalarMap b where
   ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
+
+deriving stock instance Eq (ScalarMap b)
 
 instance Backend b => Semigroup (ScalarMap b) where
   ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2

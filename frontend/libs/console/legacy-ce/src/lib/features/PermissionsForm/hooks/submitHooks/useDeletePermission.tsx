@@ -1,72 +1,92 @@
-import {
-  useMetadataVersion,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
-import { useAppSelector } from '@/store';
-import { currentDriver } from '@/dataSources';
+import { useQueryClient } from 'react-query';
+import { useMetadataMigration } from '@/features/MetadataAPI';
+import { exportMetadata } from '@/features/DataSource';
+import { useFireNotification } from '@/new-components/Notifications';
+
+import { useHttpClient } from '@/features/Network';
 
 import { QueryType } from '../../types';
 import { api } from '../../api';
-import { NewDataTarget } from '../../../PermissionsTab/types/types';
 
 export interface UseDeletePermissionArgs {
-  dataTarget: NewDataTarget;
+  dataSourceName: string;
+  table: unknown;
   roleName: string;
 }
 
-const useDataTarget = () => {
-  const dataSource: string = useAppSelector(
-    (state) => state.tables.currentDataSource || 'default'
-  );
-
-  const driver = currentDriver;
-
-  const { data: resourceVersion, isLoading, isError } = useMetadataVersion();
-
-  if (!resourceVersion && !isLoading) {
-    throw new Error('No resource version');
-  }
-
-  return {
-    driver,
-    dataSource,
-    resourceVersion,
-    isLoading,
-    isError,
-  };
-};
-
 export const useDeletePermission = ({
-  dataTarget,
+  dataSourceName,
+  table,
   roleName,
 }: UseDeletePermissionArgs) => {
-  const {
-    resourceVersion,
-    isLoading: dataTargetLoading,
-    isError: dataTargetError,
-  } = useDataTarget();
   const mutate = useMetadataMigration();
+  const httpClient = useHttpClient();
+  const queryClient = useQueryClient();
+  const { fireNotification } = useFireNotification();
 
   const submit = async (queries: QueryType[]) => {
+    const { resource_version: resourceVersion, metadata } =
+      await exportMetadata({
+        httpClient,
+      });
+
     if (!resourceVersion) {
       console.error('No resource version');
       return;
     }
 
+    const driver = metadata.sources.find(s => s.name === dataSourceName)?.kind;
+
+    if (!driver) throw Error('Unable to find driver in metadata');
+
     const body = api.createDeleteBody({
-      dataTarget,
+      driver,
+      dataSourceName,
+      table,
       roleName,
       resourceVersion,
       queries,
     });
 
-    await mutate.mutateAsync({
-      query: body,
-    });
+    await mutate.mutateAsync(
+      {
+        query: body,
+      },
+      {
+        onSuccess: () => {
+          fireNotification({
+            type: 'success',
+            title: 'Success!',
+            message: 'Permissions successfully deleted',
+          });
+        },
+        onError: err => {
+          fireNotification({
+            type: 'error',
+            title: 'Error!',
+            message:
+              err?.message ?? 'Something went wrong while deleting permissions',
+          });
+        },
+        onSettled: async () => {
+          await queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionFormData',
+            JSON.stringify(table),
+          ]);
+
+          await queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionsTable',
+            JSON.stringify(table),
+          ]);
+        },
+      }
+    );
   };
 
-  const isLoading = mutate.isLoading || dataTargetLoading;
-  const isError = mutate.isError || dataTargetError;
+  const isLoading = mutate.isLoading;
+  const isError = mutate.isError;
 
   return {
     submit,

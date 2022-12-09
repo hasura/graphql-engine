@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-restricted-imports
 import { runSQL, RunSQLResponse } from '@/features/DataSource/api';
-import { SupportedDrivers } from '@/features/MetadataAPI';
+import { SupportedDrivers } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useCallback, useState } from 'react';
 

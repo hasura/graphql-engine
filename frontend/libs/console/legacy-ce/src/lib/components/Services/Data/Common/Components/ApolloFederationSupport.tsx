@@ -4,13 +4,13 @@ import { useServerConfig } from '@/hooks';
 import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
-type ApolloFederationSupportProps = {
-  toggleApollofederation: () => void;
+export type ApolloFederationSupportProps = {
+  toggleApolloFederation: () => void;
   isApolloFederationSupported: boolean;
 };
 
 export const ApolloFederationSupport = ({
-  toggleApollofederation,
+  toggleApolloFederation,
   isApolloFederationSupported,
 }: ApolloFederationSupportProps) => {
   const { data: configData, isLoading, isError } = useServerConfig();
@@ -49,7 +49,7 @@ export const ApolloFederationSupport = ({
         <div data-toggle="tooltip">
           <Toggle
             icons={false}
-            onChange={() => toggleApollofederation()}
+            onChange={() => toggleApolloFederation()}
             checked={isApolloFederationSupported}
           />
         </div>

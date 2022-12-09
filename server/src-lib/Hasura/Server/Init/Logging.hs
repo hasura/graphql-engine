@@ -8,7 +8,6 @@ module Hasura.Server.Init.Logging
 
     -- * Log Construction
     mkGenericLog,
-    mkGenericStrLog,
     connInfoToLog,
     serveOptsToLog,
     StartupTimeInfo (..),
@@ -120,10 +119,6 @@ serveOptsToLog so =
           "websocket_connection_init_timeout" .= show (Config.soWebSocketConnectionInitTimeout so),
           "enable_metadata_query_logging" .= Config.soEnableMetadataQueryLogging so
         ]
-
-mkGenericStrLog :: Logging.LogLevel -> Text -> String -> Server.Logging.StartupLog
-mkGenericStrLog logLevel k msg =
-  Server.Logging.StartupLog logLevel k $ Aeson.toJSON msg
 
 mkGenericLog :: ToJSON a => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog
 mkGenericLog logLevel k msg =

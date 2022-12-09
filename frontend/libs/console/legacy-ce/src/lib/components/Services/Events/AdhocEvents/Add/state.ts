@@ -33,15 +33,14 @@ export const useAdhocEventAdd = () => {
   return {
     state,
     setState: {
-      webhook: (webhook: string) => setState((s) => ({ ...s, webhook })),
-      time: (time: Date) => setState((s) => ({ ...s, time })),
-      payload: (payload: string) => setState((s) => ({ ...s, payload })),
-      headers: (headers: Header[]) => setState((s) => ({ ...s, headers })),
-      retryConf: (retryConf: RetryConf) =>
-        setState((s) => ({ ...s, retryConf })),
-      comment: (comment: string) => setState((s) => ({ ...s, comment })),
+      webhook: (webhook: string) => setState(s => ({ ...s, webhook })),
+      time: (time: Date) => setState(s => ({ ...s, time })),
+      payload: (payload: string) => setState(s => ({ ...s, payload })),
+      headers: (headers: Header[]) => setState(s => ({ ...s, headers })),
+      retryConf: (retryConf: RetryConf) => setState(s => ({ ...s, retryConf })),
+      comment: (comment: string) => setState(s => ({ ...s, comment })),
       loading: (isLoading: boolean) =>
-        setState((s) => ({ ...s, loading: isLoading })),
+        setState(s => ({ ...s, loading: isLoading })),
       bulk: (newState?: LocalAdhocEventState) =>
         setState(newState || defaultState),
     },

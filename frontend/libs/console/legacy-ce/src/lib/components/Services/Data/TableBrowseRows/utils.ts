@@ -28,9 +28,9 @@ export const getTableConfiguration = (
     currentDataSource,
   } = tables;
   return sources
-    ?.find((s) => s.name === currentDataSource)
+    ?.find(s => s.name === currentDataSource)
     ?.tables.find(
-      (t) => originalTable === t.table.name && currentSchema === t.table.schema
+      t => originalTable === t.table.name && currentSchema === t.table.schema
     )?.configuration;
 };
 
@@ -42,14 +42,14 @@ export const compareRows = (
 ) => {
   let same = true;
   if (!isView && isTableWithPK(tableSchema)) {
-    tableSchema.primary_key.columns.forEach((pk) => {
+    tableSchema.primary_key.columns.forEach(pk => {
       if (row1[pk] !== row2[pk]) {
         same = false;
       }
     });
     return same;
   }
-  tableSchema.columns.forEach((k) => {
+  tableSchema.columns.forEach(k => {
     if (row1[k.column_name] !== row2[k.column_name]) {
       same = false;
     }

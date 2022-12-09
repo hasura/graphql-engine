@@ -6,7 +6,7 @@ import { getRemoteSchemaIntrospectionQuery } from '../../../metadata/queryUtils'
 
 // local cache where introspection schema is cached
 let introspectionSchemaCache = {};
-export const clearIntrospectionSchemaCache = (remoteSchemaName) => {
+export const clearIntrospectionSchemaCache = remoteSchemaName => {
   if (remoteSchemaName) {
     delete introspectionSchemaCache[remoteSchemaName];
   } else {
@@ -56,13 +56,13 @@ export const useIntrospectionSchemaRemote = (
         true
       )
     )
-      .then((response) => {
+      .then(response => {
         const clientSchema = buildClientSchema(response.data);
         setSchema(clientSchema);
         introspectionSchemaCache[remoteSchemaName] = clientSchema;
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
         setError(err);
         setLoading(false);
@@ -80,7 +80,7 @@ export const useIntrospectionSchemaRemote = (
 };
 
 // get underlying GraphQL type if it is wrapped type
-export const getUnderlyingType = (t) => {
+export const getUnderlyingType = t => {
   let currentType = t;
   while (isWrappingType(currentType)) {
     currentType = currentType.ofType;
@@ -93,7 +93,7 @@ export const getTypeFields = (typeName, objectTypes) => {
   const fields = {};
   if (objectTypes[typeName]) {
     const type = getUnderlyingType(objectTypes[typeName]);
-    Object.keys(type._fields).forEach((field) => {
+    Object.keys(type._fields).forEach(field => {
       const fieldType = getUnderlyingType(type._fields[field].type);
       fields[field] = {
         typeName: fieldType.name,

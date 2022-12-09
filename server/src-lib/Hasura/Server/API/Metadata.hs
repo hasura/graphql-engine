@@ -385,7 +385,22 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
         RMV2 (RMV2ExportMetadata _) -> True
         _ -> False
       metadataDefaults =
-        if (exportsMetadata _rqlMetadata)
+        -- Note: The following check is performed to determine if the metadata defaults can
+        --       be safely merged into the reader at this point.
+        --
+        -- We want to prevent scenarios:
+        -- \* Exporting defaults - Contradicting the "roundtrip" principle of metadata operations
+        -- \* Serializing defaults into the metadata storage - Putting data into the users hdb_catalog
+        --
+        -- While this check does have the desired effect it relies on the fact that the only
+        -- operations that need access to the defaults here do not export or modify metadata.
+        -- If at some point in future an operation needs access to the defaults and also needs to
+        -- export/modify metadata, then another approach will need to be taken.
+        --
+        -- Luckily, most actual need for defaults access exists within the schema cache build phase,
+        -- so metadata operations don't need "smarts" that require defaults access.
+        --
+        if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else _sccMetadataDefaults serverConfigCtx
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
@@ -401,6 +416,10 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
+        L.unLogger logger $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
+              "Attempting to put new metadata in storage"
         newResourceVersion <-
           Tracing.trace "setMetadata" $
             setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
@@ -602,7 +621,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
-  RMGetSourceTables q -> runGetSourceTables q
+  RMGetSourceTables q -> runGetSourceTables env q
   RMGetTableInfo q -> runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
@@ -755,5 +774,5 @@ runMetadataQueryV2M ::
   RQLMetadataV2 ->
   m EncJSON
 runMetadataQueryV2M currentResourceVersion = \case
-  RMV2ReplaceMetadata q -> runReplaceMetadataV2 q
+  RMV2ReplaceMetadata q -> runReplaceMetadataV2 DeleteEventTriggerCleanupSchedules q
   RMV2ExportMetadata q -> runExportMetadataV2 currentResourceVersion q

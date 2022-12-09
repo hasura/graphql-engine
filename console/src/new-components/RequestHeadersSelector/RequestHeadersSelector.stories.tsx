@@ -125,7 +125,13 @@ Primary.play = async ({ args, canvasElement }) => {
 
   await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
 
-  expect(args.onSubmit).toBeCalledWith(
-    expect.objectContaining([{ ...submittedHeaders }])
-  );
+  // ATTENTION: The more idiomatic version of this assertion is:
+  //  expect(args.onSubmit).toBeCalledWith(
+  // expect.objectContaining({ ...submittedHeaders })
+  //  );
+  // but at the time of writing, I (Stefano Magni) cannot get why it fails.
+  // Hence the need to access mock.calls directly
+
+  const formHeaders = args.onSubmit.mock.calls[0][0];
+  expect(formHeaders).toMatchObject(submittedHeaders);
 };

@@ -1,5 +1,5 @@
 import { OrderBy, TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { Dialog } from '@/new-components/Dialog';
 import { UpdatedForm } from '@/new-components/Form';
 import React from 'react';
@@ -35,9 +35,7 @@ const transformFilterValues = (
   columns: TableColumn[],
   filter: FilterClause
 ) => {
-  const column = columns.find(
-    (x) => x.graphQLProperties?.name === filter.column
-  );
+  const column = columns.find(x => x.graphQLProperties?.name === filter.column);
 
   if (!column) return filter;
 
@@ -95,7 +93,7 @@ export const QueryDialog = ({
   ) => {
     if (await trigger()) {
       onSubmit({
-        filters: (filters ?? []).map((f) => transformFilterValues(columns, f)),
+        filters: (filters ?? []).map(f => transformFilterValues(columns, f)),
         sorts: sorts ?? [],
       });
     }

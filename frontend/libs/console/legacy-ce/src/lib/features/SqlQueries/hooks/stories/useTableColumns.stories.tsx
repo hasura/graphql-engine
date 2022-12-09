@@ -25,7 +25,7 @@ function FetchTableColumnsComponent({
 
 export const FetchTableColumns: ComponentStory<
   typeof FetchTableColumnsComponent
-> = (args) => {
+> = args => {
   return <FetchTableColumnsComponent {...args} />;
 };
 

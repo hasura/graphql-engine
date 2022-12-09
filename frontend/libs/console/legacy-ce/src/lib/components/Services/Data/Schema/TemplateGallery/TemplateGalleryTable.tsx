@@ -82,7 +82,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
           </tr>
         </thead>
         <tbody className={styles.template_table}>
-          {templateForDb.map((section) => (
+          {templateForDb.map(section => (
             <Fragment key={section.name}>
               <tr key={section.name}>
                 <td colSpan={3} className={styles.td}>
@@ -91,7 +91,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
                   </span>
                 </td>
               </tr>
-              {section.templates.map((template) => (
+              {section.templates.map(template => (
                 <TemplateGalleryContentRow
                   key={template.key}
                   template={template}

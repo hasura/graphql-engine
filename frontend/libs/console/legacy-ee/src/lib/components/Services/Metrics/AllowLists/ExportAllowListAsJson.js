@@ -4,7 +4,7 @@ import { useLazyQuery } from '@apollo/react-hooks';
 import { exportAsAllowList } from './graphql.queries';
 import { ExportList } from '../Common/ExportList';
 
-const exportToJson = (objectData) => {
+const exportToJson = objectData => {
   const filename = 'allow-list.json';
   const contentType = 'application/json;charset=utf-8;';
   if (window.navigator && window.navigator.msSaveOrOpenBlob) {
@@ -33,14 +33,14 @@ const ExportAllowList = ({ name, projectId }) => {
     name,
     projectId,
   };
-  const onCompleted = (data) => {
+  const onCompleted = data => {
     if (data.exportAllowList.length > 0) {
       exportToJson(data.exportAllowList);
       return;
     }
   };
 
-  const onError = (error) => {
+  const onError = error => {
     alert(error);
   };
   const [exportAsAllowListQuery, { loading }] = useLazyQuery(

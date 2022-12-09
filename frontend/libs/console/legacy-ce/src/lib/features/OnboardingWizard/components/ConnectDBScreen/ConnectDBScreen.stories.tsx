@@ -11,34 +11,16 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof ConnectDBScreen>;
 
-export const WithoutNeon: Story = () => (
+export const Base: Story = () => (
   <ConnectDBScreen
     proceed={() => {}}
     dismissOnboarding={() => {}}
-    dispatch={() => {}}
-    hasNeonAccess={!true}
-    setStepperIndex={() => {}}
-  />
-);
-
-WithoutNeon.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  // Expect element renders successfully
-  expect(canvas.getByText('Connect Your Database')).toBeVisible();
-};
-
-export const WithNeon: Story = () => (
-  <ConnectDBScreen
-    proceed={() => {}}
-    dismissOnboarding={() => {}}
-    hasNeonAccess
     dispatch={() => {}}
     setStepperIndex={() => {}}
   />
 );
 
-WithNeon.play = async ({ canvasElement }) => {
+Base.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // Expect element renders successfully, these texts are highly dynamic

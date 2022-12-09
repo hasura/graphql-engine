@@ -6,6 +6,7 @@ module Hasura.Backends.DataConnector.API
     Api,
     CapabilitiesResponses,
     QueryResponses,
+    MutationResponses,
     SchemaApi,
     SchemaResponses,
     QueryApi,
@@ -98,6 +99,8 @@ queryCase defaultAction queryAction errorAction union = do
 
 type QueryResponses = '[V0.QueryResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
+type MutationResponses = '[V0.MutationResponse, V0.ErrorResponse, V0.ErrorResponse400]
+
 type QueryApi =
   "query"
     :> SourceNameHeader Required
@@ -111,6 +114,13 @@ type ExplainApi =
     :> ConfigHeader Required
     :> ReqBody '[JSON] V0.QueryRequest
     :> Post '[JSON] V0.ExplainResponse
+
+type MutationApi =
+  "mutation"
+    :> SourceNameHeader Required
+    :> ConfigHeader Required
+    :> ReqBody '[JSON] V0.MutationRequest
+    :> UVerb 'POST '[JSON] MutationResponses
 
 type HealthApi =
   "health"
@@ -158,18 +168,20 @@ data Routes mode = Routes
     _query :: mode :- QueryApi,
     -- | 'POST /explain'
     _explain :: mode :- ExplainApi,
+    -- | 'POST /mutation'
+    _mutation :: mode :- MutationApi,
     -- | 'GET /health'
     _health :: mode :- HealthApi,
     -- | 'GET /metrics'
     _metrics :: mode :- MetricsApi,
-    -- | 'GET /metrics'
+    -- | 'GET /raw'
     _raw :: mode :- RawApi
   }
   deriving stock (Generic)
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> HealthApi :<|> MetricsApi :<|> RawApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> MutationApi :<|> HealthApi :<|> MetricsApi :<|> RawApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

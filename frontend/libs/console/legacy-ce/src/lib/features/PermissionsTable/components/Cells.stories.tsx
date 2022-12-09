@@ -24,7 +24,7 @@ export default {
   parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
-export const InputCellComponent: Story<InputCellProps> = (args) => {
+export const InputCellComponent: Story<InputCellProps> = args => {
   const machine = useTableMachine();
 
   return <InputCell {...args} machine={machine} />;
@@ -36,7 +36,7 @@ InputCellComponent.args = {
   isSelected: true,
 };
 
-export const InputCellComponentNewRole: Story<InputCellProps> = (args) => {
+export const InputCellComponentNewRole: Story<InputCellProps> = args => {
   const machine = useTableMachine();
 
   return <InputCell {...args} machine={machine} />;
@@ -48,7 +48,7 @@ InputCellComponentNewRole.args = {
   isSelected: true,
 };
 
-export const EditableCellComponent: Story<EditableCellProps> = (args) => (
+export const EditableCellComponent: Story<EditableCellProps> = args => (
   <table>
     <thead>
       <tr>

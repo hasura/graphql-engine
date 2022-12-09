@@ -68,6 +68,7 @@ let
   devInputs = [
     pkgs.nixpkgs-fmt
     pkgs.shellcheck
+    pkgs.terraform
   ];
 
   ciInputs = [

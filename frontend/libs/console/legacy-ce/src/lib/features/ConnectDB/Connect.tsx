@@ -58,9 +58,9 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
       options={{
         defaultValues,
       }}
-      className="p-0 pl-sm"
+      className="pl-sm"
     >
-      {(options) => {
+      {options => {
         return (
           <div>
             <InputField type="text" name="name" label="Database Display Name" />

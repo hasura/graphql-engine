@@ -20,7 +20,11 @@ import {
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { nativeDrivers } from '@/features/DataSource';
 import { getProjectId } from '@/utils/cloudConsole';
-import { TaskEvent, useCheckDatabaseLatency } from '@/features/ConnectDB';
+import {
+  CheckDatabaseLatencyResponse,
+  useCheckDatabaseLatency,
+  useUpdateProjectRegionChangeStat,
+} from '@/features/ConnectDB';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { isCloudConsole } from '@/utils';
 import globals from '@/Globals';
@@ -339,20 +343,21 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
 
   const [fireLatencyRequest, setFireLatencyRequest] = useState(false);
 
-  const queryResponse = useCheckDatabaseLatency(
-    fireLatencyRequest,
-    dataHeaders
-  );
+  const queryResponse = useCheckDatabaseLatency(fireLatencyRequest);
 
   const checkDatabaseLatency = () => {
     setFireLatencyRequest(true);
   };
+
+  const insertProjectRegionChangeStatMutation =
+    useUpdateProjectRegionChangeStat();
 
   const openUpdateProjectRegionPage = () => {
     const projectId = getProjectId(globals);
     if (!projectId) {
       return;
     }
+    insertProjectRegionChangeStatMutation.mutate(queryResponse.data);
 
     const cloudDetailsPage = `${window.location.protocol}//${window.location.host}/project/${projectId}/details?open_update_region_drawer=true`;
 
@@ -364,7 +369,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   );
 
   const [latencyCheckData, setLatencyCheckData] = useState<
-    TaskEvent | undefined
+    CheckDatabaseLatencyResponse | undefined
   >(undefined);
 
   const [showErrorIndicator, setShowErrorIndicator] = useState(false);
@@ -381,7 +386,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   }, [queryResponse.isSuccess, queryResponse.data]);
 
   const showAccelerateProjectSection =
-    !showCheckLatencyButton && !checkHighLatencySources(latencyCheckData);
+    isCloudConsole(globals) &&
+    !showCheckLatencyButton &&
+    !checkHighLatencySources(latencyCheckData);
 
   return (
     <RightContainer>

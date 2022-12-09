@@ -210,7 +210,7 @@ validateUpdateQuery ::
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 

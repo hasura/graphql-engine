@@ -65,7 +65,7 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
             defaultState.cleanupConfig.clear_older_than?.toString() || ''
           }
           value={cleanupConfig.clear_older_than?.toString() || ''}
-          onChange={(value) => {
+          onChange={value => {
             onChange({
               ...cleanupConfig,
               clear_older_than: value ? parseInt(value, 10) : undefined,
@@ -77,7 +77,7 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
           tooltip="Cron expression at which the cleanup should be invoked."
           placeholder={defaultState.cleanupConfig.timeout?.toString() || ''}
           value={cleanupConfig.schedule?.toString() || ''}
-          onChange={(value) => {
+          onChange={value => {
             onChange({
               ...cleanupConfig,
               schedule: value,
@@ -88,7 +88,7 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
         <div className="my-sm">
           <DropdownButton
             items={[
-              crons.map((cron) => (
+              crons.map(cron => (
                 <div
                   key={cron.value}
                   onClick={() => {
@@ -122,7 +122,7 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
             tooltip="Timeout for the query (in seconds, default: 60)"
             placeholder={defaultState.cleanupConfig.timeout?.toString() || ''}
             value={cleanupConfig.timeout?.toString() || ''}
-            onChange={(value) => {
+            onChange={value => {
               onChange({
                 ...cleanupConfig,
                 timeout: value ? parseInt(value, 10) : undefined,
@@ -137,7 +137,7 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
               defaultState.cleanupConfig.batch_size?.toString() || ''
             }
             value={cleanupConfig.batch_size?.toString() || ''}
-            onChange={(value) => {
+            onChange={value => {
               onChange({
                 ...cleanupConfig,
                 batch_size: value ? parseInt(value, 10) : undefined,

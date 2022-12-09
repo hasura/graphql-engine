@@ -65,7 +65,14 @@ export function getWizardState(
   // if onbarding data is not present due to api error, or data loading state, then hide the wizard
   // this early return is required to distinguish between server errors vs data not being present for user
   // if the request is successful and data is not present for the given user, then we should show the onboarding wizard
-  if (!onboardingData) return 'hidden';
+  if (!onboardingData?.data) return 'hidden';
+
+  // if user created account before the launch of onboarding wizard (Oct 17, 2022),
+  // hide the wizard and survey
+  const userCreatedAt = new Date(onboardingData.data.users[0].created_at);
+  if (userCreatedAt.getTime() < 1666008600000) {
+    return 'hidden';
+  }
 
   // transform the onboarding data if present, to a consumable format
   const transformedOnboardingData = onboardingDataTransformFn(onboardingData);

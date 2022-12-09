@@ -1,0 +1,122 @@
+---
+sidebar_label: Removing Event Triggers
+sidebar_position: 1
+description: Remove Event Triggers
+keywords:
+  - hasura
+  - docs
+  - event trigger
+  - cleanup
+  - delete
+---
+
+import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem'; import Thumbnail from
+'@site/src/components/Thumbnail';
+
+# Removing Event Triggers
+
+## Removing an Event Trigger via metadata API
+
+An Event Trigger can be removed using the following metadata API **only when the metadata is consistent with the
+database**.
+
+- **delete_event_trigger**: Refer to the
+  [pg_delete_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-delete-event-trigger) API to
+  remove an Event Trigger in a Postgres source
+- **untrack_table**: Refer to the
+  [pg_untrack_table](/api-reference/metadata-api/table-view.mdx/#metadata-pg-untrack-table) API to untrack a table
+  present in a Postgres source
+- **drop_source**: Refer to the [pg_drop_source](/api-reference/metadata-api/source.mdx/#metadata-pg-drop-source) API to
+  drop a Postgres source
+
+The following metadata APIs can be used to remove an Event Trigger even with inconsistent metadata, although it may
+leave a Hasura footprint in the database:
+
+- **replace_metadata**: Refer to the
+  [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx/#metadata-replace-metadata) API to replace an
+  existing metadata with new metadata
+- **clear_metadata**: Refer to the
+[clear_metadata](/api-reference/metadata-api/manage-metadata.mdx/#metadata-clear-metadata) to clear the metadata
+
+Refer to the following sections on cleaning up Hasura footprints manually from the database.
+
+## Clean up Event Trigger footprints manually
+
+When an Event Trigger is created, Hasura creates SQL triggers on the table corresponding to each operation mentioned in
+the Event Trigger configuration (INSERT/UPDATE/DELETE). 
+
+When an inconsistent Table/Event Trigger is removed via the `replace_metadata` API, it may leave orphaned SQL triggers
+in the database. The following command can be used to manually delete SQL triggers corresponding to an Event Trigger on
+a table:
+
+```sql
+DROP FUNCTION hdb_catalog."notify_hasura_<event-trigger-name>_<OPERATION-NAME>" CASCADE;
+```
+
+For example: to delete SQL triggers corresponding to an Event Trigger: `users_all` on a table: `users` with operation:
+`INSERT` in the Event Trigger configuration:
+
+```sql
+DROP FUNCTION hdb_catalog."notify_hasura_users_all_INSERT" CASCADE;
+```
+
+:::info Note
+
+The SQL trigger should be deleted for each operation mentioned in the Event Trigger configuration, i.e.
+INSERT/UPDATE/DELETE
+
+:::
+
+## Clean up Hasura footprints from a source manually {#clean-footprints-manually}
+
+When an inconsistent source is dropped, it may leave Hasura footprint in the database due to Event Triggers. The
+following can be used to remove all footprint of Event Triggers present in a source from the database:
+
+### Case 1: When using a different metadata database from the source database
+
+In this case, `hdb_metadata` table is not present in `hdb_catalog` schema of the source.
+
+To clean up Hasura footprint completely, drop the `hdb_catalog` schema:
+
+```sql
+DROP SCHEMA IF EXISTS hdb_catalog;
+```
+
+### Case 2: When the metadata database and source database are the same
+
+In this case, a `hdb_metadata` table is present in `hdb_catalog` schema of the source. You may want to preserve the
+metadata but remove the remaining Hasura footprint of a few tables for Event Triggers and corresponding SQL triggers.
+
+**Step 1:** In order to drop the SQL triggers corresponding to Event Triggers created, please refer to the [clean up
+Event Trigger footprints manually](/event-triggers/remove-event-triggers.mdx/#clean-up-event-trigger-footprints-manually) section.
+Alternatively, the following command can be used to drop all SQL triggers in the source:
+
+```sql
+do $$ 
+declare f record; 
+begin 
+  for f in select trigger_name, event_object_table
+    from information_schema.triggers
+    where trigger_name like 'notify_hasura_%'
+  loop 
+    EXECUTE 'DROP FUNCTION hdb_catalog.' || QUOTE_IDENT(f.trigger_name) || ' CASCADE';
+  end loop; 
+end; 
+$$;
+```
+
+**Step 2:** The following commands can be used to delete Event Triggers tables from `hdb_catalog`:
+
+```sql
+DROP TABLE IF EXISTS hdb_catalog.hdb_source_catalog_version;
+DROP FUNCTION IF EXISTS hdb_catalog.insert_event_log(text, text, text, text, json);
+DROP TABLE IF EXISTS hdb_catalog.event_invocation_logs;
+DROP TABLE IF EXISTS hdb_catalog.event_log;
+DROP TABLE IF EXISTS hdb_catalog.hdb_event_log_cleanups;
+```
+
+:::info Note
+
+It is recommended to perform the above steps in a single transaction.
+
+:::

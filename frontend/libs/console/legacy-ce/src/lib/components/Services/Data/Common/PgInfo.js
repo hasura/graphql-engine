@@ -19,7 +19,7 @@ const pgCategoryCode = {
 const topCategory = ['N', 'S', 'B', 'D', 'T'];
 
 const restCategory = [
-  ...Object.keys(pgCategoryCode).filter((p) => topCategory.indexOf(p) === -1),
+  ...Object.keys(pgCategoryCode).filter(p => topCategory.indexOf(p) === -1),
 ];
 
 const aggCategory = [...topCategory, ...restCategory];

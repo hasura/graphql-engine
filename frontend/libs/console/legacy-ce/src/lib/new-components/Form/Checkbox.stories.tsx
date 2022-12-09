@@ -21,7 +21,7 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
   },
 } as ComponentMeta<typeof Checkbox>;
 
-export const ApiPlayground: ComponentStory<typeof Checkbox> = (args) => {
+export const ApiPlayground: ComponentStory<typeof Checkbox> = args => {
   const validationSchema = z.object({});
 
   return (
@@ -199,6 +199,30 @@ StateWithDefaultValue.parameters = {
     source: { state: 'open' },
   },
 };
+
+export const StateLoading: ComponentStory<typeof Checkbox> = () => {
+  const options = [
+    { value: 'value0', label: 'Value 0' },
+    { value: 'value1', label: 'Value 1', Loading: true },
+    { value: 'value2', label: 'Value 2' },
+  ];
+
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <Checkbox
+          name="checkboxNames"
+          label="The checkbox label"
+          options={options}
+          loading
+        />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
 
 export const StateDisabled: ComponentStory<typeof Checkbox> = () => {
   const options = [

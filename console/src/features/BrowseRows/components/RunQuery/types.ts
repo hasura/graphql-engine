@@ -10,8 +10,8 @@ export type SortFormValues = {
 };
 
 export type FiltersAndSortFormValues = {
-  filter: FilterFormValues[];
-  sort: SortFormValues[];
+  filters: FilterFormValues[];
+  sorts: SortFormValues[];
 };
 
 export const defaultColumn = '-- column --';
@@ -23,7 +23,7 @@ type ColumnName = string;
 type OperatorType = string; // TODO: find the list of possible operators
 type OperatorCondition = Record<
   OperatorType,
-  string | number | number[] | string[] | boolean
+  string | number | number[] | string[] | boolean | null
 >;
 
 export type WhereCondition = Record<ColumnName, OperatorCondition>;

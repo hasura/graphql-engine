@@ -27,7 +27,7 @@ export const Operations: React.FC<OperationProps> = ({
     });
   };
 
-  const allOperations = EVENT_TRIGGER_OPERATIONS.map((o) => ({
+  const allOperations = EVENT_TRIGGER_OPERATIONS.map(o => ({
     name: o,
     testIdentifier: `${o}-operation`,
     isChecked: selectedOperations[o],
@@ -51,7 +51,7 @@ export const Operations: React.FC<OperationProps> = ({
         <div className="mr-md">
           On <span className="font-semibold">{tableName}</span> table:
         </div>
-        {allOperations.map((o) => (
+        {allOperations.map(o => (
           <div key={o.name} className="mr-md">
             <label className="cursor-pointer flex">
               <input

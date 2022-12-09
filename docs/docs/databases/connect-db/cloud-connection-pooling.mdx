@@ -22,9 +22,8 @@ import Thumbnail from "@site/src/components/Thumbnail";
 
 ## Introduction
 
-In Hasura Cloud, any non-free tier project is backed by several Hasura Server instances. These instances are
-autoscaled to ensure reliable and consistent performance for your API. Each Hasura Server instance connects to data
-sources through [connection pools](https://en.wikipedia.org/wiki/Connection_pool) which you are able to configure.
+In Hasura, you get automatic connection pools for your database connections. Apart from the general performance benefits of
+using pooled connections, this also ensures that your database remains reliable even during periods of massive load.
 
 :::info Note
 
@@ -33,45 +32,24 @@ Connection pooling is only available for [PostgreSQL](/api-reference/syntax-defs
 
 :::
 
-A connection pool can only hold live connections up to certain limit, which is specified through the `max_connections`
-pool setting. The `max_connections` setting is applicable per server instance i.e, the cumulative number of maximum
-connections across all instances in a project will be calculated as `number of server instances * max_connections`.
-Under heavy load, when a project is scaled up, total live connections may exceed the data source's true limit. This
-problem can be avoided by using **elastic connection pools**.
+In Hasura Cloud, the connection pool is elastic i.e. shrinks and grows based on usage and also respects a configured max limit. 
+There are many other tunable parameters for the pool settings which can help you change the behaviour of the pool as required. 
+Read more about these in the [How connection pooling works](#how-connection-pooling-works) section below.
 
-## Elastic connection pools
 
-Elastic connection pools in Hasura Cloud have a flexible maximum number of connections as the pool's size is elastic in
-nature. When a project is scaled up or down, Hasura Cloud automatically adjusts the number of maximum connections in a
-data sources' pool, including read replicas, to ensure consistent **total maximum connections across all Hasura Server
-instances**. You can define the upper limit of total maximum connections of a data source's pool per Hasura Cloud
-project, via the `total_max_connections` pool setting.
+### Getting started
 
-:::info Note
+Connection pooling is always turned on and the size of the pool can be specified via the `total_max_connections`
+setting. It is always recommended to set an appropriate `total_max_connections` pool setting based on your workload and
+database constraints.
 
-At any given point in time, a pool's maximum connections = `total_max_connections / number of server instances`
+:::info In self-hosted deployments
 
-:::
-
-If both `total_max_connections` and `max_connections` are set, then `total_max_connections` will take precedence over
-the `max_connections`. If neither is set, `total_max_connections` assumes a default value. If only `max_connections`
-is set, as it is applicable per instance then Hasura Cloud will not adjust the maximum connections of individual
-pools and hence elastic connection pooling is disabled.
-
-:::tip
-
-It is always recommended to set the `total_max_connections` pool setting in Hasura cloud to take advantage of elastic
-connection pools.
+For projects not leveraging Hasura Cloud, the connection pool size can be specified via the `max_connections` setting.
+This setting is applicable per server instance and hence the cumulative number of connections across all instances in a
+project can be calculated as `number of server instances * max_connections`
 
 :::
-
-Hasura Cloud tries to keep total maximum connections across all server instances under `total_max_connections`.
-Under heavy load, when a project scales up, the total maximum connections may slightly exceed the limit for a very
-brief period of time during which Hasura Cloud is trying to adjust pools in existing Hasura Server instances. Always
-set the `total_max_connections` value slightly lower than the database true total maximum limit in order to avoid
-exceeding your resource limits.
-
-### Metadata configuration
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -175,6 +153,38 @@ X-Hasura-Role: admin
 }
 ```
 
-
 </TabItem>
 </Tabs>
+
+
+## How connection pooling works
+
+A connection pool starts off empty and as new requests arrive, a connection to the database is established. This connection
+stays warm in the pool to be reused by any other waiting request. This ensures that subsequent requests do not have to
+reestablish a database connection hence saving time and resources. 
+  
+After a certain period of connection idleness (specified by `idle_timeout`) or connection lifetime (specified by
+`connection_lifetime`), the connection is released from the pool. This ensures that Hasura is not holding
+connections which are not required.
+  
+If the connection pool is saturated, then any new request waits for the pool to provide a connection. This ensures that
+your database is not bombarded with more connections than it can handle. You can also specify a `pool_timeout` to
+timeout any requests that are blocked on the connection pool.
+
+:::tip Total max connections is best effort
+
+During heavy load, the number of connections may slightly exceed the `total_max_connections` limit for a brief period of
+time during which Hasura Cloud is trying to adjust pools in existing Hasura Server instances. Always set the
+`total_max_connections` value slightly lower than the database true total maximum limit in order to avoid exceeding
+your resource limits.
+
+:::
+
+:::info `total_max_connections` and `max_connections`
+
+If both `total_max_connections` and `max_connections` are set, then `total_max_connections` will take precedence over
+the `max_connections`. If neither is set, `total_max_connections` assumes a default value. If only `max_connections`
+is set, then Hasura Cloud will not be able to maintain a fixed size of a pool and hence the total number of connections
+on the database can be random.
+
+:::

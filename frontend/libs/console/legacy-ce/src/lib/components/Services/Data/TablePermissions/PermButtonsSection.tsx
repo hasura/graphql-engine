@@ -27,7 +27,7 @@ const PermButtonSection: React.FC<PermButtonSectionProps> = ({
   currQueryPermissions,
 }) => {
   const dispatchSavePermissions = useCallback(() => {
-    const isInvalid = Object.values(localFilterString).some((val) => {
+    const isInvalid = Object.values(localFilterString).some(val => {
       if (val && !isJsonString(val)) {
         return true;
       }

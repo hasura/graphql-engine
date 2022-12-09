@@ -17,6 +17,7 @@ import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
@@ -119,3 +120,5 @@ instance Backend 'MSSQL where
   resizeSourcePools :: SourceConfig 'MSSQL -> ServerReplicas -> IO ()
   resizeSourcePools sourceConfig =
     MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
+
+  defaultTriggerOnReplication = TOREnableTrigger

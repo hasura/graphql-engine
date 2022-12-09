@@ -73,7 +73,7 @@ const Explorer: React.FC<Props> = ({
 
   return (
     <div className={styles.schemaExplorerContainer}>
-      {tree.map((element) => {
+      {tree.map(element => {
         switch (element.kind) {
           case 'argument': {
             const el: TreeArgElement = element;

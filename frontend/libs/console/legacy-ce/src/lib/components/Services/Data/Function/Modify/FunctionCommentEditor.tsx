@@ -43,7 +43,7 @@ export const FunctionCommentEditor: React.FC<FunctionCommentEditorProps> = ({
     return (
       <div className="flex items-center">
         <input
-          onChange={(event) => setComment(event.target.value)}
+          onChange={event => setComment(event.target.value)}
           className="form-control"
           type="text"
           value={comment}

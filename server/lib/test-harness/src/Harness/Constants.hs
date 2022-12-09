@@ -8,6 +8,7 @@ module Harness.Constants
     postgresDb,
     postgresHost,
     postgresPort,
+    postgresMetadataDb,
     postgresqlMetadataConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
@@ -38,13 +39,11 @@ where
 
 -------------------------------------------------------------------------------
 
-import Data.Char qualified
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
-import Data.UUID (UUID)
 import Data.Word (Word16)
 import Database.PG.Query qualified as PG
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (UniqueTestId)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -83,8 +82,9 @@ postgresMetadataPassword = "hasura"
 postgresMetadataUser :: String
 postgresMetadataUser = "hasura"
 
-postgresMetadataDb :: String
-postgresMetadataDb = "hasura_metadata"
+postgresMetadataDb :: UniqueTestId -> String
+postgresMetadataDb uniqueTestId =
+  "hasura_metadata_" <> uniqueDbName uniqueTestId
 
 postgresMetadataHost :: String
 postgresMetadataHost = "127.0.0.1"
@@ -92,8 +92,8 @@ postgresMetadataHost = "127.0.0.1"
 postgresMetadataPort :: Word16
 postgresMetadataPort = 65002
 
-postgresqlMetadataConnectionString :: String
-postgresqlMetadataConnectionString =
+postgresqlMetadataConnectionString :: UniqueTestId -> String
+postgresqlMetadataConnectionString uniqueTestId =
   "postgres://"
     ++ postgresMetadataUser
     ++ ":"
@@ -103,7 +103,7 @@ postgresqlMetadataConnectionString =
     ++ ":"
     ++ show postgresMetadataPort
     ++ "/"
-    ++ postgresMetadataDb
+    ++ postgresMetadataDb uniqueTestId
 
 -- * Postgres
 
@@ -126,20 +126,8 @@ defaultPostgresPort :: Word16
 defaultPostgresPort = 5432
 
 -- | return a unique database name from our TestEnvironment's uniqueTestId
-uniqueDbName :: UUID -> String
-uniqueDbName uuid = "test" <> showUUID uuid
-
--- | Sanitise UUID for use in BigQuery dataset name
--- must be alphanumeric (plus underscores)
-showUUID :: UUID -> String
-showUUID =
-  map
-    ( \a ->
-        if Data.Char.isAlphaNum a
-          then a
-          else '_'
-    )
-    . show
+uniqueDbName :: UniqueTestId -> String
+uniqueDbName uniqueTestId = "test" <> show uniqueTestId
 
 -- * Citus
 
@@ -158,8 +146,8 @@ citusHost = "127.0.0.1"
 citusPort :: Word16
 citusPort = 65004
 
-citusConnectionString :: TestEnvironment -> String
-citusConnectionString testEnv =
+citusConnectionString :: UniqueTestId -> String
+citusConnectionString uniqueTestId =
   "postgres://"
     ++ citusUser
     ++ ":"
@@ -169,7 +157,7 @@ citusConnectionString testEnv =
     ++ ":"
     ++ show citusPort
     ++ "/"
-    ++ uniqueDbName (uniqueTestId testEnv)
+    ++ uniqueDbName uniqueTestId
 
 defaultCitusConnectionString :: String
 defaultCitusConnectionString =
@@ -198,8 +186,8 @@ cockroachHost = "127.0.0.1"
 cockroachPort :: Word16
 cockroachPort = 65008
 
-cockroachConnectionString :: TestEnvironment -> String
-cockroachConnectionString testEnvironment =
+cockroachConnectionString :: UniqueTestId -> String
+cockroachConnectionString uniqueTestId =
   "postgresql://"
     ++ cockroachUser
     ++ "@"
@@ -207,7 +195,7 @@ cockroachConnectionString testEnvironment =
     ++ ":"
     ++ show cockroachPort
     ++ "/"
-    ++ uniqueDbName (uniqueTestId testEnvironment)
+    ++ uniqueDbName uniqueTestId
     ++ "?sslmode=disable"
 
 defaultCockroachConnectionString :: String
@@ -252,9 +240,9 @@ sqlserverAdminConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0
 
 -- | SQL Server has strict password requirements, that's why it's not
 -- simply @hasura@ like the others.
-sqlserverConnectInfo :: TestEnvironment -> Text
-sqlserverConnectInfo testEnvironment =
-  let dbName = T.pack $ uniqueDbName $ uniqueTestId testEnvironment
+sqlserverConnectInfo :: UniqueTestId -> Text
+sqlserverConnectInfo uniqueTestId =
+  let dbName = T.pack (uniqueDbName uniqueTestId)
    in "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Database="
         <> dbName
         <> ";Encrypt=optional"
@@ -296,7 +284,7 @@ serveOptions =
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
-      soConsoleAssetsDir = Just "../console/static/dist",
+      soConsoleAssetsDir = Just "../../../console/static/dist",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = False,
       soStringifyNum = Options.Don'tStringifyNumbers,

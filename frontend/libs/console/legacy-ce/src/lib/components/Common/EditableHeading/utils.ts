@@ -4,7 +4,7 @@ import { capitaliseFirstLetter } from '../ConfigureTransformation/utils';
 
 const indentFields = (subFields: TableColumn[], depth: number) =>
   subFields
-    .map((sf) => sf.column_name)
+    .map(sf => sf.column_name)
     .join(`\n${Array(depth).fill('\t').join('')}`)
     .trim();
 
@@ -60,11 +60,11 @@ const subFieldsTypeMapping: Record<
 
 export const getInitialValueField = (table: Table): TableColumn | undefined =>
   table.columns.find(
-    (f) =>
+    f =>
       (table.primary_key?.columns || []).includes(f.column_name) &&
       ['bigint', 'integer'].includes(f.data_type)
   ) ??
-  table.columns.find((f) =>
+  table.columns.find(f =>
     ['timestamp with time zone', 'time with time zone', 'date'].includes(
       f.data_type
     )
@@ -86,10 +86,12 @@ export const generateGqlQueryFromTable = (
   const fieldName = table.table_name;
   const fields = table.columns;
   const pascalCaseName = toPascalCase(fieldName);
+  const tableSchemaPart =
+    table.table_schema !== 'public' ? `${table.table_schema}_` : '';
 
   if (operationType === 'query') {
     const query = `query Get${pascalCaseName} {
-  ${fieldName} {
+  ${tableSchemaPart}${fieldName} {
     ${indentFields(fields, 2)}
   }
 }
@@ -101,20 +103,21 @@ export const generateGqlQueryFromTable = (
 
   if (operationType === 'mutation') {
     const mandatoryFields = fields.filter(
-      (sf) => !sf.column_default && subFieldsTypeMapping[sf.data_type]
+      sf => !sf.column_default && subFieldsTypeMapping[sf.data_type]
     );
     const args = mandatoryFields
       .map(
-        (sf) => `$${sf.column_name}: ${subFieldsTypeMapping[sf.data_type].type}`
+        sf => `$${sf.column_name}: ${subFieldsTypeMapping[sf.data_type].type}`
       )
       .join(', ')
       .trim();
     const argsUsage = mandatoryFields
-      .map((sf) => `${sf.column_name}: $${sf.column_name}`)
+      .map(sf => `${sf.column_name}: $${sf.column_name}`)
       .join(', ')
       .trim();
+
     const query = `mutation Insert${pascalCaseName}(${args}) {
-  insert_${fieldName}(objects: {${argsUsage}}) {
+  insert_${tableSchemaPart}${fieldName}(objects: {${argsUsage}}) {
     affected_rows
     returning {
       ${indentFields(fields, 3)}
@@ -145,7 +148,7 @@ export const generateGqlQueryFromTable = (
       );
 
       const query = `subscription Get${pascalCaseName}StreamingSubscription {
-  ${fieldName}_stream(batch_size: 10, cursor: {initial_value: {${
+  ${tableSchemaPart}${fieldName}_stream(batch_size: 10, cursor: {initial_value: {${
         initialValueColumn.column_name
       }: ${initialValue}}}) {
     ${indentFields(fields, 2)}
@@ -160,10 +163,11 @@ export const generateGqlQueryFromTable = (
 
   if (operationType === 'subscription') {
     const query = `subscription Get${pascalCaseName}StreamingSubscription {
-  ${fieldName} {
+  ${tableSchemaPart}${fieldName} {
     ${indentFields(fields, 2)}
   }
 }
+    
 
     `;
     return {

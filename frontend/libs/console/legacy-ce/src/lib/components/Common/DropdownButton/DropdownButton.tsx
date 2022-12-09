@@ -24,7 +24,7 @@ type DropDownButtonProps = {
   inputStyle?: Record<string, string>;
 };
 
-const DDButton: React.FC<DropDownButtonProps> = (props) => {
+const DDButton: React.FC<DropDownButtonProps> = props => {
   const {
     title,
     dropdownOptions,

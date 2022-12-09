@@ -12,61 +12,38 @@ slug: index
 
 ## Introduction
 
-The Hasura CLI is a command line tool which, along with the Hasura Console is one of the primary modes of managing your
-Hasura instances.
+The Hasura CLI is a command-line tool you can use to manage your Hasura instances.
 
-Most often with Hasura CLI you will be working with Hasura Migrations and Hasura Metadata.
-[Check out the documentation on those](/migrations-metadata-seeds/index.mdx) to see how they work.
+We offer two primary methods for working with your Hasura instances: the Hasura Console and the Hasura CLI. While the
+Console is robust and provides an easy-to-navigate GUI for interacting with your project, the CLI offers a more powerful
+interface for managing your project.
+
+The CLI is useful for:
+
+- [managing Metadata](/migrations-metadata-seeds/manage-metadata.mdx).
+- [creating and applying Migrations](/migrations-metadata-seeds/manage-migrations.mdx).
+- integrating with your CI/CD pipeline.
+- automating tasks.
+
+You can use the CLI to initialize a new Hasura project from the very beginning, or you can use it to manage an
+existing one.
 
 ## Installation
 
-Refer to [Installing the Hasura CLI](/hasura-cli/install-hasura-cli.mdx).
+Installation is quick and easy with npm:
 
-## Configuration
+```bash
+npm install -g hasura-cli
+```
 
-Refer to [Hasura CLI Configuration Reference](/hasura-cli/config-reference.mdx).
+Or, if you prefer to install the binaries, check out our [installation guide](/hasura-cli/install-hasura-cli.mdx).
 
-## Commands
+## Usage
 
-- [hasura actions](/hasura-cli/commands/hasura_actions.mdx)
-- [hasura](/hasura-cli/commands/hasura.mdx)
-- [hasura actions codegen](/hasura-cli/commands/hasura_actions_codegen.mdx)
-- [hasura actions create](/hasura-cli/commands/hasura_actions_create.mdx)
-- [hasura actions use-codegen](/hasura-cli/commands/hasura_actions_use-codegen.mdx)
-- [hasura completion](/hasura-cli/commands/hasura_completion.mdx)
-- [hasura console](/hasura-cli/commands/hasura_console.mdx)
-- [hasura deploy](/hasura-cli/commands/hasura_deploy.mdx)
-- [hasura init](/hasura-cli/commands/hasura_init.mdx)
-- [hasura metadata](/hasura-cli/commands/hasura_metadata.mdx)
-- [hasura metadata apply](/hasura-cli/commands/hasura_metadata_apply.mdx)
-- [hasura metadata clear](/hasura-cli/commands/hasura_metadata_clear.mdx)
-- [hasura metadata diff](/hasura-cli/commands/hasura_metadata_diff.mdx)
-- [hasura metadata export](/hasura-cli/commands/hasura_metadata_export.mdx)
-- [hasura metadata inconsistency](/hasura-cli/commands/hasura_metadata_inconsistency.mdx)
-- [hasura metadata inconsistency drop](/hasura-cli/commands/hasura_metadata_inconsistency_drop.mdx)
-- [hasura metadata inconsistency list](/hasura-cli/commands/hasura_metadata_inconsistency_list.mdx)
-- [hasura metadata inconsistency status](/hasura-cli/commands/hasura_metadata_inconsistency_status.mdx)
-- [hasura metadata reload](/hasura-cli/commands/hasura_metadata_reload.mdx)
-- [hasura migrate](/hasura-cli/commands/hasura_migrate.mdx)
-- [hasura migrate apply](/hasura-cli/commands/hasura_migrate_apply.mdx)
-- [hasura migrate create](/hasura-cli/commands/hasura_migrate_create.mdx)
-- [hasura migrate delete](/hasura-cli/commands/hasura_migrate_delete.mdx)
-- [hasura migrate squash](/hasura-cli/commands/hasura_migrate_squash.mdx)
-- [hasura migrate status](/hasura-cli/commands/hasura_migrate_status.mdx)
-- [hasura plugins](/hasura-cli/commands/hasura_plugins.mdx)
-- [hasura plugins install](/hasura-cli/commands/hasura_plugins_install.mdx)
-- [hasura plugins list](/hasura-cli/commands/hasura_plugins_list.mdx)
-- [hasura plugins uninstall](/hasura-cli/commands/hasura_plugins_uninstall.mdx)
-- [hasura plugins upgrade](/hasura-cli/commands/hasura_plugins_upgrade.mdx)
-- [hasura scripts](/hasura-cli/commands/hasura_scripts.mdx)
-- [hasura scripts update-project-v2](/hasura-cli/commands/hasura_scripts_update-project-v2.mdx)
-- [hasura scripts update-project-v3](/hasura-cli/commands/hasura_scripts_update-project-v3.mdx)
-- [hasura seed](/hasura-cli/commands/hasura_seed.mdx)
-- [hasura seed apply](/hasura-cli/commands/hasura_seed_apply.mdx)
-- [hasura seed create](/hasura-cli/commands/hasura_seed_create.mdx)
-- [hasura update-cli](/hasura-cli/commands/hasura_update-cli.mdx)
-- [hasura version](/hasura-cli/commands/hasura_version.mdx)
+The CLI has a number of commands you can use to manage your project. You can see the full list of commands by running:
+`hasura --help`.
 
-## Uninstalling
+There are many subcommands too; you can see the available subcommands and their arguments by running a command with the
+`--help` flag, for example: `hasura metadata --help`.
 
-Refer to [Uninstalling the Hasura CLI](/hasura-cli/uninstall-hasura-cli.mdx).
+After installing, we suggest getting started by heading to the [CLI commands reference](/hasura-cli/commands/index.mdx).

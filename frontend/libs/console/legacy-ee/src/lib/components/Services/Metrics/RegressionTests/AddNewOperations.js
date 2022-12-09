@@ -20,7 +20,7 @@ const btnStates = {
  *
  * @param {Props} props
  */
-export const AddNewOperations = (props) => {
+export const AddNewOperations = props => {
   const { operations = [], testSuiteId, projectId, onComplete } = props;
   const [state, setState] = useState('INIT');
 
@@ -28,7 +28,7 @@ export const AddNewOperations = (props) => {
     insertTestSuiteOperations,
     {
       variables: {
-        operations: operations.map((o) => ({
+        operations: operations.map(o => ({
           operation_name: o.name,
           operation_id: o.operation_id,
           query: o.query,
@@ -39,7 +39,7 @@ export const AddNewOperations = (props) => {
           project_id: projectId,
         })),
       },
-      onError: (err) => {
+      onError: err => {
         alert(err.toString());
       },
       onCompleted: () => {

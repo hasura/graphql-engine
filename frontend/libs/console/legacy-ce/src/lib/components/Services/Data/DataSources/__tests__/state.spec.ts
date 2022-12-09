@@ -195,7 +195,7 @@ describe('Data state', () => {
     },
   ];
 
-  actionTests.forEach((actionTest) => {
+  actionTests.forEach(actionTest => {
     describe(`when action type is ${actionTest.action.type}`, () => {
       it('updates the state', () => {
         const state = connectDBReducer(initialState, actionTest.action);

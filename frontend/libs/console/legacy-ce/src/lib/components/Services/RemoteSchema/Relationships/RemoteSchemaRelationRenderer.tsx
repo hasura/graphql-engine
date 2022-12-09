@@ -106,7 +106,7 @@ export const RemoteSchemaRelationRenderer = ({
         <RemoteSchemaRelationshipTable
           remoteSchemaRels={remoteSchemaRels}
           showActionCell
-          onEdit={(props) => {
+          onEdit={props => {
             openForm(props);
           }}
           onDelete={onDelete}

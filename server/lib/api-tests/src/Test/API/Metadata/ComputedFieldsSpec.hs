@@ -13,18 +13,19 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction qualified as SetupAction
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
 
 -- ** Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+        [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ]
@@ -67,76 +68,52 @@ setupFunctions :: TestEnvironment -> [Fixture.SetupAction]
 setupFunctions testEnv =
   let schemaName = Schema.getSchemaName testEnv
       articleTableSQL = unSchemaName schemaName <> ".article"
-   in [ Fixture.SetupAction
-          { Fixture.setupAction =
-              BigQuery.run_ $
-                T.unpack $
-                  T.unwords $
-                    [ "CREATE TABLE FUNCTION ",
-                      fetch_articles_returns_table schemaName,
-                      "(a_id INT64, search STRING)",
-                      "RETURNS TABLE<id INT64, title STRING, content STRING>",
-                      "AS (",
-                      "SELECT t.id, t.title, t.content FROM",
-                      articleTableSQL,
-                      "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
-                      ");"
-                    ],
-            Fixture.teardownAction = \_ ->
-              BigQuery.run_ $
-                T.unpack $
-                  "DROP TABLE FUNCTION " <> fetch_articles_returns_table schemaName <> ";"
-          },
-        Fixture.SetupAction
-          { Fixture.setupAction =
-              BigQuery.run_ $
-                T.unpack $
-                  T.unwords $
-                    [ "CREATE TABLE FUNCTION ",
-                      fetch_articles schemaName,
-                      "(a_id INT64, search STRING)",
-                      "AS (",
-                      "SELECT t.* FROM",
-                      articleTableSQL,
-                      "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
-                      ");"
-                    ],
-            Fixture.teardownAction = \_ ->
-              BigQuery.run_ $
-                T.unpack $
-                  "DROP TABLE FUNCTION " <> fetch_articles schemaName <> ";"
-          },
-        Fixture.SetupAction
-          { Fixture.setupAction =
-              BigQuery.run_ $
-                T.unpack $
-                  T.unwords $
-                    [ "CREATE TABLE FUNCTION ",
-                      function_no_args schemaName <> "()",
-                      "AS (",
-                      "SELECT t.* FROM",
-                      articleTableSQL,
-                      "AS t);"
-                    ],
-            Fixture.teardownAction = \_ ->
-              BigQuery.run_ $
-                T.unpack $
-                  "DROP TABLE FUNCTION " <> function_no_args schemaName <> ";"
-          },
-        Fixture.SetupAction
-          { Fixture.setupAction =
-              BigQuery.run_ $
-                T.unpack $
-                  T.unwords $
-                    [ "CREATE FUNCTION ",
-                      add_int schemaName <> "(a INT64, b INT64)",
-                      "RETURNS INT64 AS (a + b);"
-                    ],
-            Fixture.teardownAction = \_ ->
-              BigQuery.run_ $
-                T.unpack $
-                  "DROP FUNCTION " <> add_int schemaName <> ";"
-          }
+   in [ SetupAction.noTeardown $
+          BigQuery.run_ $
+            T.unpack $
+              T.unwords $
+                [ "CREATE TABLE FUNCTION ",
+                  fetch_articles_returns_table schemaName,
+                  "(a_id INT64, search STRING)",
+                  "RETURNS TABLE<id INT64, title STRING, content STRING>",
+                  "AS (",
+                  "SELECT t.id, t.title, t.content FROM",
+                  articleTableSQL,
+                  "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
+                  ");"
+                ],
+        SetupAction.noTeardown $
+          BigQuery.run_ $
+            T.unpack $
+              T.unwords $
+                [ "CREATE TABLE FUNCTION ",
+                  fetch_articles schemaName,
+                  "(a_id INT64, search STRING)",
+                  "AS (",
+                  "SELECT t.* FROM",
+                  articleTableSQL,
+                  "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
+                  ");"
+                ],
+        SetupAction.noTeardown $
+          BigQuery.run_ $
+            T.unpack $
+              T.unwords $
+                [ "CREATE TABLE FUNCTION ",
+                  function_no_args schemaName <> "()",
+                  "AS (",
+                  "SELECT t.* FROM",
+                  articleTableSQL,
+                  "AS t);"
+                ],
+        SetupAction.noTeardown $
+          BigQuery.run_ $
+            T.unpack $
+              T.unwords $
+                [ "CREATE FUNCTION ",
+                  add_int schemaName <> "(a INT64, b INT64)",
+                  "RETURNS INT64 AS (a + b);"
+                ]
       ]
 
 fetch_articles_returns_table :: SchemaName -> T.Text

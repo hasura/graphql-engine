@@ -222,8 +222,8 @@ export const getPermissionOperators = (supportedOperators, typeMap) => {
     is_null: Object.keys(typeMap),
   };
 
-  Object.keys(modifiedColumnOperatorsInfo).forEach((op) => {
-    operatorMap[modifiedColumnOperatorsInfo[op].type].forEach((type) => {
+  Object.keys(modifiedColumnOperatorsInfo).forEach(op => {
+    operatorMap[modifiedColumnOperatorsInfo[op].type].forEach(type => {
       operators[type] = operators[type] || [];
       operators[type].push(op);
     });
@@ -249,38 +249,38 @@ export const deprecatedColumnOperators = ['_ne'];
 
 /* Util functions */
 
-export const isBoolOperator = (operator) => {
+export const isBoolOperator = operator => {
   return boolOperators.includes(operator);
 };
 
-export const isExistOperator = (operator) => {
+export const isExistOperator = operator => {
   return existOperators.includes(operator);
 };
 
-export const isArrayBoolOperator = (operator) => {
+export const isArrayBoolOperator = operator => {
   const arrayBoolOperators = Object.keys(boolOperatorsInfo).filter(
-    (op) => boolOperatorsInfo[op].inputStructure === 'array'
+    op => boolOperatorsInfo[op].inputStructure === 'array'
   );
 
   return arrayBoolOperators.includes(operator);
 };
 
-export const isColumnOperator = (operator) => {
+export const isColumnOperator = operator => {
   return (
     columnOperators.includes(operator) ||
     deprecatedColumnOperators.includes(operator)
   );
 };
 
-export const isArrayColumnOperator = (operator) => {
+export const isArrayColumnOperator = operator => {
   const arrayColumnOperators = Object.keys(columnOperatorsInfo).filter(
-    (op) => columnOperatorsInfo[op].inputStructure === 'array'
+    op => columnOperatorsInfo[op].inputStructure === 'array'
   );
 
   return arrayColumnOperators.includes(operator);
 };
 
-export const getOperatorInputType = (operator) => {
+export const getOperatorInputType = operator => {
   return columnOperatorsInfo[operator]
     ? columnOperatorsInfo[operator].inputType
     : null;
@@ -289,7 +289,7 @@ export const getOperatorInputType = (operator) => {
 export const getRootType = (type, typeMap) => {
   const typeMapKeys = Object.keys(typeMap);
 
-  let rootType = typeMapKeys.find((rType) => typeMap[rType].includes(type));
+  let rootType = typeMapKeys.find(rType => typeMap[rType].includes(type));
 
   if (!rootType) {
     rootType = 'user_defined';

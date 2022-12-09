@@ -160,7 +160,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
         return {
           name: driver.kind,
-          displayName: driver.kind,
+          displayName: driver.display_name,
           release: 'Beta',
           native: driver.builtin,
         };

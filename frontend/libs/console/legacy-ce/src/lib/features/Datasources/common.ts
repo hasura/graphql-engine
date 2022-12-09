@@ -13,7 +13,7 @@ export function useRunSQL<K extends readonly unknown[], D>({
   dataSource,
   fallBack,
 }: UseRunSQLArg<K, D>) {
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
   const { name, driver } = dataSource;
 
   return useQuery({

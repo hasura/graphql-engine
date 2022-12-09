@@ -29,7 +29,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
@@ -37,7 +37,7 @@ import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
     contexts =

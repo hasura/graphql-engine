@@ -1,9 +1,11 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
 module Hasura.Incremental.Select
   ( Select (..),
     ConstS (..),
     selectKey,
+    FMapS (..),
     FieldS (..),
     UniqueS,
     newUniqueS,
@@ -57,12 +59,30 @@ instance (GCompare k) => Select (DM.DMap k f) where
   type Selector (DM.DMap k f) = DMapS k f
   select (DMapS k) = DM.lookup k
 
--- | This may not be a "canonical" instance of `Select` for `Maybe a`.
--- We may want to revisit this in future.
--- See https://github.com/hasura/graphql-engine-mono/pull/5820#pullrequestreview-1106114823
-instance Monoid a => Select (Maybe a) where
-  type Selector (Maybe a) = ConstS () a
-  select (ConstS ()) = fromMaybe mempty
+newtype FMap f x = FMap {unFMap :: f x}
+  deriving (Functor)
+
+data FMapS f a b where
+  FMapS :: Selector a b -> FMapS f a (f b)
+
+instance Select a => GEq (FMapS f a) where
+  FMapS sel1 `geq` FMapS sel2 =
+    case sel1 `geq` sel2 of
+      Just Refl -> Just Refl
+      Nothing -> Nothing
+
+instance Select a => GCompare (FMapS f a) where
+  gcompare (FMapS sel1) (FMapS sel2) =
+    case gcompare sel1 sel2 of
+      GLT -> GLT
+      GEQ -> GEQ
+      GGT -> GGT
+
+instance (Functor f, Select a) => Select (FMap f a) where
+  type Selector (FMap f a) = FMapS f a
+  select (FMapS s) = unFMap . fmap (select s)
+
+deriving via FMap Maybe a instance Select a => Select (Maybe a)
 
 -- | The constant selector, which is useful for representing selectors into data structures where
 -- all fields have the same type. Matching on a value of type @'ConstS' k a b@ causes @a@ and @b@ to

@@ -8,6 +8,11 @@ import {
 } from '../constants';
 import { OnboardingResponseData } from '../types';
 
+const userMock = {
+  id: '59300b64-fb3a-4f17-8a0f-6f698569eade',
+  created_at: '2022-11-02T13:31:32.526653286Z',
+};
+
 export const mockOnboardingData: Record<
   string,
   OnboardingResponseData['data']
@@ -22,6 +27,7 @@ export const mockOnboardingData: Record<
         target: 'cloud_console',
       },
     ],
+    users: [userMock],
   },
   /**
    *  config to hide wizard as hasura data source created
@@ -59,6 +65,7 @@ export const mockOnboardingData: Record<
         target: 'cloud_console',
       },
     ],
+    users: [userMock],
   },
   /**
    *  config to hide wizard as run query clicked
@@ -100,6 +107,7 @@ export const mockOnboardingData: Record<
         target: 'cloud_console',
       },
     ],
+    users: [userMock],
   },
   /**
    *  config to hide wizard as user skipped onboarding
@@ -129,6 +137,7 @@ export const mockOnboardingData: Record<
         target: 'cloud_console',
       },
     ],
+    users: [userMock],
   },
   /**
    *  config to hide wizard as user completed onboarding
@@ -158,6 +167,7 @@ export const mockOnboardingData: Record<
         target: 'cloud_console',
       },
     ],
+    users: [userMock],
   },
 };
 

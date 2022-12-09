@@ -29,7 +29,9 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boRoles,
     boSources,
     buildInfoMap,
+    buildInfoMapM,
     buildInfoMapPreservingMetadata,
+    buildInfoMapPreservingMetadataM,
     initialInvalidationKeys,
     invalidateKeys,
     mkTableInputs,
@@ -276,7 +278,7 @@ withRecordDependencies ::
   arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
   (result, dependencies) <- runWriterA f -< (e, s)
-  recordDependencies -< (metadataObject, schemaObjectId, toList dependencies)
+  recordDependencies -< (metadataObject, schemaObjectId, dependencies)
   returnA -< result
 {-# INLINEABLE withRecordDependencies #-}
 
@@ -321,13 +323,32 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
   returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 
--- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
+buildInfoMapM ::
+  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (a -> m (Maybe b)) ->
+  [a] ->
+  m (HashMap k b)
+buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
+  let groupedInfos = M.groupOn extractKey infos
+  infoMapMaybes <- for groupedInfos \duplicateInfos -> do
+    infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
+    case infoMaybe of
+      Nothing -> pure Nothing
+      Just info -> do
+        buildInfo info
+  pure $ catMaybes infoMapMaybes
+
+-- | Like 'buildInfoMap', but includes each processed info’s associated 'MetadataObject' in the result.
 -- This is useful if the results will be further processed, and the 'MetadataObject' is still needed
 -- to mark the object inconsistent.
 buildInfoMapPreservingMetadata ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -341,6 +362,22 @@ buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
       result <- buildInfo -< (e, info)
       returnA -< result <&> (,mkMetadataObject info)
 {-# INLINEABLE buildInfoMapPreservingMetadata #-}
+
+buildInfoMapPreservingMetadataM ::
+  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (a -> m (Maybe b)) ->
+  [a] ->
+  m (HashMap k (b, MetadataObject))
+buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
+  buildInfoMapM extractKey mkMetadataObject buildInfoPreserving
+  where
+    buildInfoPreserving info = do
+      result <- buildInfo info
+      pure $ result <&> (,mkMetadataObject info)
 
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e

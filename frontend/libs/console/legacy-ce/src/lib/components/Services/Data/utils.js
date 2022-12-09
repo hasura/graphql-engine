@@ -3,7 +3,7 @@ import { ERROR_CODES } from './constants';
 import { dataSource } from '../../../dataSources';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
-export const getPlaceholder = (type) => {
+export const getPlaceholder = type => {
   switch (type) {
     case dataSource.columnDataTypes.TIMESTAMP:
       return new Date().toISOString();
@@ -44,7 +44,7 @@ export const ordinalColSort = (a, b) => {
   return 0;
 };
 
-export const getIngForm = (string) => {
+export const getIngForm = string => {
   return (
     (string[string.length - 1] === 'e'
       ? string.slice(0, string.length - 1)
@@ -52,7 +52,7 @@ export const getIngForm = (string) => {
   );
 };
 
-export const getEdForm = (string) => {
+export const getEdForm = string => {
   return (
     (string[string.length - 1] === 'e'
       ? string.slice(0, string.length - 1)
@@ -60,11 +60,11 @@ export const getEdForm = (string) => {
   );
 };
 
-export const escapeRegExp = (string) => {
+export const escapeRegExp = string => {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 };
 
-export const getTableName = (t) => {
+export const getTableName = t => {
   const typ = typeof t;
   if (typ === 'string') {
     return t;
@@ -88,10 +88,10 @@ export const fetchTableListQuery = (options, source) => {
 
 // TODO: move to postgres service
 const postgresFunctionTester = /.*\(.*\)$/gm;
-export const isPostgresFunction = (str) =>
+export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 export const isTypeCast = (str = '') => str.split('::').length > 1;
-export const quoteDefault = (colDefault) => {
+export const quoteDefault = colDefault => {
   if (isPostgresFunction(colDefault) || isTypeCast(colDefault)) {
     return colDefault;
   }
@@ -142,7 +142,7 @@ export const getDependencyError = (err = {}) => {
 };
 
 export const isInconsistentSource = (sourceName, inconsistentObjects) =>
-  !!inconsistentObjects.find((i) => sourceName === i.definition);
+  !!inconsistentObjects.find(i => sourceName === i.definition);
 
 export const getSourceDriver = (dataSources, source) => {
   const sourceObject = dataSources.find(({ name }) => name === source);

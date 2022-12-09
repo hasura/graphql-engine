@@ -5,7 +5,7 @@ import { split } from 'apollo-link';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 
-const getWsFromHttp = (url) => {
+const getWsFromHttp = url => {
   return url.replace(/(http)(s)?:\/\//, 'ws$2://');
 };
 

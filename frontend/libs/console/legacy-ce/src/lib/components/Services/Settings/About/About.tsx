@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { FaSpinner } from 'react-icons/fa';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import globals from '../../../../Globals';
 
@@ -45,14 +46,16 @@ class About extends Component<ConnectInjectedProps & StateProps> {
     };
 
     return (
-      <div className="clear-both pl-sm pt-md mb-sm">
-        <div className="text-base font-bold">
-          <Helmet title="About | Hasura" />
-          <h2 className="text-xl font-bold">About</h2>
-          <div className="mt-sm">{getServerVersionSection()}</div>
-          <div className="mt-sm">{getConsoleAssetVersionSection()}</div>
+      <Analytics name="About" {...REDACT_EVERYTHING}>
+        <div className="clear-both pl-sm pt-md mb-sm">
+          <div className="text-base font-bold">
+            <Helmet title="About | Hasura" />
+            <h2 className="text-xl font-bold">About</h2>
+            <div className="mt-sm">{getServerVersionSection()}</div>
+            <div className="mt-sm">{getConsoleAssetVersionSection()}</div>
+          </div>
         </div>
-      </div>
+      </Analytics>
     );
   }
 }

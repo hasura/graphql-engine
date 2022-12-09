@@ -16,7 +16,6 @@ sidebar_label: Server logs
 
 Based on your deployment method, the Hasura GraphQL engine logs can be accessed as follows:
 
-- [On Heroku](/deployment/deployment-guides/heroku.mdx#heroku-logs)
 - [On Docker](/deployment/deployment-guides/docker.mdx#docker-logs)
 - [On Kubernetes](/deployment/deployment-guides/kubernetes.mdx#kubernetes-logs)
 - [On Digital Ocean](/deployment/deployment-guides/digital-ocean-one-click.mdx#do-logs)
@@ -46,21 +45,21 @@ Default enabled log-types are: `startup, http-log, webhook-log, websocket-log, j
 
 All the log-types that can be enabled/disabled are:
 
-| Log type             | Description                                                                                                                                                                                                                       | Log Level          |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `startup`            | Information that is logged during startup                                                                                                                                                                                         | `info`             |
-| `query-log`          | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or remote schema and action queries), the operation name (if provided in the GraphQL request) | `info`             |
-| `http-log`           | Http access and error logs at the webserver layer (handling GraphQL and metadata requests)                                                                                                                                        | `info` and `error` |
-| `websocket-log`      | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
-| `webhook-log`        | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
-| `jwk-refresh-log`    | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
+| Log type          | Description                                                                                                                                                                                                                       | Log Level          |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `startup`         | Information that is logged during startup                                                                                                                                                                                         | `info`             |
+| `query-log`       | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or remote schema and action queries), the operation name (if provided in the GraphQL request) | `info`             |
+| `http-log`        | Http access and error logs at the webserver layer (handling GraphQL and metadata requests)                                                                                                                                        | `info` and `error` |
+| `websocket-log`   | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
+| `webhook-log`     | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
+| `jwk-refresh-log` | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
 
 Configurable log-types
 
 Apart from the above, there are other internal log-types which cannot be configured:
 
 | Log type             | Description                                                                                         | Log Level          |
-|----------------------|-----------------------------------------------------------------------------------------------------|--------------------|
+| -------------------- | --------------------------------------------------------------------------------------------------- | ------------------ |
 | `pg-client`          | Logs from the postgres client library                                                               | `warn`             |
 | `metadata`           | Logs inconsistent metadata items                                                                    | `warn`             |
 | `telemetry-log`      | Logs error (if any) while sending out telemetry data                                                | `info`             |
@@ -475,7 +474,7 @@ The `type` in the log will be `health-check-log` and details of the health check
 The `detail` field value is an object contains the following members.
 
 | Name          | Type                       | Description                                            |
-|---------------|----------------------------|--------------------------------------------------------|
+| ------------- | -------------------------- | ------------------------------------------------------ |
 | `source_name` | string                     | The name of the source                                 |
 | `status`      | `HealthCheckStatus` string | The health status of the source                        |
 | `timestamp`   | string                     | The timestamp in UTC when the health check is finished |
@@ -484,15 +483,16 @@ The `detail` field value is an object contains the following members.
 
 - **HealthCheckStatus** is a mandatory field whose values are as follows.
 
-   | Health check status | Description                                                                          | Log level |
-   |---------------------|--------------------------------------------------------------------------------------|-----------|
-   | `OK`                | Health check succeeded with no errors.                                               | `info`    |
-   | `FAILED`            | Health check is failed maybe due to bad connection config.                           | `warn`    |
-   | `TIMEOUT`           | Health check is timed out. The timeout value is specified in the healch check config | `warn`    |
-   | `ERROR`             | Health check results in an exception.                                                | `warn`    |
+  | Health check status | Description                                                                          | Log level |
+  | ------------------- | ------------------------------------------------------------------------------------ | --------- |
+  | `OK`                | Health check succeeded with no errors.                                               | `info`    |
+  | `FAILED`            | Health check is failed maybe due to bad connection config.                           | `warn`    |
+  | `TIMEOUT`           | Health check is timed out. The timeout value is specified in the healch check config | `warn`    |
+  | `ERROR`             | Health check results in an exception.                                                | `warn`    |
 
 - **HealthCheckError** contains more information about the health check exception when the status is `ERROR`.
   For other statuses the value will be `null`. The `error` object contains the following fields
+
   - `message`: _string_. A very brief description about the error.
   - `extra`: _any json_. Contains extra and detailed information about the error.
 

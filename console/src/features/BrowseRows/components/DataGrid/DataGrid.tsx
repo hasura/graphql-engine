@@ -1,5 +1,14 @@
-import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
-import { Feature, OrderBy, WhereClause } from '@/features/DataSource';
+import {
+  Relationship,
+  useListAllDatabaseRelationships,
+} from '@/features/DatabaseRelationships';
+import {
+  Feature,
+  Operator,
+  OrderBy,
+  TableRow,
+  WhereClause,
+} from '@/features/DataSource';
 import { Table } from '@/features/hasura-metadata-types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { ColumnSort } from '@tanstack/react-table';
@@ -17,30 +26,72 @@ import { DataTableOptions } from './parts/DataTableOptions';
 import { ReactTableWrapper } from './parts/ReactTableWrapper';
 
 import { QueryDialog } from './QueryDialog';
-import { useTableColumns } from './useTableColumns';
+import { useRows, useTableColumns } from '../../hooks';
 import { transformToOrderByClause } from './utils';
 
-interface DataGridProps {
+export type DataGridOptions = {
+  where?: WhereClause[];
+  offset?: number;
+  limit?: number;
+  order_by?: OrderBy[];
+};
+
+export interface DataGridProps {
   table: Table;
   dataSourceName: string;
+  onRelationshipOpen?: (props: {
+    table: Table;
+    dataSourceName: string;
+    options?: DataGridOptions;
+    relationshipName: string;
+    parentOptions?: DataGridOptions;
+    parentTableFilter: WhereClause[];
+  }) => void;
+  onRelationshipClose?: (relationshipName: string) => void;
+  options?: DataGridOptions;
+  activeRelationships?: string[];
+  disableRunQuery?: boolean;
+  updateOptions?: (options: DataGridOptions) => void;
 }
 
+const getEqualToOperator = (operators: Operator[]) => {
+  const equalToOperator = operators.find(op => op.name === 'equals');
+  return equalToOperator?.value ?? '_eq';
+};
+
 export const DataGrid = (props: DataGridProps) => {
+  const {
+    dataSourceName,
+    table,
+    options,
+    onRelationshipOpen,
+    disableRunQuery,
+    activeRelationships,
+    onRelationshipClose,
+    updateOptions,
+  } = props;
+
   /**
    * States used by the component - passed around and shared by the table and it's options
    */
-  const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageIndex, setPageIndex] = useState(
+    disableRunQuery
+      ? DEFAULT_PAGE_INDEX
+      : (options?.offset ?? DEFAULT_PAGE_INDEX) /
+          (options?.limit ?? DEFAULT_PAGE_SIZE)
+  );
+
+  const [pageSize, setPageSize] = useState(options?.limit ?? DEFAULT_PAGE_SIZE);
   const [sorting, setSorting] =
     React.useState<ColumnSort[]>(DEFAULT_SORT_CLAUSES);
   const [queryDialogVisibility, setQueryDialogVisibility] = useState(
     DEFAULT_QUERY_DIALOG_STATE
   );
   const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>(
-    DEFAULT_WHERE_CLAUSES
+    options?.where ?? DEFAULT_WHERE_CLAUSES
   );
   const [orderByClauses, setOrderClauses] = React.useState<OrderBy[]>(
-    DEFAULT_ORDER_BY_CLAUSES
+    options?.order_by ?? DEFAULT_ORDER_BY_CLAUSES
   );
 
   /**
@@ -53,16 +104,6 @@ export const DataGrid = (props: DataGridProps) => {
     setWhereClauses(DEFAULT_WHERE_CLAUSES);
     setOrderClauses(DEFAULT_ORDER_BY_CLAUSES);
   };
-
-  const { dataSourceName, table } = props;
-
-  /**
-   * React preserves the component's state between table to table switch.
-   * This helps the component to shed the options in between the user's jump between one table to another
-   */
-  useEffect(() => {
-    refreshAllOptions();
-  }, [dataSourceName, table]);
 
   /**
    * React query hook wrapper to get the rows for
@@ -83,7 +124,121 @@ export const DataGrid = (props: DataGridProps) => {
     },
   });
 
-  const { data: tableColumnQuery } = useTableColumns({ table, dataSourceName });
+  const { data: tableColumnQueryResult } = useTableColumns({
+    table,
+    dataSourceName,
+  });
+
+  const { data: relationships, isFetching } = useListAllDatabaseRelationships({
+    table,
+    dataSourceName,
+  });
+
+  useEffect(() => {
+    if (!disableRunQuery)
+      updateOptions?.({
+        limit: pageSize,
+        offset: pageIndex * pageSize,
+        order_by: orderByClauses,
+        where: whereClauses,
+      });
+  }, [pageIndex, pageSize]);
+
+  const handleOnRelationshipClick = ({
+    relationship,
+    rowData,
+  }: {
+    relationship: Relationship;
+    rowData: TableRow;
+  }) => {
+    /**
+     * Only local relationship can be accessed via browse rows.
+     */
+    if (relationship.type !== 'localRelationship') return;
+
+    const equalToOperator = getEqualToOperator(
+      tableColumnQueryResult?.supportedOperators ?? []
+    );
+
+    const currentTablePrimaryKeys =
+      tableColumnQueryResult?.columns
+        .filter(col => col.isPrimaryKey)
+        .map(col => col.name) ?? [];
+
+    const currentTableFilters: WhereClause[] = Object.entries(rowData)
+      .filter(([fromColumn]) => {
+        // if primary key is present for the current table then only use that column for the filter
+        if (currentTablePrimaryKeys.length) {
+          return currentTablePrimaryKeys.includes(fromColumn);
+        }
+
+        // in case of databases like BigQuery where there is no concept of PKs, then every column is valid filter
+        return true;
+      })
+      .map(([fromColumn, value]) => {
+        return {
+          [fromColumn]: {
+            [equalToOperator]: value as string | number | boolean,
+          },
+        };
+      });
+
+    /**
+     * This will be the set of WhereClauses that will by default when opening the active relationship.
+     * To find the columns to be used for the where clauses, we utilise the columnMapping from the relationships definition
+     */
+    const relationshipTableFilters: WhereClause[] = Object.entries(
+      rowData
+    ).reduce<WhereClause[]>((acc, currentEntry) => {
+      const [fromColumn, value] = currentEntry;
+
+      const referenceTableColumn = relationship.definition.mapping[fromColumn];
+
+      // If there is no reference column mapping, then keep the original result
+      if (!referenceTableColumn) return acc;
+
+      // If there is a reference column mapping, then add it to the filters.
+      return [
+        ...acc,
+        {
+          [referenceTableColumn]: {
+            [equalToOperator]: value,
+          },
+        },
+      ];
+    }, []);
+
+    onRelationshipOpen?.({
+      /**
+       * dataSourceName is the same as the current table's since it's a local relationship
+       */
+      dataSourceName,
+      /**
+       * the target table is taken from the relationship definition
+       */
+      table: relationship.definition.toTable,
+      /**
+       * only whereClause filters are required to narrow down a relationship's rows
+       */
+      options: {
+        where: relationshipTableFilters,
+      },
+      /**
+       * This will be used to generate a unique identifier for the opened relationship view
+       */
+      relationshipName: relationship.name,
+      /**
+       * This will be applied on the current table to show only the row that's been clicked on.
+       */
+      parentTableFilter: currentTableFilters,
+      parentOptions: {
+        where: currentTableFilters,
+        order_by: orderByClauses,
+        limit: pageSize,
+        offset: pageIndex * pageSize,
+      },
+    });
+  };
 
   if (rows === Feature.NotImplemented)
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
@@ -104,13 +259,14 @@ export const DataGrid = (props: DataGridProps) => {
           setPageSize,
         }}
         query={{
+          disableRunQuery,
           onQuerySearch: () => {
             setQueryDialogVisibility(true);
           },
           onRefreshQueryOptions: refreshAllOptions,
           orderByClauses,
           whereClauses,
-          supportedOperators: tableColumnQuery?.supportedOperators ?? [],
+          supportedOperators: tableColumnQueryResult?.supportedOperators ?? [],
           removeWhereClause: id => {
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
           },
@@ -120,7 +276,7 @@ export const DataGrid = (props: DataGridProps) => {
         }}
       />
 
-      {isLoading ? (
+      {isLoading || isFetching ? (
         <div className="my-4">
           <Skeleton height={30} count={8} className="my-2" />
         </div>
@@ -136,6 +292,14 @@ export const DataGrid = (props: DataGridProps) => {
           sort={{
             sorting,
             setSorting,
+          }}
+          relationships={{
+            allRelationships: relationships ?? [],
+            activeRelationships,
+            onClose: relationshipName => {
+              onRelationshipClose?.(relationshipName);
+            },
+            onClick: handleOnRelationshipClick,
           }}
         />
       )}
@@ -159,6 +323,21 @@ export const DataGrid = (props: DataGridProps) => {
               })
             );
             setOrderClauses(sorts);
+
+            if (!disableRunQuery)
+              updateOptions?.({
+                limit: pageSize,
+                offset: pageIndex * pageSize,
+                order_by: sorts,
+                where: filters.map(filter => {
+                  return {
+                    [filter.column]: {
+                      [filter.operator]: filter.value ?? '',
+                    },
+                  };
+                }),
+              });
+
             setQueryDialogVisibility(false);
           }}
           filters={whereClauses?.map(clause => {

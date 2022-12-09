@@ -32,12 +32,12 @@ import Data.Aeson.QQ.Simple
 import Data.Aeson.Types (Pair)
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Map.Strict qualified as Map
-import Data.Text qualified as T
 import Harness.Exceptions (throw, withFrozenCallStack)
+import Harness.Logging.Messages
 import Harness.TestEnvironment
   ( Server (..),
     TestEnvironment (..),
-    testLogHarness,
+    testLogMessage,
   )
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
@@ -120,10 +120,6 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
         atomicModify :: IORef x -> (x -> x) -> IO ()
         atomicModify ref f = atomicModifyIORef' ref \x -> (f x, ())
 
-        -- Convenience function for converting JSON values to strings.
-        jsonToString :: Value -> String
-        jsonToString = T.unpack . WS.fromLazyByteString . encode
-
         -- Is this an actual message or client/server busywork?
         isInteresting :: Value -> Bool
         isInteresting res =
@@ -141,12 +137,10 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
           msgBytes <- WS.receiveData conn
           case eitherDecode msgBytes of
             Left err -> do
-              testLogHarness testEnvironment $ "Subscription decode failed: " ++ err
-              testLogHarness testEnvironment $ "Payload was: " <> msgBytes
               throw $ userError (unlines ["Subscription decode failed: " <> err, "Payload: " <> show msgBytes])
             Right msg -> do
               when (isInteresting msg) do
-                testLogHarness testEnvironment $ "subscriptions message: " ++ jsonToString msg
+                testLogMessage testEnvironment $ LogSubscriptionResponse msg
 
                 let maybePayload :: Maybe Value
                     maybePayload = preview (key "payload") msg
@@ -156,7 +150,6 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
 
                 case liftA2 (,) maybePayload maybeIdentifier of
                   Nothing -> do
-                    testLogHarness testEnvironment ("Unable to parse message" :: Text)
                     throw $ userError ("Unable to parse message: " ++ show msg)
                   Just (payload, identifier) ->
                     readIORef handlers >>= \mvars ->
@@ -183,8 +176,7 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
           atomicModify handlers (Map.insert (tshow subId) messageBox)
 
           -- initialize a connection.
-          testLogHarness testEnvironment ("Initialising websocket connection" :: Text)
-          testLogHarness testEnvironment (encode query)
+          testLogMessage testEnvironment $ LogSubscriptionInit query
           WS.sendTextData conn (encode $ startQueryMessage subId query extras)
           pure $ SubscriptionHandle messageBox
 

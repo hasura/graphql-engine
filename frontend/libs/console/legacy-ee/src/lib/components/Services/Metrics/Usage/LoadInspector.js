@@ -2,7 +2,7 @@ import React from 'react';
 
 import Modal from '../Common/UsageInspectModal';
 
-const LoadInspector = (props) => {
+const LoadInspector = props => {
   const { RenderLink, data, onHide, groupBys } = props;
   return (
     <Modal

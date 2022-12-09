@@ -4,7 +4,7 @@ export const getGraphiQLQueryFromLocalStorage = () => {
   return getLSItem(LS_KEYS.graphiqlQuery);
 };
 
-export const setGraphiQLQueryInLocalStorage = (query) => {
+export const setGraphiQLQueryInLocalStorage = query => {
   return setLSItem(LS_KEYS.graphiqlQuery, query);
 };
 
@@ -12,7 +12,7 @@ export const clearCodeMirrorHints = () => {
   const cmNodes = document.querySelectorAll('.CodeMirror-hints.graphiql');
 
   if (cmNodes.length > 0) {
-    cmNodes.forEach((cm) => {
+    cmNodes.forEach(cm => {
       cm.remove();
     });
   }
@@ -25,7 +25,7 @@ export const setQueryVariableSectionHeight = () => {
   }
 };
 
-export const copyToClipboard = (copyString) => {
+export const copyToClipboard = copyString => {
   const queryTextArea = document.createElement('textarea');
   queryTextArea.value = copyString;
   queryTextArea.setAttribute('readonly', '');

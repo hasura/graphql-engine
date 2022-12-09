@@ -26,7 +26,7 @@ data MakeSomeYaml = MakeSomeYaml
 
 -- ** Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = describe "Yaml quasiquoters" $ do
   describe "yaml quoter" $ do
     it "Interpolates a simple value using a Yaml anchor" $ const do

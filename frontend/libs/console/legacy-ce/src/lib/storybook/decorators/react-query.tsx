@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 
 export const ReactQueryDecorator = (): DecoratorFn => {
   const reactQueryClient = new QueryClient();
-  return (Story) => (
+  return Story => (
     <QueryClientProvider client={reactQueryClient}>
       <Story />
       <ReactQueryDevtools />

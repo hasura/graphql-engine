@@ -100,7 +100,7 @@ validateDeleteQ ::
 validateDeleteQ query = do
   let source = doSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 

@@ -12,8 +12,6 @@ module Hasura.Incremental
     -- * Abstract interface
     ArrowDistribute (..),
     ArrowCache (..),
-    MonadDepend (..),
-    DependT,
 
     -- * Fine-grained dependencies
     Dependency,

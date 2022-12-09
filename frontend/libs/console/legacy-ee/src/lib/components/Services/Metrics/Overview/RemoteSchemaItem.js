@@ -9,7 +9,7 @@ const RemoteSchemaItem = ({ source, inconsistentObjects }) => {
   const sourceName = name || definition || '';
   const isInconsistent =
     inconsistentObjects.find(
-      (i) => i.type === 'remote_schema' && i?.definition?.name === sourceName
+      i => i.type === 'remote_schema' && i?.definition?.name === sourceName
     ) !== undefined;
 
   return (

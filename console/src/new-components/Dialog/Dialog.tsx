@@ -16,6 +16,7 @@ export type FooterProps = {
   className?: string;
   onSubmitAnalyticsName?: string;
   onCancelAnalyticsName?: string;
+  disabled?: boolean;
 };
 
 const Footer: React.VFC<FooterProps> = ({
@@ -28,6 +29,7 @@ const Footer: React.VFC<FooterProps> = ({
   className,
   onSubmitAnalyticsName,
   onCancelAnalyticsName,
+  disabled = false,
 }) => {
   const callToActionProps = onSubmit ? { onClick: onSubmit } : {};
 
@@ -54,6 +56,7 @@ const Footer: React.VFC<FooterProps> = ({
         </div>
       )}
       <Button
+        disabled={disabled}
         {...callToActionProps}
         type="submit"
         mode="primary"

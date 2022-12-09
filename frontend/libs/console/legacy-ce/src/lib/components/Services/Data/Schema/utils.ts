@@ -7,7 +7,7 @@ export const getTrackableFunctions = (
   functionsList: PGFunction[],
   trackedFunctions: PGFunction[]
 ): PGFunction[] => {
-  const trackedFuncNames = trackedFunctions.map((fn) => fn.function_name);
+  const trackedFuncNames = trackedFunctions.map(fn => fn.function_name);
   const filterCondition = (func: PGFunction) =>
     !trackedFuncNames.includes(func.function_name);
   return functionsList.filter(filterCondition);

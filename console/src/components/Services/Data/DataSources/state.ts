@@ -76,7 +76,7 @@ export const defaultState: ConnectDBState = {
   preparedStatements: false,
   isolationLevel: 'read-committed',
   customization: {
-    namingConvention: 'hasura-default',
+    namingConvention: null,
   },
 };
 
@@ -118,10 +118,10 @@ const setDataFromEnv = (str: string) => {
     : undefined;
 };
 
-const checkUndef = (obj?: Record<string, any>) =>
+const checkUndef = (obj?: Record<string, any> | string | null) =>
   obj && Object.values(obj).some(el => el !== undefined && el !== null);
 
-const checkEmpty = (obj?: Record<string, any>) =>
+const checkEmpty = (obj?: Record<string, any> | null | string) =>
   obj && Object.keys(obj).length !== 0 && checkUndef(obj);
 
 export const connectDataSource = (
@@ -197,17 +197,17 @@ export const connectDataSource = (
         }),
       preparedStatements: currentState.preparedStatements,
       isolationLevel: currentState.isolationLevel,
-      ...(checkEmpty(currentState.customization) && {
-        customization: {
-          ...(checkEmpty(currentState.customization?.rootFields) && {
-            rootFields: currentState.customization?.rootFields,
-          }),
-          ...(checkEmpty(currentState.customization?.typeNames) && {
-            typeNames: currentState.customization?.typeNames,
-          }),
+      customization: {
+        ...(checkEmpty(currentState.customization?.rootFields) && {
+          rootFields: currentState.customization?.rootFields,
+        }),
+        ...(checkEmpty(currentState.customization?.typeNames) && {
+          typeNames: currentState.customization?.typeNames,
+        }),
+        ...(checkEmpty(currentState.customization?.namingConvention) && {
           namingConvention: currentState.customization?.namingConvention,
-        },
-      }),
+        }),
+      },
     },
   };
 

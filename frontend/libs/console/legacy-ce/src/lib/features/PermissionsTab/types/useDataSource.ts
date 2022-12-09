@@ -4,7 +4,7 @@ import { NewDataSource } from './types';
 
 export const useDataSource = () => {
   const database: string = useAppSelector(
-    (state) => state.tables.currentDataSource
+    state => state.tables.currentDataSource
   );
   const driver = currentDriver;
   return {

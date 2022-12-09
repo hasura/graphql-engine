@@ -262,10 +262,8 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> =
             {responseTransformState.isResponsePayloadTransform &&
             responseBodyOnChange ? (
               <ResponseTransforms
-                requestSampleInput={responseTransformState.responseSampleInput}
-                requestBody={responseTransformState.responseBody}
-                requestBodyError={responseTransformState.responseBodyError}
-                requestBodyOnChange={responseBodyOnChange}
+                responseBody={responseTransformState.responseBody}
+                responseBodyOnChange={responseBodyOnChange}
               />
             ) : null}
           </div>

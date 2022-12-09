@@ -60,8 +60,8 @@ runRequestAcceptStatus' acceptStatus req = do
   (tracedReq, responseOrException) <- tracedHttpRequest transformableReq' (\tracedReq -> fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ TransformableHTTP.performRequest tracedReq _accHttpManager)
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of
-    Left ex ->
-      throw500 $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeHTTPExceptionMessage (Hasura.HTTP.HttpException ex)
+    -- throwConnectionError is used here in order to avoid a metadata inconsistency error
+    Left ex -> throwConnectionError $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeHTTPExceptionMessage (Hasura.HTTP.HttpException ex)
     Right response -> do
       let status = TransformableHTTP.responseStatus response
           servantResponse = clientResponseToResponse id response

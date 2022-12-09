@@ -11,7 +11,7 @@ export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
   Default stale time is 5 minutes, but can be adjusted using the staleTime arg
 */
 
-export const useMetadata = <T>(
+export const useMetadata = <T = Metadata>(
   selector?: (m: Metadata) => T,
   staleTime: number = DEFAULT_STALE_TIME
 ) => {

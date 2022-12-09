@@ -1,3 +1,4 @@
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import { Dialog } from '@/new-components/Dialog';
 import { Checkbox } from '@/new-components/Form';
@@ -68,16 +69,18 @@ export const PermissionsConfirmationModal: React.FC<Props> = ({
     hasBackdrop
     footer={<CustomDialogFooter onSubmit={onSubmit} onClose={onClose} />}
   >
-    <div className="flex items-top p-md">
-      <div className="text-yellow-500">
-        <FaExclamationTriangle className="w-9 h-9 mr-md fill-current" />
-      </div>
-      <div>
-        <p className="font-semibold">{title}</p>
-        <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
-          <p className="m-0">{description}</p>
+    <Analytics name="PermissionsConfirmationModal" {...REDACT_EVERYTHING}>
+      <div className="flex items-top p-md">
+        <div className="text-yellow-500">
+          <FaExclamationTriangle className="w-9 h-9 mr-md fill-current" />
+        </div>
+        <div>
+          <p className="font-semibold">{title}</p>
+          <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
+            <p className="m-0">{description}</p>
+          </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   </Dialog>
 );

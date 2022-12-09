@@ -9,7 +9,7 @@ import {
 } from 'graphql';
 
 /* This function sets the styling to the way the relationship looks, for eg: article.id -> user.user_id */
-export const getRelDef = (relMeta) => {
+export const getRelDef = relMeta => {
   const lcol =
     relMeta.lcol.length > 1
       ? '( ' + relMeta.lcol.join(', ') + ' )'
@@ -34,9 +34,9 @@ export const getRelDef = (relMeta) => {
 
 /* Gets the complete list of relationships and converts it to a list of object, which looks like so :
 [ { objRel: {objectRelationship}, arrRel: {arrayRelationship} } ] */
-export const getObjArrRelList = (relationships) => {
-  const objRels = relationships.filter((r) => r.rel_type === 'object');
-  const arrRels = relationships.filter((r) => r.rel_type !== 'object');
+export const getObjArrRelList = relationships => {
+  const objRels = relationships.filter(r => r.rel_type === 'object');
+  const arrRels = relationships.filter(r => r.rel_type !== 'object');
   const requiredList = [];
   const length =
     objRels.length > arrRels.length ? objRels.length : arrRels.length;
@@ -52,7 +52,7 @@ export const getObjArrRelList = (relationships) => {
   return requiredList;
 };
 
-const getUnderlyingType = (t) => {
+const getUnderlyingType = t => {
   let _type = t;
   while (isWrappingType(_type)) {
     _type = _type.ofType;
@@ -73,7 +73,7 @@ export const getSchemaTree = (relationship, fields) => {
   ) => {
     if (parentField.arguments) {
       const search = parentField.arguments.find(
-        (a) =>
+        a =>
           a.name === arg.name &&
           a.argNesting === argNesting &&
           a.parentArg === parentArg
@@ -113,10 +113,10 @@ export const getSchemaTree = (relationship, fields) => {
       parentArg,
     });
     if (isChecked) {
-      const handleWrappingTypeArg = (__fieldtype) => {
+      const handleWrappingTypeArg = __fieldtype => {
         const currentFieldType = getUnderlyingType(__fieldtype);
         if (currentFieldType._fields) {
-          Object.values(currentFieldType._fields).forEach((fa) =>
+          Object.values(currentFieldType._fields).forEach(fa =>
             handleArg(
               fa,
               nesting,
@@ -127,9 +127,9 @@ export const getSchemaTree = (relationship, fields) => {
           );
         }
       };
-      const handleInputObjectTypeArg = (__fieldtype) => {
+      const handleInputObjectTypeArg = __fieldtype => {
         if (__fieldtype._fields) {
-          Object.values(__fieldtype._fields).forEach((fa) =>
+          Object.values(__fieldtype._fields).forEach(fa =>
             handleArg(
               fa,
               nesting,
@@ -150,7 +150,7 @@ export const getSchemaTree = (relationship, fields) => {
 
   const isFieldChecked = (field, nesting) => {
     if (
-      remoteField.find((rf) => field.name === rf.name && nesting === rf.nesting)
+      remoteField.find(rf => field.name === rf.name && nesting === rf.nesting)
     ) {
       return true;
     }
@@ -171,25 +171,25 @@ export const getSchemaTree = (relationship, fields) => {
     });
     if (isChecked) {
       const currentSelectedField = remoteField.find(
-        (rf) => field.name === rf.name && nesting === rf.nesting
+        rf => field.name === rf.name && nesting === rf.nesting
       );
       field.args
         .sort((fa1, fa2) => {
           return fa1.name > fa2.name ? 1 : fa1.name < fa2.name ? -1 : 0;
         })
-        .forEach((fa) => {
+        .forEach(fa => {
           handleArg(fa, nesting + 1, 0, currentSelectedField, '');
         });
 
       const handleScalarTypeField = () => {};
 
-      const handleObjectTypeField = (__fieldtype) => {
-        Object.values(__fieldtype._fields).forEach((f) =>
+      const handleObjectTypeField = __fieldtype => {
+        Object.values(__fieldtype._fields).forEach(f =>
           handleField(f, nesting + 1)
         );
       };
 
-      const handleListTypeField = (__fieldtype) => {
+      const handleListTypeField = __fieldtype => {
         const unwrappedType = getUnderlyingType(__fieldtype);
         if (isObjectType(unwrappedType) || isInterfaceType(unwrappedType)) {
           handleObjectTypeField(unwrappedType);
@@ -208,7 +208,7 @@ export const getSchemaTree = (relationship, fields) => {
     }
   };
 
-  fields.forEach((f) => handleField(f, 0));
+  fields.forEach(f => handleField(f, 0));
 
   return schemaTree;
 };
@@ -251,7 +251,7 @@ export const getRemoteRelPayload = (remoteRel, table) => {
   const hasuraFields = [];
   const getArgs = (field, argNesting, parentArg, _argObj) => {
     const argObj = { ..._argObj };
-    field.arguments.forEach((a) => {
+    field.arguments.forEach(a => {
       if (a.argNesting === argNesting && parentArg === a.parentArg) {
         if (a.column) {
           argObj[a.name] = `$${a.column}`;
@@ -271,8 +271,8 @@ export const getRemoteRelPayload = (remoteRel, table) => {
     return argObj;
   };
 
-  const getRemoteFieldObj = (nesting) => {
-    const _rf = remoteField.find((rf) => rf.nesting === nesting);
+  const getRemoteFieldObj = nesting => {
+    const _rf = remoteField.find(rf => rf.nesting === nesting);
     if (!_rf) {
       return undefined;
     }
@@ -290,9 +290,9 @@ export const getRemoteRelPayload = (remoteRel, table) => {
 
   payload.remote_field = getRemoteFieldObj(0);
   payload.hasura_fields = [];
-  hasuraFields.forEach((hf) => {
+  hasuraFields.forEach(hf => {
     if (hf.constructor.name === 'Array') {
-      hf.forEach((f) => payload.hasura_fields.push(f));
+      hf.forEach(f => payload.hasura_fields.push(f));
     } else {
       payload.hasura_fields.push(hf);
     }
@@ -302,12 +302,12 @@ export const getRemoteRelPayload = (remoteRel, table) => {
   return payload;
 };
 
-export const parseRemoteRelationship = (remoteRel) => {
+export const parseRemoteRelationship = remoteRel => {
   let _remoteField = { ...remoteRel.remote_field };
   const remoteFields = [];
   let nesting = 0;
 
-  const getArgs = (field) => {
+  const getArgs = field => {
     const argsList = [];
     const serialiseArgs = (args, argNesting, parentArg) => {
       Object.keys(args).forEach((a, i) => {
@@ -361,7 +361,7 @@ export const getRemoteRelConfig = (rel, tableName, styles) => {
   if (!rel.remoteSchema) {
     return '';
   }
-  const remoteField = rel.remoteField.find((f) => f.nesting === 0);
+  const remoteField = rel.remoteField.find(f => f.nesting === 0);
   if (!remoteField) return '';
 
   return (

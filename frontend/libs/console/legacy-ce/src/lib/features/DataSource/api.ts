@@ -1,5 +1,9 @@
 import { AxiosInstance } from 'axios';
-import { Metadata, Source, SupportedDrivers } from '@/features/MetadataAPI';
+import {
+  Metadata,
+  Source,
+  SupportedDrivers,
+} from '@/features/hasura-metadata-types';
 
 export interface NetworkArgs {
   httpClient: AxiosInstance;

@@ -112,3 +112,5 @@ instance Backend 'BigQuery where
   resizeSourcePools _sourceConfig _serverReplicas =
     -- BigQuery does not posses connection pooling
     pure ()
+
+  defaultTriggerOnReplication = error "Event triggers are not supported for the BigQuery source."

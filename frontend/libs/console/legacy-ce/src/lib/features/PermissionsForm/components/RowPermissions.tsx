@@ -1,22 +1,20 @@
 import React from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
-
-import 'brace/mode/json';
-import 'brace/theme/github';
-
-import { NormalizedTable, Table } from '@/dataSources/types';
-import { PGFunction } from '@/dataSources/services/postgresql/types';
-import { generateTableDef } from '@/dataSources';
+import AceEditor from 'react-ace';
+import { useFormContext } from 'react-hook-form';
+import { Table } from '@/features/hasura-metadata-types';
+import { useHttpClient } from '@/features/Network';
+import { useQuery } from 'react-query';
+import { exportMetadata } from '@/features/DataSource';
+import { areTablesEqual } from '@/features/RelationshipsTable';
+import { getTypeName } from '@/features/GraphQLUtils';
 import { InputField } from '@/new-components/Form';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapse } from '@/new-components/deprecated';
 import { getIngForm } from '../../../components/Services/Data/utils';
 
-import JSONEditor from './JSONEditor';
-import PermissionBuilder from '../PermissionBuilder/PermissionBuilder';
+import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 import { QueryType } from '../types';
-import { DataLeaf } from '../../PermissionsTab/types/types';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">
@@ -37,13 +35,11 @@ const CustomLabel = () => (
 );
 
 export interface RowPermissionsProps {
-  dataLeaf: DataLeaf;
+  table: unknown;
   queryType: QueryType;
   subQueryType?: string;
-
   allRowChecks: Array<{ queryType: QueryType; value: string }>;
-  allSchemas?: NormalizedTable[];
-  allFunctions?: PGFunction[];
+  dataSourceName: string;
 }
 
 enum SelectedSection {
@@ -87,15 +83,51 @@ const getRowPermissionCheckType = (
   return 'filterType';
 };
 
+const useTypeName = ({
+  table,
+  dataSourceName,
+}: {
+  table: Table;
+  dataSourceName: string;
+}) => {
+  const httpClient = useHttpClient();
+
+  return useQuery({
+    queryKey: ['gql_introspection', 'type_name', table, dataSourceName],
+    queryFn: async () => {
+      const { metadata } = await exportMetadata({ httpClient });
+      const metadataSource = metadata.sources.find(
+        s => s.name === dataSourceName
+      );
+      const metadataTable = metadataSource?.tables.find(t =>
+        areTablesEqual(t.table, table)
+      );
+
+      if (!metadataSource || !metadataTable)
+        throw Error('unable to generate type name');
+
+      // This is very GDC specific. We have to move this to DAL later
+      const typeName = getTypeName({
+        defaultQueryRoot: (table as string[]).join('_'),
+        operation: 'select',
+        sourceCustomization: metadataSource?.customization,
+        configuration: metadataTable.configuration,
+      });
+
+      return typeName;
+    },
+  });
+};
+
 export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
+  table,
   queryType,
   subQueryType,
-  dataLeaf,
   allRowChecks,
-  allSchemas,
-  allFunctions,
+  dataSourceName,
 }) => {
-  const { control, register, watch, setValue } = useFormContext();
+  const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
+  const { register, watch, setValue } = useFormContext();
   // determines whether the inputs should be pointed at `check` or `filter`
   const rowPermissions = getRowPermission(queryType, subQueryType);
   // determines whether the check type should be pointer at `checkType` or `filterType`
@@ -108,15 +140,10 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   const disabled =
     queryType === 'update' && subQueryType === 'post' && !watch('check');
 
-  const schemaList = React.useMemo(
-    () => allSchemas?.map(({ table_schema }) => table_schema),
-    [allSchemas]
-  );
-
   const selectedSection = watch(rowPermissionsCheckType);
 
   return (
-    <fieldset className="grid gap-2">
+    <fieldset key={queryType} className="grid gap-2">
       <div>
         <label className="flex items-center gap-2">
           <input
@@ -126,7 +153,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
             disabled={disabled}
             onClick={() => {
               setValue(rowPermissionsCheckType, SelectedSection.NoChecks);
-              setValue(rowPermissions, '{}');
+              setValue(rowPermissions, {});
             }}
             {...register(rowPermissionsCheckType)}
           />
@@ -134,13 +161,21 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
         </label>
 
         {selectedSection === SelectedSection.NoChecks && (
-          <div className="pt-4">
-            <JSONEditor
-              data="{}"
+          <div className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
+            <AceEditor
+              mode="json"
+              minLines={1}
+              fontSize={14}
+              height="18px"
+              width="100%"
+              theme="github"
+              name={`${tableName}-json-editor`}
+              value="{}"
               onChange={() =>
                 setValue(rowPermissionsCheckType, SelectedSection.Custom)
               }
-              initData="{}"
+              editorProps={{ $blockScrolling: true }}
+              setOptions={{ useWorker: false }}
             />
           </div>
         )}
@@ -166,14 +201,21 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           </label>
 
           {selectedSection === query && (
-            <div className="pt-4">
-              <JSONEditor
-                data={value}
-                onChange={(output) => {
-                  setValue(rowPermissionsCheckType, SelectedSection.Custom);
-                  setValue(rowPermissions, output);
-                }}
-                initData=""
+            <div className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
+              <AceEditor
+                mode="json"
+                minLines={1}
+                fontSize={14}
+                height="18px"
+                width="100%"
+                theme="github"
+                name={`${tableName}-json-editor`}
+                value="{}"
+                onChange={() =>
+                  setValue(rowPermissionsCheckType, SelectedSection.Custom)
+                }
+                editorProps={{ $blockScrolling: true }}
+                setOptions={{ useWorker: false }}
               />
             </div>
           )}
@@ -194,39 +236,16 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
 
         {selectedSection === SelectedSection.Custom && (
           <div className="pt-4">
-            <Controller
-              control={control}
-              name={rowPermissions}
-              render={({ field: { onChange, value } }) => (
-                <>
-                  <JSONEditor
-                    data={value || '{}'}
-                    onChange={(output) => {
-                      onChange(output);
-                    }}
-                    initData="{}"
-                  />
-
-                  {allSchemas && allFunctions && schemaList && (
-                    <PermissionBuilder
-                      dispatchFuncSetFilter={(output) => {
-                        onChange(output);
-                      }}
-                      loadSchemasFunc={() => {}}
-                      tableDef={generateTableDef(
-                        dataLeaf.leaf?.name || '',
-                        dataLeaf.name
-                      )}
-                      allTableSchemas={allSchemas as Table[]}
-                      allFunctions={allFunctions}
-                      schemaList={schemaList}
-                      filter={value || '{}'}
-                      dispatch={() => console.log('output')}
-                    />
-                  )}
-                </>
-              )}
-            />
+            {!isLoading && tableName ? (
+              <RowPermissionBuilder
+                tableName={tableName}
+                nesting={['filter']}
+                table={table}
+                dataSourceName={dataSourceName}
+              />
+            ) : (
+              <>Loading...</>
+            )}
           </div>
         )}
       </div>
@@ -258,36 +277,35 @@ const getStatus = (rowPermissions: string) => {
   return 'With custom checks';
 };
 
-export const RowPermissionsSectionWrapper: React.FC<
-  RowPermissionsWrapperProps
-> = ({ children, queryType, roleName, defaultOpen }) => {
-  const { watch } = useFormContext();
+export const RowPermissionsSectionWrapper: React.FC<RowPermissionsWrapperProps> =
+  ({ children, queryType, roleName, defaultOpen }) => {
+    const { watch } = useFormContext();
 
-  const rowPermissions = watch('rowPermissions');
-  const status = React.useMemo(
-    () => getStatus(rowPermissions),
-    [rowPermissions]
-  );
+    const rowPermissions = watch('rowPermissions');
+    const status = React.useMemo(
+      () => getStatus(rowPermissions),
+      [rowPermissions]
+    );
 
-  return (
-    <Collapse
-      title={`Row ${queryType} permissions`}
-      tooltip={`Set permission rule for ${getIngForm(queryType)} rows`}
-      status={status}
-      defaultOpen={defaultOpen}
-      data-test="toggle-row-permission"
-    >
-      <Collapse.Content>
-        <div className="mb-2">
-          <p>
-            Allow role <strong>{roleName}</strong> to {queryType}&nbsp;
-            <strong>rows</strong>:
-          </p>
-        </div>
-        {children}
-      </Collapse.Content>
-    </Collapse>
-  );
-};
+    return (
+      <Collapse
+        title={`Row ${queryType} permissions`}
+        tooltip={`Set permission rule for ${getIngForm(queryType)} rows`}
+        status={status}
+        defaultOpen={defaultOpen}
+        data-test="toggle-row-permission"
+      >
+        <Collapse.Content>
+          <div className="mb-2">
+            <p>
+              Allow role <strong>{roleName}</strong> to {queryType}&nbsp;
+              <strong>rows</strong>:
+            </p>
+          </div>
+          {children}
+        </Collapse.Content>
+      </Collapse>
+    );
+  };
 
 export default RowPermissionsSection;

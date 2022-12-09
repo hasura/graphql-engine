@@ -32,7 +32,7 @@ export const AddAgentForm = (props: CreateAgentFormProps) => {
       // something is wrong with type inference with react-hook-form form wrapper. temp until the issue is resolved
       onSubmit={handleSubmit as any}
       options={{ defaultValues: { url: '', name: '' } }}
-      className="p-0 py-4"
+      className="py-4"
     >
       {() => {
         return (

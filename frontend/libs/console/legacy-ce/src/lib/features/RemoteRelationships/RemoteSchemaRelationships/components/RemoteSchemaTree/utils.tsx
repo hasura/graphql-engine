@@ -53,14 +53,14 @@ export const findRemoteField = (
   fields: RelationshipFields[],
   field: AntdTreeNode
 ) => {
-  return fields.find((f) => f.key === field.key);
+  return fields.find(f => f.key === field.key);
 };
 
 const isElementActive = (
   relationshipFields: RelationshipFields[],
   fieldKey: string
 ) => {
-  return relationshipFields.some((f) => f.key === fieldKey);
+  return relationshipFields.some(f => f.key === fieldKey);
 };
 
 export const getUnderlyingType = (_type: Record<string, any>) => {
@@ -84,7 +84,7 @@ export const getCheckedArgValue = (
   relationshipFields: RelationshipFields[],
   key: string
 ): ArgValue | null => {
-  const field = relationshipFields.find((r) => r.key === key);
+  const field = relationshipFields.find(r => r.key === key);
   if (field) {
     return field.argValue;
   }
@@ -131,7 +131,7 @@ const buildArgElement = ({
       children = [getPlaceholderChild(argKey, depth + 1)];
       if (isActive) {
         children = [
-          ...Object.values(argFields).map((argField) =>
+          ...Object.values(argFields).map(argField =>
             buildArgElement({
               arg: argField,
               parentKey: argKey,
@@ -214,7 +214,7 @@ const buildFieldElement = ({
           type: 'field',
           depth,
         },
-        ...field.args.map((arg) =>
+        ...field.args.map(arg =>
           buildArgElement({
             arg,
             parentKey: `${fieldKey}.arguments`,
@@ -238,7 +238,7 @@ const buildFieldElement = ({
             type: 'field',
             depth,
           },
-          ...Object.values(subFields).map((subField) =>
+          ...Object.values(subFields).map(subField =>
             buildFieldElement({
               field: subField,
               parentKey: `${fieldKey}.field`,
@@ -300,7 +300,7 @@ export const buildTree = ({
         checkable: false,
         depth: 0,
         type: 'field',
-        children: Object.values(fields).map((field) =>
+        children: Object.values(fields).map(field =>
           buildFieldElement({
             field,
             parentKey: `${fieldKey}.field`,
@@ -325,7 +325,7 @@ export const buildTree = ({
         checkable: false,
         depth: 0,
         type: 'field',
-        children: Object.values(fields).map((field) =>
+        children: Object.values(fields).map(field =>
           buildFieldElement({
             field,
             parentKey: `${fieldKey}.field`,
@@ -350,7 +350,7 @@ export const buildTree = ({
         checkable: false,
         depth: 0,
         type: 'field',
-        children: Object.values(fields).map((field) =>
+        children: Object.values(fields).map(field =>
           buildFieldElement({
             field,
             parentKey: `${fieldKey}.field`,
@@ -376,7 +376,7 @@ const getRemoteFieldObject = (
     return;
   }
   const obj: RemoteField | InputArgumentsType = {};
-  const depthRemoteFields: string[] = ukSplit.map((uk) => uk[depth] ?? '');
+  const depthRemoteFields: string[] = ukSplit.map(uk => uk[depth] ?? '');
 
   // get unique depth remote fields at current depth
   const uniqueDepthRemoteFields = Array.from(new Set(depthRemoteFields));
@@ -417,15 +417,15 @@ const getRemoteFieldObject = (
 
 const getUniqueRelFields = (relationshipFields: RelationshipFields[]) => {
   return relationshipFields?.filter(
-    (f) =>
+    f =>
       !relationshipFields.some(
-        (refF) => refF.key !== f.key && refF.key.includes(f.key)
+        refF => refF.key !== f.key && refF.key.includes(f.key)
       )
   );
 };
 
 const getKeysWithArgValues = (relationshipFields: RelationshipFields[]) =>
-  relationshipFields?.map((field) => {
+  relationshipFields?.map(field => {
     if (field.type === 'arg') {
       if (field.argValue && field.argValue?.kind === 'static')
         return `${field.key}.__argVal.${field.argValue?.value}`;
@@ -442,9 +442,9 @@ export const buildServerRemoteFieldObject = (
   const uniqueRelFields = getUniqueRelFields(relationshipFields);
   const uniqueKeys = getKeysWithArgValues(uniqueRelFields);
   const ukSplit: string[][] = [];
-  uniqueKeys.forEach((uk) => ukSplit.push(uk.split('.')));
+  uniqueKeys.forEach(uk => ukSplit.push(uk.split('.')));
   let maxDepth = 0;
-  ukSplit.forEach((ar) => {
+  ukSplit.forEach(ar => {
     if (ar.length > maxDepth) maxDepth = ar.length;
   });
 
@@ -453,10 +453,10 @@ export const buildServerRemoteFieldObject = (
 };
 
 export const getExpandedKeys = (relationshipFields: RelationshipFields[]) =>
-  relationshipFields.filter((rf) => !rf.argValue).map((rf) => rf.key);
+  relationshipFields.filter(rf => !rf.argValue).map(rf => rf.key);
 
 export const getCheckedKeys = (relationshipFields: RelationshipFields[]) =>
-  relationshipFields.filter((rf) => rf.argValue).map((rf) => rf.key);
+  relationshipFields.filter(rf => rf.argValue).map(rf => rf.key);
 
 export const parseArgValue = (
   argValue: InputArgumentValueType
@@ -494,7 +494,7 @@ const serialiseArguments = (
   callback: (f: RelationshipFields) => void
 ): void => {
   if (typeof args === 'object') {
-    Object.keys(args).forEach((argName) => {
+    Object.keys(args).forEach(argName => {
       const argValue = args[argName];
       const argValueMetadata = parseArgValue(argValue);
       if (argValueMetadata) {
@@ -573,7 +573,7 @@ export const parseServerRelationship = (
     { key, depth, checkable: false, argValue: null, type: 'field' },
   ];
 
-  Object.keys(remoteFields).forEach((rf) => {
+  Object.keys(remoteFields).forEach(rf => {
     serialiseRemoteField(
       remoteFields[rf],
       `${key}.field.${rf}`,

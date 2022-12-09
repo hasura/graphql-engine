@@ -34,3 +34,6 @@ import './contractIntercept';
 Cypress.Commands.add('getBySel', (selector, ...args) => {
   return cy.get(`[data-test=${selector}]`, ...args);
 });
+
+// eslint-disable-next-line import/no-extraneous-dependencies
+require('@cypress/snapshot').register();

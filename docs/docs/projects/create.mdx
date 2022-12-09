@@ -30,7 +30,11 @@ This opens a form on the right where you can create your new project.
 
 Choose a pricing plan and select a region for your project.
 
-<Thumbnail src='/img/projects/create-project_console_2.12.png' alt='Create new project in Hasura Console' width='900px' />
+<Thumbnail
+  src='/img/projects/create-project_console_2.12.png'
+  alt='Create new project in Hasura Console'
+  width='900px'
+/>
 
 Once you have completed the project setup, click `Create Project`.
 
@@ -54,20 +58,32 @@ Hasura Cloud does not host databases, but does provide integrations with which y
 many 3rd party managed cloud providers. Check out a
 [list of supported databases here](/databases/index.mdx#supported-databases).
 
-To get started with a demo database, choose `Create Heroku Database -> Create Database`, and follow the prompts to
-authenticate with Heroku. Hasura Cloud will integrate with your Heroku account and manage the initial setup of a
-dev-tier Postgres instance. You can always upgrade the instance and manage options later through your Heroku account.
+To get started with a demo database, choose `Create New Database`:
 
-<Thumbnail src='/img/projects/create-database-heroku_console_2.12.png' alt='database setup with existing
-database' width='700px' />
+<Thumbnail
+  src='/img/projects/create-database-neon-2.15.png'
+  alt='database setup with existing
+database'
+  width='700px'
+/>
+
+Select `Create Neon Database` and follow the prompts. Hasura Cloud will integrate with your Neon account and manage the
+initial setup of a Postgres instance. You can always upgrade the instance and manage options later through your Neon
+account:
+
+<Thumbnail
+  src='/img/projects/connect-database-neon-2.15.png'
+  alt='database setup with existing
+database'
+  width='700px'
+/>
 
 ### Existing database
 
 To use an existing database, choose `Connect existing database` and enter your database connection URL and enter your
 database connection string (looks like `postgres://username:password@hostname:port/dbname`).
 
-<Thumbnail src='/img/projects/connect-database_console_2.12.png' alt='database setup with new database' width='700px' />
-
+<Thumbnail src='/img/projects/connect-database_console_2.15.png' alt='database setup with new database' width='700px' />
 
 :::info
 
@@ -105,4 +121,5 @@ Make sure your database user has the right
 
 ## More databases
 
-Support for more databases is coming soon. Stay up to date with [supported databases here](/databases/index.mdx#supported-databases).
+Support for more databases is coming soon. Stay up to date with
+[supported databases here](/databases/index.mdx#supported-databases).

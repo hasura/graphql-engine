@@ -1,5 +1,5 @@
 import { TableTrackingCustomizationModal } from '@/components/Services/Data/Schema/tableTrackCustomization/TableTrackingCustomizationModal';
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
 import React from 'react';
@@ -21,7 +21,7 @@ export const TableRow = React.memo(
     const [showCustomModal, setShowCustomModal] = React.useState(false);
     const { trackTable, untrackTable, loading } = useTrackTable(dataSourceName);
 
-    const track = (customConfiguration?: MetadataTableConfig) => {
+    const track = (customConfiguration?: MetadataTable['configuration']) => {
       const t = { ...table };
       if (customConfiguration) {
         t.configuration = customConfiguration;
@@ -86,6 +86,8 @@ export const TableRow = React.memo(
                 onClose={() => {
                   setShowCustomModal(false);
                 }}
+                callToAction="Customize & Track"
+                callToActionLoadingText="Saving..."
                 isLoading={loading}
                 show={showCustomModal}
               />

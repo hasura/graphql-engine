@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from '../useQueryCollections/mocks/handlers.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useRenameQueryCollection } from './useRenameQueryCollection';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -11,7 +11,7 @@ afterAll(() => server.close());
 
 describe('useRenameQueryCollection', () => {
   beforeEach(() => {
-    server.use(...handlers(0, ''));
+    server.use(...handlers({ url: '' }));
   });
 
   test('should work correctly when renaming an existing collection', async () => {
@@ -20,7 +20,7 @@ describe('useRenameQueryCollection', () => {
       { wrapper }
     );
 
-    await result.current.renameQueryCollection('allowed-queries', 'new-name');
+    await result.current.renameQueryCollection('other_queries', 'new-name');
 
     await waitForValueToChange(() => result.current.isSuccess);
     expect(result.current.isSuccess).toBe(true);

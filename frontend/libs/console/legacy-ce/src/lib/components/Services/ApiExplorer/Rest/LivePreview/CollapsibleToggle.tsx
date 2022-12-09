@@ -15,7 +15,7 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(true);
 
-  const toggleHandler = () => setIsOpen((prev) => !prev);
+  const toggleHandler = () => setIsOpen(prev => !prev);
 
   return (
     <div className={`rounded-sm p-md ${!isOpen ? ' bg-gray-100' : ''}`}>

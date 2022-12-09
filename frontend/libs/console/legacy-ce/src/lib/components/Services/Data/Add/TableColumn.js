@@ -9,7 +9,7 @@ import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { FaTimes } from 'react-icons/fa';
 import { focusYellowRing, inputStyles } from '../utils';
 
-const TableColumn = (props) => {
+const TableColumn = props => {
   const {
     column,
     colLength,
@@ -39,7 +39,7 @@ const TableColumn = (props) => {
     }
   }
 
-  const handleColTypeChange = (selectedOption) => {
+  const handleColTypeChange = selectedOption => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
@@ -48,7 +48,7 @@ const TableColumn = (props) => {
     i
   );
 
-  const getRemoveIcon = (colLen) => {
+  const getRemoveIcon = colLen => {
     let removeIcon;
     if (i + 1 === colLen) {
       removeIcon = <FaTimes className="w-4 cursor-pointer" />;
@@ -102,7 +102,7 @@ const TableColumn = (props) => {
           <input
             type="text"
             className={`${inputStyles} max-w-48 col-type-${i}`}
-            onChange={(e) => {
+            onChange={e => {
               e.persist();
               onColTypeChange(i, e.target.value);
             }}

@@ -18,19 +18,20 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+        [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
@@ -41,30 +42,25 @@ spec = do
                       Fixture.skipTests = Just "BigQuery returns numbers as strings, which means the second test fails"
                     }
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+          (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.skipTests = Just "SQL Server currently rounds the average - we think this is a bug. Ref https://hasurahq.atlassian.net/browse/NDAT-335"
-                    }
+                ]
             }
         ]
     )
@@ -117,6 +113,13 @@ tests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
+          -- SQL Server returns int type when the input is of int type, which is different than the rest.
+          -- https://learn.microsoft.com/en-us/sql/t-sql/functions/avg-transact-sql?view=sql-server-ver16#return-types
+          avgResult :: String
+          avgResult
+            | fmap BackendType.backendType (backendTypeConfig testEnvironment) == Just Fixture.SQLServer = "3"
+            | otherwise = "3.25"
+
       let expected :: Value
           expected =
             [interpolateYaml|
@@ -127,7 +130,7 @@ tests opts = do
                     sum:
                       rating: 13
                     avg:
-                      rating: 3.25
+                      rating: #{avgResult}
                     max:
                       rating: 5
             |]

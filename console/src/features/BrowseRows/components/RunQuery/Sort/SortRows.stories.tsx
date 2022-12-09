@@ -5,10 +5,11 @@ import { z } from 'zod';
 import { FormDecorator } from '@/storybook/decorators/react-hook-form';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
+import { action } from '@storybook/addon-actions';
 import { SortRows } from './SortRows';
 
 export default {
-  title: 'Browse Rows/Run Query 📁/Sort 🧬',
+  title: 'GDC Console/Browse Rows/parts/Run Query 📁/Sort 🧬',
   component: SortRows,
   decorators: [FormDecorator()],
 } as ComponentMeta<typeof SortRows>;
@@ -66,7 +67,11 @@ export const Primary: ComponentStory<typeof SortRows> = () => {
         const formValues = watch('sorts');
         return (
           <div className="w-1/2">
-            <SortRows columns={columns} name="sorts" />
+            <SortRows
+              columns={columns}
+              name="sorts"
+              onRemove={action('onRemove')}
+            />
 
             <div className="py-4" data-testid="output">
               Output: {JSON.stringify(formValues)}

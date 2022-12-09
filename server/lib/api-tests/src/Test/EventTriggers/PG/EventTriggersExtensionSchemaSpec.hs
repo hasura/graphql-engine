@@ -15,7 +15,9 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction (permitTeardownFail)
+import Harness.Test.SetupAction qualified as SetupAction
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -26,20 +28,17 @@ import Test.Hspec (SpecWith, describe, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
               Fixture.mkLocalTestEnvironment = const Webhook.run,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
-                [ Postgres.setupTablesActionDiscardingTeardownErrors schema testEnvironment,
-                  Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnvironment webhookServer,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
-                    }
+                [ permitTeardownFail (Postgres.setupTablesAction schema testEnvironment),
+                  SetupAction.noTeardown (postgresSetup testEnvironment webhookServer)
                 ]
             }
         ]
@@ -176,7 +175,7 @@ postgresSetup :: HasCallStack => TestEnvironment -> GraphqlEngine.Server -> IO (
 postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
-      defaultSourceName = BackendType.defaultSource BackendType.Postgres
+      defaultSourceName = BackendType.backendSourceName Postgres.backendTypeMetadata
       sourceName = "hge_test"
       databaseUrl = Postgres.makeFreshDbConnectionString testEnvironment
       sourceConfig =
@@ -199,8 +198,8 @@ postgresSetup testEnvironment webhookServer = do
 
   -- track table(s) with the new source
   forM_ schema \theTable -> do
-    Schema.untrackTable Fixture.Postgres defaultSourceName theTable testEnvironment
-    Schema.trackTable Fixture.Postgres sourceName theTable testEnvironment
+    Schema.untrackTable defaultSourceName theTable testEnvironment
+    Schema.trackTable sourceName theTable testEnvironment
 
   -- create the event trigger
   GraphqlEngine.postMetadata_ testEnvironment $
@@ -217,26 +216,4 @@ postgresSetup testEnvironment webhookServer = do
           webhook: #{webhookServerEchoEndpoint}
           insert:
             columns: "*"
-    |]
-
-postgresTeardown :: HasCallStack => TestEnvironment -> IO ()
-postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-      type: bulk
-      args:
-      - type: pg_delete_event_trigger
-        args:
-          name: authors_all
-          source: hge_test
-    |]
-
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-      type: bulk
-      args:
-      - type: pg_drop_source
-        args:
-          name: hge_test
-          cascade: true
     |]

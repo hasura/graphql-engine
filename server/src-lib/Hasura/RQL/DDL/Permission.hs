@@ -35,6 +35,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
+import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -173,7 +174,7 @@ procSetObj ::
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   Maybe (ColumnValues b Value) ->
-  m (PreSetColsPartial b, [Text], [SchemaDependency])
+  m (PreSetColsPartial b, [Text], Seq SchemaDependency)
 procSetObj source tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $
@@ -184,7 +185,7 @@ procSetObj source tn fieldInfoMap mObj = do
         sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
         let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
         return ((pgCol, sqlExp), dep)
-  return (HM.fromList setColTups, depHeaders, deps)
+  return (HM.fromList setColTups, depHeaders, Seq.fromList deps)
   where
     setObj = fromMaybe mempty mObj
     depHeaders =
@@ -325,11 +326,11 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
 
     let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `HS.union` (HS.fromList setHdrs)
-        insColDeps = map (mkColDep @b DRUntyped source tn) insCols
-        deps = mkParentDep @b source tn : beDeps ++ setColDeps ++ insColDeps
-        insColsWithoutPresets = insCols \\ HM.keys setColsSQL
+        insColDeps = mkColDep @b DRUntyped source tn <$> insCols
+        deps = mkParentDep @b source tn Seq.:<| beDeps <> setColDeps <> Seq.fromList insColDeps
+        insColsWithoutPresets = HS.fromList insCols `HS.difference` HM.keysSet setColsSQL
 
-    return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
+    return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
   where
     allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
@@ -409,7 +410,7 @@ buildSelPermInfo ::
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permission" $ do
-  let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
+  let pgCols = interpColSpec (ciColumn <$> getCols fieldInfoMap) $ spColumns sp
 
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
@@ -440,9 +441,9 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
 
   let deps =
         mkParentDep @b source tableName
-          : boolExpDeps
-          ++ map (mkColDep @b DRUntyped source tableName) pgCols
-          ++ map (mkComputedFieldDep @b DRUntyped source tableName) validComputedFields
+          Seq.:<| boolExpDeps
+            <> (mkColDep @b DRUntyped source tableName <$> Seq.fromList pgCols)
+            <> (mkComputedFieldDep @b DRUntyped source tableName <$> Seq.fromList validComputedFields)
       spiRequiredHeaders = getDependentHeaders $ spFilter sp
       spiLimit = spLimit sp
 
@@ -498,13 +499,13 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
                   <<> " is not updatable and so cannot have update permissions defined"
             )
 
-  let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
-      deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
+  let updColDeps = mkColDep @b DRUntyped source tn <$> updCols
+      deps = mkParentDep @b source tn Seq.:<| beDeps <> maybe mempty snd checkExpr <> Seq.fromList updColDeps <> setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
-      updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
+      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HM.keysSet setColsSQL
 
-  return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
+  return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
   where
     allUpdCols = map ciColumn $ filter (_cmIsUpdatable . ciMutability) $ getCols fieldInfoMap
     updCols = interpColSpec allUpdCols colSpec
@@ -526,7 +527,7 @@ buildDelPermInfo source tn fieldInfoMap (DelPerm fltr backendOnly) = do
   (be, beDeps) <-
     withPathK "filter" $
       procBoolExp source tn fieldInfoMap fltr
-  let deps = mkParentDep @b source tn : beDeps
+  let deps = mkParentDep @b source tn Seq.:<| beDeps
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be backendOnly depHeaders, deps)
 

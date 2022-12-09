@@ -6,11 +6,11 @@
  * @param  {Array[function]} An array of functions which needs to be called onEnter.
  * @return {function}       A function which wraps all the other hooks function.
  */
-export const composeOnEnterHooks = (hooks) => {
+export const composeOnEnterHooks = hooks => {
   // The below is the wrapper function which will be given back to the call.
   return (nextState, replaceState, finalCallback) => {
     // Internal recursive function which will be called with all the hooks, or a subset of the hooks.
-    const executeRemainingHooks = (remainingHooks) => {
+    const executeRemainingHooks = remainingHooks => {
       // if I got no more hooks then call the finalCallback
       if (remainingHooks.length === 0) {
         return finalCallback();
@@ -42,7 +42,7 @@ export const composeOnEnterHooks = (hooks) => {
  * @param  {String} componentPath the path of the component in the system. The component is expected to have a default.
  * @return {function}               the closure function which is used.
  */
-export const asyncComponent = (componentPath) => {
+export const asyncComponent = componentPath => {
   const asyncRoutFunc = `(function (location, callback) {
     require.ensure([], (function (require) {
       callback(null, require("${componentPath}"));

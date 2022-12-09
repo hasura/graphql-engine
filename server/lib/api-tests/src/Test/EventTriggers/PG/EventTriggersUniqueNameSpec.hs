@@ -13,7 +13,8 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction qualified as SetupAction
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
@@ -24,20 +25,17 @@ import Test.Hspec (SpecWith, describe, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
               Fixture.mkLocalTestEnvironment = const Webhook.run,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Postgres.setupTablesAction (schema "authors" "articles") testEnvironment,
-                  Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnvironment webhookServer,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
-                    }
+                  SetupAction.noTeardown (postgresSetup testEnvironment webhookServer)
                 ]
             }
         ]
@@ -251,16 +249,4 @@ getReplaceMetadata testEnvironment webhookServer =
                 num_retries: 0
                 timeout_sec: 60
               webhook: #{webhookServerEchoEndpoint}
-    |]
-
-postgresTeardown :: TestEnvironment -> IO ()
-postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
-      type: bulk
-      args:
-      - type: pg_delete_event_trigger
-        args:
-          name: authors_all
-          source: postgres
     |]

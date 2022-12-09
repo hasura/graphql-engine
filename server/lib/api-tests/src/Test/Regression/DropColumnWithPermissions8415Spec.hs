@@ -12,7 +12,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema hiding (runSQL)
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -20,11 +20,11 @@ import Test.Hspec (SpecWith, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
                   Postgres.setupPermissionsAction [updatePermission] testEnv
@@ -63,12 +63,13 @@ author =
 
 updatePermission :: Permissions.Permission
 updatePermission =
-  Permissions.updatePermission
-    { Permissions.permissionTable = authorTableName,
-      Permissions.permissionSource = "postgres",
-      Permissions.permissionRole = "user",
-      Permissions.permissionColumns = ["age"]
-    }
+  Permissions.UpdatePermission
+    Permissions.updatePermission
+      { Permissions.updatePermissionTable = authorTableName,
+        Permissions.updatePermissionSource = "postgres",
+        Permissions.updatePermissionRole = "user",
+        Permissions.updatePermissionColumns = ["age"]
+      }
 
 --------------------------------------------------------------------------------
 -- Tests

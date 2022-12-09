@@ -4,11 +4,11 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { useQueryClient } from 'react-query';
 import { RootWithoutCloudCheck } from './Root';
 import {
-  baseHandlers,
+  mutationBaseHandlers,
   fetchAnsweredSurveysHandler,
   fetchUnansweredSurveysHandler,
+  onboardingDataEmptyActivity,
 } from './mocks/handlers.mock';
-import { mockGrowthClient } from './mocks/constants';
 import { surveysQueryKey } from '../Surveys/constants';
 
 export default {
@@ -24,15 +24,15 @@ export const WithSurvey: Story = () => {
     refetchActive: false,
   });
 
-  return (
-    <RootWithoutCloudCheck
-      growthExperimentsClient={mockGrowthClient.enabledWithoutActivity}
-    />
-  );
+  return <RootWithoutCloudCheck />;
 };
 
 WithSurvey.parameters = {
-  msw: [...baseHandlers(), fetchUnansweredSurveysHandler],
+  msw: [
+    ...mutationBaseHandlers(),
+    onboardingDataEmptyActivity,
+    fetchUnansweredSurveysHandler,
+  ],
 };
 
 export const WithoutSurvey: Story = () => {
@@ -42,13 +42,13 @@ export const WithoutSurvey: Story = () => {
     refetchActive: false,
   });
 
-  return (
-    <RootWithoutCloudCheck
-      growthExperimentsClient={mockGrowthClient.enabledWithoutActivity}
-    />
-  );
+  return <RootWithoutCloudCheck />;
 };
 
 WithoutSurvey.parameters = {
-  msw: [...baseHandlers(), fetchAnsweredSurveysHandler],
+  msw: [
+    ...mutationBaseHandlers(),
+    onboardingDataEmptyActivity,
+    fetchAnsweredSurveysHandler,
+  ],
 };

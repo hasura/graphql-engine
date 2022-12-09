@@ -26,7 +26,9 @@ module Hasura.Backends.DataConnector.Adapter.Types
     CountAggregate (..),
     Literal (..),
     OrderDirection (..),
+    API.GraphQLType (..),
     ScalarType (..),
+    mkScalarType,
     fromGQLType,
   )
 where
@@ -38,6 +40,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Data (Typeable)
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
@@ -329,8 +332,8 @@ data ScalarType
   = StringTy
   | NumberTy
   | BoolTy
-  | CustomTy Text
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  | CustomTy Text (Maybe API.GraphQLType)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
 
 instance ToTxt ScalarType where
@@ -339,28 +342,30 @@ instance ToTxt ScalarType where
 instance ToErrorValue ScalarType where
   toErrorValue = ErrorValue.squote . tshow
 
-instance Witch.From API.ScalarType ScalarType where
-  from = \case
-    API.StringTy -> StringTy
-    API.NumberTy -> NumberTy
-    API.BoolTy -> BoolTy
-    API.CustomTy name -> CustomTy name
-
 instance Witch.From ScalarType API.ScalarType where
   from = \case
     StringTy -> API.StringTy
     NumberTy -> API.NumberTy
     BoolTy -> API.BoolTy
-    CustomTy name -> API.CustomTy name
+    CustomTy name _ -> API.CustomTy name
 
-fromGQLType :: GQL.Name -> ScalarType
+mkScalarType :: API.Capabilities -> API.ScalarType -> ScalarType
+mkScalarType API.Capabilities {..} apiType = case apiType of
+  API.StringTy -> StringTy
+  API.NumberTy -> NumberTy
+  API.BoolTy -> BoolTy
+  API.CustomTy name -> CustomTy name graphQLType
+    where
+      graphQLType = HashMap.lookup apiType (API.unScalarTypesCapabilities _cScalarTypes) >>= API._stcGraphQLType
+
+fromGQLType :: GQL.Name -> API.ScalarType
 fromGQLType typeName =
   if
-      | typeName == _String -> StringTy
-      | typeName == _Int -> NumberTy
-      | typeName == _Float -> NumberTy
-      | typeName == _Boolean -> BoolTy
-      | otherwise -> CustomTy $ GQL.unName typeName
+      | typeName == _String -> API.StringTy
+      | typeName == _Int -> API.NumberTy
+      | typeName == _Float -> API.NumberTy
+      | typeName == _Boolean -> API.BoolTy
+      | otherwise -> API.CustomTy $ GQL.unName typeName
 
 --------------------------------------------------------------------------------
 

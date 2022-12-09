@@ -38,7 +38,7 @@ const RelationshipEditor = ({
     if (existingRelConfig && relConfig.refDb === existingRelConfig.refDb) {
       dispatch(
         getDatabaseSchemasInfo('postgres', existingRelConfig.refDb)
-      ).then((data) => {
+      ).then(data => {
         setCurrentDatabaseInfo(data);
       });
     }
@@ -54,38 +54,38 @@ const RelationshipEditor = ({
   const { name, type, refDb, refSchema, refTable, fieldMapping } = relConfig;
 
   // relname on change
-  const setRelName = (e) => {
+  const setRelName = e => {
     const relName = e.target.value;
-    setRelConfig((rc) => ({
+    setRelConfig(rc => ({
       ...rc,
       name: relName,
     }));
   };
 
   // reltype on change
-  const setRelType = (e) => {
+  const setRelType = e => {
     const relType = e.target.value;
-    setRelConfig((rc) => ({
+    setRelConfig(rc => ({
       ...rc,
       type: relType,
     }));
   };
 
-  const setDatabase = (e) => {
+  const setDatabase = e => {
     const value = e.target.value;
-    setRelConfig((rc) => ({
+    setRelConfig(rc => ({
       ...rc,
       refDb: value,
     }));
-    return dispatch(getDatabaseSchemasInfo('postgres', value)).then((data) => {
+    return dispatch(getDatabaseSchemasInfo('postgres', value)).then(data => {
       setCurrentDatabaseInfo(data);
     });
   };
 
   // ref schema on change
-  const setRelRefSchema = (e) => {
+  const setRelRefSchema = e => {
     const selectedSchema = e.target.value;
-    setRelConfig((rc) => ({
+    setRelConfig(rc => ({
       ...rc,
       refSchema: selectedSchema,
       refTable: '',
@@ -95,9 +95,9 @@ const RelationshipEditor = ({
   };
 
   // ref table on change
-  const setRelRefTable = (e) => {
+  const setRelRefTable = e => {
     const refTable_ = e.target.value;
-    setRelConfig((rc) => ({
+    setRelConfig(rc => ({
       ...rc,
       refTable: refTable_,
       fieldMapping: [defaultRelFieldMapping],
@@ -105,7 +105,7 @@ const RelationshipEditor = ({
   };
 
   // field mappings on change
-  const setFieldMappings = (f_) => {
+  const setFieldMappings = f_ => {
     const f = JSON.parse(JSON.stringify(f_));
     const lastFieldMapping = getLastArrayElement(f);
     if (!isEmpty(f) && lastFieldMapping) {
@@ -113,7 +113,7 @@ const RelationshipEditor = ({
         f.push(defaultRelFieldMapping);
       }
     }
-    setRelConfig((rc) => ({
+    setRelConfig(rc => ({
       ...rc,
       fieldMapping: f,
     }));
@@ -196,8 +196,8 @@ const RelationshipEditor = ({
             </option>
           )}
           {dataSources
-            .filter((s) => supportedDrivers.includes(s.driver || s.kind))
-            .map((s) => (
+            .filter(s => supportedDrivers.includes(s.driver || s.kind))
+            .map(s => (
               <option key={s.name} value={s.name}>
                 {s.name} ({s.driver})
               </option>
@@ -280,7 +280,7 @@ const RelationshipEditor = ({
           </div>
         </div>
         {fieldMapping.map((fieldMap, i) => {
-          const setColumn = (e) => {
+          const setColumn = e => {
             const selectedCol = e.target.value;
             const newFM = JSON.parse(JSON.stringify(fieldMapping));
             newFM[i] = {
@@ -290,7 +290,7 @@ const RelationshipEditor = ({
             setFieldMappings(newFM);
           };
 
-          const setField = (e) => {
+          const setField = e => {
             const selectedField = e.target.value;
             const newFM = JSON.parse(JSON.stringify(fieldMapping));
             newFM[i] = {
@@ -322,7 +322,7 @@ const RelationshipEditor = ({
             );
           }
 
-          const fields = objectType.fields.map((f) => f.name);
+          const fields = objectType.fields.map(f => f.name);
 
           const selectTitle = !refTable
             ? 'Please select the reference table'
@@ -344,7 +344,7 @@ const RelationshipEditor = ({
                       {'-- field --'}
                     </option>
                   )}
-                  {fields.map((f) => {
+                  {fields.map(f => {
                     return (
                       <option key={f} value={f}>
                         {f}
@@ -369,18 +369,16 @@ const RelationshipEditor = ({
                   )}
                   {currentDatabaseInfo[refSchema] &&
                     currentDatabaseInfo[refSchema][refTable] &&
-                    currentDatabaseInfo[refSchema][refTable].map(
-                      (columnInfo) => {
-                        return (
-                          <option
-                            key={columnInfo?.columnName}
-                            value={columnInfo?.columnName}
-                          >
-                            {columnInfo?.columnName}
-                          </option>
-                        );
-                      }
-                    )}
+                    currentDatabaseInfo[refSchema][refTable].map(columnInfo => {
+                      return (
+                        <option
+                          key={columnInfo?.columnName}
+                          value={columnInfo?.columnName}
+                        >
+                          {columnInfo?.columnName}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
               <div className="self-center">{removeIcon}</div>
@@ -403,7 +401,7 @@ const RelationshipEditor = ({
   );
 };
 
-const RelEditor = (props) => {
+const RelEditor = props => {
   const { dispatch, relConfig, objectType, isNew, readOnlyMode, dataSources } =
     props;
 
@@ -445,7 +443,7 @@ const RelEditor = (props) => {
   };
 
   // function to save the relationship
-  const saveFunc = (toggle) => {
+  const saveFunc = toggle => {
     const validationError = getRelValidationError(relConfigState);
     if (validationError) {
       return dispatch(
@@ -465,7 +463,7 @@ const RelEditor = (props) => {
   // function to remove the relationship
   let removeFunc;
   if (!isNew) {
-    removeFunc = (toggle) => {
+    removeFunc = toggle => {
       dispatch(
         removeActionRel(
           relConfig.name,

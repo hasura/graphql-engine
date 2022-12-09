@@ -19,7 +19,7 @@ import {
   WEBSOCKET_STATUS_SYMBOL,
 } from './constants';
 
-export const parseQueryString = (search) => {
+export const parseQueryString = search => {
   return queryString.parse(search);
 };
 const updateQsHistory = (qs = window.encodeURI('?filters=[]')) => {
@@ -32,9 +32,9 @@ const updateQsHistorywithGroupbys = (
   window.history.pushState('', '', qs);
 };
 
-const transformToTypeValueArr = (values) => {
+const transformToTypeValueArr = values => {
   const vals = Object.keys(values);
-  return vals.map((v) => {
+  return vals.map(v => {
     return {
       type: values[v],
       value: v,
@@ -42,7 +42,7 @@ const transformToTypeValueArr = (values) => {
   });
 };
 
-const arrayToPostgresArray = (values) =>
+const arrayToPostgresArray = values =>
   '{' + (values ? values.join(', ') : '') + '}';
 
 const urlToPageHeaderMap = {
@@ -107,7 +107,7 @@ const applyFilterByQueryParam = (
   return {};
 };
 
-const retrieveDefaultDropdownOptions = (value) => {
+const retrieveDefaultDropdownOptions = value => {
   switch (value) {
     case TIME_RANGE_SYMBOL:
       return timeRangeFilters;
@@ -153,7 +153,7 @@ const retrieveFilterData = (data, filter) => {
 };
 
 const getValuesForEmptyMap = () => {
-  return Object.keys(NO_TITLE_MAP).map((m) => NO_TITLE_MAP[m]);
+  return Object.keys(NO_TITLE_MAP).map(m => NO_TITLE_MAP[m]);
 };
 
 const onFilterChangeCb = (nextFilters, groupBys) => {
@@ -178,7 +178,7 @@ const onGroupByChangeCb = (nextGroupBys, filters) => {
   }
 };
 
-const getProjectId = (state) => {
+const getProjectId = state => {
   if (state.main.projectId) {
     return state.main.projectId;
   }
@@ -188,7 +188,7 @@ const getProjectId = (state) => {
   return null;
 };
 
-const getProjectInfo = (state) => {
+const getProjectInfo = state => {
   if (state.main.projectId) {
     return {
       id: state.main.projectId,
@@ -199,7 +199,7 @@ const getProjectInfo = (state) => {
 };
 
 // hide variable shape, for example: { key: '<..>' }
-const hideVariableValues = (variables) => {
+const hideVariableValues = variables => {
   if (variables === null || variables === undefined) {
     return '<..>';
   }
@@ -251,7 +251,7 @@ const getTimeIntervalFromRange = (start, end, len = 6) => {
   return `${Math.ceil(duration / len / 12)} years`;
 };
 
-const getMetricsUrl = (metricsFQDN) => {
+const getMetricsUrl = metricsFQDN => {
   if (metricsFQDN && metricsFQDN.length > 0) {
     return `https://${metricsFQDN}/v1/graphql`;
   }
@@ -263,7 +263,7 @@ const getMetricsUrl = (metricsFQDN) => {
  * @param {['admin'|'graphql_admin'|'view_metrics']} privileges
  * @return {boolean}
  */
-const isAdmin = (privileges) => (privileges || []).some((p) => p === 'admin');
+const isAdmin = privileges => (privileges || []).some(p => p === 'admin');
 
 /**
  * Utility to parse http and non HTTP URLs
@@ -279,7 +279,7 @@ const isAdmin = (privileges) => (privileges || []).some((p) => p === 'admin');
  *    params:  object,
  *  };
  */
-const parseURI = (url) => {
+const parseURI = url => {
   try {
     const protocol = new URL(url).protocol;
     const newUrl = url.replace(protocol, 'http://');

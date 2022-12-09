@@ -37,12 +37,18 @@ import Prelude
 
 data ErrorResponseType
   = UncaughtError
+  | MutationConstraintViolation
+  | MutationPermissionCheckFailure
   deriving stock (Eq, Show, Generic)
 
 instance HasCodec ErrorResponseType where
   codec =
     named "ErrorResponseType" $
-      stringConstCodec [(UncaughtError, "uncaught-error")]
+      stringConstCodec
+        [ (UncaughtError, "uncaught-error"),
+          (MutationConstraintViolation, "mutation-constraint-violation"),
+          (MutationPermissionCheckFailure, "mutation-permission-check-failure")
+        ]
 
 data ErrorResponse = ErrorResponse
   { _crType :: ErrorResponseType,

@@ -39,7 +39,7 @@ function AddRemoteDatabaseRelationshipComponent({
 
 export const AddRemoteDatabaseRelationship: ComponentStory<
   typeof AddRemoteDatabaseRelationshipComponent
-> = (args) => {
+> = args => {
   return <AddRemoteDatabaseRelationshipComponent {...args} />;
 };
 

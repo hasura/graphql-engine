@@ -119,7 +119,7 @@ const setDataFromEnv = (str: string) => {
 };
 
 const checkUndef = (obj?: Record<string, any>) =>
-  obj && Object.values(obj).some((el) => el !== undefined && el !== null);
+  obj && Object.values(obj).some(el => el !== undefined && el !== null);
 
 const checkEmpty = (obj?: Record<string, any>) =>
   obj && Object.keys(obj).length !== 0 && checkUndef(obj);
@@ -226,7 +226,7 @@ export const connectDataSource = (
 };
 
 export const removeEmptyValues = (obj: any) =>
-  pickBy(obj, (value) => value !== '');
+  pickBy(obj, value => value !== '');
 
 export type ConnectDBActions =
   | {
@@ -642,7 +642,7 @@ export const readReplicaReducer = (
     case 'ADD_READ_REPLICA':
       return [...state, action.data];
     case 'REMOVE_READ_REPLICA':
-      return state.filter((st) => st.displayName !== action.data);
+      return state.filter(st => st.displayName !== action.data);
     case 'RESET_READ_REPLICA_STATE':
       return defaultReadReplicasState;
     default:

@@ -56,8 +56,7 @@ build-all:
 
 .PHONY: start-dbs
 start-dbs:
-	docker-compose up -d
-	sleep 10
+	docker-compose up -d --wait
 
 .PHONY: stop-dbs
 stop-dbs:
@@ -73,10 +72,7 @@ test-ci:
 .PHONY: test-all
 test-all: start-dbs
 	export DATABASE_URL=$(DOCKER_POSTGRES_DATABASE_URL) && \
-	$(CABAL) test \
-	  --enable-tests \
-	  --enable-benchmarks \
-	  all
+	make test-ci
 	make stop-dbs
 
 .PHONY: ghcid
@@ -93,8 +89,7 @@ ghcid-test:
 	ghcid \
 	  --command "\
 	    $(CABAL) repl \
-	      --repl-option '-fobject-code' \
-	      --repl-option '-O0' \
+	      --repl-option='-fobject-code' \
+	      --repl-option='-O0' \
 	      pg-client-test \
 	    " \
-	--test ":main"

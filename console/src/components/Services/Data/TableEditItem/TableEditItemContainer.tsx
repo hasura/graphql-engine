@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
+import { findTable, generateTableDef } from '@/dataSources';
 import { setTable } from '../DataActions';
 import { fetchEnumOptions, editItem, E_ONGOING_REQ } from './EditActions';
-import { ColumnName, RowValues } from '../TableCommon/DataTableRowItem.types';
-import { DataTableRowItemProps } from '../TableCommon/DataTableRowItem';
+import { ColumnName } from '../TableCommon/DataTableRowItem.types';
 import { TableEditItems } from './TableEditItems';
+import { ordinalColSort } from '../utils';
+import { useSchemas } from '../TableInsertItem/hooks/useSchemas';
+import { isColumnAutoIncrement } from '../Common/Components/utils';
 
 type GetButtonTextArgs = {
   ongoingRequest: boolean;
@@ -29,27 +32,22 @@ type TableEditItemContainerContainer = {
 export const TableEditItemContainer = (
   props: TableEditItemContainerContainer
 ) => {
-  const { table: tableName } = props.params;
+  const {
+    table: tableName,
+    source: dataSourceName,
+    schema: schemaName,
+  } = props.params;
 
   const dispatch = useAppDispatch();
+  const update = useAppSelector(store => store.tables.update);
+  const { ongoingRequest, lastError, lastSuccess, enumOptions, oldItem } =
+    update;
 
-  const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
-
-  const onColumnUpdate: DataTableRowItemProps['onColumnUpdate'] = (
-    columnName,
-    rowValues
-  ) => {
-    const newValues = { ...values };
-    if (!newValues[columnName]) {
-      newValues[columnName] = {
-        valueNode: rowValues.valueNode,
-        nullNode: rowValues.nullNode,
-        defaultNode: rowValues.defaultNode,
-        radioNode: rowValues.radioNode,
-      };
-    }
-    newValues[columnName] = rowValues;
-    setValues(newValues);
+  const [values, setValues] = useState<Record<ColumnName, unknown>>(
+    oldItem ?? {}
+  );
+  const onColumnUpdate = (columnName: string, value: unknown) => {
+    setValues({ ...values, [columnName]: value });
   };
 
   useEffect(() => {
@@ -57,7 +55,6 @@ export const TableEditItemContainer = (
     dispatch(fetchEnumOptions());
   }, [tableName]);
 
-  const update = useAppSelector(store => store.tables.update);
   const allSchemas = useAppSelector(store => store.tables.allSchemas);
   const tablesView = useAppSelector(store => store.tables.view);
   const currentSchema = useAppSelector(store => store.tables.currentSchema);
@@ -68,54 +65,84 @@ export const TableEditItemContainer = (
   const readOnlyMode = useAppSelector(store => store.main.readOnlyMode);
 
   const { count } = tablesView;
-  const {
-    ongoingRequest,
-    lastError,
-    lastSuccess,
-    clone,
-    enumOptions,
-    oldItem,
-  } = update;
+
   const buttonText = getButtonText({
     ongoingRequest,
   });
 
+  const { data: schemas, isLoading: schemasIsLoading } = useSchemas({
+    dataSourceName,
+    schemaName,
+  });
+
+  const [nullCheckedValues, setNullCheckedValues] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleNullChecks = (columnName: string, value: boolean) => {
+    setNullCheckedValues({
+      ...nullCheckedValues,
+      [columnName]: value,
+    });
+  };
+
+  const [defaultValueColumns, setDefaultValueColumns] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleDefaultValueColumns = (columnName: string, value: boolean) => {
+    setDefaultValueColumns({
+      ...defaultValueColumns,
+      [columnName]: value,
+    });
+  };
+
   const onClickSave: React.MouseEventHandler = e => {
     e.preventDefault();
 
-    const inputValues = Object.keys(values).reduce<
-      Record<ColumnName, string | null | undefined>
-    >((acc, colName) => {
-      if (values?.[colName]?.nullNode?.checked) {
-        acc[colName] = null;
-        return acc;
+    const currentTable = findTable(
+      schemas,
+      generateTableDef(tableName, schemaName)
+    );
+
+    const columns = currentTable?.columns.sort(ordinalColSort) || [];
+    const inputValues = columns.reduce((tally, col) => {
+      const colName = col.column_name;
+      if (defaultValueColumns[colName]) {
+        return {
+          ...tally,
+          [colName]: { default: true },
+        };
       }
-
-      if (values?.[colName]?.defaultNode?.checked) {
-        return acc;
+      if (nullCheckedValues[colName]) {
+        return {
+          ...tally,
+          [colName]: null,
+        };
       }
-
-      acc[colName] = values?.[colName]?.valueNode?.value?.toString()
-        ? values?.[colName]?.valueNode?.value?.toString()
-        : values?.[colName]?.valueNode?.props?.value?.toString();
-
-      return acc;
+      const isAutoIncrement = isColumnAutoIncrement(col);
+      if (!isAutoIncrement && typeof values[colName] !== 'undefined') {
+        return { ...tally, [colName]: values[colName] };
+      }
+      return tally;
     }, {});
 
     dispatch({ type: E_ONGOING_REQ });
-
     dispatch(editItem(tableName, inputValues));
   };
 
+  if (schemasIsLoading) return <p>Loading...</p>;
+
   return (
     <TableEditItems
-      ongoingRequest={ongoingRequest}
+      values={values}
+      setNullCheckedValues={handleNullChecks}
+      setDefaultValueColumns={handleDefaultValueColumns}
       oldItem={oldItem}
       onColumnUpdate={onColumnUpdate}
       dispatch={dispatch}
       tableName={tableName}
       currentSchema={currentSchema}
-      clone={clone}
       schemas={allSchemas}
       migrationMode={migrationMode}
       readOnlyMode={readOnlyMode}

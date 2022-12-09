@@ -1,5 +1,5 @@
 import React from 'react';
-import { TaskEvent } from '@/features/ConnectDB';
+import { CheckDatabaseLatencyResponse, TaskEvent } from '@/features/ConnectDB';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 import { LS_KEYS, getLSItem, setLSItem } from '../../../../utils/localStorage';
 import globals from '../../../../Globals';
@@ -52,28 +52,49 @@ export const useVPCBannerVisibility = () => {
   };
 };
 
-export type DBLatencyData = TaskEvent['public_event_data']['sources'][number];
+export type DBLatencyData = Exclude<
+  TaskEvent['public_event_data']['sources'],
+  null
+>[number];
 
-const isSourceLatencyGood = (sourceLatencyData: DBLatencyData) => {
-  return sourceLatencyData.avg_latency <= 100 && sourceLatencyData.error === '';
+const isSourceLatencyGood = (
+  sourceLatencyData: DBLatencyData | null | undefined
+) => {
+  return (
+    sourceLatencyData &&
+    sourceLatencyData.avg_latency <= 100 &&
+    sourceLatencyData.error === ''
+  );
 };
 
-export const checkHighLatencySources = (taskEvent: TaskEvent | undefined) => {
-  if (!taskEvent) {
+export const checkHighLatencySources = (
+  checkDbResponse: CheckDatabaseLatencyResponse | undefined
+) => {
+  if (
+    !checkDbResponse ||
+    !checkDbResponse.taskEvent.public_event_data.sources
+  ) {
     return false;
   }
-  return Object.keys(taskEvent.public_event_data.sources).every(sourceName =>
-    isSourceLatencyGood(taskEvent.public_event_data.sources[sourceName])
+
+  return Object.keys(checkDbResponse.taskEvent.public_event_data.sources).every(
+    sourceName =>
+      isSourceLatencyGood(
+        checkDbResponse.taskEvent.public_event_data.sources &&
+          checkDbResponse.taskEvent.public_event_data.sources[sourceName]
+      )
   );
 };
 
 export const getSourceInfoFromLatencyData = (
   sourceName: string,
-  latencyData?: TaskEvent
+  latencyData?: CheckDatabaseLatencyResponse
 ) => {
-  if (!latencyData) {
+  if (!latencyData?.taskEvent?.public_event_data?.sources) {
     return undefined;
   }
 
-  return latencyData.public_event_data.sources[sourceName] || undefined;
+  return (
+    latencyData.taskEvent.public_event_data.sources[sourceName] || undefined
+  );
 };

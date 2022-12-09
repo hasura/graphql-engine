@@ -15,7 +15,7 @@ export const useAddAgent = () => {
       });
       queryClient.refetchQueries(['agent_list'], { exact: true });
     },
-    onError: (err) => {
+    onError: err => {
       fireNotification({
         title: 'Error',
         type: 'error',
@@ -50,7 +50,7 @@ export const useAddAgent = () => {
           onSuccess: () => {
             if (onSuccess) onSuccess();
           },
-          onError: (err) => {
+          onError: err => {
             if (onError) onError(err);
           },
         }

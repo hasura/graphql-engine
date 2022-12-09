@@ -1,8 +1,10 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Function
   ( DBFunctionsMetadata,
+    FunctionOverloads (..),
     FunctionArgName (..),
     FunctionCache,
     FunctionConfig (..),
@@ -341,8 +343,13 @@ $(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionConfig)
 emptyFunctionConfig :: FunctionConfig
 emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFields Nothing
 
--- Lists are used to model overloaded functions.
-type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo b]
+type DBFunctionsMetadata b = HashMap (FunctionName b) (FunctionOverloads b)
+
+newtype FunctionOverloads b = FunctionOverloads {getFunctionOverloads :: NonEmpty (RawFunctionInfo b)}
+
+deriving newtype instance Backend b => Eq (FunctionOverloads b)
+
+deriving newtype instance FromJSON (RawFunctionInfo b) => FromJSON (FunctionOverloads b)
 
 data FunctionArgsExpG a = FunctionArgsExp
   { _faePositional :: [a],

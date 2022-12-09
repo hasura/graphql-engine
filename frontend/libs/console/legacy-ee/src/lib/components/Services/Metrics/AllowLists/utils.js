@@ -45,7 +45,7 @@ export const deleteOperationFromAllowListQuery = ({
   return query;
 };
 
-export const getBulkQuery = (query) => {
+export const getBulkQuery = query => {
   const q = {
     type: 'bulk',
     args: query,
@@ -57,7 +57,7 @@ export const deleteOperationsFromAllowListQuery = ({
   operationNames,
   collectionName,
 }) => {
-  const allQueries = operationNames.map((o) => {
+  const allQueries = operationNames.map(o => {
     const query = {
       type: 'drop_query_from_collection',
       args: {
@@ -70,14 +70,14 @@ export const deleteOperationsFromAllowListQuery = ({
   return getBulkQuery(allQueries);
 };
 
-export const checkObjectValidity = (result) => {
+export const checkObjectValidity = result => {
   if (result && typeof result === 'object') {
     return true;
   }
   return false;
 };
 
-const transformTimeType = (d) => {
+const transformTimeType = d => {
   return moment(d).fromNow();
 };
 
@@ -87,5 +87,5 @@ export const transformedVals = {
 
 export const getAllowList = (metadata, collectionName) => {
   const query_collections = metadata?.query_collections || [];
-  return query_collections.find((i) => i.name === collectionName);
+  return query_collections.find(i => i.name === collectionName);
 };

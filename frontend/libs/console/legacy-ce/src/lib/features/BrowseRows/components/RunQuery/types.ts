@@ -1,13 +1,17 @@
+export type FilterFormValues = {
+  column: string;
+  operator: string;
+  value: string;
+};
+
+export type SortFormValues = {
+  column: string;
+  type: 'asc' | 'desc' | '--';
+};
+
 export type FiltersAndSortFormValues = {
-  filter: {
-    column: string;
-    operator: string;
-    value: string;
-  }[];
-  sort: {
-    column: string;
-    type: 'asc' | 'desc' | '--';
-  }[];
+  filter: FilterFormValues[];
+  sort: SortFormValues[];
 };
 
 export const defaultColumn = '-- column --';

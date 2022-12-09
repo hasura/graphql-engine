@@ -114,7 +114,12 @@ export const DbToRsForm = ({
   };
 
   return (
-    <Form schema={schema} onSubmit={submit} options={{ defaultValues }}>
+    <Form
+      schema={schema}
+      onSubmit={submit}
+      options={{ defaultValues }}
+      className="p-4"
+    >
       {() => (
         <div>
           <div className="w-full sm:w-6/12 mb-md">

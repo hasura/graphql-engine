@@ -16,7 +16,7 @@ const Add = ({ isRequesting, dispatch, ...props }) => {
   return (
     <RemoteSchema.Create
       {...props}
-      onSuccess={(remoteSchemaName) => {
+      onSuccess={remoteSchemaName => {
         // This only exists right now because the sidebar is reading from redux state
         dispatch(exportMetadata()).then(() => {
           dispatch(_push(`${appPrefix}/manage/${remoteSchemaName}/details`));
@@ -26,11 +26,11 @@ const Add = ({ isRequesting, dispatch, ...props }) => {
   );
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
     ...state.remoteSchemas.headerData,
   };
 };
 
-export default (connect) => connect(mapStateToProps)(Add);
+export default connect => connect(mapStateToProps)(Add);

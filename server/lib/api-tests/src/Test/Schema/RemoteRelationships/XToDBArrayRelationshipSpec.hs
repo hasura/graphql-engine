@@ -11,7 +11,8 @@
 module Test.Schema.RemoteRelationships.XToDBArrayRelationshipSpec (spec) where
 
 import Control.Lens (findOf, has, only, (^?!))
-import Data.Aeson (Value)
+import Data.Aeson (Value (..))
+import Data.Aeson qualified as Aeson
 import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
@@ -20,20 +21,26 @@ import Data.Maybe qualified as Unsafe (fromJust)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
+import Data.Text qualified as Text
 import Data.Typeable (Typeable)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.Test.Fixture (Fixture (..))
+import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (LHSFixture, RHSFixture)
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Permissions (SelectPermissionDetails (..))
+import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), stopServer)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -41,82 +48,41 @@ import Test.Hspec (SpecWith, describe, it)
 -------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
-spec = Fixture.runWithLocalTestEnvironment contexts tests
+spec :: SpecWith GlobalTestEnvironment
+spec = Fixture.runWithLocalTestEnvironment fixtures tests
   where
-    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsRemoteServer]
-    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer]
-    contexts = NE.fromList $ combine <$> lhsFixtures <*> rhsFixtures
-
--- | Combines a lhs and a rhs.
---
--- The rhs is set up first, then the lhs can create the remote relationship.
---
--- Teardown is done in the opposite order.
---
--- The metadata is cleared befored each setup.
-combine :: LHSFixture -> RHSFixture -> Fixture (Maybe Server)
-combine lhs (tableName, rhs) =
-  (Fixture.fixture $ Fixture.Combine lhsName rhsName)
-    { Fixture.mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-      Fixture.setupTeardown = \(testEnvironment, localTestEnvironment) ->
-        [clearMetadataSetupAction testEnvironment]
-          <> rhsSetupTeardown (testEnvironment, ())
-          <> lhsSetupTeardown (testEnvironment, localTestEnvironment),
-      Fixture.customOptions = Fixture.combineOptions lhsOptions rhsOptions
-    }
-  where
-    Fixture.Fixture
-      { name = lhsName,
-        mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
-        setupTeardown = lhsSetupTeardown,
-        customOptions = lhsOptions
-      } = lhs tableName
-    Fixture.Fixture
-      { name = rhsName,
-        setupTeardown = rhsSetupTeardown,
-        customOptions = rhsOptions
-      } = rhs
+    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsCitus, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer, rhsCitus]
+    fixtures = NE.fromList $ Fixture.combineFixtures <$> lhsFixtures <*> rhsFixtures
 
 --------------------------------------------------------------------------------
+-- Fixtures
 
-clearMetadataSetupAction :: TestEnvironment -> Fixture.SetupAction
-clearMetadataSetupAction testEnv =
-  Fixture.SetupAction
-    { Fixture.setupAction = GraphqlEngine.clearMetadata testEnv,
-      Fixture.teardownAction = \_ -> GraphqlEngine.clearMetadata testEnv
-    }
-
---------------------------------------------------------------------------------
-
--- | LHS context.
---
--- Each LHS context is responsible for setting up the remote relationship, and
--- for tearing it down. Each lhs context is given the JSON representation for
--- the table name on the RHS.
-type LHSFixture = Value -> Fixture (Maybe Server)
-
+-- | Left-hand-side (LHS) fixtures
 lhsPostgres :: LHSFixture
 lhsPostgres tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-    { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
+  (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsPostgresSetup tableName testEnv)
+        ]
+    }
+
+lhsCitus :: LHSFixture
+lhsCitus tableName =
+  (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
+      Fixture.setupTeardown = \testEnv ->
+        [ SetupAction.noTeardown (lhsCitusSetup tableName testEnv)
         ]
     }
 
 lhsCockroach :: LHSFixture
 lhsCockroach tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
-    { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
+  (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsCockroachSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsCockroachTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsCockroachSetup tableName testEnv)
         ],
       Fixture.customOptions =
         Just
@@ -127,13 +93,10 @@ lhsCockroach tableName =
 
 lhsSQLServer :: LHSFixture
 lhsSQLServer tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
-    { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
+  (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsSQLServerSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsSQLServerTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsSQLServerSetup tableName testEnv)
         ]
     }
 
@@ -149,48 +112,25 @@ lhsRemoteServer tableName =
         ]
     }
 
---------------------------------------------------------------------------------
-
--- | RHS context
---
--- Each RHS context is responsible for setting up the target table, and for
--- returning the JSON representation of said table.
-type RHSFixture = (Value, Fixture ())
-
+-- | Right-hand-side (RHS) fixtures
 rhsPostgres :: RHSFixture
 rhsPostgres =
-  let table =
-        [yaml|
-      schema: hasura
-      name: album
-    |]
-      context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+  let fixture =
+        (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsPostgresSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsPostgresSetup testEnv)
               ]
           }
-   in (table, context)
+   in (rhsTable, fixture)
 
 rhsCockroach :: RHSFixture
 rhsCockroach =
-  let table =
-        [yaml|
-      schema: hasura
-      name: album
-    |]
-      context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+  let fixture =
+        (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsCockroachSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsCockroachTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsCockroachSetup testEnv)
               ],
             Fixture.customOptions =
               Just
@@ -198,26 +138,29 @@ rhsCockroach =
                   { Fixture.skipTests = Just "NDAT-177"
                   }
           }
-   in (table, context)
+   in (rhsTable, fixture)
+
+rhsCitus :: RHSFixture
+rhsCitus =
+  let fixture =
+        (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+          { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
+              [ SetupAction.noTeardown (rhsCitusSetup testEnv)
+              ]
+          }
+   in (rhsTable, fixture)
 
 rhsSQLServer :: RHSFixture
 rhsSQLServer =
-  let table =
-        [yaml|
-      schema: hasura
-      name: album
-    |]
-      context =
-        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+  let fixture =
+        (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
           { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
             Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsSQLServerSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsSQLServerTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsSQLServerSetup testEnv)
               ]
           }
-   in (table, context)
+   in (rhsTable, fixture)
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -225,7 +168,7 @@ rhsSQLServer =
 -- | LHS
 artist :: Schema.Table
 artist =
-  (Schema.table "artist")
+  (Schema.table lhsTableName_)
     { tableColumns =
         [ Schema.columnNull "id" Schema.TInt,
           Schema.column "name" Schema.TStr
@@ -238,10 +181,60 @@ artist =
         ]
     }
 
+lhsSourceName_ :: Text
+lhsSourceName_ = "source"
+
+lhsTableName_ :: Text
+lhsTableName_ = "artist"
+
+lhsRole1 :: Permissions.Permission
+lhsRole1 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role1",
+        selectPermissionSource = lhsSourceName_,
+        selectPermissionTable = lhsTableName_,
+        selectPermissionColumns = (["id", "name"] :: [Text])
+      }
+
+lhsRole2 :: Permissions.Permission
+lhsRole2 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role2",
+        selectPermissionSource = lhsSourceName_,
+        selectPermissionTable = lhsTableName_,
+        selectPermissionColumns = (["id", "name"] :: [Text])
+      }
+
+createRemoteRelationship :: Value -> TestEnvironment -> IO ()
+createRemoteRelationship rhsTableName testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      schemaName = Schema.getSchemaName testEnvironment
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [interpolateYaml|
+        type: #{ backendType }_create_remote_relationship
+        args:
+          source: #{ lhsSourceName_ }
+          table:
+            schema: #{ schemaName }
+            name: artist
+          name: albums
+          definition:
+            to_source:
+              source: target
+              table: #{ rhsTableName }
+              relationship_type: array
+              field_mapping:
+                id: artist_id
+    |]
+
 -- | RHS
 album :: Schema.Table
 album =
-  (Schema.table "album")
+  (Schema.table rhsTableName_)
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
           Schema.column "title" Schema.TStr,
@@ -256,215 +249,135 @@ album =
         ]
     }
 
+rhsSourceName_ :: Text
+rhsSourceName_ = "target"
+
+rhsTableName_ :: Text
+rhsTableName_ = "album"
+
+rhsRole1 :: Permissions.Permission
+rhsRole1 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role1",
+        selectPermissionSource = rhsSourceName_,
+        selectPermissionTable = rhsTableName_,
+        selectPermissionColumns = (["title", "artist_id"] :: [Text]),
+        selectPermissionRows =
+          [yaml|
+        artist_id:
+          _eq: x-hasura-artist-id
+      |]
+      }
+
+rhsRole2 :: Permissions.Permission
+rhsRole2 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionRole = "role2",
+        selectPermissionSource = rhsSourceName_,
+        selectPermissionTable = rhsTableName_,
+        selectPermissionColumns = (["id", "title", "artist_id"] :: [Text]),
+        selectPermissionAllowAggregations = True,
+        selectPermissionLimit = Aeson.Number 2,
+        selectPermissionRows =
+          [yaml|
+        artist_id:
+          _eq: x-hasura-artist-id
+      |]
+      }
+
+rhsTable :: Aeson.Value
+rhsTable =
+  [yaml|
+    schema: hasura
+    name: *rhsTableName_
+  |]
+
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
-lhsPostgresMkLocalTestEnvironment _ = pure Nothing
-
 lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
+  let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
-  let sourceName = "source"
-      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: pg_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
-  -- setup tables only
+  Schema.addSource lhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
   Postgres.createTable testEnvironment artist
   Postgres.insertTable testEnvironment artist
-  Schema.trackTable Fixture.Postgres sourceName artist testEnvironment
+  Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role1
-    table:
-      schema: *schemaName
-      name: artist
-    permission:
-      columns: '*'
-      filter: {}
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role2
-    table:
-      schema: *schemaName
-      name: artist
-    permission:
-      columns: '*'
-      filter: {}
-- type: pg_create_remote_relationship
-  args:
-    source: *sourceName
-    table:
-      schema: *schemaName
-      name: artist
-    name: albums
-    definition:
-      to_source:
-        source: target
-        table: *rhsTableName
-        relationship_type: array
-        field_mapping:
-          id: artist_id
-  |]
+  -- Setup permissions
+  Permissions.createPermission testEnvironment lhsRole1
+  Permissions.createPermission testEnvironment lhsRole2
 
-lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (_testEnvironment, _) = pure ()
+  createRemoteRelationship rhsTableName testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
 
-lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
-lhsCockroachMkLocalTestEnvironment _ = pure Nothing
-
 lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
+  let sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
 
-  let sourceName = "source"
-      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-      type: cockroach_add_source
-      args:
-        name: *sourceName
-        configuration: *sourceConfig
-    |]
-  -- setup tables only
+  -- TODO(SOLOMON): Remove BackendTypeConfig param from all of these functions
+  Schema.addSource lhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
   Cockroach.createTable testEnvironment artist
   Cockroach.insertTable testEnvironment artist
-  Schema.trackTable Fixture.Cockroach sourceName artist testEnvironment
+  Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-      type: bulk
-      args:
-      - type: cockroach_create_select_permission
-        args:
-          source: *sourceName
-          role: role1
-          table:
-            schema: *schemaName
-            name: artist
-          permission:
-            columns: '*'
-            filter: {}
-      - type: cockroach_create_select_permission
-        args:
-          source: *sourceName
-          role: role2
-          table:
-            schema: *schemaName
-            name: artist
-          permission:
-            columns: '*'
-            filter: {}
-      - type: cockroach_create_remote_relationship
-        args:
-          source: *sourceName
-          table:
-            schema: *schemaName
-            name: artist
-          name: albums
-          definition:
-            to_source:
-              source: target
-              table: *rhsTableName
-              relationship_type: array
-              field_mapping:
-                id: artist_id
-    |]
+  -- Setup permissions
+  Permissions.createPermission testEnvironment lhsRole1
+  Permissions.createPermission testEnvironment lhsRole2
 
-lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachTeardown _ = pure ()
+  createRemoteRelationship rhsTableName testEnvironment
+
+--------------------------------------------------------------------------------
+-- LHS Citus
+
+lhsCitusSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup rhsTableName (testEnvironment, _) = do
+  let sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+
+  -- Add remote source
+  Schema.addSource lhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
+  Citus.createTable testEnvironment artist
+  Citus.insertTable testEnvironment artist
+  Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
+
+  -- Setup permissions
+  Permissions.createPermission testEnvironment lhsRole1
+  Permissions.createPermission testEnvironment lhsRole2
+
+  createRemoteRelationship rhsTableName testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
-lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
-lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
-
 lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
+  let sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
 
-  let sourceName = "source"
-      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: mssql_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
-  -- setup tables only
+  Schema.addSource lhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
   SQLServer.createTable testEnvironment artist
   SQLServer.insertTable testEnvironment artist
-  Schema.trackTable Fixture.SQLServer sourceName artist testEnvironment
+  Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: mssql_create_select_permission
-  args:
-    source: *sourceName
-    role: role1
-    table:
-      schema: *schemaName
-      name: artist
-    permission:
-      columns: '*'
-      filter: {}
-- type: mssql_create_select_permission
-  args:
-    source: *sourceName
-    role: role2
-    table:
-      schema: *schemaName
-      name: artist
-    permission:
-      columns: '*'
-      filter: {}
-- type: mssql_create_remote_relationship
-  args:
-    source: *sourceName
-    table:
-      schema: *schemaName
-      name: artist
-    name: albums
-    definition:
-      to_source:
-        source: target
-        table: *rhsTableName
-        relationship_type: array
-        field_mapping:
-          id: artist_id
-  |]
+  -- Setup permissions
+  Permissions.createPermission testEnvironment lhsRole1
+  Permissions.createPermission testEnvironment lhsRole2
 
-lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment artist
+  createRemoteRelationship rhsTableName testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -656,181 +569,76 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
-  let sourceName = "target"
-      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
+  let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
+
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: pg_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
-  -- setup tables only
+  Schema.addSource rhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
   Postgres.createTable testEnvironment album
   Postgres.insertTable testEnvironment album
-  Schema.trackTable Fixture.Postgres sourceName album testEnvironment
+  Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role1
-    table:
-      schema: *schemaName
-      name: album
-    permission:
-      columns:
-        - title
-        - artist_id
-      filter:
-        artist_id:
-          _eq: x-hasura-artist-id
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role2
-    table:
-      schema: *schemaName
-      name: album
-    permission:
-      columns: [id, title, artist_id]
-      filter:
-        artist_id:
-          _eq: x-hasura-artist-id
-      limit: 2
-      allow_aggregations: true
-  |]
-
-rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
-rhsPostgresTeardown (_testEnvironment, _) = pure ()
+  -- Setup permissions
+  Permissions.createPermission testEnvironment rhsRole1
+  Permissions.createPermission testEnvironment rhsRole2
 
 --------------------------------------------------------------------------------
 -- RHS Cockroach
 
 rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
 rhsCockroachSetup (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
-  let sourceName = "target"
-      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
+  let sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
+
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-      type: cockroach_add_source
-      args:
-        name: *sourceName
-        configuration: *sourceConfig
-    |]
-  -- setup tables only
+  Schema.addSource rhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
   Cockroach.createTable testEnvironment album
   Cockroach.insertTable testEnvironment album
-  Schema.trackTable Fixture.Cockroach sourceName album testEnvironment
+  Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-      type: bulk
-      args:
-      - type: cockroach_create_select_permission
-        args:
-          source: *sourceName
-          role: role1
-          table:
-            schema: *schemaName
-            name: album
-          permission:
-            columns:
-              - title
-              - artist_id
-            filter:
-              artist_id:
-                _eq: x-hasura-artist-id
-      - type: cockroach_create_select_permission
-        args:
-          source: *sourceName
-          role: role2
-          table:
-            schema: *schemaName
-            name: album
-          permission:
-            columns: [id, title, artist_id]
-            filter:
-              artist_id:
-                _eq: x-hasura-artist-id
-            limit: 2
-            allow_aggregations: true
-    |]
+  -- Setup permissions
+  Permissions.createPermission testEnvironment rhsRole1
+  Permissions.createPermission testEnvironment rhsRole2
 
-rhsCockroachTeardown :: (TestEnvironment, ()) -> IO ()
-rhsCockroachTeardown _ = pure ()
+--------------------------------------------------------------------------------
+-- RHS Citus
+
+rhsCitusSetup :: (TestEnvironment, ()) -> IO ()
+rhsCitusSetup (testEnvironment, _) = do
+  let sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+
+  -- Add remote source
+  Schema.addSource rhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
+  Citus.createTable testEnvironment album
+  Citus.insertTable testEnvironment album
+  Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
+
+  -- Setup permissions
+  Permissions.createPermission testEnvironment rhsRole1
+  Permissions.createPermission testEnvironment rhsRole2
 
 --------------------------------------------------------------------------------
 -- RHS SQLServer
 
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerSetup (testEnvironment, _) = do
-  let schemaName = Schema.getSchemaName testEnvironment
+  let sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
 
-  let sourceName = "target"
-      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: mssql_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
-  -- setup tables only
+  Schema.addSource rhsSourceName_ sourceConfig testEnvironment
+
+  -- Setup tables
   SQLServer.createTable testEnvironment album
   SQLServer.insertTable testEnvironment album
-  Schema.trackTable Fixture.SQLServer sourceName album testEnvironment
+  Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: mssql_create_select_permission
-  args:
-    source: *sourceName
-    role: role1
-    table:
-      schema: *schemaName
-      name: album
-    permission:
-      columns:
-        - title
-        - artist_id
-      filter:
-        artist_id:
-          _eq: x-hasura-artist-id
-- type: mssql_create_select_permission
-  args:
-    source: *sourceName
-    role: role2
-    table:
-      schema: *schemaName
-      name: album
-    permission:
-      columns: [id, title, artist_id]
-      filter:
-        artist_id:
-          _eq: x-hasura-artist-id
-      limit: 2
-      allow_aggregations: true
-  |]
-
-rhsSQLServerTeardown :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment album
+  -- Setup permissions
+  Permissions.createPermission testEnvironment rhsRole1
+  Permissions.createPermission testEnvironment rhsRole2
 
 --------------------------------------------------------------------------------
 -- Tests

@@ -14,7 +14,7 @@ export default {
   },
 } as ComponentMeta<typeof PermissionsConfirmationModal>;
 
-export const Base: Story<Props> = (args) => (
+export const Base: Story<Props> = args => (
   <PermissionsConfirmationModal {...args} />
 );
 

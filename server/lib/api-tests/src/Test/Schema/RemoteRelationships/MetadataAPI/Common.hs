@@ -48,6 +48,7 @@ import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Hasura.Prelude
@@ -64,8 +65,8 @@ dbTodbRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 dbTodbRemoteRelationshipFixture =
   ( Fixture.fixture $
       Fixture.Combine
-        (Fixture.Backend Fixture.Postgres)
-        (Fixture.Backend Fixture.Postgres)
+        (Fixture.Backend Postgres.backendTypeMetadata)
+        (Fixture.Backend Postgres.backendTypeMetadata)
   )
     { Fixture.mkLocalTestEnvironment = \_testEnvironment ->
         pure $ LocalTestTestEnvironment Nothing Nothing,
@@ -75,20 +76,14 @@ dbTodbRemoteRelationshipFixture =
             { Fixture.setupAction = rhsPostgresSetup testEnvironment,
               Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnvironment
             },
-          Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnvironment
-            },
-          Fixture.SetupAction
-            { Fixture.setupAction = createSourceRemoteRelationship testEnvironment,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+          SetupAction.noTeardown (lhsPostgresSetup (testEnvironment, Nothing)),
+          SetupAction.noTeardown (createSourceRemoteRelationship testEnvironment)
         ]
     }
 
 dbToRemoteSchemaRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 dbToRemoteSchemaRemoteRelationshipFixture =
-  (Fixture.fixture $ Fixture.Combine (Fixture.Backend Fixture.Postgres) Fixture.RemoteGraphQLServer)
+  (Fixture.fixture $ Fixture.Combine (Fixture.Backend Postgres.backendTypeMetadata) Fixture.RemoteGraphQLServer)
     { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment Nothing rhsServer,
@@ -98,20 +93,14 @@ dbToRemoteSchemaRemoteRelationshipFixture =
             { Fixture.setupAction = rhsRemoteServerSetup (testEnvironment, rhsServer),
               Fixture.teardownAction = \_ -> rhsRemoteServerTeardown (testEnvironment, rhsServer)
             },
-          Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnvironment
-            },
-          Fixture.SetupAction
-            { Fixture.setupAction = createRemoteSchemaRemoteRelationship testEnvironment,
-              Fixture.teardownAction = \_ -> pure ()
-            }
+          SetupAction.noTeardown (lhsPostgresSetup (testEnvironment, Nothing)),
+          SetupAction.noTeardown (createRemoteSchemaRemoteRelationship testEnvironment)
         ]
     }
 
 remoteSchemaToDBRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 remoteSchemaToDBRemoteRelationshipFixture =
-  (Fixture.fixture $ Fixture.Combine Fixture.RemoteGraphQLServer (Fixture.Backend Fixture.Postgres))
+  (Fixture.fixture $ Fixture.Combine Fixture.RemoteGraphQLServer (Fixture.Backend Postgres.backendTypeMetadata))
     { Fixture.mkLocalTestEnvironment = \testEnvironment -> do
         lhsServer <- lhsRemoteServerMkLocalTestEnvironment testEnvironment
         pure $ LocalTestTestEnvironment lhsServer Nothing,
@@ -227,7 +216,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment albumTable
   Postgres.insertTable testEnvironment albumTable
-  Schema.trackTable Fixture.Postgres sourceName albumTable testEnvironment
+  Schema.trackTable sourceName albumTable testEnvironment
 
 rhsPostgresTeardown :: TestEnvironment -> IO ()
 rhsPostgresTeardown _testEnvironment = pure ()
@@ -249,7 +238,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
 
 createSourceRemoteRelationship :: TestEnvironment -> IO ()
 createSourceRemoteRelationship testEnvironment = do
@@ -276,9 +265,6 @@ args:
         field_mapping:
           id: artist_id
   |]
-
-lhsPostgresTeardown :: TestEnvironment -> IO ()
-lhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- DB to Remote Schema Remote relationship

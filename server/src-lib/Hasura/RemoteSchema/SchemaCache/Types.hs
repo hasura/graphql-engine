@@ -97,7 +97,7 @@ data RemoteSchemaCtxG remoteFieldInfo = RemoteSchemaCtx
     _rscPermissions :: Map.HashMap RoleName IntrospectionResult,
     _rscRemoteRelationships :: RemoteSchemaRelationshipsG remoteFieldInfo
   }
-  deriving (Functor, Foldable, Traversable)
+  deriving (Eq, Functor, Foldable, Traversable)
 
 instance Filterable RemoteSchemaCtxG where
   filter f RemoteSchemaCtx {..} =

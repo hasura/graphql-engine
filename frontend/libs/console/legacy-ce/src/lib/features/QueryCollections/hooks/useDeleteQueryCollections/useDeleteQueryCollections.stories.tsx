@@ -5,7 +5,7 @@ import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 import { Button } from '@/new-components/Button';
 
-import { handlers } from '../useQueryCollections/mocks/handlers.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useDeleteQueryCollections } from './useDeleteQueryCollections';
 import { useQueryCollections } from '../useQueryCollections';
 
@@ -50,7 +50,7 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
   argTypes: {
     collectionName: {

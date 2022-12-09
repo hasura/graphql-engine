@@ -30,7 +30,7 @@ where
 
 import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
-import Autodocodec.Extended (optionalFieldOrIncludedNullWith')
+import Autodocodec.Extended (optionalFieldOrIncludedNull')
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (snakeCase)
@@ -41,7 +41,6 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
 import Database.PG.Query qualified as PG
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -101,6 +100,13 @@ data PermColSpec b
 deriving instance (Backend b) => Show (PermColSpec b)
 
 deriving instance (Backend b) => Eq (PermColSpec b)
+
+instance (Backend b) => HasCodec (PermColSpec b) where
+  codec =
+    dimapCodec
+      (either (const PCStar) PCCols)
+      (\case PCStar -> Left "*"; PCCols cols -> Right cols)
+      $ disjointEitherCodec (literalTextCodec "*") (listCodec $ codec @(Column b))
 
 instance (Backend b) => FromJSON (PermColSpec b) where
   parseJSON (String "*") = return PCStar
@@ -275,12 +281,10 @@ instance Backend b => HasCodec (InsPerm b) where
   codec =
     AC.object (codecNamePrefix @b <> "InsPerm") $
       InsPerm
-        <$> requiredFieldWith' "check" placeholderCodecViaJSON .== ipCheck
-        <*> optionalFieldWith' "set" placeholderCodecViaJSON .== ipSet
-        <*> optionalFieldWith' "columns" placeholderCodecViaJSON .== ipColumns
-        <*> optionalFieldWithDefault' "backend_only" False .== ipBackendOnly
-    where
-      (.==) = (AC..=)
+        <$> requiredField' "check" AC..= ipCheck
+        <*> optionalField' "set" AC..= ipSet
+        <*> optionalField' "columns" AC..= ipColumns
+        <*> optionalFieldWithDefault' "backend_only" False AC..= ipBackendOnly
 
 type InsPermDef b = PermDef b InsPerm
 
@@ -391,15 +395,13 @@ instance Backend b => HasCodec (SelPerm b) where
   codec =
     AC.object (codecNamePrefix @b <> "SelPerm") $
       SelPerm
-        <$> requiredFieldWith' "columns" placeholderCodecViaJSON .== spColumns
-        <*> requiredFieldWith' "filter" placeholderCodecViaJSON .== spFilter
-        <*> optionalField' "limit" .== spLimit
-        <*> optionalFieldWithOmittedDefault' "allow_aggregations" False .== spAllowAggregations
-        <*> optionalFieldWithOmittedDefaultWith' "computed_fields" placeholderCodecViaJSON [] .== spComputedFields
-        <*> optionalFieldWithOmittedDefault' "query_root_fields" ARFAllowAllRootFields .== spAllowedQueryRootFields
-        <*> optionalFieldWithOmittedDefault' "subscription_root_fields" ARFAllowAllRootFields .== spAllowedSubscriptionRootFields
-    where
-      (.==) = (AC..=)
+        <$> requiredField' "columns" AC..= spColumns
+        <*> requiredField' "filter" AC..= spFilter
+        <*> optionalField' "limit" AC..= spLimit
+        <*> optionalFieldWithOmittedDefault' "allow_aggregations" False AC..= spAllowAggregations
+        <*> optionalFieldWithOmittedDefault' "computed_fields" [] AC..= spComputedFields
+        <*> optionalFieldWithOmittedDefault' "query_root_fields" ARFAllowAllRootFields AC..= spAllowedQueryRootFields
+        <*> optionalFieldWithOmittedDefault' "subscription_root_fields" ARFAllowAllRootFields AC..= spAllowedSubscriptionRootFields
 
 type SelPermDef b = PermDef b SelPerm
 
@@ -423,7 +425,7 @@ instance Backend b => HasCodec (DelPerm b) where
   codec =
     AC.object (codecNamePrefix @b <> "DelPerm") $
       DelPerm
-        <$> requiredFieldWith' "filter" placeholderCodecViaJSON .== dcFilter
+        <$> requiredField' "filter" .== dcFilter
         <*> optionalFieldWithOmittedDefault' "backend_only" False .== dcBackendOnly
     where
       (.==) = (AC..=)
@@ -461,15 +463,13 @@ instance Backend b => HasCodec (UpdPerm b) where
   codec =
     AC.object (codecNamePrefix @b <> "UpdPerm") $
       UpdPerm
-        <$> requiredFieldWith "columns" placeholderCodecViaJSON "Allowed columns" .== ucColumns
-        <*> optionalFieldWith "set" placeholderCodecViaJSON "Preset columns" .== ucSet
-        <*> requiredFieldWith' "filter" placeholderCodecViaJSON .== ucFilter
+        <$> requiredField "columns" "Allowed columns" AC..= ucColumns
+        <*> optionalField "set" "Preset columns" AC..= ucSet
+        <*> requiredField' "filter" AC..= ucFilter
         -- Include @null@ in serialized output for this field because that is
         -- the way the @toOrdJSON@ serialization is written.
-        <*> optionalFieldOrIncludedNullWith' "check" placeholderCodecViaJSON .== ucCheck
-        <*> optionalFieldWithOmittedDefault' "backend_only" False .== ucBackendOnly
-    where
-      (.==) = (AC..=)
+        <*> optionalFieldOrIncludedNull' "check" AC..= ucCheck
+        <*> optionalFieldWithOmittedDefault' "backend_only" False AC..= ucBackendOnly
 
 type UpdPermDef b = PermDef b UpdPerm
 

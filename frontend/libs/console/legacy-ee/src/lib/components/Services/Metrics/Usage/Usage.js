@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
 
 import { fetchFiltersData } from '../Error/graphql.queries';
 import {
@@ -27,14 +28,14 @@ import UsageOverTime from './UsageOverTime';
 
 import styles from '../Metrics.module.scss';
 
-const Usage = (props) => {
+const Usage = props => {
   const { queryParams, projectId, RenderLink } = props;
 
-  const getTitle = (value) => {
+  const getTitle = value => {
     return TITLE_MAP[value];
   };
 
-  const getEmptyTitle = (value) => {
+  const getEmptyTitle = value => {
     return NO_TITLE_MAP[value];
   };
 
@@ -58,17 +59,19 @@ const Usage = (props) => {
     >
       {({ filters, groups }) => {
         return (
-          <div className="infoWrapper">
-            <div className={styles.subHeader}>Usage</div>
-            <UsageOverTime filters={filters} projectId={projectId} />
-            <BrowserRows
-              projectId={projectId}
-              RenderLink={RenderLink}
-              filters={filters}
-              groupBys={groups}
-              label={'Query List'}
-            />
-          </div>
+          <Analytics name="MonitoringUsage" {...REDACT_EVERYTHING}>
+            <div className="infoWrapper">
+              <div className={styles.subHeader}>Usage</div>
+              <UsageOverTime filters={filters} projectId={projectId} />
+              <BrowserRows
+                projectId={projectId}
+                RenderLink={RenderLink}
+                filters={filters}
+                groupBys={groups}
+                label={'Query List'}
+              />
+            </div>
+          </Analytics>
         );
       }}
     </StatsPanel>
@@ -113,7 +116,7 @@ const mapStateToProps = (state, ownProps) => {
     projectId: project.id,
   };
 };
-const usageConnector = (connect) => connect(mapStateToProps)(Usage);
+const usageConnector = connect => connect(mapStateToProps)(Usage);
 
 export { Usage };
 

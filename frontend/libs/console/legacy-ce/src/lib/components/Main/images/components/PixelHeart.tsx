@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-const PixelHeart: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const PixelHeart: React.FC<React.SVGProps<SVGSVGElement>> = props => (
   <svg viewBox="0 0 51 44" {...props}>
     <g fill="none">
       <path

@@ -38,7 +38,7 @@ import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -47,7 +47,7 @@ import Test.Schema.RemoteRelationships.MetadataAPI.Common (LocalTestTestEnvironm
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironmentSingleSetup contexts tests
   where
     contexts = NE.fromList [remoteSchemaToDBRemoteRelationshipFixture]

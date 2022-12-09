@@ -28,7 +28,7 @@ interface Props extends RequestHeadersSelectorProps {
   onSubmit: jest.Mock<void, [Record<string, unknown>]>;
 }
 
-export const Primary: Story<Props> = (args) => {
+export const Primary: Story<Props> = args => {
   return (
     <Form
       options={{

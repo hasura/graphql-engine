@@ -20,37 +20,38 @@ import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction qualified as SetupAction
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata Postgres.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Citus testEnvironment
+                  setupMetadata Citus.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
+                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.SQLServer testEnvironment
+                  setupMetadata Sqlserver.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -207,19 +208,19 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backendType testEnvironment = do
+setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendTypeMetadata testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
       schemaKeyword :: String
-      schemaKeyword = Key.toString $ Fixture.schemaKeyword backendType
+      schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
 
       backendPrefix :: String
-      backendPrefix = Fixture.defaultBackendTypeString backendType
+      backendPrefix = Fixture.backendTypeString backendTypeMetadata
 
       source :: String
-      source = Fixture.defaultSource backendType
+      source = Fixture.backendSourceName backendTypeMetadata
 
       setup :: IO ()
       setup =
@@ -275,34 +276,4 @@ setupMetadata backendType testEnvironment = do
                   - name
           |]
 
-      teardown :: IO ()
-      teardown =
-        postMetadata_
-          testEnvironment
-          [interpolateYaml|
-            type: bulk
-            args:
-            - type: #{backendPrefix}_drop_insert_permission
-              args:
-                source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
-                role: user
-            - type: #{backendPrefix}_drop_select_permission
-              args:
-                source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
-                role: user
-            - type: #{backendPrefix}_drop_insert_permission
-              args:
-                source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
-                role: user
-          |]
-
-  Fixture.SetupAction setup \_ -> teardown
+  SetupAction.noTeardown setup

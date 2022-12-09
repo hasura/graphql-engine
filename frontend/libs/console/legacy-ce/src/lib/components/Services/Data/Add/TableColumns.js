@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TableColumn from './TableColumn';
 
-const TableColumns = (props) => {
+const TableColumns = props => {
   const { columns } = props;
   const cols = columns.map((column, i) => {
     return (

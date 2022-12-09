@@ -17,7 +17,7 @@ const indexOf = (list, predicateFn) => {
 };
 
 const nextFilterValue = (prev, type, value, isSingleSelect) => {
-  const predicateFn = (l) => {
+  const predicateFn = l => {
     return l.value === value && l.type === type;
   };
   const elementIndex = indexOf(prev, predicateFn);
@@ -25,7 +25,7 @@ const nextFilterValue = (prev, type, value, isSingleSelect) => {
     return [...prev.slice(0, elementIndex), ...prev.slice(elementIndex + 1)];
   }
   if (isSingleSelect) {
-    const newTimeRangeFilter = [...prev.filter((f) => f.type !== type)];
+    const newTimeRangeFilter = [...prev.filter(f => f.type !== type)];
     return [
       ...newTimeRangeFilter,
       {

@@ -1,4 +1,4 @@
-const dataHeaders = (currentState) => {
+const dataHeaders = currentState => {
   return currentState().tables.dataHeaders;
 };
 export default dataHeaders;

@@ -22,8 +22,8 @@ spec = do
     jsonOpenApiProperties genTableName
   describe "TableInfo" $ do
     describe "minimal" $
-      testToFromJSONToSchema
-        (TableInfo (TableName ["my_table_name"]) [] [] (ForeignKeys mempty) Nothing)
+      testFromJSON
+        (TableInfo (TableName ["my_table_name"]) Table [] [] (ForeignKeys mempty) Nothing False False False)
         [aesonQQ|
           { "name": ["my_table_name"],
             "columns": []
@@ -33,30 +33,43 @@ spec = do
       testToFromJSONToSchema
         ( TableInfo
             (TableName ["my_table_name"])
-            [ColumnInfo (ColumnName "id") StringTy False Nothing]
+            View
+            [ColumnInfo (ColumnName "id") StringTy False Nothing False False]
             [ColumnName "id"]
             (ForeignKeys mempty)
             (Just "my description")
+            True
+            True
+            True
         )
         [aesonQQ|
           { "name": ["my_table_name"],
-            "columns": [{"name": "id", "type": "string", "nullable": false}],
+            "type": "view",
+            "columns": [{"name": "id", "type": "string", "nullable": false, "insertable": false, "updatable": false}],
             "primary_key": ["id"],
-            "description": "my description"
+            "description": "my description",
+            "insertable": true,
+            "updatable": true,
+            "deletable": true
           }
         |]
     describe "foreign-key" $
       testToFromJSONToSchema
         ( TableInfo
             (TableName ["my_table_name"])
-            [ColumnInfo (ColumnName "id") StringTy False Nothing]
+            Table
+            [ColumnInfo (ColumnName "id") StringTy False Nothing False False]
             [ColumnName "id"]
             (ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
             (Just "my description")
+            False
+            False
+            False
         )
         [aesonQQ|
           { "name": ["my_table_name"],
-            "columns": [{"name": "id", "type": "string", "nullable": false}],
+            "type": "table",
+            "columns": [{"name": "id", "type": "string", "nullable": false, "insertable": false, "updatable": false}],
             "primary_key": ["id"],
             "description": "my description",
             "foreign_keys": {
@@ -66,7 +79,10 @@ spec = do
                   "ArtistId": "ArtistId"
                 }
               }
-            }
+            },
+            "insertable": false,
+            "updatable": false,
+            "deletable": false
           }
         |]
     jsonOpenApiProperties genTableInfo
@@ -85,12 +101,19 @@ genConstraint =
   let mapping = genHashMap genColumnName genColumnName defaultRange
    in Constraint <$> genTableName <*> mapping
 
+genTableType :: MonadGen m => m TableType
+genTableType = Gen.enumBounded
+
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
 genTableInfo :: (MonadGen m, GenBase m ~ Identity) => m TableInfo
 genTableInfo =
   TableInfo
     <$> genTableName
+    <*> genTableType
     <*> Gen.list defaultRange genColumnInfo
     <*> Gen.list defaultRange genColumnName
     <*> genForeignKeys
     <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
+    <*> Gen.bool
+    <*> Gen.bool
+    <*> Gen.bool

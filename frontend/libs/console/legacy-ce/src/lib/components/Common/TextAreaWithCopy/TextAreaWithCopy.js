@@ -100,7 +100,7 @@ class TextAreaWithCopy extends React.Component {
       );
     };
 
-    const getTypeRenderer = (type) => {
+    const getTypeRenderer = type => {
       let typeRenderer;
 
       switch (type) {

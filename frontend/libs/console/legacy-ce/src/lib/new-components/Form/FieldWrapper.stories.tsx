@@ -27,11 +27,11 @@ Default CSS display is \`block\`, provided without padding and margin (displayed
     },
   },
   decorators: [
-    (Story) => <div className="p-4 flex w-full max-w-screen">{Story()}</div>,
+    Story => <div className="p-4 flex w-full max-w-screen">{Story()}</div>,
   ],
 } as ComponentMeta<typeof FieldWrapper>;
 
-export const ApiPlayground: ComponentStory<typeof FieldWrapper> = (args) => (
+export const ApiPlayground: ComponentStory<typeof FieldWrapper> = args => (
   <FieldWrapper {...args} />
 );
 ApiPlayground.storyName = '⚙️ API';
@@ -54,16 +54,15 @@ Basic.parameters = {
   },
 };
 
-export const VariantWithDescription: ComponentStory<
-  typeof FieldWrapper
-> = () => (
-  <FieldWrapper
-    label="The field wrapper label"
-    description="The field wrapper description"
-  >
-    <ChildrenExample />
-  </FieldWrapper>
-);
+export const VariantWithDescription: ComponentStory<typeof FieldWrapper> =
+  () => (
+    <FieldWrapper
+      label="The field wrapper label"
+      description="The field wrapper description"
+    >
+      <ChildrenExample />
+    </FieldWrapper>
+  );
 VariantWithDescription.storyName = '🎭 Variant - With description';
 VariantWithDescription.parameters = {
   docs: {
@@ -124,17 +123,16 @@ VariantHorizontalWithDescription.parameters = {
   },
 };
 
-export const VariantHorizontalWithTooltip: ComponentStory<
-  typeof FieldWrapper
-> = () => (
-  <FieldWrapper
-    label="The field wrapper label"
-    tooltip="The field wrapper tooltip"
-    horizontal
-  >
-    <ChildrenExample />
-  </FieldWrapper>
-);
+export const VariantHorizontalWithTooltip: ComponentStory<typeof FieldWrapper> =
+  () => (
+    <FieldWrapper
+      label="The field wrapper label"
+      tooltip="The field wrapper tooltip"
+      horizontal
+    >
+      <ChildrenExample />
+    </FieldWrapper>
+  );
 VariantHorizontalWithTooltip.storyName = '🎭 Variant - Horizontal with tooltip';
 VariantHorizontalWithTooltip.parameters = {
   docs: {
@@ -162,18 +160,34 @@ VariantHorizontalWithDescriptionAndTooltip.parameters = {
   },
 };
 
-export const StateWithErrorMessage: ComponentStory<
-  typeof FieldWrapper
-> = () => (
+export const StateLoading: ComponentStory<typeof FieldWrapper> = () => (
   <FieldWrapper
     label="The field wrapper label"
     description="The field wrapper description"
     tooltip="The field wrapper tooltip"
-    error={{ message: 'The error message', type: 'error' }}
+    loading
   >
     <ChildrenExample />
   </FieldWrapper>
 );
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
+export const StateWithErrorMessage: ComponentStory<typeof FieldWrapper> =
+  () => (
+    <FieldWrapper
+      label="The field wrapper label"
+      description="The field wrapper description"
+      tooltip="The field wrapper tooltip"
+      error={{ message: 'The error message', type: 'error' }}
+    >
+      <ChildrenExample />
+    </FieldWrapper>
+  );
 StateWithErrorMessage.storyName = '🔁 State - With error message';
 StateWithErrorMessage.parameters = {
   docs: {

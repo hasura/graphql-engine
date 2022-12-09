@@ -25,7 +25,7 @@ type LegacyRunQueryContainerProps = {
   onRunQuery: (userQuery: UserQuery) => void | null;
   dataSourceName: string;
   table: Table;
-  userQuery: FiltersAndSortFormValues;
+  initialFiltersAndSort: FiltersAndSortFormValues;
 };
 
 const replaceAllDotsWithUnderscore = (text: string) => text.replace(/\./g, '_');
@@ -34,39 +34,40 @@ const getFileName = (tableName: string) => {
   const currentTime = getCurrTimeForFileName();
   return `export_${replacedTableName}_${currentTime}`;
 };
-export const getUrlQueryParams = (): FiltersAndSortFormValues => {
-  const params = new URLSearchParams(window.location.search);
-  const filters = params.getAll('filter') ?? [];
-  const sorts = params.getAll('sort') ?? [];
 
-  return {
-    filter: filters.map(filter => {
-      const [column, operator, value] = filter.split(';');
-      return {
-        column,
-        operator,
-        value,
-      };
-    }),
-    sort: sorts.map(filter => {
-      const [column, type] = filter.split(';');
-      return {
-        column,
-        type: type as FiltersAndSortFormValues['sort'][0]['type'],
-      };
-    }),
+export const getFiltersAndSortFromUrlQueryParams =
+  (): FiltersAndSortFormValues => {
+    const params = new URLSearchParams(window.location.search);
+    const filters = params.getAll('filter') ?? [];
+    const sorts = params.getAll('sort') ?? [];
+
+    return {
+      filters: filters.map(filter => {
+        const [column, operator, value] = filter.split(';');
+        return {
+          column,
+          operator,
+          value,
+        };
+      }),
+      sorts: sorts.map(filter => {
+        const [column, type] = filter.split(';');
+        return {
+          column,
+          type: type as FiltersAndSortFormValues['sorts'][0]['type'],
+        };
+      }),
+    };
   };
-};
 export const LegacyRunQueryContainer = ({
   onRunQuery,
   dataSourceName,
   table,
-  userQuery: initialUserQuery,
+  initialFiltersAndSort,
 }: LegacyRunQueryContainerProps) => {
   const dispatch = useAppDispatch();
   const curFilter = useAppSelector(state => state.tables.view.curFilter);
   const limit = curFilter.limit;
-  const offset = curFilter.offset;
 
   const tableColumns = useTableColumns({ dataSourceName, table });
   const tableOperators = useDatabaseOperators({ dataSourceName });
@@ -79,6 +80,7 @@ export const LegacyRunQueryContainer = ({
     }
 
     dispatch(setOffset(0));
+
     setUrlParams(userQuery.where.$and, userQuery.order_by);
     dispatch(
       runFilterQuery({
@@ -86,7 +88,7 @@ export const LegacyRunQueryContainer = ({
         whereAnd: userQuery.where.$and,
         orderBy: userQuery.order_by,
         limit,
-        offset,
+        offset: 0,
       })
     );
   };
@@ -119,22 +121,24 @@ export const LegacyRunQueryContainer = ({
     });
   };
 
+  const onSubmitHandler = (values: FiltersAndSortFormValues) => {
+    const userQuery = filterValidUserQuery(
+      adaptFormValuesToQuery(values, tableColumns)
+    );
+    if (onRunQuery) {
+      onRunQuery(userQuery);
+    }
+    onSubmit(userQuery);
+  };
+
   return (
     <LegacyRunQuery
       columns={tableColumns}
       operators={tableOperators}
       onExport={onExportData}
-      initialUserQuery={initialUserQuery}
+      initialFiltersAndSort={initialFiltersAndSort}
       uniqueTableName={`${tableSchema?.table_schema}.${tableSchema?.table_name}`}
-      onSubmit={(values: FiltersAndSortFormValues) => {
-        const userQuery = filterValidUserQuery(
-          adaptFormValuesToQuery(values, tableColumns)
-        );
-        if (onRunQuery) {
-          onRunQuery(userQuery);
-        }
-        onSubmit(userQuery);
-      }}
+      onSubmit={onSubmitHandler}
     />
   );
 };

@@ -61,7 +61,7 @@ const transformFormData = (values: Schema) => {
     payload: isJsonString(values.payload)
       ? JSON.parse(values.payload)
       : values.payload,
-    headers: values.headers.map((header) => {
+    headers: values.headers.map(header => {
       if (header.type === 'from_env')
         return { name: header.name, value_from_env: header.value };
       return { name: header.name, value: header.value };

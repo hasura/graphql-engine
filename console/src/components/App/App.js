@@ -13,6 +13,7 @@ import styles from './App.module.scss';
 import 'react-loading-skeleton/dist/skeleton.css';
 
 import { theme } from '../UIKit/theme';
+import { trackCustomEvent } from '@/features/Analytics';
 
 export const GlobalContext = React.createContext(globals);
 
@@ -31,6 +32,11 @@ const App = ({
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
+    trackCustomEvent({
+      location: 'Console',
+      action: 'Load',
+      object: 'App',
+    });
   }, []);
   const telemetryShown = React.useRef(false);
   // should be true only in the case of hasura cloud

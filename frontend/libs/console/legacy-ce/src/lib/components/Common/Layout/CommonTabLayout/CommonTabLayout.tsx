@@ -18,7 +18,7 @@ type Props = {
   subHeading?: React.ReactNode;
 };
 
-const CommonTabLayout: React.FC<Props> = (props) => {
+const CommonTabLayout: React.FC<Props> = props => {
   const {
     breadCrumbs,
     heading,

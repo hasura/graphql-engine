@@ -1,5 +1,5 @@
 import { rest } from 'msw';
-import { Metadata } from '@/features/MetadataAPI';
+import { Metadata } from '@/features/hasura-metadata-types';
 import { TableInfo } from '@hasura/dc-api-types';
 
 const baseUrl = 'http://localhost:8080';

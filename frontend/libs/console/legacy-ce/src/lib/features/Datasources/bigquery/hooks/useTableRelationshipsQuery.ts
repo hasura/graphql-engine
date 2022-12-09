@@ -9,6 +9,6 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
 }) => {
   return useQuery(
     `BQ useTableRelationshipsQuery - ${JSON.stringify(target)}`,
-    async () => new Promise((res) => res([] as TableRelationshipsType[])) // NOTE: BQ has no local relationship support
+    async () => new Promise(res => res([] as TableRelationshipsType[])) // NOTE: BQ has no local relationship support
   );
 };

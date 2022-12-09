@@ -18,31 +18,32 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction qualified as SetupAction
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata Postgres.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.SQLServer testEnvironment
+                  setupMetadata Sqlserver.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
+                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -216,10 +217,10 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backendType testEnvironment = do
-  let backendPrefix = Fixture.defaultBackendTypeString backendType
-      source = Fixture.defaultSource backendType
+setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendTypeMetadata testEnvironment = do
+  let backendPrefix = Fixture.backendTypeString backendTypeMetadata
+      source = Fixture.backendSourceName backendTypeMetadata
 
       schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
@@ -258,27 +259,4 @@ setupMetadata backendType testEnvironment = do
                   columns: '*'
           |]
 
-      teardown :: IO ()
-      teardown =
-        postMetadata_
-          testEnvironment
-          [interpolateYaml|
-            type: bulk
-            args:
-            - type: #{backendPrefix}_drop_select_permission
-              args:
-                source: #{source}
-                table:
-                  schema: #{schemaName}
-                  name: author
-                role: user
-            - type: #{backendPrefix}_drop_insert_permission
-              args:
-                source: #{source}
-                table:
-                  schema: #{schemaName}
-                  name: author
-                role: user
-          |]
-
-  Fixture.SetupAction setup \_ -> teardown
+  SetupAction.noTeardown setup

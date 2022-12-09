@@ -3,7 +3,7 @@ import { QualifiedTable } from '@/metadata/types';
 const getTableClause = (ts: QualifiedTable[]) => (t: QualifiedTable) => {
   return ts
     .map(
-      (table) => `(
+      table => `(
         ${t.name} = '${table.name}'
           AND ${t.schema} = '${table.schema}'
         )`
@@ -12,7 +12,7 @@ const getTableClause = (ts: QualifiedTable[]) => (t: QualifiedTable) => {
 };
 
 const getSchemaClause = (s: string[]) => (n: string) =>
-  s.length ? `${n} in (${s.map((d) => `'${d}'`).join(',')})` : '';
+  s.length ? `${n} in (${s.map(d => `'${d}'`).join(',')})` : '';
 
 export const getSchemasWhereClause =
   (schemas: string[], clausePrefix = 'WHERE') =>

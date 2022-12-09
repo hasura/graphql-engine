@@ -12,7 +12,7 @@ export const getDataSourceMetadata = (state: ReduxState) => {
   const currentDataSource = state.tables?.currentDataSource;
   if (!currentDataSource) return null;
   return state.metadata.metadataObject?.sources.find(
-    (source) => source.name === currentDataSource
+    source => source.name === currentDataSource
   );
 };
 
@@ -27,7 +27,7 @@ export const getInitDataSource = (
   state: ReduxState
 ): { source: string; driver: Driver } => {
   const dataSources =
-    state.metadata.metadataObject?.sources.filter((s) =>
+    state.metadata.metadataObject?.sources.filter(s =>
       s.kind ? drivers.includes(s.kind) : true
     ) || [];
   if (dataSources.length) {
@@ -60,7 +60,7 @@ const getSecuritySettings = (state: ReduxState) => {
   return { api_limits, graphql_schema_introspection };
 };
 
-export const getTables = createSelector(getDataSourceMetadata, (source) => {
+export const getTables = createSelector(getDataSourceMetadata, source => {
   return source?.tables || [];
 });
 
@@ -70,7 +70,7 @@ export const getTablesFromAllSources = (
   return (
     state.metadata.metadataObject?.sources.reduce((accTables, source) => {
       return accTables.concat(
-        source.tables.map((t) => ({ ...t, source: source.name }))
+        source.tables.map(t => ({ ...t, source: source.name }))
       );
     }, [] as (TableEntry & { source: string })[]) || []
   );
@@ -82,7 +82,7 @@ const getMetadata = (state: ReduxState) => {
 
 const getActions = createSelector(
   getMetadata,
-  (metadata) => metadata?.actions || []
+  metadata => metadata?.actions || []
 );
 
 type PermKeys = Pick<
@@ -102,31 +102,31 @@ export const rolesSelector = createSelector(
   [getTablesFromAllSources, getActions, getRemoteSchemas, getSecuritySettings],
   (tables, actions, remoteSchemas, securitySettings) => {
     const roleNames: string[] = [];
-    tables?.forEach((table) =>
-      permKeys.forEach((key) =>
+    tables?.forEach(table =>
+      permKeys.forEach(key =>
         table[key]?.forEach(({ role }: { role: string }) =>
           roleNames.push(role)
         )
       )
     );
-    actions?.forEach((action) =>
-      action.permissions?.forEach((p) => roleNames.push(p.role))
+    actions?.forEach(action =>
+      action.permissions?.forEach(p => roleNames.push(p.role))
     );
-    remoteSchemas?.forEach((remoteSchema) => {
-      remoteSchema?.permissions?.forEach((p) => roleNames.push(p.role));
+    remoteSchemas?.forEach(remoteSchema => {
+      remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
     });
 
     Object.entries(securitySettings.api_limits ?? {}).forEach(
       ([limit, value]) => {
         if (limit !== 'disabled' && typeof value !== 'boolean') {
-          Object.keys(value?.per_role ?? {}).forEach((role) =>
+          Object.keys(value?.per_role ?? {}).forEach(role =>
             roleNames.push(role)
           );
         }
       }
     );
     securitySettings.graphql_schema_introspection?.disabled_for_roles.forEach(
-      (role) => roleNames.push(role)
+      role => roleNames.push(role)
     );
     return Array.from(new Set(roleNames));
   }
@@ -145,7 +145,7 @@ export const getRemoteSchemasSelector = createSelector(
 
 export const remoteSchemasNamesSelector = createSelector(
   getRemoteSchemas,
-  (schemas) => schemas?.map((schema) => schema.name)
+  schemas => schemas?.map(schema => schema.name)
 );
 
 type Options = {
@@ -157,14 +157,14 @@ type Options = {
 };
 export const getTablesInfoSelector = createSelector(
   getTables,
-  (tables) => (options: Options) => {
+  tables => (options: Options) => {
     if (options.schemas) {
-      return tables?.filter((t) => options?.schemas?.includes(t.table.schema));
+      return tables?.filter(t => options?.schemas?.includes(t.table.schema));
     }
     if (options.tables) {
-      return tables?.filter((t) =>
+      return tables?.filter(t =>
         options.tables?.find(
-          (optTable) =>
+          optTable =>
             optTable.table_name === t.table.name &&
             optTable.table_schema === t.table.schema
         )
@@ -176,11 +176,11 @@ export const getTablesInfoSelector = createSelector(
 
 export const getTableInformation = createSelector(
   getTables,
-  (tables) =>
+  tables =>
     (tableName: string, tableSchema: string) =>
     <T extends keyof TableEntry>(property: T): TableEntry[T] | null => {
       const table = tables?.find(
-        (t) => tableName === t.table.name && tableSchema === t.table.schema
+        t => tableName === t.table.name && tableSchema === t.table.schema
       );
       return table ? table[property] : null;
     }
@@ -193,8 +193,8 @@ export const getCurrentTableInformation = createSelector(
 
 export const getFunctions = createSelector(
   getDataSourceMetadata,
-  (source) =>
-    source?.functions?.map((f) => ({
+  source =>
+    source?.functions?.map(f => ({
       ...f.function,
       function_name: f.function.name,
       function_schema: f.function.schema,
@@ -205,9 +205,9 @@ export const getFunctions = createSelector(
 
 export const getFunctionSelector = createSelector(
   getFunctions,
-  (functions) => (name: string, schema: string) => {
+  functions => (name: string, schema: string) => {
     return functions?.find(
-      (f) => f.function_name === name && f.function_schema === schema
+      f => f.function_name === name && f.function_schema === schema
     );
   }
 );
@@ -216,7 +216,7 @@ export const getConsistentFunctions = createSelector(
   [getFunctions, getInconsistentObjects, getCurrentSchema],
   (funcs, objects, schema) => {
     return filterInconsistentMetadataObjects(
-      funcs.filter((f) => f.function_schema === schema),
+      funcs.filter(f => f.function_schema === schema),
       objects,
       'functions'
     );
@@ -233,7 +233,7 @@ export const getFunctionConfiguration = createSelector(
   getCurrentFunctionInfo,
   (funcs, { name, schema }) => {
     const func = funcs.find(
-      (f) => f.function_name === name && f.function_schema === schema
+      f => f.function_name === name && f.function_schema === schema
     );
     return func?.configuration;
   }
@@ -243,7 +243,7 @@ export const actionsSelector = createSelector(
   [getMetadata, getInconsistentObjects],
   (metadata, objects) => {
     const actions =
-      metadata?.actions?.map((action) => ({
+      metadata?.actions?.map(action => ({
         ...action,
         definition: {
           ...action.definition,
@@ -256,7 +256,7 @@ export const actionsSelector = createSelector(
   }
 );
 
-export const customTypesSelector = createSelector(getMetadata, (metadata) => {
+export const customTypesSelector = createSelector(getMetadata, metadata => {
   if (!metadata?.custom_types) return [];
 
   return parseCustomTypes(metadata.custom_types || []);
@@ -264,22 +264,22 @@ export const customTypesSelector = createSelector(getMetadata, (metadata) => {
 
 export const getRemoteSchemaSelector = createSelector(
   getRemoteSchemas,
-  (schemas) => (name: string) => {
-    return schemas.find((schema) => schema.name === name);
+  schemas => (name: string) => {
+    return schemas.find(schema => schema.name === name);
   }
 );
 
-export const getEventTriggers = createSelector(getMetadata, (metadata) => {
+export const getEventTriggers = createSelector(getMetadata, metadata => {
   let triggersMap: EventTrigger[] = [];
   if (!metadata) {
     return triggersMap;
   }
 
-  metadata.sources.forEach((source) => {
+  metadata.sources.forEach(source => {
     triggersMap = triggersMap.concat(
       source.tables.reduce((acc, t) => {
         const triggers: EventTrigger[] =
-          t.event_triggers?.map((trigger) => ({
+          t.event_triggers?.map(trigger => ({
             table_name: t.table.name,
             schema_name: t.table.schema,
             source: source.name,
@@ -309,7 +309,7 @@ export const getManualEventsTriggers = createSelector(
   getCurrentSource,
   (triggers, schema, table, source) => {
     return triggers.filter(
-      (t) =>
+      t =>
         t.table_name === table &&
         t.schema_name === schema &&
         t.source === source &&
@@ -322,12 +322,12 @@ export const getEventTriggerByName = createSelector(
   getEventTriggers,
   getMetadata,
   (triggers, metadata) => (name: string) => {
-    const currentTrigger = triggers.find((tr) => tr.name === name);
+    const currentTrigger = triggers.find(tr => tr.name === name);
     if (currentTrigger) return currentTrigger;
 
     for (const source of metadata?.sources || []) {
       for (const table of source.tables) {
-        const trigger = table.event_triggers?.find((tr) => tr.name === name);
+        const trigger = table.event_triggers?.find(tr => tr.name === name);
         if (trigger)
           return {
             table_name: table.table.name,
@@ -358,20 +358,17 @@ export const getAllowedQueries = (state: ReduxState) =>
 export const getInheritedRoles = (state: ReduxState) =>
   state.metadata.inheritedRoles || [];
 
-export const getSourcesFromMetadata = createSelector(
-  getMetadata,
-  (metadata) => {
-    return metadata?.sources.filter((s) =>
-      s.kind ? drivers.includes(s.kind) : true
-    );
-  }
-);
+export const getSourcesFromMetadata = createSelector(getMetadata, metadata => {
+  return metadata?.sources.filter(s =>
+    s.kind ? drivers.includes(s.kind) : true
+  );
+});
 
-export const getDataSources = createSelector(getMetadata, (metadata) => {
+export const getDataSources = createSelector(getMetadata, metadata => {
   const sources: DataSource[] = [];
   metadata?.sources
-    .filter((s) => (s.kind ? drivers.includes(s.kind) : true))
-    .forEach((source) => {
+    .filter(s => (s.kind ? drivers.includes(s.kind) : true))
+    .forEach(source => {
       let url: string | { from_env: string } = '';
       if (source.kind === 'bigquery') {
         url = source.configuration?.service_account?.from_env || '';
@@ -399,9 +396,9 @@ export const getDataSources = createSelector(getMetadata, (metadata) => {
   return sources;
 });
 
-export const getTablesBySource = createSelector(getMetadata, (metadata) => {
+export const getTablesBySource = createSelector(getMetadata, metadata => {
   const res: Record<string, { name: string; schema: string }[]> = {};
-  metadata?.sources.forEach((source) => {
+  metadata?.sources.forEach(source => {
     res[source.name] = source.tables.map(({ table }) => table);
   });
   return res;

@@ -18,7 +18,7 @@ const TableCommentEditor = ({
     dispatch(activateCommentEdit(true, tableComment));
   };
 
-  const commentEdited = (e) => {
+  const commentEdited = e => {
     dispatch(updateCommentInput(e.target.value));
   };
 

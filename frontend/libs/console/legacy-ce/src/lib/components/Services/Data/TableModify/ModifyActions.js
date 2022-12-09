@@ -108,7 +108,7 @@ const MODIFY_ROOT_FIELD = 'ModifyTable/MODIFY_ROOT_FIELD';
 const SET_CUSTOM_ROOT_FIELDS = 'ModifyTable/SET_CUSTOM_ROOT_FIELDS';
 
 const SET_CHECK_CONSTRAINTS = 'ModifyTable/SET_CHECK_CONSTRAINTS';
-const setCheckConstraints = (constraints) => ({
+const setCheckConstraints = constraints => ({
   type: SET_CHECK_CONSTRAINTS,
   constraints,
 });
@@ -131,17 +131,17 @@ const toggleApolloFederationSuccess = () => ({
   type: TOGGLE_APOLLO_FEDERATION_SUCCESS,
 });
 
-const setForeignKeys = (fks) => ({
+const setForeignKeys = fks => ({
   type: SET_FOREIGN_KEYS,
   fks,
 });
 
-const modifyRootFields = (rootFields) => ({
+const modifyRootFields = rootFields => ({
   type: MODIFY_ROOT_FIELD,
   data: rootFields,
 });
 
-const modifyTableCustomName = (customName) => ({
+const modifyTableCustomName = customName => ({
   type: MODIFY_TABLE_CUSTOM_NAME,
   data: customName,
 });
@@ -153,7 +153,7 @@ const editColumn = (column, key, value) => ({
   value,
 });
 
-const setColumnEdit = (data) => {
+const setColumnEdit = data => {
   return {
     type: SET_COLUMN_EDIT,
     column: data.name,
@@ -161,14 +161,14 @@ const setColumnEdit = (data) => {
   };
 };
 
-const resetColumnEdit = (column) => {
+const resetColumnEdit = column => {
   return {
     type: RESET_COLUMN_EDIT,
     column,
   };
 };
 
-const setPrimaryKeys = (pks) => ({
+const setPrimaryKeys = pks => ({
   type: SET_PRIMARY_KEYS,
   pks,
 });
@@ -179,7 +179,7 @@ const addPrimaryKey = (columnIndex, pkIndex) => ({
   pk: pkIndex,
 });
 
-const removePrimaryKey = (pkIndex) => ({
+const removePrimaryKey = pkIndex => ({
   type: REMOVE_PRIMARY_KEY,
   pk: pkIndex,
 });
@@ -298,7 +298,7 @@ export const deleteComputedField =
     );
   };
 
-export const setCustomRootFields = (successCb) => (dispatch, getState) => {
+export const setCustomRootFields = successCb => (dispatch, getState) => {
   const {
     allSchemas: allTables,
     currentTable: tableName,
@@ -344,7 +344,7 @@ export const setCustomRootFields = (successCb) => (dispatch, getState) => {
       successCb();
     }
   };
-  const customOnError = (err) => {
+  const customOnError = err => {
     dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
   };
 
@@ -413,7 +413,7 @@ export const removeCheckConstraint =
         successCb();
       }
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       if (errorCb) {
         errorCb();
       }
@@ -439,12 +439,12 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     const source = getState().tables.currentDataSource;
     const { pkModify } = getState().tables.modify;
     const tableSchema = getState().tables.allSchemas.find(
-      (ts) => ts.table_name === tableName && ts.table_schema === schemaName
+      ts => ts.table_name === tableName && ts.table_schema === schemaName
     );
     let numSelectedPkColumns = 0;
     const selectedPkColumns = pkModify
-      .filter((pk) => pk !== '')
-      .map((pk) => {
+      .filter(pk => pk !== '')
+      .map(pk => {
         numSelectedPkColumns++;
         return tableSchema.columns[pk].column_name;
       });
@@ -544,7 +544,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     const successMsg = `${pkAction} primary key constraint successful`;
     const errorMsg = `${pkAction} primary key constraint failed`;
     const customOnSuccess = () => {};
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
@@ -597,8 +597,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         filteredMappings.push(cm);
       }
     }
-    const lcols = filteredMappings.map((cm) => `"${columns[cm.column].name}"`);
-    const rcols = filteredMappings.map((cm) => `"${cm.refColumn}"`);
+    const lcols = filteredMappings.map(cm => `"${columns[cm.column].name}"`);
+    const rcols = filteredMappings.map(cm => `"${cm.refColumn}"`);
 
     const generatedConstraintName = generateFKConstraintName(
       tableName,
@@ -650,14 +650,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           schemaName,
           tableName,
           columns: Object.keys(oldConstraint.column_mapping).map(
-            (lc) => `"${lc}"`
+            lc => `"${lc}"`
           ),
         },
         {
           schemaName: oldConstraint.ref_table_table_schema,
           tableName: oldConstraint.ref_table,
           columns: Object.values(oldConstraint.column_mapping).map(
-            (rc) => `"${rc}"`
+            rc => `"${rc}"`
           ),
         },
         generatedConstraintName,
@@ -709,7 +709,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         );
       }
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
@@ -743,15 +743,13 @@ const removeForeignKey = (index, tableSchema) => {
       {
         schemaName,
         tableName,
-        columns: Object.keys(oldConstraint.column_mapping).map(
-          (lc) => `"${lc}"`
-        ),
+        columns: Object.keys(oldConstraint.column_mapping).map(lc => `"${lc}"`),
       },
       {
         schemaName: oldConstraint.ref_table_table_schema,
         tableName: oldConstraint.ref_table,
         columns: Object.values(oldConstraint.column_mapping).map(
-          (rc) => `"${rc}"`
+          rc => `"${rc}"`
         ),
       },
       oldConstraint.constraint_name,
@@ -774,7 +772,7 @@ const removeForeignKey = (index, tableSchema) => {
         ])
       );
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
@@ -793,7 +791,7 @@ const removeForeignKey = (index, tableSchema) => {
   };
 };
 
-const setUniqueKeys = (keys) => ({
+const setUniqueKeys = keys => ({
   type: SET_UNIQUE_KEYS,
   keys,
 });
@@ -864,7 +862,7 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
         dispatch(setSidebarLoading(false));
       });
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       dispatch(setSidebarLoading(false));
     };
@@ -914,7 +912,7 @@ const deleteTrigger = (trigger, table) => {
     const errorMsg = 'Deleting trigger failed';
 
     const customOnSuccess = () => {};
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
 
@@ -933,7 +931,7 @@ const deleteTrigger = (trigger, table) => {
   };
 };
 
-const deleteTableSql = (tableName) => {
+const deleteTableSql = tableName => {
   return (dispatch, getState) => {
     dispatch(setSidebarLoading(true));
     const currentSchema = getState().tables.currentSchema;
@@ -955,7 +953,7 @@ const deleteTableSql = (tableName) => {
       dispatch(setSidebarLoading(false));
     };
 
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       dispatch(setSidebarLoading(false));
     };
@@ -976,7 +974,7 @@ const deleteTableSql = (tableName) => {
   };
 };
 
-const untrackTableSql = (tableName) => {
+const untrackTableSql = tableName => {
   return (dispatch, getState) => {
     dispatch(setSidebarLoading(true));
     const currentSchema = getState().tables.currentSchema;
@@ -1008,7 +1006,7 @@ const untrackTableSql = (tableName) => {
         dispatch(setSidebarLoading(false));
       });
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       dispatch(setSidebarLoading(false));
     };
@@ -1051,7 +1049,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
         VIEW_DEF_REQUEST_ERROR
       )
     ).then(
-      (data) => {
+      data => {
         const finalDef = data.result[1][0];
         // set state and redirect to run_sql
         if (isRedirect) {
@@ -1077,7 +1075,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
         }
         dispatch({ type: SET_VIEW_DEF_SQL, data: runSqlDef });
       },
-      (err) => {
+      err => {
         dispatch(
           showErrorNotification('Fetching definition failed!', err.error, err)
         );
@@ -1142,17 +1140,17 @@ const deleteColumnSql = (column, tableSchema) => {
     const is_nullable = commonDataObject.is_nullable;
     const col_type = commonDataObject.data_type_name;
     const foreign_key_constraints = tableSchema.foreign_key_constraints.filter(
-      (fkc) => {
+      fkc => {
         const columnKeys = Object.keys(fkc.column_mapping);
         return columnKeys.includes(name);
       }
     );
     const opp_foreign_key_constraints =
-      tableSchema.opp_foreign_key_constraints.filter((fkc) => {
+      tableSchema.opp_foreign_key_constraints.filter(fkc => {
         const columnKeys = Object.values(fkc.column_mapping);
         return columnKeys.includes(name);
       });
-    const unique_constraints = tableSchema.unique_constraints.filter((uc) =>
+    const unique_constraints = tableSchema.unique_constraints.filter(uc =>
       uc.columns.includes(name)
     );
 
@@ -1188,7 +1186,7 @@ const deleteColumnSql = (column, tableSchema) => {
       opp_foreign_key_constraints
     );
     if (merged_fkc.length > 0) {
-      merged_fkc.forEach((fkc) => {
+      merged_fkc.forEach(fkc => {
         // add foreign key constraint to down migration
         const lcol = Object.keys(fkc.column_mapping);
         const rcol = Object.values(fkc.column_mapping);
@@ -1216,7 +1214,7 @@ const deleteColumnSql = (column, tableSchema) => {
     }
 
     if (unique_constraints.length > 0) {
-      unique_constraints.forEach((uc) => {
+      unique_constraints.forEach(uc => {
         // add unique constraint to down migration
         migration.UNSAFE_add(
           null,
@@ -1387,7 +1385,7 @@ const activateCommentEdit = (isEnabled, value) => ({
   type: TABLE_COMMENT_EDIT,
   data: { enabled: isEnabled, value: value },
 });
-const updateCommentInput = (value) => ({
+const updateCommentInput = value => ({
   type: TABLE_COMMENT_INPUT_EDIT,
   value: value,
 });
@@ -1432,7 +1430,7 @@ const deleteConstraintSql = (tableName, cName) => {
   };
 };
 
-const saveTableCommentSql = (tableType) => {
+const saveTableCommentSql = tableType => {
   return (dispatch, getState) => {
     const source = getState().tables.currentDataSource;
     const updatedComment =
@@ -1488,14 +1486,14 @@ const saveTableCommentSql = (tableType) => {
       // get existing state and filter out with table name and table schema.
       // update the comment and set in the state.
       const existingSchemas = getState().tables.allSchemas.filter(
-        (schemaInfo) =>
+        schemaInfo =>
           !(
             schemaInfo.table_name !== tableName &&
             schemaInfo.table_schema !== currentSchema
           )
       );
       const currentSchemaInfo = getState().tables.allSchemas.find(
-        (schemaInfo) =>
+        schemaInfo =>
           schemaInfo.table_name === tableName &&
           schemaInfo.table_schema === currentSchema
       );
@@ -1527,7 +1525,7 @@ const saveTableCommentSql = (tableType) => {
 const isColumnUnique = (tableSchema, colName) => {
   return (
     tableSchema.unique_constraints.filter(
-      (constraint) =>
+      constraint =>
         constraint.columns.includes(colName) && constraint.columns.length === 1
     ).length > 0
   );
@@ -1627,13 +1625,13 @@ const fetchColumnCasts = () => {
       body: JSON.stringify(reqQuery),
     };
     return dispatch(requestAction(url, options)).then(
-      (data) => {
+      data => {
         return dispatch({
           type: FETCH_COLUMN_TYPE_CASTS,
           data: convertArrayToJson(data.result.slice(1)),
         });
       },
-      (error) => {
+      error => {
         dispatch(
           showErrorNotification(
             'Error fetching column casts information',
@@ -1674,7 +1672,7 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
           tableName,
           currentSchema,
           getUniqueConstraintName(tableName, existingConstraint.columns),
-          existingConstraint.columns.map((c) => `"${c}"`)
+          existingConstraint.columns.map(c => `"${c}"`)
         ),
         source
       )
@@ -1774,7 +1772,7 @@ export const toggleTableAsEnum =
 
       dispatch(toggleEnumSuccess());
 
-      const newAllSchemas = allSchemas.map((schema) => {
+      const newAllSchemas = allSchemas.map(schema => {
         if (
           schema.table_name === currentTable &&
           schema.table_schema === currentSchema
@@ -1812,7 +1810,7 @@ export const toggleTableAsEnum =
     );
   };
 
-export const toggleAsApollofederation =
+export const toggleAsApolloFederation =
   (isApolloFederationSupported, successCallback, failureCallback) =>
   (dispatch, getState) => {
     const confirmMessage = `This will ${
@@ -2008,7 +2006,7 @@ const saveUniqueKey = (
     const uniqueKeys = getState().tables.modify.uniqueKeyModify;
     const numUniqueKeys = uniqueKeys.length;
     const uniqueKey = uniqueKeys[index];
-    const columns = uniqueKey.map((c) => allColumns[c].name);
+    const columns = uniqueKey.map(c => allColumns[c].name);
     const existingConstraint = existingConstraints[index];
 
     const downMigration = [];
@@ -2031,7 +2029,7 @@ const saveUniqueKey = (
             tableName,
             currentSchema,
             getUniqueConstraintName(tableName, existingConstraint.columns),
-            existingConstraint.columns.map((c) => `"${c}"`)
+            existingConstraint.columns.map(c => `"${c}"`)
           ),
           source
         )
@@ -2060,7 +2058,7 @@ const saveUniqueKey = (
           tableName,
           currentSchema,
           getUniqueConstraintName(tableName, columns),
-          columns.map((c) => `"${c}"`)
+          columns.map(c => `"${c}"`)
         ),
         source
       )

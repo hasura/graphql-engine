@@ -4,7 +4,8 @@ import {
   TrackingTableFormValues,
 } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Driver } from '@/dataSources';
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTableConfig } from '@/features/hasura-metadata-types';
+import pickBy from 'lodash.pickby';
 
 export const getTrackingTableFormPlaceholders = (
   tableName: string
@@ -32,20 +33,14 @@ export const buildConfigFromFormValues = (
 
   const config: MetadataTableConfig = {};
   // the shape of the form type almost matches the config type
-  const { custom_name, ...remainingValues } = values;
+  const { custom_name, ...customRoots } = values;
 
   if (custom_name) config.custom_name = custom_name;
 
-  let prop: keyof typeof remainingValues;
+  const rootsWithValues = pickBy(customRoots, v => v !== '');
 
-  for (prop in remainingValues) {
-    if (remainingValues[prop]) {
-      if (!config.custom_root_fields) {
-        // initialize obj if not yet created
-        config.custom_root_fields = {};
-      }
-      config.custom_root_fields[prop] = remainingValues[prop];
-    }
+  if (Object.keys(rootsWithValues).length > 0) {
+    config.custom_root_fields = rootsWithValues;
   }
 
   return config;
@@ -75,3 +70,51 @@ export const getQualifiedTable = ({
     name: tableName,
   };
 };
+
+export const query_field_props: (keyof TrackingTableFormValues)[] = [
+  'select',
+  'select_by_pk',
+  'select_aggregate',
+  'select_stream',
+];
+export const mutation_field_props: (keyof TrackingTableFormValues)[] = [
+  'insert',
+  'insert_one',
+  'update',
+  'update_by_pk',
+  'delete',
+  'delete_by_pk',
+];
+
+export const emptyForm: TrackingTableFormValues = Object.freeze({
+  custom_name: '',
+  select: '',
+  select_by_pk: '',
+  select_aggregate: '',
+  select_stream: '',
+  insert: '',
+  insert_one: '',
+  update: '',
+  update_by_pk: '',
+  delete: '',
+  delete_by_pk: '',
+  update_many: '',
+});
+
+export const buildDefaults = (
+  currentConfiguration: MetadataTableConfig | undefined
+) => ({
+  custom_name: currentConfiguration?.custom_name || '',
+  select: '',
+  select_by_pk: '',
+  select_aggregate: '',
+  select_stream: '',
+  insert: '',
+  insert_one: '',
+  update: '',
+  update_by_pk: '',
+  delete: '',
+  delete_by_pk: '',
+  update_many: '',
+  ...currentConfiguration?.custom_root_fields,
+});

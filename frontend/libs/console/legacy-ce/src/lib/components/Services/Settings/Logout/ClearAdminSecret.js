@@ -26,7 +26,7 @@ class ClearAdminSecret extends Component {
           size="sm"
           isLoading={isClearing}
           loadingText="Clearing..."
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             this.setState({ isClearing: true });
             clearAdminSecretState();

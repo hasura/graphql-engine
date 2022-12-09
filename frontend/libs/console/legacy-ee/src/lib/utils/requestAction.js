@@ -26,13 +26,13 @@ const requestAction = (
     options.credentials = 'omit';
   }
 
-  return (dispatch) => {
+  return dispatch => {
     const p1 = new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
       fetch(url, options).then(
-        (response) => {
+        response => {
           if (response.ok) {
-            return response.json().then((results) => {
+            return response.json().then(results => {
               if (SUCCESS) {
                 dispatch({ type: SUCCESS, data: results });
               }
@@ -43,7 +43,7 @@ const requestAction = (
 
           dispatch({ type: FAILED_REQUEST });
           if (response.status >= 400 && response.status <= 500) {
-            return response.text().then((errorMsg) => {
+            return response.text().then(errorMsg => {
               let msg = errorMsg;
               try {
                 msg = JSON.parse(errorMsg);
@@ -73,7 +73,7 @@ const requestAction = (
               reject(msg);
             });
           }
-          response.text().then((errorMsg) => {
+          response.text().then(errorMsg => {
             dispatch({ type: FAILED_REQUEST });
             if (ERROR) {
               dispatch({ type: ERROR, response, data: errorMsg });
@@ -81,7 +81,7 @@ const requestAction = (
             reject();
           });
         },
-        (error) => {
+        error => {
           dispatch({ type: FAILED_REQUEST });
           dispatch({ type: CONNECTION_FAILED });
           if (ERROR) {

@@ -13,9 +13,9 @@ const CheckConstraints = ({ dispatch, constraints }) => {
   }, [constraints]);
 
   return addConstraintsState.map(({ name, check }, i) => {
-    const onChangeName = (e) => {
+    const onChangeName = e => {
       e.persist();
-      setAddConstraintsState((prev) =>
+      setAddConstraintsState(prev =>
         prev.map((c, idx) => {
           if (i === idx) return { ...c, name: e.target.value };
           return c;
@@ -23,8 +23,8 @@ const CheckConstraints = ({ dispatch, constraints }) => {
       );
     };
 
-    const onChangeCheck = (ch) => {
-      setAddConstraintsState((prev) =>
+    const onChangeCheck = ch => {
+      setAddConstraintsState(prev =>
         prev.map((c, idx) => {
           if (i === idx) return { ...c, check: ch };
           return c;
@@ -72,10 +72,10 @@ const CheckConstraints = ({ dispatch, constraints }) => {
 
     let saveFunc;
     if (name && check) {
-      saveFunc = (toggle) => {
+      saveFunc = toggle => {
         dispatch(
           setCheckConstraints(
-            addConstraintsState.filter((c) => c.name && c.check)
+            addConstraintsState.filter(c => c.name && c.check)
           )
         );
         toggle();
@@ -84,9 +84,9 @@ const CheckConstraints = ({ dispatch, constraints }) => {
 
     let removeFunc;
     if (!isLast) {
-      removeFunc = (toggle) => {
+      removeFunc = toggle => {
         dispatch(removeCheckConstraint(i));
-        setAddConstraintsState((prev) => prev.filter((_, idx) => idx !== i));
+        setAddConstraintsState(prev => prev.filter((_, idx) => idx !== i));
         toggle();
       };
     }

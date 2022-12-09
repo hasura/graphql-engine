@@ -20,7 +20,7 @@ export const getFieldTypesFromType = (
   selectedTypeName: string
 ) => {
   if (types && types?.length) {
-    return types.find((i) => i.typeName === selectedTypeName)?.fields ?? [];
+    return types.find(i => i.typeName === selectedTypeName)?.fields ?? [];
   }
   return [];
 };
@@ -43,6 +43,6 @@ export const generateLhsFields = (resultSet: Record<string, unknown>) => {
   const lhs_fieldSet = new Set<string>();
 
   const results = matchAll(regexp, str);
-  results.forEach((i) => lhs_fieldSet.add(i.substring(1))); // remove $ symbol from the string to pass as lhs_fields
+  results.forEach(i => lhs_fieldSet.add(i.substring(1))); // remove $ symbol from the string to pass as lhs_fields
   return Array.from(lhs_fieldSet);
 };

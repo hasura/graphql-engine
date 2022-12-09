@@ -80,6 +80,8 @@ module.exports = {
     });
     config.resolve.alias['@'] = path.resolve(__dirname, '../src');
 
+    config.node = { fs: 'empty' };
+
     if (isConfigDebugMode) {
       console.log('------WEBPACK--------');
       console.log(util.inspect(newConfig, { showHidden: false, depth: null }));

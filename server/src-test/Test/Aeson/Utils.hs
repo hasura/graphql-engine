@@ -1,6 +1,7 @@
 -- | Some helper functions for testing Aeson instances
 module Test.Aeson.Utils
-  ( testToFromJSON,
+  ( testFromJSON,
+    testToFromJSON,
     validateToJSONOpenApi,
     testToFromJSONToSchema,
     jsonRoundTrip,
@@ -26,10 +27,14 @@ import Hedgehog.Internal.Range
 import Test.Hspec
 import Test.Hspec.Hedgehog
 
-testToFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => a -> Value -> Spec
-testToFromJSON a v = do
+testFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a) => a -> Value -> Spec
+testFromJSON a v = do
   it "parses from JSON" $
     parseEither parseJSON v `shouldBe` Right a
+
+testToFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => a -> Value -> Spec
+testToFromJSON a v = do
+  testFromJSON a v
   it "encodes to JSON" $
     toJSON a `shouldBe` v
 

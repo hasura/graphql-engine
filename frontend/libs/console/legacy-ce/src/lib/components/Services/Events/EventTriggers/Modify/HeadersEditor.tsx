@@ -44,8 +44,8 @@ const HeadersEditor = (props: HeaderEditorProps) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {existingHeaders
-                .filter((h) => !!h.name)
-                .map((header) => (
+                .filter(h => !!h.name)
+                .map(header => (
                   <tr className="">
                     <td className="px-3 py-3 whitespace-nowrap font-medium">
                       {header.name}

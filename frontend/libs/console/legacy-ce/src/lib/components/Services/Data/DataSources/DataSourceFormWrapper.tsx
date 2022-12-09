@@ -5,10 +5,10 @@ import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
-import { SampleDBSection } from './SampleDatabase';
 import { Driver } from '../../../../dataSources';
 import { isDBSupported } from './utils';
 
@@ -43,13 +43,12 @@ const driverToLabel: Record<
   },
 };
 
-const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = (props) => {
+const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
   const {
     onSubmit,
     loading,
     isEditState,
     children,
-    sampleDBTrial,
     isReadReplica,
     connectionDBState,
     connectionDBStateDispatch,
@@ -63,27 +62,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = (props) => {
     availableFeatureFlagIds.gdcId
   );
 
-  const onSampleDBTry = () => {
-    if (!sampleDBTrial || !sampleDBTrial.isActive()) return;
-
-    sampleDBTrial.track.tryButton();
-
-    if (!sampleDBTrial.isActive()) return;
-
-    connectionDBStateDispatch({
-      type: 'UPDATE_DISPLAY_NAME',
-      data: 'SampleDB',
-    });
-    connectionDBStateDispatch({
-      type: 'UPDATE_DB_DRIVER',
-      data: 'postgres',
-    });
-    connectionDBStateDispatch({
-      type: 'UPDATE_DB_URL',
-      data: sampleDBTrial.getDatabaseUrl(),
-    });
-  };
-
   const handleDBChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as Driver;
     const isSupported = isDBSupported(value, connectionTypeState);
@@ -95,7 +73,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = (props) => {
     /**
      * Early return for gdc drivers when feature flag is enabled
      */
-    const driver = drivers?.find((d) => d.name === value);
+    const driver = drivers?.find(d => d.name === value);
     if (isGDCFeatureFlagEnabled && !driver?.native) return;
 
     if (!isSupported && changeConnectionType) {
@@ -108,104 +86,113 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = (props) => {
   if (!drivers) return <>Something went wrong</>;
 
   const nativeDrivers = drivers
-    .filter((driver) => driver.native)
-    .map((driver) => driver.name);
+    .filter(driver => driver.native)
+    .map(driver => driver.name);
+
   return (
     <>
       {isGDCFeatureFlagEnabled &&
       !nativeDrivers.includes(connectionDBState.dbType) ? (
-        <div className="max-w-xl">
-          <Connect.CreateConnection
-            name={connectionDBState.displayName}
-            driver={connectionDBState.dbType}
-            onDriverChange={(driver, name) => {
-              connectionDBStateDispatch({
-                type: 'UPDATE_DB_DRIVER',
-                data: driver as any,
-              });
-              connectionDBStateDispatch({
-                type: 'UPDATE_DISPLAY_NAME',
-                data: name,
-              });
-            }}
-          />
-        </div>
-      ) : (
-        <form
-          onSubmit={onSubmit}
-          className={`${styles.connect_db_content} ${styles.connect_form_width}`}
-        >
+        <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
           <div className="max-w-xl">
-            {!isReadReplica && (
-              <>
-                {sampleDBTrial && sampleDBTrial.isActive() && (
-                  <div className="mb-md">
-                    <SampleDBSection onTrySampleDB={onSampleDBTry} />
-                  </div>
-                )}
-                <LabeledInput
-                  onChange={(e) =>
-                    connectionDBStateDispatch({
-                      type: 'UPDATE_DISPLAY_NAME',
-                      data: e.target.value,
-                    })
-                  }
-                  value={connectionDBState.displayName}
-                  label="Database Display Name"
-                  placeholder="database name"
-                  data-test="database-display-name"
-                />
-                <label
-                  key="Data Source Driver"
-                  className={styles.connect_db_input_label}
-                >
-                  Data Source Driver
-                </label>
-                <select
-                  key="connect-db-type"
-                  value={connectionDBState.dbType}
-                  onChange={handleDBChange}
-                  className={`form-control ${styles.connect_db_input_pad}`}
-                  disabled={isEditState}
-                  data-test="database-type"
-                >
-                  {(drivers ?? [])
-                    /**
-                     * Why this filter? if GDC feature flag is not enabled, then I want to see only native sources
-                     */
-                    .filter(
-                      (driver) => driver.native || isGDCFeatureFlagEnabled
-                    )
-                    .map((driver) => (
-                      <option key={driver.name} value={driver.name}>
-                        {driver.displayName}{' '}
-                        {driver.release === 'GA' ? null : `(${driver.release})`}
-                      </option>
-                    ))}
-                </select>
-              </>
-            )}
-          </div>
-
-          <ConnectDatabaseForm isEditState={isEditState} {...props} />
-          {children}
-          <div className={styles.add_button_layout}>
-            <Button
-              size="lg"
-              mode="primary"
-              type="submit"
-              style={{
-                ...(loading && { cursor: 'progress' }),
+            <Connect.CreateConnection
+              name={connectionDBState.displayName}
+              driver={connectionDBState.dbType}
+              onDriverChange={(driver, name) => {
+                connectionDBStateDispatch({
+                  type: 'UPDATE_DB_DRIVER',
+                  data: driver as any,
+                });
+                connectionDBStateDispatch({
+                  type: 'UPDATE_DISPLAY_NAME',
+                  data: name,
+                });
               }}
-              isLoading={loading}
-              loadingText="Saving..."
-              data-test="connect-database-btn"
-              data-trackid="data-tab-connect-db-button"
-            >
-              {!isEditState ? 'Connect Database' : 'Update Connection'}
-            </Button>
+            />
           </div>
-        </form>
+        </Analytics>
+      ) : (
+        <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
+          <form
+            onSubmit={onSubmit}
+            className={`${styles.connect_db_content} ${styles.connect_form_width}`}
+          >
+            <div className="max-w-xl">
+              {!isReadReplica && (
+                <>
+                  <LabeledInput
+                    onChange={e =>
+                      connectionDBStateDispatch({
+                        type: 'UPDATE_DISPLAY_NAME',
+                        data: e.target.value,
+                      })
+                    }
+                    value={connectionDBState.displayName}
+                    label="Database Display Name"
+                    placeholder="database name"
+                    data-test="database-display-name"
+                  />
+                  <label
+                    key="Data Source Driver"
+                    className={styles.connect_db_input_label}
+                  >
+                    Data Source Driver
+                  </label>
+                  <select
+                    key="connect-db-type"
+                    value={connectionDBState.dbType}
+                    onChange={handleDBChange}
+                    className={`form-control ${styles.connect_db_input_pad}`}
+                    disabled={isEditState}
+                    data-test="database-type"
+                  >
+                    {(drivers ?? [])
+                      /**
+                       * Why this filter? if GDC feature flag is not enabled, then I want to see only native sources
+                       */
+                      .filter(
+                        driver => driver.native || isGDCFeatureFlagEnabled
+                      )
+                      .map(driver => (
+                        <option key={driver.name} value={driver.name}>
+                          {driver.displayName?.replace(
+                            'athena',
+                            'Amazon Athena'
+                          )}{' '}
+                          {driver.release === 'GA'
+                            ? null
+                            : `(${driver.release})`}
+                        </option>
+                      ))}
+                  </select>
+                </>
+              )}
+            </div>
+
+            <ConnectDatabaseForm isEditState={isEditState} {...props} />
+            {children}
+            <div className={styles.add_button_layout}>
+              <Analytics
+                name="data-tab-connect-db-button"
+                passHtmlAttributesToChildren
+              >
+                <Button
+                  size="lg"
+                  mode="primary"
+                  type="submit"
+                  style={{
+                    ...(loading && { cursor: 'progress' }),
+                  }}
+                  isLoading={loading}
+                  loadingText="Saving..."
+                  data-test="connect-database-btn"
+                >
+                  {!isEditState ? 'Connect Database' : 'Update Connection'}
+                </Button>
+              </Analytics>
+            </div>
+          </form>
+        </Analytics>
       )}
     </>
   );

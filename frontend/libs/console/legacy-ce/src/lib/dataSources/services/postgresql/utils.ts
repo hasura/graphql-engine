@@ -294,7 +294,7 @@ const getBulkDeleteRowRequestBody = ({
   return {
     type: 'bulk',
     source,
-    args: pkClauses.map((pkClause) =>
+    args: pkClauses.map(pkClause =>
       getDeleteRowRequestBody({ pkClause, tableName, schemaName, source })
     ),
   };

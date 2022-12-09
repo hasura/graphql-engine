@@ -39,15 +39,15 @@ export const getEnvVars = () => {
       variables,
     }),
   })
-    .then((r) => {
-      return r.json().then((response) => {
+    .then(r => {
+      return r.json().then(response => {
         if (response.errors) {
           throw new Error(response.errors[0]?.message);
         }
         return response;
       });
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };
@@ -89,8 +89,8 @@ export const updateEnvVars = (
       variables,
     }),
   })
-    .then((r) => {
-      return r.json().then((response) => {
+    .then(r => {
+      return r.json().then(response => {
         if (response.errors) {
           throw new Error(response.errors[0]?.message);
         } else {
@@ -98,7 +98,7 @@ export const updateEnvVars = (
         }
       });
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };
@@ -107,10 +107,10 @@ export const getAvailableEnvVar = (envVars: Record<string, any>) => {
   const newEnvVarName = 'PG_DATABASE_URL';
   let suffix = 0;
   while (
-    Object.keys(envVars).some((e) => e === `${newEnvVarName}${suffix || ''}`) ||
+    Object.keys(envVars).some(e => e === `${newEnvVarName}${suffix || ''}`) ||
     (envVars.environment &&
       Object.keys(envVars.environment).some(
-        (e) => e === `${newEnvVarName}${suffix || ''}`
+        e => e === `${newEnvVarName}${suffix || ''}`
       ))
   ) {
     suffix++;
@@ -120,7 +120,7 @@ export const getAvailableEnvVar = (envVars: Record<string, any>) => {
 
 export const setDBURLInEnvVars = (dbURL: string) => {
   return getEnvVars()
-    .then((res) => {
+    .then(res => {
       const { hash, envVars } = res.data.getTenantEnv;
       const emptyEnvVar = getAvailableEnvVar(envVars);
       return updateEnvVars(hash, [
@@ -132,7 +132,7 @@ export const setDBURLInEnvVars = (dbURL: string) => {
         return emptyEnvVar;
       });
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };
@@ -146,10 +146,10 @@ const getProjectHealth = () => {
     },
     credentials: 'include',
   })
-    .then((health) => {
+    .then(health => {
       return health.ok;
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };

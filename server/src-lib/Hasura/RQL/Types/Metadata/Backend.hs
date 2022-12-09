@@ -78,13 +78,13 @@ class
       HasHttpManagerM m
     ) =>
     Logger Hasura ->
-    (Inc.Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
+    (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
   default resolveBackendInfo ::
     ( Arrow arr,
       BackendInfo b ~ ()
     ) =>
     Logger Hasura ->
-    (Inc.Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
+    (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
   resolveBackendInfo = const $ arr $ const ()
 
   -- | Function that resolves the connection related source configuration, and

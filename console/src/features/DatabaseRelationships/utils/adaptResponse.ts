@@ -43,8 +43,6 @@ const getFkDefinition = (
         areTablesEqual(fromTable, fkConstraint.from.table) &&
         isEqual(fromColumns.sort(), fkConstraint.from.column)
     );
-    console.log(matchingFkConstraint, fkConstraints);
-    // const
 
     return {
       toTable: matchingFkConstraint?.to.table,
@@ -68,8 +66,6 @@ const getFkDefinition = (
       areTablesEqual(toTable, fkConstraint.to.table) &&
       isEqual(toColumn.sort(), fkConstraint.to.column)
   );
-  console.log(matchingFkConstraint, fkConstraints);
-
   return {
     toTable: matchingFkConstraint?.from.table,
     mapping: matchingFkConstraint

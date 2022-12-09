@@ -1,6 +1,7 @@
 import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 import { IconTooltip } from '@/new-components/Tooltip';
+import globals from '@/Globals';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -97,18 +98,41 @@ const driverToLabel: Record<
         Only Database URLs and Environment Variables are available for
         CockroachDB
       </>,
-      <div className="flex whitespace-nowrap">
-        Please makes sure to not use the
-        <div className="font-semibold text-gray-500 px-1">
-          &quot;sslverify=verify-full&quot;
+      globals.consoleType === 'oss' ? (
+        <div className="flex whitespace-nowrap">
+          SSL for Cockroach is only available on{' '}
+          <a
+            href="https://hasura.io/pricing/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-gray-500 px-1"
+          >
+            Hasura Cloud
+          </a>
+          and
+          <a
+            href="https://hasura.io/pricing/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-gray-500 px-1"
+          >
+            Self-Hosted EE.
+          </a>
         </div>
-        parameter in your connection string. SSL mode needs to be configured
-        under the
-        <div className="font-semibold text-gray-500 px-1">
-          SSL Certificate Section
+      ) : (
+        <div className="flex whitespace-nowrap">
+          Please make sure to not use the
+          <div className="font-semibold text-gray-500 px-1">
+            &quot;sslverify=verify-full&quot;
+          </div>
+          parameter in your connection string. SSL mode needs to be configured
+          under the
+          <div className="font-semibold text-gray-500 px-1">
+            SSL Certificate Section
+          </div>
+          section below
         </div>
-        section below
-      </div>,
+      ),
     ],
   },
 };

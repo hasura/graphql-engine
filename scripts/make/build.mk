@@ -6,7 +6,7 @@ GENERATED_CABAL_FILES = $(foreach package_file,$(PACKAGE_YAML_FILES),$(wildcard 
 
 .PHONY: build-all
 ## build-all: build all haskell packages, or "have i broken anything?"
-build-all: build build-tests build-integration-tests build-pro build-pro-tests build-multitenant build-multitenant-integration-tests build-tests-dc-api
+build-all: build build-tests build-integration-tests build-pro build-pro-tests build-multitenant build-multitenant-integration-tests build-tests-dc-api build-pro-api-tests
 
 .PHONY: build
 ## build: build non-pro graphql executable
@@ -47,3 +47,8 @@ build-multitenant: $(GENERATED_CABAL_FILES)
 ## build-multitenant-integration-tests: build multitenant integration tests
 build-multitenant-integration-tests: $(GENERATED_CABAL_FILES)
 	cabal build multitenant-integration-test
+
+.PHONY: build-pro-api-tests
+## build-pro-api-tests: build pro api-tests
+build-pro-api-tests:
+	cabal build api-tests-pro

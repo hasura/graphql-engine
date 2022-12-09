@@ -13,33 +13,32 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Introspection (introspectEnums, introspectTypes)
-import Harness.Test.Permissions (Permission (..), insertPermission, selectPermission)
+import Harness.Test.Permissions (InsertPermissionDetails (..), Permission (..), SelectPermissionDetails (..), insertPermission, selectPermission)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, shouldContain)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend BackendType.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   Postgres.setupPermissionsAction (permissions "postgres") testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend BackendType.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
                   Citus.setupPermissionsAction (permissions "citus") testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend BackendType.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   Cockroach.setupPermissionsAction (permissions "cockroach") testEnvironment
@@ -73,18 +72,20 @@ schema =
 
 permissions :: Text -> [Permission]
 permissions source =
-  [ selectPermission
-      { permissionTable = "foo",
-        permissionSource = source,
-        permissionRole = "role-select-only",
-        permissionColumns = ["id", "bar"]
-      },
-    insertPermission
-      { permissionTable = "foo",
-        permissionSource = source,
-        permissionRole = "role-insert-only",
-        permissionColumns = ["id", "bar"]
-      }
+  [ SelectPermission
+      selectPermission
+        { selectPermissionTable = "foo",
+          selectPermissionSource = source,
+          selectPermissionRole = "role-select-only",
+          selectPermissionColumns = ["id", "bar"]
+        },
+    InsertPermission
+      insertPermission
+        { insertPermissionTable = "foo",
+          insertPermissionSource = source,
+          insertPermissionRole = "role-insert-only",
+          insertPermissionColumns = ["id", "bar"]
+        }
   ]
 
 --------------------------------------------------------------------------------

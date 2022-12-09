@@ -5,7 +5,7 @@ import AllowListDataWrapper from './AllowListDataWrapper';
 
 import ManageAllowList from './ManageAllowList';
 
-const ExistingAllowlists = (props) => {
+const ExistingAllowlists = props => {
   const { collectionName, projectName, projectId } = props;
   return (
     <AllowListDataWrapper projectId={projectId} groupName={collectionName}>

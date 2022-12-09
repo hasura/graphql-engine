@@ -144,3 +144,5 @@ instance Backend 'MySQL where
     Pool.resizePool pool (maxConnections `div` getServerReplicasInt serverReplicas)
     -- Trim pool by destroying excess resources, if any
     Pool.tryTrimPool pool
+
+  defaultTriggerOnReplication = error "Event triggers are not implemented for the MySQL source."

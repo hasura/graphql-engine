@@ -19,6 +19,10 @@ export const fetchAllOnboardingDataQuery = `
       activity
       target
     }
+    users {
+      id
+      created_at
+    }
   }
 `;
 

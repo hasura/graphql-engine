@@ -10,6 +10,7 @@ where
 import Control.Monad.Memoize
 import Data.Has
 import Data.List.NonEmpty qualified as NE
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended ((<>>))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
@@ -24,7 +25,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, tableWhereArg)
-import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns, tableSelectPermissions)
+import Hasura.GraphQL.Schema.Table (getTableGQLName, getTableIdentifierName, tableSelectColumns, tableSelectPermissions)
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -122,18 +123,18 @@ streamColumnParserArg colInfo = do
 streamColumnValueParser ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  G.Name ->
+  GQLNameIdentifier ->
   [ColumnInfo b] ->
   SchemaT r m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
-streamColumnValueParser tableGQLName colInfos = do
+streamColumnValueParser tableGQLIdentifier colInfos = do
   sourceInfo :: SourceInfo b <- asks getter
   let sourceName = _siName sourceInfo
       customization = _siCustomization sourceInfo
       tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
-      objName = mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_value_input
+      objName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkStreamCursorValueInputTypeName tableGQLIdentifier
       description = G.Description $ "Initial value of the column from where the streaming should start"
-  memoizeOn 'streamColumnValueParser (sourceName, tableGQLName) $ do
+  memoizeOn 'streamColumnValueParser (sourceName, tableGQLIdentifier) $ do
     columnVals <- sequenceA <$> traverse streamColumnParserArg colInfos
     pure $ P.object objName (Just description) columnVals <&> catMaybes
 
@@ -142,12 +143,12 @@ streamColumnValueParser tableGQLName colInfos = do
 streamColumnValueParserArg ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  G.Name ->
+  GQLNameIdentifier ->
   [ColumnInfo b] ->
   SchemaT r m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
-streamColumnValueParserArg tableGQLName colInfos = do
+streamColumnValueParserArg tableGQLIdentifier colInfos = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
-  columnValueParser <- streamColumnValueParser tableGQLName colInfos
+  columnValueParser <- streamColumnValueParser tableGQLIdentifier colInfos
   pure do
     P.field (applyFieldNameCaseCust tCase Name._initial_value) (Just $ G.Description "Stream column input with initial value") columnValueParser
 
@@ -158,12 +159,12 @@ streamColumnValueParserArg tableGQLName colInfos = do
 tableStreamColumnArg ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  G.Name ->
+  GQLNameIdentifier ->
   [ColumnInfo b] ->
   SchemaT r m (InputFieldsParser n [IR.StreamCursorItem b])
-tableStreamColumnArg tableGQLName colInfos = do
+tableStreamColumnArg tableGQLIdentifier colInfos = do
   cursorOrderingParser <- cursorOrderingArg @b
-  streamColumnParser <- streamColumnValueParserArg tableGQLName colInfos
+  streamColumnParser <- streamColumnValueParserArg tableGQLIdentifier colInfos
   pure $ do
     orderingArg <- cursorOrderingParser
     columnArg <- streamColumnParser
@@ -189,10 +190,11 @@ tableStreamCursorExp tableInfo = do
       mkTypename = runMkTypename $ _rscTypeNames customization
   memoizeOn 'tableStreamCursorExp (sourceName, tableName) $ do
     tableGQLName <- getTableGQLName tableInfo
+    tableGQLIdentifier <- getTableIdentifierName tableInfo
     columnInfos <- tableSelectColumns tableInfo
-    let objName = mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_input
+    let objName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkStreamCursorInputTypeName tableGQLIdentifier
         description = G.Description $ "Streaming cursor of the table " <>> tableGQLName
-    columnParsers <- tableStreamColumnArg tableGQLName columnInfos
+    columnParsers <- tableStreamColumnArg tableGQLIdentifier columnInfos
     pure $ P.object objName (Just description) columnParsers
 
 -- | Argument to accept the cursor input object.

@@ -7,6 +7,7 @@ module Test.Subscriptions.DerivedDataSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Database.PG.Query.Pool (sql)
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
@@ -16,27 +17,34 @@ import Harness.Subscriptions (getNextResponse, withSubscriptions)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupPostgres testEnvironment,
-                  setupMetadata Fixture.Postgres testEnvironment
+                  setupMetadata Postgres.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Citus.setupTablesAction schema testEnvironment,
+                  setupCitus testEnvironment,
+                  setupMetadata Citus.backendTypeMetadata testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   setupCockroach testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
+                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -226,6 +234,18 @@ setupPostgres testEnvironment =
     }
 
 --------------------------------------------------------------------------------
+-- Citus setup
+
+setupCitus :: TestEnvironment -> Fixture.SetupAction
+setupCitus testEnvironment =
+  Fixture.SetupAction
+    { Fixture.setupAction =
+        Citus.run_ testEnvironment setupViewSQL,
+      Fixture.teardownAction = \_ ->
+        Citus.run_ testEnvironment teardownViewSQL
+    }
+
+--------------------------------------------------------------------------------
 -- Cockroach setup
 
 setupCockroach :: TestEnvironment -> Fixture.SetupAction
@@ -240,9 +260,9 @@ setupCockroach testEnvironment =
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backend testEnvironment = do
-  let backendPrefix = Fixture.defaultBackendTypeString backend
+setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendMetadata testEnvironment = do
+  let backendPrefix = Fixture.backendTypeString backendMetadata
   Fixture.SetupAction
     { Fixture.setupAction =
         postMetadata_
@@ -300,7 +320,7 @@ setupMetadata backend testEnvironment = do
     }
   where
     source :: String
-    source = Fixture.defaultSource backend
+    source = Fixture.backendSourceName backendMetadata
 
     schemaName :: Schema.SchemaName
     schemaName = Schema.getSchemaName testEnvironment

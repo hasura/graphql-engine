@@ -1,4 +1,4 @@
-import { MetadataSelector } from './selectors';
+import * as MetadataSelectors from './selectors';
 import {
   metadataSource,
   metadataTables,
@@ -7,7 +7,7 @@ import {
   metadataWithSourcesAndTables,
 } from './mocks/metadata.mock';
 
-describe('MetadataSelector.getMetadataSources', () => {
+describe('MetadataSelectors.getSources', () => {
   test.each`
     case                         | metadata                                                          | expectedOutput
     ${' Metadata has no source'} | ${{ resource_version: 1, metadata: { version: 3, sources: [] } }} | ${[]}
@@ -16,13 +16,13 @@ describe('MetadataSelector.getMetadataSources', () => {
   `(
     'when invoked for $case, should return $expectedOutput',
     ({ metadata, expectedOutput }) => {
-      const result = MetadataSelector.getMetadataSources()(metadata);
+      const result = MetadataSelectors.getSources()(metadata);
       expect(result).toEqual(expectedOutput);
     }
   );
 });
 
-describe('MetadataSelector.findMetadataSource', () => {
+describe('MetadataSelectors.findSource', () => {
   test.each`
     case                                    | dataSourceName        | metadata                                                          | expectedOutput
     ${' Metadata has no source'}            | ${'sqlite_test'}      | ${{ resource_version: 1, metadata: { version: 3, sources: [] } }} | ${undefined}
@@ -32,14 +32,13 @@ describe('MetadataSelector.findMetadataSource', () => {
   `(
     'when invoked for $case, should return $expectedOutput',
     ({ dataSourceName, metadata, expectedOutput }) => {
-      const result =
-        MetadataSelector.findMetadataSource(dataSourceName)(metadata);
+      const result = MetadataSelectors.findSource(dataSourceName)(metadata);
       expect(result).toEqual(expectedOutput);
     }
   );
 });
 
-describe('MetadataSelector.findMetadataTable', () => {
+describe('MetadataSelectors.findTable', () => {
   test.each`
     case                                            | dataSourceName   | table          | metadata                                                          | expectedOutput
     ${' Metadata has no sources'}                   | ${'sqlite_test'} | ${['Album']}   | ${{ resource_version: 1, metadata: { version: 3, sources: [] } }} | ${undefined}
@@ -49,7 +48,7 @@ describe('MetadataSelector.findMetadataTable', () => {
   `(
     'when invoked for $case, should return $expectedOutput',
     ({ dataSourceName, table, metadata, expectedOutput }) => {
-      const result = MetadataSelector.findMetadataTable(
+      const result = MetadataSelectors.findTable(
         dataSourceName,
         table
       )(metadata);
@@ -58,7 +57,7 @@ describe('MetadataSelector.findMetadataTable', () => {
   );
 });
 
-describe('MetadataSelector.getMetadataTables', () => {
+describe('MetadataSelectors.getTables', () => {
   test.each`
     case                                    | dataSourceName        | metadata                        | expectedOutput
     ${' Metadata has no source'}            | ${'sqlite_test'}      | ${metadataWithoutSources}       | ${undefined}
@@ -68,14 +67,13 @@ describe('MetadataSelector.getMetadataTables', () => {
   `(
     'when invoked for $case, should return $expectedOutput',
     ({ dataSourceName, metadata, expectedOutput }) => {
-      const result =
-        MetadataSelector.getMetadataTables(dataSourceName)(metadata);
+      const result = MetadataSelectors.getTables(dataSourceName)(metadata);
       expect(result).toEqual(expectedOutput);
     }
   );
 });
 
-describe('MetadataSelector.getMetadataResourceVersion', () => {
+describe('MetadataSelectors.resourceVersion', () => {
   test.each`
     case                                               | metadata                        | expectedOutput
     ${' Metadata is missing the resource_version key'} | ${metadataWithResourceVersion}  | ${undefined}
@@ -84,7 +82,7 @@ describe('MetadataSelector.getMetadataResourceVersion', () => {
   `(
     'when invoked for $case, should return $expectedOutput',
     ({ metadata, expectedOutput }) => {
-      const result = MetadataSelector.getMetadataResourceVersion()(metadata);
+      const result = MetadataSelectors.resourceVersion()(metadata);
       expect(result).toEqual(expectedOutput);
     }
   );

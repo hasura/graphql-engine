@@ -3,7 +3,8 @@
 
 -- | PostgreSQL helpers.
 module Harness.Backend.Postgres
-  ( livenessCheck,
+  ( backendTypeMetadata,
+    livenessCheck,
     makeFreshDbConnectionString,
     metadataLivenessCheck,
     run_,
@@ -11,7 +12,9 @@ module Harness.Backend.Postgres
     runSQL,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    createMetadataDatabase,
     createDatabase,
+    dropMetadataDatabase,
     dropDatabase,
     createTable,
     insertTable,
@@ -20,7 +23,6 @@ module Harness.Backend.Postgres
     trackTable,
     untrackTable,
     setupTablesAction,
-    setupTablesActionDiscardingTeardownErrors,
     setupPermissionsAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
@@ -33,22 +35,31 @@ module Harness.Backend.Postgres
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
+import Data.Aeson qualified as Aeson
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as S8
+import Data.Monoid (Last, getLast)
 import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Extended (commaSeparated)
+import Data.Text.Lazy qualified as TL
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
+import Database.PostgreSQL.Simple.Options (Options (..))
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
@@ -58,18 +69,53 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), TestingMode (..), testLogHarness)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), UniqueTestId, testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+import Text.Pretty.Simple (pShow)
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.Postgres,
+      backendSourceName = "postgres",
+      backendCapabilities = Nothing,
+      backendTypeString = "pg",
+      backendDisplayNameString = "pg",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "schema"
+    }
+
+--------------------------------------------------------------------------------
 
 -- | The default connection information based on the 'TestingMode'. The
 -- interesting thing here is the database: in both modes, we specify an
 -- /initial/ database (returned by this function), which we use only as a way
 -- to create other databases for testing.
-defaultConnectInfo :: TestEnvironment -> Postgres.ConnectInfo
-defaultConnectInfo testEnvironment =
-  case testingMode testEnvironment of
-    TestAllBackends ->
+defaultConnectInfo :: HasCallStack => GlobalTestEnvironment -> Postgres.ConnectInfo
+defaultConnectInfo globalTestEnvironment =
+  case testingMode globalTestEnvironment of
+    TestNewPostgresVariant opts@Options {..} ->
+      let getComponent :: forall a. String -> Last a -> a
+          getComponent component =
+            fromMaybe
+              ( error $
+                  unlines
+                    [ "Postgres URI is missing its " <> component <> " component.",
+                      "Postgres options: " <> TL.unpack (pShow opts)
+                    ]
+              )
+              . getLast
+       in Postgres.ConnectInfo
+            { connectUser = getComponent "user" user,
+              connectPassword = getComponent "password" password,
+              connectHost = getComponent "host" $ hostaddr <> host,
+              connectPort = fromIntegral . getComponent "port" $ port,
+              connectDatabase = getComponent "dbname" $ dbname
+            }
+    _otherTestingMode ->
       Postgres.ConnectInfo
         { connectHost = Constants.postgresHost,
           connectUser = Constants.postgresUser,
@@ -77,27 +123,22 @@ defaultConnectInfo testEnvironment =
           connectPassword = Constants.postgresPassword,
           connectDatabase = Constants.postgresDb
         }
-    TestNewPostgresVariant {..} ->
-      Postgres.ConnectInfo
-        { connectHost = postgresSourceHost,
-          connectPort = postgresSourcePort,
-          connectUser = postgresSourceUser,
-          connectPassword = postgresSourcePassword,
-          connectDatabase = postgresSourceInitialDatabase
-        }
 
 -- | Create a connection string for whatever unique database has been generated
 -- for this 'TestEnvironment'.
 makeFreshDbConnectionString :: TestEnvironment -> S8.ByteString
 makeFreshDbConnectionString testEnvironment =
   Postgres.postgreSQLConnectionString
-    (defaultConnectInfo testEnvironment)
+    (defaultConnectInfo (globalEnvironment testEnvironment))
       { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
       }
 
-metadataLivenessCheck :: HasCallStack => IO ()
+metadataLivenessCheck :: HasCallStack => TestEnvironment -> IO ()
 metadataLivenessCheck =
-  doLivenessCheck (fromString postgresqlMetadataConnectionString)
+  doLivenessCheck
+    . fromString
+    . postgresqlMetadataConnectionString
+    . uniqueTestId
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
@@ -122,29 +163,22 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
-runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
-runWithInitialDb_ testEnvironment =
-  runInternal testEnvironment $
-    Postgres.postgreSQLConnectionString (defaultConnectInfo testEnvironment)
+runWithInitialDb_ :: HasCallStack => GlobalTestEnvironment -> String -> IO ()
+runWithInitialDb_ globalTestEnvironment =
+  runInternal globalTestEnvironment $
+    Postgres.postgreSQLConnectionString (defaultConnectInfo globalTestEnvironment)
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
+  runInternal (globalEnvironment testEnvironment) (makeFreshDbConnectionString testEnvironment)
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO ()
-runInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Executing connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
+runInternal :: HasCallStack => GlobalTestEnvironment -> S8.ByteString -> String -> IO ()
+runInternal globalTestEnvironment connectionString query = do
+  runLogger (logger globalTestEnvironment) $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
@@ -164,52 +198,15 @@ runInternal testEnvironment connectionString query = do
           )
     )
 
--- | when we are creating databases, we want to connect with the 'original' DB
--- we started with
-queryWithInitialDb :: (Postgres.FromRow a, HasCallStack) => TestEnvironment -> String -> IO [a]
-queryWithInitialDb testEnvironment =
-  queryInternal testEnvironment (makeFreshDbConnectionString testEnvironment)
-
---- | Run a plain SQL query.
--- On error, print something useful for debugging.
-queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
-queryInternal testEnvironment connectionString query = do
-  testLogHarness
-    testEnvironment
-    ( "Querying connection string: "
-        <> show connectionString
-        <> "\n"
-        <> "Query: "
-        <> query
-    )
-  catch
-    ( bracket
-        ( Postgres.connectPostgreSQL
-            connectionString
-        )
-        Postgres.close
-        (\conn -> Postgres.query_ conn (fromString query))
-    )
-    ( \(e :: Postgres.SqlError) ->
-        error
-          ( unlines
-              [ "PostgreSQL query error:",
-                S8.unpack (Postgres.sqlErrorMsg e),
-                "SQL was:",
-                query
-              ]
-          )
-    )
-
 runSQL :: String -> TestEnvironment -> IO ()
-runSQL = Schema.runSQL Postgres (defaultSource Postgres)
+runSQL = Schema.runSQL (BackendType.backendSourceName backendTypeMetadata)
 
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnv =
   [interpolateYaml|
-    name: #{ defaultSource Postgres }
-    kind: #{ defaultBackendTypeString Postgres }
+    name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
     tables: []
     configuration: #{ defaultSourceConfiguration testEnv }
   |]
@@ -357,12 +354,23 @@ dropTableIfExists testEnv Schema.Table {tableName} = do
 -- | Post an http request to start tracking the table
 trackTable :: TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
-  Schema.trackTable Postgres (defaultSource Postgres) table testEnvironment
+  Schema.trackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
 untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
-  Schema.untrackTable Postgres (defaultSource Postgres) table testEnvironment
+  Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
+
+createMetadataDatabase :: GlobalTestEnvironment -> UniqueTestId -> IO ()
+createMetadataDatabase globalTestEnvironment uniqueTestId =
+  runWithInitialDb_
+    globalTestEnvironment
+    ("CREATE DATABASE " <> Constants.postgresMetadataDb uniqueTestId <> ";")
+
+dropMetadataDatabase :: TestEnvironment -> IO ()
+dropMetadataDatabase testEnvironment = do
+  let dbName = postgresMetadataDb (uniqueTestId testEnvironment)
+  dropDatabaseInternal dbName testEnvironment
 
 -- | create a database to use and later drop for these tests
 -- note we use the 'initial' connection string here, ie, the one we started
@@ -370,31 +378,25 @@ untrackTable testEnvironment table =
 createDatabase :: TestEnvironment -> IO ()
 createDatabase testEnvironment = do
   runWithInitialDb_
-    testEnvironment
+    (globalEnvironment testEnvironment)
     ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
   createSchema testEnvironment
+
+dropDatabase :: TestEnvironment -> IO ()
+dropDatabase testEnvironment = do
+  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+  dropDatabaseInternal dbName testEnvironment
 
 -- | we drop databases at the end of test runs so we don't need to do DB clean
 -- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
 -- < 13 in CI so instead we boot all the active users then drop as normal.
-dropDatabase :: TestEnvironment -> IO ()
-dropDatabase testEnvironment = do
-  let dbName = uniqueDbName (uniqueTestId testEnvironment)
-  void $
-    queryWithInitialDb @(Postgres.Only Bool)
-      testEnvironment
-      [i|
-      SELECT pg_terminate_backend(pg_stat_activity.pid)
-      FROM pg_stat_activity
-      WHERE pg_stat_activity.datname = '#{dbName}'
-      AND pid <> pg_backend_pid();
-    |]
-
+dropDatabaseInternal :: String -> TestEnvironment -> IO ()
+dropDatabaseInternal dbName testEnvironment = do
   -- if this fails, don't make the test fail
   runWithInitialDb_
-    testEnvironment
+    (globalEnvironment testEnvironment)
     ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(ex :: SomeException) -> testLogHarness testEnvironment ("Failed to drop the database: " <> show ex)
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -428,27 +430,20 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships Postgres table testEnvironment
-    Schema.trackArrayRelationships Postgres table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 -- we replace metadata with nothing.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown _ (testEnvironment, _) =
-  GraphqlEngine.setSources testEnvironment mempty Nothing
+teardown _ _ = pure ()
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
-
-setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -> SetupAction
-setupTablesActionDiscardingTeardownErrors ts env =
-  SetupAction
-    (setup ts (env, ()))
-    (const $ teardown ts (env, ()) `catchAny` \ex -> testLogHarness env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =
@@ -458,25 +453,23 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup Postgres permissions env
+setupPermissions permissions env = Permissions.setup permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown Postgres permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
 
 setupFunctionRootFieldAction :: String -> TestEnvironment -> SetupAction
 setupFunctionRootFieldAction functionName env =
   SetupAction
     ( Schema.trackFunction
-        Postgres
-        (defaultSource Postgres)
+        (BackendType.backendSourceName backendTypeMetadata)
         functionName
         env
     )
     ( \_ ->
         Schema.untrackFunction
-          Postgres
-          (defaultSource Postgres)
+          (BackendType.backendSourceName backendTypeMetadata)
           functionName
           env
     )
@@ -485,17 +478,17 @@ setupComputedFieldAction :: Schema.Table -> String -> String -> TestEnvironment 
 setupComputedFieldAction table functionName asFieldName env =
   SetupAction
     ( Schema.trackComputedField
-        Postgres
-        (defaultSource Postgres)
+        (BackendType.backendSourceName backendTypeMetadata)
         table
         functionName
         asFieldName
+        Aeson.Null
+        Aeson.Null
         env
     )
     ( \_ ->
         Schema.untrackComputedField
-          Postgres
-          (defaultSource Postgres)
+          (BackendType.backendSourceName backendTypeMetadata)
           table
           asFieldName
           env

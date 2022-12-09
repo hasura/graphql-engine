@@ -124,7 +124,7 @@ const serialiseArguments = (
   parent?: string
 ): RemoteFieldArgument[] => {
   let allArgs: RemoteFieldArgument[] = [];
-  Object.keys(args).forEach((argName) => {
+  Object.keys(args).forEach(argName => {
     const argValue = args[argName];
     const argValueMetadata = parseArgValue(argValue);
     if (argValueMetadata) {
@@ -219,7 +219,7 @@ export const parseRemoteRelationship = (
     : relationship.definition.remote_field;
 
   const allRemoteFields: RemoteField[] = [];
-  Object.keys(remoteField).forEach((fieldName) => {
+  Object.keys(remoteField).forEach(fieldName => {
     serialiseRemoteField(
       fieldName,
       0,
@@ -313,7 +313,7 @@ export const getRemoteRelPayload = (
   const getRemoteFieldArguments = (field: RemoteField) => {
     const getArgumentObject = (depth: number, parent?: string) => {
       const depthArguments = field.arguments.filter(
-        (a) => a.depth === depth && a.parent === parent
+        a => a.depth === depth && a.parent === parent
       );
       const finalArgObj: any = depthArguments.reduce(
         (argObj: any, currentArg) => {
@@ -355,9 +355,9 @@ export const getRemoteRelPayload = (
   ): Record<string, RemoteRelationshipFieldServer> | undefined => {
     const obj: Record<string, RemoteRelationshipFieldServer> = {};
     const depthRemoteFields = relationship.remoteFields.filter(
-      (f) => f.depth === depth
+      f => f.depth === depth
     );
-    depthRemoteFields.forEach((f) => {
+    depthRemoteFields.forEach(f => {
       obj[f.name] = {
         field: getRemoteFieldObject(depth + 1),
         arguments: getRemoteFieldArguments(f) || {},
@@ -370,7 +370,7 @@ export const getRemoteRelPayload = (
     remote_schema: relationship.remoteSchema,
     remote_field: getRemoteFieldObject(0) || {},
     hasura_fields: hasuraFields
-      .map((f) => f.substr(1))
+      .map(f => f.substr(1))
       .filter((v, i, s) => s.indexOf(v) === i),
     table:
       currentDriver === 'bigquery'
@@ -385,7 +385,7 @@ const isFieldChecked = (
   depth: number,
   parent?: string
 ) => {
-  return relationship.remoteFields.some((f) => {
+  return relationship.remoteFields.some(f => {
     return f.name === fieldName && f.depth === depth && f.parent === parent;
   });
 };
@@ -402,12 +402,12 @@ export const getCheckedArgValue = (
   parentFieldDepth: number,
   parent?: string
 ): ArgValue | null => {
-  const parentRemoteField = relationship.remoteFields.find((f) => {
+  const parentRemoteField = relationship.remoteFields.find(f => {
     return f.name === parentField && f.depth === parentFieldDepth;
   });
   if (parentRemoteField) {
     const checkedArg = parentRemoteField.arguments.find(
-      (arg) =>
+      arg =>
         arg.name === argName && arg.depth === depth && arg.parent === parent
     );
     if (checkedArg) {
@@ -459,7 +459,7 @@ const buildArgElement = (
   });
   if (!!argValue && (isInputObjectType(argType) || isInterfaceType(argType))) {
     const argFields = argType.getFields();
-    Object.values(argFields).forEach((argField) => {
+    Object.values(argFields).forEach(argField => {
       buildArgElement(
         relationship,
         argField,
@@ -494,13 +494,13 @@ const buildFieldElement = (
   });
   if (isChecked) {
     if (field.args) {
-      field.args.forEach((arg) => {
+      field.args.forEach(arg => {
         buildArgElement(relationship, arg, 0, field.name, depth, callback);
       });
     }
     if (isObjectType(fieldType) || isInterfaceType(fieldType)) {
       const subFields = fieldType.getFields();
-      Object.values(subFields).forEach((subField) => {
+      Object.values(subFields).forEach(subField => {
         buildFieldElement(
           relationship,
           subField,
@@ -522,7 +522,7 @@ export const buildSchemaTree = (
   const queryType = remoteSchema.getQueryType();
   if (!queryType) return [];
   const fields = queryType.getFields();
-  Object.values(fields).forEach((field) => {
+  Object.values(fields).forEach(field => {
     buildFieldElement(
       relationship,
       field,
@@ -553,7 +553,7 @@ export const findRemoteFieldArgument = (
   args: RemoteFieldArgument[],
   arg: RemoteFieldArgument
 ) => {
-  return args.find((a) => compareRFArguments(a, arg));
+  return args.find(a => compareRFArguments(a, arg));
 };
 
 export const findRemoteField = (
@@ -561,7 +561,7 @@ export const findRemoteField = (
   field: RemoteField | TreeFieldElement
 ) => {
   return fields.find(
-    (f) =>
+    f =>
       f.name === field.name &&
       f.depth === field.depth &&
       f.parent === field.parent
@@ -573,6 +573,6 @@ export const findArgParentField = (
   arg: RemoteFieldArgument
 ) => {
   return fields.find(
-    (f) => f.name === arg.parentField && f.depth === arg.parentFieldDepth
+    f => f.name === arg.parentField && f.depth === arg.parentFieldDepth
   );
 };

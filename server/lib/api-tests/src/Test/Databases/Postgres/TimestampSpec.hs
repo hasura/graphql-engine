@@ -15,7 +15,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -23,16 +23,16 @@ import Test.Hspec (SpecWith, describe, it)
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
                 ]

@@ -54,7 +54,7 @@ const legacyIconStyles = 'ml-2 mr-5';
 const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
   const caseSensitiveResults: SourceItem[] = [];
   const caseAgnosticResults: SourceItem[] = [];
-  itemList.forEach((item) => {
+  itemList.forEach(item => {
     if (item.name.search(searchQuery) > -1) {
       caseSensitiveResults.push(item);
     } else if (item.name.toLowerCase().search(searchQuery.toLowerCase()) > -1) {
@@ -113,10 +113,10 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
       <div
         className={styles.sidebarTablePadding}
         onClick={() => {
-          setIsOpen((prev) => !prev);
+          setIsOpen(prev => !prev);
         }}
         onKeyDown={() => {
-          setIsOpen((prev) => !prev);
+          setIsOpen(prev => !prev);
         }}
         role="button"
       >

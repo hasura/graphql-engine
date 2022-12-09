@@ -42,7 +42,7 @@ const data = [
   ],
 ];
 
-const dataWithActions = data.map((row) => [...row, action]);
+const dataWithActions = data.map(row => [...row, action]);
 
 export const withActions = () => (
   <CardedTable
@@ -67,15 +67,15 @@ export const withIndividualComponents = () => (
   <CardedTable.Table>
     <CardedTable.TableHead>
       <CardedTable.TableHeadRow>
-        {columns.map((column) => (
+        {columns.map(column => (
           <CardedTable.TableHeadCell>{column}</CardedTable.TableHeadCell>
         ))}
       </CardedTable.TableHeadRow>
     </CardedTable.TableHead>
     <CardedTable.TableBody>
-      {data.map((row) => (
+      {data.map(row => (
         <CardedTable.TableBodyRow>
-          {row.map((cell) => (
+          {row.map(cell => (
             <CardedTable.TableBodyCell>{cell}</CardedTable.TableBodyCell>
           ))}
         </CardedTable.TableBodyRow>

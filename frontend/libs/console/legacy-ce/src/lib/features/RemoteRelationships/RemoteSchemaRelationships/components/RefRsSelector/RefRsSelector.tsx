@@ -10,7 +10,7 @@ export const refRemoteSchemaSelectorKey = 'referenceRemoteSchema';
 
 export const RefRsSelector = ({ allRemoteSchemas }: RefRsSelectorProps) => {
   const rsOptions = React.useMemo(
-    () => allRemoteSchemas.map((t) => ({ value: t, label: t })),
+    () => allRemoteSchemas.map(t => ({ value: t, label: t })),
     [allRemoteSchemas]
   );
 

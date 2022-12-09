@@ -8,6 +8,7 @@ module Hasura.Server.API.V2Query
   )
 where
 
+import Control.Concurrent.Async.Lifted (mapConcurrently)
 import Control.Lens (preview, _Right)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
@@ -65,6 +66,11 @@ data RQLQuery
   | RQDataConnectorRunSql !DataConnectorName !DataConnector.DataConnectorRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
+  | -- | A variant of 'RQBulk' that runs a bulk of read-only queries concurrently.
+    --   Asserts that queries on this lists are not modifying the schema.
+    --
+    --   This is mainly used by the graphql-engine console.
+    RQConcurrentBulk [RQLQuery]
   deriving (Generic)
 
 -- | This instance has been written by hand so that "wildcard" prefixes of _run_sql can be delegated to data connectors.
@@ -89,6 +95,7 @@ instance FromJSON RQLQuery where
       (dcNameFromRunSql -> Just t') -> RQDataConnectorRunSql t' <$> args
       "bigquery_database_inspection" -> RQBigqueryDatabaseInspection <$> args
       "bulk" -> RQBulk <$> args
+      "concurrent_bulk" -> RQConcurrentBulk <$> args
       _ -> fail $ "Unrecognised RQLQuery type: " <> T.unpack t
 
 runQuery ::
@@ -158,6 +165,7 @@ queryModifiesSchema = \case
   RQDataConnectorRunSql _ _ -> False
   RQBigqueryDatabaseInspection _ -> False
   RQBulk l -> any queryModifiesSchema l
+  RQConcurrentBulk l -> any queryModifiesSchema l
 
 runQueryM ::
   ( MonadError QErr m,
@@ -188,6 +196,10 @@ runQueryM env rq = Tracing.trace (T.pack $ constrName rq) $ case rq of
   RQDataConnectorRunSql t q -> DataConnector.runSQL t q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk l -> encJFromList <$> indexedMapM (runQueryM env) l
+  RQConcurrentBulk l -> do
+    when (queryModifiesSchema rq) $
+      throw500 "Only read-only queries are allowed in a concurrent_bulk"
+    encJFromList <$> mapConcurrently (runQueryM env) l
 
 queryModifiesUserDB :: RQLQuery -> Bool
 queryModifiesUserDB = \case
@@ -205,3 +217,4 @@ queryModifiesUserDB = \case
   RQDataConnectorRunSql _ _ -> True
   RQBigqueryDatabaseInspection _ -> False
   RQBulk q -> any queryModifiesUserDB q
+  RQConcurrentBulk _ -> False

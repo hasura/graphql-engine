@@ -14,15 +14,22 @@ sidebar_position: 13
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a GCP Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to a GCP Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing GCP Postgres database to a Hasura Cloud project. If you're
-exploring GCP Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check out
-their [docs](https://cloud.google.com/database-migration/docs/postgres) before continuing below.
+This guide explains how to connect a new or existing [GCP Postgres database](https://cloud.google.com/sql) to a Hasura
+instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring GCP Postgres and are
+interested in migrating an existing Postgres database - such as from Heroku - check out their
+[docs](https://cloud.google.com/database-migration/docs/postgres) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-gcp).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -33,54 +40,67 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
 
-After the project is initialized successfully, click on `Launch console` to open the Hasura console in your browser.
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+## Step 3: Create a Postgres DB on GCP {#create-pg-db-gcp}
 
-## Step 3: Create a Postgres DB on GCP (skip if you have an existing DB) {#create-pg-db-gcp}
+:::info Note
+
+If you have an existing Postgres database on GCP, you can skip this step and move on to
+[step 4](#allow-connections).
+
+:::
 
 Log into the [GCP console](https://console.cloud.google.com/).
 
 On the left-side navigation, scroll down to `Storage` and click on `SQL`:
 
-<Thumbnail src='/img/cloud-dbs/gcp/navigate-to-sql.png' alt='Navigate to SQL in GCP' width='250px' />
+<Thumbnail src="/img/cloud-dbs/gcp/navigate-to-sql.png" alt="Navigate to SQL in GCP" width="250px" />
 
 On the top, click on `Create instance`:
 
-<Thumbnail src='/img/cloud-dbs/gcp/create-instance.png' alt='Create database instance in GCP' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/gcp/create-instance.png" alt="Create database instance in GCP" width="1000px" />
 
 Select Postgres:
 
-<Thumbnail src='/img/cloud-dbs/gcp/select-postgres.png' alt='Select Postgres database instance in GCP' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/gcp/select-postgres.png" alt="Select Postgres database instance in GCP" width="1000px" />
 
 Select an instance ID, as well as a default user password. If required, choose a specific region and zone.
 
-<Thumbnail src='/img/cloud-dbs/gcp/configure-instance.png' alt='Configure database instance in GCP' width='500px' />
+<Thumbnail src="/img/cloud-dbs/gcp/configure-instance.png" alt="Configure database instance in GCP" width="500px" />
 
 Then click `Create`.
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: Allow connections to your DB from Hasura {#allow-connections}
 
 On the dashboard of your GCP database instance, on the left sidebar, click on `Connections`. Then scroll down to the
 checkbox `Public IP`, and click `+ Add network`:
 
-<Thumbnail src='/img/cloud-dbs/gcp/connections.png' alt='Navigate to connections in GCP' width='600px' />
+<Thumbnail src="/img/cloud-dbs/gcp/connections.png" alt="Navigate to connections in GCP" width="600px" />
 
 You can choose an optional name (e.g. "Hasura").
 
-Copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's details view on Hasura Cloud.
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
 
-<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
 
 Enter the Hasura IP address that you copied:
 
-<Thumbnail src='/img/cloud-dbs/gcp/add-network.png' alt='Add a new network in GCP' width='600px' />
+<Thumbnail src="/img/cloud-dbs/gcp/add-network.png" alt="Add a new network in GCP" width="600px" />
 
 Then click `Save`.
 
@@ -106,16 +126,16 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/
 - `public-ip`: The public IP can be optained by clicking on `Overview` on the left-side navigation and then scrolling
   down to `Connect to this instance`:
 
-<Thumbnail src='/img/cloud-dbs/gcp/public-ip.png' alt='Find the public IP for a GCP Postgres database' width='700px' />
+<Thumbnail src="/img/cloud-dbs/gcp/public-ip.png" alt="Find the public IP for a GCP Postgres database" width="700px" />
 
 - `postgres-port`: The default port for Postgres is `5432` if not specified otherwise.
 - `db`: The DB is `postgres` by default unless otherwise specified.
 
 ## Step 6: Finish connecting the database
 
-Back on Hasura Console, enter the database URL that we retrieved in [step 5](#construct-db-url-gcp):
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#construct-db-url-gcp):
 
-<Thumbnail src='/img/cloud-dbs/gcp/GCP-complete.png' alt='Database setup' width='600px' />
+<Thumbnail src="/img/cloud-dbs/gcp/GCP-complete.png" alt="Database setup" width="600px" />
 
 Then click `Connect Database`.
 
@@ -128,7 +148,7 @@ vars to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura console' width='1100px' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura console" width="1100px" />
 
 ## Step 7 (optional): Enable SSL connection
 
@@ -150,9 +170,9 @@ Download these certs to your local drive.
 
 ### Step 7.2: Add env vars
 
-Log in to [Hasura Cloud](https://cloud.hasura.io/), go to your project and add the following env vars:
+If using Hasura Cloud, go to your project and add the following env vars:
 
-(Open the cert files using your favourite text editor, select all the contents and copy them to the clipboard)
+(Open the cert files using your favorite text editor, select all the contents and copy them to the clipboard)
 
 | Env Var Name       | Value                           |
 | ------------------ | ------------------------------- |
@@ -162,11 +182,17 @@ Log in to [Hasura Cloud](https://cloud.hasura.io/), go to your project and add t
 
 Here is how your Hasura Cloud env vars setup should look like:
 
-<Thumbnail src='/img/cloud-dbs/gcp/cloud-gcp-env-vars.png' alt='Hasura Cloud Env Vars' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/gcp/cloud-gcp-env-vars.png" alt="Hasura Cloud Env Vars" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you can set these env vars in your `docker-compose.yml` file.
+
+:::
 
 ### Step 7.3: Configure SSL settings
 
-Open the console of your Hasura Cloud project, go to the `Data -> Manage -> [db-name] -> Edit` page.
+Open the Console of your Hasura project, go to the `Data -> Manage -> [db-name] -> Edit` page.
 
 Under `Connection Settings` add the following SSL certificate settings:
 
@@ -179,22 +205,22 @@ Under `Connection Settings` add the following SSL certificate settings:
 
 Here is how the setup should look like:
 
-<Thumbnail src='/img/cloud-dbs/gcp/ssl-config-setup.png' alt='Hasura Console SSL Config Setup' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/gcp/ssl-config-setup.png" alt="Hasura Console SSL Config Setup" width="1000px" />
 
 Finally, click on the `Update Connection` button to apply the SSL settings.
 
-<Thumbnail src='/img/cloud-dbs/gcp/update-connection-button.png' alt='Update Connection Button' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/gcp/update-connection-button.png" alt="Update Connection Button" width="1000px" />
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
-[custom domains](/projects/domains.mdx)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
+  [custom domains](/projects/domains.mdx)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

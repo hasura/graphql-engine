@@ -15,7 +15,8 @@ const serverEnvVars = `
   hasuraOAuthScopes: '${process.env.HASURA_OAUTH_SCOPES}',
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
   consoleType: '${process.env.HASURA_CONSOLE_TYPE}',
-  consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}'
+  consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}',
+  tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
 `;
 
 const cliEnvVars = `
@@ -35,7 +36,8 @@ const cliEnvVars = `
   hasuraMetricsUrl: '${process.env.HASURA_METRICS_URL}',
   pro: ${process.env.IS_PRO},
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
-  consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}'
+  consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}',
+  tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
 `;
 
 const envVars = process.env.CONSOLE_MODE === 'cli' ? cliEnvVars : serverEnvVars;

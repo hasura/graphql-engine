@@ -20,7 +20,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
   valueField: v,
   value,
   level,
-  setArg = (e) => console.log(e),
+  setArg = e => console.log(e),
   isInputObjectType,
   isFirstLevelInputObjPreset,
 }) => {
@@ -69,7 +69,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
     }
   };
 
-  const toggleExpandMode = () => setExpanded((b) => !b);
+  const toggleExpandMode = () => setExpanded(b => !b);
 
   if (children) {
     return (
@@ -93,7 +93,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
         ) : null}
         {hideInputArgName ? (
           expanded &&
-          Object.values(children).map((i) => {
+          Object.values(children).map(i => {
             if (typeof value === 'string') return undefined;
             const childVal =
               value && typeof value === 'object' ? value[i?.name] : undefined;
@@ -101,7 +101,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
               <li key={i.name}>
                 <ArgSelect
                   keyName={i.name}
-                  setArg={(val) => setArgVal({ [k]: val })}
+                  setArg={val => setArgVal({ [k]: val })}
                   valueField={i}
                   value={childVal}
                   level={level + 1}
@@ -112,7 +112,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
         ) : (
           <ul>
             {expanded &&
-              Object.values(children).map((i) => {
+              Object.values(children).map(i => {
                 if (typeof value === 'string') return undefined;
                 const childVal =
                   value && typeof value === 'object'
@@ -122,7 +122,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
                   <li key={i.name}>
                     <ArgSelect
                       keyName={i.name}
-                      setArg={(val) => setArgVal({ [k]: val })}
+                      setArg={val => setArgVal({ [k]: val })}
                       valueField={i}
                       value={childVal}
                       level={level + 1}

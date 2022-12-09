@@ -13,7 +13,7 @@ const HighlightedText = ({ value }: { value: string }) => {
   let insideQuotes = false;
   return (
     <span>
-      {value.split('').map((k) => {
+      {value.split('').map(k => {
         let res = <span>{k}</span>;
         if (k === `'` || k === `"`) {
           res = <span>{k}</span>;
@@ -35,13 +35,13 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
     dispatch(fetchPartitionDetails(table)).then((data: Partition[]) => {
       const partitionsMap = {} as Record<string, Partition[]>;
       const unqiuePKs = data
-        .map((p) => p.partition_key)
+        .map(p => p.partition_key)
         .filter((elem, index, self) => {
           return index === self.indexOf(elem);
         });
 
-      unqiuePKs.forEach((t) => {
-        const related = data.filter((x) => x.partition_key === t);
+      unqiuePKs.forEach(t => {
+        const related = data.filter(x => x.partition_key === t);
         partitionsMap[t] = related;
       });
 
@@ -56,14 +56,14 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
           <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
             Partitions
           </h4>
-          {Object.keys(partitions).map((key) => (
+          {Object.keys(partitions).map(key => (
             <div>
               <span className="font-semibold mr-xs">
                 <FaColumns aria-hidden="true" />
                 created_at -{' '}
               </span>
               <span className="mr-xs">{key}</span>
-              {partitions[key].map((p) => {
+              {partitions[key].map(p => {
                 return (
                   <div className="mt-sm">
                     <span className="font-semibold mr-xs">

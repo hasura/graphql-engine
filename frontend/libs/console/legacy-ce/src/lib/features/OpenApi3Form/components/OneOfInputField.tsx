@@ -24,7 +24,7 @@ const getUnionSchemas = (
   configSchema: OneOfSchema,
   references: Record<string, OpenApiSchema>
 ) => {
-  const schemas = configSchema.oneOf.map((oneOfProperty) => {
+  const schemas = configSchema.oneOf.map(oneOfProperty => {
     const oneOfPropertySchema = isReferenceObject(oneOfProperty)
       ? getReferenceObject(oneOfProperty.$ref, references)
       : oneOfProperty;
@@ -42,7 +42,7 @@ const getUnionSchemas = (
 function getOption(value: any, zodSchemas: ZodSchema[]) {
   if (!value) return undefined;
 
-  const passingSchema = zodSchemas.findIndex((zodSchema) => {
+  const passingSchema = zodSchemas.findIndex(zodSchema => {
     try {
       return zodSchema.parse(value);
     } catch {

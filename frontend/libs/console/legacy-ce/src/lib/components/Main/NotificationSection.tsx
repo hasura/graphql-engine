@@ -449,10 +449,10 @@ function useNotificationsPagination(totalNotificationsCount: number) {
     if (shownCount < totalNotificationsCount) {
       const diff = totalNotificationsCount - shownCount;
       if (diff > DEFAULT_SHOWN_COUNT) {
-        setShownCount((num) => num + DEFAULT_SHOWN_COUNT);
+        setShownCount(num => num + DEFAULT_SHOWN_COUNT);
         return;
       }
-      setShownCount((num) => num + diff);
+      setShownCount(num => num + diff);
     }
   };
 
@@ -513,7 +513,7 @@ const HasuraNotifications: React.FC<
   let userType = 'admin';
 
   const headerHasCollabToken = Object.keys(dataHeaders).find(
-    (header) => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
   );
 
   if (headerHasCollabToken) {
@@ -592,7 +592,7 @@ const HasuraNotifications: React.FC<
   ]);
 
   const onClickUpdate = (id?: number) => {
-    updateNumberNotifications((prev) => prev - 1);
+    updateNumberNotifications(prev => prev - 1);
 
     if (!id) {
       return;

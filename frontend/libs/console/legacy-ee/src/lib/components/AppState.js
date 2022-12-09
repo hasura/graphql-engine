@@ -5,7 +5,7 @@ const CONSOLE_PERSONAL_ACCESS_TOKEN = 'PERSONAL_ACCESS_TOKEN';
 const loadPATState = () =>
   window.localStorage.getItem(CONSOLE_PERSONAL_ACCESS_TOKEN);
 
-const savePATState = (state) => {
+const savePATState = state => {
   window.localStorage.setItem(CONSOLE_PERSONAL_ACCESS_TOKEN, state);
 };
 

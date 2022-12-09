@@ -210,9 +210,10 @@ createMissingSQLTriggers ::
   TableName ('Postgres pgKind) ->
   ([(ColumnInfo ('Postgres pgKind))], Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))) ->
   TriggerName ->
+  TriggerOnReplication ->
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
-createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefinition = do
+createMissingSQLTriggers sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $
     runPgSourceWriteTx sourceConfig $ do
@@ -237,7 +238,7 @@ createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefiniti
             True
       unless doesOpTriggerFunctionExist $
         flip runReaderT serverConfigCtx $
-          mkTrigger triggerName table allCols op opSpec
+          mkTrigger triggerName table triggerOnReplication allCols op opSpec
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>
@@ -246,13 +247,14 @@ createTableEventTrigger ::
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   TriggerName ->
+  TriggerOnReplication ->
   TriggerOpsDef ('Postgres pgKind) ->
   Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind))) ->
   m (Either QErr ())
-createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
+createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
   -- Create the given triggers
   flip runReaderT serverConfigCtx $
-    mkAllTriggersQ triggerName table columns opsDefinition
+    mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition
 
 dropDanglingSQLTrigger ::
   ( MonadIO m,
@@ -433,12 +435,12 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
                     ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
       |]
       (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created, retryAt) =
       Event
         { eId = id',
           eSource = source,
@@ -446,7 +448,8 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
           eTrigger = TriggerMetadata triggerName,
           eEvent = payload,
           eTries = tries,
-          eCreatedAt = created
+          eCreatedAt = created,
+          eRetryAt = retryAt
         }
     limit = fromIntegral fetchBatchSize :: Word64
 
@@ -469,12 +472,12 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
                       ORDER BY created_at
                       LIMIT $1
                       FOR UPDATE SKIP LOCKED )
-        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
         |]
         (Identity limit)
         True
     where
-      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created) =
+      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created, retryAt) =
         Event
           { eId = id',
             eSource = SNDefault, -- in v1, there'll only be the default source
@@ -482,7 +485,8 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
             eTrigger = TriggerMetadata trn,
             eEvent = payload,
             eTries = tries,
-            eCreatedAt = created
+            eCreatedAt = created,
+            eRetryAt = retryAt
           }
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
   CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize
@@ -796,24 +800,34 @@ mkTrigger ::
   (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
   TriggerName ->
   QualifiedTable ->
+  TriggerOnReplication ->
   [ColumnInfo ('Postgres pgKind)] ->
   Ops ->
   SubscribeOpSpec ('Postgres pgKind) ->
   m ()
-mkTrigger triggerName table allCols op subOpSpec = do
+mkTrigger triggerName table triggerOnReplication allCols op subOpSpec = do
   -- create/replace the trigger function
-  dbTriggerName <- mkTriggerFunctionQ triggerName table allCols op subOpSpec
+  QualifiedTriggerName dbTriggerNameTxt <- mkTriggerFunctionQ triggerName table allCols op subOpSpec
   -- check if the SQL trigger exists and only if the SQL trigger doesn't exist
   -- we create the SQL trigger.
   doesTriggerExist <- liftTx $ checkIfTriggerExistsForTableQ (pgTriggerName op triggerName) table
   unless doesTriggerExist $
-    let sqlQuery =
-          PG.fromText $ createTriggerSQL dbTriggerName (toSQLTxt table) (tshow op)
-     in liftTx $ PG.unitQE defaultTxErrorHandler sqlQuery () False
+    let createTriggerSqlQuery =
+          PG.fromText $ createTriggerSQL dbTriggerNameTxt (toSQLTxt table) (tshow op)
+     in liftTx $ do
+          PG.unitQE defaultTxErrorHandler createTriggerSqlQuery () False
+          when (triggerOnReplication == TOREnableTrigger) $
+            PG.unitQE defaultTxErrorHandler (alwaysEnableTriggerQuery dbTriggerNameTxt (toSQLTxt table)) () False
   where
-    createTriggerSQL (QualifiedTriggerName triggerNameTxt) tableName opText =
+    createTriggerSQL triggerNameTxt tableName opText =
       [ST.st|
          CREATE TRIGGER #{triggerNameTxt} AFTER #{opText} ON #{tableName} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.#{triggerNameTxt}()
+      |]
+
+    alwaysEnableTriggerQuery triggerNameTxt tableTxt =
+      PG.fromText $
+        [ST.st|
+        ALTER TABLE #{tableTxt} ENABLE ALWAYS TRIGGER #{triggerNameTxt};
       |]
 
 mkAllTriggersQ ::
@@ -821,13 +835,14 @@ mkAllTriggersQ ::
   (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
   TriggerName ->
   QualifiedTable ->
+  TriggerOnReplication ->
   [ColumnInfo ('Postgres pgKind)] ->
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
-mkAllTriggersQ triggerName table allCols fullspec = do
-  for_ (tdInsert fullspec) (mkTrigger triggerName table allCols INSERT)
-  for_ (tdUpdate fullspec) (mkTrigger triggerName table allCols UPDATE)
-  for_ (tdDelete fullspec) (mkTrigger triggerName table allCols DELETE)
+mkAllTriggersQ triggerName table triggerOnReplication allCols fullspec = do
+  for_ (tdInsert fullspec) (mkTrigger triggerName table triggerOnReplication allCols INSERT)
+  for_ (tdUpdate fullspec) (mkTrigger triggerName table triggerOnReplication allCols UPDATE)
+  for_ (tdDelete fullspec) (mkTrigger triggerName table triggerOnReplication allCols DELETE)
 
 -- | Add cleanup logs for given trigger names and cleanup configs. This will perform the following steps:
 --

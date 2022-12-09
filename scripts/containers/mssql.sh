@@ -20,7 +20,6 @@ MSSQL_VOLUME_NAME='hasura-dev-mssql'
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
 # shellcheck disable=SC2034  # this variable is used in scripts sourcing this one
 MSSQL_CONN_STR="DRIVER={ODBC Driver 18 for SQL Server};SERVER=$MSSQL_HOST,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;Encrypt=optional"
-MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
 
 if [[ "$(uname -m)" == 'arm64' ]]; then
   MSSQL_PLATFORM=linux/arm64
@@ -50,7 +49,7 @@ function mssql_launch_container {
 
 function mssql_wait {
   echo -n "Waiting for mssql to come up"
-  until ( $MSSQL_DOCKER -Q 'SELECT 1' ) &>/dev/null; do
+  until ( docker run --rm -it --net=host mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd -S "${MSSQL_HOST},${MSSQL_PORT}" -U SA -P "$MSSQL_PASSWORD" -Q 'SELECT 1' ) &>/dev/null; do
     echo -n '.' && sleep 0.2
   done
   echo " Ok"

@@ -1,10 +1,10 @@
 import { NormalizedTable } from '@/dataSources/types';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useAppSelector } from '@/store';
 import { getTableSchemaName } from './useTableSchema.utils';
 
 export const useTableSchema = (table: Table) => {
-  const tableSchema: NormalizedTable | null = useAppSelector((state) =>
+  const tableSchema: NormalizedTable | null = useAppSelector(state =>
     state.tables.allSchemas.find((schema: NormalizedTable) => {
       const tableSchemaName = getTableSchemaName(table);
       if (!tableSchemaName) {
