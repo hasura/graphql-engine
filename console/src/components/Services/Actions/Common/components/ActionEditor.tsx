@@ -10,7 +10,9 @@ import {
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
 import { isProConsole } from '@/utils';
-import { FaMagic } from 'react-icons/fa';
+import { FaFileCode, FaMagic, FaTable } from 'react-icons/fa';
+import { DropdownButton } from '@/new-components/DropdownButton';
+import { Badge } from '@/new-components/Badge';
 import HandlerEditor from './HandlerEditor';
 import ExecutionEditor from './ExecutionEditor';
 import HeaderConfEditor from './HeaderConfEditor';
@@ -22,6 +24,7 @@ import ActionDefIcon from '../../../../Common/Icons/ActionDef';
 import TypesDefIcon from '../../../../Common/Icons/TypesDef';
 import { inputStyles } from '../../constants';
 import { TypeGeneratorModal } from './TypeGeneratorModal/TypeGeneratorModal';
+import { ImportTypesModal } from './ImportTypesModal/ImportTypesModal';
 
 type ActionEditorProps = {
   handler: string;
@@ -89,6 +92,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
   } = actionDefinition;
 
   const [isTypesGeneratorOpen, setIsTypesGeneratorOpen] = React.useState(false);
+  const [isImportTypesOpen, setIsImportTypesOpen] = React.useState(false);
 
   const { enabled: isImportFromOASEnabled } = useIsFeatureFlagEnabled(
     availableFeatureFlagIds.importActionFromOpenApiId
@@ -206,18 +210,59 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
             }
             onClose={() => setIsTypesGeneratorOpen(false)}
           />
+          <ImportTypesModal
+            isOpen={isImportTypesOpen}
+            onInsertTypes={types =>
+              typeDefinitionOnChange(types, null, null, null)
+            }
+            currentValue={typesDefinitionSdl}
+            onClose={() => setIsImportTypesOpen(false)}
+          />
 
-          <Analytics
-            name="actions-tab-btn-type-generator"
-            passHtmlAttributesToChildren
+          <DropdownButton
+            items={[
+              [
+                <Analytics
+                  name="actions-tab-btn-type-generator-from-json"
+                  passHtmlAttributesToChildren
+                >
+                  <div
+                    onClick={() => setIsTypesGeneratorOpen(true)}
+                    className="py-xs font-semibold px-2.5 py-xs w-full"
+                  >
+                    <FaFileCode className="mr-xs" />
+                    From JSON
+                    <div className="text-muted font-normal">
+                      Generate GraphQL types from a JSON
+                      <p>response and request sample.</p>
+                    </div>
+                  </div>
+                </Analytics>,
+                <Analytics
+                  name="actions-tab-btn-type-generator-from-table"
+                  passHtmlAttributesToChildren
+                >
+                  <div
+                    onClick={() => setIsImportTypesOpen(true)}
+                    className="py-xs font-semibold px-2.5 w-96"
+                  >
+                    <FaTable className="mr-xs" />
+                    From Table
+                    <Badge className="mx-2" color="blue">
+                      BETA
+                    </Badge>
+                    <div className="text-muted font-normal">
+                      Generate GraphQL types from the currenty
+                      <p>state of an existing tracked table.</p>
+                    </div>
+                  </div>
+                </Analytics>,
+              ],
+            ]}
           >
-            <Button
-              icon={<FaMagic />}
-              onClick={() => setIsTypesGeneratorOpen(true)}
-            >
-              Type generator
-            </Button>
-          </Analytics>
+            <FaMagic className="mr-xs" />
+            Type Generators
+          </DropdownButton>
         </div>
       </Analytics>
 
