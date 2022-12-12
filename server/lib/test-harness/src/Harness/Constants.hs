@@ -276,7 +276,12 @@ serveOptions =
     -- a random port, so this isn't particularly
     -- important.
       soHost = "0.0.0.0",
-      soConnParams = PG.defaultConnParams,
+      soConnParams =
+        PG.defaultConnParams
+          { PG.cpConns = 3, -- only use three simultaneous connection
+            PG.cpTimeout = Just 30, -- pool should only wait 30 seconds for a connection to stop tests hanging
+            PG.cpStripes = 2 -- two thread pls
+          },
       soTxIso = PG.Serializable,
       soAdminSecret = mempty,
       soAuthHook = Nothing,

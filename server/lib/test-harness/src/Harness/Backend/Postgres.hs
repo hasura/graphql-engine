@@ -143,6 +143,14 @@ metadataLivenessCheck =
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
 
+-- PostgreSQL 15.1 on x86_64-pc-linux-musl, com ....
+-- forgive me, padre
+parsePostgresVersion :: String -> Maybe Int
+parsePostgresVersion =
+  readMaybe
+    . takeWhile (not . (==) '.')
+    . drop (length @[] "PostgreSQL ")
+
 -- | Check the postgres server is live and ready to accept connections.
 doLivenessCheck :: HasCallStack => BS.ByteString -> IO ()
 doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
@@ -200,6 +208,38 @@ runInternal globalTestEnvironment connectionString query = do
 
 runSQL :: String -> TestEnvironment -> IO ()
 runSQL = Schema.runSQL (BackendType.backendSourceName backendTypeMetadata)
+
+--- | Run a plain SQL query.
+-- On error, print something useful for debugging.
+queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
+queryInternal testEnvironment connectionString query = do
+  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
+  catch
+    ( bracket
+        ( Postgres.connectPostgreSQL
+            connectionString
+        )
+        Postgres.close
+        (\conn -> Postgres.query_ conn (fromString query))
+    )
+    ( \(e :: Postgres.SqlError) ->
+        error
+          ( unlines
+              [ "PostgreSQL query error:",
+                S8.unpack (Postgres.sqlErrorMsg e),
+                "SQL was:",
+                query
+              ]
+          )
+    )
+
+-- | when we are creating databases, we want to connect with the 'original' DB
+-- we started with
+queryWithInitialDb :: (Postgres.FromRow a, HasCallStack) => TestEnvironment -> String -> IO [a]
+queryWithInitialDb testEnvironment =
+  queryInternal
+    testEnvironment
+    (Postgres.postgreSQLConnectionString (defaultConnectInfo $ globalEnvironment testEnvironment))
 
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: TestEnvironment -> Value
@@ -388,15 +428,40 @@ dropDatabase testEnvironment = do
   dropDatabaseInternal dbName testEnvironment
 
 -- | we drop databases at the end of test runs so we don't need to do DB clean
--- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
--- < 13 in CI so instead we boot all the active users then drop as normal.
+-- up.
 dropDatabaseInternal :: String -> TestEnvironment -> IO ()
 dropDatabaseInternal dbName testEnvironment = do
-  -- if this fails, don't make the test fail
-  runWithInitialDb_
-    (globalEnvironment testEnvironment)
-    ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+  ([Postgres.Only version]) <-
+    queryWithInitialDb @(Postgres.Only String)
+      testEnvironment
+      "SELECT version();"
+
+  case parsePostgresVersion version of
+    Just pgVersion | pgVersion >= 13 -> do
+      -- if we are on Postgres 13 or more, we can use WITH (FORCE);
+      runWithInitialDb_
+        (globalEnvironment testEnvironment)
+        ("DROP DATABASE " <> dbName <> " WITH (FORCE);")
+        `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+
+    -- for older Postgres versions, we Do Our Best
+    _ -> do
+      -- throw all the other users off the database
+      void $
+        queryWithInitialDb @(Postgres.Only Bool)
+          testEnvironment
+          [i|
+          SELECT pg_terminate_backend(pg_stat_activity.pid)
+          FROM pg_stat_activity
+          WHERE pg_stat_activity.datname = '#{dbName}'
+          AND pid <> pg_backend_pid();
+        |]
+
+      -- if this fails, don't make the test fail
+      runWithInitialDb_
+        (globalEnvironment testEnvironment)
+        ("DROP DATABASE " <> dbName <> ";")
+        `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
