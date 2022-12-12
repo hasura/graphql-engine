@@ -1,9 +1,12 @@
+import {
+  MetadataUtils,
+  useInvalidateMetata,
+  useMetadata,
+} from '@/features/hasura-metadata-api';
 import { MetadataTable } from '@/features/hasura-metadata-types';
 import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { useCallback } from 'react';
-import { useQueryClient } from 'react-query';
-import { manageTableMetadataQueryKey, useMetadataTable } from '.';
 
 export const useUpdateTableConfiguration = (
   dataSourceName: string,
@@ -13,20 +16,23 @@ export const useUpdateTableConfiguration = (
 
   const { fireNotification } = useFireNotification();
 
-  const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetata();
 
-  const { metadata, resource_version, metadataTable } = useMetadataTable(
-    dataSourceName,
-    table
-  );
+  const { data } = useMetadata(m => ({
+    source: MetadataUtils.findMetadataSource(dataSourceName, m),
+    resource_version: m.resource_version,
+    metadataTable: MetadataUtils.findMetadataTable(dataSourceName, table, m),
+  }));
+
+  const { source, metadataTable, resource_version } = data || {};
 
   const updateTableConfiguration = useCallback(
     (config: MetadataTable['configuration']) => {
-      const driver = metadata?.kind;
+      const driver = source?.kind;
 
       return new Promise<void>((resolve, reject) => {
-        if (!metadata) {
-          throw Error('Metadata not found!');
+        if (!source) {
+          throw Error('Data Source not found!');
         }
 
         mutate(
@@ -46,10 +52,8 @@ export const useUpdateTableConfiguration = (
           },
           {
             onSuccess: () => {
-              queryClient.invalidateQueries(
-                manageTableMetadataQueryKey(dataSourceName)
-              );
-              queryClient.invalidateQueries('export_metadata');
+              invalidateMetadata();
+
               fireNotification({
                 type: 'success',
                 title: 'Success!',
@@ -72,10 +76,11 @@ export const useUpdateTableConfiguration = (
     [
       dataSourceName,
       fireNotification,
-      metadata,
       mutate,
-      queryClient,
+      invalidateMetadata,
+      metadataTable,
       resource_version,
+      source,
       table,
     ]
   );
@@ -98,7 +103,7 @@ export const useUpdateTableConfiguration = (
   return {
     updateTableConfiguration,
     updateCustomRootFields,
-    metadata,
+    source,
     resource_version,
     ...rest,
   };

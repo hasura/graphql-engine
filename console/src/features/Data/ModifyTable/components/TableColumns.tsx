@@ -10,11 +10,10 @@ import { ModifyTableProps } from '../ModifyTable';
 interface TableColumnProps extends ModifyTableProps {}
 export const TableColumns: React.VFC<TableColumnProps> = props => {
   const { dataSourceName, table } = props;
-  const {
-    data: columns,
-    isLoading,
-    isError,
-  } = useListAllTableColumns(dataSourceName, table);
+  const { columns, isLoading, isError } = useListAllTableColumns(
+    dataSourceName,
+    table
+  );
 
   const [isEditColumnFormActive, setIsEditColumnFormActive] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState<ModifyTableColumn>();

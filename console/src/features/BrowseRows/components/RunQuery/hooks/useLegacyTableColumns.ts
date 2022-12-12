@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useIsUnmounted } from '@/components/Services/Data';
 import { DataSource, TableColumn } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
-import { useIsUnmounted } from '@/components/Services/Data';
+import { useEffect, useState } from 'react';
 
 type UseTableColumnsProps = {
   dataSourceName: string;
   table: unknown;
 };
 
-export const useTableColumns = ({
+export const useLegacyTableColumns = ({
   dataSourceName,
   table,
 }: UseTableColumnsProps) => {

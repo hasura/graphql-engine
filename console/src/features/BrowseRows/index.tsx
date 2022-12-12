@@ -10,4 +10,4 @@ export {
   convertUserQueryToFiltersAndSortFormValues,
 } from './components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
 export { UserQuery } from './components/RunQuery/types';
-export { useTableColumns } from './components/RunQuery/hooks/useTableColumns';
+export { useTableColumns } from './hooks';

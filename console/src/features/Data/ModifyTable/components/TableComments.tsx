@@ -1,12 +1,14 @@
 import { MetadataUtils, useMetadata } from '@/features/hasura-metadata-api';
 import { Table } from '@/features/hasura-metadata-types';
+import useUpdateEffect from '@/hooks/useUpdateEffect';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Nullable } from '@/types';
 import clsx from 'clsx';
-import React, { useMemo } from 'react';
+import React from 'react';
 import TextareaAutosize from 'react-autosize-textarea';
 import { FaEdit, FaRegComment } from 'react-icons/fa';
+import Skeleton from 'react-loading-skeleton';
 import { useUpdateTableConfiguration } from '../hooks';
 
 import { ModifyTableProps } from '../ModifyTable';
@@ -19,7 +21,11 @@ export interface TableCommentsProps extends ModifyTableProps {
 export const TableComments: React.VFC<TableCommentsProps> = props => {
   const { dataSourceName, table } = props;
 
-  const { isLoading, data: savedComment } = useMetadata(
+  const {
+    isLoading,
+    data: savedComment,
+    isError,
+  } = useMetadata(
     m =>
       MetadataUtils.findMetadataTable(dataSourceName, table, m)?.configuration
         ?.comment
@@ -27,15 +33,25 @@ export const TableComments: React.VFC<TableCommentsProps> = props => {
 
   const [comment, setComment] = React.useState<Nullable<string>>(null);
 
-  const saveNeeded = useMemo(
-    () => comment != null && comment !== savedComment,
-    [comment, savedComment]
-  );
+  useUpdateEffect(() => {
+    // this resets the state so we aren't carrying over the comment from a previous table
+    // prevents the saveNeeded from becoming inaccurate
+    setComment(null);
+  }, [table]);
+
+  const saveNeeded = comment != null && comment !== savedComment;
 
   const { updateTableConfiguration, isLoading: savingComment } =
     useUpdateTableConfiguration(dataSourceName, table);
 
-  if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
+  if (isLoading) return <Skeleton count={5} height={20} />;
+
+  if (isError)
+    return (
+      <IndicatorCard status="negative" headline="Error">
+        Unable to fetch table comments.
+      </IndicatorCard>
+    );
 
   return (
     <div className="mb-lg flex items-center">
@@ -43,11 +59,11 @@ export const TableComments: React.VFC<TableCommentsProps> = props => {
         <TextareaAutosize
           style={{ minWidth: '24rem', outline: 'none' }}
           rows={1}
+          key={savedComment}
           className={clsx(
             'bg-secondary-light border border-gray-300 border-l-4 border-l-secondary p-sm peer',
             'focus:bg-white rounded focus:[box-shadow:none] focus:border-secondary',
-            'placeholder-shown:italic pl-9',
-            saveNeeded && 'border-l-red-500 '
+            'placeholder-shown:italic pl-9'
           )}
           name="comments"
           defaultValue={savedComment}

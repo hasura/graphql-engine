@@ -1,13 +1,11 @@
+import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
 import { Button } from '@/new-components/Button';
 import { Dialog } from '@/new-components/Dialog';
 import { InputField, UpdatedForm } from '@/new-components/Form';
 import { sanitizeGraphQLFieldNames } from '@/utils';
 import { SanitizeTips } from '@/utils/sanitizeGraphQLFieldNames';
 import React from 'react';
-import {
-  useMetadataTable,
-  useUpdateTableConfiguration,
-} from '../../../ModifyTable/hooks';
+import { useUpdateTableConfiguration } from '../../../ModifyTable/hooks';
 import { ModifyTableProps } from '../../ModifyTable';
 import { ModifyTableColumn } from '../../types';
 import { schema, Schema } from './schema';
@@ -20,7 +18,9 @@ interface EditTableColumnDialogProps extends ModifyTableProps {
 export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
   const { onClose, column, table, dataSourceName } = props;
 
-  const { metadataTable } = useMetadataTable(dataSourceName, table);
+  const { data: metadataTable } = useMetadata(
+    MetadataSelectors.findTable(dataSourceName, table)
+  );
 
   const { isLoading: isSaveInProgress, updateTableConfiguration } =
     useUpdateTableConfiguration(dataSourceName, table);
