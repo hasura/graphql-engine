@@ -26,10 +26,15 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
+import Hasura.GraphQL.Schema.Update qualified as GS.U
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
+import Hasura.RQL.IR.Delete qualified as IR
+import Hasura.RQL.IR.Insert qualified as IR
+import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
@@ -50,9 +55,9 @@ instance BackendSchema 'DataConnector where
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []
   buildFunctionMutationFields _ _ _ _ = pure []
-  buildTableInsertMutationFields _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields = buildTableInsertMutationFields'
+  buildTableUpdateMutationFields = buildTableUpdateMutationFields'
+  buildTableDeleteMutationFields = buildTableDeleteMutationFields'
   buildTableStreamingSubscriptionFields _ _ _ _ = pure []
 
   -- backend extensions
@@ -80,6 +85,72 @@ instance BackendTableSelectSchema 'DataConnector where
   tableSelectionSet = GS.S.defaultTableSelectionSet
 
 --------------------------------------------------------------------------------
+
+buildTableInsertMutationFields' ::
+  MonadBuildSchema 'DataConnector r m n =>
+  RQL.MkRootFieldName ->
+  GS.C.Scenario ->
+  RQL.TableName 'DataConnector ->
+  RQL.TableInfo 'DataConnector ->
+  GQLNameIdentifier ->
+  GS.C.SchemaT r m [P.FieldParser n (IR.AnnotatedInsert 'DataConnector (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue 'DataConnector))]
+buildTableInsertMutationFields' mkRootFieldName scenario tableName tableInfo gqlName = do
+  API.Capabilities {..} <- DC._scCapabilities . RQL._siConfiguration @('DataConnector) <$> asks getter
+  case _cMutations >>= API._mcInsertCapabilities of
+    Just _insertCapabilities -> GS.B.buildTableInsertMutationFields mkBackendInsertParser mkRootFieldName scenario tableName tableInfo gqlName
+    Nothing -> pure []
+
+mkBackendInsertParser ::
+  MonadBuildSchema 'DataConnector r m n =>
+  RQL.TableInfo 'DataConnector ->
+  GS.C.SchemaT r m (P.InputFieldsParser n (DC.BackendInsert (IR.UnpreparedValue 'DataConnector)))
+mkBackendInsertParser _tableInfo =
+  pure $ pure DC.BackendInsert
+
+buildTableUpdateMutationFields' ::
+  MonadBuildSchema 'DataConnector r m n =>
+  RQL.MkRootFieldName ->
+  GS.C.Scenario ->
+  RQL.TableName 'DataConnector ->
+  RQL.TableInfo 'DataConnector ->
+  GQLNameIdentifier ->
+  GS.C.SchemaT r m [P.FieldParser n (IR.AnnotatedUpdateG 'DataConnector (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue 'DataConnector))]
+buildTableUpdateMutationFields' mkRootFieldName scenario tableName tableInfo gqlName = do
+  API.Capabilities {..} <- DC._scCapabilities . RQL._siConfiguration @('DataConnector) <$> asks getter
+  fieldParsers <- runMaybeT $ do
+    _updateCapabilities <- hoistMaybe $ _cMutations >>= API._mcUpdateCapabilities
+    roleName <- GS.C.retrieve GS.C.scRole
+    updatePerms <- hoistMaybe $ RQL._permUpd $ RQL.getRolePermInfo roleName tableInfo
+    let mkBackendUpdate backendUpdateTableInfo =
+          (fmap . fmap) DC.BackendUpdate $
+            GS.U.buildUpdateOperators
+              (DC.UpdateSet <$> GS.U.presetColumns updatePerms)
+              [ DC.UpdateSet <$> GS.U.setOp
+              ]
+              backendUpdateTableInfo
+    lift $
+      GS.B.buildTableUpdateMutationFields
+        mkBackendUpdate
+        mkRootFieldName
+        scenario
+        tableName
+        tableInfo
+        gqlName
+  pure $ fromMaybe [] fieldParsers
+
+buildTableDeleteMutationFields' ::
+  MonadBuildSchema 'DataConnector r m n =>
+  RQL.MkRootFieldName ->
+  GS.C.Scenario ->
+  RQL.TableName 'DataConnector ->
+  RQL.TableInfo 'DataConnector ->
+  GQLNameIdentifier ->
+  GS.C.SchemaT r m [P.FieldParser n (IR.AnnDelG 'DataConnector (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue 'DataConnector))]
+buildTableDeleteMutationFields' mkRootFieldName scenario tableName tableInfo gqlName = do
+  API.Capabilities {..} <- DC._scCapabilities . RQL._siConfiguration @('DataConnector) <$> asks getter
+  case _cMutations >>= API._mcDeleteCapabilities of
+    Just _deleteCapabilities -> GS.B.buildTableDeleteMutationFields mkRootFieldName scenario tableName tableInfo gqlName
+    Nothing -> pure []
 
 experimentalBuildTableRelayQueryFields ::
   MonadBuildSchema 'DataConnector r m n =>

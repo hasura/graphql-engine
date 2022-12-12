@@ -18,7 +18,6 @@ import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Prelude
@@ -69,6 +68,9 @@ instance Backend 'DataConnector where
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
   type ComputedFieldReturn 'DataConnector = Unimplemented
 
+  type BackendInsert 'DataConnector = DC.BackendInsert
+  type BackendUpdate 'DataConnector = DC.BackendUpdate
+
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable
   type XNodesAgg 'DataConnector = XEnable
@@ -88,8 +90,8 @@ instance Backend 'DataConnector where
   isNumType DC.NumberTy = True
   isNumType _ = False
 
-  getCustomAggregateOperators :: Adapter.SourceConfig -> HashMap G.Name (HashMap DC.ScalarType DC.ScalarType)
-  getCustomAggregateOperators Adapter.SourceConfig {..} =
+  getCustomAggregateOperators :: DC.SourceConfig -> HashMap G.Name (HashMap DC.ScalarType DC.ScalarType)
+  getCustomAggregateOperators DC.SourceConfig {..} =
     HashMap.foldrWithKey insertOps mempty scalarTypesCapabilities
     where
       scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
