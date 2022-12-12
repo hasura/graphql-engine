@@ -52,11 +52,6 @@ source-repository-package
   location: https://github.com/hasura/ci-info-hs.git
   tag: be578a01979fc95137cc2c84827f9fafb99df60f
 
-source-repository-package
-  type: git
-  location: https://github.com/hasura/pool.git
-  tag: c5faf9a358e83eaf15fef0c1e890f463d0022565
-
 -- This is an unrelesaed version of "odbc"
 source-repository-package
   type: git
