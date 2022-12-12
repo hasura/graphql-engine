@@ -1,9 +1,11 @@
 import { AxiosInstance } from 'axios';
 import {
   Metadata,
+  NativeDrivers,
   Source,
   SupportedDrivers,
 } from '@/features/hasura-metadata-types';
+import { isPostgres } from '@/metadata/dataSource.utils';
 
 export interface NetworkArgs {
   httpClient: AxiosInstance;
@@ -43,8 +45,10 @@ export type RunSQLResponse =
       result: null;
     };
 
-const getRunSqlType = (driver: SupportedDrivers) => {
-  if (driver === 'postgres') return 'run_sql';
+const getRunSqlType = (driver: NativeDrivers) => {
+  if (isPostgres(driver)) {
+    return 'run_sql';
+  }
 
   return `${driver}_run_sql`;
 };
@@ -81,7 +85,7 @@ export const runSQL = async ({
   sql,
   httpClient,
 }: RunSqlArgs & NetworkArgs): Promise<RunSQLResponse> => {
-  const type = getRunSqlType(source.kind);
+  const type = getRunSqlType(source.kind as NativeDrivers);
   const result = await runQuery<RunSQLResponse>({
     httpClient,
     body: {
@@ -199,4 +203,4 @@ export const runIntrospectionQuery = async ({ httpClient }: NetworkArgs) => {
 };
 
 export const getDriverPrefix = (driver: SupportedDrivers) =>
-  driver === 'postgres' ? 'pg' : driver;
+  isPostgres(driver as NativeDrivers) ? 'pg' : driver;

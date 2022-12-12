@@ -597,13 +597,16 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
       if (
         currentTypeMap?.boolean &&
         currentTypeMap.boolean.includes(valueType) &&
-        (currentDriver === 'postgres' || currentDriver === 'bigquery')
+        (currentDriver === 'alloy' ||
+          currentDriver === 'postgres' ||
+          currentDriver === 'bigquery')
       ) {
         input = renderBoolSelect(dispatchInput, value);
       } else if (
-        currentTypeMap?.jsonb &&
-        currentTypeMap.jsonb.includes(valueType) &&
-        currentDriver === 'postgres'
+        (currentTypeMap?.jsonb &&
+          currentTypeMap.jsonb.includes(valueType) &&
+          currentDriver === 'postgres') ||
+        currentDriver === 'alloy'
       ) {
         input = inputBox();
         suggestion = jsonSuggestion();

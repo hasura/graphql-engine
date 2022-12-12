@@ -24,4 +24,5 @@ export const dataSourceSqlQueries: Record<Driver, DatasourceSqlQueries> = {
   bigquery: bigquerySqlQueries,
   citus: citusSqlQueries,
   cockroach: cockroachDbSqlQueries,
+  alloy: postgresSqlQueries,
 };

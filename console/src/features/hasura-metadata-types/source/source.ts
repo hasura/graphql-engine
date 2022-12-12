@@ -1,3 +1,4 @@
+import { Driver } from '@/dataSources';
 import {
   BigQueryConfiguration,
   CitusConfiguration,
@@ -8,12 +9,14 @@ import { MetadataTable } from './table';
 
 export type NativeDrivers =
   | 'postgres'
+  | 'alloy'
   | 'mssql'
+  | 'mysql'
   | 'bigquery'
   | 'citus'
   | 'cockroach';
 export type GDCDriver = string;
-export type SupportedDrivers = NativeDrivers | GDCDriver;
+export type SupportedDrivers = Driver | GDCDriver;
 
 export type SourceCustomization = {
   root_fields?: {

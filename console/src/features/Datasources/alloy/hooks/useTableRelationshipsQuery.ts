@@ -1,7 +1,7 @@
 import { useRunSQL } from '../../common';
 import { DataTarget, TUseTableRelationshipsQuery } from '../../drivers';
 import { RunSQLQueryOptions } from '../../types';
-import { isCitusDataTarget } from '../types';
+import { isAlloyDataTarget } from '../types';
 
 const getSQL = (schema: string, tableName: string) => {
   return `SELECT conrelid::regclass AS "source_table"
@@ -12,8 +12,8 @@ const getSQL = (schema: string, tableName: string) => {
     JOIN   pg_namespace n ON n.oid = c.connamespace
     WHERE  contype IN ('f', 'p') 
     AND (conrelid::regclass = '"${schema}"."${tableName}"'::regclass OR substring(pg_get_constraintdef(c.oid), position(' REFERENCES ' in pg_get_constraintdef(c.oid))+12, position('(' in substring(pg_get_constraintdef(c.oid), 14))-position(' REFERENCES ' in pg_get_constraintdef(c.oid))+1) = '${
-    schema === 'public' ? '' : `${schema}.`
-  }${tableName}')
+    schema === 'public' ? `"${tableName}"` : `${schema}.${tableName}`
+  }')
     AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY %';
   `;
 };
@@ -25,7 +25,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
   target: DataTarget;
   queryOptions?: RunSQLQueryOptions<string[], any>;
 }) => {
-  if (!isCitusDataTarget(target)) throw Error('Not a valid citus data path');
+  if (!isAlloyDataTarget(target)) throw Error('Not a valid postgres data path');
 
   const { database, schema, table } = target;
 
@@ -43,7 +43,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
     }[]
   >({
     sql: getSQL(schema, table),
-    queryKey: ['citus', 'fk_relationships', database, schema, table],
+    queryKey: ['alloy', 'fk_relationships', database, schema, table],
     transformFn: data => {
       const { result } = data;
 
@@ -65,6 +65,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
             column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
           },
         }));
+
         return rows;
       } catch (err) {
         throw Error('Unable to parse response');
@@ -73,7 +74,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
     queryOptions,
     dataSource: {
       name: database,
-      driver: 'citus',
+      driver: 'alloy',
     },
   });
 

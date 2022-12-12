@@ -38,29 +38,31 @@ export { Table, TableColumn } from './types';
 
 export const drivers = [
   'postgres',
-  'mysql',
   'mssql',
+  'mysql',
   'bigquery',
   'citus',
   'cockroach',
+  'alloy',
 ] as const;
 export type Driver = typeof drivers[number];
 
 export const driverToLabel: Record<Driver, string> = {
-  mysql: 'MySQL',
   postgres: 'PostgreSQL',
+  mysql: 'MySQL',
   mssql: 'MS SQL Server',
   bigquery: 'BigQuery',
   citus: 'Citus',
   cockroach: 'CockroachDB',
+  alloy: 'AlloyDB',
 };
 
 export const sourceNames = {
-  postgres: PGSupportedFeatures?.driver?.name,
-  mssql: MssqlSupportedFeatures?.driver?.name,
   bigquery: BigQuerySupportedFeatures?.driver?.name,
   citus: CitusQuerySupportedFeatures?.driver?.name,
   cockroach: CockroachQuerySupportedFeatures?.driver?.name,
+  mssql: MssqlSupportedFeatures?.driver?.name,
+  postgres: PGSupportedFeatures?.driver?.name,
 };
 
 export type ColumnsInfoResult = {

@@ -23,6 +23,7 @@ import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from '../components/Common/utils/tsUtils';
+import { getDataSourcePrefix } from './dataSource.utils';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -128,60 +129,11 @@ export const getMetadataQuery = (
   args: MetadataQueryArgs;
   version?: number;
 } => {
-  let prefix = '';
-  switch (driver) {
-    case 'mysql':
-      prefix = 'mysql_';
-      break;
-    case 'mssql':
-      prefix = 'mssql_';
-      break;
-    case 'bigquery':
-      prefix = 'bigquery_';
-      break;
-    case 'citus':
-      prefix = 'citus_';
-      break;
-    case 'cockroach':
-      prefix = 'cockroach_';
-      break;
-    case 'postgres':
-    default:
-      prefix = 'pg_';
-  }
+  const prefix = getDataSourcePrefix(driver);
   return {
     type: `${prefix}${type}`,
     args: { ...args, source },
   };
-};
-
-export type DataSourceDriver =
-  | 'postgres'
-  | 'mysql'
-  | 'mssql'
-  | 'bigquery'
-  | 'citus';
-
-export const getDataSourcePrefix = (driver: DataSourceDriver) => {
-  let prefix = '';
-  switch (driver) {
-    case 'mysql':
-      prefix = 'mysql_';
-      break;
-    case 'mssql':
-      prefix = 'mssql_';
-      break;
-    case 'bigquery':
-      prefix = 'bigquery_';
-      break;
-    case 'citus':
-      prefix = 'citus_';
-      break;
-    case 'postgres':
-    default:
-      prefix = 'pg_';
-  }
-  return prefix;
 };
 
 export const getCreatePermissionQuery = (

@@ -51,6 +51,7 @@ const dbTypePlaceholders: Record<Driver, string> = {
   mysql: 'MySQL connection string',
   bigquery: 'SERVICE_ACCOUNT_KEY_FROM_ENV',
   cockroach: 'postgresql://username:password@hostname:5432/database',
+  alloy: 'postgresql://username:password@hostname:5432/database',
 };
 
 const defaultTitle = 'Connect Database Via';
@@ -66,6 +67,7 @@ const driverToLabel: Record<
 > = {
   mysql: { label: 'MySQL', defaultConnection: 'DATABASE_URL' },
   postgres: { label: 'PostgreSQL', defaultConnection: 'DATABASE_URL' },
+  alloy: { label: 'AlloyDB', defaultConnection: 'DATABASE_URL' },
   mssql: {
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
@@ -147,7 +149,6 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
     title,
     isEditState,
   } = props;
-
   const isDBSupported = (driver: Driver, connectionType: string) => {
     let ts = 'databaseURL';
     if (connectionType === 'CONNECTION_PARAMETERS') {

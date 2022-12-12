@@ -41,6 +41,10 @@ const driverToLabel: Record<
     label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
   },
+  alloy: {
+    label: 'AlloyDB',
+    defaultConnection: 'DATABASE_URL',
+  },
 };
 
 const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {

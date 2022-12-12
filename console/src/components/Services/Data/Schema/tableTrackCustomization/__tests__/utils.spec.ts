@@ -1,27 +1,10 @@
 import {
-  getDriverPrefix,
   getQualifiedTable,
   getTrackTableType,
   getTrackingTableFormPlaceholders,
 } from '../utils';
 
 import { TrackingTableFormValues } from '../types';
-
-describe('getDriverPrefix', () => {
-  it.each`
-    driver        | expected
-    ${'postgres'} | ${'pg'}
-    ${'mssql'}    | ${'mssql'}
-    ${'mysql'}    | ${'mysql'}
-    ${'citus'}    | ${'citus'}
-    ${'bigquery'} | ${'bigquery'}
-  `(
-    'Given a $driver driver, then returns $expected',
-    ({ driver, expected }) => {
-      expect(getDriverPrefix(driver)).toBe(expected);
-    }
-  );
-});
 
 describe('getTrackTableType', () => {
   it.each`
