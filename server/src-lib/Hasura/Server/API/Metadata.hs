@@ -385,7 +385,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
         RMV2 (RMV2ExportMetadata _) -> True
         _ -> False
       metadataDefaults =
-        if (exportsMetadata _rqlMetadata)
+        if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else _sccMetadataDefaults serverConfigCtx
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
