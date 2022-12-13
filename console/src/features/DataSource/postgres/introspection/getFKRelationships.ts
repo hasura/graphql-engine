@@ -1,6 +1,7 @@
 import { PostgresTable } from '..';
 import { runSQL, RunSQLResponse } from '../../api';
 import { GetFKRelationshipProps, TableFkRelationships } from '../../types';
+import { adaptStringForPostgres } from '../utils';
 
 const getTable = (tableName: string) => {
   const splitResult = tableName.split('.');
@@ -48,6 +49,14 @@ export const getFKRelationships = async ({
   httpClient,
 }: GetFKRelationshipProps) => {
   const { schema, name } = table as PostgresTable;
+
+  const qualifiedSchemaName = adaptStringForPostgres(schema);
+  const qualifiedTableName = adaptStringForPostgres(name);
+
+  const qualifiedTable =
+    schema === 'public'
+      ? qualifiedTableName
+      : `${qualifiedSchemaName}.${qualifiedTableName}`;
   /**
    * This SQL goes through the pg_constraint (https://www.postgresql.org/docs/current/catalog-pg-constraint.html) and the pg_namespace (https://www.postgresql.org/docs/14/catalog-pg-namespace.html)
    * and links fk_constraint object that have the same Object ID on both tables and finally
@@ -61,9 +70,7 @@ export const getFKRelationships = async ({
   FROM   pg_constraint c
   JOIN   pg_namespace n ON n.oid = c.connamespace
   WHERE  contype IN ('f', 'p') 
-  AND (conrelid::regclass = '"${schema}"."${name}"'::regclass OR substring(pg_get_constraintdef(c.oid), position(' REFERENCES ' in pg_get_constraintdef(c.oid))+12, position('(' in substring(pg_get_constraintdef(c.oid), 14))-position(' REFERENCES ' in pg_get_constraintdef(c.oid))+1) = '${
-    schema === 'public' ? `"${name}"` : `${schema}.${name}`
-  }')
+  AND (conrelid::regclass = '${qualifiedTable}'::regclass OR substring(pg_get_constraintdef(c.oid), position(' REFERENCES ' in pg_get_constraintdef(c.oid))+12, position('(' in substring(pg_get_constraintdef(c.oid), 14))-position(' REFERENCES ' in pg_get_constraintdef(c.oid))+1) = '${qualifiedTable}')
   AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY %';
 `;
 
