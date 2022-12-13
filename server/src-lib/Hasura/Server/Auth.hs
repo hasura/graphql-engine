@@ -60,7 +60,7 @@ class (Monad m) => UserAuthentication m where
     [HTTP.Header] ->
     AuthMode ->
     Maybe ReqsText ->
-    m (Either QErr (UserInfo, Maybe UTCTime, [HTTP.Header]))
+    m (Either QErr (UserInfo, Maybe UTCTime, [HTTP.Header], ExtraUserInfo))
 
 -- | The hashed admin password. 'hashAdminSecret' is our public interface for
 -- constructing the secret.
