@@ -1022,9 +1022,9 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
   emptyExtraHttpLogMetadata = ()
 
-  buildExtraHttpLogMetadata _ = ()
+  buildExtraHttpLogMetadata _ _ = ()
 
-  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers =
+  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ =
     unLogger logger $
       mkHttpLog $
         mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
@@ -1040,7 +1040,9 @@ instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
 
 instance (MonadIO m, MonadBaseControl IO m) => UserAuthentication (Tracing.TraceT (PGMetadataStorageAppT m)) where
   resolveUserInfo logger manager headers authMode reqs =
-    runExceptT $ getUserInfoWithExpTime logger manager headers authMode reqs
+    runExceptT $ do
+      (a, b, c) <- getUserInfoWithExpTime logger manager headers authMode reqs
+      pure $ (a, b, c, ExtraUserInfo Nothing)
 
 accessDeniedErrMsg :: Text
 accessDeniedErrMsg =
