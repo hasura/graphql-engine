@@ -42,14 +42,14 @@
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html"><span class="hs-identifier">Hasura.RQL.Types.QueryCollection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier">CollectionName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier">QueryName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Web.HttpApiData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromHttpApiData</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span id="local-6989586621690077184"><span id="local-6989586621690077185"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMethod"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-var">EndpointMethod</span></a></span></span><span>
+</span><span id="line-45"></span><span id="local-6989586621690076417"><span id="local-6989586621690076418"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMethod"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-var">EndpointMethod</span></a></span></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GET"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#GET"><span class="hs-identifier hs-var">GET</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="POST"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#POST"><span class="hs-identifier hs-var">POST</span></a></span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PUT"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#PUT"><span class="hs-identifier hs-var">PUT</span></a></span></span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DELETE"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DELETE"><span class="hs-identifier hs-var">DELETE</span></a></span></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PATCH"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#PATCH"><span class="hs-identifier hs-var">PATCH</span></a></span></span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-52"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621690077173"><span id="local-6989586621690077175"><span id="local-6989586621690077177"><span class="annot"><span class="annottext">Int -&gt; EndpointMethod -&gt; ShowS
+</span><span id="line-52"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621690076406"><span id="local-6989586621690076408"><span id="local-6989586621690076410"><span class="annot"><span class="annottext">Int -&gt; EndpointMethod -&gt; ShowS
 [EndpointMethod] -&gt; ShowS
 EndpointMethod -&gt; String
 forall a.
@@ -60,13 +60,13 @@ show :: EndpointMethod -&gt; String
 $cshow :: EndpointMethod -&gt; String
 showsPrec :: Int -&gt; EndpointMethod -&gt; ShowS
 $cshowsPrec :: Int -&gt; EndpointMethod -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690077168"><span id="local-6989586621690077170"><span class="annot"><span class="annottext">EndpointMethod -&gt; EndpointMethod -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076401"><span id="local-6989586621690076403"><span class="annot"><span class="annottext">EndpointMethod -&gt; EndpointMethod -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 $c/= :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 == :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 $c== :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690077148"><span id="local-6989586621690077150"><span id="local-6989586621690077153"><span id="local-6989586621690077156"><span id="local-6989586621690077159"><span id="local-6989586621690077161"><span id="local-6989586621690077163"><span class="annot"><span class="annottext">Eq EndpointMethod
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076381"><span id="local-6989586621690076383"><span id="local-6989586621690076386"><span id="local-6989586621690076389"><span id="local-6989586621690076392"><span id="local-6989586621690076394"><span id="local-6989586621690076396"><span class="annot"><span class="annottext">Eq EndpointMethod
 EndpointMethod -&gt; EndpointMethod -&gt; Bool
 EndpointMethod -&gt; EndpointMethod -&gt; Ordering
 EndpointMethod -&gt; EndpointMethod -&gt; EndpointMethod
@@ -94,7 +94,7 @@ $c&lt;= :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 $c&lt; :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 compare :: EndpointMethod -&gt; EndpointMethod -&gt; Ordering
 $ccompare :: EndpointMethod -&gt; EndpointMethod -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690077141"><span id="local-6989586621690077143"><span class="annot"><span class="annottext">Eq EndpointMethod
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076374"><span id="local-6989586621690076376"><span class="annot"><span class="annottext">Eq EndpointMethod
 Int -&gt; EndpointMethod -&gt; Int
 EndpointMethod -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -102,7 +102,7 @@ hash :: EndpointMethod -&gt; Int
 $chash :: EndpointMethod -&gt; Int
 hashWithSalt :: Int -&gt; EndpointMethod -&gt; Int
 $chashWithSalt :: Int -&gt; EndpointMethod -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690077136"><span id="local-6989586621690077138"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointMethod]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076369"><span id="local-6989586621690076371"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointMethod]
 Value -&gt; Parser EndpointMethod
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -110,7 +110,7 @@ parseJSONList :: Value -&gt; Parser [EndpointMethod]
 $cparseJSONList :: Value -&gt; Parser [EndpointMethod]
 parseJSON :: Value -&gt; Parser EndpointMethod
 $cparseJSON :: Value -&gt; Parser EndpointMethod
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690077127"><span id="local-6989586621690077129"><span id="local-6989586621690077131"><span id="local-6989586621690077133"><span class="annot"><span class="annottext">[EndpointMethod] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076360"><span id="local-6989586621690076362"><span id="local-6989586621690076364"><span id="local-6989586621690076366"><span class="annot"><span class="annottext">[EndpointMethod] -&gt; Value
 [EndpointMethod] -&gt; Encoding
 EndpointMethod -&gt; Value
 EndpointMethod -&gt; Encoding
@@ -128,7 +128,7 @@ toEncoding :: EndpointMethod -&gt; Encoding
 $ctoEncoding :: EndpointMethod -&gt; Encoding
 toJSON :: EndpointMethod -&gt; Value
 $ctoJSON :: EndpointMethod -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690077122"><span id="local-6989586621690077124"><span class="annot"><span class="annottext">ToJSONKeyFunction [EndpointMethod]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076355"><span id="local-6989586621690076357"><span class="annot"><span class="annottext">ToJSONKeyFunction [EndpointMethod]
 ToJSONKeyFunction EndpointMethod
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -145,14 +145,14 @@ $cfrom :: forall x. EndpointMethod -&gt; Rep EndpointMethod x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621690077113"><span class="annot"><span class="annottext">toTxt :: EndpointMethod -&gt; Text
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621690076346"><span class="annot"><span class="annottext">toTxt :: EndpointMethod -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span id="EndpointName"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-var">EndpointName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointName"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-var">EndpointName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unEndpointName"><span class="annot"><span class="annottext">EndpointName -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.Endpoint.html#unEndpointName"><span class="hs-identifier hs-var hs-var">unEndpointName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690077098"><span id="local-6989586621690077102"><span id="local-6989586621690077107"><span class="annot"><span class="annottext">Int -&gt; EndpointName -&gt; ShowS
+</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690076331"><span id="local-6989586621690076335"><span id="local-6989586621690076340"><span class="annot"><span class="annottext">Int -&gt; EndpointName -&gt; ShowS
 [EndpointName] -&gt; ShowS
 EndpointName -&gt; String
 forall a.
@@ -164,14 +164,14 @@ $cshow :: EndpointName -&gt; String
 showsPrec :: Int -&gt; EndpointName -&gt; ShowS
 $cshowsPrec :: Int -&gt; EndpointName -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>      </span><span id="local-6989586621690077088"><span id="local-6989586621690077093"><span class="annot"><span class="annottext">EndpointName -&gt; EndpointName -&gt; Bool
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621690076321"><span id="local-6989586621690076326"><span class="annot"><span class="annottext">EndpointName -&gt; EndpointName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: EndpointName -&gt; EndpointName -&gt; Bool
 $c/= :: EndpointName -&gt; EndpointName -&gt; Bool
 == :: EndpointName -&gt; EndpointName -&gt; Bool
 $c== :: EndpointName -&gt; EndpointName -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>      </span><span id="local-6989586621690077056"><span id="local-6989586621690077060"><span id="local-6989586621690077064"><span id="local-6989586621690077068"><span id="local-6989586621690077072"><span id="local-6989586621690077076"><span id="local-6989586621690077081"><span class="annot"><span class="annottext">Eq EndpointName
+</span><span id="line-61"></span><span>      </span><span id="local-6989586621690076289"><span id="local-6989586621690076293"><span id="local-6989586621690076297"><span id="local-6989586621690076301"><span id="local-6989586621690076305"><span id="local-6989586621690076309"><span id="local-6989586621690076314"><span class="annot"><span class="annottext">Eq EndpointName
 EndpointName -&gt; EndpointName -&gt; Bool
 EndpointName -&gt; EndpointName -&gt; Ordering
 EndpointName -&gt; EndpointName -&gt; EndpointName
@@ -200,12 +200,12 @@ $c&lt; :: EndpointName -&gt; EndpointName -&gt; Bool
 compare :: EndpointName -&gt; EndpointName -&gt; Ordering
 $ccompare :: EndpointName -&gt; EndpointName -&gt; Ordering
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>      </span><span id="local-6989586621690077051"><span class="annot"><span class="annottext">EndpointName -&gt; Text
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621690076284"><span class="annot"><span class="annottext">EndpointName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: EndpointName -&gt; Text
 $ctoTxt :: EndpointName -&gt; Text
-</span><a href="#local-6989586621690077051"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-63"></span><span>      </span><span id="local-6989586621690077038"><span id="local-6989586621690077043"><span class="annot"><span class="annottext">Eq EndpointName
+</span><a href="#local-6989586621690076284"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>      </span><span id="local-6989586621690076271"><span id="local-6989586621690076276"><span class="annot"><span class="annottext">Eq EndpointName
 Int -&gt; EndpointName -&gt; Int
 EndpointName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -213,8 +213,8 @@ hash :: EndpointName -&gt; Int
 $chash :: EndpointName -&gt; Int
 hashWithSalt :: Int -&gt; EndpointName -&gt; Int
 $chashWithSalt :: Int -&gt; EndpointName -&gt; Int
-</span><a href="#local-6989586621690077038"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-64"></span><span>      </span><span id="local-6989586621690077020"><span id="local-6989586621690077024"><span id="local-6989586621690077028"><span id="local-6989586621690077033"><span class="annot"><span class="annottext">[EndpointName] -&gt; Value
+</span><a href="#local-6989586621690076271"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621690076253"><span id="local-6989586621690076257"><span id="local-6989586621690076261"><span id="local-6989586621690076266"><span class="annot"><span class="annottext">[EndpointName] -&gt; Value
 [EndpointName] -&gt; Encoding
 EndpointName -&gt; Value
 EndpointName -&gt; Encoding
@@ -232,8 +232,8 @@ toEncoding :: EndpointName -&gt; Encoding
 $ctoEncoding :: EndpointName -&gt; Encoding
 toJSON :: EndpointName -&gt; Value
 $ctoJSON :: EndpointName -&gt; Value
-</span><a href="#local-6989586621690077020"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-65"></span><span>      </span><span id="local-6989586621690077010"><span id="local-6989586621690077015"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointName]
+</span><a href="#local-6989586621690076253"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>      </span><span id="local-6989586621690076243"><span id="local-6989586621690076248"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointName]
 Value -&gt; Parser EndpointName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -241,13 +241,13 @@ parseJSONList :: Value -&gt; Parser [EndpointName]
 $cparseJSONList :: Value -&gt; Parser [EndpointName]
 parseJSON :: Value -&gt; Parser EndpointName
 $cparseJSON :: Value -&gt; Parser EndpointName
-</span><a href="#local-6989586621690077010"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
+</span><a href="#local-6989586621690076243"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
 </span><span id="line-66"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-keyword">newtype</span><span> </span><span id="EndpointUrl"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointUrl"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unEndpointUrl"><span class="annot"><span class="annottext">EndpointUrl -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.Endpoint.html#unEndpointUrl"><span class="hs-identifier hs-var hs-var">unEndpointUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690076996"><span id="local-6989586621690077000"><span id="local-6989586621690077004"><span class="annot"><span class="annottext">Int -&gt; EndpointUrl -&gt; ShowS
+</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690076229"><span id="local-6989586621690076233"><span id="local-6989586621690076237"><span class="annot"><span class="annottext">Int -&gt; EndpointUrl -&gt; ShowS
 [EndpointUrl] -&gt; ShowS
 EndpointUrl -&gt; String
 forall a.
@@ -259,14 +259,14 @@ $cshow :: EndpointUrl -&gt; String
 showsPrec :: Int -&gt; EndpointUrl -&gt; ShowS
 $cshowsPrec :: Int -&gt; EndpointUrl -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-71"></span><span>      </span><span id="local-6989586621690076987"><span id="local-6989586621690076991"><span class="annot"><span class="annottext">EndpointUrl -&gt; EndpointUrl -&gt; Bool
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621690076220"><span id="local-6989586621690076224"><span class="annot"><span class="annottext">EndpointUrl -&gt; EndpointUrl -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 $c/= :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 == :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 $c== :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-72"></span><span>      </span><span id="local-6989586621690076956"><span id="local-6989586621690076960"><span id="local-6989586621690076964"><span id="local-6989586621690076968"><span id="local-6989586621690076972"><span id="local-6989586621690076976"><span id="local-6989586621690076980"><span class="annot"><span class="annottext">Eq EndpointUrl
+</span><span id="line-72"></span><span>      </span><span id="local-6989586621690076189"><span id="local-6989586621690076193"><span id="local-6989586621690076197"><span id="local-6989586621690076201"><span id="local-6989586621690076205"><span id="local-6989586621690076209"><span id="local-6989586621690076213"><span class="annot"><span class="annottext">Eq EndpointUrl
 EndpointUrl -&gt; EndpointUrl -&gt; Bool
 EndpointUrl -&gt; EndpointUrl -&gt; Ordering
 EndpointUrl -&gt; EndpointUrl -&gt; EndpointUrl
@@ -295,12 +295,12 @@ $c&lt; :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 compare :: EndpointUrl -&gt; EndpointUrl -&gt; Ordering
 $ccompare :: EndpointUrl -&gt; EndpointUrl -&gt; Ordering
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>      </span><span id="local-6989586621690076951"><span class="annot"><span class="annottext">EndpointUrl -&gt; Text
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621690076184"><span class="annot"><span class="annottext">EndpointUrl -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: EndpointUrl -&gt; Text
 $ctoTxt :: EndpointUrl -&gt; Text
-</span><a href="#local-6989586621690076951"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>      </span><span id="local-6989586621690076940"><span id="local-6989586621690076944"><span class="annot"><span class="annottext">Eq EndpointUrl
+</span><a href="#local-6989586621690076184"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>      </span><span id="local-6989586621690076173"><span id="local-6989586621690076177"><span class="annot"><span class="annottext">Eq EndpointUrl
 Int -&gt; EndpointUrl -&gt; Int
 EndpointUrl -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -308,8 +308,8 @@ hash :: EndpointUrl -&gt; Int
 $chash :: EndpointUrl -&gt; Int
 hashWithSalt :: Int -&gt; EndpointUrl -&gt; Int
 $chashWithSalt :: Int -&gt; EndpointUrl -&gt; Int
-</span><a href="#local-6989586621690076940"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-75"></span><span>      </span><span id="local-6989586621690076923"><span id="local-6989586621690076927"><span id="local-6989586621690076931"><span id="local-6989586621690076935"><span class="annot"><span class="annottext">[EndpointUrl] -&gt; Value
+</span><a href="#local-6989586621690076173"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>      </span><span id="local-6989586621690076156"><span id="local-6989586621690076160"><span id="local-6989586621690076164"><span id="local-6989586621690076168"><span class="annot"><span class="annottext">[EndpointUrl] -&gt; Value
 [EndpointUrl] -&gt; Encoding
 EndpointUrl -&gt; Value
 EndpointUrl -&gt; Encoding
@@ -327,8 +327,8 @@ toEncoding :: EndpointUrl -&gt; Encoding
 $ctoEncoding :: EndpointUrl -&gt; Encoding
 toJSON :: EndpointUrl -&gt; Value
 $ctoJSON :: EndpointUrl -&gt; Value
-</span><a href="#local-6989586621690076923"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-76"></span><span>      </span><span id="local-6989586621690076914"><span id="local-6989586621690076918"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointUrl]
+</span><a href="#local-6989586621690076156"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621690076147"><span id="local-6989586621690076151"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointUrl]
 Value -&gt; Parser EndpointUrl
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -336,48 +336,48 @@ parseJSONList :: Value -&gt; Parser [EndpointUrl]
 $cparseJSONList :: Value -&gt; Parser [EndpointUrl]
 parseJSON :: Value -&gt; Parser EndpointUrl
 $cparseJSON :: Value -&gt; Parser EndpointUrl
-</span><a href="#local-6989586621690076914"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
+</span><a href="#local-6989586621690076147"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
 </span><span id="line-77"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span id="local-6989586621690077805"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-type">mkEndpointUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690077805"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690077805"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span><span>
+</span><span id="line-79"></span><span id="local-6989586621690077038"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-type">mkEndpointUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690077038"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690077038"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span><span>
 </span><span id="line-80"></span><span id="mkEndpointUrl"><span class="annot"><span class="annottext">mkEndpointUrl :: forall a. ToTxt a =&gt; a -&gt; Maybe EndpointUrl
-</span><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-var hs-var">mkEndpointUrl</span></a></span></span><span> </span><span id="local-6989586621690076906"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690076906"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; EndpointUrl
+</span><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-var hs-var">mkEndpointUrl</span></a></span></span><span> </span><span id="local-6989586621690076139"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621690076139"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; EndpointUrl
 </span><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690076906"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690076139"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690076900"><span id="local-6989586621690076902"><span class="annot"><span class="hs-identifier hs-type">FromHttpApiData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621690076891"><span class="annot"><span class="annottext">parseQueryParam :: Text -&gt; Either Text EndpointUrl
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseQueryParam</span></span></span><span> </span><span id="local-6989586621690076889"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076889"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690076133"><span id="local-6989586621690076135"><span class="annot"><span class="hs-identifier hs-type">FromHttpApiData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621690076124"><span class="annot"><span class="annottext">parseQueryParam :: Text -&gt; Either Text EndpointUrl
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseQueryParam</span></span></span><span> </span><span id="local-6989586621690076122"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690076122"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">forall a. FromHttpApiData a =&gt; Text -&gt; Either Text a
 </span><span class="hs-identifier hs-var">parseQueryParam</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076889"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690076888"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076888"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690076122"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690076121"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690076121"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-85"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076888"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690076121"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">Maybe NonEmptyText
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Endpoint url must be non-empty&quot;</span></span><span>
-</span><span id="line-87"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690076887"><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621690076887"><span class="hs-identifier hs-var">net</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
+</span><span id="line-87"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690076120"><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621690076120"><span class="hs-identifier hs-var">net</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmptyText -&gt; EndpointUrl
 </span><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621690076887"><span class="hs-identifier hs-var">net</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690076120"><span class="hs-identifier hs-var">net</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span id="local-6989586621690076885"><span id="local-6989586621690076886"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span>
+</span><span id="line-89"></span><span id="local-6989586621690076118"><span id="local-6989586621690076119"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_qrCollectionName"><span class="annot"><span class="annottext">QueryReference -&gt; CollectionName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_qrCollectionName"><span class="hs-identifier hs-var hs-var">_qrCollectionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-91"></span><span>    </span><span id="_qrQueryName"><span class="annot"><span class="annottext">QueryReference -&gt; QueryName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_qrQueryName"><span class="hs-identifier hs-var hs-var">_qrQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-type">QueryName</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690076870"><span id="local-6989586621690076872"><span id="local-6989586621690076880"><span class="annot"><span class="annottext">Int -&gt; QueryReference -&gt; ShowS
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690076103"><span id="local-6989586621690076105"><span id="local-6989586621690076113"><span class="annot"><span class="annottext">Int -&gt; QueryReference -&gt; ShowS
 [QueryReference] -&gt; ShowS
 QueryReference -&gt; String
 forall a.
@@ -388,7 +388,7 @@ show :: QueryReference -&gt; String
 $cshow :: QueryReference -&gt; String
 showsPrec :: Int -&gt; QueryReference -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryReference -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076862"><span id="local-6989586621690076868"><span class="annot"><span class="annottext">QueryReference -&gt; QueryReference -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076095"><span id="local-6989586621690076101"><span class="annot"><span class="annottext">QueryReference -&gt; QueryReference -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: QueryReference -&gt; QueryReference -&gt; Bool
 $c/= :: QueryReference -&gt; QueryReference -&gt; Bool
@@ -402,14 +402,14 @@ $cto :: forall x. Rep QueryReference x -&gt; QueryReference
 $cfrom :: forall x. QueryReference -&gt; Rep QueryReference x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-special">$</span><span id="local-6989586621690076819"><span id="local-6989586621690076821"><span id="local-6989586621690076830"><span id="local-6989586621690076842"><span id="local-6989586621690076844"><span id="local-6989586621690076857"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryReference</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-95"></span><span class="hs-special">$</span><span id="local-6989586621690076052"><span id="local-6989586621690076054"><span id="local-6989586621690076063"><span id="local-6989586621690076075"><span id="local-6989586621690076077"><span id="local-6989586621690076090"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryReference</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-96"></span><span class="hs-special">$</span><span id="qrQueryName"><span id="qrCollectionName"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryReference</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span id="local-6989586621690076782"><span id="local-6989586621690076783"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span> </span><span id="local-6989586621690077763"><span class="annot"><a href="#local-6989586621690077763"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span>
+</span><span id="line-98"></span><span id="local-6989586621690076015"><span id="local-6989586621690076016"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span> </span><span id="local-6989586621690076996"><span class="annot"><a href="#local-6989586621690076996"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_edQuery"><span class="annot"><span class="annottext">forall query. EndpointDef query -&gt; query
-</span><a href="Hasura.RQL.Types.Endpoint.html#_edQuery"><span class="hs-identifier hs-var hs-var">_edQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690077763"><span class="hs-identifier hs-type">query</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Endpoint.html#_edQuery"><span class="hs-identifier hs-var hs-var">_edQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690076996"><span class="hs-identifier hs-type">query</span></a></span><span>
 </span><span id="line-100"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690076772"><span id="local-6989586621690076774"><span id="local-6989586621690076778"><span class="annot"><span class="annottext">Int -&gt; EndpointDef query -&gt; ShowS
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690076005"><span id="local-6989586621690076007"><span id="local-6989586621690076011"><span class="annot"><span class="annottext">Int -&gt; EndpointDef query -&gt; ShowS
 forall query. Show query =&gt; Int -&gt; EndpointDef query -&gt; ShowS
 forall query. Show query =&gt; [EndpointDef query] -&gt; ShowS
 forall query. Show query =&gt; EndpointDef query -&gt; String
@@ -421,7 +421,7 @@ show :: EndpointDef query -&gt; String
 $cshow :: forall query. Show query =&gt; EndpointDef query -&gt; String
 showsPrec :: Int -&gt; EndpointDef query -&gt; ShowS
 $cshowsPrec :: forall query. Show query =&gt; Int -&gt; EndpointDef query -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076767"><span id="local-6989586621690076770"><span class="annot"><span class="annottext">EndpointDef query -&gt; EndpointDef query -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076000"><span id="local-6989586621690076003"><span class="annot"><span class="annottext">EndpointDef query -&gt; EndpointDef query -&gt; Bool
 forall query.
 Eq query =&gt;
 EndpointDef query -&gt; EndpointDef query -&gt; Bool
@@ -434,7 +434,7 @@ EndpointDef query -&gt; EndpointDef query -&gt; Bool
 $c== :: forall query.
 Eq query =&gt;
 EndpointDef query -&gt; EndpointDef query -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076746"><span id="local-6989586621690076748"><span id="local-6989586621690076751"><span id="local-6989586621690076754"><span id="local-6989586621690076757"><span id="local-6989586621690076760"><span id="local-6989586621690076763"><span class="annot"><span class="annottext">EndpointDef query -&gt; EndpointDef query -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075979"><span id="local-6989586621690075981"><span id="local-6989586621690075984"><span id="local-6989586621690075987"><span id="local-6989586621690075990"><span id="local-6989586621690075993"><span id="local-6989586621690075996"><span class="annot"><span class="annottext">EndpointDef query -&gt; EndpointDef query -&gt; Bool
 EndpointDef query -&gt; EndpointDef query -&gt; Ordering
 forall a.
 Eq a
@@ -490,7 +490,7 @@ forall query x. Rep (EndpointDef query) x -&gt; EndpointDef query
 forall query x. EndpointDef query -&gt; Rep (EndpointDef query) x
 $cto :: forall query x. Rep (EndpointDef query) x -&gt; EndpointDef query
 $cfrom :: forall query x. EndpointDef query -&gt; Rep (EndpointDef query) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076739"><span id="local-6989586621690076741"><span class="annot"><span class="annottext">forall a b. a -&gt; EndpointDef b -&gt; EndpointDef a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075972"><span id="local-6989586621690075974"><span class="annot"><span class="annottext">forall a b. a -&gt; EndpointDef b -&gt; EndpointDef a
 forall a b. (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
@@ -499,7 +499,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; EndpointDef b -&gt; EndpointDef a
 fmap :: forall a b. (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b
 $cfmap :: forall a b. (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076702"><span id="local-6989586621690076704"><span id="local-6989586621690076706"><span id="local-6989586621690076708"><span id="local-6989586621690076710"><span id="local-6989586621690076712"><span id="local-6989586621690076714"><span id="local-6989586621690076716"><span id="local-6989586621690076718"><span id="local-6989586621690076720"><span id="local-6989586621690076722"><span id="local-6989586621690076724"><span id="local-6989586621690076726"><span id="local-6989586621690076728"><span id="local-6989586621690076730"><span id="local-6989586621690076733"><span id="local-6989586621690076735"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; EndpointDef a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075935"><span id="local-6989586621690075937"><span id="local-6989586621690075939"><span id="local-6989586621690075941"><span id="local-6989586621690075943"><span id="local-6989586621690075945"><span id="local-6989586621690075947"><span id="local-6989586621690075949"><span id="local-6989586621690075951"><span id="local-6989586621690075953"><span id="local-6989586621690075955"><span id="local-6989586621690075957"><span id="local-6989586621690075959"><span id="local-6989586621690075961"><span id="local-6989586621690075963"><span id="local-6989586621690075966"><span id="local-6989586621690075968"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; EndpointDef a -&gt; Bool
 forall a. Num a =&gt; EndpointDef a -&gt; a
 forall a. Ord a =&gt; EndpointDef a -&gt; a
 forall m. Monoid m =&gt; EndpointDef m -&gt; m
@@ -563,7 +563,7 @@ foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; EndpointDef a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; EndpointDef a -&gt; m
 fold :: forall m. Monoid m =&gt; EndpointDef m -&gt; m
 $cfold :: forall m. Monoid m =&gt; EndpointDef m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076686"><span id="local-6989586621690076688"><span id="local-6989586621690076690"><span id="local-6989586621690076695"><span class="annot"><span class="annottext">Functor EndpointDef
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075919"><span id="local-6989586621690075921"><span id="local-6989586621690075923"><span id="local-6989586621690075928"><span class="annot"><span class="annottext">Functor EndpointDef
 Foldable EndpointDef
 forall (t :: * -&gt; *).
 Functor t
@@ -615,12 +615,12 @@ Applicative f =&gt;
 (a -&gt; f b) -&gt; EndpointDef a -&gt; f (EndpointDef b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-special">$</span><span id="local-6989586621690076662"><span id="local-6989586621690076664"><span id="local-6989586621690076669"><span id="local-6989586621690076675"><span id="local-6989586621690076677"><span id="local-6989586621690076682"><span id="local-6989586621690077763"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
-</span><span id="line-104"></span><span class="hs-special">$</span><span id="edQuery"><span id="local-6989586621690077723"><span id="local-6989586621690077763"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-103"></span><span class="hs-special">$</span><span id="local-6989586621690075895"><span id="local-6989586621690075897"><span id="local-6989586621690075902"><span id="local-6989586621690075908"><span id="local-6989586621690075910"><span id="local-6989586621690075915"><span id="local-6989586621690076996"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-104"></span><span class="hs-special">$</span><span id="edQuery"><span id="local-6989586621690076956"><span id="local-6989586621690076996"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span class="hs-keyword">type</span><span> </span><span id="EndpointTrie"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-var">EndpointTrie</span></a></span></span><span> </span><span id="local-6989586621690076647"><span class="annot"><a href="#local-6989586621690076647"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690076647"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span class="hs-keyword">type</span><span> </span><span id="EndpointTrie"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-var">EndpointTrie</span></a></span></span><span> </span><span id="local-6989586621690075880"><span class="annot"><a href="#local-6989586621690075880"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690075880"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span id="local-6989586621690077713"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#buildEndpointsTrie"><span class="hs-identifier hs-type">buildEndpointsTrie</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690077713"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690077713"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-type">EndpointTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690077713"><span class="hs-identifier hs-type">query</span></a></span></span><span>
+</span><span id="line-108"></span><span id="local-6989586621690076946"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#buildEndpointsTrie"><span class="hs-identifier hs-type">buildEndpointsTrie</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690076946"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690076946"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-type">EndpointTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690076946"><span class="hs-identifier hs-type">query</span></a></span></span><span>
 </span><span id="line-109"></span><span id="buildEndpointsTrie"><span class="annot"><span class="annottext">buildEndpointsTrie :: forall query.
 Ord query =&gt;
 [EndpointMetadata query] -&gt; EndpointTrie query
@@ -636,31 +636,31 @@ Trie
 -&gt; Trie
      (PathComponent Text)
      (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621690076630"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="#local-6989586621690075863"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621690076630"><span class="annot"><span class="annottext">insert :: Trie
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621690075863"><span class="annot"><span class="annottext">insert :: Trie
   (PathComponent Text)
   (MultiMap EndpointMethod (EndpointMetadata query))
 -&gt; EndpointMetadata query
 -&gt; Trie
      (PathComponent Text)
      (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621690076630"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621690076617"><span class="annot"><span class="annottext">Trie
+</span><a href="#local-6989586621690075863"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621690075850"><span class="annot"><span class="annottext">Trie
   (PathComponent Text)
   (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621690076617"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621690076616"><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621690076616"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-112"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690076615"><span class="annot"><span class="annottext">endpointMap :: MultiMap EndpointMethod (EndpointMetadata query)
-</span><a href="#local-6989586621690076615"><span class="hs-identifier hs-var hs-var">endpointMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><a href="#local-6989586621690075850"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621690075849"><span class="annot"><span class="annottext">EndpointMetadata query
+</span><a href="#local-6989586621690075849"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690075848"><span class="annot"><span class="annottext">endpointMap :: MultiMap EndpointMethod (EndpointMetadata query)
+</span><a href="#local-6989586621690075848"><span class="hs-identifier hs-var hs-var">endpointMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; MultiMap k v
 </span><a href="Data.HashMap.Strict.Multi.html#singleton"><span class="hs-operator hs-var">`MM.singleton`</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621690076616"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690075849"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; NonEmpty EndpointMethod
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceMethods"><span class="hs-identifier hs-var">_ceMethods</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621690076616"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621690075849"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-113"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall k v.
 Hashable k =&gt;
 (v -&gt; v -&gt; v) -&gt; [k] -&gt; v -&gt; Trie k v -&gt; Trie k v
@@ -671,21 +671,21 @@ Hashable k =&gt;
 </span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathParam"><span class="hs-identifier hs-var">PathParam</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; PathComponent a
 </span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathLiteral"><span class="hs-identifier hs-var">PathLiteral</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; EndpointUrl
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceUrl"><span class="hs-identifier hs-var">_ceUrl</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621690076616"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MultiMap EndpointMethod (EndpointMetadata query)
-</span><a href="#local-6989586621690076615"><span class="hs-identifier hs-var">endpointMap</span></a></span><span> </span><span class="annot"><span class="annottext">Trie
+</span><a href="#local-6989586621690075849"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MultiMap EndpointMethod (EndpointMetadata query)
+</span><a href="#local-6989586621690075848"><span class="hs-identifier hs-var">endpointMap</span></a></span><span> </span><span class="annot"><span class="annottext">Trie
   (PathComponent Text)
   (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621690076617"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621690075850"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- | Split a path and construct PathSegments based on callbacks for variables and literals</span><span>
 </span><span id="line-116"></span><span class="hs-comment">--   Var callback is passed the &quot;:&quot; prefix as part of the text.</span><span>
-</span><span id="line-117"></span><span id="local-6989586621690077690"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-type">splitPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690077690"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690077690"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690077690"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-117"></span><span id="local-6989586621690076923"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-type">splitPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690076923"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690076923"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690076923"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
 </span><span id="line-118"></span><span id="splitPath"><span class="annot"><span class="annottext">splitPath :: forall a. (Text -&gt; a) -&gt; (Text -&gt; a) -&gt; EndpointUrl -&gt; [a]
-</span><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-var hs-var">splitPath</span></a></span></span><span> </span><span id="local-6989586621690076602"><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621690076602"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span id="local-6989586621690076601"><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621690076601"><span class="hs-identifier hs-var">lit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-var hs-var">splitPath</span></a></span></span><span> </span><span id="local-6989586621690075835"><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621690075835"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span id="local-6989586621690075834"><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621690075834"><span class="hs-identifier hs-var">lit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621690076600"><span class="hs-identifier hs-var">toPathComponent</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="#local-6989586621690075833"><span class="hs-identifier hs-var">toPathComponent</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Text -&gt; [Text]
 </span><span class="hs-identifier hs-var">T.split</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Char
@@ -693,23 +693,23 @@ Hashable k =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-120"></span><span>    </span><span id="local-6989586621690076600"><span class="annot"><span class="annottext">toPathComponent :: Text -&gt; a
-</span><a href="#local-6989586621690076600"><span class="hs-identifier hs-var hs-var">toPathComponent</span></a></span></span><span> </span><span id="local-6989586621690076597"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076597"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621690075833"><span class="annot"><span class="annottext">toPathComponent :: Text -&gt; a
+</span><a href="#local-6989586621690075833"><span class="hs-identifier hs-var hs-var">toPathComponent</span></a></span></span><span> </span><span id="local-6989586621690075830"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690075830"><span class="hs-identifier hs-var">x</span></a></span></span><span>
 </span><span id="line-121"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;:&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076597"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621690076602"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076597"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621690075830"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621690075835"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690075830"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-122"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621690076601"><span class="hs-identifier hs-var">lit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690076597"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621690075834"><span class="hs-identifier hs-var">lit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690075830"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span class="hs-keyword">type</span><span> </span><span id="CreateEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#CreateEndpoint"><span class="hs-identifier hs-var">CreateEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-type">QueryReference</span></a></span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span id="local-6989586621690076594"><span id="local-6989586621690076595"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span> </span><span id="local-6989586621690077702"><span class="annot"><a href="#local-6989586621690077702"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span>
+</span><span id="line-126"></span><span id="local-6989586621690075827"><span id="local-6989586621690075828"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span> </span><span id="local-6989586621690076935"><span class="annot"><a href="#local-6989586621690076935"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ceName"><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; EndpointName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceName"><span class="hs-identifier hs-var hs-var">_ceName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-128"></span><span>    </span><span id="_ceUrl"><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; EndpointUrl
@@ -717,11 +717,11 @@ Hashable k =&gt;
 </span><span id="line-129"></span><span>    </span><span id="_ceMethods"><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; NonEmpty EndpointMethod
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceMethods"><span class="hs-identifier hs-var hs-var">_ceMethods</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: Use a set for this?</span><span>
 </span><span id="line-130"></span><span>    </span><span id="_ceDefinition"><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; EndpointDef query
-</span><a href="Hasura.RQL.Types.Endpoint.html#_ceDefinition"><span class="hs-identifier hs-var hs-var">_ceDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-type">EndpointDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690077702"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Endpoint.html#_ceDefinition"><span class="hs-identifier hs-var hs-var">_ceDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-type">EndpointDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690076935"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-131"></span><span>    </span><span id="_ceComment"><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceComment"><span class="hs-identifier hs-var hs-var">_ceComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690076574"><span id="local-6989586621690076576"><span id="local-6989586621690076588"><span class="annot"><span class="annottext">Int -&gt; EndpointMetadata query -&gt; ShowS
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690075807"><span id="local-6989586621690075809"><span id="local-6989586621690075821"><span class="annot"><span class="annottext">Int -&gt; EndpointMetadata query -&gt; ShowS
 forall query. Show query =&gt; Int -&gt; EndpointMetadata query -&gt; ShowS
 forall query. Show query =&gt; [EndpointMetadata query] -&gt; ShowS
 forall query. Show query =&gt; EndpointMetadata query -&gt; String
@@ -733,7 +733,7 @@ show :: EndpointMetadata query -&gt; String
 $cshow :: forall query. Show query =&gt; EndpointMetadata query -&gt; String
 showsPrec :: Int -&gt; EndpointMetadata query -&gt; ShowS
 $cshowsPrec :: forall query. Show query =&gt; Int -&gt; EndpointMetadata query -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076560"><span id="local-6989586621690076571"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075793"><span id="local-6989586621690075804"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
 forall query.
 Eq query =&gt;
 EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
@@ -746,7 +746,7 @@ EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
 $c== :: forall query.
 Eq query =&gt;
 EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076524"><span id="local-6989586621690076526"><span id="local-6989586621690076529"><span id="local-6989586621690076532"><span id="local-6989586621690076535"><span id="local-6989586621690076544"><span id="local-6989586621690076555"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075757"><span id="local-6989586621690075759"><span id="local-6989586621690075762"><span id="local-6989586621690075765"><span id="local-6989586621690075768"><span id="local-6989586621690075777"><span id="local-6989586621690075788"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
 EndpointMetadata query -&gt; EndpointMetadata query -&gt; Ordering
 forall a.
 Eq a
@@ -811,7 +811,7 @@ $cto :: forall query x.
 Rep (EndpointMetadata query) x -&gt; EndpointMetadata query
 $cfrom :: forall query x.
 EndpointMetadata query -&gt; Rep (EndpointMetadata query) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076515"><span id="local-6989586621690076518"><span class="annot"><span class="annottext">forall a b. a -&gt; EndpointMetadata b -&gt; EndpointMetadata a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075748"><span id="local-6989586621690075751"><span class="annot"><span class="annottext">forall a b. a -&gt; EndpointMetadata b -&gt; EndpointMetadata a
 forall a b. (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
@@ -820,7 +820,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; EndpointMetadata b -&gt; EndpointMetadata a
 fmap :: forall a b. (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b
 $cfmap :: forall a b. (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076474"><span id="local-6989586621690076476"><span id="local-6989586621690076478"><span id="local-6989586621690076480"><span id="local-6989586621690076482"><span id="local-6989586621690076484"><span id="local-6989586621690076487"><span id="local-6989586621690076489"><span id="local-6989586621690076491"><span id="local-6989586621690076493"><span id="local-6989586621690076495"><span id="local-6989586621690076497"><span id="local-6989586621690076499"><span id="local-6989586621690076502"><span id="local-6989586621690076504"><span id="local-6989586621690076509"><span id="local-6989586621690076511"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; EndpointMetadata a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075707"><span id="local-6989586621690075709"><span id="local-6989586621690075711"><span id="local-6989586621690075713"><span id="local-6989586621690075715"><span id="local-6989586621690075717"><span id="local-6989586621690075720"><span id="local-6989586621690075722"><span id="local-6989586621690075724"><span id="local-6989586621690075726"><span id="local-6989586621690075728"><span id="local-6989586621690075730"><span id="local-6989586621690075732"><span id="local-6989586621690075735"><span id="local-6989586621690075737"><span id="local-6989586621690075742"><span id="local-6989586621690075744"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; EndpointMetadata a -&gt; Bool
 forall a. Num a =&gt; EndpointMetadata a -&gt; a
 forall a. Ord a =&gt; EndpointMetadata a -&gt; a
 forall m. Monoid m =&gt; EndpointMetadata m -&gt; m
@@ -884,7 +884,7 @@ foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; EndpointMetadata a -&gt;
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; EndpointMetadata a -&gt; m
 fold :: forall m. Monoid m =&gt; EndpointMetadata m -&gt; m
 $cfold :: forall m. Monoid m =&gt; EndpointMetadata m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076457"><span id="local-6989586621690076459"><span id="local-6989586621690076461"><span id="local-6989586621690076468"><span class="annot"><span class="annottext">Functor EndpointMetadata
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075690"><span id="local-6989586621690075692"><span id="local-6989586621690075694"><span id="local-6989586621690075701"><span class="annot"><span class="annottext">Functor EndpointMetadata
 Foldable EndpointMetadata
 forall (t :: * -&gt; *).
 Functor t
@@ -936,14 +936,14 @@ Applicative f =&gt;
 (a -&gt; f b) -&gt; EndpointMetadata a -&gt; f (EndpointMetadata b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span class="hs-special">$</span><span id="local-6989586621690076392"><span id="local-6989586621690076394"><span id="local-6989586621690076409"><span id="local-6989586621690076431"><span id="local-6989586621690076433"><span id="local-6989586621690076455"><span id="local-6989586621690077702"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
-</span><span id="line-136"></span><span class="hs-special">$</span><span id="ceUrl"><span id="ceName"><span id="ceMethods"><span id="ceDefinition"><span id="ceComment"><span id="local-6989586621690077660"><span id="local-6989586621690077702"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-135"></span><span class="hs-special">$</span><span id="local-6989586621690075625"><span id="local-6989586621690075627"><span id="local-6989586621690075642"><span id="local-6989586621690075664"><span id="local-6989586621690075666"><span id="local-6989586621690075688"><span id="local-6989586621690076935"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-136"></span><span class="hs-special">$</span><span id="ceUrl"><span id="ceName"><span id="ceMethods"><span id="ceDefinition"><span id="ceComment"><span id="local-6989586621690076893"><span id="local-6989586621690076935"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span id="local-6989586621690076323"><span id="local-6989586621690076324"></span></span><span class="hs-keyword">data</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span>
+</span><span id="line-138"></span><span id="local-6989586621690075556"><span id="local-6989586621690075557"></span></span><span class="hs-keyword">data</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_deName"><span class="annot"><span class="annottext">DropEndpoint -&gt; EndpointName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_deName"><span class="hs-identifier hs-var hs-var">_deName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690076313"><span id="local-6989586621690076315"><span id="local-6989586621690076319"><span class="annot"><span class="annottext">Int -&gt; DropEndpoint -&gt; ShowS
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690075546"><span id="local-6989586621690075548"><span id="local-6989586621690075552"><span class="annot"><span class="annottext">Int -&gt; DropEndpoint -&gt; ShowS
 [DropEndpoint] -&gt; ShowS
 DropEndpoint -&gt; String
 forall a.
@@ -954,7 +954,7 @@ show :: DropEndpoint -&gt; String
 $cshow :: DropEndpoint -&gt; String
 showsPrec :: Int -&gt; DropEndpoint -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropEndpoint -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690076308"><span id="local-6989586621690076311"><span class="annot"><span class="annottext">DropEndpoint -&gt; DropEndpoint -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690075541"><span id="local-6989586621690075544"><span class="annot"><span class="annottext">DropEndpoint -&gt; DropEndpoint -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DropEndpoint -&gt; DropEndpoint -&gt; Bool
 $c/= :: DropEndpoint -&gt; DropEndpoint -&gt; Bool
@@ -968,6 +968,6 @@ $cto :: forall x. Rep DropEndpoint x -&gt; DropEndpoint
 $cfrom :: forall x. DropEndpoint -&gt; Rep DropEndpoint x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span class="hs-special">$</span><span id="local-6989586621690076283"><span id="local-6989586621690076285"><span id="local-6989586621690076290"><span id="local-6989586621690076296"><span id="local-6989586621690076298"><span id="local-6989586621690076303"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropEndpoint</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-143"></span><span class="hs-special">$</span><span id="local-6989586621690075516"><span id="local-6989586621690075518"><span id="local-6989586621690075523"><span id="local-6989586621690075529"><span id="local-6989586621690075531"><span id="local-6989586621690075536"><span class="hs-special">(</span><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropEndpoint</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-144"></span><span class="hs-special">$</span><span id="deName"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropEndpoint</span><span class="hs-special">)</span></span><span>
 </span><span id="line-145"></span></pre></body></html>

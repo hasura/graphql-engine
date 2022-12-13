@@ -18810,7 +18810,7 @@ withNewInconsistentObjsCheck :: (QErrM m, CacheRM m) => m a -> m a
 -- | getInconsistentQueryCollections is a helper function that runs the
 --   static analysis over the saved queries and reports any inconsistenties
 --   with the current schema.
-getInconsistentQueryCollections :: MonadError QErr m => SchemaIntrospection -> QueryCollections -> ((CollectionName, ListedQuery) -> MetadataObject) -> EndpointTrie GQLQueryWithText -> [NormalizedQuery] -> m [InconsistentMetadata]
+getInconsistentQueryCollections :: SchemaIntrospection -> QueryCollections -> ((CollectionName, ListedQuery) -> MetadataObject) -> EndpointTrie GQLQueryWithText -> [NormalizedQuery] -> [InconsistentMetadata]
 instance Control.Monad.Trans.Control.MonadBaseControl b m => Control.Monad.Trans.Control.MonadBaseControl b (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Control.Monad.Base.MonadBase b m => Control.Monad.Base.MonadBase b (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Hasura.Tracing.MonadTrace m => Hasura.Tracing.MonadTrace (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
@@ -22485,22 +22485,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) TriggerOnReplication
-cteqCleanupConfig :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe Text)
-cetqWebhook :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe InputWebhook)
-cetqUpdate :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe (SubscribeOpSpec b_aC3Ji))
-cetqTable :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (TableName b_aC3Ji)
-cetqSource :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) SourceName
-cetqRetryConf :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe RequestTransform)
-cetqReplace :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) Bool
-cetqName :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) TriggerName
-cetqInsert :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe (SubscribeOpSpec b_aC3Ji))
-cetqHeaders :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe Bool)
-cetqDelete :: forall b_aC3Ji. Lens' (CreateEventTriggerQuery b_aC3Ji) (Maybe (SubscribeOpSpec b_aC3Ji))
+cteqTriggerOnReplication :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) TriggerOnReplication
+cteqCleanupConfig :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe Text)
+cetqWebhook :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe InputWebhook)
+cetqUpdate :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe (SubscribeOpSpec b_aC3Gn))
+cetqTable :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (TableName b_aC3Gn)
+cetqSource :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) SourceName
+cetqRetryConf :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe RequestTransform)
+cetqReplace :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) Bool
+cetqName :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) TriggerName
+cetqInsert :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe (SubscribeOpSpec b_aC3Gn))
+cetqHeaders :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe Bool)
+cetqDelete :: forall b_aC3Gn. Lens' (CreateEventTriggerQuery b_aC3Gn) (Maybe (SubscribeOpSpec b_aC3Gn))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
