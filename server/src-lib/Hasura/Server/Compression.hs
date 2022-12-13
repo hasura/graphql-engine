@@ -50,22 +50,25 @@ compressResponse ::
   (BL.ByteString, EncodingType)
 compressResponse reqHeaders unCompressedResp
   -- we have option to gzip:
-  | acceptedEncodings == Set.fromList [identityEncoding, Just CTGZip]
-      ||
-      -- we must gzip:
-      acceptedEncodings == Set.fromList [Just CTGZip] =
+  | acceptedEncodings == Set.fromList [identityEncoding, Just CTGZip] =
+      if shouldSkipCompression unCompressedResp
+        then notCompressed
+        else (compressFast CTGZip unCompressedResp, Just CTGZip)
+  -- we MUST gzip:
+  | acceptedEncodings == Set.fromList [Just CTGZip] =
       (compressFast CTGZip unCompressedResp, Just CTGZip)
-  -- we must only return an uncompressed response:
+  -- we must ONLY return an uncompressed response:
   | acceptedEncodings == Set.fromList [identityEncoding] =
-      (unCompressedResp, identityEncoding)
+      notCompressed
   -- this is technically a client error, but ignore for now (maintaining
   -- current behavior); assume identity:
   | otherwise =
-      (unCompressedResp, identityEncoding)
+      notCompressed
   where
     acceptedEncodings = getAcceptedEncodings reqHeaders
+    notCompressed = (unCompressedResp, identityEncoding)
 
--- | Compress using
+-- | Compress the bytestring preferring speed over compression ratio
 compressFast :: CompressionType -> BL.ByteString -> BL.ByteString
 compressFast = \case
   CTGZip -> GZ.compressWith gzipCompressionParams
@@ -73,6 +76,39 @@ compressFast = \case
     gzipCompressionParams =
       -- See Note [Compression ratios]
       GZ.defaultCompressParams {GZ.compressLevel = GZ.compressionLevel 1}
+
+-- | Assuming we have the option to compress or not (i.e. client accepts
+-- identity AND gzip), should we skip compression?
+shouldSkipCompression :: BL.ByteString -> Bool
+shouldSkipCompression bs = BL.length bs < 700
+
+{- NOTE [Compression Heuristics]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compression is a significant source of CPU usage (and latency for small
+requests); let's be smarter about compression when we have the option.
+
+Some data from cloud (omitting healthz and version), with zlib gzip at
+compression level 1:
+
+   ~96% of requests can accept gzip responses
+
+   P50(uncompressed_response_size) :     150 bytes
+   P75(uncompressed_response_size) :    1200 bytes
+   P95(uncompressed_response_size) :   39000 bytes
+   P99(uncompressed_response_size) :   95000 bytes
+
+   Responses smaller than 700 bytes (the common case)...
+       ...account for  4% of total response egress (currently)
+       ...account for 68% of responses
+
+       ...have a P50 compression ratio of: 1.0  (i.e. no benefit)
+       ...     a P75 compression ratio of: 1.3
+       ...     a P99 compression ratio of: 2.0
+
+   ...and FYI if we take a cutoff of...
+       ...2000 we get P50 ratio 0.9
+       ...5000 we get P50 ratio 0.8
+-}
 
 -- | Which encodings can the client accept? The empty set returned here is an
 -- error condition and the server tecnically ought to return a 406.

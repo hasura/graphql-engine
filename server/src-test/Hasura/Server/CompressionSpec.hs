@@ -1,5 +1,7 @@
 module Hasura.Server.CompressionSpec (spec) where
 
+import Codec.Compression.GZip qualified as GZ
+import Data.ByteString.Lazy qualified as BL
 import Data.Set qualified as Set
 import Hasura.Prelude
 import Hasura.Server.Compression
@@ -47,3 +49,25 @@ spec = describe "serialized data compression" $ parallel do
         `shouldBe` Set.fromList [identityEncoding]
       getAcceptedEncodings [("accept-encoding", "")]
         `shouldBe` Set.fromList [identityEncoding]
+
+  describe "compressResponse" do
+    let smallVal = "xxxx"
+        largeVal = BL.pack $ replicate 1000 121
+
+    it "compresses when required" do
+      let (valOut0, encodingChosen0) = compressResponse [("accept-encoding", "gzip, identity;q=0")] smallVal
+      GZ.decompress valOut0 `shouldBe` smallVal
+      encodingChosen0 `shouldBe` Just CTGZip
+
+      let (valOut1, encodingChosen1) = compressResponse [("accept-encoding", "gzip, identity;q=0")] largeVal
+      GZ.decompress valOut1 `shouldBe` largeVal
+      encodingChosen1 `shouldBe` Just CTGZip
+
+    it "omits compression for small values" do
+      let (valOut0, encodingChosen0) = compressResponse [("accept-encoding", "gzip")] smallVal
+      valOut0 `shouldBe` smallVal
+      encodingChosen0 `shouldBe` Nothing
+
+      let (valOut1, encodingChosen1) = compressResponse [("accept-encoding", "gzip")] largeVal
+      GZ.decompress valOut1 `shouldBe` largeVal
+      encodingChosen1 `shouldBe` Just CTGZip
