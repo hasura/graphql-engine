@@ -8,8 +8,8 @@ module Harness.Constants
     postgresDb,
     postgresHost,
     postgresPort,
-    postgresMetadataDb,
     postgresqlMetadataConnectionString,
+    postgresMetadataDb,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
     defaultPostgresPort,
@@ -82,9 +82,8 @@ postgresMetadataPassword = "hasura"
 postgresMetadataUser :: String
 postgresMetadataUser = "hasura"
 
-postgresMetadataDb :: UniqueTestId -> String
-postgresMetadataDb uniqueTestId =
-  "hasura_metadata_" <> uniqueDbName uniqueTestId
+postgresMetadataDb :: String
+postgresMetadataDb = "hasura_metadata"
 
 postgresMetadataHost :: String
 postgresMetadataHost = "127.0.0.1"
@@ -92,8 +91,8 @@ postgresMetadataHost = "127.0.0.1"
 postgresMetadataPort :: Word16
 postgresMetadataPort = 65002
 
-postgresqlMetadataConnectionString :: UniqueTestId -> String
-postgresqlMetadataConnectionString uniqueTestId =
+postgresqlMetadataConnectionString :: String
+postgresqlMetadataConnectionString =
   "postgres://"
     ++ postgresMetadataUser
     ++ ":"
@@ -103,7 +102,7 @@ postgresqlMetadataConnectionString uniqueTestId =
     ++ ":"
     ++ show postgresMetadataPort
     ++ "/"
-    ++ postgresMetadataDb uniqueTestId
+    ++ postgresMetadataDb
 
 -- * Postgres
 

@@ -21,6 +21,7 @@ where
 
 --------------------------------------------------------------------------------
 
+import Control.Concurrent.Async (concurrently_)
 import Control.Concurrent.Extended
 import Data.List qualified as List
 import Data.String
@@ -265,7 +266,9 @@ setup tables' (testEnvironment, _) = do
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 teardown _ (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
-  removeDataset schemaName
+  concurrently_
+    (GraphqlEngine.setSources testEnvironment mempty Nothing)
+    (removeDataset schemaName)
 
 setupTablesAction :: HasCallStack => [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

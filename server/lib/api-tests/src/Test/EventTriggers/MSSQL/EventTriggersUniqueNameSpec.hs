@@ -13,7 +13,6 @@ import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
@@ -35,7 +34,10 @@ spec =
               Fixture.mkLocalTestEnvironment = const Webhook.run,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Sqlserver.setupTablesAction (schema "authors" "articles") testEnvironment,
-                  SetupAction.noTeardown (mssqlSetupWithEventTriggers testEnvironment webhookServer)
+                  Fixture.SetupAction
+                    { Fixture.setupAction = mssqlSetupWithEventTriggers testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> mssqlTeardown testEnvironment
+                    }
                 ]
             }
         ]
@@ -249,4 +251,16 @@ getReplaceMetadata testEnvironment webhookServer =
                 num_retries: 0
                 timeout_sec: 60
               webhook: #{webhookServerEchoEndpoint}
+    |]
+
+mssqlTeardown :: TestEnvironment -> IO ()
+mssqlTeardown testEnvironment = do
+  GraphqlEngine.postMetadata_ testEnvironment $
+    [yaml|
+      type: bulk
+      args:
+      - type: mssql_delete_event_trigger
+        args:
+          name: authors_all
+          source: mssql
     |]

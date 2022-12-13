@@ -9,6 +9,7 @@ module Harness.TestEnvironment
     TestingMode (..),
     UniqueTestId (..),
     getServer,
+    getTestingMode,
     serverUrl,
     stopServer,
     testLogTrace,
@@ -50,15 +51,15 @@ data GlobalTestEnvironment = GlobalTestEnvironment
     logger :: Logger,
     -- | the mode in which we're running the tests. See 'TestingMode' for
     -- details'.
-    testingMode :: TestingMode
+    testingMode :: TestingMode,
+    -- | connection details for the instance of HGE we're connecting to
+    server :: Server
   }
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
   { -- | shared setup not related to a particular test
     globalEnvironment :: GlobalTestEnvironment,
-    -- | connection details for the instance of HGE we're connecting to
-    server :: Server,
     -- | a uuid generated for each test suite used to generate a unique
     -- `SchemaName`
     uniqueTestId :: UniqueTestId,
@@ -66,6 +67,10 @@ data TestEnvironment = TestEnvironment
     -- testing `remote <-> remote` joins or someting similarly esoteric)
     backendTypeConfig :: Maybe BackendTypeConfig
   }
+
+instance Show TestEnvironment where
+  show TestEnvironment {globalEnvironment} =
+    "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"
 
 -- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
 -- practical consequences of this type.
@@ -93,7 +98,7 @@ data Server = Server
 
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
 getServer :: TestEnvironment -> Server
-getServer TestEnvironment {server} = server
+getServer TestEnvironment {globalEnvironment} = server globalEnvironment
 
 -- | Extracts the full URL prefix and port number from a given 'Server'.
 --
@@ -103,6 +108,10 @@ getServer TestEnvironment {server} = server
 -- @
 serverUrl :: Server -> String
 serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
+
+-- | Retrieve the 'TestingMode' associated with some 'TestEnvironment'
+getTestingMode :: TestEnvironment -> TestingMode
+getTestingMode = testingMode . globalEnvironment
 
 -- | Forcibly stop a given 'Server'.
 stopServer :: Server -> IO ()

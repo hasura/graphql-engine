@@ -12,9 +12,7 @@ module Harness.Backend.Postgres
     runSQL,
     defaultSourceMetadata,
     defaultSourceConfiguration,
-    createMetadataDatabase,
     createDatabase,
-    dropMetadataDatabase,
     dropDatabase,
     createTable,
     insertTable,
@@ -69,7 +67,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), UniqueTestId, testLogMessage)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
 import Text.Pretty.Simple (pShow)
@@ -133,20 +131,18 @@ makeFreshDbConnectionString testEnvironment =
       { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
       }
 
-metadataLivenessCheck :: HasCallStack => TestEnvironment -> IO ()
+metadataLivenessCheck :: HasCallStack => IO ()
 metadataLivenessCheck =
-  doLivenessCheck
-    . fromString
-    . postgresqlMetadataConnectionString
-    . uniqueTestId
+  doLivenessCheck $
+    fromString postgresqlMetadataConnectionString
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
 
 -- PostgreSQL 15.1 on x86_64-pc-linux-musl, com ....
 -- forgive me, padre
-parsePostgresVersion :: String -> Maybe Int
-parsePostgresVersion =
+_parsePostgresVersion :: String -> Maybe Int
+_parsePostgresVersion =
   readMaybe
     . takeWhile (not . (==) '.')
     . drop (length @[] "PostgreSQL ")
@@ -401,17 +397,6 @@ untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
   Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
-createMetadataDatabase :: GlobalTestEnvironment -> UniqueTestId -> IO ()
-createMetadataDatabase globalTestEnvironment uniqueTestId =
-  runWithInitialDb_
-    globalTestEnvironment
-    ("CREATE DATABASE " <> Constants.postgresMetadataDb uniqueTestId <> ";")
-
-dropMetadataDatabase :: TestEnvironment -> IO ()
-dropMetadataDatabase testEnvironment = do
-  let dbName = postgresMetadataDb (uniqueTestId testEnvironment)
-  dropDatabaseInternal dbName testEnvironment
-
 -- | create a database to use and later drop for these tests
 -- note we use the 'initial' connection string here, ie, the one we started
 -- with.
@@ -431,37 +416,21 @@ dropDatabase testEnvironment = do
 -- up.
 dropDatabaseInternal :: String -> TestEnvironment -> IO ()
 dropDatabaseInternal dbName testEnvironment = do
-  ([Postgres.Only version]) <-
-    queryWithInitialDb @(Postgres.Only String)
+  void $
+    queryWithInitialDb @(Postgres.Only Bool)
       testEnvironment
-      "SELECT version();"
+      [i|
+      SELECT pg_terminate_backend(pg_stat_activity.pid)
+      FROM pg_stat_activity
+      WHERE pg_stat_activity.datname = '#{dbName}'
+      AND pid <> pg_backend_pid();
+    |]
 
-  case parsePostgresVersion version of
-    Just pgVersion | pgVersion >= 13 -> do
-      -- if we are on Postgres 13 or more, we can use WITH (FORCE);
-      runWithInitialDb_
-        (globalEnvironment testEnvironment)
-        ("DROP DATABASE " <> dbName <> " WITH (FORCE);")
-        `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
-
-    -- for older Postgres versions, we Do Our Best
-    _ -> do
-      -- throw all the other users off the database
-      void $
-        queryWithInitialDb @(Postgres.Only Bool)
-          testEnvironment
-          [i|
-          SELECT pg_terminate_backend(pg_stat_activity.pid)
-          FROM pg_stat_activity
-          WHERE pg_stat_activity.datname = '#{dbName}'
-          AND pid <> pg_backend_pid();
-        |]
-
-      -- if this fails, don't make the test fail
-      runWithInitialDb_
-        (globalEnvironment testEnvironment)
-        ("DROP DATABASE " <> dbName <> ";")
-        `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+  -- if this fails, don't make the test fail
+  runWithInitialDb_
+    (globalEnvironment testEnvironment)
+    ("DROP DATABASE " <> dbName <> ";")
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -502,7 +471,8 @@ setup tables (testEnvironment, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 -- we replace metadata with nothing.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown _ _ = pure ()
+teardown _ (testEnvironment, _) =
+  GraphqlEngine.setSources testEnvironment mempty Nothing
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

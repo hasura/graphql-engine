@@ -16,7 +16,6 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -152,4 +151,20 @@ setupMetadata testEnvironment = do
                 columns: '*'
           |]
 
-  SetupAction.noTeardown setup
+      teardown :: IO ()
+      teardown =
+        postMetadata_
+          testEnvironment
+          [yaml|
+            type: bulk
+            args:
+            - type: pg_drop_select_permission
+              args:
+                source: postgres
+                table:
+                  schema: hasura
+                  name: author
+                role: user
+            |]
+
+  Fixture.SetupAction setup \_ -> teardown
