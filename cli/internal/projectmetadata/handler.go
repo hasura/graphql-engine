@@ -331,6 +331,7 @@ type Metadata struct {
 
 	// HGE Pro
 	GraphQLSchemaIntrospection interface{} `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`
+	MetricsConfig              interface{} `yaml:"metrics_config,omitempty" mapstructure:"metrics_config,omitempty"`
 
 	// note: update metadatautil/json.metadata to reflect changes made here
 }
