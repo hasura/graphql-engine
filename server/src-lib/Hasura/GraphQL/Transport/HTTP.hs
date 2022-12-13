@@ -726,7 +726,6 @@ runGQBatched ::
     MonadQueryLog m,
     MonadTrace m,
     MonadExecuteQuery m,
-    HttpLog m,
     MonadMetadataStorage (MetadataStorageT m),
     EB.MonadQueryTags m,
     HasResourceLimits m
@@ -741,13 +740,13 @@ runGQBatched ::
   E.GraphQLQueryType ->
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
-  m (HttpLogMetadata m, HttpResponse EncJSON)
+  m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
       (gqlQueryOperationLog, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
-      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)) L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog)))
-      pure (httpLoggingMetadata, snd <$> httpResp)
+      let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
+      pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -768,7 +767,7 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
               )
               responses
           parameterizedQueryHashes = map gqolParameterizedQueryHash requestsOperationLogs
-          httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetBatched parameterizedQueryHashes) L.RequestModeBatched (Just (GQLBatchedReqs batchOperationLogs))
-      pure (httpLoggingMetadata, removeHeaders (map ((fmap snd) . snd) responses))
+          httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeBatched ((Just (GQLBatchedReqs batchOperationLogs))), PQHSetBatched parameterizedQueryHashes)
+      pure (httpLoggingGQInfo, removeHeaders (map ((fmap snd) . snd) responses))
   where
     try = flip catchError (pure . Left) . fmap Right
