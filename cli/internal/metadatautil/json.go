@@ -36,6 +36,7 @@ type metadata struct {
 
 	// HGE Pro
 	GraphQLSchemaIntrospection v3yaml.Node `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`
+	MetricsConfig              v3yaml.Node `yaml:"metrics_config,omitempty" mapstructure:"metrics_config,omitempty"`
 
 	// note: update projectmetadata/handler.go.Metadata to reflect changes made here
 	// TODO: remove this note once the TODO item above (code reuse) is addressed
