@@ -29,7 +29,6 @@ module Hasura.RQL.Types.SchemaCache.Build
 where
 
 import Control.Arrow.Extended
-import Control.Lens
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson (Value, toJSON)
@@ -327,17 +326,17 @@ withNewInconsistentObjsCheck action = do
 -- static analysis over the saved queries and reports any inconsistenties
 -- with the current schema.
 getInconsistentQueryCollections ::
-  (MonadError QErr m) =>
   G.SchemaIntrospection ->
   QueryCollections ->
   ((CollectionName, ListedQuery) -> MetadataObject) ->
   EndpointTrie GQLQueryWithText ->
   [NormalizedQuery] ->
-  m [InconsistentMetadata]
-getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = do
-  inconsistentMetaObjs <- lefts <$> traverse (validateQuery rs (lqToMetadataObj) formatError) lqLst
-  pure $ map (\(o, t) -> InconsistentObject t Nothing o) inconsistentMetaObjs
+  [InconsistentMetadata]
+getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
+  map (\(o, t) -> InconsistentObject t Nothing o) inconsistentMetaObjs
   where
+    inconsistentMetaObjs = lefts $ validateQuery <$> lqLst
+
     zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), [G.ExecutableDefinition G.Name])]
     zipLQwithDef (cName, cc) = map (\lq -> ((cName, lq), (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq))) lqs
       where
@@ -370,21 +369,15 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = 
 
         isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
 
-validateQuery ::
-  (MonadError QErr m) =>
-  G.SchemaIntrospection ->
-  (a -> MetadataObject) ->
-  (a -> [Text] -> Text) ->
-  (a, [G.ExecutableDefinition G.Name]) ->
-  m (Either (MetadataObject, Text) ())
-validateQuery rSchema getMetaObj formatError (eMeta, eDefs) = do
-  -- create the gql request object
-  let gqlRequest = GQLReq Nothing (GQLExecDoc eDefs) Nothing
+    validateQuery (eMeta, eDefs) = do
+      -- create the gql request object
+      let gqlRequest = GQLReq Nothing (GQLExecDoc eDefs) Nothing
 
-  -- @getSingleOperation@ will do the fragment inlining
-  singleOperation <- getSingleOperation gqlRequest
+      -- @getSingleOperation@ will do the fragment inlining
+      singleOperation <- case getSingleOperation gqlRequest of
+        Left err -> throwError (lqToMetadataObj eMeta, formatError eMeta [qeError err])
+        Right singleOp -> Right singleOp
 
-  -- perform the validation
-  pure $ case diagnoseGraphQLQuery rSchema singleOperation of
-    Nothing -> Right ()
-    Just errors -> Left (getMetaObj eMeta, formatError eMeta errors)
+      -- perform the validation
+      for_ (diagnoseGraphQLQuery rs singleOperation) \errors ->
+        throwError (lqToMetadataObj eMeta, formatError eMeta errors)

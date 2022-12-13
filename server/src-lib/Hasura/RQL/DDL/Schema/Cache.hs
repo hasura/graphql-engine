@@ -367,7 +367,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       -- OpenTelemerty doesn't generate any dependencies
       openTelemetryInconsistencies = either id absurd <$> toList openTelemetryCollectedInfo
 
-  inconsistentQueryCollections <- bindA -< do getInconsistentQueryCollections adminIntrospection _metaQueryCollections listedQueryObjects endpoints globalAllowLists
+      inconsistentQueryCollections = getInconsistentQueryCollections adminIntrospection _metaQueryCollections listedQueryObjects endpoints globalAllowLists
 
   returnA
     -<
