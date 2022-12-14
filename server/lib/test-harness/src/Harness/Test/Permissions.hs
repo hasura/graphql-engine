@@ -39,7 +39,6 @@ data Permission
 
 data SelectPermissionDetails = SelectPermissionDetails
   { selectPermissionTable :: Text,
-    selectPermissionSource :: Text,
     selectPermissionRole :: Text,
     selectPermissionColumns :: [Text],
     selectPermissionRows :: Aeson.Value,
@@ -49,7 +48,6 @@ data SelectPermissionDetails = SelectPermissionDetails
 
 data UpdatePermissionDetails = UpdatePermissionDetails
   { updatePermissionTable :: Text,
-    updatePermissionSource :: Text,
     updatePermissionRole :: Text,
     updatePermissionColumns :: [Text],
     updatePermissionRows :: Aeson.Value
@@ -57,7 +55,6 @@ data UpdatePermissionDetails = UpdatePermissionDetails
 
 data InsertPermissionDetails = InsertPermissionDetails
   { insertPermissionTable :: Text,
-    insertPermissionSource :: Text,
     insertPermissionRole :: Text,
     insertPermissionColumns :: [Text],
     insertPermissionRows :: Aeson.Value
@@ -67,7 +64,6 @@ selectPermission :: SelectPermissionDetails
 selectPermission =
   SelectPermissionDetails
     { selectPermissionTable = mempty,
-      selectPermissionSource = mempty,
       selectPermissionRole = mempty,
       selectPermissionColumns = mempty,
       selectPermissionRows = [yaml|{}|],
@@ -79,7 +75,6 @@ updatePermission :: UpdatePermissionDetails
 updatePermission =
   UpdatePermissionDetails
     { updatePermissionTable = mempty,
-      updatePermissionSource = mempty,
       updatePermissionRole = mempty,
       updatePermissionColumns = mempty,
       updatePermissionRows = [yaml|{}|]
@@ -89,7 +84,6 @@ insertPermission :: InsertPermissionDetails
 insertPermission =
   InsertPermissionDetails
     { insertPermissionTable = mempty,
-      insertPermissionSource = mempty,
       insertPermissionRole = mempty,
       insertPermissionColumns = mempty,
       insertPermissionRows = [yaml|{}|]
@@ -103,6 +97,7 @@ createPermission testEnvironment (InsertPermission InsertPermissionDetails {..})
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_create_insert_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName insertPermissionTable
   GraphqlEngine.postMetadata_
@@ -111,7 +106,7 @@ createPermission testEnvironment (InsertPermission InsertPermissionDetails {..})
       type: *requestType
       args:
         table: *qualifiedTable
-        source: *insertPermissionSource
+        source: *sourceName
         role:  *insertPermissionRole
         permission:
           columns: *insertPermissionColumns
@@ -123,6 +118,7 @@ createPermission testEnvironment (UpdatePermission UpdatePermissionDetails {..})
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_create_update_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName updatePermissionTable
   GraphqlEngine.postMetadata_
@@ -131,7 +127,7 @@ createPermission testEnvironment (UpdatePermission UpdatePermissionDetails {..})
       type: *requestType
       args:
         table: *qualifiedTable
-        source: *updatePermissionSource
+        source: *sourceName
         role:  *updatePermissionRole
         permission:
           columns: *updatePermissionColumns
@@ -143,6 +139,7 @@ createPermission testEnvironment (SelectPermission SelectPermissionDetails {..})
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_create_select_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName selectPermissionTable
   GraphqlEngine.postMetadata_
@@ -151,7 +148,7 @@ createPermission testEnvironment (SelectPermission SelectPermissionDetails {..})
       type: *requestType
       args:
         table: *qualifiedTable
-        source: *selectPermissionSource
+        source: *sourceName
         role:  *selectPermissionRole
         permission:
           columns: *selectPermissionColumns
@@ -165,6 +162,7 @@ dropPermission backendTypeMetadata env (InsertPermission InsertPermissionDetails
   let schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
       requestType = backendType <> "_drop_insert_permission"
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName insertPermissionTable
   GraphqlEngine.postMetadata_
     env
@@ -172,12 +170,13 @@ dropPermission backendTypeMetadata env (InsertPermission InsertPermissionDetails
       type: *requestType
       args:
         table: *qualifiedTable
-        source: *insertPermissionSource
+        source: *sourceName
         role:  *insertPermissionRole
     |]
 dropPermission backendTypeMetadata env (SelectPermission SelectPermissionDetails {..}) = do
   let schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_drop_select_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName selectPermissionTable
   GraphqlEngine.postMetadata_
@@ -186,12 +185,13 @@ dropPermission backendTypeMetadata env (SelectPermission SelectPermissionDetails
       type: *requestType
       args:
         table: *qualifiedTable
-        source: *selectPermissionSource
+        source: *sourceName
         role:  *selectPermissionRole
     |]
 dropPermission backendTypeMetadata env (UpdatePermission UpdatePermissionDetails {..}) = do
   let schemaName = Schema.getSchemaName env
       backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName = BackendType.backendSourceName backendTypeMetadata
       requestType = backendType <> "_drop_update_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName updatePermissionTable
   GraphqlEngine.postMetadata_
@@ -200,7 +200,7 @@ dropPermission backendTypeMetadata env (UpdatePermission UpdatePermissionDetails
       type: *requestType
       args:
         table: *qualifiedTable
-        source: *updatePermissionSource
+        source: *sourceName
         role:  *updatePermissionRole
     |]
 

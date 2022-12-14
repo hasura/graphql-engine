@@ -29,19 +29,19 @@ spec = do
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  Postgres.setupPermissionsAction (permissions "postgres") testEnvironment
+                  Postgres.setupPermissionsAction permissions testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
-                  Citus.setupPermissionsAction (permissions "citus") testEnvironment
+                  Citus.setupPermissionsAction permissions testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  Cockroach.setupPermissionsAction (permissions "cockroach") testEnvironment
+                  Cockroach.setupPermissionsAction permissions testEnvironment
                 ]
             }
         ]
@@ -70,19 +70,17 @@ schema =
 --------------------------------------------------------------------------------
 -- Permissions
 
-permissions :: Text -> [Permission]
-permissions source =
+permissions :: [Permission]
+permissions =
   [ SelectPermission
       selectPermission
         { selectPermissionTable = "foo",
-          selectPermissionSource = source,
           selectPermissionRole = "role-select-only",
           selectPermissionColumns = ["id", "bar"]
         },
     InsertPermission
       insertPermission
         { insertPermissionTable = "foo",
-          insertPermissionSource = source,
           insertPermissionRole = "role-insert-only",
           insertPermissionColumns = ["id", "bar"]
         }

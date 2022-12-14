@@ -192,7 +192,6 @@ lhsRole1 =
   Permissions.SelectPermission
     Permissions.selectPermission
       { selectPermissionRole = "role1",
-        selectPermissionSource = lhsSourceName_,
         selectPermissionTable = lhsTableName_,
         selectPermissionColumns = (["id", "name"] :: [Text])
       }
@@ -202,7 +201,6 @@ lhsRole2 =
   Permissions.SelectPermission
     Permissions.selectPermission
       { selectPermissionRole = "role2",
-        selectPermissionSource = lhsSourceName_,
         selectPermissionTable = lhsTableName_,
         selectPermissionColumns = (["id", "name"] :: [Text])
       }
@@ -260,7 +258,6 @@ rhsRole1 =
   Permissions.SelectPermission
     Permissions.selectPermission
       { selectPermissionRole = "role1",
-        selectPermissionSource = rhsSourceName_,
         selectPermissionTable = rhsTableName_,
         selectPermissionColumns = (["title", "artist_id"] :: [Text]),
         selectPermissionRows =
@@ -275,7 +272,6 @@ rhsRole2 =
   Permissions.SelectPermission
     Permissions.selectPermission
       { selectPermissionRole = "role2",
-        selectPermissionSource = rhsSourceName_,
         selectPermissionTable = rhsTableName_,
         selectPermissionColumns = (["id", "title", "artist_id"] :: [Text]),
         selectPermissionAllowAggregations = True,

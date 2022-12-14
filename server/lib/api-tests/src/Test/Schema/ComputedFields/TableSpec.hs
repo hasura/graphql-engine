@@ -232,8 +232,7 @@ setupMetadata testEnvironment =
                 testEnvironment
                 $ SelectPermission
                   selectPermission
-                    { selectPermissionSource = T.pack source,
-                      selectPermissionTable = "author",
+                    { selectPermissionTable = "author",
                       selectPermissionRole = "user_1",
                       selectPermissionColumns = (["id", "name"] :: [Text])
                     },
@@ -245,8 +244,7 @@ setupMetadata testEnvironment =
                 testEnvironment
                 $ SelectPermission
                   selectPermission
-                    { selectPermissionSource = T.pack source,
-                      selectPermissionTable = "article",
+                    { selectPermissionTable = "article",
                       selectPermissionRole = "user_1",
                       selectPermissionColumns = (["id", "title", "content", "author_id"] :: [Text])
                     },
@@ -259,8 +257,7 @@ setupMetadata testEnvironment =
                 testEnvironment
                 $ SelectPermission
                   selectPermission
-                    { selectPermissionSource = T.pack source,
-                      selectPermissionTable = "author",
+                    { selectPermissionTable = "author",
                       selectPermissionRole = "user_2",
                       selectPermissionColumns = (["id", "name"] :: [Text])
                     },

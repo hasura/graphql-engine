@@ -66,7 +66,6 @@ updatePermission =
   Permissions.UpdatePermission
     Permissions.updatePermission
       { Permissions.updatePermissionTable = authorTableName,
-        Permissions.updatePermissionSource = "postgres",
         Permissions.updatePermissionRole = "user",
         Permissions.updatePermissionColumns = ["age"]
       }
