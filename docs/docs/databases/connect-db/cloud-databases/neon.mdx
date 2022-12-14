@@ -79,7 +79,7 @@ If you want to migrate your existing database to Neon, you must use Postgres's `
 database.
 
 ```bash
-pg_dump -h <host> -U <username> <dbname> | psql -h pg.neon.tech
+pg_dump -h <host> -U <username> <dbname> | psql <neon-connection-string>
 ```
 
 For more info, follow
@@ -94,19 +94,20 @@ If you're migrating from Heroku, check out Neon's platform-specific
 
 ## Neon Free Tier
 
-With Neon's Free Tier, you can create up to three projects with the following limits:
+With Neon's Free Tier, you can create one free project with the following limits:
 
-- Project data size is limited to 10GB
-- The Point in Time Reset (PITR) window is limited to 7 days of reasonable usage
-- The compute node is limited to 1 vCPU and 256MB of RAM
+- 10 [branches](https://neon.tech/branching/)
+- 3 GB of storage per branch
+- Up to 3 compute endpoints with 1 vCPU and 4 GBs of RAM
+- A point-in-time restore window of 7 days of reasonable usage
 
 For more info, check out Neon's
 [Technical Preview Free Tier](https://neon.tech/docs/reference/technical-preview-free-tier/).
 
 :::info Note
 
-If you've already reached the free-tier limit of three databases, please head to your
-[Neon console](https://console.neon.tech/) and delete an unused database to be able to create and connect a new one from
+If you've already reached the Neon free-tier project limit, please head to your
+[Neon console](https://console.neon.tech/) and delete an unused project to be able to create and connect a new one from
 the Hasura Console.
 
 <Thumbnail src="/img/cloud-dbs/neon/free_tier_exceeded_neon.png" alt="Neon Free Tier Warning" widht="700px" />
