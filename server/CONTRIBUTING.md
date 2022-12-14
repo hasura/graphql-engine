@@ -87,6 +87,16 @@ If you have to customise any of the options for ghcide/hls, you should instead c
 cp sample.hie.yaml hie.yaml
 ```
 
+### Run and test via `run-new.sh`
+
+The `run-new.sh` scripts are an active work in progress, and will eventually replace the `dev.sh` option below.
+
+Run the Python integration tests with `./server/tests-py/run-new.sh`.
+
+Filter on specific test files with `./server/tests-py/run-new.sh -- create_async_action_with_nested_output_and_relation.py`
+
+If you have any issues with `run-new.sh`, please create a [GitHub issue](https://github.com/hasura/graphql-engine/issues/new/choose) and run and test via `dev.sh` instead.
+
 ### Run and test via `dev.sh`
 
 The `dev.sh` script in the top-level `scripts/` directory is a turnkey solution to build, run, and
