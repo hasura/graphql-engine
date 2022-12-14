@@ -1,11 +1,11 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
-import { Form } from '@/new-components/Form';
+import { Meta, Story } from '@storybook/react';
+import { SimpleForm } from '@/new-components/Form';
 import { z } from 'zod';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import {
-  RowPermissionsSection,
   RowPermissionsProps,
+  RowPermissionsSection,
   RowPermissionsSectionWrapper,
   RowPermissionsWrapperProps,
 } from './RowPermissions';
@@ -17,9 +17,9 @@ export default {
   component: RowPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}}>
-        {() => <StoryComponent />}
-      </Form>
+      <SimpleForm schema={z.any()} onSubmit={() => {}}>
+        <StoryComponent />
+      </SimpleForm>
     ),
     ReactQueryDecorator(),
   ],

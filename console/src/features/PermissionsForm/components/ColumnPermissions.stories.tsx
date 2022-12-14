@@ -1,7 +1,7 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import {
   ColumnPermissionsSection,
@@ -15,7 +15,7 @@ export default {
   component: ColumnPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form
+      <SimpleForm
         schema={schema}
         onSubmit={() => {}}
         options={{
@@ -25,8 +25,8 @@ export default {
         }}
         className="p-4"
       >
-        {() => <StoryComponent />}
-      </Form>
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
   parameters: {
@@ -79,7 +79,7 @@ PartiallySelected.args = {
 };
 PartiallySelected.decorators = [
   (S: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       options={{
@@ -89,8 +89,8 @@ PartiallySelected.decorators = [
       }}
       className="p-4"
     >
-      {() => <S />}
-    </Form>
+      <S />
+    </SimpleForm>
   ),
 ];
 
@@ -102,7 +102,7 @@ AllSelected.args = {
 };
 AllSelected.decorators = [
   (S: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       options={{
@@ -112,8 +112,8 @@ AllSelected.decorators = [
       }}
       className="p-4"
     >
-      {() => <S />}
-    </Form>
+      <S />
+    </SimpleForm>
   ),
 ];
 

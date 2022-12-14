@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dialog } from '@/new-components/Dialog';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import { formSchema, OasGeneratorForm } from './OASGeneratorForm';
 import { GeneratedAction } from './types';
@@ -41,9 +41,13 @@ export const OasGeneratorModal = (props: OasGeneratorModalProps) => {
         <p className="text-muted mb-6">
           Generate your action from a Open API spec.
         </p>
-        <Form className="pl-0 pr-0" schema={formSchema} onSubmit={() => {}}>
-          {() => <OasGeneratorForm setValues={setValues} />}
-        </Form>
+        <SimpleForm
+          className="pl-0 pr-0"
+          schema={formSchema}
+          onSubmit={() => {}}
+        >
+          <OasGeneratorForm setValues={setValues} />
+        </SimpleForm>
       </div>
     </Dialog>
   );

@@ -10,10 +10,6 @@ module.exports = {
     fontFamily: {
       sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
     },
-    flex: {
-      grow220px: '1 0 220px',
-      grow320px: '1 0 320px',
-    },
     extend: {
       colors: {
         current: 'currentColor',

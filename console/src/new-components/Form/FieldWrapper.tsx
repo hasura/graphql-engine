@@ -45,10 +45,6 @@ type FieldWrapperProps = {
    */
   tooltip?: React.ReactNode;
   /**
-   * Flag indicating wheteher the field is horizontally aligned
-   */
-  horizontal?: boolean;
-  /**
    * The field data test id for testing
    */
   dataTest?: string;
@@ -107,7 +103,6 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     children,
     description,
     tooltip,
-    horizontal,
     loading,
     noErrorPlaceholder = false,
     renderDescriptionLineBreaks = false,
@@ -146,19 +141,8 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
 
   if (label) {
     FieldLabel = () => (
-      <label
-        htmlFor={id}
-        className={clsx(
-          'block pt-1 text-gray-600 mb-xs',
-          horizontal && 'pr-8 flex-grow220px'
-        )}
-      >
-        <span
-          className={clsx(
-            'flex items-center',
-            horizontal ? 'text-muted' : 'font-semibold'
-          )}
-        >
+      <label htmlFor={id} className={clsx('block pt-1 text-gray-600 mb-xs')}>
+        <span className={clsx('flex items-center font-semibold')}>
           <span className={loading ? 'relative' : ''}>
             <FieldLabelIcon />
             {label}
@@ -191,15 +175,11 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
       className={clsx(
         className,
         size === 'medium' ? 'w-1/2' : 'w-full',
-        horizontal
-          ? 'flex flex-row flex-wrap w-full max-w-screen-md justify-between'
-          : size === 'full'
-          ? ''
-          : 'max-w-xl'
+        size === 'full' ? '' : 'max-w-xl'
       )}
     >
       <FieldLabel />
-      <div className={clsx(horizontal && 'flex-grow320px')}>
+      <div>
         {/*
           Remove line height to prevent skeleton bug
         */}

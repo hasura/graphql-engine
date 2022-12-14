@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { UpdatedForm } from '@/new-components/Form';
+import { useConsoleForm } from '@/new-components/Form';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { action } from '@storybook/addon-actions';
@@ -59,48 +59,45 @@ const operators = [
 ];
 
 export const Primary: ComponentStory<typeof FilterRows> = () => {
-  return (
-    <UpdatedForm
-      schema={z.object({
-        filters: z
-          .array(
-            z.object({
-              column: z.string(),
-              operator: z.string(),
-              value: z.string(),
-            })
-          )
-          .optional(),
-      })}
-      options={{
-        defaultValues: {
-          filters: [
-            { column: 'FirstName', operator: '_eq', value: 'John Doe' },
-          ],
-        },
-      }}
-      onSubmit={data => {
-        console.log(data);
-      }}
-    >
-      {({ watch }) => {
-        const formValues = watch('filters');
-        return (
-          <>
-            <FilterRows
-              columns={columns}
-              operators={operators}
-              name="filters"
-              onRemove={action('onRemove')}
-            />
+  const {
+    methods: { watch },
+    Form,
+  } = useConsoleForm({
+    schema: z.object({
+      filters: z
+        .array(
+          z.object({
+            column: z.string(),
+            operator: z.string(),
+            value: z.string(),
+          })
+        )
+        .optional(),
+    }),
+    options: {
+      defaultValues: {
+        filters: [{ column: 'FirstName', operator: '_eq', value: 'John Doe' }],
+      },
+    },
+  });
 
-            <div className="py-4" data-testid="output">
-              Output: {JSON.stringify(formValues)}
-            </div>
-          </>
-        );
-      }}
-    </UpdatedForm>
+  const formValues = watch('filters');
+
+  return (
+    <Form onSubmit={action('onSubmit')}>
+      <>
+        <FilterRows
+          columns={columns}
+          operators={operators}
+          name="filters"
+          onRemove={action('onRemove')}
+        />
+
+        <div className="py-4" data-testid="output">
+          Output: {JSON.stringify(formValues)}
+        </div>
+      </>
+    </Form>
   );
 };
 

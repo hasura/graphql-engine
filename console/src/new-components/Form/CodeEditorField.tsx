@@ -186,14 +186,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
             );
           }}
         />
-        {/* This is to let form errors to appear below the tip */}
-        {tipState === 'ANY' && (
-          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
-            {' '}
-          </div>
-        )}
         {tipState === 'ESC' && (
-          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+          <div className="absolute bg-legacybg top-full pl-1 text-gray-600 text-sm mt-1">
             Tip:{' '}
             <strong>
               Press <em>Esc</em> key
@@ -202,7 +196,7 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
           </div>
         )}
         {tipState === 'TAB' && (
-          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+          <div className="absolute bg-legacybg top-full pl-1 text-gray-600 text-sm mt-1">
             Tip: Press <em>Esc</em> key then{' '}
             <strong>
               navigate with <em>Tab</em>

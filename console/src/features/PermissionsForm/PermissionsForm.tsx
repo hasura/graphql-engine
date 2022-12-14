@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { UpdatedForm as Form } from '@/new-components/Form';
+import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
@@ -53,7 +53,7 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     accessType,
   });
 
-  const handleSubmit = async (formData: PermissionsSchema) => {
+  const onSubmit = async (formData: PermissionsSchema) => {
     await updatePermissions.submit(formData);
     handleClose();
   };
@@ -68,6 +68,18 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
 
   // for update it is possible to set pre update and post update row checks
   const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
+
+  const { formData, defaultValues } = data || {};
+
+  const {
+    methods: { getValues },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: {
+      defaultValues,
+    },
+  });
 
   if (isSubmittingError) {
     return (
@@ -87,95 +99,82 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     return <IndicatorCard status="info">Loading...</IndicatorCard>;
   }
 
-  const { formData, defaultValues } = data;
-
   // allRowChecks relates to other queries and is for duplicating from others
   const allRowChecks = defaultValues?.allRowChecks;
 
   const key = `${JSON.stringify(table)}-${queryType}-${roleName}`;
 
+  const filterType = getValues('filterType');
+
   return (
-    <Form
-      key={key}
-      onSubmit={handleSubmit}
-      schema={schema}
-      options={{ defaultValues }}
-    >
-      {options => {
-        const filterType = options.getValues('filterType');
-        if (Object.keys(options.formState.errors)?.length) {
-          console.error('form errors:', options.formState.errors);
-        }
-        return (
-          <div className="bg-white rounded p-md border border-gray-300">
-            <div className="pb-4 flex items-center gap-4">
-              <Button type="button" onClick={handleClose}>
-                Close
-              </Button>
-              <h3 data-testid="form-title">
-                <strong>Role:</strong> {roleName} <strong>Action:</strong>{' '}
-                {queryType}
-              </h3>
-            </div>
+    <Form onSubmit={onSubmit} key={key}>
+      <div className="bg-white rounded p-md border border-gray-300">
+        <div className="pb-4 flex items-center gap-4">
+          <Button type="button" onClick={handleClose}>
+            Close
+          </Button>
+          <h3 data-testid="form-title">
+            <strong>Role:</strong> {roleName} <strong>Action:</strong>{' '}
+            {queryType}
+          </h3>
+        </div>
 
-            <RowPermissionsSectionWrapper
-              roleName={roleName}
-              queryType={queryType}
-              defaultOpen
-            >
-              {rowPermissions.map(permissionName => (
-                <React.Fragment key={permissionName}>
-                  {queryType === 'update' && (
-                    <p className="my-2">
-                      <strong>
-                        {permissionName === 'pre'
-                          ? 'Pre-update'
-                          : 'Post-update'}
-                        &nbsp; check
-                      </strong>
-                      &nbsp;
-                      {permissionName === 'Post-update' && '(optional)'}
-                    </p>
-                  )}
-                  <RowPermissionsSection
-                    table={table}
-                    queryType={queryType}
-                    subQueryType={
-                      queryType === 'update' ? permissionName : undefined
-                    }
-                    allRowChecks={allRowChecks || []}
-                    dataSourceName={dataSourceName}
-                  />
-                </React.Fragment>
-              ))}
-            </RowPermissionsSectionWrapper>
-
-            {queryType !== 'delete' && (
-              <ColumnPermissionsSection
-                roleName={roleName}
+        <RowPermissionsSectionWrapper
+          roleName={roleName}
+          queryType={queryType}
+          defaultOpen
+        >
+          {rowPermissions.map(permissionName => (
+            <React.Fragment key={permissionName}>
+              {queryType === 'update' && (
+                <p className="my-2">
+                  <strong>
+                    {permissionName === 'pre' ? 'Pre-update' : 'Post-update'}
+                    &nbsp; check
+                  </strong>
+                  &nbsp;
+                  {permissionName === 'Post-update' && '(optional)'}
+                </p>
+              )}
+              <RowPermissionsSection
+                table={table}
                 queryType={queryType}
-                columns={formData?.columns}
+                subQueryType={
+                  queryType === 'update' ? permissionName : undefined
+                }
+                allRowChecks={allRowChecks || []}
+                dataSourceName={dataSourceName}
               />
-            )}
+            </React.Fragment>
+          ))}
+        </RowPermissionsSectionWrapper>
 
-            {['insert', 'update'].includes(queryType) && (
-              <ColumnPresetsSection
-                queryType={queryType}
-                columns={formData?.columns}
-              />
-            )}
+        {queryType !== 'delete' && (
+          <ColumnPermissionsSection
+            roleName={roleName}
+            queryType={queryType}
+            columns={formData?.columns}
+          />
+        )}
 
-            {queryType === 'select' && (
-              <AggregationSection queryType={queryType} roleName={roleName} />
-            )}
+        {['insert', 'update'].includes(queryType) && (
+          <ColumnPresetsSection
+            queryType={queryType}
+            columns={formData?.columns}
+          />
+        )}
 
-            {['insert', 'update', 'delete'].includes(queryType) && (
-              <BackendOnlySection queryType={queryType} />
-            )}
+        {queryType === 'select' && (
+          <AggregationSection queryType={queryType} roleName={roleName} />
+        )}
 
-            <hr className="my-4" />
+        {['insert', 'update', 'delete'].includes(queryType) && (
+          <BackendOnlySection queryType={queryType} />
+        )}
 
-            {/* {!!tableNames?.length && (
+        <hr className="my-4" />
+
+        {/* {!!tableNames?.length && (
             <ClonePermissionsSection
               queryType={queryType}
               tables={tableNames}
@@ -184,34 +183,32 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
             />
           )} */}
 
-            <div className="pt-2 flex gap-2">
-              <Button
-                type="submit"
-                mode="primary"
-                title={
-                  filterType === 'none'
-                    ? 'You must select an option for row permissions'
-                    : 'Submit'
-                }
-                disabled={filterType === 'none'}
-                isLoading={updatePermissions.isLoading}
-              >
-                Save Permissions
-              </Button>
+        <div className="pt-2 flex gap-2">
+          <Button
+            type="submit"
+            mode="primary"
+            title={
+              filterType === 'none'
+                ? 'You must select an option for row permissions'
+                : 'Submit'
+            }
+            disabled={filterType === 'none'}
+            isLoading={updatePermissions.isLoading}
+          >
+            Save Permissions
+          </Button>
 
-              <Button
-                type="button"
-                disabled={accessType === 'noAccess'}
-                mode="destructive"
-                isLoading={deletePermissions.isLoading}
-                onClick={handleDelete}
-              >
-                Delete Permissions
-              </Button>
-            </div>
-          </div>
-        );
-      }}
+          <Button
+            type="button"
+            disabled={accessType === 'noAccess'}
+            mode="destructive"
+            isLoading={deletePermissions.isLoading}
+            onClick={handleDelete}
+          >
+            Delete Permissions
+          </Button>
+        </div>
+      </div>
     </Form>
   );
 };

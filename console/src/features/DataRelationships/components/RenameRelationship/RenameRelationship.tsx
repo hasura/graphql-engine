@@ -1,6 +1,6 @@
 import { Button } from '@/new-components/Button';
 import { z } from 'zod';
-import { InputField, UpdatedForm } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import React from 'react';
 import { Relationship } from '../DatabaseRelationshipsTable/types';
 import { useRenameRelationship } from './useRenameRelationship';
@@ -18,7 +18,7 @@ export const RenameRelationship = ({
 
   return (
     <div>
-      <UpdatedForm
+      <SimpleForm
         schema={z.object({
           name: z.string(),
         })}
@@ -40,15 +40,13 @@ export const RenameRelationship = ({
           },
         }}
       >
-        {() => (
-          <div>
-            <InputField name="name" type="text" label="Relationship Name" />
-            <Button type="submit" mode="primary" isLoading={isLoading}>
-              Rename
-            </Button>
-          </div>
-        )}
-      </UpdatedForm>
+        <div>
+          <InputField name="name" type="text" label="Relationship Name" />
+          <Button type="submit" mode="primary" isLoading={isLoading}>
+            Rename
+          </Button>
+        </div>
+      </SimpleForm>
     </div>
   );
 };

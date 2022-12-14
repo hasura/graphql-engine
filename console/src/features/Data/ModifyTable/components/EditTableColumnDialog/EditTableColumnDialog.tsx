@@ -1,7 +1,7 @@
 import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
 import { Button } from '@/new-components/Button';
 import { Dialog } from '@/new-components/Dialog';
-import { InputField, UpdatedForm } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import { sanitizeGraphQLFieldNames } from '@/utils';
 import { SanitizeTips } from '@/utils/sanitizeGraphQLFieldNames';
 import React from 'react';
@@ -26,7 +26,7 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
     useUpdateTableConfiguration(dataSourceName, table);
 
   return (
-    <UpdatedForm
+    <SimpleForm
       schema={schema}
       onSubmit={(data: Schema) => {
         updateTableConfiguration({
@@ -49,39 +49,37 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
         },
       }}
     >
-      {() => (
-        <Dialog
-          size="md"
-          titleTooltip={`Edit ${column.name} column settings`}
-          title={`[${column.name}]`}
-          hasBackdrop
-          onClose={onClose}
-          footer={
-            <div className="bg-white p-2 justify-end border flex">
-              <Button type="submit" isLoading={isSaveInProgress}>
-                Submit
-              </Button>
-            </div>
-          }
-        >
-          <div className="m-4">
-            <SanitizeTips />
-            <InputField
-              label="Custom GraphQL Field Name"
-              name="custom_name"
-              placeholder="Enter GraphQL Field Name"
-              tooltip="Add a custom GQL field name for table column"
-              inputTransform={val => sanitizeGraphQLFieldNames(val)}
-            />
-            <InputField
-              tooltip="Add a comment for your table column"
-              label="Comment"
-              name="comment"
-              placeholder="Add a comment"
-            />
+      <Dialog
+        size="md"
+        titleTooltip={`Edit ${column.name} column settings`}
+        title={`[${column.name}]`}
+        hasBackdrop
+        onClose={onClose}
+        footer={
+          <div className="bg-white p-2 justify-end border flex">
+            <Button type="submit" isLoading={isSaveInProgress}>
+              Submit
+            </Button>
           </div>
-        </Dialog>
-      )}
-    </UpdatedForm>
+        }
+      >
+        <div className="m-4">
+          <SanitizeTips />
+          <InputField
+            label="Custom GraphQL Field Name"
+            name="custom_name"
+            placeholder="Enter GraphQL Field Name"
+            tooltip="Add a custom GQL field name for table column"
+            inputTransform={val => sanitizeGraphQLFieldNames(val)}
+          />
+          <InputField
+            tooltip="Add a comment for your table column"
+            label="Comment"
+            name="comment"
+            placeholder="Add a comment"
+          />
+        </div>
+      </Dialog>
+    </SimpleForm>
   );
 };

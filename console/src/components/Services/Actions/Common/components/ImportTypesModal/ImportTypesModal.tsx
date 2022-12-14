@@ -1,7 +1,7 @@
 import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
 import { Badge } from '@/new-components/Badge';
 import { Dialog } from '@/new-components/Dialog';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import React from 'react';
 import z from 'zod';
 import { ImportTypesForm } from './ImportTypesForm';
@@ -66,7 +66,7 @@ ${values.typeDef}`);
             text="Know More"
           />
         </p>
-        <Form
+        <SimpleForm
           options={{
             defaultValues: values,
           }}
@@ -74,8 +74,8 @@ ${values.typeDef}`);
           schema={schema}
           onSubmit={() => {}}
         >
-          {() => <ImportTypesForm setValues={setValues} />}
-        </Form>
+          <ImportTypesForm setValues={setValues} />
+        </SimpleForm>
       </div>
     </Dialog>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, InputField } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { schema, Schema } from './schema';
 import { useDefaultValues } from './hooks';
@@ -31,50 +31,48 @@ const OneOffScheduledEventForm = (props: Props) => {
   };
 
   return (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={onSubmit}
       options={{ defaultValues }}
       className="overflow-y-hidden p-4"
     >
-      {() => (
-        <>
-          <div className="mb-md">
-            <InputField
-              name="comment"
-              label="Comment / Description"
-              placeholder="Comment / Description..."
-              tooltip="A statement to help describe the scheduled event in brief"
-            />
-          </div>
-          <div className="mb-md">
-            <ScheduledTime />
-          </div>
-          <div className="mb-md">
-            <InputField
-              name="webhook"
-              label="Webhook URL"
-              placeholder="https://httpbin.com/post"
-              tooltip="The HTTP URL that should be triggered."
-            />
-          </div>
-          <div className="mb-md">
-            <ScheduleEventPayloadInput />
-          </div>
-          <div className="mb-md">
-            <AdvancedSettings />
-          </div>
-          <div className="mb-md">
-            <RetryConfiguration />
-          </div>
-          <div className="flex items-center mb-lg">
-            <Button type="submit" mode="primary" isLoading={mutation.isLoading}>
-              Create scheduled event
-            </Button>
-          </div>
-        </>
-      )}
-    </Form>
+      <>
+        <div className="mb-md">
+          <InputField
+            name="comment"
+            label="Comment / Description"
+            placeholder="Comment / Description..."
+            tooltip="A statement to help describe the scheduled event in brief"
+          />
+        </div>
+        <div className="mb-md">
+          <ScheduledTime />
+        </div>
+        <div className="mb-md">
+          <InputField
+            name="webhook"
+            label="Webhook URL"
+            placeholder="https://httpbin.com/post"
+            tooltip="The HTTP URL that should be triggered."
+          />
+        </div>
+        <div className="mb-md">
+          <ScheduleEventPayloadInput />
+        </div>
+        <div className="mb-md">
+          <AdvancedSettings />
+        </div>
+        <div className="mb-md">
+          <RetryConfiguration />
+        </div>
+        <div className="flex items-center mb-lg">
+          <Button type="submit" mode="primary" isLoading={mutation.isLoading}>
+            Create scheduled event
+          </Button>
+        </div>
+      </>
+    </SimpleForm>
   );
 };
 

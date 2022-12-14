@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Connect } from 'react-redux';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
-import { Form, InputField, Checkbox } from '@/new-components/Form';
+import { Checkbox, InputField, SimpleForm } from '@/new-components/Form';
 import { push } from 'react-router-redux';
 import { z } from 'zod';
 import Helmet from 'react-helmet';
@@ -69,55 +69,53 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
     };
 
     return (
-      <Form
+      <SimpleForm
         schema={validationSchema}
         options={{
           defaultValues: undefined,
         }}
         onSubmit={onSubmit}
       >
-        {() => (
-          <Analytics name="Login" {...REDACT_EVERYTHING}>
-            <div className="flex flex-col bg-white p-4">
-              {!!children && <div>{children}</div>}
-              <div>
-                <div className="w-full">
-                  <InputField
-                    name="password"
-                    type="password"
-                    size="full"
-                    placeholder="Enter admin-secret"
-                  />
-                </div>
-              </div>
+        <Analytics name="Login" {...REDACT_EVERYTHING}>
+          <div className="flex flex-col bg-white p-4">
+            {!!children && <div>{children}</div>}
+            <div>
               <div className="w-full">
-                <Button
-                  full
-                  type="submit"
-                  mode="primary"
-                  size="md"
-                  disabled={loading}
-                >
-                  {getLoginButtonText()}
-                </Button>
-              </div>
-              <div>
-                <label className="cursor-pointer flex items-center pt-sm">
-                  <Checkbox
-                    name="savePassword"
-                    options={[
-                      {
-                        value: 'checked',
-                        label: 'Remember in this browser',
-                      },
-                    ]}
-                  />
-                </label>
+                <InputField
+                  name="password"
+                  type="password"
+                  size="full"
+                  placeholder="Enter admin-secret"
+                />
               </div>
             </div>
-          </Analytics>
-        )}
-      </Form>
+            <div className="w-full">
+              <Button
+                full
+                type="submit"
+                mode="primary"
+                size="md"
+                disabled={loading}
+              >
+                {getLoginButtonText()}
+              </Button>
+            </div>
+            <div>
+              <label className="cursor-pointer flex items-center pt-sm">
+                <Checkbox
+                  name="savePassword"
+                  options={[
+                    {
+                      value: 'checked',
+                      label: 'Remember in this browser',
+                    },
+                  ]}
+                />
+              </label>
+            </div>
+          </div>
+        </Analytics>
+      </SimpleForm>
     );
   };
 

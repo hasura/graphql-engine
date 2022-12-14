@@ -1,5 +1,5 @@
 import z from 'zod';
-import { Form, InputField } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaSearch } from 'react-icons/fa';
@@ -32,12 +32,12 @@ export const TypeSearchForm: React.FC<TypeSearchFormProps> = ({
   setSearch,
 }) => {
   return (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       className="pr-0 pt-0 pb-0 relative"
     >
-      {() => <SearchInput setSearch={setSearch} />}
-    </Form>
+      <SearchInput setSearch={setSearch} />
+    </SimpleForm>
   );
 };

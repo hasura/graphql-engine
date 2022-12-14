@@ -3,14 +3,14 @@ import { z } from 'zod';
 import Skeleton from 'react-loading-skeleton';
 import 'ace-builds/src-noconflict/mode-yaml';
 
-import { Form, InputField, CodeEditorField } from '@/new-components/Form';
+import { CodeEditorField, InputField, SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { Badge } from '@/new-components/Badge';
 import { Card } from '@/new-components/Card';
 import {
   FaCheckCircle,
-  FaTimesCircle,
   FaExclamationTriangle,
+  FaTimesCircle,
 } from 'react-icons/fa';
 import { PrometheusAnimation } from './PrometheusAnimation';
 
@@ -60,7 +60,7 @@ const PrometheusFormFields = ({
   prometheusUrl,
   prometheusConfig,
 }: PrometheidFormFieldsProps) => (
-  <Form
+  <SimpleForm
     schema={z.object({})}
     onSubmit={() => {}}
     options={{
@@ -70,51 +70,49 @@ const PrometheusFormFields = ({
       },
     }}
   >
-    {() => (
-      <>
-        <InputField
-          name="prometheusUrl"
-          label="Prometheus URL"
-          placeholder="URL"
-          tooltip="This is the URL from which Hasura exposes its metrics in the Prometheus format."
-          loading={loading}
-          size="full"
-          disabled
-        />
-        <CodeEditorField
-          name="prometheusConfig"
-          label="Example Prometheus Configuration (.yml)"
-          tooltip={
-            <span>
-              This is a{' '}
-              <span className="font-mono text-sm w-max text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
-                scrape_config
-              </span>{' '}
-              section of{' '}
-              <a
-                href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config"
-                target="_blank"
-                rel="noreferrer"
-                className="text-cloud italic"
-              >
-                a Prometheus configuration file
-              </a>{' '}
-              used for scraping metrics from this Hasura instance.
-            </span>
-          }
-          mode="yaml"
-          theme="eclipse"
-          editorOptions={{
-            minLines: 17,
-            maxLines: 20,
-          }}
-          loading={loading}
-          size="full"
-          disabled
-        />
-      </>
-    )}
-  </Form>
+    <>
+      <InputField
+        name="prometheusUrl"
+        label="Prometheus URL"
+        placeholder="URL"
+        tooltip="This is the URL from which Hasura exposes its metrics in the Prometheus format."
+        loading={loading}
+        size="full"
+        disabled
+      />
+      <CodeEditorField
+        name="prometheusConfig"
+        label="Example Prometheus Configuration (.yml)"
+        tooltip={
+          <span>
+            This is a{' '}
+            <span className="font-mono text-sm w-max text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+              scrape_config
+            </span>{' '}
+            section of{' '}
+            <a
+              href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config"
+              target="_blank"
+              rel="noreferrer"
+              className="text-cloud italic"
+            >
+              a Prometheus configuration file
+            </a>{' '}
+            used for scraping metrics from this Hasura instance.
+          </span>
+        }
+        mode="yaml"
+        theme="eclipse"
+        editorOptions={{
+          minLines: 17,
+          maxLines: 20,
+        }}
+        loading={loading}
+        size="full"
+        disabled
+      />
+    </>
+  </SimpleForm>
 );
 
 PrometheusFormFields.defaultProps = {
