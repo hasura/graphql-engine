@@ -12,6 +12,7 @@ import (
 	inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
 	metricsconfig "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/metrics_config"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/network"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/opentelemetry"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
 	restendpoints "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/rest_endpoints"
@@ -59,6 +60,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 			// metadata objects supported in metadata v3
 			objects = append(objects, restendpoints.New(ec, metadataDir))
 			objects = append(objects, inheritedroles.New(ec, metadataDir))
+			objects = append(objects, opentelemetry.New(ec, metadataDir))
 
 			// hasura pro specific metadata objects
 			objects = append(objects, apilimits.New(ec, metadataDir))
