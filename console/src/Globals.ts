@@ -211,8 +211,10 @@ const globals = {
   neonOAuthClientId: window.__env?.neonOAuthClientId,
   neonRootDomain: window.__env?.neonRootDomain,
   allowedLuxFeatures: window.__env?.allowedLuxFeatures || [],
-  cloudDataApiUrl: `${window.location?.protocol}//data.${window.__env?.cloudRootDomain}`,
-  luxDataHost: window.__env?.luxDataHost,
+  luxDataHost: window.__env?.luxDataHost
+    ? stripTrailingSlash(window.__env.luxDataHost)
+    : // stripTrailingSlash is used to ensure correctness in Endpoints because we append /v1/graphql to luxDataHost in endpoints.
+      undefined,
   userRole: window.__env?.userRole || undefined,
   userId: window.__env?.userId || undefined,
   consoleType: window.__env?.consoleType // FIXME : this check can be removed when the all CLI environments are set with the console type, some CLI environments could have empty consoleType

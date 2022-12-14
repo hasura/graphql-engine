@@ -29,7 +29,7 @@ export type CloudProjectInfo = {
 
 export interface MainState {
   migrationError: unknown | null;
-  hasuractlEnv: unknown | null;
+  hasuraCliServerEnv: unknown | null;
   migrationMode: boolean;
   readOnlyMode: boolean;
   migrationModeProgress: boolean;
@@ -73,7 +73,7 @@ export interface MainState {
 
 const defaultState: MainState = {
   migrationError: null,
-  hasuractlEnv: null,
+  hasuraCliServerEnv: null,
   migrationMode: true,
   readOnlyMode: false,
   migrationModeProgress: false,

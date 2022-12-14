@@ -55,7 +55,7 @@ export function useMetadataMigration(
           queryClient.fetchQuery({
             queryKey: 'cliExport',
             queryFn: () => {
-              const cliMetadataExportUrl = `${Endpoints.hasuractlMetadata}?export=true`;
+              const cliMetadataExportUrl = `${Endpoints.hasuraCliServerMetadata}?export=true`;
               return Api.get<MetadataResponse>({
                 headers,
                 url: cliMetadataExportUrl,

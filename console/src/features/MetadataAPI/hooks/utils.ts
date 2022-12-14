@@ -25,8 +25,8 @@ export const returnMigrateUrl = (
 ) => {
   if (globals.consoleMode === CLI_CONSOLE_MODE && !overrideCliMode) {
     return migrationMode
-      ? Endpoints.hasuractlMigrate
-      : Endpoints.hasuractlMetadata;
+      ? Endpoints.hasuraCliServerMigrate
+      : Endpoints.hasuraCliServerMetadata;
   }
   if (!upQueries) {
     return Endpoints.query;

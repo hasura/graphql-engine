@@ -23,8 +23,8 @@ type Query = {
 const returnMigrateUrl = (migrationMode: boolean, upQueries?: Query[]) => {
   if (globals.consoleMode === CLI_CONSOLE_MODE) {
     return migrationMode
-      ? Endpoints.hasuractlMigrate
-      : Endpoints.hasuractlMetadata;
+      ? Endpoints.hasuraCliServerMigrate
+      : Endpoints.hasuraCliServerMetadata;
   }
   if (!upQueries) {
     return Endpoints.query;
