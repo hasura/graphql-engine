@@ -3,6 +3,7 @@ import { Metadata } from '@/features/hasura-metadata-types';
 
 import { metadataHandlers as allowListMetadataHandlers } from '@/features/AllowLists';
 import { metadataHandlers as queryCollectionMetadataHandlers } from '@/features/QueryCollections';
+import { metadataHandlers as adhocEventMetadataHandlers } from '@/features/AdhocEvents';
 
 import { TMigration } from '../features/MetadataAPI/hooks/useMetadataMigration';
 
@@ -28,6 +29,7 @@ const metadataHandlers: Partial<Record<allowedMetadataTypes, MetadataReducer>> =
     export_metadata: state => state,
     ...allowListMetadataHandlers,
     ...queryCollectionMetadataHandlers,
+    ...adhocEventMetadataHandlers,
   };
 
 export const metadataReducer: MetadataReducer = (state, action) => {
