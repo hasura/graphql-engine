@@ -72,6 +72,12 @@ test-matrix: remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests:exe:produce-feature-matrix +RTS -N4 -RTS)
 
+.PHONY: test-backends-pro
+## test-backends-pro: run tests for HGE pro for all backends
+test-backends-pro: start-backends remove-tix-file
+	$(call stop_after, \
+		cabal run api-tests-pro:exe:api-tests-pro)
+
 .PHONY: test-unit
 ## test-unit: run unit tests from main suite
 test-unit: remove-tix-file
