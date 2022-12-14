@@ -19,25 +19,10 @@ import Link from '@docusaurus/Link';
 
 ## Installing the Hasura CLI
 
-### Installing through npm
-
-The Hasura CLI is conveniently available as an npm package which wraps the compiled binary and is independently
-maintained by members of the community. It can be beneficial to use the npm package if you want a  version-fixed CLI
-dedicated to your node.js project. You can find usage details (e.g. flag information) in the
-[original repository](https://github.com/jjangga0214/hasura-cli). To install the CLI, you can use npm (or yarn):
-
-```bash
-# install as a devDependency of your project
-npm install --save-dev hasura-cli[@tag|@version]
-
-# or install globally on your system
-npm install --global hasura-cli[@tag|@version]
-```
-
 ### Installing the Hasura CLI binary globally
 
-If you prefer to install the binary globally, you can download it by following the instructions for your
-operating system:
+The recommended installation method of the Hasura CLI is to install it as a global binary. You can download it by
+following the instructions for your operating system:
 
 <Tabs className="api-tabs">
 <TabItem value="linux" label="Linux">
@@ -110,19 +95,12 @@ To add command auto-completion in your shell, refer to the
 
 :::
 
+### Installing through npm
+
+The Hasura CLI is available as an [npm package](https://www.npmjs.com/package/hasura-cli) which wraps the compiled
+binary and is **independently maintained by members of the community. Hasura does not offer maintenance or support for this package**.
+
 ## Uninstalling the Hasura CLI
-
-### Uninstalling through npm
-
-If you installed the CLI as an npm package, use npm (or yarn):
-
-```bash
-# if installed as a project dependency
-npm uninstall hasura-cli
-
-# if installed as a global package
-npm uninstall --global hasura-cli
-```
 
 ### Uninstalling a binary globally
 
@@ -136,3 +114,8 @@ $ which hasura
 # use sudo if required
 $ rm /usr/local/bin/hasura
 ```
+
+### Uninstalling through npm
+
+Follow the instructions on the [npm package](https://www.npmjs.com/package/hasura-cli) page to uninstall the npm
+package.
