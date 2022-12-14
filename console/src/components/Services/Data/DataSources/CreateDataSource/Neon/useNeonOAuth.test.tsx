@@ -87,19 +87,17 @@ Object.defineProperty(window, 'open', { value: mockPopupImpl.openPopup });
 const mockHTTPResponse = (status = 200, returnBody: any) => {
   global.fetch = jest.fn().mockImplementationOnce(() => {
     return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          ok: true,
-          status,
-          json: () => {
-            return returnBody || {};
-          },
-          headers: {
-            get: (key: string) =>
-              key === 'Content-Type' ? 'application/json' : '',
-          },
-        });
-      }, 1000);
+      resolve({
+        ok: true,
+        status,
+        json: () => {
+          return returnBody || {};
+        },
+        headers: {
+          get: (key: string) =>
+            key === 'Content-Type' ? 'application/json' : '',
+        },
+      });
     });
   });
 };
@@ -108,12 +106,11 @@ const mockHTTPResponse = (status = 200, returnBody: any) => {
 // TEST UTILS
 // --------------------------------------------------
 // use fake timers because the hook uses setTimeout and setInterval
-jest.useFakeTimers();
 
 function closeFakePopup() {
   act(() => {
     mockPopupImpl.closePopup();
-    jest.advanceTimersByTime(2000);
+    jest.advanceTimersByTime(4000);
   });
 }
 
@@ -128,11 +125,14 @@ describe('Neon', () => {
     mockPopupImpl.closePopup();
     jest.clearAllTimers();
     jest.clearAllMocks();
+    jest.useFakeTimers('legacy');
   });
 
   it('Happy path', async () => {
     // Arrange
-    render(<TestComponent />);
+    await render(<TestComponent />);
+
+    expect(screen.getByTestId('status')).toHaveTextContent('idle');
 
     // Act
     fireEvent.click(screen.getByTestId('start'));
@@ -165,10 +165,9 @@ describe('Neon', () => {
     closeFakePopup();
     // --------------------------------------------------
 
+    await screen.findByText('authenticating');
     // Assert
-    await waitFor(() => {
-      expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
-    });
+    await screen.findByText('authenticated');
     expect(screen.getByTestId('email')).toHaveTextContent(
       response.data.neonExchangeOAuthToken.email
     );
@@ -272,6 +271,10 @@ describe('Neon', () => {
 
     closeFakePopup();
     // --------------------------------------------------
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticating');
+    });
 
     // Assert
     await waitFor(() => {
