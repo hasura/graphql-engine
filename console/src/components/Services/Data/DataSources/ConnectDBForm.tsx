@@ -449,13 +449,15 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
         https://github.com/hasura/graphql-engine-mono/issues/4700
       */}
 
-      <GraphQLFieldCustomizationContainer
-        rootFields={connectionDBState.customization?.rootFields}
-        typeNames={connectionDBState.customization?.typeNames}
-        namingConvention={connectionDBState.customization?.namingConvention}
-        connectionDBStateDispatch={connectionDBStateDispatch}
-        connectionDBState={connectionDBState}
-      />
+      {!isReadReplica && (
+        <GraphQLFieldCustomizationContainer
+          rootFields={connectionDBState.customization?.rootFields}
+          typeNames={connectionDBState.customization?.typeNames}
+          namingConvention={connectionDBState.customization?.namingConvention}
+          connectionDBStateDispatch={connectionDBStateDispatch}
+          connectionDBState={connectionDBState}
+        />
+      )}
     </>
   );
 };
