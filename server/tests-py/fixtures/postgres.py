@@ -195,14 +195,6 @@ def source_backend(
         yield from new_source(request, owner_engine, runner_engine, hge_ctx)
 
 
-def version(engine: sqlalchemy.engine.Engine) -> int:
-    with engine.connect() as connection:
-        row = connection.execute('show server_version_num').fetchone()
-        if not row:
-            raise Exception('Could not get the PostgreSQL version.')
-        return int(row['server_version_num']) // 10000
-
-
 def postgis(owner_engine: sqlalchemy.engine.Engine, source_backend: Optional[Backend]):
     # TODO: remove once parallelization work is completed
     #       `source_backend` will no longer be optional

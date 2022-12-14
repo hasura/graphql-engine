@@ -276,10 +276,6 @@ def per_backend_test_function(request: pytest.FixtureRequest):
     return per_backend_tests_fixture(request)
 
 @pytest.fixture(scope='session')
-def pg_version(owner_engine: sqlalchemy.engine.Engine) -> int:
-    return fixtures.postgres.version(owner_engine)
-
-@pytest.fixture(scope='session')
 def owner_engine(request: pytest.FixtureRequest, hge_bin: str):
     # TODO: remove once parallelization work is completed
     #       `hge_bin` will no longer be optional

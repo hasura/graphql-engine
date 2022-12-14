@@ -450,23 +450,27 @@ class TestCreateEventQueryPostgresMSSQL(object):
 
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
+@pytest.mark.backend('postgres')
+@usefixtures("per_class_tests_db_state")
+class TestCreateEventQueryPostgres(object):
 
-    def test_partitioned_table_basic_insert(self, pg_version, hge_ctx, evts_webhook):
-        if hge_ctx.backend == "postgres":
-            if pg_version < 11:
-                pytest.skip('Event triggers on partioned tables are not supported in Postgres versions < 11')
-            hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
-            table = { "schema":"hge_tests", "name": "measurement"}
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/basic'
 
-            init_row = { "city_id": 1, "logdate": "2006-02-02", "peaktemp": 1, "unitsales": 1}
+    def test_partitioned_table_basic_insert(self, hge_ctx, evts_webhook):
+        hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
+        table = { "schema":"hge_tests", "name": "measurement"}
 
-            exp_ev_data = {
-                "old": None,
-                "new": init_row
-            }
-            insert(hge_ctx, table, init_row)
-            check_event(hge_ctx, evts_webhook, "measurement_all", table, "INSERT", exp_ev_data)
-            hge_ctx.v1q_f(self.dir() + '/partition_table_teardown.yaml')
+        init_row = { "city_id": 1, "logdate": "2006-02-02", "peaktemp": 1, "unitsales": 1}
+
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        insert(hge_ctx, table, init_row)
+        check_event(hge_ctx, evts_webhook, "measurement_all", table, "INSERT", exp_ev_data)
+        hge_ctx.v1q_f(self.dir() + '/partition_table_teardown.yaml')
 
 @pytest.mark.backend('mssql','postgres')
 @usefixtures('per_method_tests_db_state')
