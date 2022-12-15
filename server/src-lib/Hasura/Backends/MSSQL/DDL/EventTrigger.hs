@@ -599,19 +599,10 @@ getMaintenanceModeVersionTx = do
 -- We wrap the time value in Datetime2, but before we insert it into the
 -- event_log table we convert it into UTCTIME using the 'TODATETIMEOFFSET()'
 -- sql function.
-convertUTCToDatetime2 :: UTCTime -> TxE QErr Datetime2
+convertUTCToDatetime2 :: MonadIO m => UTCTime -> m Datetime2
 convertUTCToDatetime2 utcTime = do
-  -- We are fetching the timezone from the database server as the database
-  -- server and the hasura might not be hosted in the same timezone.
-  timeZoneMinutes :: Int <-
-    singleRowQueryE
-      HGE.defaultMSSQLTxErrorHandler
-      [ODBC.sql|
-        select DATEPART(TZOFFSET, SYSDATETIMEOFFSET());
-      |]
-
-  let timezone = minutesToTimeZone timeZoneMinutes
-      localTime = utcToLocalTime timezone utcTime -- DB local time
+  timezone <- liftIO $ getTimeZone utcTime
+  let localTime = utcToLocalTime timezone utcTime
   return $ Datetime2 localTime
 
 checkIfTriggerExistsQ ::
