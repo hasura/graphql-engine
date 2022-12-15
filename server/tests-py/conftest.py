@@ -906,6 +906,19 @@ def setup_and_teardown_v1q(
     setup_files, teardown_files,
     skip_setup=False, skip_teardown=False
 ):
+    if PytestConf.config.getoption("--port-to-haskell"):
+      backend = hge_ctx.backend.title()
+      hs_test = PortToHaskell.with_test(request.cls.__qualname__)
+
+      def appendSetupIfExists(name, url):
+          def curried(f):
+              if os.path.isfile(f):
+                  with open(f, 'r') as content:
+                      hs_test.add_setup(backend, PortToHaskell.Setup(name, f, url, content.read()))
+          return curried
+
+      run_on_elem_or_list(appendSetupIfExists("setup", "/v1/query"), setup_files)
+
     def v1q_f(filepath):
         if os.path.isfile(filepath):
             return hge_ctx.v1q_f(filepath)
@@ -922,6 +935,19 @@ def setup_and_teardown_v2q(
     setup_files, teardown_files,
     skip_setup=False, skip_teardown=False
 ):
+    if PytestConf.config.getoption("--port-to-haskell"):
+      backend = hge_ctx.backend.title()
+      hs_test = PortToHaskell.with_test(request.cls.__qualname__)
+
+      def appendSetupIfExists(name, url):
+          def curried(f):
+              if os.path.isfile(f):
+                  with open(f, 'r') as content:
+                      hs_test.add_setup(backend, PortToHaskell.Setup(name, f, url, content.read()))
+          return curried
+
+      run_on_elem_or_list(appendSetupIfExists("setup", "/v2/query"), setup_files)
+
     def v2q_f(filepath):
         if os.path.isfile(filepath):
             return hge_ctx.v2q_f(filepath)

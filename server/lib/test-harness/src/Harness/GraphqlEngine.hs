@@ -24,6 +24,7 @@ module Harness.GraphqlEngine
     postGraphqlWithHeaders,
     postWithHeadersStatus,
     clearMetadata,
+    postV1Query,
     postV2Query,
     postV2Query_,
 
@@ -239,6 +240,10 @@ postV2Query statusCode testEnvironment =
 postV2Query_ :: HasCallStack => TestEnvironment -> Value -> IO ()
 postV2Query_ testEnvironment =
   withFrozenCallStack $ post_ testEnvironment "/v2/query"
+
+postV1Query :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
+postV1Query statusCode testEnvironment =
+  withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/query" mempty
 
 -------------------------------------------------------------------------------
 

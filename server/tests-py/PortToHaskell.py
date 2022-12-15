@@ -1,6 +1,14 @@
 import os
+import ruamel.yaml as yaml
 import textwrap
 from abc import ABC, abstractmethod
+
+# https://yaml.readthedocs.io/en/latest/example.html#output-of-dump-as-a-string
+def dump_to_string(v):
+  import io
+  s = io.StringIO()
+  yaml.YAML().dump(v, stream=s)
+  return s.getvalue()
 
 class Fixtures():
   setups = {} # Map backend [Setup]
@@ -16,20 +24,86 @@ class Fixtures():
       self.specs[desc] = []
     self.specs[desc].append(spec)
 
-def render_gql(query):
-  return f"""GraphqlEngine.postGraphql
+def render_gql(query, headers):
+  if headers is None:
+      return f"""\
+GraphqlEngine.postGraphql
   testEnvironment
   [graphql|
 {textwrap.indent(query, '    ')}
   |]"""
+  else:
+      return f"""\
+GraphqlEngine.postGraphqlWithHeaders
+  testEnvironment
+{textwrap.indent(render_headers(headers), '    ')}
+  [graphql|
+{textwrap.indent(query, '    ')}
+      |]"""
 
-def render_v2query(expected_status, query):
-  return f"""GraphqlEngine.postV2Query
+def render_v2query(expected_status, query, headers):
+  if headers is None:
+      return f"""\
+GraphqlEngine.postV2Query
   {expected_status}
   testEnvironment
   [interpolateYaml|
-{textwrap.indent(query, '    ')}
+{textwrap.indent(dump_to_string(query), '    ')}
   |]"""
+  else:
+      return f"""
+GraphqlEngine.postV2QueryWithHeaders
+  {expected_status}
+{textwrap.indent(render_headers(headers), '    ')}
+  testEnvironment
+  [interpolateYaml|
+{textwrap.indent(dump_to_string(query), '    ')}
+  |]"""
+
+def render_v1query(expected_status, query, headers):
+  if headers is None:
+      return f"""\
+GraphqlEngine.postV1Query
+  {expected_status}
+  testEnvironment
+  [interpolateYaml|
+{textwrap.indent(dump_to_string(query), '    ')}
+  |]"""
+  else:
+      return f"""\
+GraphqlEngine.postV1QueryWithHeaders
+  {expected_status}
+{textwrap.indent(render_headers(headers), '    ')}
+  testEnvironment
+  [interpolateYaml|
+{textwrap.indent(dump_to_string(query), '    ')}
+  |]"""
+
+def render_v1metadata(expected_status, query, headers):
+  if headers is None:
+      return f"""\
+GraphqlEngine.postMetadataWithStatus
+  {expected_status}
+  testEnvironment
+  [interpolateYaml|
+{textwrap.indent(dump_to_string(query), '    ')}
+  |]"""
+  else:
+      return f"""\
+GraphqlEngine.postMetadataWithHeaders
+  testEnvironment
+{textwrap.indent(render_headers(headers), '    ')}
+  [interpolateYaml|
+{textwrap.indent(dump_to_string(query), '    ')}
+  |]"""
+
+def render_headers(headers):
+    res = "(\n"
+    for key, val in headers.items():
+        res += f'  ("{key}", "{val}"):\n'
+    res += "[])"
+
+    return res
 
 class Setup():
   def __init__(self, setup_name, original_file, url, value):
@@ -51,14 +125,16 @@ class Setup():
     res = ""
     if self.url == "/v2/query":
       res = f"GraphqlEngine.postV2Query 200 testEnvironment {self.setup_name}_{backend}"
+    elif self.url == "/v1/query":
+      res = f"GraphqlEngine.postV1Query 200 testEnvironment {self.setup_name}_{backend}"
     elif self.url == "/v1/graphql":
       res = f"GraphqlEngine.postGraphql testEnvironment {self.setup_name}_{backend}"
     elif self.url == "/v1/metadata":
       res = f"""GraphqlEngine.postMetadata_ testEnvironment {self.setup_name}_{backend}"""
 
     else:
-      raise f"Unknown query url: {self.url}"
-    
+      raise Exception(f"Unknown query url: {self.url}, in file {self.original_file}")
+
     return res
 
 class Spec(ABC):
@@ -66,68 +142,58 @@ class Spec(ABC):
   @abstractmethod
   def render(self):
     pass
-  
-class CovertSetupSpec(Spec):
-  """
-  Specs that do not make any assertions, i.e. are only run for their side
-  effects.
-  """
-  def __init__(self, desc, file, url, query):
-    self.desc = desc
-    self.file = file
-    self.url = url
-    self.query = query
-
-  def render(self):
-    res = ""
-    if self.url == "/v2/query":
-      res = render_v2query(200, self.query)
-    elif self.url == "/v1/graphql":
-      res = render_gql(self.query)
-    else:
-      raise f"Unknown query url: {self.url}"
-
-    res = "void $ " + res
-
-    return f"""-- from: {self.file}
-it "{self.desc}" \\testEnvironment -> do
-{textwrap.indent(res, ' ')}"""
 
 class PostSpec(Spec):
   """
   Specs that post something to HGE and make assertions against status code and
   response.
   """
-  def __init__(self, desc, file, url, query, expected_status, expected_response):
+  def __init__(self, desc, file, url, headers, query, expected_status, expected_response):
     self.desc = desc
     self.file = file
     self.url = url
+    self.headers = headers
     self.query = query
     self.expected_status = expected_status
     self.expected_response = expected_response
 
   def render(self):
     actual = ""
-    if self.url == "/v2/query":
-      actual = render_v2query(self.expected_status, self.query)
+    if self.url == "/v1/query":
+      actual = render_v1query(self.expected_status, self.query, self.headers)
+    elif self.url == "/v2/query":
+      actual = render_v2query(self.expected_status, self.query, self.headers)
     elif self.url == "/v1/graphql":
-      actual = render_gql(self.query)
+      actual = render_gql(self.query, self.headers)
+    elif self.url == "/v1/metadata":
+      actual = render_v1metadata(self.expected_status, self.query, self.headers)
     else:
-      raise f"Unknown query url: {self.url}"
+      raise Exception(f"Unknown query url: {self.url}, in file {self.file}")
 
-    return f"""-- from: {self.file}
-it "{self.desc}" \\testEnvironment -> do
+    head =f"""-- from: {self.file}
+it "{self.desc}" \\testEnvironment -> do"""
+
+    expected = ""
+    assertion = ""
+    if self.expected_response is not None:
+      expected = f"""
   let expected :: Yaml.Value
       expected =
         [interpolateYaml|
-{textwrap.indent(self.expected_response, '          ')}
+{textwrap.indent(dump_to_string(self.expected_response), '          ')}
         |]
-   
-      actual :: IO Yaml.Value
+"""
+      assertion = "actual `shouldBe` expected"
+    else:
+      assertion = "void actual"
+
+    return f"""{head}
+{expected}
+  let actual :: IO Yaml.Value
       actual =
 {textwrap.indent(actual, '        ')}
 
-  actual `shouldBe` expected"""
+  {assertion}"""
 
 
 tests_to_port = {} # Map classname Fixtures
@@ -166,14 +232,14 @@ import Data.List.NonEmpty qualified as NE
         f"import Harness.Backend.{backend} qualified as {backend}"
            for backend in backends
 
-        ]) +  
+        ]) +
 """
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.PytestPortedCompat (compatSetup)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec
@@ -203,7 +269,7 @@ fixture_{backend} =
 """)
 
         ported_hs.write("""
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runSingleSetup (NE.fromList [""" + str.join(', ', ["fixture_" + backend for backend in backends]) + """]) tests
 
 tests :: Fixture.Options -> SpecWith TestEnvironment

@@ -124,7 +124,9 @@ library
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Upsert.OnConflictSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
+    Test.PortedFromPytest.TestGraphQLQueryFunctions
     Test.Queries.AggregationSpec
+    Test.Queries.CustomFunctions.PortedSpec
     Test.Queries.DistinctSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec

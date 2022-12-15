@@ -827,67 +827,6 @@ class TestGraphQLQueryOrderBy:
     def dir(cls):
         return 'queries/graphql_query/order_by'
 
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryFunctions:
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_search_posts(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_search_posts_aggregate(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_users(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_get_users.yaml", transport)
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_users_arguments_error(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_get_users_arguments_error.yaml", transport)
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_users_default_arguments_error(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_get_users_default_arguments_error.yaml", transport)
-
-    def test_alter_function_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
-
-    def test_overloading_function_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
-
-    def test_query_get_test_uuid(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
-
-    def test_query_my_add(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_session_var(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/query_get_session_var.yaml', transport)
-
-    def test_track_function_v2_errors(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_test_session_id(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_search_author_mview(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
-
-    def test_tracking_function_with_composite_type_argument(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
-
-    @pytest.mark.skip(reason="FIXME: https://github.com/hasura/graphql-engine-mono/issues/2595")
-    def test_tracking_function_with_customized_names(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/track_customised_names.yaml')
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/functions'
-
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCustomSchema:
