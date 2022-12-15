@@ -25,7 +25,8 @@ export const useUpdateProjectRegionChangeStat = () => {
     ) => {
       if (
         !checkDatabaseLatencyResponse ||
-        typeof checkDatabaseLatencyResponse === 'string'
+        typeof checkDatabaseLatencyResponse === 'string' ||
+        !checkDatabaseLatencyResponse.insertDbLatencyData
       ) {
         return;
       }
