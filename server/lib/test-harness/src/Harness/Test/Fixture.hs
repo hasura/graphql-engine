@@ -232,7 +232,8 @@ setupTestEnvironment name globalTestEnvironment = do
               Backend db -> Just db
               _ -> Nothing,
             uniqueTestId = uniqueTestId,
-            globalEnvironment = globalTestEnvironment
+            globalEnvironment = globalTestEnvironment,
+            testingRole = Nothing
           }
 
   -- create source databases

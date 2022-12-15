@@ -113,7 +113,12 @@ postWithHeadersStatus ::
   HasCallStack => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
   testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
-  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers requestBody
+
+  let headers' = case testingRole testEnv of
+        Just role -> ("X-Hasura-Role", txtToBs role) : headers
+        Nothing -> headers
+
+  responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers' requestBody
   testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
   pure responseBody
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | This module captures what different backends happen to have in common with
 -- regard to permission metadata handling.
@@ -17,10 +18,14 @@ module Harness.Test.Permissions
     selectPermission,
     updatePermission,
     insertPermission,
+    withPermissions,
+    withRole,
   )
 where
 
+import Control.Exception (SomeException, finally, try)
 import Data.Aeson qualified as Aeson
+import Data.List (subsequences)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendTypeConfig)
@@ -28,6 +33,9 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
 import Hasura.Prelude
+import Test.Hspec (expectationFailure)
+import Test.Hspec.Core.Spec
+import Text.Show.Pretty (ppShow)
 
 -- | Data type used to model permissions to be setup in tests.
 -- Each case of this type mirrors the fields in the correspond permission
@@ -36,6 +44,7 @@ data Permission
   = SelectPermission SelectPermissionDetails
   | UpdatePermission UpdatePermissionDetails
   | InsertPermission InsertPermissionDetails
+  deriving (Eq, Show)
 
 data SelectPermissionDetails = SelectPermissionDetails
   { selectPermissionTable :: Text,
@@ -45,6 +54,7 @@ data SelectPermissionDetails = SelectPermissionDetails
     selectPermissionAllowAggregations :: Bool,
     selectPermissionLimit :: Aeson.Value
   }
+  deriving (Eq, Show)
 
 data UpdatePermissionDetails = UpdatePermissionDetails
   { updatePermissionTable :: Text,
@@ -52,6 +62,7 @@ data UpdatePermissionDetails = UpdatePermissionDetails
     updatePermissionColumns :: [Text],
     updatePermissionRows :: Aeson.Value
   }
+  deriving (Eq, Show)
 
 data InsertPermissionDetails = InsertPermissionDetails
   { insertPermissionTable :: Text,
@@ -59,6 +70,7 @@ data InsertPermissionDetails = InsertPermissionDetails
     insertPermissionColumns :: [Text],
     insertPermissionRows :: Aeson.Value
   }
+  deriving (Eq, Show)
 
 selectPermission :: SelectPermissionDetails
 selectPermission =
@@ -88,6 +100,93 @@ insertPermission =
       insertPermissionColumns = mempty,
       insertPermissionRows = [yaml|{}|]
     }
+
+-- | Assert that a given test block requires precisely the given permissions.
+--
+-- This function modifies the given Hspec test "forest" to replace each test
+-- with two separate tests:
+--
+-- * The original test, but all requests will be made under a Hasura role with
+--   the given permissions. This test should therefore only pass if the given
+--   permissions are sufficient.
+--
+-- * The opposite test: all requests will be made under a Hasura role with
+--   every (proper) subset of the given permissions. If the original test can
+--   run successfully with missing permissions, then this test will __fail__.
+--
+-- The responsibility is on the test writer to make the permissions
+-- requirements as granular as possible. If two tests in the same block require
+-- differing levels of permissions, those tests should be separated into
+-- distinct blocks.
+--
+-- Note that we don't check anything about /extra/ permissions.
+withPermissions :: NonEmpty Permission -> SpecWith TestEnvironment -> SpecWith TestEnvironment
+withPermissions (toList -> permissions) = mapSpecForest (map go)
+  where
+    go :: SpecTree TestEnvironment -> SpecTree TestEnvironment
+    go = \case
+      Node name forest ->
+        Node name (map go forest)
+      NodeWithCleanup cleanup c forest ->
+        NodeWithCleanup cleanup c (map go forest)
+      Leaf item ->
+        Node
+          (itemRequirement item)
+          [ Leaf
+              item
+                { itemRequirement = "Passes with sufficient permissions",
+                  itemExample = \params -> itemExample item params . succeeding
+                },
+            Leaf
+              item
+                { itemRequirement = "Rejects insufficient permissions",
+                  itemExample = \params -> itemExample item params . failing
+                }
+          ]
+
+    succeeding :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
+    succeeding k test = k \testEnvironment -> do
+      let permissions' :: [Permission]
+          permissions' = fmap (withRole "success") permissions
+
+      traverse_ (createPermission testEnvironment) permissions'
+
+      test testEnvironment {testingRole = Just "success"}
+        `finally` for_ (backendTypeConfig testEnvironment) \config ->
+          traverse_ (dropPermission config testEnvironment) permissions'
+
+    failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
+    failing k test = k \testEnvironment -> do
+      -- Test every possible (strict) subset of the permissions to ensure that
+      -- they lead to test failures.
+      for_ (subsequences permissions) \subsequence ->
+        unless (subsequence == permissions) do
+          let permissions' = map (withRole "failure") subsequence
+
+          traverse_ (createPermission testEnvironment) permissions'
+
+          let attempt :: IO () -> IO ()
+              attempt x =
+                try x >>= \case
+                  Right _ ->
+                    expectationFailure $
+                      mconcat
+                        [ "Unexpectedly adequate permissions:\n",
+                          ppShow permissions'
+                        ]
+                  Left (_ :: SomeException) ->
+                    pure ()
+
+          attempt (test testEnvironment {testingRole = Just "failure"})
+            `finally` for_ (backendTypeConfig testEnvironment) \config ->
+              traverse_ (dropPermission config testEnvironment) permissions'
+
+-- | Update the role on a given permission.
+withRole :: Text -> Permission -> Permission
+withRole role = \case
+  SelectPermission p -> SelectPermission p {selectPermissionRole = role}
+  UpdatePermission p -> UpdatePermission p {updatePermissionRole = role}
+  InsertPermission p -> InsertPermission p {insertPermissionRole = role}
 
 -- | Send a JSON payload of the common `*_create_*_permission` form.
 -- Backends where the format of this api call deviates significantly from this

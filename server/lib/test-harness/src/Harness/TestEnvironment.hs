@@ -65,7 +65,10 @@ data TestEnvironment = TestEnvironment
     uniqueTestId :: UniqueTestId,
     -- | the main backend type of the test, if applicable (ie, where we are not
     -- testing `remote <-> remote` joins or someting similarly esoteric)
-    backendTypeConfig :: Maybe BackendTypeConfig
+    backendTypeConfig :: Maybe BackendTypeConfig,
+    -- | The role we attach to requests made within the tests. This allows us
+    -- to test permissions.
+    testingRole :: Maybe Text
   }
 
 instance Show TestEnvironment where

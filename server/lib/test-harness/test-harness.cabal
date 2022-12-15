@@ -18,6 +18,7 @@ library
     , graphql-engine
     , haskell-src-meta
     , hasura-prelude
+    , hedgehog
     , hspec
     , hspec-core
     , http-conduit
@@ -38,6 +39,7 @@ library
     , postgresql-simple
     , postgres-options
     , pretty-simple
+    , pretty-show
     , refined
     , resourcet
     , safe-exceptions

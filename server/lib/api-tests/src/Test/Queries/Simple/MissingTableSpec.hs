@@ -1,12 +1,12 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- |
--- Simple queries on single objects.
+-- Simple object queries on tables that don't exist.
 --
 -- https://hasura.io/docs/latest/queries/postgres/simple-object-queries/#fetch-list-of-objects
 -- https://hasura.io/docs/latest/queries/ms-sql-server/simple-object-queries/#fetch-list-of-objects
 -- https://hasura.io/docs/latest/queries/bigquery/simple-object-queries/#fetch-list-of-objects
-module Test.Queries.Simple.ObjectQueriesSpec (spec) where
+module Test.Queries.Simple.MissingTableSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
@@ -20,7 +20,6 @@ import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission, withPermissions)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
@@ -69,17 +68,7 @@ spec = do
             }
         ]
     )
-    ( withPermissions
-        ( NE.fromList
-            [ SelectPermission
-                selectPermission
-                  { selectPermissionTable = "authors",
-                    selectPermissionColumns = ["id", "name"]
-                  }
-            ]
-        )
-        . tests
-    )
+    tests
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -117,8 +106,8 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Fetch a list of objects" do
-    it "Fetch a list of authors" \testEnvironment -> do
+  describe "Missing table errors" do
+    it "Fails on unknown tables" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
@@ -128,42 +117,8 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  #{schemaName}_authors(order_by: { id: asc }) {
+                  #{schemaName}_unknown {
                     id
-                    name
-                  }
-                }
-              |]
-
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              data:
-                #{schemaName}_authors:
-                - id: 1
-                  name: Justin
-                - id: 2
-                  name: Beltran
-                - id: 3
-                  name: Sidney
-                - id: 4
-                  name: Anjela
-            |]
-
-      actual `shouldBe` expected
-
-    it "Fails on unknown fields" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
-          actual :: IO Value
-          actual =
-            postGraphql
-              testEnvironment
-              [graphql|
-                query {
-                  #{schemaName}_authors {
-                    unknown
                   }
                 }
               |]
@@ -174,8 +129,8 @@ tests opts = do
               errors:
               - extensions:
                   code: validation-failed
-                  path: $.selectionSet.#{schemaName}_authors.selectionSet.unknown
-                message: 'field ''unknown'' not found in type: ''#{schemaName}_authors'''
+                  path: $.selectionSet.#{schemaName}_unknown
+                message: 'field ''#{schemaName}_unknown'' not found in type: ''query_root'''
             |]
 
       actual `shouldBe` expected
