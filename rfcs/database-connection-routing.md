@@ -6,6 +6,8 @@ authors:
 
 ---
 
+**Preview**: If you are interested in trying out a preview of this feature, please fill this form: https://bit.ly/hasura-dynamic-db and we will reach out with a preview build.
+
 # Dynamic Connection Routing
 
 Currently, Hasura only executes queries against a connection that was configured when the source is added in the metadata.
