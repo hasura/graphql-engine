@@ -36,7 +36,7 @@ Let us now connect these tables to enable nested queries using manual relationsh
 
 Each article has one author. This is an `object relationship`.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the console, select the `articles` table and navigate to the `Relationships` tab, then click `Configure` under
@@ -153,7 +153,7 @@ For each author, there are many possible related articles. If we wanted to estab
 would return an array. We model this in the Hasura console using an array relationship (we can also think of this as
 being a one-to-many relationship between authors and articles).
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the console, select the `authors` table and navigate to the `Relationships` tab, then click `Configure` under

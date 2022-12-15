@@ -32,8 +32,8 @@ Let's look at **examples** for mutation and query type actions.
 
 ## Setup
 
-<Tabs className="api-tabs">
-<TabItem value="console" label="Console">
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console" className='empty-tab'>
 
 There is no setup required for defining actions via the console.
 
@@ -88,7 +88,7 @@ Let's start with a mutation that accepts a username and password, and returns an
 
 Start with defining the mutation and the required types. These types will reflect in the GraphQL schema.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Go to the `Actions` tab on the console and click on `Create`. This will take you to a page like this:
@@ -237,7 +237,7 @@ You can deploy this code somewhere and get the URI. For getting started quickly,
 
 Now, set the handler for the action:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Set the value of the `handler` field to the above endpoint.
@@ -283,7 +283,7 @@ If you are running Hasura using Docker, ensure that the Hasura Docker container 
 
 Finally, to save the action:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
   <TabItem value="console" label="Console">
 
 Hit `Create`.
@@ -333,7 +333,7 @@ Let's start with a basic query that accepts a list of numbers and returns their 
 
 Start with defining the query and the required types. These types will reflect in the GraphQL schema.
 
-<Tabs className="api_tabs">
+<Tabs groupId="user-preference" className="api_tabs">
 <TabItem value="console" label="Console">
 
 Go to the `Actions` tab on the console and click on `Create`. This will take you to a page like this:
@@ -450,13 +450,10 @@ The above definition means:
 
 You can also use Type Generator feature to generate the types for your action:
 
-<Thumbnail
-  src="/img/actions/type-generator.png"
-  alt="Console action create"
-  width="800px"
-/>
+<Thumbnail src='/img/actions/type-generator.png' alt='Console action create' width='800px' />
 
-Insert JSON samples for the request and the response, click "Insert Types" and Hasura generates the GraphQL types for you.
+Insert JSON samples for the request and the response, click "Insert Types" and Hasura generates the GraphQL types for
+you.
 
 ### Step 2: Create the action handler
 
@@ -491,7 +488,7 @@ You can deploy this code somewhere and get the URI. For getting started quickly,
 
 Now, set the handler for the action:
 
-<Tabs className="api_tabs">
+<Tabs groupId="user-preference" className="api_tabs">
 <TabItem value="console" label="Console">
 
 Set the value of the `handler` field to the above endpoint.
@@ -529,7 +526,7 @@ e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE
 
 Finally, to save the action:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
   <TabItem value="console" label="Console">
 
 Hit `Create`.

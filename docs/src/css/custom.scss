@@ -3,16 +3,16 @@
  * bundles Infima by default. Infima is a CSS framework designed to
  * work well for content-centric websites.
  */
-@use "default-fonts-and-colors";
-@use "cloud-and-enterprise-menu-icons";
-@use "header";
-@use "sidebar";
-@use "table-of-contents";
-@use "doc";
-@use "footer";
-@use "introduction-page";
-@use "cloud-db-icon-gallery";
-@use "admonitions";
+@use 'default-fonts-and-colors';
+@use 'cloud-and-enterprise-menu-icons';
+@use 'header';
+@use 'sidebar';
+@use 'table-of-contents';
+@use 'doc';
+@use 'footer';
+@use 'introduction-page';
+@use 'cloud-db-icon-gallery';
+@use 'admonitions';
 
 /* Custom Styles */
 .no-shadow {
@@ -23,7 +23,6 @@
   color: #fff;
   opacity: 0.75;
 }
-
 
 .sub-heading {
   grid-column: 1 / -1;
@@ -55,7 +54,6 @@ tbody {
 /* Dark Mode Styles */
 
 html[data-theme='dark'] {
-
   .no-shadow {
     background-color: var(--color-gray-0);
   }

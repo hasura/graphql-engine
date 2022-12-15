@@ -37,7 +37,7 @@ Let us now connect these tables to enable nested queries using a foreign-key:
 
 Let's add a foreign-key constraint to the `author_id` column in the `articles` table.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the console, navigate to the `Modify` tab of the `articles` table. Click the `Add` button in the Foreign Keys section
@@ -97,7 +97,7 @@ X-Hasura-Role: admin
 
 Each article has one author. This is an `object relationship`.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 The console infers potential relationships using the foreign-key created above and recommends these in the
@@ -212,7 +212,7 @@ An author can write multiple articles. This is an `array relationship`.
 
 You can add an `array relationship` in the same fashion as an `object relationship` as shown above.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 On the console, add an `array relationship` named `articles` for the `authors` table as shown here:
@@ -359,7 +359,7 @@ Let's say you have a table `authors (id, name)` and a [view](/schema/ms-sql-serv
 Let us now create an `object relationship` called `avg_rating` from the `authors` table to the `author_avg_rating` view
 using a manual relationship:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 **Step 1: Open the manual relationship section**
@@ -498,7 +498,7 @@ Fetch a list of authors with the average rating of their articles:
 As mentioned in the Introduction section above, relationships can be inferred via foreign-keys that exist in your
 database:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 The console infers potential relationships using existing foreign-keys and recommends these on the `Data -> Schema` page

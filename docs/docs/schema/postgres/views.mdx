@@ -26,7 +26,7 @@ Hasura GraphQL engine lets you expose views over the GraphQL API to allow queryi
 
 ## Creating views {#pg-create-views}
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Views can be created using SQL which can be run in the Hasura console:
@@ -75,7 +75,7 @@ X-Hasura-Role: admin
 Views can be present in the underlying Postgres database without being exposed over the GraphQL API. In order to expose
 a view over the GraphQL API, it needs to be **tracked**.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 While creating views from the `Data -> SQL` page, selecting the `Track this` checkbox will expose the new view over the

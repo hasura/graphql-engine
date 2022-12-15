@@ -54,7 +54,7 @@ mutation insertAuthor($name: String) {
 
 Now that we have a mutation with arguments being accepted as variables, we can derive our action:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `API` tab of the console and paste / generate your query in the GraphiQL window.
@@ -121,7 +121,7 @@ The action name will be picked up from the argument of the command and not the m
 For a derived action, Hasura can generate the relevant handler code to delegate the action back to the original
 operation.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Actions -> [action-name] -> Codegen` tab in the console

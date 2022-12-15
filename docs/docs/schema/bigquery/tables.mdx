@@ -43,7 +43,7 @@ articles (
 
 ```
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Open the Hasura console and head to the `Data` tab and click on the button on the left side bar to open up an interface
@@ -118,7 +118,7 @@ X-Hasura-Role: admin
 Tables can be present in the underlying BigQuery database without being exposed over the GraphQL API. In order to expose
 a table over the GraphQL API, it needs to be **tracked**.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 When a table is created via the Hasura console, it gets tracked by default.
@@ -238,6 +238,7 @@ tab in the console. _(You may want to add some sample data into the tables first
 
 - Query all rows in the `articles` table:
 
+  {' '}
   <GraphiQLIDE
     query={`query {
     bigquery_articles {

@@ -22,7 +22,7 @@ triggers exists for Postgres and MSSQL databases.
 
 ## Creating triggers
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Open the Hasura Console, head to the `Events` tab and click on the `Create` button to open the page below:
@@ -138,7 +138,7 @@ Choose the columns here which you want the update operation to listen to.
 
 If a column is not selected here, then an update to that column will not trigger the webhook.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an event trigger:
@@ -240,7 +240,7 @@ Retry configuration is available in the "Advanced settings" when you create a tr
 2. `interval_sec`: Number of seconds after which a failed invocation is retried. Default value is **10**.
 3. `timeout_sec`: Number of seconds before which client closes the connection to the webhook. Default value is **60**.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an event trigger:
@@ -362,7 +362,7 @@ Each header has 3 parameters:
    variable in the GraphQL engine which will be resolved before sending the header.
 3. `Value`: The value of the header. Either a static value or the name of an environment variable.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an event trigger:

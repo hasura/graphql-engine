@@ -84,11 +84,7 @@ be read. In the case of `insert`, the boolean expression determines whether or n
 Row-level permissions are defined using operators, static values, values in columns (_including those in related tables
 or nested objects_) and session variables.
 
-<TOCInline
-    toc={toc}
-    maxHeadingLevel={4}
-    filterTOC={'row-level-permissions'}
-/>
+<TOCInline toc={toc} maxHeadingLevel={4} filterTOC={'row-level-permissions'} />
 
 #### Using column operators to build rules
 
@@ -109,7 +105,7 @@ See the [API reference](/api-reference/syntax-defs.mdx#metadataoperator) for a l
 The following is an example of a simple boolean expression to restrict access for `select` to rows where the value in
 the `id` column is greater than 10:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can define permissions using boolean expressions on the Hasura Console as follows:
@@ -119,9 +115,8 @@ You can define permissions using boolean expressions on the Hasura Console as fo
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define permissions using boolean expressions in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` file, eg:
-
+You can define permissions using boolean expressions in the
+`metadata > databases > [database-name] > tables > [table-name].yaml` file, eg:
 
 ```yaml {8-10}
 - table:
@@ -183,7 +178,7 @@ You can construct more complex boolean expressions using the `_and`, `_or` and `
 **For example**, using the `_and` operator, you can construct a rule to restrict access for `select` to rows where the
 value in the `id` column is greater than 10 **and** the value in the `name` column starts with "a" or "A":
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can define permissions using the `_and` operator on the Hasura Console as follows:
@@ -197,8 +192,8 @@ You can define permissions using the `_and` operator on the Hasura Console as fo
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define permissions using the `_and` operator in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` file eg:
+You can define permissions using the `_and` operator in the
+`metadata > databases > [database-name] > tables > [table-name].yaml` file eg:
 
 ```yaml {8-11}
 - table:
@@ -270,7 +265,7 @@ using the JWT configuration are available for constructing row-level permissions
 to construct a rule to restrict access for `select` to rows in the `articles` table where the value in the `id` column
 is equal to the value in the session variable (_assuming this variable is being used to indicate the author's ID_):
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can define session variables in permissions on the Hasura Console:
@@ -284,8 +279,8 @@ You can define session variables in permissions on the Hasura Console:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define session variables in permissions in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` file, eg:
+You can define session variables in permissions in the
+`metadata > databases > [database-name] > tables > [table-name].yaml` file, eg:
 
 ```yaml {10-12}
 - table:
@@ -359,7 +354,7 @@ called `agent` (_an author can have an agent_) and we want to allow users with t
 the authors who they manage in `authors` table. We can define the following permission rule that uses the aforementioned
 object relationship:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can use a nested object to build rules on the Hasura Console:
@@ -373,8 +368,8 @@ You can use a nested object to build rules on the Hasura Console:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You add permissions using relationships or nested objects in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` eg:
+You add permissions using relationships or nested objects in the
+`metadata > databases > [database-name] > tables > [table-name].yaml` eg:
 
 ```yaml {8-11}
 - table:
@@ -451,7 +446,7 @@ You can use the `_exists` operator to set a permission rule based on tables/view
 column in the `users` table is set to `true`. Let's assume the user's id is passed in the `X-Hasura-User-ID` session
 variable.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can set permissions using unrelated tables on the Hasura Console as follows:
@@ -461,8 +456,8 @@ You can set permissions using unrelated tables on the Hasura Console as follows:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can set permissions using unrelated tables in the `metadata > databases > [database-name] > tables >
-[table-name].yaml`, eg:
+You can set permissions using unrelated tables in the
+`metadata > databases > [database-name] > tables > [table-name].yaml`, eg:
 
 ```yaml {7-15}
 - table:
@@ -541,7 +536,7 @@ user's_ `id` _and has the_ `allow_article_create` _column set to true, allow acc
 
 Column-level permissions determine access to columns in the rows that are accessible based on row-level permissions.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Column-level permissions are simple selections on the Hasura Console:
@@ -551,8 +546,8 @@ Column-level permissions are simple selections on the Hasura Console:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can set column-level permissions in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` file, eg:
+You can set column-level permissions in the `metadata > databases > [database-name] > tables > [table-name].yaml` file,
+eg:
 
 ```yaml {7-11}
 - table:
@@ -619,7 +614,7 @@ In this example, the role `author` has only partial access to columns of the acc
 In the case of `select` operations, the number of rows to be returned in the response can be limited using this
 configuration:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can set a row fetch limit on the Hasura Console as follows:
@@ -629,8 +624,8 @@ You can set a row fetch limit on the Hasura Console as follows:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can set a row fetch limit for a table in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` file, eg:
+You can set a row fetch limit for a table in the `metadata > databases > [database-name] > tables > [table-name].yaml`
+file, eg:
 
 ```yaml {13}
 - table:
@@ -695,7 +690,7 @@ In the above example, this configuration restricts the number of accessible rows
 In the case of `select` operations, access to [aggregation queries](/queries/postgres/aggregation-queries.mdx) can be
 enabled for a given role using this configuration.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can enable aggregation queries permissions on the Hasura Console as follows:
@@ -705,8 +700,8 @@ You can enable aggregation queries permissions on the Hasura Console as follows:
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can allow aggregation query permissions in the `metadata > databases > [database-name] > tables >
-[table-name].yaml` file, eg:
+You can allow aggregation query permissions in the `metadata > databases > [database-name] > tables > [table-name].yaml`
+file, eg:
 
 ```yaml {13}
 - table:
@@ -773,7 +768,7 @@ While this is strictly not a permission configuration, defining
 access to it. This preset can be defined for `insert` and `update` operations. This configuration is also very useful to
 avoid sending sensitive user-information in the request and leverage session variables or static data instead.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can define column presets for either `insert` or `update` operations in the Hasura Console as follows:
@@ -783,8 +778,8 @@ You can define column presets for either `insert` or `update` operations in the 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define column presets for table columns in the `metadata > databases > [database-name] >
-tables > [table-name].yaml`, eg: `public_users.yaml`:
+You can define column presets for table columns in the
+`metadata > databases > [database-name] > tables > [table-name].yaml`, eg: `public_users.yaml`:
 
 ```yaml {8-9}
 table:
@@ -798,7 +793,6 @@ insert_permissions:
         id: x-hasura-User-Id
       columns:
         - id
-
 ```
 
 Apply the metadata by running:
@@ -811,8 +805,8 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define column presets with either the [insert](/api-reference/syntax-defs.mdx#insertpermission) or
-[update](/api-reference/syntax-defs.mdx#updatepermission) [permissions metadata API](/api-reference/metadata-api/permission.mdx).
-Example using a Postgres db:
+[update](/api-reference/syntax-defs.mdx#updatepermission)
+[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {15-20}
 POST /v1/metadata HTTP/1.1
@@ -855,19 +849,22 @@ This might be useful if you would like to hide a mutation from the public facing
 
 Setting `backend-only` is currently available for insert, update and delete mutations.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can set a mutate permission for a role as backend only in the Hasura Console as follows:
 
-<Thumbnail src='/img/auth/allow-backends-only_console_2.10.1.png' alt='Allow backends only in Hasura console'
-           width='600px' />
+<Thumbnail
+  src='/img/auth/allow-backends-only_console_2.10.1.png'
+  alt='Allow backends only in Hasura console'
+  width='600px'
+/>
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can set a mutate permission for a role as backend only in the `metadata >
-databases > [database-name] > tables > [table-name].yaml` file, eg: `public_users.yaml`:
+You can set a mutate permission for a role as backend only in the
+`metadata > databases > [database-name] > tables > [table-name].yaml` file, eg: `public_users.yaml`:
 
 ```yaml {10,14}
 table:
@@ -878,7 +875,7 @@ insert_permissions:
     permission:
       check: {}
       columns:
-      - id
+        - id
       backend_only: true
 delete_permissions:
   - role: user
@@ -891,8 +888,8 @@ delete_permissions:
 <TabItem value="api" label="API">
 
 You can set a mutate permission for a role as backend only with the Metadata API and the
-  [insert](/api-reference/syntax-defs.mdx#insertpermission), [update](/api-reference/syntax-defs.mdx#updatepermission)
-  or [delete](/api-reference/syntax-defs.mdx#deletepermission) permissions.
+[insert](/api-reference/syntax-defs.mdx#insertpermission), [update](/api-reference/syntax-defs.mdx#updatepermission) or
+[delete](/api-reference/syntax-defs.mdx#deletepermission) permissions.
 
 ```http {19}
 POST /v1/metadata HTTP/1.1
@@ -930,7 +927,6 @@ and above.
 
 :::
 
-
 ### Disabling Root Fields {#disabling-root-fields}
 
 When you track a table in Hasura, by default it exposes all the root fields available to the role. However, sometimes
@@ -949,22 +945,23 @@ Disabling root fields is supported in version `v2.8.0` and above.
 
 :::
 
-
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 You can disable specific root fields for query and subscription by unchecking them in the Select permission for the
 table and role in Console as follows:
 
-<Thumbnail src='/img/auth/disable-root-fields_console_2.11.1.png' alt='Disable root fields in Hasura console'
-           width='600px' />
+<Thumbnail
+  src='/img/auth/disable-root-fields_console_2.11.1.png'
+  alt='Disable root fields in Hasura console'
+  width='600px'
+/>
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can disable root fields for queries and subscriptions specifying which are available for the
-`select_permissions` by updating the specific `metadata > databases > [database-name] > tables > [table-name].yaml` file
-eg:
+You can disable root fields for queries and subscriptions specifying which are available for the `select_permissions` by
+updating the specific `metadata > databases > [database-name] > tables > [table-name].yaml` file eg:
 
 ```yaml {10-15}
 table:
@@ -991,8 +988,8 @@ delete_permissions:
 
 :::info Note
 
-Setting the value of `query_root_fields` or `subscription_root_fields` to `null` or not defining it at
-all implies that all fields are allowed and an empty array means no fields are allowed.
+Setting the value of `query_root_fields` or `subscription_root_fields` to `null` or not defining it at all implies that
+all fields are allowed and an empty array means no fields are allowed.
 
 :::
 
@@ -1000,8 +997,8 @@ all implies that all fields are allowed and an empty array means no fields are a
 <TabItem value="api" label="API">
 
 You can disable root fields for Select permissions with the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx) by specifying which should be available in
-the  `query_root_fields` and `subscription_root_fields` arrays, eg:
+[permissions metadata API](/api-reference/metadata-api/permission.mdx) by specifying which should be available in the
+`query_root_fields` and `subscription_root_fields` arrays, eg:
 
 ```http {16,17}
 POST /v1/metadata HTTP/1.1
@@ -1028,15 +1025,13 @@ X-Hasura-Role: admin
 
 :::info Note
 
-Setting the value of `query_root_fields` or `subscription_root_fields` to `null` or not defining it at
-all implies that all fields are allowed and an empty array means no fields are allowed.
+Setting the value of `query_root_fields` or `subscription_root_fields` to `null` or not defining it at all implies that
+all fields are allowed and an empty array means no fields are allowed.
 
 :::
 
 </TabItem>
 </Tabs>
-
-
 
 #### Use cases
 
@@ -1054,12 +1049,14 @@ We would like to configure permissions of the `guest` role such that they are on
 
 Modifying the select permission of the `articles` table:
 
+<Thumbnail
+  src='/img/auth/disable-all-root-fields_console_2.11.1.png'
+  alt='Disable root fields in Hasura console'
+  width='600px'
+/>
 
-<Thumbnail src='/img/auth/disable-all-root-fields_console_2.11.1.png' alt='Disable root fields in Hasura console' width='600px' />
-
-Note that `query_root_fields` and `subscription_root_fields` are set to `[]`, which means that the `guest` role
-won't be able to access the `articles` table directly, but will be able to access it through the `articles`
-relationship.
+Note that `query_root_fields` and `subscription_root_fields` are set to `[]`, which means that the `guest` role won't be
+able to access the `articles` table directly, but will be able to access it through the `articles` relationship.
 
 :::caution
 
@@ -1078,7 +1075,11 @@ In this case, regardless of the permission on the table, only `<table>_by_pk` sh
 
 This can be done in the following way:
 
-<Thumbnail src='/img/auth/disable-select-root-fields_console_2.11.1.png' alt='Disable select root fields in Hasura console' width='600px' />
+<Thumbnail
+  src='/img/auth/disable-select-root-fields_console_2.11.1.png'
+  alt='Disable select root fields in Hasura console'
+  width='600px'
+/>
 
 ##### 3. Disable subscription fields
 
@@ -1086,7 +1087,11 @@ You can allow a role to only be able to make query and not subscription requests
 
 This can be done in the following way:
 
-<Thumbnail src='/img/auth/disable-subscription-root-fields_console_2.11.1.png' alt='Disable subscription root fields inHasura console' width='600px' />
+<Thumbnail
+  src='/img/auth/disable-subscription-root-fields_console_2.11.1.png'
+  alt='Disable subscription root fields inHasura console'
+  width='600px'
+/>
 
 :::info Additional Resources
 

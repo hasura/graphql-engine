@@ -8,8 +8,9 @@ keywords:
   - event trigger
   - payload
 ---
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Event trigger payload
 
@@ -60,8 +61,7 @@ Content-Type: application/json
 | schema-name       | String                    | Name of the schema for the table                                                                                                                            |
 | table-name        | String                    | Name of the table                                                                                                                                           |
 
-
-<Tabs className="json-payloads">
+<Tabs groupId="user-preference" className="json-payloads">
 <TabItem value="postgres" label="Postgres">
 
 **In case of**:
@@ -77,8 +77,7 @@ Content-Type: application/json
   - `event.data.new` will be `null`
 - MANUAL
   - `event.data.old` will be `null`
-  - `event.data.new` will contain the current row 
-
+  - `event.data.new` will contain the current row
 
 :::info Note
 
@@ -141,17 +140,15 @@ Content-Type: application/json
   - `event.data.new` will be `null`
 - MANUAL
   - `event.data.old` will be `null`
-  - `event.data.new` will contain the current row 
-
+  - `event.data.new` will contain the current row
 
 :::info Note
 
-- In case of `UPDATE`, the events are delivered only if new data is
-  distinct from old data. We use the primary keys to join the temporary tables `inserted`
-  and `deleted` tables to correlate the old and new data.
+- In case of `UPDATE`, the events are delivered only if new data is distinct from old data. We use the primary keys to
+  join the temporary tables `inserted` and `deleted` tables to correlate the old and new data.
 - `UPDATE` event triggers will only work on tables which have primary keys.
-- Since we use the primary key to co-relate DELETED and INSERTED table, if the
-  primary key is updated then it is not possible to correlate the `old` and `new` data. Hence, only `new` data is sent in this case.
+- Since we use the primary key to co-relate DELETED and INSERTED table, if the primary key is updated then it is not
+  possible to correlate the `old` and `new` data. Hence, only `new` data is sent in this case.
 
 :::
 
@@ -188,8 +185,6 @@ Content-Type: application/json
 
 </TabItem>
 </Tabs>
-
-
 
 ## Syntax definitions
 

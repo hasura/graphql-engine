@@ -47,7 +47,7 @@ Currently, only functions which satisfy the following constraints can be exposed
 
 SQL functions can be created using SQL statements which can be executed as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 - Head to the `Data -> SQL` section of the Hasura console
@@ -96,7 +96,7 @@ X-Hasura-Role: admin
 Functions can be present in the underlying Postgres database without being exposed over the GraphQL API. In order to
 expose a function over the GraphQL API, it needs to be **tracked**.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 While creating functions from the `Data -> SQL` page, selecting the `Track this` checkbox will expose the new function

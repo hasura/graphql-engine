@@ -27,15 +27,15 @@ Hasura enables users to check the health of connected data sources via the healt
 
 ## Configuring source health check
 
-A health check configuration contains information that Hasura uses to determine the health state of a source. You
-can set the time interval for when Hasura will re-perform the check on the source.
+A health check configuration contains information that Hasura uses to determine the health state of a source. You can
+set the time interval for when Hasura will re-perform the check on the source.
 
 Currently, Hasura supports enabling health checks on Postgres and MS SQL Server databases. Support for other data
 sources will be added soon.
 
 Health check configurations for Postgres and SQL Server sources are identical and are as follows.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Console support will be added soon.
@@ -114,10 +114,10 @@ X-Hasura-Role: admin
 
 ### API
 
-Health check reports of sources can be obtained through a `GET` request from the
-`/healthz/sources` API, on demand. Learn more about the API [here](/api-reference/source-health.mdx).
+Health check reports of sources can be obtained through a `GET` request from the `/healthz/sources` API, on demand.
+Learn more about the API [here](/api-reference/source-health.mdx).
 
 ### Logging
 
-Hasura logs the health check status and other information via `health-check-log` type when enabled.
-Learn more about the health checks logs [here](/deployment/logging.mdx#health-check-log-structure).
+Hasura logs the health check status and other information via `health-check-log` type when enabled. Learn more about the
+health checks logs [here](/deployment/logging.mdx#health-check-log-structure).

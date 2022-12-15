@@ -9,10 +9,10 @@ keywords:
 sidebar_position: 8
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
-import HeadingIcon from "@site/src/components/HeadingIcon";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Allow List of operations
 
@@ -38,14 +38,11 @@ Allow-list validation will not be enforced for the `admin` role.
 
 Head to the `API` tab and find the `Allow List` section in the console.
 
-<Thumbnail
-  src="/img/api-explorer/allowlist-manager.png"
-  alt="AllowList manager"
-/>
+<Thumbnail src='/img/api-explorer/allowlist-manager.png' alt='AllowList manager' />
 
 ## Adding or removing an operation in Allow List
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `API` tab and find the `Allow List` section in the console.
@@ -67,16 +64,13 @@ query ($id: Int!) {
 
 After writing your query or selecting a query from quick add dropdown menu, click `Add Operation`.
 
-<Thumbnail src="/img/api-explorer/write-operation.png" alt="Add operation" />
+<Thumbnail src='/img/api-explorer/write-operation.png' alt='Add operation' />
 
 - **Upload File**: Alternatively, you can upload files, like this
   [sample file](https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025), to add multiple operations to the
   Allow List. Each operation in the file will need a unique name. Once you've selected your file, click `Add Operation`.
 
-<Thumbnail
-  src="/img/api-explorer/upload-operation.png"
-  alt="Upload operation"
-/>
+<Thumbnail src='/img/api-explorer/upload-operation.png' alt='Upload operation' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -159,25 +153,22 @@ A role-based Allow List is useful when you would like a query collection(s) to b
 
 :::info Note
 
-Server support for Role-based Allow Lists in Cloud/Enterprise products is available from version `v2.3` and console support is available from version `v2.13`. In OSS, role-based entries are
-ignored.
+Server support for Role-based Allow Lists in Cloud/Enterprise products is available from version `v2.3` and console
+support is available from version `v2.13`. In OSS, role-based entries are ignored.
 
 On older versions (which do not support role-based Allow Lists), any role-based Allow List Metadata entry will be
 treated as global. Hence, caution is advised when using role-based Allow List Metadata with older versions.
 
 :::
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `API` tab and find the `Allow List` section on the Console. On the left side bar, you can see a list of
 query collections. After selecting a query collection, you can enable the roles which should have access to any query
 collection via the `Permissions` tab.
 
-<Thumbnail
-  src="/img/api-explorer/role-based-allow-list.png"
-  alt="Role based allow list"
-/>
+<Thumbnail src='/img/api-explorer/role-based-allow-list.png' alt='Role based allow list' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -229,17 +220,14 @@ Metadata API.
 
 ## Quick-create allowed operations
 
-<div className="badge badge--primary heading-badge">Available on: Cloud</div>
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
 ### Hasura Cloud
 
 This feature lets you add to the Allow List with one click from the record of past operations. (With Hasura GraphQL
 Engine CE, Allow Lists must be managed manually).
 
-<Thumbnail
-  src="/img/security/allowlist-add-new-op.png"
-  alt="Hasura Cloud Console create new allowed operation"
-/>
+<Thumbnail src='/img/security/allowlist-add-new-op.png' alt='Hasura Cloud Console create new allowed operation' />
 
 ## Recommended usage
 

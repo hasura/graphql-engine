@@ -45,7 +45,7 @@ articles (id int, title text, author_id int, body text)
 
 Now, we can create a role `editor` and add a select validation rule as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 <Thumbnail src='/img/schema/bq-validation-not-empty.png' />
@@ -142,8 +142,8 @@ authors (id int, name text)
 articles (id int, title text, author_id int, body text)
 ```
 
-Also, suppose there is an [object relationship](schema/bigquery/table-relationships/index.mdx) `articles.author`
-defined as:
+Also, suppose there is an [object relationship](schema/bigquery/table-relationships/index.mdx) `articles.author` defined
+as:
 
 ```sql
 articles.author_id -> authors.id
@@ -151,7 +151,7 @@ articles.author_id -> authors.id
 
 Now, we can create a role `author` and add an select validation rule as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 <Thumbnail src='/img/schema/bq-author-own-articles.png' />

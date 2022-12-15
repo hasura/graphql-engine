@@ -9,9 +9,9 @@ sidebar_label: Kriti Templating
 sidebar_position: 13
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Kriti Templating in Hasura
 
@@ -19,14 +19,17 @@ import Thumbnail from "@site/src/components/Thumbnail";
 
 Kriti allows transformation of JSON via templating during the Hasura GraphQL Engine lifecycle.
 
-Kriti has a JSON-like syntax that allows for the creation of JSON values via direct-construction, reference and branching structures.
+Kriti has a JSON-like syntax that allows for the creation of JSON values via direct-construction, reference and
+branching structures.
 
 There are two main ways that Kriti templates are used:
 
-* String interpolation for fields
-* Payload transformation
+- String interpolation for fields
+- Payload transformation
 
-String interpolation can also be used inside Kriti payload transformations, so only payload examples will be used here. But note that when a field provides Kriti interpolation capabilities you can't use the full capabilities of Kriti templates, just the interpolation capabilities.
+String interpolation can also be used inside Kriti payload transformations, so only payload examples will be used here.
+But note that when a field provides Kriti interpolation capabilities you can't use the full capabilities of Kriti
+templates, just the interpolation capabilities.
 
 :::info Note
 
@@ -38,15 +41,15 @@ See [Kriti's README.md on GitHub](https://github.com/hasura/kriti-lang#kriti-lan
 
 At present, Kriti templating is available for:
 
-* [Action REST Connectors](/actions/rest-connectors.mdx)
-* [Event Triggers REST Connectors](/event-triggers/rest-connectors.mdx)
-* [Cron Triggers REST Connectors](/scheduled-triggers/create-cron-trigger.mdx#rest-connectors)
+- [Action REST Connectors](/actions/rest-connectors.mdx)
+- [Event Triggers REST Connectors](/event-triggers/rest-connectors.mdx)
+- [Cron Triggers REST Connectors](/scheduled-triggers/create-cron-trigger.mdx#rest-connectors)
 
 ### Example
 
 The following is an example of using Kriti templates for an Action REST Connector:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Open the Hasura Console, head to the `Actions` tab, and click the `Create` button to open the page.
@@ -54,8 +57,8 @@ Open the Hasura Console, head to the `Actions` tab, and click the `Create` butto
 Add a REST connector payload and configure and test the associated template.
 
 <Thumbnail
-src="/img/graphql/core/templates/create-action-configure-rest-connectors.png"
-alt="Create an event trigger"
+  src='/img/graphql/core/templates/create-action-configure-rest-connectors.png'
+  alt='Create an event trigger'
 />
 
 </TabItem>
@@ -102,8 +105,8 @@ X-Hasura-Role: admin
 }
 ```
 
-The template field is a string that represents a template in the language reflected in the template_engine field.
-In this case:
+The template field is a string that represents a template in the language reflected in the template_engine field. In
+this case:
 
 ```json
 {
@@ -113,21 +116,21 @@ In this case:
   }
 }
 ```
+
 </TabItem>
 </Tabs>
-
 
 ## Capabilities and behavior
 
 The functionality of Kriti templates can be broken down into the following categories:
 
-* JSON Value Construction
-* Control Flow
-* Value Interpolation
-* String Interpolation
-* Path Accessors
-* Optional Chaining
-* Functions
+- JSON Value Construction
+- Control Flow
+- Value Interpolation
+- String Interpolation
+- Path Accessors
+- Optional Chaining
+- Functions
 
 Most Kriti-specific functionality is introduced through the use of a `{{ ... }}` syntax.
 
@@ -139,13 +142,15 @@ For example, the following is a valid Kriti template and JSON document:
 
 ```json
 {
-  "a": [1,2,3],
+  "a": [1, 2, 3],
   "b": "hello world"
 }
 ```
+
 ### Value interpolation
 
-Values can be interpolated in place of a normal JSON value. For example, the "b" field uses interpolation rather than a literal value here:
+Values can be interpolated in place of a normal JSON value. For example, the "b" field uses interpolation rather than a
+literal value here:
 
 ```json
 {
@@ -175,7 +180,8 @@ Conditional logic and loops are supported:
 
 ### Path references
 
-As part of interpolation and control-flow you may reference data via paths, of which a variable is a special case. The scope from which a path is looked up is either top-level, or expanded via control flow.
+As part of interpolation and control-flow you may reference data via paths, of which a variable is a special case. The
+scope from which a path is looked up is either top-level, or expanded via control flow.
 
 For example, if the variable `foo` contained the value `1`, you could reference it like so:
 
@@ -197,7 +203,8 @@ or:
 
 ### Optional chaining
 
-You may also use optional chaining to traverse into fields that may not be present. The value is `Null` if the field is not present:
+You may also use optional chaining to traverse into fields that may not be present. The value is `Null` if the field is
+not present:
 
 ```json
 { "a": {{ bar?.x }} }
@@ -227,8 +234,9 @@ These use the `foo(...)` syntax:
 }
 ```
 
-The [Function Reference](#kriti-function-reference) section details the functions available by default. Note that there can be additional functions and values in the scope depending on the template context. These will be documented in the relevant documentation section.
-
+The [Function Reference](#kriti-function-reference) section details the functions available by default. Note that there
+can be additional functions and values in the scope depending on the template context. These will be documented in the
+relevant documentation section.
 
 ## Function reference {#kriti-function-reference}
 
@@ -263,9 +271,10 @@ Output:
 ### size
 
 Returns:
+
 - the length of an array or string
 - the number of keys of an object
-- the value of a number 
+- the value of a number
 - `1` for `true` and `0` for `false`
 - `0` for `null`
 
@@ -279,8 +288,8 @@ Input:
 }
 ```
 
- Output:
- 
+Output:
+
 ```json
 {
   "array": 1,
@@ -310,11 +319,7 @@ Output:
 
 ```json
 {
-  "array": [
-    3,
-    2,
-    1
-  ],
+  "array": [3, 2, 1],
   "number": 0.25,
   "string": "fdsa"
 }
@@ -363,13 +368,9 @@ Output:
 
 ```json
 {
-  "array": [
-    2,
-    3
-  ],
+  "array": [2, 3],
   "string": "sdf"
 }
-
 ```
 
 ### toCaseFold
@@ -414,7 +415,6 @@ Output:
 {
   "string": "abcd"
 }
-
 ```
 
 ### toUpper
@@ -437,7 +437,6 @@ Output:
 {
   "string": "ABCD"
 }
-
 ```
 
 ### toTitle
@@ -502,14 +501,8 @@ Output:
 ```json
 {
   "object": [
-    [
-      "a",
-      1
-    ],
-    [
-      "b",
-      2
-    ]
+    ["a", 1],
+    ["b", 2]
   ]
 }
 ```
@@ -530,11 +523,7 @@ Output:
 
 ```json
 {
-  "array": [
-    1,
-    3,
-    5
-  ]
+  "array": [1, 3, 5]
 }
 ```
 
@@ -558,12 +547,7 @@ Output:
 
 ```json
 {
-  "arrays": [
-    1,
-    2,
-    3,
-    4
-  ],
+  "arrays": [1, 2, 3, 4],
   "objects": {
     "a": 1,
     "b": 3,
@@ -575,7 +559,7 @@ Output:
 
 :::info Note
 
-All of the above functions are also listed on the [Kriti GitHub README.md](https://github.com/hasura/kriti-lang/blob/main/README.md#basic-functions-collection).
+All of the above functions are also listed on the
+[Kriti GitHub README.md](https://github.com/hasura/kriti-lang/blob/main/README.md#basic-functions-collection).
 
 :::
-

@@ -43,7 +43,7 @@ REST Connectors are supported in Hasura GraphQL Engine versions `v2.1.0` and abo
 REST Connectors can be configured either when creating a new event trigger or editing an existing one. See the transform
 options [here](#event-trigger-transform-types):
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Go to the `Events` tab on the console and create or modify an event trigger. Scroll down to `Configure REST Connectors`
@@ -199,7 +199,7 @@ You can transform your:
 
 You can change the request method to adapt to your API's expected format.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Events > [event_trigger_name]` page. Under `Configure REST Connectors` click on
@@ -305,7 +305,7 @@ You can also provide query params to add to the URL.
 
 You can use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Events > [event_trigger_name]` page. Under `Configure REST Connectors` click on
@@ -442,7 +442,7 @@ request body to `x_www_form_urlencoded` formats.
 If you are using a `GET` request, you might want to not send any request body, and additionally not send a
 `content-type` header to the webhook. You can do that using the disable body feature.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the `Configure REST Connectors` section, click on `Add Request Options Transform`, and convert the `Request Method`
@@ -550,7 +550,7 @@ X-Hasura-Role: admin
 
 You can transform Request Body to `application/json` format using the following steps:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the `Configure REST Connectors` section, click on `Add Payload Transform`. By default console sends the body as
@@ -659,7 +659,7 @@ While doing `x_www_form_urlencoded` transformation, please note that as all chan
 when calling the API, so you will need to remove the default `application/json` header and add a
 `application/x-www-form-urlencoded` header.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the `Configure REST Connectors` section, click on `Add Payload Transform`. Change the dropdown next to

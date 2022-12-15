@@ -48,7 +48,7 @@ author (id uuid, name text, rating integer)
 
 We can now add a check constraint to limit the `rating` values as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Modify` tab in the table page and add a check constraint in the `Check Constraints` section:
@@ -146,7 +146,7 @@ an article's content exceeds a certain number of words, and then add a
 [Postgres trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html) that will call this function every
 time before an article is inserted or updated.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 - Head to the `Data -> SQL` section of the Hasura console
@@ -265,7 +265,7 @@ article (id uuid, title text, content text, author_id uuid)
 
 Now, we can create a role `user` and add an insert validation rule as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 <Thumbnail src='/img/schema/validation-not-empty.png' alt='validation using permission: title cannot be empty' />
@@ -369,7 +369,7 @@ article.author_id -> author.id
 
 Now, we can create a role `user` and add an insert validation rule as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 <Thumbnail
