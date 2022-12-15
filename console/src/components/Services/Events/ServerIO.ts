@@ -8,7 +8,6 @@ import {
   getScheduledEventsLandingRoute,
   getSTModifyRoute,
   getDataEventsLandingRoute,
-  getAdhocPendingEventsRoute,
 } from '../../Common/utils/routesUtils';
 import { transformHeaders } from '../../Common/Headers/utils';
 import {
@@ -27,12 +26,10 @@ import {
 } from './types';
 import { setCurrentTrigger } from './reducer';
 import { LocalScheduledTriggerState } from './CronTriggers/state';
-import { LocalAdhocEventState } from './AdhocEvents/Add/state';
 import {
   LocalEventTriggerState,
   parseServerETDefinition,
 } from './EventTriggers/state';
-import { validateAddState as validateAdhocEventState } from './AdhocEvents/utils';
 import { validateETState } from './EventTriggers/utils';
 import {
   validateAddState,
@@ -50,7 +47,6 @@ import {
   generateCreateScheduledTriggerQuery,
   generateUpdateScheduledTriggerQuery,
   getDropScheduledTriggerQuery,
-  getCreateScheduledEventQuery,
   getRedeliverDataEventQuery,
   deleteScheduledEvent,
   SupportedEvents,
@@ -565,56 +561,6 @@ export const deleteEventTrigger =
       successMsg,
       errorMsg,
       true
-    );
-  };
-
-export const createScheduledEvent =
-  (
-    state: LocalAdhocEventState,
-    successCb?: () => void,
-    errorCb?: () => void
-  ): Thunk =>
-  (dispatch, getState) => {
-    const validationError = validateAdhocEventState(state);
-    const errorMessage = 'Failed scheduling the event';
-    if (validationError) {
-      if (errorCb) {
-        errorCb();
-      }
-      return dispatch(showErrorNotification(errorMessage, validationError));
-    }
-
-    const currentSource = getState().tables.currentDataSource;
-
-    const query = getCreateScheduledEventQuery(state, currentSource);
-    return dispatch(
-      requestAction(
-        Endpoints.metadata,
-        {
-          method: 'POST',
-          body: JSON.stringify(query),
-        },
-        undefined,
-        undefined,
-        true,
-        true
-      )
-    ).then(
-      () => {
-        if (successCb) {
-          successCb();
-        }
-        dispatch(showSuccessNotification('Event scheduled successfully'));
-        dispatch(_push(getAdhocPendingEventsRoute('absolute')));
-      },
-      (error: any) => {
-        dispatch(
-          showErrorNotification(errorMessage, error.message || '', error)
-        );
-        if (errorCb) {
-          errorCb();
-        }
-      }
     );
   };
 

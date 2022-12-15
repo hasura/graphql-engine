@@ -1,32 +1,4 @@
-import { LocalAdhocEventState } from './Add/state';
-import {
-  isObject,
-  isValidURL,
-  isValidTemplateLiteral,
-  isValidDate,
-} from '../../../Common/utils/jsUtils';
 import { BaseTable } from '../../../../dataSources/types';
-
-export const validateAddState = (state: LocalAdhocEventState) => {
-  if (!isValidURL(state.webhook) && !isValidTemplateLiteral(state.webhook)) {
-    return 'webhook must either be a valid URL or a valid template literal';
-  }
-
-  if (!isValidDate(state.time)) {
-    return 'the given time is invalid';
-  }
-
-  try {
-    const maybeObj = JSON.parse(state.payload);
-    if (!isObject(maybeObj)) {
-      throw new Error();
-    }
-  } catch (_) {
-    return 'payload must be valid JSON';
-  }
-
-  return '';
-};
 
 export const adhocEventsTable: BaseTable = {
   table_name: 'hdb_scheduled_events',
