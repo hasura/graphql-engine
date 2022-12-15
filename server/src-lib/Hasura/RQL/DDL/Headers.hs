@@ -6,6 +6,8 @@ module Hasura.RQL.DDL.Headers
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
@@ -30,6 +32,31 @@ data HeaderValue = HVValue Text | HVEnv Text
 instance NFData HeaderValue
 
 instance Hashable HeaderValue
+
+instance HasCodec HeaderConf where
+  codec =
+    dimapCodec
+      ( either
+          (\(name, value) -> HeaderConf name (HVValue value))
+          (\(name, value) -> HeaderConf name (HVEnv value))
+      )
+      ( \case
+          HeaderConf name (HVValue value) -> Left (name, value)
+          HeaderConf name (HVEnv value) -> Right (name, value)
+      )
+      $ disjointEitherCodec valueCodec fromEnvCodec
+    where
+      valueCodec =
+        AC.object "HeaderConfValue" $
+          (,)
+            <$> requiredField' "name" AC..= fst
+            <*> requiredField' "value" AC..= snd
+
+      fromEnvCodec =
+        AC.object "HeaderConfFromEnv" $
+          (,)
+            <$> requiredField' "name" AC..= fst
+            <*> requiredField' "value_from_env" AC..= snd
 
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do

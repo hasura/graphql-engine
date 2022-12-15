@@ -48,14 +48,7 @@ import Hasura.SQL.Backend
 type RemoteRelationship = RemoteRelationshipG RemoteRelationshipDefinition
 
 instance HasCodec RemoteRelationship where
-  codec =
-    AC.object "RemoteRelationship" $
-      RemoteRelationship
-        <$> requiredField' "name" AC..= _rrName
-        <*> requiredFieldWith'
-          "definition"
-          (remoteRelationshipDefinitionCodec RRPLenient)
-          AC..= _rrDefinition
+  codec = remoteRelationshipCodec $ remoteRelationshipDefinitionCodec RRPLenient
 
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "RemoteRelationship" $ \obj ->

@@ -510,7 +510,7 @@ metadataToDTO
     ) =
     MetadataV3
       { metaV3Sources = sources,
-        metaV3RemoteSchemas = placeholder <$> remoteSchemasToOrdJSONList remoteSchemas,
+        metaV3RemoteSchemas = remoteSchemas,
         metaV3QueryCollections = placeholder <$> queryCollectionsToOrdJSONList queryCollections,
         metaV3Allowlist = placeholder <$> allowlistToOrdJSONList allowlist,
         metaV3Actions = placeholder <$> actionMetadataToOrdJSONList actions,

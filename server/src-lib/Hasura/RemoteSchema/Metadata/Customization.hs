@@ -7,6 +7,8 @@ module Hasura.RemoteSchema.Metadata.Customization
   )
 where
 
+import Autodocodec (HasCodec, codec, hashMapCodec, object, optionalField', optionalFieldWith', requiredFieldWith', (.=))
+import Autodocodec.Extended (graphQLFieldNameCodec)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Hasura.Prelude
@@ -24,6 +26,14 @@ data RemoteTypeCustomization = RemoteTypeCustomization
 instance NFData RemoteTypeCustomization
 
 instance Hashable RemoteTypeCustomization
+
+instance HasCodec RemoteTypeCustomization where
+  codec =
+    object "RemoteTypeCustomization" $
+      RemoteTypeCustomization
+        <$> optionalFieldWith' "prefix" graphQLFieldNameCodec .= _rtcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec .= _rtcSuffix
+        <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec) .= _rtcMapping
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteTypeCustomization)
 
@@ -46,6 +56,15 @@ instance NFData RemoteFieldCustomization
 
 instance Hashable RemoteFieldCustomization
 
+instance HasCodec RemoteFieldCustomization where
+  codec =
+    object "RemoteFieldCustomization" $
+      RemoteFieldCustomization
+        <$> requiredFieldWith' "parent_type" graphQLFieldNameCodec .= _rfcParentType
+        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec .= _rfcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec .= _rfcSuffix
+        <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec) .= _rfcMapping
+
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteFieldCustomization)
 
 instance J.FromJSON RemoteFieldCustomization where
@@ -66,5 +85,13 @@ data RemoteSchemaCustomization = RemoteSchemaCustomization
 instance NFData RemoteSchemaCustomization
 
 instance Hashable RemoteSchemaCustomization
+
+instance HasCodec RemoteSchemaCustomization where
+  codec =
+    object "RemoteSchemaCustomization" $
+      RemoteSchemaCustomization
+        <$> optionalFieldWith' "root_fields_namespace" graphQLFieldNameCodec .= _rscRootFieldsNamespace
+        <*> optionalField' "type_names" .= _rscTypeNames
+        <*> optionalField' "field_names" .= _rscFieldNames
 
 $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaCustomization)

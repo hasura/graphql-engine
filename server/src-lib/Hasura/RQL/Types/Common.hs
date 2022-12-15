@@ -42,6 +42,7 @@ module Hasura.RQL.Types.Common
     ApolloFederationVersion (..),
     isApolloFedV1enabled,
     RemoteRelationshipG (..),
+    remoteRelationshipCodec,
     rrDefinition,
     rrName,
     TriggerOnReplication (..),
@@ -50,12 +51,14 @@ where
 
 import Autodocodec
   ( HasCodec (codec),
+    JSONCodec,
     bimapCodec,
     dimapCodec,
     disjointEitherCodec,
     optionalFieldOrNull',
     requiredField,
     requiredField',
+    requiredFieldWith',
     stringConstCodec,
   )
 import Autodocodec qualified as AC
@@ -71,6 +74,7 @@ import Data.Scientific (toBoundedInteger)
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.Typeable (Typeable)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
@@ -78,7 +82,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Metadata.DTO.Utils (fromEnvCodec)
+import Hasura.Metadata.DTO.Utils (fromEnvCodec, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -665,6 +669,17 @@ data RemoteRelationshipG definition = RemoteRelationship
     _rrDefinition :: definition
   }
   deriving (Show, Eq, Generic)
+
+remoteRelationshipCodec ::
+  forall definition.
+  (Typeable definition) =>
+  JSONCodec definition ->
+  JSONCodec (RemoteRelationshipG definition)
+remoteRelationshipCodec definitionCodec =
+  AC.object ("RemoteRelationship_" <> typeableName @definition) $
+    RemoteRelationship
+      <$> requiredField' "name" AC..= _rrName
+      <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
 
 $(makeLenses ''RemoteRelationshipG)
 $(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)

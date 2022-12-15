@@ -1,6 +1,7 @@
 module Autodocodec.Extended
   ( graphQLFieldNameCodec,
     graphQLValueCodec,
+    graphQLSchemaDocumentCodec,
     hashSetCodec,
     hashSetCodecWith,
     integerCodec,
@@ -18,11 +19,14 @@ import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
+import Language.GraphQL.Draft.Parser qualified as GParser
+import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
+import Text.Builder qualified as TB
 
 -- | Codec for a GraphQL field name
 graphQLFieldNameCodec :: JSONCodec G.Name
-graphQLFieldNameCodec = bimapCodec dec enc codec
+graphQLFieldNameCodec = named "GraphQLName" $ bimapCodec dec enc codec
   where
     dec text =
       maybeToEither ("invalid GraphQL field name '" <> T.unpack text <> "'") $
@@ -69,6 +73,12 @@ graphQLValueCodec varCodec =
           dec _ = Left msg -- handle failure without exception when decoding
           enc _ = error msg -- encoding is supposed to be total so we need an exception here
        in bimapCodec dec enc nullCodec
+
+graphQLSchemaDocumentCodec :: JSONCodec G.SchemaDocument
+graphQLSchemaDocumentCodec = named "GraphQLSchema" $ bimapCodec dec enc $ codec @Text
+  where
+    dec = mapLeft T.unpack . GParser.parseSchemaDocument
+    enc = TB.run . GPrinter.schemaDocument
 
 -- | Serializes a hash set by converting it to a list. This matches the FromJSON
 -- and ToJSON instances in aeson.
