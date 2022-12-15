@@ -82,7 +82,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Metadata.DTO.Utils (fromEnvCodec, typeableName)
+import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -644,6 +644,9 @@ data TriggerOnReplication
   deriving (Show, Eq, Generic)
 
 instance NFData TriggerOnReplication
+
+instance HasCodec TriggerOnReplication where
+  codec = boolConstCodec TOREnableTrigger TORDisableTrigger
 
 instance FromJSON TriggerOnReplication where
   parseJSON = withBool "TriggerOnReplication" $ \case

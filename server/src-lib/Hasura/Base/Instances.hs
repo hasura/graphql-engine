@@ -5,6 +5,7 @@
 -- | This module defines all missing instances of third party libraries.
 module Hasura.Base.Instances () where
 
+import Autodocodec qualified as AC
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Fixed (Fixed (..))
@@ -101,6 +102,15 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
       GEQ -> GEQ
       GGT -> GGT
     GGT -> GGT
+
+--------------------------------------------------------------------------------
+-- HasCodec
+
+instance AC.HasCodec C.CronSchedule where
+  codec =
+    AC.named "CronSchedule" $
+      AC.bimapCodec C.parseCronSchedule C.serializeCronSchedule $
+        AC.codec @Text
 
 --------------------------------------------------------------------------------
 -- JSON

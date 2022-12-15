@@ -14,6 +14,7 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, object, requiredField', (.=))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
@@ -24,6 +25,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation)
 import Data.Validation qualified as V
+import Hasura.Metadata.DTO.Utils (discriminatorField)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( Template (..),
@@ -152,6 +154,36 @@ escapeURIBS =
     . URI.escapeURIString URI.isUnescapedInURIComponent
     . T.unpack
     . TE.decodeUtf8
+
+instance HasCodec BodyTransformFn where
+  codec =
+    dimapCodec dec enc $
+      disjointEitherCodec removeCodec $
+        disjointEitherCodec modifyAsJSONCodec modifyAsFormURLEncodecCodec
+    where
+      removeCodec = object "BodyTransformFn_Remove" $ discriminatorField "action" "remove"
+
+      modifyAsJSONCodec =
+        dimapCodec snd ((),) $
+          object "BodyTransformFn_ModifyAsJSON" $
+            (,)
+              <$> discriminatorField "action" "transform" .= fst
+              <*> requiredField' @Template "template" .= snd
+
+      modifyAsFormURLEncodecCodec =
+        dimapCodec snd ((),) $
+          object "BodyTransformFn_ModifyAsFormURLEncoded" $
+            (,)
+              <$> discriminatorField "action" "x_www_form_urlencoded" .= fst
+              <*> requiredField' @(M.HashMap Text UnescapedTemplate) "form_template" .= snd
+
+      dec (Left _) = Remove
+      dec (Right (Left template)) = ModifyAsJSON template
+      dec (Right (Right hashMap)) = ModifyAsFormURLEncoded hashMap
+
+      enc Remove = Left ()
+      enc (ModifyAsJSON template) = Right $ Left template
+      enc (ModifyAsFormURLEncoded hashMap) = Right $ Right hashMap
 
 instance FromJSON BodyTransformFn where
   parseJSON = J.withObject "BodyTransformFn" \o -> do

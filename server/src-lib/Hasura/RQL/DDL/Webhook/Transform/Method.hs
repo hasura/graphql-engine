@@ -11,6 +11,8 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec)
+import Autodocodec.Extended (caseInsensitiveTextCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
@@ -34,6 +36,9 @@ newtype Method = Method (CI.CI T.Text)
   deriving stock (Generic)
   deriving newtype (Show, Eq)
   deriving anyclass (NFData)
+
+instance HasCodec Method where
+  codec = dimapCodec Method coerce caseInsensitiveTextCodec
 
 instance J.ToJSON Method where
   toJSON = J.String . CI.original . coerce
@@ -67,6 +72,9 @@ newtype MethodTransformFn
     Replace Method
   deriving stock (Eq, Generic, Show)
   deriving newtype (NFData, FromJSON, ToJSON)
+
+instance HasCodec MethodTransformFn where
+  codec = dimapCodec Replace coerce codec
 
 -- | Provide an implementation for the transformations defined by
 -- 'MethodTransformFn'.

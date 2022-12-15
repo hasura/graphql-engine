@@ -37,6 +37,8 @@ module Hasura.RQL.Types.EventTrigger
   )
 where
 
+import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, listCodec, literalTextCodec, optionalField', optionalFieldWithDefault', requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Extended ((.=?))
 import Data.Aeson.TH
@@ -46,6 +48,7 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
+import Hasura.Metadata.DTO.Utils (boolConstCodec, codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -72,6 +75,9 @@ newtype TriggerName = TriggerName {unTriggerName :: NonEmptyText}
       PG.FromCol
     )
 
+instance HasCodec TriggerName where
+  codec = dimapCodec TriggerName unTriggerName codec
+
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
 
@@ -87,6 +93,13 @@ deriving instance Backend b => Show (SubscribeColumns b)
 deriving instance Backend b => Eq (SubscribeColumns b)
 
 instance Backend b => NFData (SubscribeColumns b)
+
+instance Backend b => HasCodec (SubscribeColumns b) where
+  codec =
+    dimapCodec
+      (either (const SubCStar) SubCArray)
+      (\case SubCStar -> Left "*"; SubCArray cols -> Right cols)
+      $ disjointEitherCodec (literalTextCodec "*") (listCodec codec)
 
 instance Backend b => FromJSON (SubscribeColumns b) where
   parseJSON (String s) = case s of
@@ -109,6 +122,13 @@ data SubscribeOpSpec (b :: BackendType) = SubscribeOpSpec
   deriving (Show, Eq, Generic)
 
 instance (Backend b) => NFData (SubscribeOpSpec b)
+
+instance Backend b => HasCodec (SubscribeOpSpec b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "SubscribeOpSpec") $
+      SubscribeOpSpec
+        <$> requiredField' "columns" AC..= sosColumns
+        <*> optionalField' "payload" AC..= sosPayload
 
 instance Backend b => FromJSON (SubscribeOpSpec b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
@@ -136,6 +156,14 @@ data RetryConf = RetryConf
   deriving (Show, Eq, Generic)
 
 instance NFData RetryConf
+
+instance HasCodec RetryConf where
+  codec =
+    AC.object "RetryConf" $
+      RetryConf
+        <$> requiredField' "num_retries" AC..= rcNumRetries
+        <*> requiredField' "interval_sec" AC..= rcIntervalSec
+        <*> optionalField' "timeout_sec" AC..= rcTimeoutSec
 
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''RetryConf)
 
@@ -187,6 +215,15 @@ data TriggerOpsDef (b :: BackendType) = TriggerOpsDef
 
 instance Backend b => NFData (TriggerOpsDef b)
 
+instance Backend b => HasCodec (TriggerOpsDef b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "TriggerOpsDef") $
+      TriggerOpsDef
+        <$> optionalField' "insert" AC..= tdInsert
+        <*> optionalField' "update" AC..= tdUpdate
+        <*> optionalField' "delete" AC..= tdDelete
+        <*> optionalField' "enable_manual" AC..= tdEnableManual
+
 instance Backend b => FromJSON (TriggerOpsDef b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
@@ -196,6 +233,9 @@ instance Backend b => ToJSON (TriggerOpsDef b) where
 data EventTriggerCleanupStatus = ETCSPaused | ETCSUnpaused deriving (Show, Eq, Generic)
 
 instance NFData EventTriggerCleanupStatus
+
+instance HasCodec EventTriggerCleanupStatus where
+  codec = boolConstCodec ETCSPaused ETCSUnpaused
 
 instance ToJSON EventTriggerCleanupStatus where
   toJSON = Bool . (ETCSPaused ==)
@@ -223,6 +263,17 @@ data AutoTriggerLogCleanupConfig = AutoTriggerLogCleanupConfig
   deriving (Show, Eq, Generic)
 
 instance NFData AutoTriggerLogCleanupConfig
+
+instance HasCodec AutoTriggerLogCleanupConfig where
+  codec =
+    AC.object "AutoTriggerLogCleanupConfig" $
+      AutoTriggerLogCleanupConfig
+        <$> requiredField' "schedule" AC..= _atlccSchedule
+        <*> optionalFieldWithDefault' "batch_size" 10000 AC..= _atlccBatchSize
+        <*> requiredField' "clear_older_than" AC..= _atlccClearOlderThan
+        <*> optionalFieldWithDefault' "timeout" 60 AC..= _atlccTimeout
+        <*> optionalFieldWithDefault' "clean_invocation_logs" False AC..= _atlccCleanInvocationLogs
+        <*> optionalFieldWithDefault' "paused" ETCSUnpaused AC..= _atlccPaused
 
 instance FromJSON AutoTriggerLogCleanupConfig where
   parseJSON =
@@ -340,6 +391,21 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
     etcTriggerOnReplication :: TriggerOnReplication
   }
   deriving (Show, Eq, Generic)
+
+instance (Backend b) => HasCodec (EventTriggerConf b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "EventTriggerConfEventTriggerConf") $
+      EventTriggerConf
+        <$> requiredField' "name" AC..= etcName
+        <*> requiredField' "definition" AC..= etcDefinition
+        <*> optionalField' "webhook" AC..= etcWebhook
+        <*> optionalField' "webhook_from_env" AC..= etcWebhookFromEnv
+        <*> requiredField' "retry_conf" AC..= etcRetryConf
+        <*> optionalField' "headers" AC..= etcHeaders
+        <*> optionalField' "request_transform" AC..= etcRequestTransform
+        <*> optionalField' "response_transform" AC..= etcResponseTransform
+        <*> optionalField' "cleanup_config" AC..= etcCleanupConfig
+        <*> optionalFieldWithDefault' "trigger_on_replication" (defaultTriggerOnReplication @b) AC..= etcTriggerOnReplication
 
 instance Backend b => FromJSON (EventTriggerConf b) where
   parseJSON = withObject "EventTriggerConf" \o -> do

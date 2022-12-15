@@ -1,5 +1,7 @@
 module Autodocodec.Extended
-  ( graphQLFieldNameCodec,
+  ( caseInsensitiveHashMapCodec,
+    caseInsensitiveTextCodec,
+    graphQLFieldNameCodec,
     graphQLValueCodec,
     graphQLSchemaDocumentCodec,
     hashSetCodec,
@@ -13,6 +15,9 @@ module Autodocodec.Extended
 where
 
 import Autodocodec
+import Data.Aeson (FromJSONKey, ToJSONKey)
+import Data.CaseInsensitive qualified as CI
+import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HashSet
 import Data.Scientific (Scientific (base10Exponent), floatingOrInteger)
 import Data.Text qualified as T
@@ -23,6 +28,23 @@ import Language.GraphQL.Draft.Parser qualified as GParser
 import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
 import Text.Builder qualified as TB
+
+-- | Like 'hashMapCodec', but with case-insensitive keys.
+caseInsensitiveHashMapCodec ::
+  forall k a.
+  (CI.FoldCase k, Hashable k, FromJSONKey k, ToJSONKey k) =>
+  JSONCodec a ->
+  JSONCodec (M.HashMap (CI.CI k) a)
+caseInsensitiveHashMapCodec elemCodec =
+  dimapCodec
+    (mapKeys CI.mk)
+    (mapKeys CI.original)
+    $ hashMapCodec elemCodec
+
+-- | Codec for case-insensitive strings / text. The underlying value may be
+-- @Text@ or another type that implements @FoldCase@ and @HasCodec@.
+caseInsensitiveTextCodec :: forall a. (CI.FoldCase a, HasCodec a) => JSONCodec (CI.CI a)
+caseInsensitiveTextCodec = dimapCodec CI.mk CI.original codec
 
 -- | Codec for a GraphQL field name
 graphQLFieldNameCodec :: JSONCodec G.Name

@@ -1,24 +1,16 @@
 -- | Utility functions for use defining autodocodec codecs.
 module Hasura.Metadata.DTO.Utils
-  ( codecNamePrefix,
+  ( boolConstCodec,
+    codecNamePrefix,
+    discriminatorField,
     fromEnvCodec,
-    versionField,
     optionalVersionField,
     typeableName,
+    versionField,
   )
 where
 
 import Autodocodec
-  ( Codec (EqCodec),
-    JSONCodec,
-    ObjectCodec,
-    object,
-    optionalFieldWith',
-    requiredField',
-    requiredFieldWith',
-    scientificCodec,
-    (.=),
-  )
 import Data.Char (isAlphaNum)
 import Data.Scientific (Scientific)
 import Data.Text qualified as T
@@ -26,6 +18,16 @@ import Data.Text.Extended qualified as T
 import Data.Typeable (Proxy (Proxy), Typeable, typeRep)
 import Hasura.Prelude
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
+
+-- | Map a fixed set of two values to boolean values when serializing. The first
+-- argument is the value to map to @True@, the second is the value to map to
+-- @False@.
+boolConstCodec :: Eq a => a -> a -> JSONCodec a
+boolConstCodec trueCase falseCase =
+  dimapCodec
+    (bool trueCase falseCase)
+    (== trueCase)
+    $ codec @Bool
 
 -- | Defines a required object field named @version@ that must have the given
 -- integer value. On serialization the field will have the given value
@@ -45,6 +47,13 @@ optionalVersionField v =
   optionalFieldWith' "version" (EqCodec n scientificCodec) .= const (Just n)
   where
     n = fromInteger v
+
+-- | Useful in an object codec for a field that indicates the type of the
+-- object within a union.
+discriminatorField :: Text -> Text -> ObjectCodec () ()
+discriminatorField name value =
+  dimapCodec (const ()) (const value) $
+    requiredFieldWith' name (literalTextCodec value)
 
 -- | Provides a title-cased name for a database kind, inferring the appropriate
 -- database kind from type context.

@@ -14,6 +14,8 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec
+import Autodocodec.Extended (caseInsensitiveHashMapCodec, caseInsensitiveTextCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
@@ -70,6 +72,9 @@ newtype HeadersTransformFn
     AddReplaceOrRemove AddReplaceOrRemoveFields
   deriving stock (Eq, Generic, Show)
   deriving newtype (NFData, FromJSON, ToJSON)
+
+instance HasCodec HeadersTransformFn where
+  codec = dimapCodec AddReplaceOrRemove coerce codec
 
 -- | The user can supply a set of header keys to be filtered from the
 -- request and a set of headers to be added to the request.
@@ -131,6 +136,16 @@ validateHeadersTransformFn engine = \case
   AddReplaceOrRemove fields -> do
     let templates = fields & addOrReplaceHeaders & map snd
     traverse_ (validateRequestUnescapedTemplateTransform' engine) templates
+
+instance HasCodec AddReplaceOrRemoveFields where
+  codec =
+    object "AddReplaceOrRemoveFields" $
+      AddReplaceOrRemoveFields
+        <$> optionalFieldWithDefaultWith' "add_headers" addCodec mempty .= addOrReplaceHeaders
+        <*> optionalFieldWithDefaultWith' "remove_headers" removeCodec mempty .= removeHeaders
+    where
+      addCodec = dimapCodec M.toList M.fromList $ caseInsensitiveHashMapCodec codec
+      removeCodec = listCodec caseInsensitiveTextCodec
 
 instance FromJSON AddReplaceOrRemoveFields where
   parseJSON = J.withObject "AddReplaceRemoveFields" $ \o -> do

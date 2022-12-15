@@ -55,6 +55,8 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWithDefault')
+import Autodocodec qualified as AC
 import Control.Lens (Lens', lens, set, traverseOf, view)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Extended ((.!=), (.:?), (.=), (.=?))
@@ -65,6 +67,7 @@ import Data.Functor.Barbie (AllBF, ApplicativeB, ConstraintsB, FunctorB, Travers
 import Data.Functor.Barbie qualified as B
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
+import Hasura.Metadata.DTO.Utils (optionalVersionField, versionField)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Webhook.Transform.Body (Body (..), BodyTransformFn, TransformFn (BodyTransformFn_))
 import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body
@@ -75,7 +78,7 @@ import Hasura.RQL.DDL.Webhook.Transform.QueryParams
 import Hasura.RQL.DDL.Webhook.Transform.Request
 import Hasura.RQL.DDL.Webhook.Transform.Response
 import Hasura.RQL.DDL.Webhook.Transform.Url
-import Hasura.RQL.DDL.Webhook.Transform.WithOptional (WithOptional (..), withOptional)
+import Hasura.RQL.DDL.Webhook.Transform.WithOptional (WithOptional (..), withOptional, withOptionalField')
 import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
@@ -94,6 +97,46 @@ data RequestTransform = RequestTransform
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass (NFData)
+
+instance HasCodec RequestTransform where
+  codec =
+    dimapCodec
+      (either id id)
+      (\rt -> case version rt of V1 -> Left rt; V2 -> Right rt)
+      $ disjointEitherCodec transformV1 transformV2
+    where
+      transformV1 =
+        AC.object "RequestTransformV1" $
+          RequestTransform
+            <$> (V1 <$ optionalVersionField 1)
+            <*> requestFieldsCodec bodyV1 AC..= requestFields
+            <*> transformCommon
+
+      transformV2 =
+        AC.object "RequestTransformV2" $
+          RequestTransform
+            <$> (V2 <$ versionField 2)
+            <*> requestFieldsCodec bodyV2 AC..= requestFields
+            <*> transformCommon
+
+      transformCommon = optionalFieldWithDefault' "template_engine" Kriti AC..= templateEngine
+
+      requestFieldsCodec bodyCodec =
+        RequestFields
+          <$> withOptionalField' @MethodTransformFn "method" AC..= method
+          <*> withOptionalField' @UrlTransformFn "url" AC..= url
+          <*> bodyCodec AC..= body
+          <*> withOptionalField' @QueryParamsTransformFn "query_params" AC..= queryParams
+          <*> withOptionalField' @HeadersTransformFn "request_headers" AC..= requestHeaders
+
+      bodyV1 = dimapCodec dec enc $ optionalField' @Template "body"
+        where
+          dec template = withOptional $ fmap Body.ModifyAsJSON template
+          enc body = case getOptional body of
+            Just (BodyTransformFn_ (Body.ModifyAsJSON template)) -> Just template
+            _ -> Nothing
+
+      bodyV2 = withOptionalField' @BodyTransformFn "body"
 
 instance FromJSON RequestTransform where
   parseJSON = Aeson.withObject "RequestTransform" \o -> do
@@ -327,6 +370,37 @@ data MetadataResponseTransform = MetadataResponseTransform
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass (NFData)
+
+instance HasCodec MetadataResponseTransform where
+  codec =
+    dimapCodec
+      (either id id)
+      (\rt -> case mrtVersion rt of V1 -> Left rt; V2 -> Right rt)
+      $ disjointEitherCodec transformV1 transformV2
+    where
+      transformV1 =
+        AC.object "ResponseTransformV1" $
+          MetadataResponseTransform
+            <$> (V1 <$ optionalVersionField 1)
+            <*> bodyV1 AC..= mrtBodyTransform
+            <*> transformCommon
+
+      transformV2 =
+        AC.object "ResponseTransformV2" $
+          MetadataResponseTransform
+            <$> (V2 <$ versionField 2)
+            <*> bodyV2 AC..= mrtBodyTransform
+            <*> transformCommon
+
+      transformCommon = optionalFieldWithDefault' "template_engine" Kriti AC..= mrtTemplatingEngine
+
+      bodyV1 =
+        dimapCodec
+          (fmap Body.ModifyAsJSON)
+          (\case Just (Body.ModifyAsJSON template) -> Just template; _ -> Nothing)
+          $ optionalField' @Template "body"
+
+      bodyV2 = optionalField' @BodyTransformFn "body"
 
 instance FromJSON MetadataResponseTransform where
   parseJSON = Aeson.withObject "MetadataResponseTransform" $ \o -> do

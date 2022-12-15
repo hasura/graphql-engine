@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -25,6 +26,7 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec, stringConstCodec)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
@@ -105,6 +107,9 @@ data TemplatingEngine
   deriving stock (Bounded, Enum, Eq, Generic, Show)
   deriving anyclass (NFData)
 
+instance HasCodec TemplatingEngine where
+  codec = stringConstCodec [(Kriti, "Kriti")]
+
 -- XXX(jkachmar): We need roundtrip tests for these instances.
 instance FromJSON TemplatingEngine where
   parseJSON =
@@ -135,6 +140,9 @@ newtype Template = Template
   deriving newtype (Hashable, FromJSONKey, ToJSONKey)
   deriving anyclass (NFData)
 
+instance HasCodec Template where
+  codec = dimapCodec Template unTemplate codec
+
 instance J.FromJSON Template where
   parseJSON = J.withText "Template" (pure . Template)
 
@@ -154,6 +162,9 @@ newtype UnescapedTemplate = UnescapedTemplate
   deriving stock (Eq, Generic, Ord, Show)
   deriving newtype (Hashable, FromJSONKey, ToJSONKey)
   deriving anyclass (NFData)
+
+instance HasCodec UnescapedTemplate where
+  codec = dimapCodec UnescapedTemplate getUnescapedTemplate codec
 
 instance J.FromJSON UnescapedTemplate where
   parseJSON = J.withText "Template" (pure . UnescapedTemplate)
