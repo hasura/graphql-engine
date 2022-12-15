@@ -3,15 +3,20 @@
 -- | Test if all root fields (list, pk and aggregate) are enabled by default
 module Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec (spec) where
 
+import Data.Aeson (Value (String), object, (.=))
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.BigQuery qualified as BigQuery
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, backendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Auth.Authorization.DisableRootFields.Common
@@ -24,16 +29,39 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+        [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ BigQuery.setupTablesAction schema testEnv,
+                  BigQuery.setupPermissionsAction permissions testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True
+                    }
+            },
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv,
+                  Citus.setupPermissionsAction permissions testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv,
+                  Cockroach.setupPermissionsAction permissions testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  postgresSetupPermissions testEnv
+                  Postgres.setupPermissionsAction permissions testEnv
                 ]
             },
           (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ SQLServer.setupTablesAction schema testEnv,
-                  sqlserverSetupPermissions testEnv
+                  SQLServer.setupPermissionsAction permissions testEnv
                 ]
             }
         ]
@@ -61,78 +89,22 @@ author =
     }
 
 --------------------------------------------------------------------------------
--- Setting up postgres
+-- Permissions
 
-postgresSetupPermissions :: TestEnvironment -> Fixture.SetupAction
-postgresSetupPermissions testEnv =
-  Fixture.SetupAction
-    { setupAction =
-        GraphqlEngine.postMetadata_
-          testEnv
-          [yaml|
-          type: pg_create_select_permission
-          args:
-            source: postgres
-            table:
-              schema: hasura
-              name: author
-            role: user
-            permission:
-              filter:
-                id: X-Hasura-User-Id
-              allow_aggregations: true
-              columns: '*'
-          |],
-      teardownAction = \_ ->
-        GraphqlEngine.postMetadata_
-          testEnv
-          [yaml|
-          type: pg_drop_select_permission
-          args:
-            source: postgres
-            table:
-              schema: hasura
-              name: author
-            role: user
-          |]
-    }
-
---------------------------------------------------------------------------------
--- Setting up SQL Server
-
-sqlserverSetupPermissions :: TestEnvironment -> Fixture.SetupAction
-sqlserverSetupPermissions testEnv =
-  Fixture.SetupAction
-    { setupAction =
-        GraphqlEngine.postMetadata_
-          testEnv
-          [yaml|
-          type: mssql_create_select_permission
-          args:
-            source: mssql
-            table:
-              schema: hasura
-              name: author
-            role: user
-            permission:
-              filter:
-                id: X-Hasura-User-Id
-              allow_aggregations: true
-              columns: '*'
-          |],
-      teardownAction = \_ ->
-        GraphqlEngine.postMetadata_
-          testEnv
-          [yaml|
-          type: mssql_drop_select_permission
-          args:
-            source: mssql
-            table:
-              schema: hasura
-              name: author
-            role: user
-          |]
-    }
+permissions :: [Permission]
+permissions =
+  [ SelectPermission
+      selectPermission
+        { selectPermissionTable = "author",
+          selectPermissionRole = "user",
+          selectPermissionColumns = ["id", "name"],
+          selectPermissionAllowAggregations = True,
+          selectPermissionRows =
+            object
+              [ "id" .= String "X-Hasura-User-Id"
+              ]
+        }
+  ]
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -141,35 +113,55 @@ sqlserverSetupPermissions testEnv =
 tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = describe "DefaultRootFieldSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
+
+      backendType :: TestEnvironment -> Maybe Fixture.BackendType
+      backendType testEnvironment = fmap Fixture.backendType (backendTypeConfig testEnvironment)
+
   it "'list' root field is enabled and accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders listQuery)
-      listRFEnabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
+      (listRFEnabledExpectedResponse testEnvironment)
 
   it "'pk' root field is enabled and accessible" $ \testEnvironment -> do
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders pkQuery)
-      pkRFEnabledExpectedResponse
+    -- BigQuery doesn't have primary keys.
+    unless (backendType testEnvironment == Just Fixture.BigQuery) do
+      shouldReturnYaml
+        opts
+        (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
+        (pkRFEnabledExpectedResponse testEnvironment)
 
   it "'aggregate' root field is enabled and accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders aggregateQuery)
-      aggRFEnabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
+      (aggRFEnabledExpectedResponse testEnvironment)
 
   it "introspection query: all root fields are enabled and accessible for query" $ \testEnvironment -> do
-    let expectedResponse =
-          [yaml|
-          data:
-            __schema:
-              queryType:
-                fields:
-                  - name: hasura_author
-                  - name: hasura_author_aggregate
-                  - name: hasura_author_by_pk
-          |]
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
+        expectedResponse :: Value
+        expectedResponse = case backendType testEnvironment of
+          Just Fixture.BigQuery ->
+            [interpolateYaml|
+              data:
+                __schema:
+                  queryType:
+                    fields:
+                      - name: #{schemaName}_author
+                      - name: #{schemaName}_author_aggregate
+            |]
+          _ ->
+            [interpolateYaml|
+              data:
+                __schema:
+                  queryType:
+                    fields:
+                      - name: #{schemaName}_author
+                      - name: #{schemaName}_author_aggregate
+                      - name: #{schemaName}_author_by_pk
+            |]
 
     shouldReturnYaml
       opts

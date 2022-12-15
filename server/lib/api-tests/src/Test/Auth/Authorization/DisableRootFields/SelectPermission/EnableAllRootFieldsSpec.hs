@@ -7,7 +7,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -143,38 +143,44 @@ tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = describe "EnableAllRootFieldsSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
   it "query root: 'list' root field is accessible" $ \testEnvironment -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders listQuery)
-      [yaml|
-      data:
-        hasura_author:
-          - id: 1
-            name: Author 1
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
+      [interpolateYaml|
+        data:
+          #{schemaName}_author:
+            - id: 1
+              name: Author 1
       |]
 
   it "query root: 'pk' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders pkQuery)
-      pkRFEnabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
+      (pkRFEnabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders aggregateQuery)
-      aggRFEnabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
+      (aggRFEnabledExpectedResponse testEnvironment)
 
   it "query_root: introspection query: all root fields are accessible" $ \testEnvironment -> do
-    let expectedResponse =
-          [yaml|
-          data:
-            __schema:
-              queryType:
-                fields:
-                  - name: hasura_author
-                  - name: hasura_author_aggregate
-                  - name: hasura_author_by_pk
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
+        expectedResponse =
+          [interpolateYaml|
+            data:
+              __schema:
+                queryType:
+                  fields:
+                    - name: #{schemaName}_author
+                    - name: #{schemaName}_author_aggregate
+                    - name: #{schemaName}_author_by_pk
           |]
 
     shouldReturnYaml

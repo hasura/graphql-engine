@@ -13,7 +13,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -219,29 +219,32 @@ commonTests opts = describe "EnableAggregateRootField GraphQL common tests" $ do
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders listQuery)
-      listRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
+      (listRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'pk' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders pkQuery)
-      pkRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
+      (pkRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders aggregateQuery)
-      aggRFEnabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
+      (aggRFEnabledExpectedResponse testEnvironment)
 
   it "query_root: introspection query: only 'aggregate' field is accessible" $ \testEnvironment -> do
-    let expectedResponse =
-          [yaml|
-          data:
-            __schema:
-              queryType:
-                fields:
-                  - name: hasura_author_aggregate
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
+        expectedResponse =
+          [interpolateYaml|
+            data:
+              __schema:
+                queryType:
+                  fields:
+                    - name: #{schemaName}_author_aggregate
           |]
 
     shouldReturnYaml
@@ -250,13 +253,16 @@ commonTests opts = describe "EnableAggregateRootField GraphQL common tests" $ do
       expectedResponse
 
   it "subscription_root: introspection query: 'list' and 'aggregate' field is accessible" $ \testEnvironment -> do
-    let expectedResponse =
-          [yaml|
-          data:
-            __schema:
-              subscriptionType:
-                fields:
-                  - name: hasura_author_aggregate
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
+        expectedResponse =
+          [interpolateYaml|
+            data:
+              __schema:
+                subscriptionType:
+                  fields:
+                    - name: #{schemaName}_author_aggregate
           |]
 
     shouldReturnYaml

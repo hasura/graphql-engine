@@ -7,7 +7,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -213,29 +213,32 @@ graphQLTests opts = describe "EnablePKRootFieldSpec GraphQL tests" $ do
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders listQuery)
-      listRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
+      (listRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'pk' root field is accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders pkQuery)
-      pkRFEnabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
+      (pkRFEnabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders aggregateQuery)
-      aggRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
+      (aggRFDisabledExpectedResponse testEnvironment)
 
   it "query_root: introspection query: only  'pk' field is accessible" $ \testEnvironment -> do
-    let expectedResponse =
-          [yaml|
-          data:
-            __schema:
-              queryType:
-                fields:
-                  - name: hasura_author_by_pk
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
+        expectedResponse =
+          [interpolateYaml|
+            data:
+              __schema:
+                queryType:
+                  fields:
+                    - name: #{schemaName}_author_by_pk
           |]
 
     shouldReturnYaml

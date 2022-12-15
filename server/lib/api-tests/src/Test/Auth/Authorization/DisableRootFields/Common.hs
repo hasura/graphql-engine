@@ -18,128 +18,156 @@ where
 
 import Data.Aeson (Value)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 
-listQuery :: Value
-listQuery =
+listQuery :: TestEnvironment -> Value
+listQuery testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
   [graphql|
-  query {
-    hasura_author {
-      id
-      name
+    query {
+      #{schemaName}_author {
+        id
+        name
+      }
     }
-  }
   |]
 
-listRFEnabledExpectedResponse :: Value
-listRFEnabledExpectedResponse =
-  [yaml|
-  data:
-    hasura_author:
-      - id: 1
+listRFEnabledExpectedResponse :: TestEnvironment -> Value
+listRFEnabledExpectedResponse testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [interpolateYaml|
+    data:
+      #{schemaName}_author:
+        - id: 1
+          name: Author 1
+  |]
+
+listRFDisabledExpectedResponse :: TestEnvironment -> Value
+listRFDisabledExpectedResponse testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [interpolateYaml|
+    errors:
+      - extensions:
+          path: $.selectionSet.#{schemaName}_author
+          code: validation-failed
+        message: |-
+          field '#{schemaName}_author' not found in type: 'query_root'
+  |]
+
+pkQuery :: TestEnvironment -> Value
+pkQuery testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [graphql|
+    query {
+      #{schemaName}_author_by_pk(id: 1) {
+        id
+        name
+      }
+    }
+  |]
+
+pkRFEnabledExpectedResponse :: TestEnvironment -> Value
+pkRFEnabledExpectedResponse testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [interpolateYaml|
+    data:
+      #{schemaName}_author_by_pk:
+        id: 1
         name: Author 1
   |]
 
-listRFDisabledExpectedResponse :: Value
-listRFDisabledExpectedResponse =
-  [yaml|
-  errors:
-    - extensions:
-        path: $.selectionSet.hasura_author
-        code: validation-failed
-      message: |-
-        field 'hasura_author' not found in type: 'query_root'
+pkRFDisabledExpectedResponse :: TestEnvironment -> Value
+pkRFDisabledExpectedResponse testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [interpolateYaml|
+    errors:
+      - extensions:
+          path: $.selectionSet.#{schemaName}_author_by_pk
+          code: validation-failed
+        message: |-
+          field '#{schemaName}_author_by_pk' not found in type: 'query_root'
   |]
 
-pkQuery :: Value
-pkQuery =
+aggregateQuery :: TestEnvironment -> Value
+aggregateQuery testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
   [graphql|
-  query {
-    hasura_author_by_pk(id: 1) {
-      id
-      name
-    }
-  }
-  |]
-
-pkRFEnabledExpectedResponse :: Value
-pkRFEnabledExpectedResponse =
-  [yaml|
-  data:
-    hasura_author_by_pk:
-      id: 1
-      name: Author 1
-  |]
-
-pkRFDisabledExpectedResponse :: Value
-pkRFDisabledExpectedResponse =
-  [yaml|
-  errors:
-    - extensions:
-        path: $.selectionSet.hasura_author_by_pk
-        code: validation-failed
-      message: |-
-        field 'hasura_author_by_pk' not found in type: 'query_root'
-  |]
-
-aggregateQuery :: Value
-aggregateQuery =
-  [graphql|
-  query {
-    hasura_author_aggregate {
-      aggregate {
-        count
+    query {
+      #{schemaName}_author_aggregate {
+        aggregate {
+          count
+        }
       }
     }
-  }
   |]
 
-aggRFEnabledExpectedResponse :: Value
-aggRFEnabledExpectedResponse =
-  [yaml|
-  data:
-    hasura_author_aggregate:
-      aggregate:
-        count: 1
+aggRFEnabledExpectedResponse :: TestEnvironment -> Value
+aggRFEnabledExpectedResponse testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [interpolateYaml|
+    data:
+      #{schemaName}_author_aggregate:
+        aggregate:
+          count: 1
   |]
 
-aggRFDisabledExpectedResponse :: Value
-aggRFDisabledExpectedResponse =
-  [yaml|
-  errors:
-    - extensions:
-        path: $.selectionSet.hasura_author_aggregate
-        code: validation-failed
-      message: |-
-        field 'hasura_author_aggregate' not found in type: 'query_root'
+aggRFDisabledExpectedResponse :: TestEnvironment -> Value
+aggRFDisabledExpectedResponse testEnvironment = do
+  let schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
+
+  [interpolateYaml|
+    errors:
+      - extensions:
+          path: $.selectionSet.#{schemaName}_author_aggregate
+          code: validation-failed
+        message: |-
+          field '#{schemaName}_author_aggregate' not found in type: 'query_root'
   |]
 
 queryTypesIntrospection :: Value
 queryTypesIntrospection =
   [graphql|
-  query {
-    __schema {
-      queryType {
-        fields{
-          name
+    query {
+      __schema {
+        queryType {
+          fields{
+            name
+          }
         }
-
       }
     }
-  }
   |]
 
 subscriptionTypesIntrospection :: Value
 subscriptionTypesIntrospection =
   [graphql|
-  query {
-    __schema {
-      subscriptionType {
-        fields{
-          name
-        }
+    query {
+      __schema {
+        subscriptionType {
+          fields{
+            name
+          }
 
+        }
       }
     }
-  }
   |]

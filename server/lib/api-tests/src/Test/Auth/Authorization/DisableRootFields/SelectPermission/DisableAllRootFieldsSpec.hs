@@ -98,29 +98,29 @@ tests opts = describe "DisableAllRootFieldsSpec" $ do
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders listQuery)
-      listRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
+      (listRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'pk' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders pkQuery)
-      pkRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
+      (pkRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders aggregateQuery)
-      aggRFDisabledExpectedResponse
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
+      (aggRFDisabledExpectedResponse testEnvironment)
 
   it "query_root: introspection query: all root fields are disabled and not accessible" $ \testEnvironment -> do
     let expectedResponse =
           [yaml|
-          data:
-            __schema:
-              queryType:
-                fields:
-                  - name: no_queries_available
+            data:
+              __schema:
+                queryType:
+                  fields:
+                    - name: no_queries_available
           |]
 
     shouldReturnYaml
@@ -131,9 +131,9 @@ tests opts = describe "DisableAllRootFieldsSpec" $ do
   it "subscription_root: introspection query: all root fields disabled and not accessible" $ \testEnvironment -> do
     let expectedResponse =
           [yaml|
-          data:
-            __schema:
-              subscriptionType: null
+            data:
+              __schema:
+                subscriptionType: null
           |]
 
     shouldReturnYaml
