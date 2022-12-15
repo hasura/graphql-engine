@@ -21,12 +21,11 @@ import { Button } from '@/new-components/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
-import { NotFoundError } from '../../../Error/PageNotFound';
-
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { Tabs } from '../Common/Tabs';
+import { InconsistentBadge } from '../Common/GraphQLCustomization/InconsistentBadge';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 class Edit extends React.Component {
@@ -115,15 +114,6 @@ class Edit extends React.Component {
   }
 
   render() {
-    const currentRemoteSchema = this.props.allRemoteSchemas.find(
-      r => r.name === this.props.params.remoteSchemaName
-    );
-
-    if (!currentRemoteSchema) {
-      // throw a 404 exception
-      throw new NotFoundError();
-    }
-
     const { isFetching, isRequesting, inconsistentObjects } = this.props;
     const { remoteSchemaName } = this.props.params;
 
@@ -224,6 +214,10 @@ class Edit extends React.Component {
           baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
           showLoader={isFetching}
         />
+
+        {inconsistencyDetails && (
+          <InconsistentBadge inconsistencyDetails={inconsistencyDetails} />
+        )}
 
         {isFetching ? null : (
           <Analytics name="EditRemoteSchema" {...REDACT_EVERYTHING}>

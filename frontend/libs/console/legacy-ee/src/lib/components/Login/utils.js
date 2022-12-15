@@ -8,6 +8,8 @@ import globals from '../../Globals';
 
 import { parseQueryString } from '../../helpers/parseQueryString';
 
+import { hasOAuthLoggedIn } from '../OAuthCallback/utils';
+
 const {
   hasuraOAuthUrl,
   hasuraClientID,
@@ -94,4 +96,23 @@ export const getAuthorizeUrl = () => {
     'code_challenge=' +
     generateCodeVerifier();
   return authorizeUrl;
+};
+
+export const initiateOAuthRequest = (location, shouldRedirectBack) => {
+  const parsed = parseQueryString(location.search);
+  const authUrl = getAuthorizeUrl();
+  hasOAuthLoggedIn(false);
+  if (shouldRedirectBack) {
+    modifyRedirectUrl(location.pathname);
+  } else if (
+    'redirect_url' in parsed &&
+    parsed.redirect_url &&
+    parsed.redirect_url !== 'undefined' &&
+    parsed.redirect_url !== 'null'
+  ) {
+    modifyRedirectUrl(parsed.redirect_url);
+  } else {
+    modifyRedirectUrl('/');
+  }
+  window.location.href = authUrl;
 };

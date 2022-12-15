@@ -55,9 +55,9 @@ const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
   const caseSensitiveResults: SourceItem[] = [];
   const caseAgnosticResults: SourceItem[] = [];
   itemList.forEach(item => {
-    if (item.name.search(searchQuery) > -1) {
+    if (item.name.includes(searchQuery)) {
       caseSensitiveResults.push(item);
-    } else if (item.name.toLowerCase().search(searchQuery.toLowerCase()) > -1) {
+    } else if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       caseAgnosticResults.push(item);
     }
   });

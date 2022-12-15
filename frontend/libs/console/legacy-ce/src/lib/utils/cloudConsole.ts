@@ -7,10 +7,14 @@ import type { LuxFeature } from '@/Globals';
  * consoleType === 'cloud' is also true for Hasura EE
  * */
 export function isCloudConsole(g: typeof globals) {
-  return g.consoleType === 'cloud' && g.hasuraCloudTenantId;
+  return !!g.hasuraCloudTenantId && g.consoleType === 'cloud';
 }
 
 //  This function returns true if the current user has access to a lux feature
 export function hasLuxFeatureAccess(g: typeof globals, feature: LuxFeature) {
   return (globals.allowedLuxFeatures || []).includes(feature);
+}
+
+export function getProjectId(g: typeof globals) {
+  return isCloudConsole(g) ? g.hasuraCloudProjectId : undefined;
 }

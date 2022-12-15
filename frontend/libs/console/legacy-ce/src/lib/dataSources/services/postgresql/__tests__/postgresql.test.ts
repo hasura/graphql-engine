@@ -1,8 +1,19 @@
 import { postgres } from '../index';
 
+const {
+  getAlterPkSql,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterViewCommentSql,
+  getAlterFunctionCommentSql,
+  createIndexSql,
+  getDataTriggerLogsCountQuery,
+  getDataTriggerLogsQuery,
+  getDataTriggerInvocations,
+} = postgres;
+
 describe('postgresql datasource tests', () => {
   describe('getAlterPkSql', () => {
-    const { getAlterPkSql } = postgres;
     it('should generate alter operation as a single transaction ', () => {
       const query = getAlterPkSql({
         schemaName: 'public',
@@ -32,7 +43,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterTableCommentSql', () => {
-    const { getAlterTableCommentSql } = postgres;
     it('should generate SQL for modifying table comment', () => {
       const query = getAlterTableCommentSql({
         tableName: 'users',
@@ -47,7 +57,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterColumnCommentSql', () => {
-    const { getAlterColumnCommentSql } = postgres;
     it('should generate SQL for modifying column comment', () => {
       const query = getAlterColumnCommentSql({
         tableName: 'users',
@@ -63,7 +72,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterViewCommentSql', () => {
-    const { getAlterViewCommentSql } = postgres;
     it('should generate SQL for modifying view comment', () => {
       const query = getAlterViewCommentSql({
         viewName: 'view_users',
@@ -78,7 +86,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterFunctionCommentSql', () => {
-    const { getAlterFunctionCommentSql } = postgres;
     it('should generate SQL for modifying function comment', () => {
       const query = getAlterFunctionCommentSql({
         functionName: 'users',
@@ -93,7 +100,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getCreateIndexSQL', () => {
-    const { createIndexSql } = postgres;
     it('generates proper SQL for column names containing no spaces', () => {
       if (createIndexSql) {
         const query = createIndexSql({
@@ -168,7 +174,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getDataTriggerLogsCountQuery', () => {
-    const { getDataTriggerLogsCountQuery } = postgres;
     if (getDataTriggerLogsCountQuery) {
       it('should generate SQL query for pending event count ', () => {
         const pendingCountQuery = getDataTriggerLogsCountQuery(
@@ -218,7 +223,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getDataTriggerLogsQuery', () => {
-    const { getDataTriggerLogsQuery } = postgres;
     if (getDataTriggerLogsQuery) {
       it('should generate SQL query for pending event logs', () => {
         // pending
@@ -280,7 +284,6 @@ describe('postgresql datasource tests', () => {
     }
   });
   describe('getDataTriggerInvocations', () => {
-    const { getDataTriggerInvocations } = postgres;
     if (getDataTriggerInvocations) {
       it('should generate SQL to fetch invocations for an event', () => {
         // pending

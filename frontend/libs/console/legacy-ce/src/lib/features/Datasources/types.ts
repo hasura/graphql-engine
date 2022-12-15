@@ -18,7 +18,14 @@ export type RunSQLResponse =
 
 export type QualifiedDataSource = {
   name: string;
-  driver: 'postgres' | 'mssql' | 'bigquery' | 'citus' | 'cockroach';
+  driver:
+    | 'postgres'
+    | 'mssql'
+    | 'bigquery'
+    | 'citus'
+    | 'cockroach'
+    | 'alloy'
+    | 'mysql';
 };
 
 export type UseRunSQLArg<K extends readonly unknown[], D> = {

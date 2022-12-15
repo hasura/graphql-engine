@@ -1,14 +1,14 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { useTableMachine } from '../hooks/useTableMachine';
 
 import {
-  InputCell,
-  InputCellProps,
   EditableCell,
   EditableCellProps,
+  InputCell,
+  InputCellProps,
 } from './Cells';
 
 export default {
@@ -16,9 +16,9 @@ export default {
   component: InputCell,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}}>
-        {() => <StoryComponent />}
-      </Form>
+      <SimpleForm schema={z.any()} onSubmit={() => {}}>
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
   parameters: { chromatic: { disableSnapshot: true } },

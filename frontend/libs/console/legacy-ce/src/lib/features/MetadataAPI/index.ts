@@ -23,6 +23,7 @@ export {
   useDbToRemoteSchemaRelationships,
   useDbToRemoteDbRelationships,
 } from './hooks/useMetadataRemoteRelationships';
+export { useInconsistentObject } from './hooks/useInconsitentObject';
 
 // we probably need to remove all usages that directly use the useMetadata and use only the exported functions
 export { useMetadata } from './hooks/useMetadata';

@@ -1,7 +1,10 @@
 import { TableTrackingCustomizationModal } from '@/components/Services/Data/Schema/tableTrackCustomization/TableTrackingCustomizationModal';
+import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
 import { Button } from '@/new-components/Button';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React from 'react';
-import { useMetadataTable, useUpdateTableConfiguration } from '../hooks';
+import Skeleton from 'react-loading-skeleton';
+import { useUpdateTableConfiguration } from '../hooks';
 import { ModifyTableProps } from '../ModifyTable';
 
 const RootField: React.VFC<{ property: string; value: string }> = ({
@@ -18,14 +21,24 @@ const RootField: React.VFC<{ property: string; value: string }> = ({
 export const TableRootFields: React.VFC<ModifyTableProps> = props => {
   const { dataSourceName, table, tableName } = props;
   const [showCustomModal, setShowCustomModal] = React.useState(false);
-  const { metadataTable, isLoading } = useMetadataTable(dataSourceName, table);
+
+  const {
+    data: metadataTable,
+    isLoading,
+    isError,
+  } = useMetadata(MetadataSelectors.findTable(dataSourceName, table));
 
   const { updateCustomRootFields, isLoading: saving } =
     useUpdateTableConfiguration(dataSourceName, table);
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <Skeleton count={5} height={20} />;
+
+  if (isError)
+    return (
+      <IndicatorCard status="negative" headline="Error">
+        Unable to fetch table data.
+      </IndicatorCard>
+    );
 
   const isEmpty =
     !metadataTable?.configuration?.custom_name &&

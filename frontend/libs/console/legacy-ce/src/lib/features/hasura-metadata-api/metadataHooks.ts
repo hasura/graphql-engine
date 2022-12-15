@@ -3,6 +3,7 @@ import { exportMetadata } from '@/features/DataSource';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { areTablesEqual } from '@/features/RelationshipsTable';
+import { DEFAULT_STALE_TIME } from '../DatabaseRelationships';
 
 export const useMetadata = () => {
   const httpClient = useHttpClient();
@@ -13,6 +14,7 @@ export const useMetadata = () => {
       return result;
     },
     refetchOnWindowFocus: false,
+    staleTime: DEFAULT_STALE_TIME,
   });
 };
 

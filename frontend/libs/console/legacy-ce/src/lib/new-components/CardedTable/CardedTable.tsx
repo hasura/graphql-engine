@@ -77,9 +77,14 @@ const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
   );
 };
 
-const TableBodyCell = ({ children }: ChildrenProps) => {
+const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
-    <td className="px-sm py-xs whitespace-nowrap text-muted">{children}</td>
+    <td
+      className="px-sm py-xs whitespace-nowrap text-muted"
+      {...cellAttributes}
+    >
+      {children}
+    </td>
   );
 };
 

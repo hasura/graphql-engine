@@ -24,9 +24,7 @@ export const Driver = (props: DriverProps) => {
 
   const options = availableDrivers.map(d => ({
     value: d.name,
-    label: `${d.displayName?.replace('athena', 'Amazon Athena')} ${
-      d.release === 'GA' ? '' : `(${d.release})`
-    }`,
+    label: `${d.displayName} ${d.release === 'GA' ? '' : `(${d.release})`}`,
   }));
 
   return (

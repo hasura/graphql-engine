@@ -1,12 +1,12 @@
 import React from 'react';
-import { Form, InputField } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { schema, Schema } from './schema';
 import {
-  CronScheduleSelector,
-  CronPayloadInput,
-  IncludeInMetadataSwitch,
   AdvancedSettings,
+  CronPayloadInput,
+  CronScheduleSelector,
+  IncludeInMetadataSwitch,
   RetryConfiguration,
 } from './components';
 import { getCronTriggerCreateQuery, getCronTriggerUpdateQuery } from './utils';
@@ -54,63 +54,60 @@ const CronTriggersForm = (props: Props) => {
     return <div>Something went wrong while loading cron trigger data</div>;
   }
 
-  // TODO: type casting defaultValues as any as we need to fix the <Form /> component to accept nullable fields
   return (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={onSubmit}
-      options={{ defaultValues: defaultValues as any }}
+      options={{ defaultValues }}
       className="overflow-y-hidden p-4"
     >
-      {() => (
-        <>
-          <div className="mb-md">
-            <InputField
-              name="name"
-              label="Name"
-              placeholder="Name..."
-              tooltip="Give this cron trigger a friendly name"
-            />
-          </div>
-          <div className="mb-md">
-            <InputField
-              name="comment"
-              label="Comment / Description"
-              placeholder="Comment / Description..."
-              tooltip="A statement to help describe the cron trigger in brief"
-            />
-          </div>
-          <div className="mb-md">
-            <InputField
-              name="webhook"
-              label="Webhook URL"
-              placeholder="https://httpbin.com/post"
-              tooltip="The HTTP URL that should be triggered. You can also provide the URL from environment variables, e.g. {{MY_WEBHOOK_URL}}"
-            />
-          </div>
-          <div className="mb-md">
-            <CronScheduleSelector />
-          </div>
-          <div className="mb-md">
-            <CronPayloadInput />
-          </div>
-          <div className="mb-md">
-            <IncludeInMetadataSwitch />
-          </div>
-          <div className="mb-md">
-            <AdvancedSettings />
-          </div>
-          <div className="mb-md">
-            <RetryConfiguration />
-          </div>
-          <div className="flex items-center mb-lg">
-            <Button type="submit" mode="primary" isLoading={mutation.isLoading}>
-              {cronTriggerName ? 'Update Cron Trigger' : 'Add Cron Trigger'}
-            </Button>
-          </div>
-        </>
-      )}
-    </Form>
+      <>
+        <div className="mb-md">
+          <InputField
+            name="name"
+            label="Name"
+            placeholder="Name..."
+            tooltip="Give this cron trigger a friendly name"
+          />
+        </div>
+        <div className="mb-md">
+          <InputField
+            name="comment"
+            label="Comment / Description"
+            placeholder="Comment / Description..."
+            tooltip="A statement to help describe the cron trigger in brief"
+          />
+        </div>
+        <div className="mb-md">
+          <InputField
+            name="webhook"
+            label="Webhook URL"
+            placeholder="https://httpbin.com/post"
+            tooltip="The HTTP URL that should be triggered. You can also provide the URL from environment variables, e.g. {{MY_WEBHOOK_URL}}"
+          />
+        </div>
+        <div className="mb-md">
+          <CronScheduleSelector />
+        </div>
+        <div className="mb-md">
+          <CronPayloadInput />
+        </div>
+        <div className="mb-md">
+          <IncludeInMetadataSwitch />
+        </div>
+        <div className="mb-md">
+          <AdvancedSettings />
+        </div>
+        <div className="mb-md">
+          <RetryConfiguration />
+        </div>
+        <div className="flex items-center mb-lg">
+          <Button type="submit" mode="primary" isLoading={mutation.isLoading}>
+            {cronTriggerName ? 'Update Cron Trigger' : 'Add Cron Trigger'}
+          </Button>
+        </div>
+      </>
+    </SimpleForm>
   );
 };
 

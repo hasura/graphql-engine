@@ -1,7 +1,7 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import {
   ColumnPresetsSection,
@@ -13,7 +13,7 @@ export default {
   component: ColumnPresetsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form
+      <SimpleForm
         schema={z.any()}
         options={{
           defaultValues: {
@@ -24,8 +24,8 @@ export default {
         onSubmit={() => {}}
         className="p-4"
       >
-        {() => <StoryComponent />}
-      </Form>
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
   parameters: { chromatic: { disableSnapshot: true } },
@@ -57,7 +57,7 @@ WithPartialPresets.args = {
 };
 WithPartialPresets.decorators = [
   (S: React.FC) => (
-    <Form
+    <SimpleForm
       schema={z.object({
         presets: z.any(),
         rowPermissionsCheckType: z.string(),
@@ -78,8 +78,8 @@ WithPartialPresets.decorators = [
       onSubmit={() => {}}
       className="p-4"
     >
-      {() => <S />}
-    </Form>
+      <S />
+    </SimpleForm>
   ),
 ];
 
@@ -91,7 +91,7 @@ WithAllPresets.args = {
 };
 WithAllPresets.decorators = [
   (S: React.FC) => (
-    <Form
+    <SimpleForm
       schema={z.object({
         presets: z.array(
           z.object({
@@ -131,8 +131,8 @@ WithAllPresets.decorators = [
       onSubmit={() => {}}
       className="p-4"
     >
-      {() => <S />}
-    </Form>
+      <S />
+    </SimpleForm>
   ),
 ];
 

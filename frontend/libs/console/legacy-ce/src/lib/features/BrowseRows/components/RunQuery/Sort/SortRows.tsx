@@ -10,13 +10,15 @@ import { FiltersAndSortFormValues } from '../types';
 export type SortRowsProps = {
   columns: TableColumn[];
   name: string;
-  initialSorts?: FiltersAndSortFormValues['sort'];
+  initialSorts?: FiltersAndSortFormValues['sorts'];
+  onRemove: () => void;
 };
 
 export const SortRows = ({
   columns,
   name,
   initialSorts = [],
+  onRemove,
 }: SortRowsProps) => {
   const { fields, append, remove, update } = useFieldArray({
     name,
@@ -28,7 +30,7 @@ export const SortRows = ({
         update(index, { column: sort.column, type: sort.type });
       });
     }
-  }, [initialSorts]);
+  }, [initialSorts?.length]);
 
   const columnOptions: SelectItem[] = columns.map(column => {
     const value = column.graphQLProperties?.name ?? column.name;
@@ -51,6 +53,7 @@ export const SortRows = ({
 
   const removeEntry = (index: number) => {
     remove(index);
+    setTimeout(() => onRemove(), 100);
   };
 
   return (

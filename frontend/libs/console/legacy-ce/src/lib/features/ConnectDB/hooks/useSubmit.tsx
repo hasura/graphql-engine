@@ -17,7 +17,11 @@ const useRedirect = () => {
   const dispatch = useAppDispatch();
   const redirect = async () => {
     await dispatch(exportMetadata());
-    dispatch(push('/data/manage'));
+    dispatch(
+      push({
+        pathname: '/data/manage',
+      })
+    );
   };
 
   return redirect;
@@ -52,7 +56,7 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries('treeview');
+      queryClient.invalidateQueries(['export_metadata']);
 
       fireNotification({
         type: 'success',

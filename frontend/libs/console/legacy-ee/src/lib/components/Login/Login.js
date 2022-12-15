@@ -18,12 +18,18 @@ import { IconTooltip } from '@hasura/console-oss';
 import { getFromLS, initLS } from './localStorage';
 
 import LoginWith from './LoginWith';
+import { clearAdminSecretState } from '../AppState';
 
-import { isClientSet } from './utils';
+import { isClientSet, initiateOAuthRequest } from './utils';
 
 import loginIcon from './login.svg';
 import styles from './Login.module.scss';
 import hasuraLogo from './black-logo.svg';
+import hasuraEELogo from './mono-dark-ee.svg';
+import ssoIcon from './black-building.svg';
+import keyIcon from './black-key.svg';
+import { AdminSecretLogin } from './AdminSecretLogin';
+import { SSOLogin } from './SSOLogin';
 
 class Login extends Component {
   constructor(props) {
@@ -33,6 +39,7 @@ class Login extends Component {
     } else {
       this.state = { loginMethod: 'admin-secret' };
     }
+    this.state = { ...this.state, showAdminSecretLogin: false };
   }
 
   componentDidMount() {
@@ -80,7 +87,7 @@ class Login extends Component {
     ];
 
     const renderLogin = () => {
-      // Dont show "login with lux control plane" when running in pro-lite mode 
+      // Dont show "login with lux control plane" when running in pro-lite mode
       if (isClientSet() && globals.consoleType !== 'pro-lite') {
         return (
           <LoginWith location={location}>
@@ -180,9 +187,7 @@ class Login extends Component {
             className={`${styles.display_flex} ${styles.add_mar_bottom_small} relative z-10`}
           >
             Enter your admin secret
-            <IconTooltip
-              message="Admin secret is the secret key to access your GraphQL API in admin mode. If you own this project, you can find the admin secret on the projects dashboard."
-            />
+            <IconTooltip message="Admin secret is the secret key to access your GraphQL API in admin mode. If you own this project, you can find the admin secret on the projects dashboard." />
           </div>
         );
       }
@@ -203,6 +208,41 @@ class Login extends Component {
         </div>
       );
     };
+
+    const doSSOLogin = () => {
+      clearAdminSecretState();
+      initiateOAuthRequest(location, false);
+    };
+
+    const doAdminSecretLogin = () => {
+      this.setState({ ...this.state, showAdminSecretLogin: true });
+    };
+
+    const backToLoginHome = () => {
+      this.setState({ ...this.state, showAdminSecretLogin: false });
+    };
+
+    if (globals.consoleType === 'pro-lite' && !globals.ssoEnabled) {
+      return <AdminSecretLogin />;
+    }
+
+    if (globals.consoleType === 'pro-lite' && globals.ssoEnabled) {
+      return (
+        <div>
+          {this.state.showAdminSecretLogin ? (
+            <AdminSecretLogin backToLoginHome={backToLoginHome} />
+          ) : (
+            <SSOLogin
+              ssoIcon={ssoIcon}
+              hasuraEELogo={hasuraEELogo}
+              doAdminSecretLogin={doAdminSecretLogin}
+              doSSOLogin={doSSOLogin}
+              keyIcon={keyIcon}
+            />
+          )}
+        </div>
+      );
+    }
 
     return (
       <div className={styles.mainWrapper + ' container-fluid'}>
@@ -234,7 +274,7 @@ Login.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const generatedLoginConnector = connect => {
+const generatedLoginConnector = conn => {
   const mapStateToProps = (state, ownProps) => {
     return {
       location: ownProps.location,
@@ -243,7 +283,7 @@ const generatedLoginConnector = connect => {
       featuresCompatibility: state.main.featuresCompatibility,
     };
   };
-  return connect(mapStateToProps)(Login);
+  return conn(mapStateToProps)(Login);
 };
 
 export default generatedLoginConnector;

@@ -14,6 +14,7 @@ import { saveAppState, clearState } from '../../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 import requestActionPlain from '../../../utils/requestActionPlain';
 import { showErrorNotification } from '../Common/Notification';
+import { getWebsocketProtocol } from '@/helpers/protocol';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -189,10 +190,9 @@ const changeRequestParams = newParams => {
 };
 
 const createWsClient = (url, headers) => {
-  const gqlUrl = new URL(url);
-  const websocketProtocol = gqlUrl.protocol === 'https:' ? 'wss' : 'ws';
+  const websocketProtocol = getWebsocketProtocol(url);
   const headersFinal = getHeadersAsJSON(headers);
-  const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
+  const graphqlUrl = `${websocketProtocol}//${url.split('//')[1]}`;
 
   if (!websocketSubscriptionClient) {
     websocketSubscriptionClient = getSubscriptionInstance(

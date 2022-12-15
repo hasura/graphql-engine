@@ -41,6 +41,10 @@ const driverToLabel: Record<
     label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
   },
+  alloy: {
+    label: 'AlloyDB',
+    defaultConnection: 'DATABASE_URL',
+  },
 };
 
 const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
@@ -155,10 +159,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
                       )
                       .map(driver => (
                         <option key={driver.name} value={driver.name}>
-                          {driver.displayName?.replace(
-                            'athena',
-                            'Amazon Athena'
-                          )}{' '}
+                          {driver.displayName}{' '}
                           {driver.release === 'GA'
                             ? null
                             : `(${driver.release})`}

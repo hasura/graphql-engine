@@ -1,6 +1,6 @@
 import React from 'react';
+import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
-import { Form } from '@/new-components/Form';
 
 import { DataTarget } from '@/features/Datasources';
 import { TableRelationship } from '@/features/MetadataAPI';
@@ -38,9 +38,7 @@ export const SuggestedRelationshipForm = ({
 }: SuggestedRelationshipFormProps) => {
   const { submit, isLoading } = useSubmit();
 
-  const handleSubmit = async ({
-    relationshipName,
-  }: Record<string, unknown>) => {
+  const onSubmit = async ({ relationshipName }: Record<string, unknown>) => {
     try {
       await submit({
         relationshipName: relationshipName as string,
@@ -53,36 +51,38 @@ export const SuggestedRelationshipForm = ({
     }
   };
 
+  const {
+    methods: { register },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: {
+      defaultValues: {
+        relationshipName: relationship.to.table,
+      },
+    },
+  });
+
   return (
-    <Form
-      onSubmit={handleSubmit}
-      schema={schema}
-      options={{
-        defaultValues: {
-          relationshipName: relationship.to.table,
-        },
-      }}
-    >
-      {options => (
-        <div className="flex items-center space-x-1.5 bg-white">
-          <label htmlFor="relationshipName" className="sr-only">
-            Relationship Name
-          </label>
-          <input
-            id="relationshipName"
-            type="text"
-            className="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
-            placeholder="Relationship Name..."
-            {...options.register('relationshipName')}
-          />
-          <Button type="submit" mode="primary" isLoading={isLoading}>
-            Add Relationship
-          </Button>
-          <button onClick={close} aria-label="close">
-            <CloseIcon />
-          </button>
-        </div>
-      )}
+    <Form onSubmit={onSubmit}>
+      <div className="flex items-center space-x-1.5 bg-white">
+        <label htmlFor="relationshipName" className="sr-only">
+          Relationship Name
+        </label>
+        <input
+          id="relationshipName"
+          type="text"
+          className="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+          placeholder="Relationship Name..."
+          {...register('relationshipName')}
+        />
+        <Button type="submit" mode="primary" isLoading={isLoading}>
+          Add Relationship
+        </Button>
+        <button onClick={close} aria-label="close">
+          <CloseIcon />
+        </button>
+      </div>
     </Form>
   );
 };

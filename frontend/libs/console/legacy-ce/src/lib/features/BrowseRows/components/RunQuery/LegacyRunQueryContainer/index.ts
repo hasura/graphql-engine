@@ -1,1 +1,4 @@
-export { LegacyRunQueryContainer } from './LegacyRunQueryContainer';
+export {
+  LegacyRunQueryContainer,
+  getFiltersAndSortFromUrlQueryParams,
+} from './LegacyRunQueryContainer';

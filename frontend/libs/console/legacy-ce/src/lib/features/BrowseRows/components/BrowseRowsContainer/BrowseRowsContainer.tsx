@@ -1,6 +1,6 @@
 import { Table } from '@/features/hasura-metadata-types';
 import React from 'react';
-import { DataGrid } from '../DataGrid/DataGrid';
+import { BrowseRows } from '../../BrowseRows';
 
 interface BrowseRowsContainerProps {
   table: Table;
@@ -10,7 +10,7 @@ interface BrowseRowsContainerProps {
 export const BrowseRowsContainer = (props: BrowseRowsContainerProps) => {
   return (
     <div className="p-2">
-      <DataGrid {...props} />
+      <BrowseRows {...props} />
     </div>
   );
 };

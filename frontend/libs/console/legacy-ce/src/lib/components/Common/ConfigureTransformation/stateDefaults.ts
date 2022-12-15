@@ -42,8 +42,6 @@ export const SET_REQUEST_PAYLOAD_TRANSFORM =
 export const SET_REQUEST_TRANSFORM_STATE =
   'RequestTransform/SET_REQUEST_TRANSFORM_STATE';
 export const SET_RESPONSE_BODY = 'ResponseTransform/SET_RESPONSE_BODY';
-export const SET_RESPONSE_BODY_ERROR =
-  'ResponseTransform/SET_RESPONSE_BODY_ERROR';
 export const SET_RESPONSE_PAYLOAD_TRANSFORM =
   'ResponseTransform/SET_RESPONSE_PAYLOAD_TRANSFORM';
 export const SET_RESPONSE_TRANSFORM_STATE =
@@ -102,11 +100,6 @@ export interface SetResponseBody extends ReduxAction {
 export interface SetRequestBodyError extends ReduxAction {
   type: typeof SET_REQUEST_BODY_ERROR;
   requestBodyError: string;
-}
-
-export interface SetResponseBodyError extends ReduxAction {
-  type: typeof SET_RESPONSE_BODY_ERROR;
-  responseBodyError: string;
 }
 
 export interface SetRequestSampleInput extends ReduxAction {
@@ -169,7 +162,6 @@ export type RequestTransformEvents =
 
 export type ResponseTransformEvents =
   | SetResponseBody
-  | SetResponseBodyError
   | SetResponsePayloadTransform
   | SetResponseTransformState;
 
@@ -197,9 +189,7 @@ export type ResponseTransformState = {
   version: 1 | 2;
   templatingEngine: RequestTransformTemplateEngine;
   isResponsePayloadTransform: boolean;
-  responseSampleInput: string;
   responseBody: ResponseTransformStateBody;
-  responseBodyError: string;
 };
 
 export type RequestTransformStateBody = Omit<
@@ -242,7 +232,7 @@ export const defaultActionRequestBody = `{
 }`;
 
 export const defaultActionResponseBody = `{
-  "response": {{$body}},
+  "response": {{$body}}
 }`;
 
 export const defaultEventRequestBody = `{

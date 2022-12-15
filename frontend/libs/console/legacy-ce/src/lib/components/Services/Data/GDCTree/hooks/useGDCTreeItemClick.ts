@@ -1,8 +1,8 @@
-import { getRoute } from '../../../../../utils/getDataRoute';
 import { exportMetadata } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 import { Dispatch } from '@/types';
 import { useCallback } from 'react';
+import { getRoute } from '../../../../../utils/getDataRoute';
 import { useIsUnmounted } from '../../Common/tsUtils';
 import _push from '../../push';
 
@@ -11,7 +11,7 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
   const isUnmounted = useIsUnmounted();
 
   const handleClick = useCallback(
-    async (value) => {
+    async value => {
       if (!value.length) return;
 
       if (isUnmounted()) return;
@@ -19,7 +19,7 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
       const { metadata } = await exportMetadata({ httpClient });
       const { database, ...rest } = JSON.parse(value[0]);
       const metadataSource = metadata.sources.find(
-        (source) => source.name === database
+        source => source.name === database
       );
 
       if (!metadataSource)

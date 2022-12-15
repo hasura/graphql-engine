@@ -6,7 +6,7 @@ import { DatabaseRelationships } from './DatabaseRelationships';
 import { handlers } from '../handler.mock';
 
 export default {
-  title: 'GDC Console/DatabaseRelationships',
+  title: 'GDC Console/Relationships/DatabaseRelationships',
   component: DatabaseRelationships,
   decorators: [ReactQueryDecorator()],
   parameters: {

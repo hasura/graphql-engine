@@ -23,3 +23,4 @@ export { HtmlElementPlayground } from './HtmlElement.story';
 
 export { ReactComponent } from './ReactComponent.story';
 export { ReactComponentThatAcceptHtmlAttributes } from './ReactComponentThatAcceptHtmlAttributes.story';
+export { AnalyticsButton } from './AnalyticsButton.story';

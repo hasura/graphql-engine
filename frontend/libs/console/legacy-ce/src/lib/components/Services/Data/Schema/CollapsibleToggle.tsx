@@ -1,17 +1,72 @@
+import ToolTip from '@/components/Common/Tooltip/Tooltip';
+import { TaskEvent } from '@/features/ConnectDB';
+import { Badge } from '@/new-components/Badge';
 import React, { useState } from 'react';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import {
+  FaCheck,
+  FaChevronDown,
+  FaChevronUp,
+  FaExclamationTriangle,
+  FaMinusCircle,
+} from 'react-icons/fa';
 
 import { driverToLabel } from '../../../../dataSources';
 import { DataSource } from '../../../../metadata/types';
 
+type LatencyData = Exclude<
+  TaskEvent['public_event_data']['sources'],
+  null
+>[number];
+
 type CollapsibleToggleProps = {
   dataSource: DataSource;
   dbVersion: string;
+  dbLatencyData?: LatencyData;
+};
+
+const getBadgeColorForLatencyData = (latencyData: LatencyData) => {
+  if (latencyData.avg_latency <= 100) {
+    return 'green';
+  }
+
+  if (latencyData.avg_latency > 100 && latencyData.avg_latency <= 200) {
+    return 'yellow';
+  }
+
+  return 'red';
+};
+
+const getBadgeTextForLatencyData = (latencyData: LatencyData) => {
+  if (latencyData.avg_latency <= 100) {
+    return (
+      <span className="flex items-center justify-center">
+        <FaCheck className="mr-xs" />
+        Connection
+      </span>
+    );
+  }
+
+  if (latencyData.avg_latency > 100 && latencyData.avg_latency <= 200) {
+    return (
+      <span className="flex items-center justify-center">
+        <FaMinusCircle className="mr-xs" />
+        Acceptable
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex items-center justify-center">
+      <FaExclamationTriangle className="mr-xs" />
+      Elevated Latency
+    </span>
+  );
 };
 
 const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
   dataSource,
   dbVersion,
+  dbLatencyData,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -26,6 +81,16 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
             <span className="font-normal">
               ({driverToLabel[dataSource.driver]})
             </span>
+            {dbLatencyData && (
+              <ToolTip
+                message={`Latency: ${dbLatencyData.avg_latency} ms`}
+                placement="top"
+              >
+                <Badge color={getBadgeColorForLatencyData(dbLatencyData)}>
+                  {getBadgeTextForLatencyData(dbLatencyData)}
+                </Badge>
+              </ToolTip>
+            )}
           </div>
           <div className="flex ml-auto w-full sm:w-6/12">
             {!!dataSource?.read_replicas?.length && (

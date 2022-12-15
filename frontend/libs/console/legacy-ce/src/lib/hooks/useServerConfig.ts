@@ -13,6 +13,7 @@ type ExperimentalFeature =
 export interface ServerConfig {
   version: string;
   is_function_permissions_inferred: boolean;
+  default_naming_convention: string;
   is_admin_secret_set: boolean;
   is_auth_hook_set: boolean;
   is_allow_list_enabled: boolean;

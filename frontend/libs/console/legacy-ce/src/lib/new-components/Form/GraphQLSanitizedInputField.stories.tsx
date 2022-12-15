@@ -3,7 +3,7 @@ import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
 
 import {
-  Form,
+  SimpleForm,
   GraphQLSanitizedInputField as InputField,
 } from '@/new-components/Form';
 import { z } from 'zod';
@@ -27,9 +27,9 @@ export const ApiPlayground: StoryType = args => {
   const validationSchema = z.object({});
 
   return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => <InputField {...args} />}
-    </Form>
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <InputField {...args} />
+    </SimpleForm>
   );
 };
 
@@ -46,22 +46,20 @@ export const Examples: StoryType = () => {
   const validationSchema = z.object({});
 
   return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <div className="max-w-xs">
-          <InputField
-            name="sanitized-input"
-            label="With tips in description"
-            placeholder="Try typing spaces and other stuff!"
-          />
-          <InputField
-            name="sanitized-input-no-tips"
-            label="No tips in description"
-            placeholder="Try typing spaces and other stuff!"
-            hideTips
-          />
-        </div>
-      )}
-    </Form>
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <div className="max-w-xs">
+        <InputField
+          name="sanitized-input"
+          label="With tips in description"
+          placeholder="Try typing spaces and other stuff!"
+        />
+        <InputField
+          name="sanitized-input-no-tips"
+          label="No tips in description"
+          placeholder="Try typing spaces and other stuff!"
+          hideTips
+        />
+      </div>
+    </SimpleForm>
   );
 };

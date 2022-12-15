@@ -51,8 +51,6 @@ import {
   ResponseTransformStateBody,
   SET_RESPONSE_BODY,
   SetResponseBody,
-  SET_RESPONSE_BODY_ERROR,
-  SetResponseBodyError,
   ResponseTransformState,
   ResponseTransformEvents,
   SET_RESPONSE_TRANSFORM_STATE,
@@ -132,13 +130,6 @@ export const setRequestBodyError = (
 ): SetRequestBodyError => ({
   type: SET_REQUEST_BODY_ERROR,
   requestBodyError,
-});
-
-export const setResponseBodyError = (
-  responseBodyError: string
-): SetResponseBodyError => ({
-  type: SET_RESPONSE_BODY_ERROR,
-  responseBodyError,
 });
 
 export const setRequestSampleInput = (
@@ -233,9 +224,7 @@ export const requestTransformState: RequestTransformState = {
 export const responseTransformState: ResponseTransformState = {
   version: currentVersion,
   isResponsePayloadTransform: false,
-  responseSampleInput: '',
   responseBody: { action: responseBodyActionState.transformApplicationJson },
-  responseBodyError: '',
   templatingEngine: 'Kriti',
 };
 
@@ -265,7 +254,6 @@ export const getActionResponseTransformDefaultState =
         template: defaultActionResponseBody,
         form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
       },
-      responseSampleInput: defaultActionRequestSampleInput,
     };
   };
 
@@ -387,11 +375,6 @@ export const responseTransformReducer = (
       return {
         ...state,
         responseBody: action.responseBody,
-      };
-    case SET_RESPONSE_BODY_ERROR:
-      return {
-        ...state,
-        responseBodyError: action.responseBodyError,
       };
     case SET_RESPONSE_PAYLOAD_TRANSFORM:
       return {

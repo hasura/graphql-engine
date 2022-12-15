@@ -498,8 +498,6 @@ export const getResponseTransformState = (
   templatingEngine: responseTransform?.template_engine ?? 'Kriti',
   isResponsePayloadTransform: !!responseTransform?.body,
   responseBody: getResponseTransformBody(responseTransform),
-  responseSampleInput: '',
-  responseBodyError: '',
 });
 
 export const capitaliseFirstLetter = (val: string) =>

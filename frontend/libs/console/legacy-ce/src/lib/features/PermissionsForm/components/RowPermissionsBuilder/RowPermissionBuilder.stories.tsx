@@ -2,17 +2,17 @@ import React from 'react';
 import { z } from 'zod';
 import { ComponentStory, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { UpdatedForm } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import { RowPermissionBuilder } from './RowPermissionBuilder';
 import { createDefaultValues } from './utils';
 import {
+  complicatedExample,
+  exampleWithBoolOperator,
+  exampleWithRelationship,
   handlers,
   schema,
   simpleExample,
-  exampleWithBoolOperator,
-  exampleWithRelationship,
-  complicatedExample,
 } from './mocks';
 
 export default {
@@ -36,11 +36,9 @@ Primary.decorators = [
   Component => {
     return (
       <div style={{ width: 800 }}>
-        <UpdatedForm schema={z.any()} onSubmit={console.log}>
-          {() => {
-            return <Component />;
-          }}
-        </UpdatedForm>
+        <SimpleForm schema={z.any()} onSubmit={console.log}>
+          <Component />
+        </SimpleForm>
       </div>
     );
   },
@@ -56,7 +54,7 @@ WithDefaults.decorators = [
   Component => {
     return (
       <div style={{ width: 800 }}>
-        <UpdatedForm
+        <SimpleForm
           schema={z.any()}
           options={{
             defaultValues: createDefaultValues({
@@ -68,10 +66,8 @@ WithDefaults.decorators = [
           }}
           onSubmit={console.log}
         >
-          {() => {
-            return <Component />;
-          }}
-        </UpdatedForm>
+          <Component />
+        </SimpleForm>
       </div>
     );
   },
@@ -89,7 +85,7 @@ WithDefaultsBool.decorators = [
   Component => {
     return (
       <div style={{ width: 800 }}>
-        <UpdatedForm
+        <SimpleForm
           schema={z.any()}
           options={{
             defaultValues: createDefaultValues({
@@ -101,10 +97,8 @@ WithDefaultsBool.decorators = [
           }}
           onSubmit={console.log}
         >
-          {() => {
-            return <Component />;
-          }}
-        </UpdatedForm>
+          <Component />
+        </SimpleForm>
       </div>
     );
   },
@@ -122,7 +116,7 @@ WithDefaultsRelationship.decorators = [
   Component => {
     return (
       <div style={{ width: 800 }}>
-        <UpdatedForm
+        <SimpleForm
           schema={z.any()}
           options={{
             defaultValues: createDefaultValues({
@@ -134,10 +128,8 @@ WithDefaultsRelationship.decorators = [
           }}
           onSubmit={console.log}
         >
-          {() => {
-            return <Component />;
-          }}
-        </UpdatedForm>
+          <Component />;
+        </SimpleForm>
       </div>
     );
   },
@@ -156,7 +148,7 @@ WithPointlesslyComplicatedRelationship.decorators = [
   Component => {
     return (
       <div style={{ width: 800 }}>
-        <UpdatedForm
+        <SimpleForm
           schema={z.any()}
           options={{
             defaultValues: createDefaultValues({
@@ -168,10 +160,8 @@ WithPointlesslyComplicatedRelationship.decorators = [
           }}
           onSubmit={console.log}
         >
-          {() => {
-            return <Component />;
-          }}
-        </UpdatedForm>
+          <Component />
+        </SimpleForm>
       </div>
     );
   },

@@ -6,7 +6,7 @@ import {
 } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { DataTarget } from '@/features/Datasources';
-import { InputField, Select, Form } from '@/new-components/Form';
+import { InputField, Select, useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
@@ -60,6 +60,16 @@ export const RemoteDBRelationshipWidget = ({
   } = useDefaultValues({
     sourceTableInfo,
     existingRelationshipName,
+  });
+
+  const {
+    methods: { formState },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: {
+      defaultValues,
+    },
   });
 
   const { fireNotification } = useFireNotification();
@@ -144,65 +154,58 @@ export const RemoteDBRelationshipWidget = ({
   }
 
   return (
-    <Form
-      schema={schema}
-      onSubmit={submit}
-      options={{ defaultValues }}
-      className="p-4"
-    >
-      {options => (
-        <>
-          <div>
-            <div className="w-full sm:w-6/12 mb-md">
-              <div className="mb-md">
-                <InputField
-                  name="relationshipName"
-                  label="Name"
-                  placeholder="Relationship name"
-                  dataTest="local-db-to-db-rel-name"
-                  disabled={!!existingRelationshipName}
-                />
-              </div>
-
-              <div className="mb-md">
-                <Select
-                  name="relationshipType"
-                  label="Type"
-                  dataTest="local-db-to-db-select-rel-type"
-                  placeholder="Select a relationship type..."
-                  options={[
-                    {
-                      label: 'Object Relationship',
-                      value: 'object',
-                    },
-                    {
-                      label: 'Array Relationship',
-                      value: 'array',
-                    },
-                  ]}
-                />
-              </div>
+    <Form onSubmit={submit}>
+      <>
+        <div>
+          <div className="w-full sm:w-6/12 mb-md">
+            <div className="mb-md">
+              <InputField
+                name="relationshipName"
+                label="Name"
+                placeholder="Relationship name"
+                dataTest="local-db-to-db-rel-name"
+                disabled={!!existingRelationshipName}
+              />
             </div>
-            <FormElements />
 
-            <Button
-              mode="primary"
-              type="submit"
-              isLoading={mutation.isLoading}
-              loadingText="Saving relationship"
-              data-test="add-local-db-relationship"
-            >
-              Save Relationship
-            </Button>
+            <div className="mb-md">
+              <Select
+                name="relationshipType"
+                label="Type"
+                dataTest="local-db-to-db-select-rel-type"
+                placeholder="Select a relationship type..."
+                options={[
+                  {
+                    label: 'Object Relationship',
+                    value: 'object',
+                  },
+                  {
+                    label: 'Array Relationship',
+                    value: 'array',
+                  },
+                ]}
+              />
+            </div>
           </div>
+          <FormElements />
 
-          {!!Object.keys(options.formState.errors).length && (
-            <IndicatorCard status="negative">
-              Error saving relationship
-            </IndicatorCard>
-          )}
-        </>
-      )}
+          <Button
+            mode="primary"
+            type="submit"
+            isLoading={mutation.isLoading}
+            loadingText="Saving relationship"
+            data-test="add-local-db-relationship"
+          >
+            Save Relationship
+          </Button>
+        </div>
+
+        {!!Object.keys(formState.errors).length && (
+          <IndicatorCard status="negative">
+            Error saving relationship
+          </IndicatorCard>
+        )}
+      </>
     </Form>
   );
 };

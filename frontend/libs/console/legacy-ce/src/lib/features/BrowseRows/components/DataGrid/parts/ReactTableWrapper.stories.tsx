@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
-import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
-import { Feature } from '@/features/DataSource';
+import React from 'react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { ColumnSort } from '@tanstack/react-table';
+import { Relationship } from '@/features/DatabaseRelationships';
+import { expect } from '@storybook/jest';
+import { waitFor, within } from '@storybook/testing-library';
 import { ReactTableWrapper } from './ReactTableWrapper';
-import { transformToOrderByClause } from '../utils';
 import { handlers } from '../../../__mocks__/handlers.mock';
 
 export default {
-  title: 'Browse Rows/React-Table Wrapper 🧬',
   component: ReactTableWrapper,
   decorators: [ReactQueryDecorator()],
   parameters: {
@@ -17,27 +15,122 @@ export default {
   },
 } as ComponentMeta<typeof ReactTableWrapper>;
 
-export const Primary: ComponentStory<typeof ReactTableWrapper> = () => {
-  const [sorting, setSorting] = useState<ColumnSort[]>([]);
-  const { data: rows } = useRows({
-    dataSourceName: 'sqlite_test',
-    table: ['Album'],
-    options: {
-      order_by: transformToOrderByClause(sorting),
+const mockDataForRows = [
+  {
+    AlbumId: 1,
+    Title: 'For Those About To Rock We Salute You',
+    ArtistId: 1,
+  },
+  { AlbumId: 2, Title: 'Balls to the Wall', ArtistId: 2 },
+  { AlbumId: 3, Title: 'Restless and Wild', ArtistId: 2 },
+  { AlbumId: 4, Title: 'Let There Be Rock', ArtistId: 1 },
+  { AlbumId: 5, Title: 'Big Ones', ArtistId: 3 },
+  { AlbumId: 6, Title: 'Jagged Little Pill', ArtistId: 4 },
+  { AlbumId: 7, Title: 'Facelift', ArtistId: 5 },
+  { AlbumId: 8, Title: 'Warner 25 Anos', ArtistId: 6 },
+  { AlbumId: 9, Title: 'Plays Metallica By Four Cellos', ArtistId: 7 },
+  { AlbumId: 10, Title: 'Audioslave', ArtistId: 8 },
+];
+
+export const Default: ComponentStory<typeof ReactTableWrapper> = () => {
+  return <ReactTableWrapper rows={mockDataForRows} />;
+};
+
+export const Basic: ComponentStory<typeof ReactTableWrapper> = () => {
+  return <ReactTableWrapper rows={mockDataForRows} />;
+};
+
+Basic.storyName = '🧪 Test - Basic data with columns';
+
+Basic.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  waitFor(
+    async () => {
+      const albumRows = await canvas.findAllByTestId(/^@table-row-.*$/);
+      expect(albumRows.length).toBe(10);
+
+      const firstRowOfAlbum = await canvas.findAllByTestId(
+        /^@table-cell-0-.*$/
+      );
+      expect(firstRowOfAlbum.length).toBe(3);
+
+      expect(firstRowOfAlbum[0]).toHaveTextContent('1'); // AlbumId
+      expect(firstRowOfAlbum[1]).toHaveTextContent(
+        'For Those About To Rock We Salute You'
+      );
     },
-  });
+    { timeout: 5000 }
+  );
+};
 
-  if (!rows) return <>Loading...</>;
+export const WithRelationships: ComponentStory<typeof ReactTableWrapper> =
+  () => {
+    const relationships: Relationship[] = [
+      {
+        name: 'Artist',
+        fromSource: 'sqlite_test',
+        fromTable: ['Album'],
+        relationshipType: 'Object',
+        type: 'localRelationship',
+        definition: {
+          toTable: ['Artist'],
+          mapping: {
+            ArtistId: 'ArtistId',
+          },
+        },
+      },
+      {
+        name: 'Tracks',
+        fromSource: 'sqlite_test',
+        fromTable: ['Album'],
+        relationshipType: 'Object',
+        type: 'localRelationship',
+        definition: {
+          toTable: ['Track'],
+          mapping: {
+            AlbumId: 'AlbumId',
+          },
+        },
+      },
+    ];
 
-  if (rows === Feature.NotImplemented) return <>Not implemented</>;
+    return (
+      <ReactTableWrapper
+        rows={mockDataForRows}
+        relationships={{
+          allRelationships: relationships,
+          onClick: () => {},
+          onClose: () => {},
+        }}
+      />
+    );
+  };
 
-  return (
-    <ReactTableWrapper
-      rows={rows}
-      sort={{
-        sorting,
-        setSorting,
-      }}
-    />
+WithRelationships.storyName = '🧪 Test - Data with Relationships';
+
+WithRelationships.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  waitFor(
+    async () => {
+      const albumRows = await canvas.findAllByTestId(/^@table-row-.*$/);
+      expect(albumRows.length).toBe(10);
+
+      const firstRowOfAlbum = await canvas.findAllByTestId(
+        /^@table-cell-0-.*$/
+      );
+      expect(firstRowOfAlbum.length).toBe(5);
+
+      expect(firstRowOfAlbum[0]).toHaveTextContent('1'); // AlbumId
+      expect(firstRowOfAlbum[1]).toHaveTextContent(
+        'For Those About To Rock We Salute You'
+      );
+
+      // The last two columns should be relationships
+      expect(firstRowOfAlbum[3]).toHaveTextContent('View');
+      expect(firstRowOfAlbum[4]).toHaveTextContent('View');
+    },
+    { timeout: 5000 }
   );
 };

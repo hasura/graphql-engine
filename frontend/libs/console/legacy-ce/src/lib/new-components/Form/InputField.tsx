@@ -52,7 +52,7 @@ export type InputFieldProps<T extends z.infer<Schema>> =
     /**
      * The input field type
      */
-    type?: 'text' | 'email' | 'password' | 'number';
+    type?: 'text' | 'email' | 'password' | 'number' | 'file';
     /**
      * The input field classes
      */
@@ -119,6 +119,17 @@ export const InputField = <T extends z.infer<Schema>>({
 
   const { onChange, ...regReturn } = register(name);
   const showInputEndContainer = clearButton || (iconPosition === 'end' && icon);
+
+  const onInputChange = React.useCallback(
+    async event => {
+      console.log('event', event);
+      if (event.target.files?.[0]) {
+        onChange(event);
+      }
+    },
+    [onChange]
+  );
+
   return (
     <FieldWrapper
       id={name}
@@ -159,7 +170,8 @@ export const InputField = <T extends z.infer<Schema>>({
               {
                 'pl-10': iconPosition === 'start' && icon,
                 'pr-10': iconPosition === 'end' && icon,
-              }
+              },
+              type === 'file' && 'h-auto'
             )}
             placeholder={placeholder}
             {...regReturn}
@@ -167,7 +179,11 @@ export const InputField = <T extends z.infer<Schema>>({
               if (inputTransform) {
                 e.target.value = inputTransform(e.target.value);
               }
-              onChange(e);
+              if (type === 'file') {
+                onInputChange(e);
+              } else {
+                onChange(e);
+              }
             }}
             disabled={disabled}
             data-testid={name}

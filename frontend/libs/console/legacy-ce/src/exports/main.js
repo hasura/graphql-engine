@@ -3,10 +3,6 @@ const filterQueryScss = require('../lib/components/Common/FilterQuery/FilterQuer
 const tableScss = require('../lib/components/Common/TableCommon/Table.module.scss');
 
 import * as EndpointNamedExps from '../lib/Endpoints';
-import { isMetadataStatusPage } from '../lib/components/Error/ErrorBoundary.tsx';
-import { redirectToMetadataStatus } from '../lib/components/Common/utils/routesUtils.ts';
-import { ApiLimits } from '../lib/components/Services/ApiExplorer/Security';
-import { IntrospectionOptions } from '../lib/components/Services/ApiExplorer/Security/Introspection';
 
 export {
   persistGraphiQLHeaders,
@@ -46,6 +42,10 @@ export {
   loadInconsistentObjects,
   exportMetadata,
 } from '../lib/metadata/actions';
+import { isMetadataStatusPage } from '../lib/components/Error/ErrorBoundary.tsx';
+import { redirectToMetadataStatus } from '../lib/components/Common/utils/routesUtils.ts';
+import { ApiLimits } from '../lib/components/Services/ApiExplorer/Security';
+import { IntrospectionOptions } from '../lib/components/Services/ApiExplorer/Security/Introspection';
 
 export { default as globals } from '../lib/Globals';
 export { default as endpoints } from '../lib/Endpoints';
@@ -93,3 +93,5 @@ export {
 } from '../lib/utils/proConsole';
 
 export { AllowListDetail } from '../lib/components/Services/AllowList/AllowListDetail';
+
+export { default as generatedAdminSecretLoginConnector } from '../lib/components/Login/Login';

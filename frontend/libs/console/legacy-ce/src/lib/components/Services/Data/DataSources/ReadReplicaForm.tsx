@@ -164,7 +164,7 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
               onClick={() => setShowUrl(true)}
             >
               <FaEye aria-hidden="true" />
-              <p style={{ marginLeft: 6 }}>Show Connection String</p>
+              <span style={{ marginLeft: 6 }}>Show Connection String</span>
             </span>
           )}
           {showUrl && (

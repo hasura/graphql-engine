@@ -25,7 +25,7 @@ export const buildUrl = (name: string, section: string) =>
   `/api/allow-list/detail/${name}/${section}`;
 
 export const pushUrl = (name: string, section: string) => {
-  browserHistory.push(buildUrl(name, section));
+  browserHistory.replace(buildUrl(name, section));
 };
 
 export const AllowListDetail: React.FC<AllowListDetailProps> = props => {

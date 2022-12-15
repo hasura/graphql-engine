@@ -185,7 +185,6 @@
   display: flex;
   align-items: center;
   border-right: 1px solid #788095;
-  display: inline-block;
   width: 20%;
   min-width: 240px;
 
@@ -982,7 +981,7 @@
   color: #fff;
   cursor: pointer;
   align-items: center;
-  padding: 3px;
+  padding: 0px;
 }
 
 .heart {
@@ -1320,7 +1319,7 @@
   background-color: #dedede;
   height: 7px;
   position: absolute;
-  top: 2px;
+  top: 6px;
   left: 4px;
   z-index: -1;
 }

@@ -11,10 +11,12 @@ import {
   FaSort,
   FaTrash,
 } from 'react-icons/fa';
+import clsx from 'clsx';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
 } from '../../../Common/TableCommon/DragFoldTable';
+import { vMakeTableRequests, vSetLimit } from './ViewActions';
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
@@ -44,7 +46,6 @@ import {
   addOrder,
 } from './FilterActions';
 
-import _push from '../push';
 import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
@@ -63,43 +64,47 @@ import {
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  persistColumnCollapseChange,
   getPersistedCollapsedColumns,
-  persistColumnOrderChange,
   getPersistedColumnsOrder,
+  persistColumnCollapseChange,
+  persistColumnOrderChange,
+  setPersistedPageSize,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import { push } from 'react-router-redux';
 import globals from '@/Globals';
-import { getUrlQueryParams } from '@/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer';
-import { adaptFormValuesToQuery } from '@/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
 
 const ViewRows = props => {
   const {
-    curTableName,
-    currentSchema,
-    curQuery,
-    curFilter,
-    curRows,
-    curPath = [],
-    parentTableName,
-    curDepth,
     activePath,
-    schemas,
+    count,
+    curDepth,
+    curFilter,
+    curPath = [],
+    curQuery,
+    currentSchema,
+    currentSource,
+    curRows,
+    curTableName,
     dispatch,
-    ongoingRequest,
+    expandedRow,
+    filtersAndSort,
     isProgressing,
+    isView,
     lastError,
     lastSuccess,
-    isView,
-    count,
-    expandedRow,
     manualTriggers = [],
+    onChangePageSize,
+    ongoingRequest,
+    onRunQuery,
+    parentTableName,
     readOnlyMode,
+    schemas,
     shouldHidePagination,
-    currentSource,
     useCustomPagination,
+    paginationUserQuery,
   } = props;
+
   const [invokedRow, setInvokedRow] = useState(null);
   const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -141,7 +146,7 @@ const ViewRows = props => {
     } else if (
       _curRelName &&
       parentTableSchema &&
-      parentTableSchema.relationships.find(
+      (parentTableSchema?.relationships || []).find(
         r => r.rel_name === _curRelName && r.rel_type === 'object'
       )
     ) {
@@ -365,18 +370,20 @@ const ViewRows = props => {
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableEditRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableEditRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+              })
             );
           };
-
           const editTitle = 'Edit row';
 
           return getActionButton(
@@ -688,7 +695,8 @@ const ViewRows = props => {
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableColumnsSorted = tableSchema.columns
+
+  const tableColumnsSorted = tableSchema?.columns
     .map(col => {
       const customColumnName = getTableCustomColumnName(
         tableSchema,
@@ -705,7 +713,11 @@ const ViewRows = props => {
     })
     .sort(ordinalColSort);
 
-  const tableRelationships = tableSchema.relationships;
+  if (!tableSchema) {
+    return <p>Loading...</p>;
+  }
+
+  const tableRelationships = tableSchema?.relationships || [];
 
   const hasPrimaryKey = isTableWithPK(tableSchema);
 
@@ -767,32 +779,37 @@ const ViewRows = props => {
       }
     });
 
-    const childTabs = childQueries.map((q, i) => {
+    const childTabs = childQueries.map(q => {
       const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
       return (
-        <li key={i} className={isActive} role="presentation">
-          <a
-            href="#"
+        <div>
+          <Button
+            className={clsx(
+              'mr-2',
+              isActive === 'active' ? 'border-4' : 'border-white'
+            )}
             onClick={e => {
               e.preventDefault();
               dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });
             }}
           >
             {[...activePath.slice(0, 1), ...curPath, q.name].join('.')}
-          </a>
-        </li>
+          </Button>
+        </div>
       );
     });
 
-    const childViewRows = childQueries.map((cq, i) => {
+    const childViewRows = childQueries.map((childQuery, i) => {
       // Render child only if data is available
-      if (curRows[0] && curRows[0][cq.name]) {
-        const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
+      if (curRows[0] && curRows[0][childQuery.name]) {
+        const rel = tableSchema.relationships.find(
+          r => r.rel_name === childQuery.name
+        );
 
         if (rel) {
           const isObjectRel = rel.rel_type === 'object';
 
-          let childRows = curRows[0][cq.name];
+          let childRows = curRows[0][childQuery.name];
           if (isObjectRel) {
             childRows = [childRows];
           }
@@ -800,26 +817,46 @@ const ViewRows = props => {
 
           const childTable = findTable(schemas, childTableDef);
 
+          const onChangePageSizeNested = newPageSize => {
+            dispatch(vSetLimit(newPageSize, [...curPath, rel.rel_name]));
+            dispatch(vMakeTableRequests());
+          };
+
+          const nestedPaginationUserQuery = {
+            where: { $and: childQuery?.where?.$and || [] },
+            order_by: childQuery?.order_by || [],
+          };
+
+          const limit = childQuery.limit || curFilter.limit;
+          const filter = {
+            ...curFilter,
+            limit,
+          };
+
           return (
             <ViewRows
               key={i}
-              curTableName={childTable.table_name}
-              currentSchema={childTable.table_schema}
-              curQuery={cq}
-              curFilter={curFilter}
-              curPath={[...curPath, rel.rel_name]}
-              curRows={childRows}
-              parentTableName={curTableName}
               activePath={activePath}
-              ongoingRequest={ongoingRequest}
-              lastError={lastError}
-              lastSuccess={lastSuccess}
-              schemas={schemas}
               curDepth={curDepth + 1}
+              curFilter={filter}
+              curPath={[...curPath, rel.rel_name]}
+              curQuery={childQuery}
+              currentSchema={childTable.table_schema}
+              currentSource={currentSource}
+              curRows={childRows}
+              curTableName={childTable.table_name}
               dispatch={dispatch}
               expandedRow={expandedRow}
+              lastError={lastError}
+              lastSuccess={lastSuccess}
+              onChangePageSize={onChangePageSizeNested}
+              ongoingRequest={ongoingRequest}
+              onRunQuery={() => null}
+              paginationUserQuery={nestedPaginationUserQuery}
+              parentTableName={curTableName}
               readOnlyMode={readOnlyMode}
-              currentSource={currentSource}
+              schemas={schemas}
+              useCustomPagination
             />
           );
         }
@@ -831,7 +868,7 @@ const ViewRows = props => {
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul>{childTabs}</ul>
+          <div className="flex">{childTabs}</div>
           {childViewRows}
         </div>
       );
@@ -840,24 +877,12 @@ const ViewRows = props => {
     return _childComponent;
   };
 
-  const queryParams = getUrlQueryParams();
-  const [urlParamsFilters, setUrlParamsFilters] = useState(queryParams);
-  const [userQuery, setUserQuery] = useState(
-    adaptFormValuesToQuery(
-      urlParamsFilters,
-      tableSchema.columns.map(column => ({
-        name: column.column_name,
-        dataType: column.data_type,
-      }))
-    )
-  );
-
   const renderTableBody = () => {
     if (isProgressing) {
       return (
         <div>
           {' '}
-          <Spinner />{' '}
+          <Spinner width="16px" height="16px" />{' '}
         </div>
       );
     }
@@ -960,8 +985,10 @@ const ViewRows = props => {
     };
 
     const handlePageSizeChange = size => {
-      if (curFilter.size !== size) {
+      if (curFilter.limit !== size) {
         setSelectedRows([]);
+        onChangePageSize(size);
+        setPersistedPageSize(size);
       }
     };
 
@@ -976,7 +1003,7 @@ const ViewRows = props => {
           pageSize={curFilter.limit}
           rows={curRows}
           tableSchema={tableSchema}
-          userQuery={userQuery}
+          userQuery={paginationUserQuery}
         />
       );
     }
@@ -1036,10 +1063,9 @@ const ViewRows = props => {
               [schemaKey]: tableSchema.table_schema,
               name: curTableName,
             }}
-            userQuery={urlParamsFilters}
+            initialFiltersAndSort={filtersAndSort}
             onRunQuery={newUserQuery => {
-              setUrlParamsFilters(newUserQuery);
-              setUserQuery(newUserQuery);
+              onRunQuery(newUserQuery);
             }}
           />
         </div>

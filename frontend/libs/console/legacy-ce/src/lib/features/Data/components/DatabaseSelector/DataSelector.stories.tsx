@@ -1,5 +1,5 @@
 import { Button } from '@/new-components/Button';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { userEvent, within } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
@@ -7,6 +7,7 @@ import React from 'react';
 import { expect } from '@storybook/jest';
 import { Controller, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
+import { action } from '@storybook/addon-actions';
 import { DatabaseSelector } from '@/features/Data';
 import { handlers } from './mocks/handlers.mock';
 
@@ -23,7 +24,7 @@ export const Playground: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'chinook', schema: 'public', table: 'Album' }}
-      onChange={v => console.log(v)}
+      onChange={action('onChange')}
       name="source"
       className="border-l-4 border-l-green-600"
       labels={{
@@ -40,7 +41,7 @@ export const WithDisabledInputs: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'chinook', schema: 'public', table: 'Album' }}
-      onChange={v => console.log(v)}
+      onChange={action('onChange')}
       name="source"
       className="border-l-4 border-l-green-600"
       disabledKeys={['database', 'schema', 'table']}
@@ -52,7 +53,7 @@ export const BqWithDisabledInputs: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'bigquery_test', dataset: 'sensei', table: 'table1' }}
-      onChange={v => console.log(v)}
+      onChange={action('onChange')}
       name="source"
       className="border-l-4 border-l-green-600"
       disabledKeys={['database', 'schema', 'table']}
@@ -64,7 +65,7 @@ export const WithHiddenInputs: Story = () => {
   return (
     <DatabaseSelector
       value={{ database: 'bigquery_test', dataset: 'sensei', table: '' }}
-      onChange={v => console.log(v)}
+      onChange={action('onChange')}
       name="source"
       className="border-l-4 border-l-green-600"
       hiddenKeys={['database']}
@@ -107,12 +108,8 @@ const FormElements = () => {
 };
 
 export const WithReactFormHookNested: Story = () => {
-  const submit = (values: Record<string, unknown>) => {
-    console.log(JSON.stringify(values));
-  };
-
   return (
-    <Form
+    <SimpleForm
       options={{
         defaultValues: {
           destination: {
@@ -122,21 +119,15 @@ export const WithReactFormHookNested: Story = () => {
           },
         },
       }}
-      onSubmit={submit}
+      onSubmit={action('onSubmit')}
       schema={schema}
       className="p-4"
     >
-      {() => {
-        return (
-          <>
-            <FormElements />
-            <Button type="submit" data-testid="submit">
-              Submit
-            </Button>
-          </>
-        );
-      }}
-    </Form>
+      <FormElements />
+      <Button type="submit" data-testid="submit">
+        Submit
+      </Button>
+    </SimpleForm>
   );
 };
 
