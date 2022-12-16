@@ -103,7 +103,7 @@ resolveConfigurationInputs env = \case
   FromYamls a -> pure a
   FromEnvs v -> filter (not . T.null) . T.splitOn "," <$> MSSQLConn.getEnv env v
 
-initConnection :: MonadIO m => ServiceAccount -> Text -> Maybe RetryOptions -> m BigQueryConnection
+initConnection :: MonadIO m => ServiceAccount -> BigQueryProjectId -> Maybe RetryOptions -> m BigQueryConnection
 initConnection _bqServiceAccount _bqProjectId _bqRetryOptions = do
   _bqAccessTokenMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
   pure BigQueryConnection {..}

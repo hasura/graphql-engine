@@ -56,7 +56,7 @@ resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _ba
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
     Right serviceAccount -> do
-      projectId <- resolveConfigurationInput env _cscProjectId
+      projectId <- BigQueryProjectId <$> resolveConfigurationInput env _cscProjectId
       retryOptions <- do
         numRetries <-
           resolveConfigurationInput env `mapM` _cscRetryLimit >>= \case
@@ -72,7 +72,7 @@ resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _ba
                 Just v -> fromInteger <$> readNonNegative v "retry base delay"
             pure $ Just RetryOptions {..}
       _scConnection <- initConnection serviceAccount projectId retryOptions
-      _scDatasets <- resolveConfigurationInputs env _cscDatasets
+      _scDatasets <- fmap BigQueryDataset <$> resolveConfigurationInputs env _cscDatasets
       _scGlobalSelectLimit <-
         resolveConfigurationInput env `mapM` _cscGlobalSelectLimit >>= \case
           Nothing -> pure defaultGlobalSelectLimit

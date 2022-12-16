@@ -49,7 +49,7 @@ import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
-import Hasura.Backends.BigQuery.Source (BigQueryConnection, ServiceAccount)
+import Hasura.Backends.BigQuery.Source (BigQueryConnection, BigQueryProjectId (..), ServiceAccount)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
@@ -71,8 +71,8 @@ backendTypeMetadata =
 getServiceAccount :: HasCallStack => IO ServiceAccount
 getServiceAccount = getEnvJson Constants.bigqueryServiceKeyVar
 
-getProjectId :: (HasCallStack) => IO Text
-getProjectId = getEnvString Constants.bigqueryProjectIdVar
+getProjectId :: (HasCallStack) => IO BigQueryProjectId
+getProjectId = BigQueryProjectId <$> getEnvString Constants.bigqueryProjectIdVar
 
 -- | Run a plain Standard SQL string against the server, ignore the
 -- result. Just checks for errors.

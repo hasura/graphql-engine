@@ -1,11 +1,12 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoGeneralisedNewtypeDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.BigQuery.Source
   ( BigQueryConnSourceConfig (..),
     RetryOptions (..),
+    BigQueryProjectId (..),
+    BigQueryDataset (..),
     BigQueryConnection (..),
     BigQuerySourceConfig (..),
     ConfigurationInput (..),
@@ -33,6 +34,20 @@ import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
 import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
+
+newtype BigQueryProjectId = BigQueryProjectId {getBigQueryProjectId :: Text}
+  deriving newtype (Eq, Show, NFData, Hashable, J.FromJSON, J.ToJSON)
+  deriving stock (Data, Generic)
+
+instance HasCodec BigQueryProjectId where
+  codec = bimapCodec (Right . BigQueryProjectId) getBigQueryProjectId textCodec
+
+newtype BigQueryDataset = BigQueryDataset {getBigQueryDataset :: Text}
+  deriving newtype (Eq, Show, NFData, Hashable, J.FromJSON, J.ToJSON)
+  deriving stock (Data, Generic)
+
+instance HasCodec BigQueryDataset where
+  codec = bimapCodec (Right . BigQueryDataset) getBigQueryDataset textCodec
 
 data PKey = PKey
   { unPKey :: Cry.PrivateKey,
@@ -70,7 +85,8 @@ instance J.ToJSON PKey where
 
 newtype GoogleAccessToken
   = GoogleAccessToken Text
-  deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable, Generic, Data, NFData)
+  deriving stock (Show, Eq, Generic, Data)
+  deriving anyclass (J.FromJSON, J.ToJSON, Hashable, NFData)
 
 data TokenResp = TokenResp
   { _trAccessToken :: GoogleAccessToken,
@@ -87,7 +103,7 @@ instance J.FromJSON TokenResp where
 data ServiceAccount = ServiceAccount
   { _saClientEmail :: Text,
     _saPrivateKey :: PKey,
-    _saProjectId :: Text
+    _saProjectId :: BigQueryProjectId
   }
   deriving (Eq, Show, Data, NFData, Generic, Hashable)
 
@@ -231,7 +247,7 @@ instance J.FromJSON ConfigurationInput where
 data BigQueryConnSourceConfig = BigQueryConnSourceConfig
   { _cscServiceAccount :: ConfigurationJSON ServiceAccount,
     _cscDatasets :: ConfigurationInputs,
-    _cscProjectId :: ConfigurationInput, -- this is part of service-account.json, but we put it here on purpose
+    _cscProjectId :: ConfigurationInput, -- we use this projectId instead of the one from the service account as a service account may have access to multiple projects and we wish to choose which one to use
     _cscGlobalSelectLimit :: Maybe ConfigurationInput,
     _cscRetryBaseDelay :: Maybe ConfigurationInput,
     _cscRetryLimit :: Maybe ConfigurationInput
@@ -253,7 +269,7 @@ instance HasCodec BigQueryConnSourceConfig where
         <*> optionalFieldOrNull' "retry_base_delay" .= _cscRetryBaseDelay
         <*> optionalFieldOrNull' "retry_limit" .= _cscRetryLimit
 
-deriving instance Show BigQueryConnSourceConfig
+deriving stock instance Show BigQueryConnSourceConfig
 
 deriving instance Hashable BigQueryConnSourceConfig
 
@@ -265,7 +281,7 @@ data RetryOptions = RetryOptions
 
 data BigQueryConnection = BigQueryConnection
   { _bqServiceAccount :: ServiceAccount,
-    _bqProjectId :: Text, -- this is part of service-account.json, but we put it here on purpose
+    _bqProjectId :: BigQueryProjectId, -- we use this projectId instead of the one from the service account as a service account may have access to multiple projects and we wish to choose which one to use
     _bqRetryOptions :: Maybe RetryOptions,
     _bqAccessTokenMVar :: MVar (Maybe TokenResp)
   }
@@ -273,7 +289,7 @@ data BigQueryConnection = BigQueryConnection
 
 data BigQuerySourceConfig = BigQuerySourceConfig
   { _scConnection :: BigQueryConnection,
-    _scDatasets :: [Text],
+    _scDatasets :: [BigQueryDataset],
     _scGlobalSelectLimit :: Int.Int64
   }
   deriving (Eq)

@@ -28,7 +28,7 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Execute qualified as Execute
-import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
+import Hasura.Backends.BigQuery.Source (BigQueryDataset (..), BigQuerySourceConfig (..))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -62,9 +62,9 @@ runDatabaseInspection (BigQueryRunSQL _query source) = do
   BigQuerySourceConfig {_scDatasets = dataSets} <- askSourceConfig @'BigQuery source
   let queries =
         [ "SELECT *, ARRAY(SELECT as STRUCT * from "
-            <> dataSet
+            <> getBigQueryDataset dataSet
             <> ".INFORMATION_SCHEMA.COLUMNS WHERE table_name = t.table_name) as columns from "
-            <> dataSet
+            <> getBigQueryDataset dataSet
             <> ".INFORMATION_SCHEMA.TABLES as t"
           | dataSet <- dataSets
         ]

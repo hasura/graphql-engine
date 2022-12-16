@@ -495,7 +495,7 @@ getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
   -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
   let url =
         "GET "
-          <> bigQueryProjectUrl (_bqProjectId conn)
+          <> bigQueryProjectUrl (getBigQueryProjectId $ _bqProjectId conn)
           <> "/queries/"
           <> T.unpack jobId
           <> "?alt=json&prettyPrint=false"
@@ -568,7 +568,7 @@ createQueryJob :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection
 createQueryJob conn BigQuery {..} = do
   let url =
         "POST "
-          <> bigQueryProjectUrl (_bqProjectId conn)
+          <> bigQueryProjectUrl (getBigQueryProjectId $ _bqProjectId conn)
           <> "/jobs?alt=json&prettyPrint=false"
 
       req =
@@ -633,7 +633,7 @@ deleteDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection 
 deleteDataset conn datasetId = do
   let url =
         "DELETE "
-          <> bigQueryProjectUrl (_bqProjectId conn)
+          <> bigQueryProjectUrl (getBigQueryProjectId $ _bqProjectId conn)
           <> "/datasets/"
           <> T.unpack datasetId
           <> "/?force=true&deleteContents=true"
@@ -667,7 +667,7 @@ insertDataset conn datasetId =
   do
     let url =
           "POST "
-            <> bigQueryProjectUrl (_bqProjectId conn)
+            <> bigQueryProjectUrl (getBigQueryProjectId $ _bqProjectId conn)
             <> "/datasets?alt=json&prettyPrint=false"
 
         req =
