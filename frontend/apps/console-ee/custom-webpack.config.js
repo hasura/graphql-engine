@@ -5,7 +5,7 @@ const webpack = require('webpack');
 // un comment this to test out the circular deps
 //const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const log = (value) =>
+const log = value =>
   console.log(
     util.inspect(value, { showHidden: false, depth: null, colors: true })
   );
@@ -13,7 +13,7 @@ const log = (value) =>
 module.exports = (config, context) => {
   const output = merge(config, {
     output: {
-      publicPath: '',
+      publicPath: 'auto',
     },
     plugins: [
       new webpack.DefinePlugin({

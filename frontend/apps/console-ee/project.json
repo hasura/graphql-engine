@@ -5,16 +5,18 @@
   "targets": {
     "build-server-assets": {
       "executor": "@nrwl/workspace:run-commands",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ee/**"],
       "outputs": ["dist/apps/server-assets-console-ee"],
       "dependsOn": ["build"],
       "options": {
         "commands": [
           "rm -rf dist/apps/server-assets-console-ee",
-          "cp dist/apps/console-ee dist/apps/server-assets-console-ee -r",
+          "cp -r dist/apps/console-ee dist/apps/server-assets-console-ee",
           "mkdir -p dist/apps/server-assets-console-ee/versioned",
-          "mv dist/apps/server-assets-console-ee/*.{js,css} dist/apps/server-assets-console-ee/versioned",
+          "mv dist/apps/server-assets-console-ee/*.js dist/apps/server-assets-console-ee/versioned",
+          "mv dist/apps/server-assets-console-ee/*.css dist/apps/server-assets-console-ee/versioned",
           "gzip -r -f dist/apps/server-assets-console-ee/versioned",
-          "mv dist/apps/server-assets-console-ee/*.map dist/apps/server-assets-console-ee/versioned"
+          "mv dist/apps/server-assets-console-ee/*.map dist/apps/server-assets-console-ee/*.txt  dist/apps/server-assets-console-ee/versioned"
         ],
         "parallel": false
       }
@@ -32,8 +34,11 @@
         "polyfills": "apps/console-ee/src/polyfills.ts",
         "tsConfig": "apps/console-ee/tsconfig.app.json",
         "assets": [
-          "apps/console-ee/src/favicon.ico",
-          "apps/console-ee/src/assets"
+          {
+            "glob": "**",
+            "input": "apps/console-ee/src/assets/common",
+            "output": "common"
+          }
         ],
         "styles": [
           "apps/console-ee/src/css/tailwind.css",

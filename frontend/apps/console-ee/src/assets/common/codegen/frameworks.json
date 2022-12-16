@@ -1,0 +1,54 @@
+[
+  {
+    "name": "nodejs-express",
+    "hasStarterKit": true
+  },
+  {
+    "name": "nodejs-zeit",
+    "hasStarterKit": true
+  },
+  {
+    "name": "typescript-zeit",
+    "hasStarterKit": true
+  },
+  {
+    "name": "nodejs-azure-function",
+    "hasStarterKit": false
+  },
+  {
+    "name": "go-serve-mux",
+    "hasStarterKit": false
+  },
+  {
+    "name": "javascript-js-doc-express",
+    "hasStarterKit": false
+  },
+  {
+    "name": "kotlin-http4k",
+    "hasStarterKit": false
+  },
+  {
+    "name": "kotlin-ktor",
+    "hasStarterKit": false
+  },
+  {
+    "name": "python-fast-api",
+    "hasStarterKit": false
+  },
+  {
+    "name": "python-flask",
+    "hasStarterKit": false
+  },
+  {
+    "name": "ruby-rails",
+    "hasStarterKit": false
+  },
+  {
+    "name": "typescript-express",
+    "hasStarterKit": false
+  },
+  {
+    "name": "java-spring-boot",
+    "hasStarterKit": false
+  }
+]
