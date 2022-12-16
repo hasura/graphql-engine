@@ -485,7 +485,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQV2TrackTable q -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
       RQV2TrackFunction q -> runTrackFunctionV2 q
-      RQV2ReplaceMetadata q -> runReplaceMetadataV2 DeleteEventTriggerCleanupSchedules q
+      RQV2ReplaceMetadata q -> runReplaceMetadataV2 q
 
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case

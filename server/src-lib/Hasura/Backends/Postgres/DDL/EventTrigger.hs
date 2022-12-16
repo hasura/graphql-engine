@@ -667,11 +667,10 @@ pgTriggerName op trn = qualifyTriggerName op $ triggerNameToTxt trn
     qualifyTriggerName op' trn' =
       QualifiedTriggerName $ "notify_hasura_" <> trn' <> "_" <> tshow op'
 
-pgIdenTrigger :: Ops -> TriggerName -> QualifiedTriggerName
-pgIdenTrigger op = QualifiedTriggerName . pgFmtIdentifier . unQualifiedTriggerName . pgTriggerName op
-
 -- | pgIdenTrigger is a method used to construct the name of the pg function
 -- used for event triggers which are present in the hdb_catalog schema.
+pgIdenTrigger :: Ops -> TriggerName -> QualifiedTriggerName
+pgIdenTrigger op = QualifiedTriggerName . pgFmtIdentifier . unQualifiedTriggerName . pgTriggerName op
 
 -- | Define the pgSQL trigger functions on database events.
 mkTriggerFunctionQ ::

@@ -13,7 +13,6 @@ module Hasura.RQL.DDL.Metadata
     runTestWebhookTransform,
     runSetMetricsConfig,
     runRemoveMetricsConfig,
-    ShouldDeleteEventTriggerCleanupSchedules (..),
     module Hasura.RQL.DDL.Metadata.Types,
   )
 where
@@ -84,11 +83,6 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
-data ShouldDeleteEventTriggerCleanupSchedules
-  = DeleteEventTriggerCleanupSchedules
-  | DontDeleteEventTriggerCleanupSchedules
-  deriving (Show, Eq)
-
 runClearMetadata ::
   forall m r.
   ( MonadIO m,
@@ -154,8 +148,7 @@ runClearMetadata _ = do
                         Nothing
            in emptyMetadata
                 & metaSources %~ OMap.insert defaultSource emptyDefaultSource
-  -- ShouldDeleteEventTriggerCleanupSchedules here is False because when `clear_metadata` is called, it checks the sources present in the schema-cache, and deletes `hdb_event_log_cleanups` also. Since the inconsistent source is not present in schema-cache, the process fails and it gives an sql run error.
-  runReplaceMetadataV1 DontDeleteEventTriggerCleanupSchedules $ RMWithSources emptyMetadata'
+  runReplaceMetadataV1 $ RMWithSources emptyMetadata'
 
 {- Note [Cleanup for dropped triggers]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,8 +177,8 @@ runReplaceMetadata ::
   ReplaceMetadata ->
   m EncJSON
 runReplaceMetadata = \case
-  RMReplaceMetadataV1 v1args -> runReplaceMetadataV1 DeleteEventTriggerCleanupSchedules v1args
-  RMReplaceMetadataV2 v2args -> runReplaceMetadataV2 DeleteEventTriggerCleanupSchedules v2args
+  RMReplaceMetadataV1 v1args -> runReplaceMetadataV1 v1args
+  RMReplaceMetadataV2 v2args -> runReplaceMetadataV2 v2args
 
 runReplaceMetadataV1 ::
   ( CacheRWM m,
@@ -197,11 +190,10 @@ runReplaceMetadataV1 ::
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m
   ) =>
-  ShouldDeleteEventTriggerCleanupSchedules ->
   ReplaceMetadataV1 ->
   m EncJSON
-runReplaceMetadataV1 shouldDeleteEventTriggerCleanupSchedules =
-  (successMsg <$) . (runReplaceMetadataV2 shouldDeleteEventTriggerCleanupSchedules) . ReplaceMetadataV2 NoAllowInconsistentMetadata
+runReplaceMetadataV1 =
+  (successMsg <$) . runReplaceMetadataV2 . ReplaceMetadataV2 NoAllowInconsistentMetadata
 
 runReplaceMetadataV2 ::
   forall m r.
@@ -214,10 +206,9 @@ runReplaceMetadataV2 ::
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m
   ) =>
-  ShouldDeleteEventTriggerCleanupSchedules ->
   ReplaceMetadataV2 ->
   m EncJSON
-runReplaceMetadataV2 shouldDeleteEventTriggerCleanupSchedules ReplaceMetadataV2 {..} = do
+runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
   -- we drop all the future cron trigger events before inserting the new metadata
   -- and re-populating future cron events below
@@ -315,8 +306,7 @@ runReplaceMetadataV2 shouldDeleteEventTriggerCleanupSchedules ReplaceMetadataV2 
   -- See Note [Cleanup for dropped triggers]
   dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
 
-  when (shouldDeleteEventTriggerCleanupSchedules == DeleteEventTriggerCleanupSchedules) $
-    generateSQLTriggerCleanupSchedules logger (_metaSources oldMetadata) (_metaSources metadata)
+  generateSQLTriggerCleanupSchedules logger (_metaSources oldMetadata) (_metaSources metadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
@@ -485,14 +475,30 @@ runReplaceMetadataV2 shouldDeleteEventTriggerCleanupSchedules ReplaceMetadataV2 
               <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
           )
 
+    -- \| `generateSQLTriggerCleanupSchedules` is primarily used to update the
+    --    cleanup schedules associated with an event trigger in case the cleanup
+    --    config has changed while replacing the metadata.
+    --
+    --    In case,
+    --    i. a source has been dropped -
+    --           We don't need to clear the cleanup schedules
+    --           because the event log cleanup table is dropped as part
+    --           of the post drop source hook.
+    --    ii. a table or an event trigger has been dropped/updated -
+    --           Older cleanup events will be deleted first and in case of
+    --           an update, new cleanup events will be generated and inserted
+    --           into the table.
+    --    iii. a new event trigger with cleanup config has been added -
+    --             Generate the cleanup events and insert it.
     generateSQLTriggerCleanupSchedules ::
       HL.Logger HL.Hasura ->
       InsOrdHashMap SourceName BackendSourceMetadata ->
       InsOrdHashMap SourceName BackendSourceMetadata ->
       m ()
     generateSQLTriggerCleanupSchedules (HL.Logger logger) oldSources newSources = do
-      -- If there are any event trigger cleanup configs with different cron then delete the older schedules
-      -- generate cleanup logs for new event trigger cleanup config
+      -- If there are any event trigger cleanup configs with different cron schedule,
+      -- then delete the older schedules generate cleanup logs for new event trigger
+      -- cleanup config.
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
         for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
           AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
