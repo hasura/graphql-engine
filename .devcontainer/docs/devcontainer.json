@@ -1,0 +1,20 @@
+{
+  "name": "Node.js",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:0-18",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "forwardPorts": [3000],
+  "postCreateCommand": "cd docs && yarn install",
+  "customizations": {
+    "codespaces": {
+      "vscode": {
+        "extensions": ["esbenp.prettier-vscode", "streetsidesoftware.code-spell-checker"]
+      },
+      "openFiles": ["docs/CODESPACES.md"]
+    }
+  }
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}

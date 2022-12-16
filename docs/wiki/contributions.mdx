@@ -300,7 +300,7 @@ Assets are stored in `static/img/<feature-folder>`. Just like the file-based rou
 file paths are important for images as well. However, instead of any output to the console, the page will simply crash
 and present a message indicating which image's path cannot be resolved.
 
-<Thumbnail src="/img/wiki/broken-image.png" alt="Add check constraint" width="1000px" />
+<Thumbnail src='/img/wiki/broken-image.png' alt='Add check constraint' width='1000px' />
 
 Use the erroneous image path to identify the error, facepalm, and then fix your typo.
 
@@ -325,3 +325,31 @@ Perhaps the biggest pitfall we've encountered with Docusaurus is how delicate `.
 placement of code blocks and other text. If you've included a code block using common markdown syntax, and things aren't
 rendering as you think they should, try giving the block a bit of breathing room with a single empty line above and
 below it.
+
+## Codespaces
+
+:::info Note
+
+For Hasurians, we've recently introduced a new way to contribute to the docs:
+[Codespaces](https://docs.github.com/en/codespaces). This is a new feature from GitHub that allows you to spin up a
+fully-configured docs dev environment in the cloud. This means you can get started contributing to the docs without
+having to install any dependencies on your local machine.
+
+:::
+
+### Step 1: Create a Codespace
+
+Head to the `hasura/graphql-engine-mono` repo and click the `Code` button. You should see a `Open with Codespaces`
+button. Click it and choose `...` and then `+ New with options...` as in the example below:
+
+<Thumbnail src='/img/wiki/codespaces-1.gif' alt='Create Codespace' width='1000px' />
+
+### Step 2: Configure your Codespace
+
+You'll be presented with a few options. Select the `docs` devcontainer, the region nearest to you, and a machine type
+before clicking `Create codespace`:
+
+<Thumbnail src='/img/wiki/codespaces-2.gif' alt='Create Codespace' width='1000px' />
+
+The Codespace will spin up and you'll be presented with a fully-configured dev environment. We automatically open you to
+the `CODESPACES.md` file where you can follow the instructions to get started quickly.
