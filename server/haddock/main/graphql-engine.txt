@@ -25234,15 +25234,12 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.RenameS
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.SQL.Backend.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.AddSource b)
 
 module Hasura.RQL.DDL.Metadata
-data ShouldDeleteEventTriggerCleanupSchedules
-DeleteEventTriggerCleanupSchedules :: ShouldDeleteEventTriggerCleanupSchedules
-DontDeleteEventTriggerCleanupSchedules :: ShouldDeleteEventTriggerCleanupSchedules
 runClearMetadata :: forall m r. (MonadIO m, CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m, MonadBaseControl IO m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ClearMetadata -> m EncJSON
 
 -- | Replace the 'current metadata' with the 'new metadata' The 'new
 --   metadata' might come via the 'Import Metadata' in console
 runReplaceMetadata :: (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ReplaceMetadata -> m EncJSON
-runReplaceMetadataV2 :: forall m r. (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ShouldDeleteEventTriggerCleanupSchedules -> ReplaceMetadataV2 -> m EncJSON
+runReplaceMetadataV2 :: forall m r. (CacheRWM m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadMetadataStorageQueryAPI m, MonadReader r m, Has (Logger Hasura) r, MonadEventLogCleanup m) => ReplaceMetadataV2 -> m EncJSON
 runExportMetadata :: forall m. (QErrM m, MetadataM m) => ExportMetadata -> m EncJSON
 runExportMetadataV2 :: forall m. (QErrM m, MetadataM m) => MetadataResourceVersion -> ExportMetadata -> m EncJSON
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
@@ -25254,8 +25251,6 @@ runSetCatalogState :: MonadMetadataStorageQueryAPI m => SetCatalogState -> m Enc
 runSetMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) => MetricsConfig -> m EncJSON
 runRemoveMetricsConfig :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m) => m EncJSON
 runTestWebhookTransform :: QErrM m => TestWebhookTransform -> m EncJSON
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.ShouldDeleteEventTriggerCleanupSchedules
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.ShouldDeleteEventTriggerCleanupSchedules
 
 
 -- | The RQL query ('<i>v1</i>query')

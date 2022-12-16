@@ -1,6 +1,6 @@
-This note is in [Hasura.RQL.DDL.Metadata](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Metadata.hs#L160).
+This note is in [Hasura.RQL.DDL.Metadata](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Metadata.hs#L153).
 It is referenced at:
-  - line 315 of [Hasura.RQL.DDL.Metadata](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Metadata.hs#L315)
+  - line 306 of [Hasura.RQL.DDL.Metadata](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Metadata.hs#L306)
   - line 147 of [Hasura.RQL.Types.Eventing.Backend](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Eventing/Backend.hs#L147)
 
 # Cleanup for dropped triggers
