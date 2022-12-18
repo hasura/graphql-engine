@@ -26,6 +26,7 @@ services:
 
   postgres:
     image: postgis/postgis:15-3.3-alpine
+    platform: linux/amd64
     command:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
@@ -46,6 +47,7 @@ services:
 
   citus:
     image: citusdata/citus:11
+    platform: linux/amd64
     command:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
@@ -67,6 +69,7 @@ services:
 
   cockroach:
     image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
+    platform: linux/amd64
     command:
       - start-single-node
       - --insecure
@@ -124,6 +127,7 @@ services:
   # We can reconsider this once the MSSQL Server image can run on arm64.
   sqlserver-healthcheck:
     image: mcr.microsoft.com/mssql-tools
+    platform: linux/amd64
     command:
       - sleep
       - inf
