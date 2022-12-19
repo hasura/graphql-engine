@@ -68,12 +68,13 @@ services:
       retries: 20
 
   cockroach:
-    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
+    image: cockroachdb/cockroach:latest-v22.2
     platform: linux/amd64
     command:
       - start-single-node
       - --insecure
       - --accept-sql-without-tls
+    init: true # doesn't shut down properly without this
     ports:
       - 26257
     volumes:
@@ -109,6 +110,7 @@ services:
     # This uses an environment variable so it can be overridden by scripts to
     # provide that image instead.
     image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
+    init: true # azure-sql-edge doesn't shut down properly without this
     ports:
       - 1433
     environment:
