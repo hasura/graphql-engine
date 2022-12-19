@@ -467,8 +467,9 @@ pgDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   FieldName ->
   (FieldName, IR.SourceRelationshipSelection ('Postgres pgKind) Void UnpreparedValue) ->
+  Options.StringifyNumbers ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship stringifyNumbers = do
   -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
   --
   -- In the future if we want to add support we'll need to add a new type of
@@ -503,3 +504,4 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
         (Postgres.unsafePGCol $ getFieldNameTxt argumentId)
         (ColumnScalar Postgres.PGBigInt)
         relationship
+        stringifyNumbers

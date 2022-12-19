@@ -34,6 +34,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
@@ -207,7 +208,8 @@ data RemoteSourceJoin b = RemoteSourceJoin
   { _rsjSource :: !SourceName,
     _rsjSourceConfig :: !(SourceConfig b),
     _rsjRelationship :: !(IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
-    _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b)))
+    _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b))),
+    _rsjStringifyNum :: Options.StringifyNumbers
   }
   deriving (Generic)
 

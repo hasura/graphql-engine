@@ -227,4 +227,4 @@ remoteRelationshipToSourceField context options sourceCache RemoteSourceFieldInf
                 ]
         pure $
           parsers <&> fmap \select ->
-            IR.RemoteSourceSelect _rsfiSource _rsfiSourceConfig select _rsfiMapping
+            IR.RemoteSourceSelect _rsfiSource _rsfiSourceConfig select _rsfiMapping (soStringifyNumbers options)

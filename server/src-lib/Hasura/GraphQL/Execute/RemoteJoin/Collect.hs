@@ -642,6 +642,7 @@ createRemoteJoin joinColumnAliases = \case
                 _rssConfig
                 transformedSourceRelationship
                 joinColumns
+                _rssStringifyNums
        in RemoteJoinSource anySourceJoin sourceRelationshipJoins
 
 -- | Constructs a 'JoinColumnAlias' for a given field in a selection set.

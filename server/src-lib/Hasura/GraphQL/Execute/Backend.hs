@@ -150,6 +150,7 @@ class
     -- to be returned as either a number or a string with a number in it
     FieldName ->
     (FieldName, SourceRelationshipSelection b Void UnpreparedValue) ->
+    Options.StringifyNumbers ->
     m (DBStepInfo b)
 
 -- | This is a helper function to convert a remote source's relationship to a
@@ -173,13 +174,15 @@ convertRemoteSourceRelationship ::
   -- | The relationship column and its name (how it should be selected in the
   -- response)
   (FieldName, SourceRelationshipSelection b Void UnpreparedValue) ->
+  Options.StringifyNumbers ->
   QueryDB b Void (UnpreparedValue b)
 convertRemoteSourceRelationship
   columnMapping
   selectFrom
   argumentIdColumn
   argumentIdColumnType
-  (relationshipName, relationship) =
+  (relationshipName, relationship)
+  stringifyNumbers =
     QDBMultipleRows simpleSelect
     where
       -- TODO: FieldName should have also been a wrapper around NonEmptyText
@@ -211,7 +214,7 @@ convertRemoteSourceRelationship
             _asnFrom = selectFrom,
             _asnPerm = TablePerm annBoolExpTrue Nothing,
             _asnArgs = noSelectArgs,
-            _asnStrfyNum = Options.Don'tStringifyNumbers,
+            _asnStrfyNum = stringifyNumbers,
             _asnNamingConvention = Nothing
           }
 
