@@ -53,7 +53,7 @@ import Control.Monad.Morph (hoist)
 import Control.Monad.STM (atomically)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
-import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
+import Control.Monad.Trans.Managed (ManagedT (..), allocate, allocate_)
 import Control.Retry qualified as Retry
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
@@ -348,7 +348,10 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
   -- log postgres connection info
   unLogger logger $ connInfoToLog _gcMetadataDbConnInfo
 
-  metadataDbPool <- liftIO $ PG.initPGPool _gcMetadataDbConnInfo soConnParams pgLogger
+  metadataDbPool <-
+    allocate
+      (liftIO $ PG.initPGPool _gcMetadataDbConnInfo soConnParams pgLogger)
+      (liftIO . PG.destroyPGPool)
 
   let maybeDefaultSourceConfig =
         fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
