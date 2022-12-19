@@ -1,7 +1,7 @@
 ---
 sidebar_label: Troubleshooting
 sidebar_position: 250
-description: Troubleshoot Hasura GraphQL engine errors
+description: Troubleshoot Hasura GraphQL Engine errors
 keywords:
   - hasura
   - docs
@@ -11,7 +11,7 @@ keywords:
 slug: troubleshooting/index
 ---
 
-# Troubleshooting Hasura GraphQL engine errors
+# Troubleshooting Hasura GraphQL Engine errors
 
 ## Introduction
 
@@ -39,15 +39,15 @@ different log types, visit [this page](/deployment/logging.mdx).
 
 ### Console logs
 
-Should there be any error coming from the Hasura console UI, they will
+Should there be any error coming from the Hasura Console UI, they will
 show up in the Browser dev tools.
 
 ### Remote service logs
 
 Errors can come from a remote service, such as
-[remote schemas](/remote-schemas/index.mdx), [events](/event-triggers/index.mdx) or
-[actions](/actions/index.mdx). In this case, check the errors of the respective
-remote service. For actions, check out this [debugging page](/actions/debugging.mdx).
+[Remote Schemas](/remote-schemas/index.mdx), [Events](/event-triggers/index.mdx) or
+[Actions](/actions/index.mdx). In this case, check the errors of the respective
+remote service. For Actions, check out this [debugging page](/actions/debugging.mdx).
 
 ## GitHub issues
 
@@ -93,6 +93,7 @@ request to <graphql-api> failed, reason: write EPROTO <....> alert handshake fai
 ```
 
 Follow the steps below to try and resolve the issue:
+
 1. Whitelist the EPROTO error code (in client-side code).
 2. Allow the retry logic to be activated.
 3. Monitor the system for improvements or changes in the reconciliation process.

@@ -1,15 +1,15 @@
 ---
 sidebar_label: Network Options
 sidebar_position: 19
-description: Manage network options with the Hasura metadata API
+description: Manage network options with the Hasura Metadata API
 keywords:
-   - hasura
-   - docs
-   - metadata API
-   - API reference
-   - network options
-   - TLS
-   - allowlis
+  - hasura
+  - docs
+  - Metadata API
+  - API reference
+  - network options
+  - TLS
+  - allowlis
 ---
 
 # Metadata API Reference: Network Options (v2.0 and above)
@@ -51,11 +51,10 @@ X-Hasura-Role: admin
 ### Args syntax {#add-host-to-tls-allowlist-syntax}
 
 | Key         | Required | Schema     | Description                                                                                                                                          |
-|-------------|----------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------- | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | host        | true     | `String`   | the hostname/domain of the endpoint                                                                                                                  |
 | suffix      | false    | `String`   | suffix for the service (this is usually reserved for the service port number)                                                                        |
 | permissions | false    | `[String]` | Can be only `["self-signed"]` until more permissions are supported. "self-signed" allows self-signed, name mismatches, and non-X509.V3 certificates. |
-
 
 ## drop_host_from_tls_allowlist {#metadata-drop-host-from-tls-allowlist}
 
@@ -77,6 +76,5 @@ X-Hasura-Role: admin
 ### Args syntax {#drop-host-from-tls-allowlist-syntax}
 
 | Key  | Required | Schema   | Description                                                                    |
-|------|----------|----------|--------------------------------------------------------------------------------|
+| ---- | -------- | -------- | ------------------------------------------------------------------------------ |
 | host | true     | `String` | The hostname/domain of the endpoint that was previously added to the allowlist |
-

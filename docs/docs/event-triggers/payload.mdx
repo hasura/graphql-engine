@@ -1,7 +1,7 @@
 ---
-sidebar_label: Event trigger payload
+sidebar_label: Event Trigger payload
 sidebar_position: 2
-description: Event trigger payload in Hasura
+description: Event Trigger payload in Hasura
 keywords:
   - hasura
   - docs
@@ -12,11 +12,11 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Event trigger payload
+# Event Trigger payload
 
 ## Introduction
 
-The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
+The following is the payload and delivery mechanism of an event to the webhook when an Event Trigger is invoked.
 
 ## HTTP request method
 
@@ -85,7 +85,7 @@ Content-Type: application/json
   [composite type comparison](https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON)
   is used to compare the old and new rows. If rows contain columns, which cannot be compared using `<>` operator, then
   internal binary representation of rows by Postgres is compared.
-- [Table computed fields](/schema/postgres/computed-fields.mdx) are not included in the event trigger payload data
+- [Table computed fields](/schema/postgres/computed-fields.mdx) are not included in the Event Trigger payload data
 
 :::
 

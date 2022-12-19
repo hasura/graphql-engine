@@ -1,6 +1,6 @@
 ---
-description: Hasura database source health check
-title: 'Cloud: Source health check'
+description: Hasura database source Health Check
+title: 'Cloud: Source Health Check'
 keywords:
   - hasura
   - cloud
@@ -18,22 +18,22 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Source Health Check
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
 
 ## Overview
 
-Hasura enables users to check the health of connected data sources via the health check API.
+Hasura enables users to check the health of connected data sources via the Health Check API.
 [API reference here](/api-reference/source-health.mdx).
 
-## Configuring source health check
+## Configuring source Health Check
 
-A health check configuration contains information that Hasura uses to determine the health state of a source. You can
+A Health Check configuration contains information that Hasura uses to determine the health state of a source. You can
 set the time interval for when Hasura will re-perform the check on the source.
 
-Currently, Hasura supports enabling health checks on Postgres and MS SQL Server databases. Support for other data
+Currently, Hasura supports enabling Health Checks on Postgres and MS SQL Server databases. Support for other data
 sources will be added soon.
 
-Health check configurations for Postgres and SQL Server sources are identical and are as follows.
+Health Check configurations for Postgres and SQL Server sources are identical and are as follows.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -65,7 +65,7 @@ You can add _health check_ for a source by adding the config to the `/metadata/d
         retries: 1
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```yaml
 hasura metadata apply
@@ -75,7 +75,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add _health check_ for a database using the
-[pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) metadata API.
+[pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) Metadata API.
 
 ```http {17-24}
 POST /v1/metadata HTTP/1.1
@@ -110,14 +110,14 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-## Reporting source health check
+## Reporting source Health Check
 
 ### API
 
-Health check reports of sources can be obtained through a `GET` request from the `/healthz/sources` API, on demand.
-Learn more about the API [here](/api-reference/source-health.mdx).
+Health Check reports of sources can be obtained through a `GET` request from the
+`/healthz/sources` API, on demand. Learn more about the API [here](/api-reference/source-health.mdx).
 
 ### Logging
 
-Hasura logs the health check status and other information via `health-check-log` type when enabled. Learn more about the
-health checks logs [here](/deployment/logging.mdx#health-check-log-structure).
+Hasura logs the Health Check status and other information via `health-check-log` type when enabled.
+Learn more about the Health Checks logs [here](/deployment/logging.mdx#health-check-log-structure).

@@ -14,7 +14,7 @@ import LatestRelease from '@site/src/components/LatestRelease';
 
 # Quickstart with Docker
 
-<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
 
 ## Introduction
 
@@ -49,7 +49,7 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 
 Edit the downloaded `docker-compose.yml` and set the license key and admin secret:
 
-To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to configure an
+To make sure that your GraphQL endpoint and the Hasura Console are not publicly accessible, you need to configure an
 admin secret key.
 
 #### Run the Docker container with the license key and admin secret env var
@@ -65,15 +65,15 @@ graphql-engine:
 
 :::info Note
 
-The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
 the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
 information on setting up authentication.
 
 :::
 
-### Step 3: Run Hasura GraphQL engine
+### Step 3: Run Hasura GraphQL Engine
 
-The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
+The following command will run Hasura GraphQL Engine along with a Postgres database to store its metadata.
 
 ```bash
 docker compose up -d
@@ -113,9 +113,9 @@ graphql-engine:
 Congratulations! You have successfully set up Hasura EE on Docker.
 [Start using Hasura EE now](/enterprise/getting-started/start-using-hasura-ee.mdx).
 
-## Hasura GraphQL engine server logs {#docker-logs}
+## Hasura GraphQL Engine server logs {#docker-logs}
 
-You can check the logs of the Hasura GraphQL engine deployed using Docker by checking the logs of the GraphQL engine
+You can check the logs of the Hasura GraphQL Engine deployed using Docker by checking the logs of the GraphQL Engine
 container:
 
 ```bash
@@ -135,12 +135,12 @@ docker logs 097f58433a2b
 **See:**
 
 - [Docker logs](https://docs.docker.com/config/containers/logging) for more details on logging in Docker.
-- [Hasura GraphQL engine logs](/deployment/logging.mdx) for more details on Hasura logs.
+- [Hasura GraphQL Engine logs](/deployment/logging.mdx) for more details on Hasura logs.
 
-## Updating Hasura GraphQL engine {#docker-update}
+## Updating Hasura GraphQL Engine {#docker-update}
 
-This guide will help you update the Hasura GraphQL engine running with Docker. This guide assumes that you already have
-Hasura GraphQL engine running with Docker.
+This guide will help you update the Hasura GraphQL Engine running with Docker. This guide assumes that you already have
+Hasura GraphQL Engine running with Docker.
 
 ### Step 1: Check the latest release version
 
@@ -177,7 +177,7 @@ you should change it to:
 
 :::info Note
 
-If you are downgrading to an older version of the GraphQL engine, you might need to downgrade your metadata catalogue
-version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx).
+If you are downgrading to an older version of the GraphQL Engine, you might need to downgrade your Metadata catalogue
+version as described in [Downgrading Hasura GraphQL Engine](/deployment/downgrading.mdx).
 
 :::

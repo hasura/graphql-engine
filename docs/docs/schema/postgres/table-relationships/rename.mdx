@@ -21,7 +21,7 @@ An existing relationship can be renamed as follows:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-- Head to `Data -> [table-name] -> Relationships` in the console
+- Head to `Data -> [table-name] -> Relationships` in the Console
 - Drop the existing relationship
 - Recreate the relationship with the new name
 
@@ -44,7 +44,7 @@ directory:
     name: authors
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -54,7 +54,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can rename a relationship by using the
-[pg_rename_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-rename-relationship) metadata API:
+[pg_rename_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-rename-relationship) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

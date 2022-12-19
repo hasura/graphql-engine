@@ -1,5 +1,5 @@
 ---
-description: Deploy Hasura GraphQL engine on Azure with Container Instances and Postgres
+description: Deploy Hasura GraphQL Engine on Azure with Container Instances and Postgres
 keywords:
   - hasura
   - docs
@@ -15,11 +15,11 @@ sidebar_label: Using Azure Container Instances
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Hasura GraphQL engine on Azure with Container Instances and Postgres
+# Hasura GraphQL Engine on Azure with Container Instances and Postgres
 
 ## Introduction
 
-This guide walks you through deploying the Hasura GraphQL engine on [Azure](https://azure.microsoft.com) using
+This guide walks you through deploying the Hasura GraphQL Engine on [Azure](https://azure.microsoft.com) using
 [Container Instances](https://azure.microsoft.com/en-us/services/container-instances/) with
 [Azure Database for PostgreSQL server](https://azure.microsoft.com/en-us/services/postgresql/).
 
@@ -52,7 +52,7 @@ You can deploy all the resources mentioned in this guide with the one-click butt
   free trial).
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
-The actions mentioned below can be executed using the Azure Portal and the Azure CLI. But for the sake of simplicity in
+The Actions mentioned below can be executed using the Azure Portal and the Azure CLI. But for the sake of simplicity in
 documentation, we are using Azure CLI; so that commands can be easily copy-pasted and executed.
 
 Once you install the `CLI`, login to your Azure account:
@@ -220,7 +220,7 @@ az container show --resource-group hasura \
 
 The output will contain the FQDN in the format `<dns-name-label>.westus.azurecontainer.io`.
 
-Visit the following URL for the Hasura console:
+Visit the following URL for the Hasura Console:
 
 ```
 http://<dns-name-label>.westus.azurecontainer.io/console
@@ -229,9 +229,9 @@ http://<dns-name-label>.westus.azurecontainer.io/console
 Replace `<dns-name-label>` with the label given earlier.
 
 <img
-  src='https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png'
-  className='no-shadow'
-  alt='Hasura console'
+  src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png"
+  className="no-shadow"
+  alt="Hasura Console"
 />
 
 You can create tables and test your GraphQL queries here.
@@ -248,7 +248,7 @@ services.
 
 ### Checking logs {#azure-logs}
 
-If the console doesn't load, check the logs:
+If the Console doesn't load, check the logs:
 
 ```bash
 az container logs --resource-group hasura \

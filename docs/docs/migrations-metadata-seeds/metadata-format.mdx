@@ -97,7 +97,7 @@ API is a JSON version of the Metadata files.
 
 #### [database-name]
 
-Directory with metadata related to a database.
+Directory with Metadata related to a database.
 
 ```text
 📂 default
@@ -112,7 +112,7 @@ Directory with metadata related to a database.
 
 ##### tables
 
-Directory with metadata related to a database's tables and views.
+Directory with Metadata related to a database's tables and views.
 
 ```text
 📂 tables
@@ -135,19 +135,19 @@ metadata.
 
 ###### [table-name].yaml
 
-The specific files for each database table contain all the metadata information regarding each database table.
+The specific files for each database table contain all the Metadata information regarding each database table.
 
 These files can contain information relating to the table for:
 
 - Relationships including object and array relationships
-- Remote relationships including those to remote schemas and remote databases
+- Remote relationships including those to Remote Schemas and remote databases
 - Operation permissions per role
 - Event Triggers
 - Computed fields
 - Whether the table is an enum table
 - GraphQL field customization
 
-**Example**: A `public_author.yaml` table metadata file specifying some of the above.
+**Example**: A `public_author.yaml` table Metadata file specifying some of the above.
 
 ```yaml
 table:
@@ -207,7 +207,7 @@ event_triggers:
 
 ##### functions
 
-Directory with metadata related to a database's functions tracked to be exposed as top-level GraphQL fields.
+Directory with Metadata related to a database's functions tracked to be exposed as top-level GraphQL fields.
 
 ```text
 📂 functions
@@ -218,7 +218,7 @@ Directory with metadata related to a database's functions tracked to be exposed 
 ###### functions.yaml
 
 The `functions.yaml` file contains a list of all further database function `yaml` files which need to be included in the
-metadata to be exposed as top-level GraphQL fields.
+Metadata to be exposed as top-level GraphQL fields.
 
 **Example**: A `functions.yaml` file which specifies further `search_author` function file
 
@@ -228,10 +228,10 @@ metadata to be exposed as top-level GraphQL fields.
 
 ###### [function-name].yaml
 
-The specific files for each database function contain all the metadata information regarding exposing the database
+The specific files for each database function contain all the Metadata information regarding exposing the database
 function as a top-level GraphQL field.
 
-**Example**: A `public_search_author.yaml` function metadata file
+**Example**: A `public_search_author.yaml` function Metadata file
 
 ```yaml
 function:
@@ -371,7 +371,7 @@ retry_conf:
 :::info Note
 
 The Metadata about a cron trigger will not be stored if `Include this trigger in Hasura Metadata` is disabled in the
-advanced option of `events` on the console or `include_in_metadata` is passed as `false` via the API.
+advanced option of `events` on the Console or `include_in_metadata` is passed as `false` via the API.
 
 :::
 
@@ -447,9 +447,9 @@ The `query_collections.yaml` file contains Metadata information about
 
 ### remote_schemas.yaml
 
-The `remote_schemas.yaml` file contains the Metadata related to [remote schemas](/remote-schemas/index.mdx).
+The `remote_schemas.yaml` file contains the Metadata related to [Remote Schemas](/remote-schemas/index.mdx).
 
-**Example**: A remote schema called `my-remote-schema` with the URL `<remote-schema-url>`
+**Example**: A Remote Schema called `my-remote-schema` with the URL `<remote-schema-url>`
 
 ```yaml
 - name: my-remote-schema
@@ -458,7 +458,7 @@ The `remote_schemas.yaml` file contains the Metadata related to [remote schemas]
     timeout_seconds: 40
 ```
 
-**Example**: A remote schema called `my-remote-schema` with the URL passed as environment variable
+**Example**: A Remote Schema called `my-remote-schema` with the URL passed as environment variable
 
 ```yaml
 - name: my-remote-schema

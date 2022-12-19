@@ -18,12 +18,12 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # GitHub Deployment
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
 
 ## Introduction
 
 GitHub integration is intended to improve the CI/CD experience on Hasura Cloud. With GitHub integration, you can link a
-GitHub repository and a branch to a Hasura Cloud project and automatically deploy metadata and migrations in a given
+GitHub repository and a branch to a Hasura Cloud project and automatically deploy Metadata and Migrations in a given
 directory to the linked project.
 
 Check out our [Starter Kit](https://github.com/hasura/github-integration-starter) to see a few example workflows.
@@ -35,7 +35,7 @@ Check out our [Starter Kit](https://github.com/hasura/github-integration-starter
 With the `Automatic deployment mode`, Hasura Cloud automatically triggers a deployment for every commit pushed to the
 GitHub repository from the given branch and directory.
 
-<Thumbnail src='/img/projects/automatic-commit-deployment.png' alt='Automatic GitHub deployment' width='900px' />
+<Thumbnail src="/img/projects/automatic-commit-deployment.png" alt="Automatic GitHub deployment" width="900px" />
 
 The Automatic deployment mode also has the `Deploy Now` button which allows the user to retry deploying the latest
 commit.
@@ -45,7 +45,7 @@ commit.
 With `Manual deployment mode`, Hasura Cloud does not automatically deploy the commits pushed to the configured branch.
 The deployment of the latest commit in that branch can be triggered manually by clicking the `Deploy Now` button.
 
-<Thumbnail src='/img/projects/manual-commit-deployment.png' alt='Manual GitHub deployment' width='900px' />
+<Thumbnail src="/img/projects/manual-commit-deployment.png" alt="Manual GitHub deployment" width="900px" />
 
 ## Initial setup
 
@@ -54,12 +54,12 @@ The deployment of the latest commit in that branch can be triggered manually by 
 To link a GitHub account, click on the `Sign in with GitHub` button in the Git Deployment section of the project
 details.
 
-<Thumbnail src='/img/projects/github-link-account.png' alt='Link GitHub Account' width='900px' />
+<Thumbnail src="/img/projects/github-link-account.png" alt="Link GitHub Account" width="900px" />
 
 When you link a new GitHub account, Hasura Cloud installs the Hasura Cloud GitHub App on your GitHub account. While
 authenticating, you can choose to grant access to all repositories or to specific repositories only.
 
-<Thumbnail src='/img/projects/github-grant-access.png' alt='GitHub grant access' width='500px' />
+<Thumbnail src="/img/projects/github-grant-access.png" alt="GitHub grant access" width="500px" />
 
 The permissions requested by Hasura Cloud can be viewed in the GitHub app settings once you install the app.
 
@@ -70,7 +70,7 @@ is used to manage the GitHub integration from the UI.
 
 Specify the GitHub repository, branch and the hasura-project directory in the form as shown below.
 
-<Thumbnail src='/img/projects/setup-github-integration.png' alt='Setup GitHub Integration' width='900px' />
+<Thumbnail src="/img/projects/setup-github-integration.png" alt="Setup GitHub Integration" width="900px" />
 
 If the repository that you're looking for doesn't show up in the repository list, click
 `Configure Hasura Cloud on GitHub` to grant access to the required repository.
@@ -78,20 +78,20 @@ If the repository that you're looking for doesn't show up in the repository list
 Clicking on the `Setup Git Deployment` button integrates the specified GitHub repository, branch and directory with the
 Hasura Cloud project. The details for the integration can be viewed in the `Git Deployment` section of project details.
 
-<Thumbnail src='/img/projects/github-integration-details.png' alt='Setup GitHub Integration' width='900px' />
+<Thumbnail src="/img/projects/github-integration-details.png" alt="Setup GitHub Integration" width="900px" />
 
 ## Edit GitHub Integration
 
 Click on the `Edit Deployment` button in the GitHub Deployment section to edit the GitHub
 repository/branch/directory/deployment mode for the GitHub integration.
 
-<Thumbnail src='/img/projects/edit-github-integration.png' alt='Setup GitHub Integration' width='900px' />
+<Thumbnail src="/img/projects/edit-github-integration.png" alt="Setup GitHub Integration" width="900px" />
 
 ## Deployment Log
 
 User can view the deployed commits and their deployment status in the `Deployment Log` section of Git Deployment.
 
-<Thumbnail src='/img/projects/deployment-log.png' alt='GitHub deployment log' width='900px' />
+<Thumbnail src="/img/projects/deployment-log.png" alt="GitHub deployment log" width="900px" />
 
 ## Deployment Process
 
@@ -107,40 +107,40 @@ process or run into any other problems post the deployment.
 
 The following is a task wise breakdown of the commit deployment job.
 
-<Thumbnail src='/img/projects/github-deployment-status.png' alt='GitHub deployment Progress' width='500px' />
+<Thumbnail src="/img/projects/github-deployment-status.png" alt="GitHub deployment Progress" width="500px" />
 
 Each task in the deployment has realtime logs and can be viewed by clicking on the `Logs` option for each
 successful/failed step.
 
 #### Step 1: Fetching Metadata / Migrations
 
-The metadata and migrations are fetched from the GitHub repository and validated.
+The Metadata and Migrations are fetched from the GitHub repository and validated.
 
 #### Step 2: Applying Metadata
 
-The metadata in the GitHub repository is applied to the server.
+The Metadata in the GitHub repository is applied to the server.
 
 #### Step 3: Applying Migrations
 
-The migrations in the GitHub repository are applied to your data sources.
+The Migrations in the GitHub repository are applied to your data sources.
 
 #### Step 4: Finalizing Update
 
-The metadata on the server is reloaded and project health is verified before finalizing the update.
+The Metadata on the server is reloaded and project health is verified before finalizing the update.
 
 ## Things to check before running your first deployment {#github-integration-pre-checks}
 
 You need to ensure the your Cloud project has been appropriately set up to execute the deployment.
 
-- Ensure all the required Hasura config related and any other custom ENV vars that might be used in the metadata are
+- Ensure all the required Hasura config related and any other custom ENV vars that might be used in the Metadata are
   added to your Cloud project as well.
 - Ensure that you have connected the required database(s) with the right name and connection params as you have in the
-  metadata to the Cloud project.
+  Metadata to the Cloud project.
 
 ## Troubleshooting failures {#github-integration-troubleshooting}
 
 If a deployment fails, depending on the kind of error, you can fix it by retrying the deployment by either updating your
-metadata and migrations with a fix and pushing a commit to deploy again or by just redeploying the failed commit after
+Metadata and Migrations with a fix and pushing a commit to deploy again or by just redeploying the failed commit after
 making any required fixes to your project.
 
 The following are some troubleshooting steps to fix some possible errors in the deployment sub-tasks:

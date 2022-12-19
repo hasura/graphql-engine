@@ -15,7 +15,7 @@ import TOCInline from '@theme/TOCInline';
 
 ## Introduction
 
-With `config v2`, the metadata that is exported from the server by the CLI is a directory of multiple files.
+With `config v2`, the Metadata that is exported from the server by the CLI is a directory of multiple files.
 
 :::info Note
 
@@ -33,7 +33,7 @@ The following files will be generated in the `metadata/` directory of your proje
 :::info Note
 
 The output of the [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) metadata
-API is a JSON version of the metadata files.
+API is a JSON version of the Metadata files.
 
 :::
 
@@ -58,7 +58,7 @@ type SampleOutput {
 
 ### actions.yaml
 
-The `actions.yaml` file contains metadata related to [actions](/actions/index.mdx).
+The `actions.yaml` file contains Metadata related to [Actions](/actions/index.mdx).
 
 **Example**: An action called `greet` with the `handler` set to `<base_url>/greet` and two custom types called
 `SampleInput` and `SampleOutput`.
@@ -105,7 +105,7 @@ custom_types:
 
 ### allow_list.yaml
 
-The `allow_list.yaml` file contains the metadata related to the [allow list](/security/allow-list.mdx).
+The `allow_list.yaml` file contains the Metadata related to the [allow list](/security/allow-list.mdx).
 
 **Example**: A query collection called `allowed-queries` set as the allow-list.
 
@@ -115,7 +115,7 @@ The `allow_list.yaml` file contains the metadata related to the [allow list](/se
 
 ### cron_triggers.yaml
 
-The `cron_triggers.yaml` file contains metadata related to [cron triggers](/scheduled-triggers/create-cron-trigger.mdx).
+The `cron_triggers.yaml` file contains Metadata related to [cron triggers](/scheduled-triggers/create-cron-trigger.mdx).
 The `webhook` can be an HTTP endpoint or an environment variable containing the HTTP endpoint.
 
 **Example**: A cron trigger called `test-trigger`.
@@ -135,14 +135,14 @@ retry_conf:
 
 :::info Note
 
-The metadata about a cron trigger will not be stored if `Include this trigger in Hasura Metadata` is disabled in the
-advanced option of `events` on the console or `include_in_metadata` is passed as `false` via the API.
+The Metadata about a cron trigger will not be stored if `Include this trigger in Hasura Metadata` is disabled in the
+advanced option of `events` on the Console or `include_in_metadata` is passed as `false` via the API.
 
 :::
 
 ### functions.yaml
 
-Contains the metadata related to [custom functions](/schema/postgres/custom-functions.mdx).
+Contains the Metadata related to [custom functions](/schema/postgres/custom-functions.mdx).
 
 **Example**: A custom SQL function called `search_books`.
 
@@ -154,7 +154,7 @@ Contains the metadata related to [custom functions](/schema/postgres/custom-func
 
 ### query_collections.yaml
 
-The `query_collections.yaml` file contains metadata information about
+The `query_collections.yaml` file contains Metadata information about
 [query collections](/api-reference/metadata-api/query-collections.mdx).
 
 **Example**: A query collection called `sample-collection` which contains two queries `test` and `test2`.
@@ -184,9 +184,9 @@ The `query_collections.yaml` file contains metadata information about
 
 ### remote_schemas.yaml
 
-The `remote_schemas.yaml` file contains the metadata related to [remote schemas](/remote-schemas/index.mdx).
+The `remote_schemas.yaml` file contains the Metadata related to [Remote Schemas](/remote-schemas/index.mdx).
 
-**Example**: A remote schema called `my-remote-schema` with URL `<remote-schema-url>`.
+**Example**: A Remote Schema called `my-remote-schema` with URL `<remote-schema-url>`.
 
 ```yaml
 - name: my-remote-schema
@@ -195,7 +195,7 @@ The `remote_schemas.yaml` file contains the metadata related to [remote schemas]
     timeout_seconds: 40
 ```
 
-**Example**: A remote schema called `my-remote-schema` with URL passed as environment variable.
+**Example**: A Remote Schema called `my-remote-schema` with URL passed as environment variable.
 
 ```yaml
 - name: my-remote-schema
@@ -206,9 +206,9 @@ The `remote_schemas.yaml` file contains the metadata related to [remote schemas]
 
 ### tables.yaml
 
-The `tables.yaml` file contains metadata related to [tables](/schema/postgres/tables.mdx).
+The `tables.yaml` file contains Metadata related to [tables](/schema/postgres/tables.mdx).
 
-**Example**: Two tables called `authors` and `books` including relationships and an event trigger defined on the
+**Example**: Two tables called `authors` and `books` including relationships and an Event Trigger defined on the
 `authors` table.
 
 ```yaml
@@ -288,7 +288,7 @@ The `tables.yaml` file contains metadata related to [tables](/schema/postgres/ta
 
 ### version.yaml
 
-The `version.yaml` file contains the metadata format version.
+The `version.yaml` file contains the Metadata format version.
 
 ```yaml
 version: 2

@@ -41,37 +41,37 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
 On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
 Postgres Database URL. We'll create this in the next step and then come back here.
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
 ## Step 3: Create an AlloyDB database {#create-pg-db-alloy}
 
 Head [here](https://cloud.google.com/alloydb) to learn more about and to try AlloyDB. If logged in, click
 `Go to console`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-splash.png' alt='AlloyDB splash page' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-splash.png" alt="AlloyDB splash page" width="1000px" />
 
 You'll be redirected to GCP where you can get started with AlloyDB by clicking `ENABLE`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-enable.png' alt='AlloyDB enable page' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-enable.png" alt="AlloyDB enable page" width="1000px" />
 
 To get started, create a cluster by clicking `CREATE CLUSTER`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-create-cluster.png' alt='AlloyDB create cluster' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-create-cluster.png" alt="AlloyDB create cluster" width="1000px" />
 
 If not already enabled, click, `ENABLE APIS`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-enable-apis.png' alt='AlloyDB enable APIs' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-enable-apis.png" alt="AlloyDB enable APIs" width="1000px" />
 
 Choose your cluster type:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-choose-cluster.png' alt='AlloyDB choose cluster' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-choose-cluster.png" alt="AlloyDB choose cluster" width="1000px" />
 
 :::info Note
 
@@ -82,22 +82,22 @@ the others are currently in development: `Highly available` and `Highly availabl
 
 Configure your cluster by providing the information required:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-configure-cluster.png' alt='AlloyDB configure cluster' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-configure-cluster.png" alt="AlloyDB configure cluster" width="1000px" />
 
 Under the Networking tab, you'll be prompted to set up a list of IP addresses for your services. Click
 `SET UP CONNECTION`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-set-up-connection.png' alt='AlloyDB set up connection' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-set-up-connection.png" alt="AlloyDB set up connection" width="1000px" />
 
 Either select an IP range or let GCP automatically allocate a range. After making your selection, click `CONTINUE` and
 then `CREATE CONNECTION`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-allocate-ip.png' alt='AlloyDB allocate IP' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-allocate-ip.png" alt="AlloyDB allocate IP" width="1000px" />
 
 With your cluster configured, you now need to configure your primary instance. Fill in the required information before
 clicking `CREATE CLUSTER`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-cluster-created.png' alt='AlloyDB cluster created' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-cluster-created.png" alt="AlloyDB cluster created" width="1000px" />
 
 ## Step 4: Create an AlloyDB auth proxy {#create-auth-proxy}
 
@@ -112,7 +112,7 @@ Create a Compute Engine VM that can connect to AlloyDB instances using private s
 
 Navigate to the **VM Instances page** and click `CREATE INSTANCE`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-vm-create-instance.png' alt='AlloyDB VM create instance' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-vm-create-instance.png" alt="AlloyDB VM create instance" width="1000px" />
 
 Provide a name for this instance and set the following properties:
 
@@ -137,7 +137,7 @@ Click `CREATE`.
 **From the cluster listing page for your AlloyDB instance**, get the private IP address of the instance. You'll use this
 in the next step to run the auth proxy and connect it to the AlloyDB instance:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-get-db-ip.png' alt='AlloyDB get IP of db' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-get-db-ip.png" alt="AlloyDB get IP of db" width="1000px" />
 
 **From your GCE-created VM instance**,
 [download the auth proxy](https://cloud.google.com/alloydb/docs/auth-proxy/connect) and, per GCP's instructions, make
@@ -164,7 +164,7 @@ Additionally, you may have to specify a different version of the auth proxy, suc
 With our auth proxy now running, you'll need to create a firewall rule that allows a connection from your Hasura
 instance. If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-hasura-ip.png' alt='AlloyDB get IP of Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-hasura-ip.png" alt="AlloyDB get IP of Hasura Cloud project" width="1000px" />
 
 :::info Note
 
@@ -175,12 +175,12 @@ service.
 
 Within the **VPC Firewall settings**, add a new rule by clicking, `CREATE FIREWALL RULE`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-create-firewall.png' alt='AlloyDB create firewall rule' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-create-firewall.png" alt="AlloyDB create firewall rule" width="1000px" />
 
 Permit connections to port `5432` and specify the IP address of your Hasura instance in the IPv4 range and click
 `CREATE`:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-firewall-settings.png' alt='AlloyDB firewall rule settings' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-firewall-settings.png" alt="AlloyDB firewall rule settings" width="1000px" />
 
 ## Step 6: Construct the database connection URL and connect the database {#construct-db-url-alloy}
 
@@ -197,7 +197,7 @@ postgresql://<database-user>:<postgres-password>@<ip-address-of-gce-instance>:54
 
 Back on the Hasura Console, enter the database URL:
 
-<Thumbnail src='/img/cloud-dbs/alloy/alloy-connect-db.png' alt='AlloyDB connect db' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/alloy/alloy-connect-db.png" alt="AlloyDB connect db" width="1000px" />
 
 Then click `Connect Database`.
 
@@ -210,7 +210,7 @@ vars to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura console' width='1100px' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" width="1100px" />
 
 ## Next steps
 
@@ -221,7 +221,7 @@ Voilà. You are ready to start developing.
   [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
   [custom domains](/projects/domains.mdx)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

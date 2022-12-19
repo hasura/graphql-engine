@@ -42,14 +42,14 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
 On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
 Postgres Database URL. We'll create this in the next step and then come back here.
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
 ## Step 3: Create a Postgres DB on Azure {#create-pg-db-azure}
 
@@ -57,19 +57,19 @@ Log into the [Azure portal](https://portal.azure.com).
 
 On the Azure portal, type "postgres" in the search window and choose `Azure Database for PostgreSQL servers`:
 
-<Thumbnail src='/img/cloud-dbs/azure/select-postgres-db.png' alt='Select Postgres database on Azure' />
+<Thumbnail src="/img/cloud-dbs/azure/select-postgres-db.png" alt="Select Postgres database on Azure" />
 
 Click the `+ Add` button to create a new Postgres database:
 
-<Thumbnail src='/img/cloud-dbs/azure/add-postgres-db.png' alt='Add Postgres database on Azure' />
+<Thumbnail src="/img/cloud-dbs/azure/add-postgres-db.png" alt="Add Postgres database on Azure" />
 
 Choose the plan that fits your requirements. For this tutorial, we'll choose `Single server`:
 
-<Thumbnail src='/img/cloud-dbs/azure/pg-single-server.png' alt='Select single server on Azure' width='600px' />
+<Thumbnail src="/img/cloud-dbs/azure/pg-single-server.png" alt="Select single server on Azure" width="600px" />
 
 Configure your database with all required fields:
 
-<Thumbnail src='/img/cloud-dbs/azure/configure-db.png' alt='Configure database on Azure' width='600px' />
+<Thumbnail src="/img/cloud-dbs/azure/configure-db.png" alt="Configure database on Azure" width="600px" />
 
 Then click `Review + create`.
 
@@ -97,7 +97,7 @@ On `Allow access to Azure services`, click the `Yes` button. Then add a Firewall
 If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
 details view:
 
-<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
 
 :::info Note
 
@@ -108,7 +108,7 @@ service.
 
 Add the Hasura IP address that you copied:
 
-<Thumbnail src='/img/cloud-dbs/azure/add-hasura-ip.png' alt='Add Hasura IP on Azure' />
+<Thumbnail src="/img/cloud-dbs/azure/add-hasura-ip.png" alt="Add Hasura IP on Azure" />
 
 Then click `Save` on the top left.
 
@@ -123,8 +123,8 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 On the database dashboard, click on `Overview`:
 
 <Thumbnail
-  src='/img/cloud-dbs/azure/get-database-connection-string.png'
-  alt='Construct the database connection string for Azure'
+  src="/img/cloud-dbs/azure/get-database-connection-string.png"
+  alt="Construct the database connection string for Azure"
 />
 
 - `user-name`: If you have a separate database user, the user name will be their name. If you didn't specify a user, use
@@ -139,7 +139,7 @@ On the database dashboard, click on `Overview`:
 
 Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-azure):
 
-<Thumbnail src='/img/cloud-dbs/azure/azure-complete.png' alt='Database setup' width='600px' />
+<Thumbnail src="/img/cloud-dbs/azure/azure-complete.png" alt="Database setup" width="600px" />
 
 Then click `Connect Database`.
 
@@ -153,7 +153,7 @@ of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura console' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
 
 ## Next steps
 
@@ -165,7 +165,7 @@ Voilà. You are ready to start developing.
   [env vars](/projects/env-vars.mdx#manage-project-env-vars) or
   [custom domains](/projects/domains.mdx#manage-project-domains)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

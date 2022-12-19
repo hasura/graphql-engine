@@ -15,11 +15,11 @@ sidebar_label: Auth0 JWT Integration
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Auth0 JWT Integration with Hasura GraphQL engine
+# Auth0 JWT Integration with Hasura GraphQL Engine
 
 ## Introduction
 
-This page helps you to set up Auth0 to work with the Hasura GraphQL engine.
+This page helps you to set up Auth0 to work with the Hasura GraphQL Engine.
 
 ## Create an Auth0 Application
 
@@ -28,7 +28,7 @@ This page helps you to set up Auth0 to work with the Hasura GraphQL engine.
 - In the `Create Application` window, set a name for your application, and select `Single Page Web Applications`.
   (assuming your application is React/Angular/Vue etc).
 
-<Thumbnail src='/img/guides/create-client-popup.png' alt='Create an Auth0 application' width='1000px' />
+<Thumbnail src="/img/guides/create-client-popup.png" alt="Create an Auth0 application" width="1000px" />
 
 You get the basic information such as the `Domain`, `Client ID`, and `Client Secret` from the `Applications > Settings`
 tab once the application is created.
@@ -138,7 +138,7 @@ You don't need to integrate your UI with Auth0 for testing. There are 2 ways you
 
    `https://dev-m-lbqrnq.us.auth0.com/authorize?response_type=token&scope=openid%20profile&client_id=BDAXJbE7Hw0Jhm4CL0UlAXmgrwebDFfj&redirect_uri=http://jwt.io&connection=THE_CONNECTION_YOU_WANT_TO_TEST`
 
-   <Thumbnail src='/img/auth/auth0-login-url.png' alt='auth0 login' width='750px' />
+   <Thumbnail src="/img/auth/auth0-login-url.png" alt="auth0 login" width="750px" />
 
    1. `client_id`: Client ID of the application. This value is auto-filled from your application.
    2. `connection`: Name of the connection you want to test. `Applications > <application_name> > Connections`
@@ -150,9 +150,9 @@ You don't need to integrate your UI with Auth0 for testing. There are 2 ways you
    Once you follow the link, you will be redirected to your configured identity provider. After successful login, you
    will be sent back to [JWT.io](https://jwt.io/) to decode, verify and generate JWT.
 
-   <Thumbnail src='/img/auth/jwt-io-debug.png' alt='JWT debug on jwt.io' width='900px' />
+   <Thumbnail src="/img/auth/jwt-io-debug.png" alt="JWT debug on jwt.io" width="900px" />
 
-   **Save this JWT token value to be used later to test authorization using the Hasura console.**
+   **Save this JWT token value to be used later to test authorization using the Hasura Console.**
 
 ## Configure Hasura to use Auth0 Keys
 
@@ -201,7 +201,7 @@ You can use the generated config in the `HASURA_GRAPHQL_JWT_SECRET` env variable
 You can directly copy-paste the config in `yaml` files and command-line arguments as it takes care of escaping the new
 lines.
 
-<Thumbnail src='/img/auth/jwt-config-generated.png' alt='Generated JWT config' width='750px' />
+<Thumbnail src="/img/auth/jwt-config-generated.png" alt="Generated JWT config" width="750px" />
 
 ## Add Access Control Rules via Hasura Console
 
@@ -214,9 +214,9 @@ Add an access control rule that uses `x-hasura-user-id` for the role `user`. The
 with the authorization token from the [previous step](#test-auth0) where we generated an Auth0 token.
 
 <img
-  src='https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png'
-  alt='JWT token used as bearer token on hasura console'
-  width='1200px'
+  src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png"
+  alt="JWT token used as bearer token on Hasura Console"
+  width="1200px"
 />
 
 You can also use the env variable `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or `--unauthorized-role` flag to set a role for

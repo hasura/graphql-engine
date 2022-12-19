@@ -48,7 +48,7 @@ Now, we can create a role `editor` and add a select validation rule as follows:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src='/img/schema/bq-validation-not-empty.png' />
+<Thumbnail src="/img/schema/bq-validation-not-empty.png" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -68,7 +68,7 @@ select_permissions:
           _eq: ''
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -78,7 +78,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add an select permission rule by using the
-[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) metadata API:
+[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -154,7 +154,7 @@ Now, we can create a role `author` and add an select validation rule as follows:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src='/img/schema/bq-author-own-articles.png' />
+<Thumbnail src="/img/schema/bq-author-own-articles.png" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -174,7 +174,7 @@ select_permissions:
           _eq: X-Hasura-User-Id
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -184,7 +184,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add a select permission rule by using the
-[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) metadata API:
+[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

@@ -40,10 +40,10 @@ Let's add a foreign-key constraint to the `author_id` column in the `articles` t
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-In the console, navigate to the `Modify` tab of the `articles` table. Click the `Add` button in the Foreign Keys section
+In the Console, navigate to the `Modify` tab of the `articles` table. Click the `Add` button in the Foreign Keys section
 and configure the `author_id` column as a foreign-key for the `id` column in the `authors` table:
 
-<Thumbnail src='/img/schema/add-foreign-key.png' alt='Add foreign-key constraint' width='700px' />
+<Thumbnail src="/img/schema/add-foreign-key.png" alt="Add foreign-key constraint" width="700px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -100,12 +100,12 @@ Each article has one author. This is an `object relationship`.
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-The console infers potential relationships using the foreign-key created above and recommends these in the
+The Console infers potential relationships using the foreign-key created above and recommends these in the
 `Relationships` tab of the `articles` table.
 
 Add an `object relationship` named `author` for the `articles` table as shown here:
 
-<Thumbnail src='/img/schema/add-1-1-relationship.png' alt='Create an object relationship' width='1100px' />
+<Thumbnail src="/img/schema/add-1-1-relationship.png" alt="Create an object relationship" width="1100px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -125,7 +125,7 @@ You can add an object relationship in the `tables.yaml` file inside the `metadat
     name: authors
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -136,7 +136,7 @@ hasura metadata apply
 
 You can create an object relationship by using the
 [pg_create_object_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-create-object-relationship)
-metadata API:
+Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -215,9 +215,9 @@ You can add an `array relationship` in the same fashion as an `object relationsh
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-On the console, add an `array relationship` named `articles` for the `authors` table as shown here:
+On the Console, add an `array relationship` named `articles` for the `authors` table as shown here:
 
-<Thumbnail src='/img/schema/add-1-many-relationship.png' alt='Create an array relationship' width='1100px' />
+<Thumbnail src="/img/schema/add-1-many-relationship.png" alt="Create an array relationship" width="1100px" />
 
 We can now run a nested object query that is based on this `array relationship`.
 
@@ -247,7 +247,7 @@ You can add an array relationship in the `tables.yaml` file inside the `metadata
             name: articles
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -258,7 +258,7 @@ hasura metadata apply
 
 You can create an array relationship by using the
 [pg_create_array_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-create-array-relationship)
-metadata API:
+Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -364,16 +364,16 @@ using a manual relationship:
 
 **Step 1: Open the manual relationship section**
 
-- Open the console and navigate to the `Data -> authors -> Relationships` tab.
+- Open the Console and navigate to the `Data -> authors -> Relationships` tab.
 - Click on the `Configure` button:
 
-<Thumbnail src='/img/schema/manual-relationship-btn.png' alt='Open the manual relationship section' width='1100px' />
+<Thumbnail src="/img/schema/manual-relationship-btn.png" alt="Open the manual relationship section" width="1100px" />
 
 **Step 2: Define the relationship**
 
 The above step will open up a section as shown below:
 
-<Thumbnail src='/img/schema/manual-relationship-create.png' alt='Define the relationship' width='700px' />
+<Thumbnail src="/img/schema/manual-relationship-create.png" alt="Define the relationship" width="700px" />
 
 In this case:
 
@@ -411,7 +411,7 @@ You can add a manual relationship in the `tables.yaml` file inside the `metadata
     name: author_average_rating
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -422,7 +422,7 @@ hasura metadata apply
 
 You can add a manual relationship by using the
 [pg_create_object_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-create-object-relationship)
-metadata API:
+Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -501,9 +501,9 @@ database:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-The console infers potential relationships using existing foreign-keys and recommends these on the `Data -> Schema` page
+The Console infers potential relationships using existing foreign-keys and recommends these on the `Data -> Schema` page
 
-<Thumbnail src='/img/schema/schema-track-relationships.png' alt='Track all relationships' width='700px' />
+<Thumbnail src="/img/schema/schema-track-relationships.png" alt="Track all relationships" width="700px" />
 
 You can choose to track the relationships individually using the `Track` buttons or hit the `Track all` button to track
 all the inferred relationships in one go.
@@ -534,7 +534,7 @@ You can add relationships in the `tables.yaml` file inside the `metadata` direct
             name: articles
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -546,7 +546,7 @@ hasura metadata apply
 You can create multiple relationships by using the
 [pg_create_object_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-create-object-relationship) and
 the [pg_create_array_relationship](/api-reference/metadata-api/relationship.mdx#metadata-pg-create-array-relationship)
-metadata APIs:
+Metadata APIs:
 
 ```http
 POST /v1/metadata HTTP/1.1

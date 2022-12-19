@@ -14,17 +14,17 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Connecting databases to Hasura GraphQL engine
+# Connecting databases to Hasura GraphQL Engine
 
 ## Introduction
 
-From `v2.0.0` onwards Hasura GraphQL engine allows connecting to multiple databases and build a unified GraphQL API
+From `v2.0.0` onwards Hasura GraphQL Engine allows connecting to multiple databases and build a unified GraphQL API
 based on the database schemas.
 
 ## Connect a database {#connect-database-v2-0}
 
 In versions `v2.0.0` and above, databases can be connected and removed dynamically without having to restart the GraphQL
-engine instance via the console / metadata APIs / CLI:
+engine instance via the Console / Metadata APIs / CLI:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -53,7 +53,7 @@ below:
     functions: []
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -63,7 +63,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 Depending on the type of database, you can add a database using the
-[sources metadata API](/api-reference/metadata-api/source.mdx).
+[sources Metadata API](/api-reference/metadata-api/source.mdx).
 
 For example:
 
@@ -98,7 +98,7 @@ X-Hasura-Role: admin
 :::info Note
 
 - You can connect to databases either using env vars or by using their raw connection string/parameters. It is
-  recommended to use env vars for better security _(as connection details are part of Hasura metadata)_ as well as to
+  recommended to use env vars for better security _(as connection details are part of Hasura Metadata)_ as well as to
   allow configuring different databases in different environments _(like staging/production)_ easily.
 - A Postgres database can be connected using the `HASURA_GRAPHQL_DATABASE_URL` env var as well in which case it gets
   added automatically as a database named `default`

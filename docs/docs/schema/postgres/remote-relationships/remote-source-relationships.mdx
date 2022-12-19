@@ -46,7 +46,7 @@ the process to add your target database.
 
 A remote database relationship is defined alongside the source database table (that is, the source side of the join).
 
-The following fields can be defined for a remote schema relationship:
+The following fields can be defined for a Remote Schema relationship:
 
 - **Relationship type**: Either `object` or `array` - similar to normal relationships. Hasura supports both many-to-one
   (object) and one-to-many (array) relationships.
@@ -69,8 +69,8 @@ Head to the `Data > [database] > [orders] > Relationships` tab. Under the `Remot
 select `Add a remote database relationship`.
 
 <Thumbnail
-  src='/img/databases/postgres/schema/create-remote-source-relationship.png'
-  alt='Create remote database relationships'
+  src="/img/databases/postgres/schema/create-remote-source-relationship.png"
+  alt="Create remote database relationships"
 />
 
 Hit `Save`.
@@ -110,7 +110,7 @@ You can add a remote database relationship by using the
 [pg_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)
 or
 [pg_update_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-update-remote-relationship)
-metadata APIs with the `to_source` field.
+Metadata APIs with the `to_source` field.
 
 ```http
 POST /v1/metadata HTTP/1.1

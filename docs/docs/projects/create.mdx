@@ -15,7 +15,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Creating projects
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud</div>
 
 ## Introduction
 
@@ -31,9 +31,9 @@ This opens a form on the right where you can create your new project.
 Choose a pricing plan and select a region for your project.
 
 <Thumbnail
-  src='/img/projects/create-project_console_2.12.png'
-  alt='Create new project in Hasura Console'
-  width='900px'
+  src="/img/projects/create-project_console_2.12.png"
+  alt="Create new project in Hasura Console"
+  width="900px"
 />
 
 Once you have completed the project setup, click `Create Project`.
@@ -42,15 +42,15 @@ Once you have completed the project setup, click `Create Project`.
 
 Once created, you can specify a new name for your Project if you want.
 
-Then to get started, Click `Launch Console` to open the Hasura console in your browser.
+Then to get started, Click `Launch Console` to open the Hasura Console in your browser.
 
 <Thumbnail
-  src='/img/projects/create-project-assign-name_console_2.12.png'
-  alt='database setup with new database'
-  width='900px'
+  src="/img/projects/create-project-assign-name_console_2.12.png"
+  alt="database setup with new database"
+  width="900px"
 />
 
-On the Hasura console, navigate to `Data -> Manage -> Connect Database`:
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database`:
 
 ### Connect or create a new database
 
@@ -61,10 +61,10 @@ many 3rd party managed cloud providers. Check out a
 To get started with a demo database, choose `Create New Database`:
 
 <Thumbnail
-  src='/img/projects/create-database-neon-2.15.png'
-  alt='database setup with existing
-database'
-  width='700px'
+  src="/img/projects/create-database-neon-2.15.png"
+  alt="database setup with existing
+database"
+  width="700px"
 />
 
 Select `Create Neon Database` and follow the prompts. Hasura Cloud will integrate with your Neon account and manage the
@@ -72,10 +72,10 @@ initial setup of a Postgres instance. You can always upgrade the instance and ma
 account:
 
 <Thumbnail
-  src='/img/projects/connect-database-neon-2.15.png'
-  alt='database setup with existing
-database'
-  width='700px'
+  src="/img/projects/connect-database-neon-2.15.png"
+  alt="database setup with existing
+database"
+  width="700px"
 />
 
 ### Existing database
@@ -83,12 +83,12 @@ database'
 To use an existing database, choose `Connect existing database` and enter your database connection URL and enter your
 database connection string (looks like `postgres://username:password@hostname:port/dbname`).
 
-<Thumbnail src='/img/projects/connect-database_console_2.15.png' alt='database setup with new database' width='700px' />
+<Thumbnail src="/img/projects/connect-database_console_2.15.png" alt="database setup with new database" width="700px" />
 
 :::info
 
 Note You can connect to databases either using env vars or by using their raw connection string/parameters. It is
-recommended to use env vars for better security _(as connection details are part of Hasura metadata)_ as well as to
+recommended to use env vars for better security _(as connection details are part of Hasura Metadata)_ as well as to
 allow configuring different databases in different environments _(like staging/production)_ easily.
 
 :::
@@ -99,17 +99,17 @@ For some cloud services, like GCP, you'll need to adjust your Postgres connectio
 Hasura Cloud IP address. You can copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's
 details view.
 
-<Thumbnail src='/img/projects/project-general-ip-address_console_2.12.png' alt='Hasura Cloud IP field' width='1000px' />
+<Thumbnail src="/img/projects/project-general-ip-address_console_2.12.png" alt="Hasura Cloud IP field" width="1000px" />
 
 <Thumbnail
-  src='/img/projects/gcp-postgres-authorized-network.png'
-  alt='whitelist Hasura instance IP in Postgres settings'
-  width='727px'
+  src="/img/projects/gcp-postgres-authorized-network.png"
+  alt="whitelist Hasura instance IP in Postgres settings"
+  width="727px"
 />
 
 ## Postgres requirements
 
-Hasura GraphQL engine supports all supported versions of Postgres per the
+Hasura GraphQL Engine supports all supported versions of Postgres per the
 [public documentation](https://www.postgresql.org/support/versioning/).
 
 Make sure your database user has the right

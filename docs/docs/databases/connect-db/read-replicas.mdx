@@ -21,12 +21,12 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Read replicas
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
 
 ## Introduction
 
 Hasura Cloud and Hasura Enterprise can load balance queries and subscriptions across _read replicas_ while sending all
-mutations and metadata API calls to the primary.
+mutations and Metadata API calls to the primary.
 
 ## Adding read replica URLs
 
@@ -38,9 +38,9 @@ mutations and metadata API calls to the primary.
 Head to `Data -> Manage -> <db-name> -> Edit`
 
 <Thumbnail
-  src='/img/databases/read-replicas/connect-db-with-replica.png'
-  alt='Connect database with read replica'
-  width='1000px'
+  src="/img/databases/read-replicas/connect-db-with-replica.png"
+  alt="Connect database with read replica"
+  width="1000px"
 />
 
 </TabItem>
@@ -68,7 +68,7 @@ You can add _read replicas_ for a database by adding their config to the `/metad
           retries: 1
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```yaml
 hasura metadata apply
@@ -78,7 +78,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add _read replicas_ for a database using the
-[pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) metadata API.
+[pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) Metadata API.
 
 ```http {16-27}
 POST /v1/metadata HTTP/1.1
@@ -146,9 +146,9 @@ supported for v2.0 and above projects.**
 Head to `Data -> Manage -> <db-name> -> Edit`
 
 <Thumbnail
-  src='/img/databases/read-replicas/connect-db-with-replica-mssql.png'
-  alt='Connect database with read replica'
-  width='1000px'
+  src="/img/databases/read-replicas/connect-db-with-replica-mssql.png"
+  alt="Connect database with read replica"
+  width="1000px"
 />
 
 </TabItem>
@@ -175,7 +175,7 @@ You can add _read replicas_ for a database by adding their config to the `/metad
           max_connections: 100
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```yaml
 hasura metadata apply
@@ -185,7 +185,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add _read replicas_ for a database using the
-[mssql_add_source](/api-reference/metadata-api/source.mdx#mssql-add-source) metadata API.
+[mssql_add_source](/api-reference/metadata-api/source.mdx#mssql-add-source) Metadata API.
 
 ```http {19-29}
 POST /v1/metadata HTTP/1.1

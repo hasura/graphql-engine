@@ -24,7 +24,7 @@ Custom SQL functions are [user-defined SQL functions](https://www.postgresql.org
 that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
 SQL functions are also referred to as **stored procedures**.
 
-Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
+Hasura GraphQL Engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
 querying them with either `queries` or `subscriptions`, or for `VOLATILE` functions as `mutations`.
 
 :::info Note
@@ -50,7 +50,7 @@ SQL functions can be created using SQL statements which can be executed as follo
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-- Head to the `Data -> SQL` section of the Hasura console
+- Head to the `Data -> SQL` section of the Hasura Console
 - Enter your [create function SQL statement](https://www.postgresql.org/docs/current/sql-createfunction.html)
 - Hit the `Run` button
 
@@ -60,9 +60,9 @@ SQL functions can be created using SQL statements which can be executed as follo
 1.  [Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add
     your [create function SQL statement](https://www.postgresql.org/docs/current/sql-createfunction.html) to the
     `up.sql` file. Also, add an SQL statement that reverts the previous statement to the `down.sql` file in case you
-    need to [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the migrations.
+    need to [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the Migrations.
 
-2.  Apply the migration by running:
+2.  Apply the Migration by running:
 
     ```bash
     hasura migrate apply
@@ -104,7 +104,7 @@ over the GraphQL API right after creation if it is supported.
 
 You can track any existing supported functions in your database from the `Data -> Schema` page:
 
-<Thumbnail src='/img/schema/schema-track-functions.png' alt='Track functions' />
+<Thumbnail src="/img/schema/schema-track-functions.png" alt="Track functions" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -118,7 +118,7 @@ You can track any existing supported functions in your database from the `Data -
         name: <function name>
     ```
 
-2.  Apply the metadata by running:
+2.  Apply the Metadata by running:
 
     ```bash
     hasura metadata apply
@@ -128,7 +128,7 @@ You can track any existing supported functions in your database from the `Data -
 <TabItem value="api" label="API">
 
 To track the function and expose it over the GraphQL API, make the following API call to the
-[pg_track_function](/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) metadata API:
+[pg_track_function](/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -232,7 +232,7 @@ CREATE INDEX address_gin_idx ON properties
 USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode) gin_trgm_ops);
 ```
 
-And finally create the custom SQL function in the Hasura console:
+And finally create the custom SQL function in the Hasura Console:
 
 ```plsql
 CREATE FUNCTION search_properties(search text)
@@ -437,7 +437,7 @@ query {
 
 ### Using argument default values for custom functions
 
-If you omit an argument in the `args` input field then the GraphQL engine executes the SQL function without the
+If you omit an argument in the `args` input field then the GraphQL Engine executes the SQL function without the
 argument. Hence, the function will use the default value of that argument set in its definition.
 
 **For example:** In the above [PostGIS functions example](#pg-custom-functions-postgis), the function definition can be
@@ -495,7 +495,7 @@ Search nearby landmarks with `distance_kms` default value which is 2 kms:
 ### Accessing Hasura session variables in custom functions
 
 Create a function with an argument for session variables and track it with the
-[pg_track_function](/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) metadata API with the
+[pg_track_function](/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) Metadata API with the
 `session_argument` config set. The session argument will be a JSON object where keys are session variable names (in
 lower case) and values are strings. Use the `->>` JSON operator to fetch the value of a session variable as shown in the
 following example.
@@ -540,7 +540,7 @@ The specified session argument will not be included in the `<function-name>_args
 ### Tracking functions with side effects
 
 You can also use the [pg_track_function](/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function)
-metadata API to track [VOLATILE functions](https://www.postgresql.org/docs/current/xfunc-volatility.html) as mutations.
+Metadata API to track [VOLATILE functions](https://www.postgresql.org/docs/current/xfunc-volatility.html) as mutations.
 
 Aside from showing up under the `mutation` root (and presumably having side-effects), these tracked functions behave the
 same as described above for `queries`.
@@ -572,7 +572,7 @@ are also applicable to the function itself.
 
 :::info Note
 
-In case of **functions exposed as queries**, if the Hasura GraphQL engine is started with inferring of function
+In case of **functions exposed as queries**, if the Hasura GraphQL Engine is started with inferring of function
 permissions set to `true` (by default: `true`) then a function exposed as a query will be accessible to a role even if
 the role doesn't have a function permission for the function - provided the role has select permission defined on the
 returning table of the function.

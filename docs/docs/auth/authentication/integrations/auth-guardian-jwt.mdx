@@ -14,11 +14,11 @@ sidebar_label: OneGraph's AuthGuardian JWT Integration
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# OneGraph's AuthGuardian JWT Integration with Hasura GraphQL engine
+# OneGraph's AuthGuardian JWT Integration with Hasura GraphQL Engine
 
 ## Introduction
 
-In this guide, we will walk through how to set up AuthGuardian JWT to work with the Hasura GraphQL engine.
+In this guide, we will walk through how to set up AuthGuardian JWT to work with the Hasura GraphQL Engine.
 
 ## About AuthGuardian
 
@@ -69,7 +69,7 @@ as a primary key:
 - Add set the user id in the "built-in value" field to `GITHUB_USER_ID`
 - Click the `save` button on the right hand side.
 
-<Thumbnail src='/img/guides/auth-guardian-user-id.png' alt='Set an AuthGuardian JWT with a user id' />
+<Thumbnail src="/img/guides/auth-guardian-user-id.png" alt="Set an AuthGuardian JWT with a user id" />
 
 ### Option 2: Set the default Hasura role
 
@@ -83,7 +83,7 @@ Add a new rule (the `+` button in the top-left), and fill it out:
 - Add the default role, e.g. `user`.
 - Click the `save` button on the right hand side.
 
-<Thumbnail src='/img/guides/auth-guardian-default-role.png' alt='Set an AuthGuardian JWT with default role' />
+<Thumbnail src="/img/guides/auth-guardian-default-role.png" alt="Set an AuthGuardian JWT with default role" />
 
 :::info Note
 
@@ -104,7 +104,7 @@ in the JWT to people who belong to your GitHub organization:
 - Click on "Add" and add an additional role, e.g. `admin`.
 - Click the `save` button on the right hand side.
 
-<Thumbnail src='/img/guides/auth-guardian-additional-role.png' alt='Set an AuthGuardian JWT with additional roles' />
+<Thumbnail src="/img/guides/auth-guardian-additional-role.png" alt="Set an AuthGuardian JWT with additional roles" />
 
 ### Option 4: Set a session variable
 
@@ -122,8 +122,8 @@ particular GitHub repository:
 - Click the `save` button on the right hand side.
 
 <Thumbnail
-  src='/img/guides/auth-guardian-session-variable.png'
-  alt='Set an AuthGuardian JWT with session variables for Hasura to use'
+  src="/img/guides/auth-guardian-session-variable.png"
+  alt="Set an AuthGuardian JWT with session variables for Hasura to use"
 />
 
 :::info Note
@@ -163,8 +163,8 @@ The generated config has the following structure:
   server flag.
 
 <Thumbnail
-  src='/img/guides/auth-guardian-config-generator.png'
-  alt='AuthGuardian lets you copy/paste the required JWT configuration for either Hasura or Hasura-on-Heroku'
+  src="/img/guides/auth-guardian-config-generator.png"
+  alt="AuthGuardian lets you copy/paste the required JWT configuration for either Hasura or Hasura-on-Heroku"
 />
 
 ## Step 4: Test the config and tokens
@@ -175,18 +175,18 @@ everything works as you expect.
 - Copy the JWT that you created in step 2.
 - On the left sidebar, click on "JWT settings" and scroll down to "Generate signed token".
 - Paste the copied JWT (or optionally write your own JSON if you want to test alternative scenarios).
-- Copy the signed token and add it as a header in the Hasura console.
+- Copy the signed token and add it as a header in the Hasura Console.
 
 <Thumbnail
-  src='/img/guides/auth-guardian-generate-test-jwt.png'
-  alt='Use the JWT-signer form to quickly sign any JSON and test in the Hasura console'
+  src="/img/guides/auth-guardian-generate-test-jwt.png"
+  alt="Use the JWT-signer form to quickly sign any JSON and test in the Hasura Console"
 />
 
 - In GraphiQL, try out queries to test that the integration works as expected by adding an `Authorization` header, with
   a value of `Bearer <the-copied-JWT-text>`. Hasura's GraphiQL will recognize this header, show you its content, and
   confirm whether it recognizes the JWT as securely signed.
 
-<Thumbnail src='/img/guides/auth-guardian-test-jwt.png' alt='Test AuthGuardian JWT' />
+<Thumbnail src="/img/guides/auth-guardian-test-jwt.png" alt="Test AuthGuardian JWT" />
 
 ## Next Steps
 

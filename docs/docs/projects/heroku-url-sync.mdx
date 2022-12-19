@@ -1,6 +1,6 @@
 ---
 description: Automatically sync database URL of a Heroku Postgres into a Hasura Cloud project
-title: "Cloud: Heroku database integration"
+title: 'Cloud: Heroku database integration'
 keywords:
   - hasura
   - docs
@@ -13,15 +13,12 @@ sidebar_position: 12
 sidebar_label: Heroku URL Sync
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
-import HeadingIcon from "@site/src/components/HeadingIcon";
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Heroku database integration
 
-<div
-  className="badge badge--primary heading-badge"
-  style={{ marginBottom: `20px` }}
->
+<div className="badge badge--primary heading-badge" style={{ marginBottom: `20px` }}>
   Available on: Cloud
 </div>
 
@@ -35,7 +32,7 @@ To know more about Heroku's latest announcement on deprecation of free resources
 :::warning Warning
 
 Recently, Heroku introduced a [change to Postgres extensions](https://devcenter.heroku.com/changelog-items/2446) that
-affects our integration and the use of event triggers. If you're having trouble creating event triggers with a database
+affects our integration and the use of Event Triggers. If you're having trouble creating Event Triggers with a database
 hosted on Heroku, you can find more information
 [in this GitHub issue](https://github.com/hasura/graphql-engine/issues/8734).
 
@@ -50,17 +47,13 @@ integration ensures that the linked environment variable in your Hasura Cloud pr
 
 ## Connecting an existing Heroku database {#cloud-connect-existing-heroku-db}
 
-You can connect your Heroku database to your Hasura project by following these steps:
+You can connect your Heroku database to your Hasura Project by following these steps:
 
 1.  Go to your Hasura Cloud dashboard and head to the settings section of the desired project
 
 2.  Go to `Integrations` tab and click on the Heroku integration under `Databases`
 
-    <Thumbnail
-      src="/img/projects/heroku-integration.png"
-      alt="Heroku Integration"
-      width="1100px"
-    />
+    <Thumbnail src="/img/projects/heroku-integration.png" alt="Heroku Integration" width="1100px" />
 
 3.  Login into Heroku, enter an env var name of your choice (say `PG_DATABASE_URL`) and connect the desired database
     from the list of databases
@@ -68,14 +61,10 @@ You can connect your Heroku database to your Hasura project by following these s
     After a couple of seconds the env var will be updated with your connected database url and you can see it in the
     `Env Vars` tab of your project.
 
-4.  Now you can go ahead to your project console's `Data` tab and connect the database through the env var that you
+4.  Now you can go ahead to your project Console's `Data` tab and connect the database through the env var that you
     created.
 
-    <Thumbnail
-      src="/img/projects/heroku-db-connect.png"
-      alt="Heroku DB Connect"
-      width="600px"
-    />
+    <Thumbnail src="/img/projects/heroku-db-connect.png" alt="Heroku DB Connect" width="600px" />
 
 This completes your integration setup, you can now go ahead, track tables and try out Hasura's GraphQL APIs.
 
@@ -83,7 +72,7 @@ This completes your integration setup, you can now go ahead, track tables and tr
 
 Deleting the Heroku integration from your `Integrations` section does not delete the associated env var, it only stops
 the database url sync. Should you want to remove the env var also, it is recommended to remove the connected database
-from your console and then deleting the associated env var to prevent metadata inconsistency.
+from your Console and then deleting the associated env var to prevent Metadata inconsistency.
 
 :::
 
@@ -102,7 +91,7 @@ new project owner can restart the sync with the Heroku account that they have co
 
 ### Enable Heroku database URL sync
 
-If you create a project with a Heroku trial database using the Hasura console, your project has the Heroku database URL
+If you create a project with a Heroku trial database using the Hasura Console, your project has the Heroku database URL
 sync enabled by default, which means, Hasura Cloud keeps the database URL of your project in sync with the related
 Heroku Postgres.
 
@@ -120,21 +109,13 @@ If your project has Heroku database URL sync enabled, you can opt out using the 
 
 2.  Click on `Opt out of the sync` button next to Heroku note.
 
-    <Thumbnail
-      src="/img/projects/heroku-db-sync-enabled-new.png"
-      alt="Enabled DB Sync"
-      width="1100px"
-    />
+    <Thumbnail src="/img/projects/heroku-db-sync-enabled-new.png" alt="Enabled DB Sync" width="1100px" />
 
 #### Option 2:
 
 You can also opt out of Heroku database URL sync by deleting the integration from project integrations page.
 
-<Thumbnail
-  src="/img/projects/heroku-delete-integration.png"
-  alt="Delete Heroku Integration"
-  width="1100px"
-/>
+<Thumbnail src="/img/projects/heroku-delete-integration.png" alt="Delete Heroku Integration" width="1100px" />
 
 ## How it works?
 

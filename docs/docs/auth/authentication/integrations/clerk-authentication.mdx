@@ -38,14 +38,14 @@ This guide assumes the following:
 - Give your application a name. Then choose whichever authentication strategy and social login providers you prefer. For
   more information, check out Clerk's [application setup guide](https://clerk.dev/docs/how-to/set-up-your-application).
 
-  <Thumbnail src='/img/guides/clerk-01_authentication-settings.png' alt='Create a Clerk application' width='450' />
+  <Thumbnail src="/img/guides/clerk-01_authentication-settings.png" alt="Create a Clerk application" width="450" />
 
 ## Step 2: Create Hasura JWT template
 
 Once your Clerk application has been created, navigate to **JWT Templates**. Click the `+ New template` button and
 choose the Hasura template.
 
-<Thumbnail src='/img/guides/clerk-02_create-jwt-template.png' alt='Create Hasura JWT template' width='550' />
+<Thumbnail src="/img/guides/clerk-02_create-jwt-template.png" alt="Create Hasura JWT template" width="550" />
 
 This will pre-populate the default claims required to authenticate requests to Hasura. You can read more about the
 necessary claims [here](/docs/latest/auth/authentication/jwt/#the-spec).
@@ -54,7 +54,7 @@ You can include additional claims or modify them as necessary.
 [Shortcodes](https://clerk.dev/docs/how-to/jwt-templates#shortcodes) are available to make adding dynamic user values
 easy.
 
-<Thumbnail src='/img/guides/clerk-03_hasura-jwt-template.png' alt='Hasura JWT template claims' width='750' />
+<Thumbnail src="/img/guides/clerk-03_hasura-jwt-template.png" alt="Hasura JWT template claims" width="750" />
 
 By default, Clerk will sign the JWT with a private key automatically generated for your application, which is what most
 developers use for Hasura. If you choose this, you can customize this key.
@@ -65,9 +65,9 @@ The next step is to provide Hasura with the public key used to verify the JWT is
 custom key, this can be done with the JSON Web Key Set (JWKS), which Clerk automatically creates an endpoint for with
 your frontend API.
 
-<Thumbnail src='/img/guides/clerk-04_jwks-endpoint.png' alt='JWKS endpoint' />
+<Thumbnail src="/img/guides/clerk-04_jwks-endpoint.png" alt="JWKS endpoint" />
 
-Copy the JWKS endpoint. Go to your Hasura project settings and add a new environment variable. Set the key to
+Copy the JWKS endpoint. Go to your Hasura Project settings and add a new environment variable. Set the key to
 `HASURA_GRAPHQL_JWT_SECRET` and the value to the following:
 
 ```
@@ -208,7 +208,7 @@ export default function Home() {
   };
 
   return (
-    <button type='button' onClick={makeQuery}>
+    <button type="button" onClick={makeQuery}>
       Make query
     </button>
   );
@@ -216,9 +216,9 @@ export default function Home() {
 ```
 
 Upon clicking the button, a request is made with our Hasura JWT as the Bearer token in the `Authorization` header. The
-response is converted to JSON and logged to the browser console.
+response is converted to JSON and logged to the browser Console.
 
-If all has been successful, you should see something similiar as below in your browser console:
+If all has been successful, you should see something similiar as below in your browser Console:
 
 ```json
 {

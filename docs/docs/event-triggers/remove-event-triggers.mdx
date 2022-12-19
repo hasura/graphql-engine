@@ -10,14 +10,15 @@ keywords:
   - delete
 ---
 
-import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem'; import Thumbnail from
-'@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Removing Event Triggers
 
-## Removing an Event Trigger via metadata API
+## Removing an Event Trigger via Metadata API
 
-An Event Trigger can be removed using the following metadata API **only when the metadata is consistent with the
+An Event Trigger can be removed using the following Metadata API **only when the Metadata is consistent with the
 database**.
 
 - **delete_event_trigger**: Refer to the
@@ -29,21 +30,21 @@ database**.
 - **drop_source**: Refer to the [pg_drop_source](/api-reference/metadata-api/source.mdx/#metadata-pg-drop-source) API to
   drop a Postgres source
 
-The following metadata APIs can be used to remove an Event Trigger even with inconsistent metadata, although it may
+The following Metadata APIs can be used to remove an Event Trigger even with inconsistent metadata, although it may
 leave a Hasura footprint in the database:
 
 - **replace_metadata**: Refer to the
   [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx/#metadata-replace-metadata) API to replace an
-  existing metadata with new metadata
+  existing Metadata with new metadata
 - **clear_metadata**: Refer to the
-[clear_metadata](/api-reference/metadata-api/manage-metadata.mdx/#metadata-clear-metadata) to clear the metadata
+  [clear_metadata](/api-reference/metadata-api/manage-metadata.mdx/#metadata-clear-metadata) to clear the metadata
 
 Refer to the following sections on cleaning up Hasura footprints manually from the database.
 
 ## Clean up Event Trigger footprints manually
 
 When an Event Trigger is created, Hasura creates SQL triggers on the table corresponding to each operation mentioned in
-the Event Trigger configuration (INSERT/UPDATE/DELETE). 
+the Event Trigger configuration (INSERT/UPDATE/DELETE).
 
 When an inconsistent Table/Event Trigger is removed via the `replace_metadata` API, it may leave orphaned SQL triggers
 in the database. The following command can be used to manually delete SQL triggers corresponding to an Event Trigger on
@@ -72,7 +73,7 @@ INSERT/UPDATE/DELETE
 When an inconsistent source is dropped, it may leave Hasura footprint in the database due to Event Triggers. The
 following can be used to remove all footprint of Event Triggers present in a source from the database:
 
-### Case 1: When using a different metadata database from the source database
+### Case 1: When using a different Metadata database from the source database
 
 In this case, `hdb_metadata` table is not present in `hdb_catalog` schema of the source.
 
@@ -82,26 +83,26 @@ To clean up Hasura footprint completely, drop the `hdb_catalog` schema:
 DROP SCHEMA IF EXISTS hdb_catalog;
 ```
 
-### Case 2: When the metadata database and source database are the same
+### Case 2: When the Metadata database and source database are the same
 
 In this case, a `hdb_metadata` table is present in `hdb_catalog` schema of the source. You may want to preserve the
-metadata but remove the remaining Hasura footprint of a few tables for Event Triggers and corresponding SQL triggers.
+Metadata but remove the remaining Hasura footprint of a few tables for Event Triggers and corresponding SQL triggers.
 
 **Step 1:** In order to drop the SQL triggers corresponding to Event Triggers created, please refer to the [clean up
 Event Trigger footprints manually](/event-triggers/remove-event-triggers.mdx/#clean-up-event-trigger-footprints-manually) section.
 Alternatively, the following command can be used to drop all SQL triggers in the source:
 
 ```sql
-do $$ 
-declare f record; 
-begin 
+do $$
+declare f record;
+begin
   for f in select trigger_name, event_object_table
     from information_schema.triggers
     where trigger_name like 'notify_hasura_%'
-  loop 
+  loop
     EXECUTE 'DROP FUNCTION hdb_catalog.' || QUOTE_IDENT(f.trigger_name) || ' CASCADE';
-  end loop; 
-end; 
+  end loop;
+end;
 $$;
 ```
 

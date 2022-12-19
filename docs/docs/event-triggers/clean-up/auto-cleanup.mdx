@@ -1,7 +1,7 @@
 ---
 sidebar_label: Auto cleanup
-description: Cleanup event trigger logs for Hasura Cloud/Enterprise Edition
-title: 'Auto cleanup of event trigger logs'
+description: Cleanup Event Trigger logs for Hasura Cloud/Enterprise Edition
+title: 'Auto cleanup of Event Trigger logs'
 keywords:
   - hasura
   - docs
@@ -18,19 +18,19 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Auto cleanup of event trigger logs
+# Auto cleanup of Event Trigger logs
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
 
 :::note Supported from
 
-Auto cleanup for event triggers is available from Hasura version `v2.13` and above.
+Auto cleanup for Event Triggers is available from Hasura version `v2.13` and above.
 
 :::
 
 ## Introduction
 
-Hasura provides a way to automate the cleanup of the event trigger logs based on the following parameters:
+Hasura provides a way to automate the cleanup of the Event Trigger logs based on the following parameters:
 
 | Name of the parameter | Description                                                                                                                                                                                                                                                | Default | Example                                                                                                                                                                                            |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -50,17 +50,16 @@ provided config.
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-For an existing event trigger, head to the `Modify` tab of the event trigger and scroll down to the
-`Auto-cleanup Event Logs` section.
+For an existing Event Trigger, head to the `Modify` tab of the Event Trigger and scroll down to the `Auto-cleanup Event Logs` section.
 
-<Thumbnail src='/img/event-triggers/auto-cleanup.png' alt='Auto cleanup' max-width='543px' />
+<Thumbnail src="/img/event-triggers/auto-cleanup.png" alt="Auto cleanup" max-width="543px" />
 
 </TabItem>
 
 <TabItem value="cli" label="CLI">
 
 To add an auto cleanup config, update the `databases > [source-name] > tables > [table-name].yaml` file inside the
-metadata directory as in this example:
+Metadata directory as in this example:
 
 ```yaml {15-21}
 table:
@@ -86,7 +85,7 @@ event_triggers:
       timeout: 60
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -95,7 +94,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a auto cleanup config using the `<backend>_create_event_trigger` metadata API.
+You can add a auto cleanup config using the `<backend>_create_event_trigger` Metadata API.
 
 ```http {15-22}
 POST /v1/metadata HTTP/1.1
@@ -128,19 +127,19 @@ X-Hasura-Role: admin
 
 :::caution Warning
 
-If you initially choose not to delete `invocation_logs`, but later they need to be deleted, you will need to delete the
-retained logs manually.
+If you initially choose not to delete `invocation_logs`, but later they need to be deleted, you will need to delete
+the retained logs manually.
 
 :::
 
 ## Manual APIs
 
-For cleaning up the event trigger logs using an API, Hasura provides the
+For cleaning up the Event Trigger logs using an API, Hasura provides the
 [cleanup_event_trigger_logs](/api-reference/metadata-api/event-triggers.mdx#metadata-cleanup-event-trigger-logs) API.
 
 ## Managing automatic cleaners
 
-For the ease of managing automated cleanups, Hasura provides few metadata APIs such as:
+For the ease of managing automated cleanups, Hasura provides few Metadata APIs such as:
 
 - [resume_event_trigger_cleanups](/api-reference/metadata-api/event-triggers.mdx#metadata-start-event-trigger-cleanups):
   This API resumes the cleanup process (sets `paused` to `false`).
@@ -149,7 +148,7 @@ For the ease of managing automated cleanups, Hasura provides few metadata APIs s
 
 :::tip Tip
 
-While applying migrations, you may pause all the installed cleaners for better performance.
+While applying Migrations, you may pause all the installed cleaners for better performance.
 
 :::
 
@@ -172,7 +171,8 @@ X-Hasura-Role: admin
 }
 ```
 
-- Activate the cleaners on all the triggers defined on the sources: `source_1`, `source_2`
+- Activate the cleaners on all the triggers defined on the sources: `source_1`,
+  `source_2`
 
 ```json
 POST /v1/metadata HTTP/1.1
@@ -189,7 +189,8 @@ X-Hasura-Role: admin
 }
 ```
 
-- Activate the cleaners on triggers: `sample_trigger_1`, `sample_trigger_2` defined on source `default`
+- Activate the cleaners on triggers: `sample_trigger_1`, `sample_trigger_2`
+  defined on source `default`
 
 ```json
 POST /v1/metadata HTTP/1.1
@@ -211,6 +212,6 @@ X-Hasura-Role: admin
 
 :::info Note
 
-The management APIs will only affect the event trigger log cleaners if the event triggers have cleaners configured.
+The management APIs will only affect the Event Trigger log cleaners if the Event Triggers have cleaners configured.
 
 :::

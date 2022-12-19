@@ -29,37 +29,32 @@ By default, Hasura supports [PostgreSQL and the multiple other databases](/datab
 
 When you track a table in the Hasura GraphQL Engine, it automatically generates the following for it:
 
-- A GraphQL __*type definition*__ for the table
+- A GraphQL **_type definition_** for the table
 
+- A **_query_** field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments.
+- A **_query by primary key_** field.
+- A **_query aggregate_** field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments and
+  returning, `count`, `max`, `min`, `sum` and many other aggregates.
 
-- A __*query*__ field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments.
-- A __*query by primary key*__ field.
-- A __*query aggregate*__ field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments and
-returning, `count`, `max`, `min`, `sum` and many other aggregates.
+- An **_insert mutation_** field with `on_conflict` argument that supports upsert and bulk inserts.
+- An **_insert one mutation_** field with `on_conflict` argument that supports upsert.
 
+- An **_update mutation_** field with `where` argument that supports bulk updates.
+- An **_update by primary key mutation_** field.
 
-- An __*insert mutation*__ field with `on_conflict` argument that supports upsert and bulk inserts.
-- An __*insert one mutation*__ field with `on_conflict` argument that supports upsert.
+- A **_delete mutation_** field with `where` argument that supports bulk deletes.
+- A **_delete by primary key mutation_** field.
 
-
-- An __*update mutation*__ field with `where` argument that supports bulk updates.
-- An __*update by primary key mutation*__ field.
-
-
-- A __*delete mutation*__ field with `where` argument that supports bulk deletes.
-- A __*delete by primary key mutation*__ field.
-
-
-- A __*subscription*__ field with `where`, `order_by`, `limit` and `offset` arguments.
-- A __*subscription by primary key*__ field.
-- A __*subscription aggregate*__ field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments and
-returning, `count`, `max`, `min`, `sum` and many other aggregates.
-- A __*subscription stream*__ field with `where`, and `cursor` arguments.
+- A **_subscription_** field with `where`, `order_by`, `limit` and `offset` arguments.
+- A **_subscription by primary key_** field.
+- A **_subscription aggregate_** field with `where`, `order_by`, `limit`, `offset`, and `distinct_on` arguments and
+  returning, `count`, `max`, `min`, `sum` and many other aggregates.
+- A **_subscription stream_** field with `where`, and `cursor` arguments.
 
 ## Views
 
 When you track a view with a [database which supports views](/databases/index.mdx#schema) in Hasura GraphQL Engine,
-it also automatically generates the same as the above but without the `_by_pk`  fields. Depending on the type of
+it also automatically generates the same as the above but without the `_by_pk` fields. Depending on the type of
 view created, Hasura may not generate the `insert`, `update` and `delete` mutation fields.
 
 ## Relationships
@@ -86,7 +81,7 @@ a "catalogue" which is a Postgres schema in the specified Metadata database. Whe
 Metadata is [exposed as yaml files](/migrations-metadata-seeds/manage-metadata.mdx) which can be checked into
 version control to keep the your codebase in-sync with your database schema and Hasura changes.
 
-See [metadata format](/migrations-metadata-seeds/metadata-format.mdx) for more details.
+See [Metadata format](/migrations-metadata-seeds/metadata-format.mdx) for more details.
 
 ## Authorization
 
@@ -104,11 +99,11 @@ API endpoint which is then called for resolving the result.
 
 Using Remote Schemas you can add an existing GraphQL API into Hasura. You just have to provide the endpoint for it.
 Hasura will introspect and merge the API into the existing schema. Additionally, you can provide permissions for the
-remote schemas and create relationships with other models in Hasura too.
+Remote Schemas and create relationships with other models in Hasura too.
 
 ## Event Triggers
 
-Event triggers use database triggers to capture DML activity and sends it reliably (at least once) to a configured
+Event Triggers use database triggers to capture DML activity and sends it reliably (at least once) to a configured
 webhook.
 
 ## Hasura Cloud
@@ -118,23 +113,13 @@ Hasura instances in seconds and includes extra reliability, monitoring, caching,
 features. You can also deploy Hasura manually using our Community Edition Docker image which includes all the core
 features of GraphQL Engine.
 
-[//]: # (## Hasura Cloud Projects)
-
-[//]: # (## Hasura Security)
-
-[//]: # (### Authentication - Hasura allows you to integrate your own authentication solution whether it be Auth0,
-Firebase Authentication or a custom implementation with either JWT or webhooks)
-
-[//]: # (## Scheduled Triggers)
-
-[//]: # (## Data Federation &#40;Linking it together, relationships, data connectors&#41;)
-
-[//]: # (## Deployment options &#40;GitHub Integration, Preview apps, Docker, Kubernetes&#41;)
-
-[//]: # (## Simple user interfaces &#40;console, hasura CLI&#41;)
-
-[//]: # (## Observability)
-
-[//]: # (## Hasura Enterprise)
-
-
+[//]: # '## Hasura Cloud Projects'
+[//]: # '## Hasura Security'
+[//]: # '### Authentication - Hasura allows you to integrate your own authentication solution whether it be Auth0,
+Firebase Authentication or a custom implementation with either JWT or webhooks'
+[//]: # '## Scheduled Triggers'
+[//]: # '## Data Federation (Linking it together, relationships, data connectors)'
+[//]: # '## Deployment options (GitHub Integration, Preview Apps, Docker, Kubernetes)'
+[//]: # '## Simple user interfaces (console, hasura CLI)'
+[//]: # '## Observability'
+[//]: # '## Hasura Enterprise'

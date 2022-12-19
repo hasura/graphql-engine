@@ -19,7 +19,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-Hasura GraphQL engine supports the Apollo Federation v1 spec, so you can add Hasura as a subgraph in your Apollo
+Hasura GraphQL Engine supports the Apollo Federation v1 spec, so you can add Hasura as a subgraph in your Apollo
 federated gateway. You can also use Hasura generated table types in your other subgraphs by enabling tables for Apollo
 Federation explicitly.
 
@@ -58,17 +58,17 @@ Hasura.
 
 :::note Note
 
-Other types such as action types, remote schema types, etc. cannot be extended to other subgraphs.
+Other types such as action types, Remote Schema types, etc. cannot be extended to other subgraphs.
 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
   <TabItem value="console" label="Console">
 
-Head to the `Data -> [table-name] -> Modify` tab in the console and toggle the switch in the `Enable Apollo Federation`
+Head to the `Data -> [table-name] -> Modify` tab in the Console and toggle the switch in the `Enable Apollo Federation`
 section:
 
-<Thumbnail src='/img/graphql/core/data-federation/apollo-federation-enable.png' alt='Set table as enum' />
+<Thumbnail src="/img/graphql/core/data-federation/apollo-federation-enable.png" alt="Set table as enum" />
 
   </TabItem>
   <TabItem value="cli" label="CLI">
@@ -85,7 +85,7 @@ apollo_federation_config:
   enable: v1
 ```
 
-Apply the metadata using the Hasura CLI by running:
+Apply the Metadata using the Hasura CLI by running:
 
 ```bash
 hasura metadata apply

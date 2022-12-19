@@ -1,26 +1,26 @@
 ---
 sidebar_label: Scheduled Triggers
 sidebar_position: 10
-description: Manage scheduled triggers with the Hasura metadata API
+description: Manage Scheduled Triggers with the Hasura Metadata API
 keywords:
-   - hasura
-   - docs
-   - metadata API
-   - API reference
-   - scheduled trigger
+  - hasura
+  - docs
+  - Metadata API
+  - API reference
+  - scheduled trigger
 ---
 
 # Metadata API Reference: Scheduled Triggers
 
 ## Introduction
 
-Scheduled triggers are used to invoke webhooks based on a timestamp or
+Scheduled Triggers are used to invoke webhooks based on a timestamp or
 cron.
 
 :::tip Supported from
 
-The metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
+The Metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -51,24 +51,23 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-create-cron-trigger-syntax}
 
-| Key                       | Required | Schema                                                                                          | Description                                                                                                                                                                                                     |
-|---------------------------|----------|-----------------------------------------------------------------------------------------------  |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name                      | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                          | Name of the cron trigger                                                                                                                                                                                        |
-| webhook                   | true     | [WebhookURL](/api-reference/syntax-defs.mdx#webhookurl)                            | URL of the webhook                                                                                                                                                                                              |
-| schedule                  | true     | Cron Expression                                                                                 | Cron expression at which the trigger should be invoked.                                                                                                                                                         |
-| payload                   | false    | JSON                                                                                            | Any JSON payload which will be sent when the webhook is invoked.                                                                                                                                                |
-| headers                   | false    | [[HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv)] | List of headers to be sent with the webhook                                                                                                      |
-| retry_conf                | false    | [RetryConfST](/api-reference/syntax-defs.mdx#retryconfst)                          | Retry configuration if scheduled invocation delivery fails                                                                                                                                                      |
-| include_in_metadata       | true     | Boolean                                                                                         | Flag to indicate whether a trigger should be included in the metadata. When a cron trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is exported. |
-| comment                   | false    | Text                                                                                            | Custom comment.                                                                                                                                                                                                 |
-| replace                   | false    | Bool                                                                                            | When replace is set to `true`, the cron trigger will be updated(if exists) and when it's `false` or the field is omitted, then a new cron trigger will be created.                                              |
-| request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)      | Attaches a Request Transformation to the cron trigger.                                                                                                                                                         |
-| response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)    | Attaches a Request Transformation to the cron trigger.                                                                                                                                                         |
-
+| Key                 | Required | Schema                                                                                                                               | Description                                                                                                                                                                                                     |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name                | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                            | Name of the cron trigger                                                                                                                                                                                        |
+| webhook             | true     | [WebhookURL](/api-reference/syntax-defs.mdx#webhookurl)                                                                              | URL of the webhook                                                                                                                                                                                              |
+| schedule            | true     | Cron Expression                                                                                                                      | Cron expression at which the trigger should be invoked.                                                                                                                                                         |
+| payload             | false    | JSON                                                                                                                                 | Any JSON payload which will be sent when the webhook is invoked.                                                                                                                                                |
+| headers             | false    | [[HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv)] | List of headers to be sent with the webhook                                                                                                                                                                     |
+| retry_conf          | false    | [RetryConfST](/api-reference/syntax-defs.mdx#retryconfst)                                                                            | Retry configuration if scheduled invocation delivery fails                                                                                                                                                      |
+| include_in_metadata | true     | Boolean                                                                                                                              | Flag to indicate whether a trigger should be included in the metadata. When a cron trigger is included in the metadata, the user will be able to export it when the Metadata of the graphql-engine is exported. |
+| comment             | false    | Text                                                                                                                                 | Custom comment.                                                                                                                                                                                                 |
+| replace             | false    | Bool                                                                                                                                 | When replace is set to `true`, the cron trigger will be updated(if exists) and when it's `false` or the field is omitted, then a new cron trigger will be created.                                              |
+| request_transform   | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                        | Attaches a Request Transformation to the cron trigger.                                                                                                                                                          |
+| response_transform  | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                      | Attaches a Request Transformation to the cron trigger.                                                                                                                                                          |
 
 :::tip Supported from
 
-Scheduled triggers are supported from versions `v1.3.0` and above.
+Scheduled Triggers are supported from versions `v1.3.0` and above.
 
 :::
 
@@ -92,13 +91,13 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-delete-cron-trigger-syntax}
 
-| Key  | Required | Schema                      | Description              |
-|------|----------|-----------------------------|--------------------------|
+| Key  | Required | Schema                                                    | Description              |
+| ---- | -------- | --------------------------------------------------------- | ------------------------ |
 | name | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the cron trigger |
 
 :::tip Supported from
 
-Scheduled triggers are supported from versions `v1.3.0` and above.
+Scheduled Triggers are supported from versions `v1.3.0` and above.
 
 :::
 
@@ -144,18 +143,18 @@ Content-Type: application/json
 
 ### Args syntax {#metadata-create-scheduled-event-syntax}
 
-| Key         | Required | Schema                                                                       | Description                                                      |
-|-------------|----------|------------------------------------------------------------------------------|------------------------------------------------------------------|
-| webhook     | true     | [WebhookURL](/api-reference/syntax-defs.mdx#webhookurl)                                                    | URL of the webhook                                               |
-| schedule_at | true     | Timestamp (ISO8601 format)                                                   | The time at which the invocation should be invoked.              |
-| payload     | false    | JSON                                                                         | Any JSON payload which will be sent when the webhook is invoked. |
+| Key         | Required | Schema                                                                                                                               | Description                                                      |
+| ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| webhook     | true     | [WebhookURL](/api-reference/syntax-defs.mdx#webhookurl)                                                                              | URL of the webhook                                               |
+| schedule_at | true     | Timestamp (ISO8601 format)                                                                                                           | The time at which the invocation should be invoked.              |
+| payload     | false    | JSON                                                                                                                                 | Any JSON payload which will be sent when the webhook is invoked. |
 | headers     | false    | [[HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv)] | List of headers to be sent with the webhook                      |
-| retry_conf  | false    | [RetryConfST](/api-reference/syntax-defs.mdx#retryconfst)                                                                | Retry configuration if scheduled event delivery fails            |
-| comment     | false    | Text                                                                         | Custom comment.                                                  |
+| retry_conf  | false    | [RetryConfST](/api-reference/syntax-defs.mdx#retryconfst)                                                                            | Retry configuration if scheduled event delivery fails            |
+| comment     | false    | Text                                                                                                                                 | Custom comment.                                                  |
 
 :::tip Supported from
 
-Scheduled triggers are supported from versions `v1.3.0` and above.
+Scheduled Triggers are supported from versions `v1.3.0` and above.
 
 :::
 
@@ -181,16 +180,15 @@ X-Hasura-Role: admin
 ### Args syntax {#metadata-delete-scheduled-event-syntax}
 
 | Key      | Required | Schema              | Description                      |
-|----------|----------|---------------------|----------------------------------|
-| type     | true     | `one_off` \| `cron` | Type of the event trigger.       |
+| -------- | -------- | ------------------- | -------------------------------- |
+| type     | true     | `one_off` \| `cron` | Type of the Event Trigger.       |
 | event_id | true     | UUID                | The `id` of the scheduled event. |
 
 :::tip Supported from
 
-Scheduled triggers are supported from versions `v1.3.0` and above.
+Scheduled Triggers are supported from versions `v1.3.0` and above.
 
 :::
-
 
 ## get_cron_triggers {#metadata-get-cron-triggers}
 
@@ -253,14 +251,14 @@ X-Hasura-Role: admin
 
 ### Args Syntax {#metadata-get-scheduled-events-syntax}
 
-| Key            | Required                   | Schema              | Description                                                                          |
-|----------------|----------------------------|---------------------|--------------------------------------------------------------------------------------|
-| type           | true                       | `one_off` \| `cron` | Type of the scheduled trigger.                                                       |
-| trigger_name   | only when `type` is `cron` | String              | Name of the cron trigger                                                             |
-| limit          | false                      | Integer             | Maximum number of events to be returned in one API call.                             |
-| offset         | false                      | Integer             | Starting point from where the rows need to be returned.                              |
-| get_rows_count | false                      | Boolean             | Flag to indicate whether number of rows returned should be included in the response. |
-| status         | false                      | [[ScheduledEventStatus]](/api-reference/syntax-defs.mdx#scheduledEventStatus) | Filter scheduled events by the status |
+| Key            | Required                   | Schema                                                                        | Description                                                                          |
+| -------------- | -------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| type           | true                       | `one_off` \| `cron`                                                           | Type of the Scheduled Trigger.                                                       |
+| trigger_name   | only when `type` is `cron` | String                                                                        | Name of the cron trigger                                                             |
+| limit          | false                      | Integer                                                                       | Maximum number of events to be returned in one API call.                             |
+| offset         | false                      | Integer                                                                       | Starting point from where the rows need to be returned.                              |
+| get_rows_count | false                      | Boolean                                                                       | Flag to indicate whether number of rows returned should be included in the response. |
+| status         | false                      | [[ScheduledEventStatus]](/api-reference/syntax-defs.mdx#scheduledEventStatus) | Filter scheduled events by the status                                                |
 
 ## get_scheduled_event_invocations {#metadata-get-scheduled-event_invocations}
 
@@ -305,8 +303,8 @@ X-Hasura-Role: admin
 ### Args Syntax {#metadata-get-scheduled-event-invocations-syntax}
 
 | Key            | Required                   | Schema              | Description                                                                          |
-|----------------|----------------------------|---------------------|--------------------------------------------------------------------------------------|
-| type           | true                       | `one_off` \| `cron` | Type of the scheduled trigger.                                                       |
+| -------------- | -------------------------- | ------------------- | ------------------------------------------------------------------------------------ |
+| type           | true                       | `one_off` \| `cron` | Type of the Scheduled Trigger.                                                       |
 | trigger_name   | only when `type` is `cron` | String              | Name of the cron trigger                                                             |
 | event_id       | false                      | String              | Getting invocations of the specified event                                           |
 | limit          | false                      | Integer             | Maximum number of events to be returned in one API call.                             |

@@ -26,7 +26,7 @@ scenario.
 
 :::info Note
 
-You can also choose to manage your database migrations using external tools like: knex, TypeORM, Django/Rails
+You can also choose to manage your database Migrations using external tools like: knex, TypeORM, Django/Rails
 migrations, etc.
 
 :::
@@ -79,7 +79,7 @@ hasura init demo-project --endpoint https://docs-demo.hasura.app --admin-secret 
 Input `Y` or `Yes` at the prompt:
 
 ```text
-? Initialize project with metadata & migrations from https://docs-demo.hasura.app ? Yes
+? Initialize project with Metadata & Migrations from https://docs-demo.hasura.app ? Yes
 ```
 
 We'll see an output like this:
@@ -99,7 +99,7 @@ Let's break all this down:
 
 `hasura init` is the command to create a new Hasura directory structure in a new directory called `demo-project` which
 we also specified. It will create a `config.yaml` file and a `migrations`, `metadata` and `seeds` directory. This
-directory structure is mandatory and should not be changed in order to use Hasura migrations properly.
+directory structure is mandatory and should not be changed in order to use Hasura Migrations properly.
 
 ### Endpoint
 
@@ -129,7 +129,7 @@ variable file such as `production.env` with env vars in accordance with the
 
 ### Initialization
 
-By inputting `Yes` at the prompt to initialize metadata & migrations we have told the CLI to create an initial
+By inputting `Yes` at the prompt to initialize Metadata & Migrations we have told the CLI to create an initial
 Migrations directory called, for example, `1654696186008_init`. This naming structure consists of a Unix timestamp in
 nanoseconds of when it was created (the "version") and an auto generated name. Since this is the initialization of
 Migrations the CLI automatically names it `init`.
@@ -190,9 +190,9 @@ git add .
 git commit -m "hasura project init"
 ```
 
-## Step 4: Use the console served by the CLI
+## Step 4: Use the Console served by the CLI
 
-From this point onwards, instead of using the console at `http://docs-demo.hasura.app/console` you should only use the
+From this point onwards, instead of using the Console at `http://docs-demo.hasura.app/console` you should only use the
 console served by the CLI in order to track Migration and Metadata changes. Do this by running:
 
 ```bash
@@ -203,7 +203,7 @@ hasura console
 ## Step 5: Add a new table and see how Migrations and Metadata are updated
 
 As you use the Hasura Console UI served by the CLI to make changes to your schema, database migration files are
-automatically generated in the `migrations/` directory and the metadata is exported in the `metadata/` directory of your
+automatically generated in the `migrations/` directory and the Metadata is exported in the `metadata/` directory of your
 project.
 
 Let's use the Console to create the following table
@@ -230,14 +230,14 @@ changes will automatically be exported into the `metadata` directory.
 
 :::info Note
 
-Migrations are only created when using the console through the CLI.
+Migrations are only created when using the Console through the CLI.
 
 :::
 
 ## Step 6: Squash Migrations and add checkpoints to version control
 
-Squashing Migrations is the process of merging multiple `sql` files into one. As you keep using the console via the CLI
-to make changes to the schema, new migration files will keep getting generated and the metadata files will keep getting
+Squashing Migrations is the process of merging multiple `sql` files into one. As you keep using the Console via the CLI
+to make changes to the schema, new migration files will keep getting generated and the Metadata files will keep getting
 updated automatically.
 
 Typically, while adding a feature, a lot of incremental migration files get created for each of the small tasks that you
@@ -299,7 +299,11 @@ Migrations and Metadata and then start the Hasura Server.
 
 If you open the Console of the new instance, you can see that our three tables have been created and tracked:
 
-<Thumbnail src='/img/migrations-metadata-seeds/tracked-tables.png' alt='Tracked tables from Hasura migrations' width='30%' />
+<Thumbnail
+  src="/img/migrations-metadata-seeds/tracked-tables.png"
+  alt="Tracked tables from Hasura Migrations"
+  width="30%"
+/>
 
 ## Step 8: Check the status of Migrations
 
@@ -327,7 +331,7 @@ VERSION        NAME                           SOURCE STATUS  DATABASE STATUS
 ```
 
 We can see the version timestamp number of the migration, it's name, and whether it's present in the source (our
-filesystem) and also present on the database via the Hasura Server. Hasura keeps track of which migrations have been
+filesystem) and also present on the database via the Hasura Server. Hasura keeps track of which Migrations have been
 applied to the databases in order to not duplicate applying them and creating errors.
 
 If `SOURCE STATUS` indicates `Not Present`, it means that the migration version is present on the server, but not on the

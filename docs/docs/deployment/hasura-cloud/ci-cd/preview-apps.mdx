@@ -19,7 +19,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Preview Apps
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
 
 ## TL;DR
 
@@ -91,8 +91,8 @@ created by navigating to `Account Settings` section by clicking the button `My A
 Hasura Cloud dashboard and selecting the `Access Tokens` submenu.
 
 <Thumbnail
-  src='/img/deployment/preview-apps/create-new-hasura-access-token_cloud_2.8.1.png'
-  alt='Create a Hasura Cloud personal access token'
+  src="/img/deployment/preview-apps/create-new-hasura-access-token_cloud_2.8.1.png"
+  alt="Create a Hasura Cloud personal access token"
 />
 
 Copy the generated personal access token, this will be needed in further steps.
@@ -105,26 +105,26 @@ select the `Settings` tab.
 Select `Secrets` from the submenu on the left and click `Actions`. Click on `New repository secret` to add a new secret.
 
 <Thumbnail
-  src='/img/deployment/preview-apps/github-add-secret_2_cloud-preview-apps_2-8-1.png'
-  alt='Create Access Token'
-  width='1146px'
+  src="/img/deployment/preview-apps/github-add-secret_2_cloud-preview-apps_2-8-1.png"
+  alt="Create Access Token"
+  width="1146px"
 />
 
 Populate the `Name` field with `HASURA_CLOUD_ACCESS_TOKEN` and `Value` field with the personal access token generated in
 step 1 and click `Add secret` to save.
 
 <Thumbnail
-  src='/img/deployment/preview-apps/github-add-secret_3_cloud-preview-apps_2-8-1.png'
-  alt='Create Access Token'
-  width='1146px'
+  src="/img/deployment/preview-apps/github-add-secret_3_cloud-preview-apps_2-8-1.png"
+  alt="Create Access Token"
+  width="1146px"
 />
 
 A successfully added secret will result in this screen.
 
 <Thumbnail
-  src='/img/deployment/preview-apps/github-add-secret_4_cloud-preview-apps_2-8-1.png'
-  alt='Create Access Token'
-  width='1146px'
+  src="/img/deployment/preview-apps/github-add-secret_4_cloud-preview-apps_2-8-1.png"
+  alt="Create Access Token"
+  width="1146px"
 />
 
 #### Step 3: Database setup {#github-action-step-3}
@@ -189,14 +189,14 @@ For creating the action's configuration file, we have created a
 1. Navigate to the
    [Hasura Cloud Preview Apps GitHub Action YAML Generator](https://cloud.hasura.io/preview-apps-yaml-generator).
 
-<Thumbnail src='/img/deployment/preview-apps/yaml-generator.png' alt='Create Access Token' width='1146px' />
+<Thumbnail src="/img/deployment/preview-apps/yaml-generator.png" alt="Create Access Token" width="1146px" />
 
 2. Populate the fields as per the required configuration and click `Generate YAML`.
 
 | Field                                          | YAML key                                                                                           | Description                                                                                                                                                                                                               |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository Name                                | under `hasura/hasura-cloud-preview-apps` job: `name`                                               | The GitHub repository to be configured with this action, without the author/organisation name. For example, if the repo is located at `https://github.com/JaneDoe/test-repo`, the input to the field will be `test-repo`. |
-| Path to Hasura Project (in repo)               | under `hasura/hasura-cloud-preview-apps` job: `hasuraProjectDirectoryPath`                         | Path to the Hasura project directory (typically created by the Hasura CLI) containing Migrations and Metadata. The path should be relative to the project's root directory.                                               |
+| Path to Hasura Project (in repo)               | under `hasura/hasura-cloud-preview-apps` job: `hasuraProjectDirectoryPath`                         | Path to the Hasura Project directory (typically created by the Hasura CLI) containing Migrations and Metadata. The path should be relative to the project's root directory.                                               |
 | Project Region                                 | under `hasura/hasura-cloud-preview-apps` job: `region` and `tier`                                  | Hasura Cloud project region to create projects in. The regions are available in two tiers: `Free` tier and `Standard` tier across various regions, and under two cloud providers: AWS and GCP.                            |
 | Environment Variables                          | under `hasura/hasura-cloud-preview-apps` job: `hasuraEnv`                                          | Env vars to be set in the Hasura Cloud project created.                                                                                                                                                                   |
 | Comment                                        | under `hasura/comment-progress` job: `message`                                                     | Content to be displayed in the comment on the PR for which the Preview App is created. If you do not want a comment to be posted, clear this field.                                                                       |
@@ -251,7 +251,7 @@ jobs:
 
 #### Step 5: Set up the deletion of Preview Apps {#github-action-step-5}
 
-You can set up cleanup for the above workflow. Preview apps, along with the ephemeral databases created for it, need to
+You can set up cleanup for the above workflow. Preview Apps, along with the ephemeral databases created for it, need to
 be deleted to avoid unnecessary costs.
 
 Create a file `.github/workflows/delete-hasura-cloud-preview-app.yml` in your git repo and add the following code:

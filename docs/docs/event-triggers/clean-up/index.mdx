@@ -1,7 +1,6 @@
 ---
-
 title: Cleaning up event data
-description: Clean up event data of event triggers in Hasura
+description: Clean up event data of Event Triggers in Hasura
 keywords:
   - hasura
   - docs
@@ -16,12 +15,11 @@ keywords:
 
 Hasura stores event data associated with Event Triggers in **the "hdb_catalog" schema of the database containing the source table**.
 
-If there are many events, the Metadata tables can get huge, and you may want to prune them. 
-
+If there are many events, the Metadata tables can get huge, and you may want to prune them.
 
 :::tip Automatic cleanup
 
-In Cloud/Enterprise editions, you can use the [Auto cleanup](auto-cleanup.mdx) feature 
+In Cloud/Enterprise editions, you can use the [Auto cleanup](auto-cleanup.mdx) feature
 to automatically and efficiently clean up your event logs.
 
 :::
@@ -59,7 +57,7 @@ DELETE FROM hdb_catalog.event_log
 WHERE delivered = true OR error = true;
 ```
 
-## Option 4: Clear all event data for a particular event trigger only
+## Option 4: Clear all event data for a particular Event Trigger only
 
 ```sql
 DELETE FROM
@@ -73,7 +71,6 @@ hdb_catalog.event_log
 WHERE trigger_name = '<event_trigger_name>'
 AND (delivered = true OR error = true);
 ```
-
 
 ## Option 5: Clear everything
 

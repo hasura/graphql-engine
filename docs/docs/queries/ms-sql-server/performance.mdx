@@ -34,16 +34,16 @@ query {
 }
 ```
 
-In order to analyse the performance of a query, you can click on the `Analyze` button on the Hasura console:
+In order to analyse the performance of a query, you can click on the `Analyze` button on the Hasura Console:
 
-<Thumbnail src='/img/queries/analyze-query.png' alt='Query analyze button on Hasura console' width='800px' />
+<Thumbnail src="/img/queries/analyze-query.png" alt="Query analyze button on Hasura Console" width="800px" />
 
 The following query execution plan is generated:
 
 <Thumbnail
-  src='/img/queries/query-analysis-before-index.png'
-  alt='Execution plan for Hasura GraphQL query'
-  width='800px'
+  src="/img/queries/query-analysis-before-index.png"
+  alt="Execution plan for Hasura GraphQL query"
+  width="800px"
 />
 
 We can see that a sequential scan is conducted on the `authors` table. This means that MS SQL Server goes through every
@@ -86,7 +86,7 @@ CREATE INDEX ON authors (name);
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-An index can be added in the `Data -> SQL` tab in the Hasura console.
+An index can be added in the `Data -> SQL` tab in the Hasura Console.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -105,7 +105,7 @@ hasura migrate apply
 <TabItem value="api" label="API">
 
 You can add an index by making an API call to the
-[schema_run_sql metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
+[schema_run_sql Metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
 
 ```http
 POST /v2/query HTTP/1.1
@@ -130,9 +130,9 @@ than `sequential scans`. We can also see that the `cost` of the query is now low
 index.
 
 <Thumbnail
-  src='/img/queries/query-analysis-after-index.png'
-  alt='Execution plan for Hasura GraphQL query'
-  width='800px'
+  src="/img/queries/query-analysis-after-index.png"
+  alt="Execution plan for Hasura GraphQL query"
+  width="800px"
 />
 
 :::info Note

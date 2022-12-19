@@ -1,5 +1,5 @@
 ---
-description: Hasura GraphQL engine server config reference (Flags/Environment variables)
+description: Hasura GraphQL Engine server config reference (Flags/Environment variables)
 keywords:
   - hasura
   - docs
@@ -17,7 +17,7 @@ sidebar_label: Server config reference
 
 ## Introduction
 
-Every GraphQL engine command is structured as:
+Every GraphQL Engine command is structured as:
 
 ```bash
 $ graphql-engine <server-flags> serve <command-flags>
@@ -76,8 +76,8 @@ Example:
 </td>
 <td>
 
-Postgres database URL that will be used to store the Hasura metadata. By default the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` will be used to store the metadata.
+Postgres database URL that will be used to store the Hasura Metadata. By default the database configured using
+`HASURA_GRAPHQL_DATABASE_URL` will be used to store the Metadata.
 
 Postgres database URL:
 
@@ -185,8 +185,8 @@ Admin secret key, required to access this instance. This is mandatory when you u
 </td>
 <td>
 
-Interval in milliseconds to sleep before trying to fetch async actions again after a fetch returned no async actions
-from metadata storage. Value `0` implies completely disable fetching async actions from the storage.
+Interval in milliseconds to sleep before trying to fetch async Actions again after a fetch returned no async actions
+from Metadata storage. Value `0` implies completely disable fetching async Actions from the storage.
 
 _(Available for versions > v2.0.0)_
 
@@ -291,7 +291,7 @@ reclaimed. (default: `600` **sec**)
 </td>
 <td>
 
-Set the value to `/srv/console-assets` for the console to load assets from the server itself instead of CDN.
+Set the value to `/srv/console-assets` for the Console to load assets from the server itself instead of CDN.
 
 </td>
 </tr>
@@ -330,7 +330,7 @@ CSV of list of domains, including scheme (http/https) and port, to allow for COR
 </td>
 <td>
 
-The schema in which Hasura can install extensions in the metadata database. Default: `public`.
+The schema in which Hasura can install extensions in the Metadata database. Default: `public`.
 
 </td>
 </tr>
@@ -389,7 +389,7 @@ Disable CORS. Do not send any CORS headers on any request.
 </td>
 <td>
 
-Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured allow-list.
+Restrict queries allowed to be executed by the GraphQL Engine to those that are part of the configured allow-list.
 Default: `false`
 
 </td>
@@ -447,7 +447,7 @@ Enable sending compressed logs to metrics server.
 </td>
 <td>
 
-Disable updating of metadata on the server. (default: `false`)
+Disable updating of Metadata on the server. (default: `false`)
 
 _(Available for versions > v2.0.0)_
 
@@ -467,7 +467,7 @@ _(Available for versions > v2.0.0)_
 </td>
 <td>
 
-Enables the query field in http-logs for metadata queries. (default: `false`)
+Enables the query field in http-logs for Metadata queries. (default: `false`)
 
 </td>
 </tr>
@@ -486,7 +486,7 @@ Enables the query field in http-logs for metadata queries. (default: `false`)
 </td>
 <td>
 
-Enable remote schema permissions. (default: `false`)
+Enable Remote Schema permissions. (default: `false`)
 
 _(Available for versions > v2.0.0)_
 
@@ -647,7 +647,7 @@ _(Available for versions > v2.0.0)_
 </td>
 <td>
 
-Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to
+Timeout (in seconds) to wait for the in-flight events (Event Triggers and Scheduled Triggers) and async Actions to
 complete before the server shuts down completely (default: `60` **sec**). If the in-flight events are not completed
 within the timeout, those events are marked as pending.
 
@@ -879,7 +879,7 @@ particular stripe pseudo-randomly.
 </td>
 <td>
 
-Interval to poll metadata storage for updates in milliseconds. Default: `1000` (`1` **sec**). Set to `0` to disable.
+Interval to poll Metadata storage for updates in milliseconds. Default: `1000` (`1` **sec**). Set to `0` to disable.
 
 _(Available for versions > v2.0.0)_
 

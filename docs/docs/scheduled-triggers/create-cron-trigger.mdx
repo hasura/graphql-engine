@@ -40,16 +40,16 @@ this [here](https://crontab.guru/#0_22_*_*_1-5)).
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Navigate to `Events > Cron Triggers > Create` in your Hasura console.
+Navigate to `Events > Cron Triggers > Create` in your Hasura Console.
 
-<Thumbnail src='/img/event-triggers/create-cron.png' alt='Adding a cron trigger' width='1000px' />
+<Thumbnail src="/img/event-triggers/create-cron.png" alt="Adding a cron trigger" width="1000px" />
 
 In the form opened, fill out the fields defined above:
 
 You can use the link next to the `Cron Schedule` field to help build a cron expression using
 [crontab guru](https://crontab.guru/#*_*_*_*_*), or use the `Frequently used crons` dropdown as a shortcut.
 
-<Thumbnail src='/img/event-triggers/define-cron-trigger.png' alt='Defining a cron trigger' width='500px' />
+<Thumbnail src="/img/event-triggers/define-cron-trigger.png" alt="Defining a cron trigger" width="500px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -64,7 +64,7 @@ You can define a cron trigger by adding it to the `cron_triggers.yaml` file insi
   payload: {}
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```yaml
 hasura metadata apply
@@ -74,7 +74,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define a cron trigger via the
-[create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
+[create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -112,9 +112,9 @@ If you like, you can also define the following values:
 Expand the `Advanced` section.
 
 <Thumbnail
-  src='/img/event-triggers/advanced-cron.png'
-  alt='Defining advanced options for a cron trigger'
-  width='700px'
+  src="/img/event-triggers/advanced-cron.png"
+  alt="Defining advanced options for a cron trigger"
+  width="700px"
 />
 
 </TabItem>
@@ -137,7 +137,7 @@ You can define advanced options for a crone trigger when adding it to the `cron_
   comment: This is a comment
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```yaml
 hasura metadata apply
@@ -147,7 +147,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define advanced options for a cron trigger when defining it via the
-[create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
+[create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -181,7 +181,7 @@ X-Hasura-Role: admin
 Once you've created your cron trigger, you can see `Pending events`, `Processed events`, and `Invocation logs` in their
 respective tabs.
 
-<Thumbnail src='/img/event-triggers/pending-cron.png' alt='Schedule and logs for cron triggers' width='1200px' />
+<Thumbnail src="/img/event-triggers/pending-cron.png" alt="Schedule and logs for cron triggers" width="1200px" />
 
 ## Rest Connectors
 
@@ -192,4 +192,4 @@ REST Connectors modify the cron trigger's HTTP request to adapt to your webhook'
 transforms.
 
 Currently, rest connectors for cron triggers can only be configured through the CLI and the
-[metadata API](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger).
+[Metadata API](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger).

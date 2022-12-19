@@ -47,9 +47,9 @@ For versions `v2.1.0-beta.1` and above, inherited roles are enabled by default.
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Go to the `Settings` tab (⚙) on the console and click on `Inherited Roles`.
+Go to the `Settings` tab (⚙) on the Console and click on `Inherited Roles`.
 
-<Thumbnail src='/img/auth/console-inherited-role.png' alt='Console create inherited role' width='1200px' />
+<Thumbnail src="/img/auth/console-inherited-role.png" alt="Console create inherited role" width="1200px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -64,7 +64,7 @@ this:
     - editor
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -74,7 +74,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add a inherited role using the
-[add_inherited_role metadata API](/api-reference/metadata-api/inherited-roles.mdx#metadata-add-inherited-role):
+[add_inherited_role Metadata API](/api-reference/metadata-api/inherited-roles.mdx#metadata-add-inherited-role):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -339,7 +339,7 @@ X-Hasura-User-Id: 1
 
 ### 2. Mutation and Remote Schema permissions
 
-A mutation (insert, update and delete) or remote schema permission is inherited in the following manner:
+A mutation (insert, update and delete) or Remote Schema permission is inherited in the following manner:
 
 Suppose there's an inherited role `(R)` which inherits permissions from `n` parent roles namely `pr1`, `pr2`, `pr3` ...
 `prn`. The permission for the role `R` on some entity can only be inherited when the permission on the entity is the
@@ -385,7 +385,7 @@ For example, if two insert permissions are configured in the following way:
 
 The `check` constraint is different in both the permissions and there's no way to resolve this conflict.
 
-Whenever a conflict occurs while a role inherits from its parents, then the metadata for that entity and role
+Whenever a conflict occurs while a role inherits from its parents, then the Metadata for that entity and role
 combination will be marked as inconsistent. These can be seen by calling the
 [get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata) API.
 Following the above example, the role `R` which is trying to inherit permissions from the role `pr1` and `pr2` will be
@@ -397,7 +397,7 @@ entity pair.
 
 ### 3. Actions and Custom Functions permissions
 
-Inheritance of permissions of actions and custom functions work in the following manner:
+Inheritance of permissions of Actions and custom functions work in the following manner:
 
 If any of the parent roles have permission configured for a given action or custom function, then the inherited role
 will also be able to access the given action or custom function.

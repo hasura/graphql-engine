@@ -17,21 +17,21 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Transfer existing Hasura Cloud project to a new project
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud</div>
 
 ## Introduction
 
-To transfer a project you will have to create a new Hasura project and configure it with the same Hasura metadata and
+To transfer a project you will have to create a new Hasura Project and configure it with the same Hasura Metadata and
 other configuration as in the previous project.
 
 The following is a guide to achieve this.
 
-## Step 1: Export metadata from existing project
+## Step 1: Export Metadata from existing project
 
-See [exporting metadata](/migrations-metadata-seeds/manage-metadata.mdx) to get a copy of the current Hasura metadata on
+See [exporting metadata](/migrations-metadata-seeds/manage-metadata.mdx) to get a copy of the current Hasura Metadata on
 your project.
 
-Do ensure no further changes are made to the Hasura metadata post this.
+Do ensure no further changes are made to the Hasura Metadata post this.
 
 ## Step 2: Create a new Cloud project with the same configuration
 
@@ -40,9 +40,9 @@ See `Step 1` of [creating projects](/projects/create.mdx) to create a new Hasura
 After project creation, update the Hasura Cloud configuration of the new project with the same configuration as the
 earlier project. i.e. add the same ENV vars, custom domains, collaborators, billing, etc.
 
-## Step 3: Apply the exported metadata to the new project
+## Step 3: Apply the exported Metadata to the new project
 
-See [applying metadata](/migrations-metadata-seeds/manage-metadata.mdx) to apply the earlier exported metadata to the
+See [applying metadata](/migrations-metadata-seeds/manage-metadata.mdx) to apply the earlier exported Metadata to the
 new project.
 
 The new project should now be generating the same GraphQL API as the earlier project.
@@ -53,7 +53,7 @@ See [deleting projects](/projects/delete.mdx) to delete the earlier project.
 
 ## Optional steps
 
-- If you are using Hasura migrations on your project, please mark all existing migrations as applied on the new project
+- If you are using Hasura Migrations on your project, please mark all existing Migrations as applied on the new project
   using the following Hasura CLI command:
 
   ```bash

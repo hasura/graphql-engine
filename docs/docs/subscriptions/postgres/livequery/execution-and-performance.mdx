@@ -21,7 +21,7 @@ from the database.
 
 ## Execution
 
-The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
+The Hasura GraphQL Engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
 of the query being made and not the individual events leading up to the result.
 
 Subscriptions, on start, will emit the result of the underlying query. Subsequently, results will be emitted only if the
@@ -54,10 +54,10 @@ The below figure shows multiplexing in action, where the 3 similar subscriptions
 batched into one SQL:
 
 <Thumbnail
-  src='/img/databases/postgres/subscriptions/subscription-multiplexing.png'
-  alt='Hasura subscription multiplexing AST'
-  width='900px'
-  className='no-shadow'
+  src="/img/databases/postgres/subscriptions/subscription-multiplexing.png"
+  alt="Hasura subscription multiplexing AST"
+  width="900px"
+  className="no-shadow"
 />
 
 In this case, all 3 subscriptions are multiplexed into 1 batch resulting in 1 SQL query which is run every 1 second. If
@@ -67,7 +67,7 @@ there is an update in the location, the appropriate client gets sent the updated
 
 ### Analyze
 
-Subscriptions can be 'Analyzed' (from the Analyze button in GraphiQl window of Hasura console) to see the generated
+Subscriptions can be 'Analyzed' (from the Analyze button in GraphiQl window of Hasura Console) to see the generated
 multiplexed SQL and its query plan. The query plan can reveal the bottlenecks in query execution and appropriate indexes
 can be added to improve performance.
 

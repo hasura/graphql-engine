@@ -15,11 +15,11 @@ Issues also marked as `help wanted` (see
 are those that require community contributions.
 
 Please note that some of these issues, labelled with both `c/docs` and `c/console`/`c/server`, are part of a change/task
-that requires modifications in some component of GraphQL engine and the docs.
+that requires modifications in some component of GraphQL Engine and the docs.
 
 Feel free to open pull requests to address these issues or to add/fix docs features/content, even if a corresponding
 issue doesn't exist. If you are unsure about whether to go ahead and work on something like the latter, please get in
-touch with the maintainers in the `GraphQL engine`->`contrib` channel in the community
+touch with the maintainers in the `GraphQL Engine`->`contrib` channel in the community
 [Discord](https://discord.gg/vBPpJkS).
 
 ## Notes

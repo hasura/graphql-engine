@@ -136,7 +136,7 @@ tools because of the architectural complexity. For more information, check out o
 
 Database connection management isn't an easy task, especially when scaling to multiple application nodes. There are
 common issues such as connection leaking, and maximum connections exceeded. If you use serverless applications for
-Actions/event triggers that connect directly to a database, connection leaking is unavoidable because every invocation
+Actions/Event Triggers that connect directly to a database, connection leaking is unavoidable because every invocation
 may result in a new connection to the database. This is especially true when the number of services has grown into the
 hundreds.
 

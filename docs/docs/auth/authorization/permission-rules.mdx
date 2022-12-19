@@ -20,7 +20,7 @@ import TOCInline from '@theme/TOCInline';
 Access control rules in Hasura are defined at a role, table and action (_insert, update, select, delete_) level
 granularity:
 
-<Thumbnail src='/img/auth/permission-rule-granularity.png' alt='Access control rules in Hasura' width='1000px' />
+<Thumbnail src="/img/auth/permission-rule-granularity.png" alt="Access control rules in Hasura" width="1000px" />
 
 Requests to Hasura should contain the reserved session variable `X-Hasura-Role` to indicate the requesting user's role,
 and the table and action information is inferred from the request itself. This information is used to determine the
@@ -34,7 +34,7 @@ on the data being returned or modified.
 
 Let's take a look at the different configuration options available to define a permission rule. Permission rules are
 defined for each role, table, operation (_insert, select, update, delete_) by using the Console or the
-[metadata APIs for permissions](/api-reference/metadata-api/permission.mdx).
+[Metadata APIs for permissions](/api-reference/metadata-api/permission.mdx).
 
 ## Operation permissions
 
@@ -96,9 +96,9 @@ See the [API reference](/api-reference/syntax-defs.mdx#metadataoperator) for a l
 
 **For example**, the following two images illustrate the different operators available for `integer` and `text` types:
 
-<Thumbnail src='/img/auth/operators-for-integer-types.png' alt='Column operators for integer types' width='400px' />
+<Thumbnail src="/img/auth/operators-for-integer-types.png" alt="Column operators for integer types" width="400px" />
 
-<Thumbnail src='/img/auth/operators-for-text-types.png' alt='Column operators for text types' width='400px' />
+<Thumbnail src="/img/auth/operators-for-text-types.png" alt="Column operators for text types" width="400px" />
 
 #### Using boolean expressions
 
@@ -110,7 +110,7 @@ the `id` column is greater than 10:
 
 You can define permissions using boolean expressions on the Hasura Console as follows:
 
-<Thumbnail src='/img/auth/simple-boolean-expression.png' alt='Using boolean expressions to build rules' width='600px' />
+<Thumbnail src="/img/auth/simple-boolean-expression.png" alt="Using boolean expressions to build rules" width="600px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -131,7 +131,7 @@ You can define permissions using boolean expressions in the
             _gt: 10
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -141,7 +141,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define permissions using boolean expressions when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example with a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example with a Postgres db:
 
 ```http {13-15}
 POST /v1/metadata HTTP/1.1
@@ -170,9 +170,9 @@ X-Hasura-Role: admin
 You can construct more complex boolean expressions using the `_and`, `_or` and `not` operators:
 
 <Thumbnail
-  src='/img/auth/boolean-operators.png'
-  alt='Using more complex boolean expressions to build rules'
-  width='600px'
+  src="/img/auth/boolean-operators.png"
+  alt="Using more complex boolean expressions to build rules"
+  width="600px"
 />
 
 **For example**, using the `_and` operator, you can construct a rule to restrict access for `select` to rows where the
@@ -184,16 +184,15 @@ value in the `id` column is greater than 10 **and** the value in the `name` colu
 You can define permissions using the `_and` operator on the Hasura Console as follows:
 
 <Thumbnail
-  src='/img/auth/composite-boolean-expression.png'
-  alt='Example of a rule with the _and operator'
-  width='600px'
+  src="/img/auth/composite-boolean-expression.png"
+  alt="Example of a rule with the _and operator"
+  width="600px"
 />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define permissions using the `_and` operator in the
-`metadata > databases > [database-name] > tables > [table-name].yaml` file eg:
+You can define permissions using the `_and` operator in the `metadata > databases > [database-name] > tables > [table-name].yaml` file eg:
 
 ```yaml {8-11}
 - table:
@@ -209,7 +208,7 @@ You can define permissions using the `_and` operator in the
             - name: { _ilike: a% }
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -219,7 +218,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define permissions using the `_and` operator when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example with a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example with a Postgres db:
 
 ```http {13-26}
 POST /v1/metadata HTTP/1.1
@@ -271,9 +270,9 @@ is equal to the value in the session variable (_assuming this variable is being 
 You can define session variables in permissions on the Hasura Console:
 
 <Thumbnail
-  src='/img/auth/session-variables-in-permissions-simple-example.png'
-  alt='Using session variables to build rules'
-  width='600px'
+  src="/img/auth/session-variables-in-permissions-simple-example.png"
+  alt="Using session variables to build rules"
+  width="600px"
 />
 
 </TabItem>
@@ -297,7 +296,7 @@ You can define session variables in permissions in the
             _eq: X-Hasura-User-Id
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -307,7 +306,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define session variables in permissions tables when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {13-15}
 POST /v1/metadata HTTP/1.1
@@ -360,9 +359,9 @@ object relationship:
 You can use a nested object to build rules on the Hasura Console:
 
 <Thumbnail
-  src='/img/auth/nested-object-permission-simple-example.png'
-  alt='Using a nested object to build rules'
-  width='600px'
+  src="/img/auth/nested-object-permission-simple-example.png"
+  alt="Using a nested object to build rules"
+  width="600px"
 />
 
 </TabItem>
@@ -385,7 +384,7 @@ You add permissions using relationships or nested objects in the
               _eq: X-Hasura-User-Id
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -395,7 +394,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You add permissions using relationships or nested objects when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {13-19}
 POST /v1/metadata HTTP/1.1
@@ -451,7 +450,7 @@ variable.
 
 You can set permissions using unrelated tables on the Hasura Console as follows:
 
-<Thumbnail src='/img/auth/exists-permission-example.png' alt='Use an unrelated table to build rules' width='900px' />
+<Thumbnail src="/img/auth/exists-permission-example.png" alt="Use an unrelated table to build rules" width="900px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -481,7 +480,7 @@ You can set permissions using unrelated tables in the
           - title
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -491,7 +490,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can set permissions for unrelated tables when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {13-27}
 POST /v1/metadata HTTP/1.1
@@ -541,7 +540,7 @@ Column-level permissions determine access to columns in the rows that are access
 
 Column-level permissions are simple selections on the Hasura Console:
 
-<Thumbnail src='/img/auth/column-level-permissions.png' alt='Column level permissions' width='600px' />
+<Thumbnail src="/img/auth/column-level-permissions.png" alt="Column level permissions" width="600px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -566,7 +565,7 @@ eg:
             _eq: X-Hasura-User-Id
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -576,7 +575,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can set column-level permissions when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {12-17}
 POST /v1/metadata HTTP/1.1
@@ -619,7 +618,7 @@ configuration:
 
 You can set a row fetch limit on the Hasura Console as follows:
 
-<Thumbnail src='/img/auth/limit-rows-for-select.png' alt='Row fetch limit' width='600px' />
+<Thumbnail src="/img/auth/limit-rows-for-select.png" alt="Row fetch limit" width="600px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -643,7 +642,7 @@ file, eg:
         limit: 20
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -653,7 +652,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can a row fetch limit for a table when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {18}
 POST /v1/metadata HTTP/1.1
@@ -695,7 +694,7 @@ enabled for a given role using this configuration.
 
 You can enable aggregation queries permissions on the Hasura Console as follows:
 
-<Thumbnail src='/img/auth/aggregation-query-permissions.png' alt='Aggregation queries permissions' width='600px' />
+<Thumbnail src="/img/auth/aggregation-query-permissions.png" alt="Aggregation queries permissions" width="600px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -719,7 +718,7 @@ file, eg:
         allow_aggregations: true
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -729,7 +728,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can allow aggregation query permissions when using the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {19}
 POST /v1/metadata HTTP/1.1
@@ -773,7 +772,7 @@ avoid sending sensitive user-information in the request and leverage session var
 
 You can define column presets for either `insert` or `update` operations in the Hasura Console as follows:
 
-<Thumbnail src='/img/auth/set_column_preset_console_2.10.1.png' alt='Set column preset' width='1000px' />
+<Thumbnail src="/img/auth/set_column_preset_console_2.10.1.png" alt="Set column preset" width="1000px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -795,7 +794,7 @@ insert_permissions:
         - id
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -804,9 +803,8 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can define column presets with either the [insert](/api-reference/syntax-defs.mdx#insertpermission) or
-[update](/api-reference/syntax-defs.mdx#updatepermission)
-[permissions metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
+You can define column presets with either the [insert](/api-reference/syntax-defs.mdx#insertpermission) or [update](/api-reference/syntax-defs.mdx#updatepermission)
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Postgres db:
 
 ```http {15-20}
 POST /v1/metadata HTTP/1.1
@@ -855,9 +853,9 @@ Setting `backend-only` is currently available for insert, update and delete muta
 You can set a mutate permission for a role as backend only in the Hasura Console as follows:
 
 <Thumbnail
-  src='/img/auth/allow-backends-only_console_2.10.1.png'
-  alt='Allow backends only in Hasura console'
-  width='600px'
+  src="/img/auth/allow-backends-only_console_2.10.1.png"
+  alt="Allow backends only in Hasura Console"
+  width="600px"
 />
 
 </TabItem>
@@ -888,6 +886,7 @@ delete_permissions:
 <TabItem value="api" label="API">
 
 You can set a mutate permission for a role as backend only with the Metadata API and the
+
 [insert](/api-reference/syntax-defs.mdx#insertpermission), [update](/api-reference/syntax-defs.mdx#updatepermission) or
 [delete](/api-reference/syntax-defs.mdx#deletepermission) permissions.
 
@@ -922,7 +921,7 @@ X-Hasura-Role: admin
 
 :::tip Supported from
 
-Back-end only permissions for `update` and `delete` mutations are supported in Hasura GraphQL engine versions `v2.8.0`
+Back-end only permissions for `update` and `delete` mutations are supported in Hasura GraphQL Engine versions `v2.8.0`
 and above.
 
 :::
@@ -946,15 +945,16 @@ Disabling root fields is supported in version `v2.8.0` and above.
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+
 <TabItem value="console" label="Console">
 
 You can disable specific root fields for query and subscription by unchecking them in the Select permission for the
 table and role in Console as follows:
 
 <Thumbnail
-  src='/img/auth/disable-root-fields_console_2.11.1.png'
-  alt='Disable root fields in Hasura console'
-  width='600px'
+  src="/img/auth/disable-root-fields_console_2.11.1.png"
+  alt="Disable root fields in Hasura Console"
+  width="600px"
 />
 
 </TabItem>
@@ -997,8 +997,9 @@ all fields are allowed and an empty array means no fields are allowed.
 <TabItem value="api" label="API">
 
 You can disable root fields for Select permissions with the
-[permissions metadata API](/api-reference/metadata-api/permission.mdx) by specifying which should be available in the
-`query_root_fields` and `subscription_root_fields` arrays, eg:
+
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx) by specifying which should be available in
+the `query_root_fields` and `subscription_root_fields` arrays, eg:
 
 ```http {16,17}
 POST /v1/metadata HTTP/1.1
@@ -1050,13 +1051,14 @@ We would like to configure permissions of the `guest` role such that they are on
 Modifying the select permission of the `articles` table:
 
 <Thumbnail
-  src='/img/auth/disable-all-root-fields_console_2.11.1.png'
-  alt='Disable root fields in Hasura console'
-  width='600px'
+  src="/img/auth/disable-all-root-fields_console_2.11.1.png"
+  alt="Disable root fields in Hasura Console"
+  width="600px"
 />
 
-Note that `query_root_fields` and `subscription_root_fields` are set to `[]`, which means that the `guest` role won't be
-able to access the `articles` table directly, but will be able to access it through the `articles` relationship.
+Note that `query_root_fields` and `subscription_root_fields` are set to `[]`, which means that the `guest` role
+won't be able to access the `articles` table directly, but will be able to access it through the `articles`
+relationship.
 
 :::caution
 
@@ -1076,9 +1078,9 @@ In this case, regardless of the permission on the table, only `<table>_by_pk` sh
 This can be done in the following way:
 
 <Thumbnail
-  src='/img/auth/disable-select-root-fields_console_2.11.1.png'
-  alt='Disable select root fields in Hasura console'
-  width='600px'
+  src="/img/auth/disable-select-root-fields_console_2.11.1.png"
+  alt="Disable select root fields in Hasura Console"
+  width="600px"
 />
 
 ##### 3. Disable subscription fields
@@ -1088,9 +1090,9 @@ You can allow a role to only be able to make query and not subscription requests
 This can be done in the following way:
 
 <Thumbnail
-  src='/img/auth/disable-subscription-root-fields_console_2.11.1.png'
-  alt='Disable subscription root fields inHasura console'
-  width='600px'
+  src="/img/auth/disable-subscription-root-fields_console_2.11.1.png"
+  alt="Disable subscription root fields in Hasura Console"
+  width="600px"
 />
 
 :::info Additional Resources

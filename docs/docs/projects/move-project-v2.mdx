@@ -18,7 +18,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Updating Hasura Cloud v1.3 projects to Hasura v2.0
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud</div>
 
 ## Introduction
 
@@ -30,10 +30,10 @@ changes in `v2.0`, existing projects have not been auto-updated to `v2.0`. You c
 
 :::info Note
 
-In case you happen to have a large number of past cron and event trigger logs in your database, this might slow down the
+In case you happen to have a large number of past cron and Event Trigger logs in your database, this might slow down the
 update to v2 and might even cause DB errors in certain scenarios.
 
-**It is highly recommended to clean up past cron and event trigger logs data from the database before attempting the
+**It is highly recommended to clean up past cron and Event Trigger logs data from the database before attempting the
 update if you have a lot of historical data.**
 
 You can take a dump of this data before cleaning up if you wish to keep the log history.
@@ -46,7 +46,7 @@ Check the [core updating to v2.0 guide](/resources/upgrade-hasura-v2.mdx) and th
 [release notes](https://github.com/hasura/graphql-engine/releases) to see what new concepts, features and behaviour
 changes have been introduced in Hasura `v2.0`.
 
-Note that Hasura v2 Cloud projects' metadata is now stored in metadata DBs managed by Hasura Cloud. Hence the new
+Note that Hasura v2 Cloud projects' Metadata is now stored in Metadata DBs managed by Hasura Cloud. Hence the new
 `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var is not configurable on Hasura Cloud and is managed by Hasura Cloud
 itself.
 
@@ -65,7 +65,7 @@ complete.
 When **Cloud maintenance mode** is enabled, all Hasura Cloud project actions such as updating env vars, transferring
 ownership, etc. will be disabled.
 
-When **Server maintenance mode** is enabled, all actions updating the project metadata such as tracking tables, adding
+When **Server maintenance mode** is enabled, all actions updating the project Metadata such as tracking tables, adding
 relationships, etc. will be disabled.
 
 Hence it is recommended to update your project at a time convenient to all project collaborators.
@@ -96,7 +96,7 @@ If you do not see the option to update your project as mentioned below, please r
 To start the update, you should see a button called `Update` next to your project on the Project list page as shown
 below:
 
-<Thumbnail src='/img/projects/update-project.png' alt='Update project' width='700px' />
+<Thumbnail src="/img/projects/update-project.png" alt="Update project" width="700px" />
 
 Clicking on this button will trigger an update job that will perform a few tasks to update your current `v1.3` project
 to `v2.0`.
@@ -150,7 +150,7 @@ assistance.
 
 ###### Sub-tasks:
 
-- Take a backup of server metadata from user database & move metadata to cloud metadata database
+- Take a backup of server Metadata from user database & move Metadata to cloud Metadata database
 
 ###### On Failure:
 
@@ -179,7 +179,7 @@ assistance.
 
 - Send signal to shutdown `v1.3` instance
 - Wait for `v1.3` to gracefully shutdown after completing processing of any in-flight events
-- Migrate pending events, async actions data to cloud metadata database
+- Migrate pending events, async actions data to cloud Metadata database
 
 ###### On Failure:
 
@@ -193,7 +193,7 @@ assistance.
 
 ###### Sub-tasks:
 
-- Migrate invocation logs of processed events, async actions to cloud metadata database
+- Migrate invocation logs of processed events, async actions to cloud Metadata database
 
 ###### On Failure:
 
@@ -217,16 +217,16 @@ assistance.
   `false`
 - Contact support if your project is in an unexpected state
 
-##### Step 3.2: Check metadata consistency {#v2-update-check-consistency}
+##### Step 3.2: Check Metadata consistency {#v2-update-check-consistency}
 
 ###### Sub-tasks:
 
-- Check if metadata is consistent
+- Check if Metadata is consistent
 
 ###### On Failure:
 
 - **No action taken. Job continues to next task**
-- Check your project metadata status on the console _(Settings (⚙) -> Metadata status)_ and attempt reloading metadata
+- Check your project Metadata status on the Console _(Settings (⚙) -> Metadata status)_ and attempt reloading metadata
   if there is an unexpected inconsistency reported. Contact support if the inconsistency doesn't go away on metadata
   reload.
 

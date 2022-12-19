@@ -21,7 +21,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 to expose the results of a custom query as a virtual table. Views are not persisted physically i.e. the query defining a
 view is executed whenever data is requested from the view.
 
-Hasura GraphQL engine lets you expose views over the GraphQL API to allow querying them using both `queries` and
+Hasura GraphQL Engine lets you expose views over the GraphQL API to allow querying them using both `queries` and
 `subscriptions` just like regular tables.
 
 ## Creating views {#ms-sql-server-create-views}
@@ -29,9 +29,9 @@ Hasura GraphQL engine lets you expose views over the GraphQL API to allow queryi
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Views can be created using SQL which can be run in the Hasura console:
+Views can be created using SQL which can be run in the Hasura Console:
 
-- Head to the `Data -> SQL` section of the Hasura console
+- Head to the `Data -> SQL` section of the Hasura Console
 - Enter your
   [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
 - Hit the `Run` button
@@ -44,7 +44,7 @@ Views can be created using SQL which can be run in the Hasura console:
     [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
     to the `up.sql` file. Also, add an SQL statement to the `down.sql` file that reverts the previous statement.
 
-2.  Apply the migration and metadata by running:
+2.  Apply the Migration and Metadata by running:
 
     ```bash
     hasura migrate apply
@@ -53,7 +53,7 @@ Views can be created using SQL which can be run in the Hasura console:
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a view by using the [schema_run_sql metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
+You can add a view by using the [schema_run_sql Metadata API](/api-reference/schema-api/run-sql.mdx#schema-run-sql):
 
 ```http
 POST /v2/query HTTP/1.1
@@ -85,7 +85,7 @@ GraphQL API right after creation.
 
 You can track any existing views in your database from the `Data -> Schema` page:
 
-<Thumbnail src='/img/schema/schema-track-views.png' alt='Track views' />
+<Thumbnail src="/img/schema/schema-track-views.png" alt="Track views" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -105,7 +105,7 @@ You can track any existing views in your database from the `Data -> Schema` page
         name: <name of view>
     ```
 
-2.  Apply the metadata by running:
+2.  Apply the Metadata by running:
 
     ```bash
     hasura metadata apply
@@ -115,7 +115,7 @@ You can track any existing views in your database from the `Data -> Schema` page
 <TabItem value="api" label="API">
 
 To track the view and expose it over the GraphQL API, make the following API call to the
-[mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
+[mssql_track_table Metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1

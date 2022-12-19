@@ -13,15 +13,18 @@ slug: glossary/index
 # Glossary
 
 ## Docker
+
 Docker is a system which allows the packaging up of code and all its dependencies so the an application runs
 quickly and reliably from one computing environment to another.
 
 ## Docker container
+
 A Docker container image is a lightweight, standalone, executable package of software that includes everything
 needed to run an application: code, runtime, system tools, system libraries and settings. Hasura can be run as a
 Docker container.
 
 ## Docker image
+
 Docker images become containers at runtime and in the case of Docker containers – images become containers
 when they run on Docker Engine which is available for both Linux and Windows-based applications, containerized
 software will always run the same, regardless of the infrastructure. Containers isolate software from its
@@ -30,19 +33,22 @@ Hasura is distributed as a Docker image for the Community Edition at
 [DockerHub](https://hub.docker.com/r/hasura/graphql-engine).
 
 ## GraphQL schema
+
 Every GraphQL service defines a set of types which completely describe the set of possible data you can query on
 that service. This is called the GraphQL schema. Hasura automatically generates a GraphQL Schema for you from the
 tables in your connected databases, Hasura Actions you've defined, and other connected GraphQL or REST endpoints.
 When queries come in, they are validated and executed against that schema.
 
 ## GraphQL query type
+
 Every GraphQL service has a `query` type and may or may not have a mutation type. These types are the same as a
 regular object type, but they are special because they define the entry point of every GraphQL query. In Hasura the
 query type is generated for you in order to get data from your schema.
 
-[//]: # (TODO query types per table)
+[//]: # 'TODO query types per table'
 
 ## GraphQL mutation type
+
 The GraphQL `mutation` type is an optional type in the GraphQL specification but will be available to you on every
 configured Hasura endpoint in order to change or "mutate" data on your database, action or Remote Schema endpoints.
 
@@ -51,9 +57,10 @@ configured Hasura endpoint in order to change or "mutate" data on your database,
 The container(s) serving the GraphQL API and in the critical path of every request/response.
 
 ## Hasura account
-An account on [hasura.io](https://hasura.io) in which multiple cloud instances of Hasura Cloud can be created.
 
-## Hasura GraphQL engine
+An account on [hasura.io](https://hasura.io) in which multiple instances of Hasura Cloud can be created.
+
+## Hasura GraphQL Engine
 
 The Docker container(s) serving the GraphQL API and in the critical path of every request/response.
 
@@ -68,7 +75,7 @@ request in Hasura Pro metrics and monitoring tools.
 
 ## Hasura Cloud
 
-The cloud managed, optimised and massively scalable version of Hasura with the option to add the Hasura Enterprise
+The cloud-managed, optimised and massively scalable version of Hasura with the option to add the Hasura Enterprise
 Edition package and runs as a managed service. Hasura Cloud includes extra reliability, monitoring, caching, tracing,
 security and deployment features which aren't available in Hasura Community Edition.
 
@@ -81,9 +88,9 @@ able to connect to your database and the GraphQL API will not be available.
 
 ## Hasura Cloud Project
 
-A Project is an individual GraphQL API hosted by Hasura Cloud. You can create a Project by going to the cloud
-dashboard and then connecting a database from the Hasura console. You can also provision a database on cloud
-platforms like Heroku from the Hasura console itself.
+A Project is an individual GraphQL API hosted by Hasura Cloud. You can create a Project by going to the Hasura Cloud
+dashboard and then connecting a database from the Hasura Console. You can also provision a database on cloud
+platforms like Heroku from the Hasura Console itself.
 
 Each project is allocated a unique auto-generated name and an ID. You can use this name or ID while communicating to
 Hasura team regarding this project. Each project is also assigned a GraphQL API endpoint of the format
@@ -94,7 +101,7 @@ For example, a project might be called `usable-cobra-29` with ID `bf0ea856-76a2-
 ## Hasura Collaborator Token
 
 When you open the Hasura Console on a Cloud Project, you will not be asked to enter the admin secret like Hasura
-Community Edition version. Instead, if you are an admin, the console will be accessible with the admin secret already
+Community Edition version. Instead, if you are an admin, the Console will be accessible with the admin secret already
 set, or if you are a collaborator with limited access you will be automatically logged into the Console via an
 OAuth2.0 based authorization flow. You will be given the right access based on your permissions for the particular
 Hasura Cloud Project.
@@ -115,4 +122,3 @@ Hasura Enterprise edition that includes a self-hosted control plane.
 A set of services that powers the Hasura Enterprise Edition Control Plane that allows for user/team management,
 managing Hasura GraphQL configuration and includes a monitoring plane that ingests Hasura & GraphQL API metrics and
 makes it available over a UI and an API.
-

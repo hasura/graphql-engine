@@ -1,9 +1,9 @@
 ---
-description: Hasura metadata API reference
+description: Hasura Metadata API reference
 keywords:
   - hasura
   - docs
-  - metadata API
+  - Metadata API
   - API reference
 slug: index
 ---
@@ -12,13 +12,13 @@ slug: index
 
 ## Introduction
 
-The metadata API is primarily intended to be used as an `admin` API to
-manage the Hasura metadata.
+The Metadata API is primarily intended to be used as an `admin` API to
+manage the Hasura Metadata.
 
 :::tip Supported from
 
-The metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/metadata API](/api-reference/schema-metadata-api/index.mdx).
+The Metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -46,9 +46,9 @@ The structure of args depends on the type and version.
 <div className="parsed-literal">
 
 <pre>
-<code>
-<a href="#metadata-query">Query</a>
-</code>
+  <code>
+    <a href="#metadata-query">Query</a>
+  </code>
 </pre>
 
 </div>
@@ -56,7 +56,7 @@ The structure of args depends on the type and version.
 #### Query {#metadata-query}
 
 | Key              | Required | Schema     | Description                                                    |
-|------------------|----------|------------|----------------------------------------------------------------|
+| ---------------- | -------- | ---------- | -------------------------------------------------------------- |
 | type             | true     | String     | Type of the query                                              |
 | resource_version | false    | Integer    | Version of the resource that you are targeting for replacement |
 | args             | true     | JSON Value | The arguments to the query                                     |
@@ -67,7 +67,7 @@ The structure of args depends on the type and version.
 The various types of queries are listed in the following table:
 
 | `type`                                                                                                                                             | `args`                                                                                                                                                         | `version` | Synopsis                                                                |
-|----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|-------------------------------------------------------------------------|
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ----------------------------------------------------------------------- |
 | **bulk**                                                                                                                                           | [Query](#metadata-query) array                                                                                                                                 | 1         | Execute multiple operations in a single query                           |
 | [pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source)                                                                     | [pg_add_source_args](/api-reference/metadata-api/source.mdx#metadata-pg-add-source-syntax)                                                                     | 1         | Add a Postgres database                                                 |
 | [pg_drop_source](/api-reference/metadata-api/source.mdx#metadata-pg-drop-source)                                                                   | [pg_drop_source_args](/api-reference/metadata-api/source.mdx#metadata-pg-drop-source-syntax)                                                                   | 1         | Remove a Postgres database                                              |
@@ -97,8 +97,8 @@ The various types of queries are listed in the following table:
 | [pg_create_delete_permission](/api-reference/metadata-api/permission.mdx#metadata-pg-create-delete-permission)                                     | [pg_create_delete_permission_args](/api-reference/metadata-api/permission.mdx#metadata-pg-create-delete-permission-syntax)                                     | 1         | Specify delete permission for a Postgres table/view                     |
 | [pg_drop_delete_permission](/api-reference/metadata-api/permission.mdx#metadata-pg-drop-delete-permission)                                         | [pg_drop_delete_permission_args](/api-reference/metadata-api/permission.mdx#metadata-pg-drop-delete-permission-syntax)                                         | 1         | Remove existing delete permission for a Postgres table/view             |
 | [pg_set_permission_comment](/api-reference/metadata-api/permission.mdx#metadata-pg-set-permission-comment)                                         | [pg_set_permission_comment_args](/api-reference/metadata-api/permission.mdx#metadata-pg-set-permission-comment-syntax)                                         | 1         | Set comment on an existing permission for a Postgres table/view         |
-| [pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger)                                         | [pg_create_event_trigger_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger-syntax)                                         | 1         | Create or replace an event trigger on a Postgres table                  |
-| [pg_delete_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-delete-event-trigger)                                         | [pg_delete_event_trigger_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-delete-event-trigger-syntax)                                         | 1         | Delete an existing event trigger on a Postgres table                    |
+| [pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger)                                         | [pg_create_event_trigger_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger-syntax)                                         | 1         | Create or replace an Event Trigger on a Postgres table                  |
+| [pg_delete_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-delete-event-trigger)                                         | [pg_delete_event_trigger_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-delete-event-trigger-syntax)                                         | 1         | Delete an existing Event Trigger on a Postgres table                    |
 | [pg_redeliver_event](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-redeliver-event)                                                   | [pg_redeliver_event_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-redeliver-event-syntax)                                                   | 1         | Redeliver an existing event on a Postgres table                         |
 | [pg_invoke_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-invoke-event-trigger)                                         | [pg_invoke_event_trigger_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-invoke-event-trigger-syntax)                                         | 1         | Invoke a trigger with custom payload on a Postgres table                |
 | [pg_set_apollo_federation_config](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-apollo-federation-config)                             | [pg_set_apollo_federation_config_args](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-apollo-federation-config-syntax)                             | 1         | Set Apollo Federaion configuration of an already tracked postgres table |
@@ -133,18 +133,18 @@ The various types of queries are listed in the following table:
 | [delete_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-delete-cron-trigger)                                             | [delete_cron_trigger_args](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-delete-cron-trigger-syntax)                                             | 1         | Delete an existing cron trigger                                         |
 | [get_cron_triggers](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-cron-triggers)                                                 | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Returns all the cron triggers                                           |
 | [get_scheduled_events](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-scheduled-events)                                           | [get_scheduled_events_args](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-scheduled-events-syntax)                                           | 1         | API to fetch scheduled events                                           |
-| [get_scheduled_event_invocations](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-scheduled-event-invocations)                     | [get_scheduled_event_invocations_args](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-scheduled-event-invocations-syntax)                          | 1         | API to fetch scheduled event's invocations                              |
+| [get_scheduled_event_invocations](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-scheduled-event-invocations)                     | [get_scheduled_event_invocations_args](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-get-scheduled-event-invocations-syntax)                     | 1         | API to fetch scheduled event's invocations                              |
 | [create_scheduled_event](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-scheduled-event)                                       | [create_scheduled_event_args](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-scheduled-event-syntax)                                       | 1         | Create a new scheduled event                                            |
 | [delete_scheduled_event](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-delete-scheduled-event)                                       | [delete_scheduled_event_args](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-delete-scheduled-event-syntax)                                       | 1         | Delete a scheduled event                                                |
-| [cleanup_event_trigger_logs](/api-reference/metadata-api/event-triggers.mdx#metadata-cleanup-event-trigger-logs)                                   | [cleanup_event_trigger_logs_args](/api-reference/metadata-api/event-triggers.mdx#metadata-cleanup-event-trigger-logs-syntax)                                   | 1         | Manually delete event trigger logs                                      |
-| [resume_event_trigger_cleanups](/api-reference/metadata-api/event-triggers.mdx#metadata-resume-event-trigger-cleanups)                             | [resume_event_trigger_cleanups_args](/api-reference/metadata-api/event-triggers.mdx#metadata-resume-event-trigger-cleanups-syntax)                             | 1         | Resume log cleaner for event triggers                                   |
-| [pause_event_trigger_cleanups](/api-reference/metadata-api/event-triggers.mdx#metadata-pause-event-trigger-cleanups)                               | [pause_event_trigger_cleanups_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pause-event-trigger-cleanups-syntax)                               | 1         | Pause log cleaner for event triggers                                    |
-| [add_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema)                                                     | [add_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema-syntax)                                                     | 1         | Add a remote GraphQL server as a remote schema                          |
-| [update_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-update-remote-schema)                                               | [update_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-update-remote-schema-syntax)                                               | 1         | Update the details for a remote schema                                  |
-| [remove_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-remove-remote-schema)                                               | [remove_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-remove-remote-schema-syntax)                                               | 1         | Remove an existing remote schema                                        |
-| [reload_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-reload-remote-schema)                                               | [reload_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-reload-remote-schema-syntax)                                               | 1         | Reload schema of an existing remote schema                              |
-| [add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions)                  | [add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions-syntax)                       | 1         | Add permissions to a role of an existing remote schema                  |
-| [drop_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-drop-remote-schema-permissions)                | [drop_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-drop-remote-schema-permissions-syntax)                     | 1         | Drop existing permissions defined for a role for a remote schema        |
+| [cleanup_event_trigger_logs](/api-reference/metadata-api/event-triggers.mdx#metadata-cleanup-event-trigger-logs)                                   | [cleanup_event_trigger_logs_args](/api-reference/metadata-api/event-triggers.mdx#metadata-cleanup-event-trigger-logs-syntax)                                   | 1         | Manually delete Event Trigger logs                                      |
+| [resume_event_trigger_cleanups](/api-reference/metadata-api/event-triggers.mdx#metadata-resume-event-trigger-cleanups)                             | [resume_event_trigger_cleanups_args](/api-reference/metadata-api/event-triggers.mdx#metadata-resume-event-trigger-cleanups-syntax)                             | 1         | Resume log cleaner for Event Triggers                                   |
+| [pause_event_trigger_cleanups](/api-reference/metadata-api/event-triggers.mdx#metadata-pause-event-trigger-cleanups)                               | [pause_event_trigger_cleanups_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pause-event-trigger-cleanups-syntax)                               | 1         | Pause log cleaner for Event Triggers                                    |
+| [add_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema)                                                     | [add_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema-syntax)                                                     | 1         | Add a remote GraphQL server as a Remote Schema                          |
+| [update_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-update-remote-schema)                                               | [update_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-update-remote-schema-syntax)                                               | 1         | Update the details for a Remote Schema                                  |
+| [remove_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-remove-remote-schema)                                               | [remove_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-remove-remote-schema-syntax)                                               | 1         | Remove an existing Remote Schema                                        |
+| [reload_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-reload-remote-schema)                                               | [reload_remote_schema_args](/api-reference/metadata-api/remote-schemas.mdx#metadata-reload-remote-schema-syntax)                                               | 1         | Reload schema of an existing Remote Schema                              |
+| [add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions)                  | [add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions-syntax)                       | 1         | Add permissions to a role of an existing Remote Schema                  |
+| [drop_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-drop-remote-schema-permissions)                | [drop_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-drop-remote-schema-permissions-syntax)                     | 1         | Drop existing permissions defined for a role for a Remote Schema        |
 | [pg_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)                       | [pg_create_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship-syntax)                       | 1         | Create a remote relationship on a Postgres table                        |
 | [pg_update_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-update-remote-relationship)                       | [pg_update_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-update-remote-relationship-syntax)                       | 1         | Update an existing remote relationship                                  |
 | [pg_delete_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-delete-remote-relationship)                       | [pg_delete_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-delete-remote-relationship-syntax)                       | 1         | Delete an existing remote relationship                                  |
@@ -157,17 +157,17 @@ The various types of queries are listed in the following table:
 | [bigquery_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-create-remote-relationship)           | [bigquery_create_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-create-remote-relationship-syntax)           | 1         | Create a remote relationship on a bigquery table                        |
 | [bigquery_update_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-update-remote-relationship)           | [bigquery_update_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-update-remote-relationship-syntax)           | 1         | Update an existing remote relationship                                  |
 | [bigquery_delete_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-delete-remote-relationship)           | [bigquery_delete_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-delete-remote-relationship-syntax)           | 1         | Delete an existing remote relationship                                  |
-| [create_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship) | [create_remote_schema_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship-syntax) | 1         | Create a remote relationship on a remote schema's type                  |
-| [update_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship) | [update_remote_schema_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship-syntax) | 1         | Update an existing remote relationship on a remote schema's type        |
-| [delete_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-delete-remote-schema-remote-relationship) | [delete_remote_schema_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-delete-remote-schema-remote-relationship-syntax) | 1         | Delete an existing remote relationship on a remote schema's type        |
-| [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)                                                        | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Export the current metadata                                             |
-| [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)                                                        | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 2         | Export existing metadata with resource version included.                |
-| [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata)                                                      | [replace_metadata_args](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata-syntax)                                                      | 1         | Import and replace existing metadata                                    |
-| [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata)                                                      | [replace_metadata_args](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata-syntax)                                                      | 2         | Replace existing metadata with check against current resource_version.  |
+| [create_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship) | [create_remote_schema_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship-syntax) | 1         | Create a remote relationship on a Remote Schema's type                  |
+| [update_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship) | [update_remote_schema_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship-syntax) | 1         | Update an existing remote relationship on a Remote Schema's type        |
+| [delete_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-delete-remote-schema-remote-relationship) | [delete_remote_schema_remote_relationship_args](/api-reference/metadata-api/remote-relationships.mdx#metadata-delete-remote-schema-remote-relationship-syntax) | 1         | Delete an existing remote relationship on a Remote Schema's type        |
+| [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)                                                        | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Export the current Metadata                                             |
+| [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)                                                        | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 2         | Export existing Metadata with resource version included.                |
+| [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata)                                                      | [replace_metadata_args](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata-syntax)                                                      | 1         | Import and replace existing Metadata                                    |
+| [replace_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata)                                                      | [replace_metadata_args](/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata-syntax)                                                      | 2         | Replace existing Metadata with check against current resource_version.  |
 | [reload_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-reload-metadata)                                                        | [reload_metadata_args](/api-reference/metadata-api/manage-metadata.mdx#metadata-reload-metadata-syntax)                                                        | 1         | Reload changes to the underlying Postgres DB                            |
-| [clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata)                                                          | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Clear/wipe-out the current metadata state form server                   |
-| [get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata)                                    | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | List all inconsistent metadata objects                                  |
-| [drop_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-drop-inconsistent-metadata)                                  | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Drop all inconsistent metadata objects                                  |
+| [clear_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata)                                                          | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Clear/wipe-out the current Metadata state form server                   |
+| [get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata)                                    | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | List all inconsistent Metadata objects                                  |
+| [drop_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-drop-inconsistent-metadata)                                  | [Empty Object](/api-reference/syntax-defs.mdx#empty-object)                                                                                                    | 1         | Drop all inconsistent Metadata objects                                  |
 | [create_query_collection](/api-reference/metadata-api/query-collections.mdx#metadata-create-query-collection)                                      | [create_query_collection_args](/api-reference/metadata-api/query-collections.mdx#metadata-create-query-collection-syntax)                                      | 1         | Create a query collection                                               |
 | [rename_query_collection](/api-reference/metadata-api/query-collections.mdx#metadata-rename-query-collection)                                      | [rename_query_collection_args](/api-reference/metadata-api/query-collections.mdx#metadata-rename-query-collection-syntax)                                      | 1         | Rename a query collection                                               |
 | [drop_query_collection](/api-reference/metadata-api/query-collections.mdx#metadata-drop-query-collection)                                          | [drop_query_collection_args](/api-reference/metadata-api/query-collections.mdx#metadata-drop-query-collection-syntax)                                          | 1         | Drop a query collection                                                 |
@@ -199,8 +199,8 @@ TODO: MSSQL_UNSUPPORTED
 | `mssql_drop_function_permission`                                                  | `mssql_drop_function_permission_args <mssql_drop_function_permission_syntax>`                              | 1         | Drop an existing MS SQL Server function permission                     |
 | `mssql_add_computed_field`                                                        | `mssql_add_computed_field_args <mssql_add_computed_field_syntax>`                                          | 1         | Add a computed field to an MS SQL Server table/view                    |
 | `mssql_drop_computed_field`                                                       | `mssql_drop_computed_field_args <mssql_drop_computed_field_syntax>`                                        | 1         | Drop an MS SQL Server computed field                                   |
-| `mssql_create_event_trigger`                                                      | `mssql_create_event_trigger_args <mssql_create_event_trigger_syntax>`                                      | 1         | Create or replace an event trigger on an MS SQL Server table           |
-| `mssql_delete_event_trigger`                                                      | `mssql_delete_event_trigger_args <mssql_delete_event_trigger_syntax>`                                      | 1         | Delete an existing event trigger on an MS SQL Server table             |
+| `mssql_create_event_trigger`                                                      | `mssql_create_event_trigger_args <mssql_create_event_trigger_syntax>`                                      | 1         | Create or replace an Event Trigger on an MS SQL Server table           |
+| `mssql_delete_event_trigger`                                                      | `mssql_delete_event_trigger_args <mssql_delete_event_trigger_syntax>`                                      | 1         | Delete an existing Event Trigger on an MS SQL Server table             |
 | `mssql_redeliver_event`                                                           | `mssql_redeliver_event_args <mssql_redeliver_event_syntax>`                                                | 1         | Redeliver an existing event on an MS SQL Server table                  |
 | `mssql_invoke_event_trigger`                                                      | `mssql_invoke_event_trigger_args <mssql_invoke_event_trigger_syntax>`                                      | 1         | Invoke a trigger with custom payload on an MS SQL Server table         |
 
@@ -224,25 +224,25 @@ TODO: MSSQL_UNSUPPORTED
 
 ## Response structure
 
-| Status code | Description           | Response structure                      |
-|-------------|-----------------------|-----------------------------------------|
-| 200         | Success               | Request specific                        |
-| 400         | Bad request           | `{ "path"  : String, "error" : String}` |
-| 401         | Unauthorized          | `{"error" : String}`                    |
-| 500         | Internal server error | `{"error" : String}`                    |
+| Status code | Description           | Response structure                     |
+| ----------- | --------------------- | -------------------------------------- |
+| 200         | Success               | Request specific                       |
+| 400         | Bad request           | `{ "path" : String, "error" : String}` |
+| 401         | Unauthorized          | `{"error" : String}`                   |
+| 500         | Internal server error | `{"error" : String}`                   |
 
-## Disabling metadata API
+## Disabling Metadata API
 
 Since this API can be used to make changes to the GraphQL schema, it can
 be disabled, especially in production deployments.
 
 The `enabled-apis` flag or the `HASURA_GRAPHQL_ENABLED_APIS` env var can
-be used to enable/disable this API. By default, the schema/metadata API
+be used to enable/disable this API. By default, the schema/Metadata API
 is enabled. To disable it, you need to explicitly state that this API is
 not enabled i.e. remove it from the list of enabled APIs.
 
 ```bash
-# enable only graphql api, disable metadata and pgdump
+# enable only graphql api, disable Metadata and pgdump
 --enabled-apis="graphql"
 HASURA_GRAPHQL_ENABLED_APIS="graphql"
 ```
@@ -254,10 +254,10 @@ See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/re
 Metadata is versioned with an optional `resource_version` field in
 operations and responses.
 
-This is intended to allow for feedback when replacing metadata with
+This is intended to allow for feedback when replacing Metadata with
 modifications to an out-of-date copy.
 
 The `resource_version` supplied must match the version returned
 otherwise a 409 error response is returned.
 
-The version is incremented on any operation that modified metadata as well as `reload_metadata`.
+The version is incremented on any operation that modified Metadata as well as `reload_metadata`.

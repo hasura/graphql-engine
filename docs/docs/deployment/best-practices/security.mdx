@@ -13,16 +13,16 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-This guide reviews security best practices that should be implemented when working on a Hasura project. Applying API
+This guide reviews security best practices that should be implemented when working on a Hasura Project. Applying API
 security beyond RBAC (role-based access control) permissions is mandatory for any API moving towards a Hasura
 deployment. We recommend that all HTTP layer security work be done at the API gateway level and GraphQL-specific
 policies be applied at the Hasura level.
 
 <Thumbnail
-  src='/img/guides/best-practices-security-apihasura-diagram.png'
-  alt='Hasura/API security architecture'
-  width='900px'
-  className='no-shadow'
+  src="/img/guides/best-practices-security-apihasura-diagram.png"
+  alt="Hasura/API security architecture"
+  width="900px"
+  className="no-shadow"
 />
 
 Specifics about each security best practice can be found below.
@@ -46,7 +46,7 @@ globally or at the role level which allows for each role to have a differently d
 The allow list should include the complete set of expected operations for a given role to restrict the ability for a
 user to execute non-permissible operations. Consider using the
 [Hasura Allow List](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) codegen plugin to
-automatically generate allow list metadata from your application code.
+automatically generate allow list Metadata from your application code.
 
 :::info Note
 
@@ -87,7 +87,7 @@ re-enabled if a situation arises where a production environment specific issue r
 
 - [Disable APIs](/deployment/production-checklist.mdx#disable-apis).
 
-- [Disable the console](/deployment/production-checklist.mdx#disable-console).
+- [Disable the Console](/deployment/production-checklist.mdx#disable-console).
 
 - [Disable dev mode](/deployment/production-checklist.mdx#disable-dev-mode).
 

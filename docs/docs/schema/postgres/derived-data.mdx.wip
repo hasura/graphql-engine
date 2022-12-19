@@ -20,7 +20,7 @@ type in the GraphQL query.
 
 Step 1: Create a view
 ---------------------
-Open the Hasura console and head to the ``Data -> SQL`` tab.
+Open the Hasura Console and head to the ``Data -> SQL`` tab.
 
 A view that averages the rating of articles for each author can be created using the following SQL query:
 

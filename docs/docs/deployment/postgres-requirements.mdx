@@ -1,5 +1,5 @@
 ---
-description: Postgres requirements for Hasura GraphQL engine
+description: Postgres requirements for Hasura GraphQL Engine
 keywords:
   - hasura
   - docs
@@ -16,16 +16,16 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Supported Postgres versions {#postgres-version-support}
 
-Hasura GraphQL engine supports all supported versions of Postgres per the
+Hasura GraphQL Engine supports all supported versions of Postgres per the
 [public documentation](https://www.postgresql.org/support/versioning/).
 
 ## Postgres permissions {#postgres-permissions}
 
-If you're running in a controlled environment, you might need to configure the Hasura GraphQL engine to use a specific
+If you're running in a controlled environment, you might need to configure the Hasura GraphQL Engine to use a specific
 Postgres user that your DBA gives you.
 
-The Hasura GraphQL engine needs access to your Postgres database(s) with the following permissions. You may have a
-dedicated metadata database as described
+The Hasura GraphQL Engine needs access to your Postgres database(s) with the following permissions. You may have a
+dedicated Metadata database as described
 [here](/deployment/graphql-engine-flags/config-examples.mdx#add-metadata-database).
 
 ### Metadata Database Permissions
@@ -39,9 +39,9 @@ dedicated metadata database as described
   [PUBLIC](https://www.postgresql.org/docs/current/sql-grant.html) grant.
 - (required) Read access to the schemas (`public` or otherwise) if you only want to support queries.
 - (optional) Write access to the schemas if you want to support mutations as well.
-- (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create
+- (optional) To create tables and views via the Hasura Console (the admin UI) you'll need the privilege to create
   tables/views. This might not be required when you're working with an existing database.
-- (required only if event triggers are needed) Read, write & create access on schema: `hdb_catalog`.
+- (required only if Event Triggers are needed) Read, write & create access on schema: `hdb_catalog`.
 
 ## Sample scenarios
 
@@ -112,7 +112,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS;
 -- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO hasurauser;
 -- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO hasurauser;
 
--- grant these privileges to use create and use all Hasura GraphQL engine functionality
+-- grant these privileges to use create and use all Hasura GraphQL Engine functionality
 GRANT USAGE ON SCHEMA hdb_catalog TO hasurauser;
 GRANT CREATE ON SCHEMA hdb_catalog TO hasurauser;
 GRANT ALL ON ALL TABLES IN SCHEMA hdb_catalog TO hasurauser;
@@ -120,7 +120,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA hdb_catalog TO hasurauser;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA hdb_catalog TO hasurauser;
 ```
 
-### 2. A single role to manage metadata and user objects in the **same database**
+### 2. A single role to manage Metadata and user objects in the **same database**
 
 ```sql
 -- We will create a separate user to grant permissions on hasura-specific
@@ -221,6 +221,7 @@ You can **ignore** these warnings/errors or skip granting these permission as us
 ## **pgcrypto** in PG search path
 
 Hasura GraphQL Engine needs the `pgcrypto` Postgres extension for the following:
+
 - Metadata Database
 - User Database (only if Event Triggers are used)
 
@@ -255,14 +256,18 @@ default, the extensions are created in the `public` schema but if you want to in
 custom schema you can achieve this by specifying the schema name in the `extensions_schema` field of the source
 configuration.
 
-<Thumbnail src='/img/deployment/set-pg-extensions-schema.png' alt='Update extensions schema from console' width='1000px' />
+<Thumbnail
+  src="/img/deployment/set-pg-extensions-schema.png"
+  alt="Update extensions schema from Console"
+  width="1000px"
+/>
 
 :::info Note
 
 If you're using Heroku Postgres instance for the first time, you will get an error `pgcrypto can only be created in heroku_ext schema`.
 
-For metadata database, set environment variable `HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA: heroku_ext` and
-for user database with event triggers, set `extensions_schema: heroku_ext` in source configuration.
+For Metadata database, set environment variable `HASURA_GRAPHQL_METADATA_DATABASE_EXTENSIONS_SCHEMA: heroku_ext` and
+for user database with Event Triggers, set `extensions_schema: heroku_ext` in source configuration.
 
 :::
 

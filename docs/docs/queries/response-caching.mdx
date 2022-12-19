@@ -16,19 +16,19 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Query response caching
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
 
 ## Introduction
 
 Hasura Cloud and Enterprise Edition provide support for caching query responses, in order to improve performance for
-queries which are executed frequently. This includes actions and queries against remote schemas.
+queries which are executed frequently. This includes Actions and queries against Remote Schemas.
 
 Cached responses are stored in for a period of time in a LRU (least-recently used) cache, and removed from the cache as
 needed based on usage.
 
 A query's response can be cached only if the following conditions hold:
 
-- The query does **not** make use of `remote schemas` that has `forward_client_headers` (see
+- The query does **not** make use of `Remote Schemas` that has `forward_client_headers` (see
   [RemoteSchemaDef](/api-reference/syntax-defs.mdx#remoteschemadef)) set to `true`.
 - The query **isn't** an `Action` that has `forward_client_headers` (see
   [ActionDefinition](/api-reference/syntax-defs.mdx#actiondefinition)) set to `true`.

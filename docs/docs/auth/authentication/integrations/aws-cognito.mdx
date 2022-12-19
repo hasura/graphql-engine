@@ -18,7 +18,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-In this guide, we will walk through how to set up AWS Cognito to work with the Hasura GraphQL engine.
+In this guide, we will walk through how to set up AWS Cognito to work with the Hasura GraphQL Engine.
 
 ## Set up user pools and hosted web UI
 
@@ -27,7 +27,7 @@ Follow
 to set up a user pool, add an app and enable the hosted web UI in AWS cognito. While enabling the hosted web UI, you
 need to select the checkbox `Implicit Grant`.
 
-<Thumbnail src='/img/guides/cognito-app-client-settings.png' alt='Cognito App Client Settings' />
+<Thumbnail src="/img/guides/cognito-app-client-settings.png" alt="Cognito App Client Settings" />
 
 ## Create a lambda function to add claims to the JWT
 
@@ -56,15 +56,15 @@ exports.handler = (event, context, callback) => {
 };
 ```
 
-<Thumbnail src='/img/guides/cognito-lambda.png' alt='Cognito Lambda function to add claims to the JWT' />
+<Thumbnail src="/img/guides/cognito-lambda.png" alt="Cognito Lambda function to add claims to the JWT" />
 
 ## Configure Cognito to trigger the lambda function
 
 In cognito, select `Triggers` -> `Pre Token Generation` and choose the lambda function created above:
 
-<Thumbnail src='/img/guides/cognito-triggers-1.png' alt='Select lambda for the trigger' />
+<Thumbnail src="/img/guides/cognito-triggers-1.png" alt="Select lambda for the trigger" />
 
-<Thumbnail src='/img/guides/cognito-triggers-2.png' alt='Select lambda for the trigger' />
+<Thumbnail src="/img/guides/cognito-triggers-2.png" alt="Select lambda for the trigger" />
 
 ## Test the Cognito login and generate sample JWTs for testing
 
@@ -72,26 +72,26 @@ You don't need to integrate your UI with Cognito for testing. You can follow the
 
 1.  Launch the hosted UI from AWS Cognito.
 
-<Thumbnail src='/img/guides/cognito-launch-hosted-ui.png' alt='Launch Cognito Login UI' />
+<Thumbnail src="/img/guides/cognito-launch-hosted-ui.png" alt="Launch Cognito Login UI" />
 
 2.  You should see the Cognito login page where you can log in or sign up.
 
-<Thumbnail src='/img/guides/cognito-login.png' alt='Cognito Login Page' />
+<Thumbnail src="/img/guides/cognito-login.png" alt="Cognito Login Page" />
 
-<div id='test-cognito' />
+<div id="test-cognito" />
 
 3. After successfully logging in, you will be redirected to
    `https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy`. This page may be a 404 if you don't have a UI
    running on localhost:3000. Extract the `id_token` value from this URL.
 
-<Thumbnail src='/img/guides/cognito-redirect.png' alt='JWT from id_token query param' />
+<Thumbnail src="/img/guides/cognito-redirect.png" alt="JWT from id_token query param" />
 
 4.  To test this JWT, and to see if all the Hasura claims are added as per the sections above, let's test this out with
     [jwt.io](https://jwt.io)!
 
-<Thumbnail src='/img/guides/cognito-jwt.png' alt='JWT debug on jwt.io' />
+<Thumbnail src="/img/guides/cognito-jwt.png" alt="JWT debug on jwt.io" />
 
-**Save this JWT token value so that we can use it later to test the authorization using the Hasura console.**
+**Save this JWT token value so that we can use it later to test the authorization using the Hasura Console.**
 
 ## Configure Hasura to use Cognito keys
 
@@ -110,7 +110,7 @@ below JSON:
 }
 ```
 
-## Add access control rules via the Hasura console
+## Add access control rules via the Hasura Console
 
 Cognito is configured and ready to be used in the application. You can now set up access control rules that will
 automatically get applied whenever a client makes a GraphQL request with the Cognito token.
@@ -121,9 +121,9 @@ To test this out, add an access control rule that uses `x-hasura-user-id` for th
 or a mutation, with the authorization token from the [previous step](#test-cognito) where we generated an Cognito token.
 
 <img
-  src='https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png'
-  className='no-shadow'
-  alt='JWT token used as bearer token on hasura console'
+  src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png"
+  className="no-shadow"
+  alt="JWT token used as bearer token on Hasura Console"
 />
 
 You can also use the env variable `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or `--unauthorized-role` flag to set a role for

@@ -182,7 +182,7 @@ Query data from the `authors` table:
 
 Head to the `Modify` tab of the table/view and click on the `Add` button in the `Computed fields` section:
 
-<Thumbnail src='/img/schema/computed-field-create.png' alt='Add computed field' />
+<Thumbnail src="/img/schema/computed-field-create.png" alt="Add computed field" />
 
 :::tip Supported from
 
@@ -210,7 +210,7 @@ You can add a computed field by updating the `metadata > databases > [db-name] >
       comment: ''
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -220,7 +220,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 A computed field can be added to a table/view using the
-[pg_add_computed_field](/api-reference/metadata-api/computed-field.mdx#metadata-pg-add-computed-field) metadata API:
+[pg_add_computed_field](/api-reference/metadata-api/computed-field.mdx#metadata-pg-add-computed-field) Metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -354,11 +354,11 @@ columns.
 
 Using computed fields in [Remote Relationships](/schema/postgres/remote-relationships/index.mdx) allows transformation
 of data from table columns before joining with data from remote sources. For instance, suppose we want to extract
-certain field from a `json` column and join it with a field in a remote schema by argument value. We would define a
+certain field from a `json` column and join it with a field in a Remote Schema by argument value. We would define a
 computed field which returns a scalar type of the field value in the `json` column and use it to join the graphql field
-of the remote schema. Consider the following Postgres schema.
+of the Remote Schema. Consider the following Postgres schema.
 
-<Thumbnail src='/img/databases/postgres/schema/computed-fields-remote-relationship.png' width='700px' />
+<Thumbnail src="/img/databases/postgres/schema/computed-fields-remote-relationship.png" width="700px" />
 
 ```plsql
 CREATE TABLE "user" (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, address json NOT NULL);
@@ -371,7 +371,7 @@ $$ LANGUAGE sql STABLE;
 ```
 
 Now, let's track the table and add computed field `user_city` using the SQL function `get_city`. Consider the following
-remote schema.
+Remote Schema.
 
 ```graphql
 type Query {
@@ -384,7 +384,7 @@ type Coordinates {
 ```
 
 [Define a remote relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship)
-with name `user_location` from `user_city` scalar computed field to `get_coordinates` remote schema field. We can query
+with name `user_location` from `user_city` scalar computed field to `get_coordinates` Remote Schema field. We can query
 users with the pincode of their residing place.
 
 <GraphiQLIDE

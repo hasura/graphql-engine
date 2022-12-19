@@ -34,21 +34,21 @@ Hasura supports two modes of authentication configuration:
 
 ### 1. Webhook
 
-Your auth server exposes a webhook that is used to authenticate all incoming requests to the Hasura GraphQL engine
-server and to get metadata about the request to evaluate access control rules.
+Your auth server exposes a webhook that is used to authenticate all incoming requests to the Hasura GraphQL Engine
+server and to get Metadata about the request to evaluate access control rules.
 
 Here's how a GraphQL request is processed in webhook mode:
 
-<Thumbnail src='/img/auth/auth-webhook-overview.png' alt='Authentication using webhooks' width='1000px' />
+<Thumbnail src="/img/auth/auth-webhook-overview.png" alt="Authentication using webhooks" width="1000px" />
 
 ### 2. JWT (JSON Web Token)
 
 Your auth server issues JWTs to your client app, which, when sent as part of the request, are verified and decoded by
-the GraphQL engine to get metadata about the request to evaluate access control rules.
+the GraphQL Engine to get Metadata about the request to evaluate access control rules.
 
 Here's how a GraphQL query is processed in JWT mode:
 
-<Thumbnail src='/img/auth/auth-jwt-overview.png' alt='Authentication using JWT' width='1000px' />
+<Thumbnail src="/img/auth/auth-jwt-overview.png" alt="Authentication using JWT" width="1000px" />
 
 **See more details at:**
 

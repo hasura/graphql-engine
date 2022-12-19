@@ -13,7 +13,7 @@ import LatestRelease from '@site/src/components/LatestRelease';
 
 # Quickstart with AWS ECS
 
-<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
 
 ## Introduction
 
@@ -36,7 +36,7 @@ This tutorial assumes that the following prerequisites have been met:
   have been completed.
 - Your AWS user has the required permissions specified in the
   [Amazon ECS first-run wizard permissions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/security_iam_id-based-policy-examples.html#first-run-permissions).
-- You have a Postgres database for storing metadata and Redis for caching / rate limiting, preferably a managed service,
+- You have a Postgres database for storing Metadata and Redis for caching / rate limiting, preferably a managed service,
   which is accessible from the ECS containers.
 - You have a VPC and security group created to use. This tutorial uses a container image hosted on the Public docker hub
   so your task must have internet access. To give your task a route to the internet, use one of the following options:
@@ -64,7 +64,7 @@ installation manifests required to deploy Hasura anywhere. Get the ECS task defi
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/aws-ecs/hasura-fargate-task.json
 ```
 
-### Step 3: Set the license key, metadata database URL, Redis database URL and the admin secret
+### Step 3: Set the license key, Metadata database URL, Redis database URL and the admin secret
 
 Edit `hasura-fargate-task.json` and set the right values:
 
@@ -111,10 +111,10 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
   `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var (e.g. %40 for @).
 
-- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+- The Hasura GraphQL Engine needs access permissions on your Postgres database as described in
   [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
 
-- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
   the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
   information on setting up authentication.
 
@@ -203,7 +203,7 @@ You may also find information on the task definition, the network configuration 
 section, you will find information on failures, if any, associated with the call. For troubleshooting, see
 [Service Event Messages](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-event-messages.html).
 
-### Step 8: Open the Hasura console
+### Step 8: Open the Hasura Console
 
 Copy the task id from the previous step and describe the task in the service so that you can get the Elastic Network
 Interface (ENI) for the task.
@@ -262,13 +262,13 @@ The public IP address is in the output.
 
 ```
 
-Enter the public IP address in your web browser and you should see a webpage that displays the Hasura GraphQL engine
+Enter the public IP address in your web browser and you should see a webpage that displays the Hasura GraphQL Engine
 console.
 
-## Updating Hasura GraphQL engine {#ecs-update}
+## Updating Hasura GraphQL Engine {#ecs-update}
 
-This guide will help you update the Hasura GraphQL engine running on ECS. This guide assumes that you already have the
-Hasura GraphQL engine running on ECS.
+This guide will help you update the Hasura GraphQL Engine running on ECS. This guide assumes that you already have the
+Hasura GraphQL Engine running on ECS.
 
 ### Step 1: Check the latest release version
 
@@ -326,7 +326,7 @@ aws ecs update-service --cluster hasura-fargate-cluster --service hasura-fargate
 
 :::info Note
 
-If you are downgrading to an older version of the GraphQL engine, you might need to downgrade your metadata catalogue
-version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx).
+If you are downgrading to an older version of the GraphQL Engine, you might need to downgrade your Metadata catalogue
+version as described in [Downgrading Hasura GraphQL Engine](/deployment/downgrading.mdx).
 
 :::

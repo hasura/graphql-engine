@@ -11,7 +11,7 @@ sidebar_position: 4
 
 # Metrics via Prometheus
 
-<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
 
 ## Enable metrics endpoint
 
@@ -109,7 +109,7 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
   </tr> 
   <tr>
     <td>hasura_event_trigger_http_workers</td>
-    <td>Current number of active event trigger HTTP workers</td>
+    <td>Current number of active Event Trigger HTTP workers</td>
     <td>Gauge</td>
     <td>none</td>
   </tr>
@@ -130,6 +130,6 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
 The GraphQL request execution time:
 
 - Uses wall-clock time, so it includes time spent waiting on I/O.
-- Includes authorization, parsing, validation, planning, and execution (calls to databases, remote schemas).
+- Includes authorization, parsing, validation, planning, and execution (calls to databases, Remote Schemas).
 
 :::

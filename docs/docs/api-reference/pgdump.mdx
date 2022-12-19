@@ -17,7 +17,7 @@ The PG Dump API is an admin-only endpoint that can be used to execute
 `pg_dump` on the Postgres instance that Hasura is configured with.
 
 The primary motive of this API is to provide convenience methods to
-initialise migrations from an existing Hasura instance. But the
+initialise Migrations from an existing Hasura instance. But the
 functionality can be later expanded to do other things such as taking a
 data dump etc.
 
@@ -41,24 +41,24 @@ X-Hasura-Role: admin
 }
 ```
 
--   `opts`: Arguments to be passed to the `pg_dump` tool. Represented as
-    array of strings. The underlying command that is executed is:
+- `opts`: Arguments to be passed to the `pg_dump` tool. Represented as
+  array of strings. The underlying command that is executed is:
 
-    ```bash
-    pg_dump $DATABASE_URL $OPTS -f $FILENAME
-    ```
+  ```bash
+  pg_dump $DATABASE_URL $OPTS -f $FILENAME
+  ```
 
--   `clean_output`: When this optional argument is set to `true`, the
-    output SQL from the command is cleaned to remove the following:
+- `clean_output`: When this optional argument is set to `true`, the
+  output SQL from the command is cleaned to remove the following:
 
-    -   SQL front matter, like SET statements.
-    -   `CREATE SCHEMA public`.
-    -   `COMMENT ON SCHEMA public is 'standard public schema'`;
-    -   Comments (`--`) and empty newlines.
-    -   Postgres triggers created by Hasura for event triggers.
+  - SQL front matter, like SET statements.
+  - `CREATE SCHEMA public`.
+  - `COMMENT ON SCHEMA public is 'standard public schema'`;
+  - Comments (`--`) and empty newlines.
+  - Postgres triggers created by Hasura for Event Triggers.
 
--   `source`: the name of the connected database on which to run
-    `pg_dump` on. If skipped, it is set to `default`
+- `source`: the name of the connected database on which to run
+  `pg_dump` on. If skipped, it is set to `default`
 
 ### Sample response
 
@@ -93,7 +93,7 @@ enabled. To disable it, you need to explicitly state that this API is
 not enabled. i.e. remove it from the list of enabled APIs.
 
 ```bash
-# enable only graphql & metadata apis, disable pgdump
+# enable only graphql & Metadata apis, disable pgdump
 --enabled-apis="graphql,metadata"
 HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 ```

@@ -1,28 +1,27 @@
 ---
 sidebar_label: Query Collections
-sidebar_position: 12 
-description: Manage query collections with the Hasura schema/metadata API
+sidebar_position: 12
+description: Manage query collections with the Hasura schema/Metadata API
 keywords:
-   - hasura
-   - docs
-   - schema/metadata API
-   - API reference
-   - query collection
+  - hasura
+  - docs
+  - schema/Metadata API
+  - API reference
+  - query collection
 ---
 
 # Schema/Metadata API Reference: Query collections (Deprecated)
 
 :::caution Deprecation
 
-In versions `v2.0.0` and above, the schema/metadata API is deprecated in
+In versions `v2.0.0` and above, the schema/Metadata API is deprecated in
 favour of the [schema API](/api-reference/schema-api/index.mdx) and the
-[metadata API](/api-reference/metadata-api/index.mdx).
+[Metadata API](/api-reference/metadata-api/index.mdx).
 
-Though for backwards compatibility, the schema/metadata APIs will
+Though for backwards compatibility, the schema/Metadata APIs will
 continue to function.
 
 :::
-
 
 ## Introduction
 
@@ -56,19 +55,18 @@ X-Hasura-Role: admin
 
 :::info Note
 
-The queries in query collections are validated against the schema. So, adding an invalid query would result in inconsistent metadata error.
+The queries in query collections are validated against the schema. So, adding an invalid query would result in inconsistent Metadata error.
 As the query collection is used in allowlists and REST endpoints, they are validated as well.
 
 :::
 
-
 ### Args Syntax {#schema-metadata-create-query-collection-syntax}
 
-| Key        | Required | Schema                                                                                | Description                  |
-|------------|----------|---------------------------------------------------------------------------------------|------------------------------|
-| name       | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)          | Name of the query collection |
-| definition | true     | [CollectionQuery](/api-reference/syntax-defs.mdx#collectionquery) array  | List of queries              |
-| comment    | false    | text                                                                                  | Optional comment             |
+| Key        | Required | Schema                                                                  | Description                  |
+| ---------- | -------- | ----------------------------------------------------------------------- | ---------------------------- |
+| name       | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)         | Name of the query collection |
+| definition | true     | [CollectionQuery](/api-reference/syntax-defs.mdx#collectionquery) array | List of queries              |
+| comment    | false    | text                                                                    | Optional comment             |
 
 ## rename_query_collection {#schema-metadata-rename-query-collection}
 
@@ -90,10 +88,10 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-rename-query-collection-syntax}
 
-| Key        | Required | Schema                                                           | Description                                 |
-|------------|----------|------------------------------------------------------------------|---------------------------------------------|
-| name       | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)  | Name of the query collection to be replaced |
-| new_name   | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)  | New name of the query collection            |
+| Key      | Required | Schema                                                          | Description                                 |
+| -------- | -------- | --------------------------------------------------------------- | ------------------------------------------- |
+| name     | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | Name of the query collection to be replaced |
+| new_name | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | New name of the query collection            |
 
 ## drop_query_collection {#schema-metadata-drop-query-collection}
 
@@ -115,10 +113,10 @@ X-Hasura-Role: admin
 
 ### Args syntax {#schema-metadata-drop-query-collection-syntax}
 
-| Key        | Required | Schema                                                                        | Description                                                                   |
-|------------|----------|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| collection | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname)  | Name of the query collection                                                  |
-| cascade    | true     | boolean                                                                       | When set to `true`, the collection (if present) is removed from the allowlist |
+| Key        | Required | Schema                                                          | Description                                                                   |
+| ---------- | -------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| collection | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | Name of the query collection                                                  |
+| cascade    | true     | boolean                                                         | When set to `true`, the collection (if present) is removed from the allowlist |
 
 ## add_query_to_collection {#schema-metadata-add-query-to-collection}
 
@@ -141,11 +139,11 @@ X-Hasura-Role: admin
 
 ### Args Syntax {#schema-metadata-add-query-to-collection-syntax}
 
-| Key             | Required | Schema                                                                       | Description                  |
-|-----------------|----------|------------------------------------------------------------------------------|------------------------------|
+| Key             | Required | Schema                                                          | Description                  |
+| --------------- | -------- | --------------------------------------------------------------- | ---------------------------- |
 | collection_name | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | Name of the query collection |
 | query_name      | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)           | Name of the query            |
-| query           | true     | text                                                                         | The GraphQL query text       |
+| query           | true     | text                                                            | The GraphQL query text       |
 
 ## drop_query_from_collection {#schema-metadata-drop-query-from-collection}
 
@@ -168,8 +166,8 @@ X-Hasura-Role: admin
 
 ### Args Syntax {#schema-metadata-drop-query-from-collection-syntax}
 
-| Key             | Required | Schema                                                                       | Description                  |
-|-----------------|----------|------------------------------------------------------------------------------|------------------------------|
+| Key             | Required | Schema                                                          | Description                  |
+| --------------- | -------- | --------------------------------------------------------------- | ---------------------------- |
 | collection_name | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | Name of the query collection |
 | query_name      | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)           | Name of the query            |
 
@@ -192,8 +190,8 @@ X-Hasura-Role: admin
 
 ### Args Syntax {#schema-metadata-add-collection-to-allowlist-syntax}
 
-| Key        | Required | Schema                                                                       | Description                                              |
-|------------|----------|------------------------------------------------------------------------------|----------------------------------------------------------|
+| Key        | Required | Schema                                                          | Description                                              |
+| ---------- | -------- | --------------------------------------------------------------- | -------------------------------------------------------- |
 | collection | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | Name of a query collection to be added to the allow-list |
 
 ## drop_collection_from_allowlist {#schema-metadata-drop-collection-from-allowlist}
@@ -215,6 +213,6 @@ X-Hasura-Role: admin
 
 ### Args Syntax {#schema-metadata-drop-collection-from-allowlist-syntax}
 
-| Key        | Required | Schema                                                                       | Description                                                  |
-|------------|----------|------------------------------------------------------------------------------|--------------------------------------------------------------|
+| Key        | Required | Schema                                                          | Description                                                  |
+| ---------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------ |
 | collection | true     | [CollectionName](/api-reference/syntax-defs.mdx#collectionname) | Name of a query collection to be removed from the allow-list |
