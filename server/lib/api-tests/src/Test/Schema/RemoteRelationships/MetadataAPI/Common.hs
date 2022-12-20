@@ -29,6 +29,8 @@ module Test.Schema.RemoteRelationships.MetadataAPI.Common
     remoteSchemaToDBRemoteRelationshipFixture,
     remoteSchemaToremoteSchemaRemoteRelationshipFixture,
     LocalTestTestEnvironment (..),
+    hasuraTypeOptions,
+    lhsRemoteServerMkLocalTestEnvironment,
   )
 where
 

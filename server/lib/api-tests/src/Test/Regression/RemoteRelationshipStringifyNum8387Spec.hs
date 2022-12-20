@@ -5,25 +5,24 @@
 module Test.Regression.RemoteRelationshipStringifyNum8387Spec (spec) where
 
 import Data.Aeson (Value)
-import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
-import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
-import Data.Morpheus.Document (gqlDocument)
-import Data.Morpheus.Types qualified as Morpheus
-import Data.Typeable (Typeable)
+import Data.Text qualified as Text
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
-import Harness.RemoteServer qualified as RemoteServer
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Permissions (SelectPermissionDetails (..))
+import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.TestResource (Managed)
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, backendTypeConfig, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
+import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -31,22 +30,19 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    lhsFixtures = [lhsPostgresStringifyNums, lhsRemoteServerStringifyNums]
-    rhsFixtures = [rhsPostgresStringifyNums]
+    lhsFixtures = [lhsPostgres, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres]
     contexts = NE.fromList $ Fixture.combineFixtures <$> lhsFixtures <*> rhsFixtures
 
 --------------------------------------------------------------------------------
 
 -- | Left-hand-side (LHS) fixtures
-lhsPostgresStringifyNums :: Fixture.LHSFixture
-lhsPostgresStringifyNums tableName =
+lhsPostgres :: Fixture.LHSFixture
+lhsPostgres tableName =
   (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-    { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsPostgresSetup tableName testEnv)
         ],
       Fixture.customOptions =
         Just $
@@ -55,10 +51,10 @@ lhsPostgresStringifyNums tableName =
             }
     }
 
-lhsRemoteServerStringifyNums :: Fixture.LHSFixture
-lhsRemoteServerStringifyNums tableName =
+lhsRemoteServer :: Fixture.LHSFixture
+lhsRemoteServer tableName =
   (Fixture.fixture $ Fixture.RemoteGraphQLServer)
-    { Fixture.mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
+    { Fixture.mkLocalTestEnvironment = Common.lhsRemoteServerMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
         [ Fixture.SetupAction
             { Fixture.setupAction = lhsRemoteServerSetup tableName testEnv,
@@ -75,20 +71,17 @@ lhsRemoteServerStringifyNums tableName =
 --------------------------------------------------------------------------------
 
 -- | Right-hand-side (RHS) fixtures
-rhsPostgresStringifyNums :: Fixture.RHSFixture
-rhsPostgresStringifyNums =
+rhsPostgres :: Fixture.RHSFixture
+rhsPostgres =
   let table =
-        [yaml|
+        [interpolateYaml|
       schema: hasura
-      name: album
+      name: #{ rhsTableName_ }
     |]
       context =
         (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsPostgresSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsPostgresSetup testEnv)
               ],
             Fixture.customOptions =
               Just $
@@ -104,21 +97,22 @@ rhsPostgresStringifyNums =
 -- | LHS
 track :: Schema.Table
 track =
-  (Schema.table "track")
+  (Schema.table lhsTableName_)
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
+          Schema.column "title" Schema.TStr,
           Schema.columnNull "album_id" Schema.TInt
         ],
       tablePrimaryKey = ["id"],
       tableData =
-        [ [Schema.VInt 1, Schema.VInt 1]
+        [ [Schema.VInt 1, Schema.VStr "track1_album1", Schema.VInt 1]
         ]
     }
 
 -- | RHS
 album :: Schema.Table
 album =
-  (Schema.table "album")
+  (Schema.table rhsTableName_)
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
           Schema.column "title" Schema.TStr,
@@ -161,223 +155,81 @@ mkBigIntValue int =
       }
 
 --------------------------------------------------------------------------------
--- LHS Postgres
+-- LHS
 
-lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
-lhsPostgresMkLocalTestEnvironment _ = pure Nothing
+lhsSourceName_ :: Text
+lhsSourceName_ = "source"
+
+lhsTableName_ :: Text
+lhsTableName_ = "track"
+
+lhsRole1 :: Permissions.Permission
+lhsRole1 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionSource = Just lhsSourceName_,
+        selectPermissionRole = "role1",
+        selectPermissionTable = lhsTableName_,
+        selectPermissionColumns = (["id", "title", "album_id"] :: [Text])
+      }
+
+lhsRole2 :: Permissions.Permission
+lhsRole2 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionSource = Just lhsSourceName_,
+        selectPermissionRole = "role2",
+        selectPermissionTable = lhsTableName_,
+        selectPermissionColumns = (["id", "title", "album_id"] :: [Text])
+      }
+
+createRemoteRelationship :: Value -> TestEnvironment -> IO ()
+createRemoteRelationship rhsTableName testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      schemaName = Schema.getSchemaName testEnvironment
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [interpolateYaml|
+      type: #{ backendType }_create_remote_relationship
+      args:
+        source: #{ lhsSourceName_ }
+        table:
+          schema: #{ schemaName }
+          name: #{ lhsTableName_ }
+        name: #{ rhsTableName_ }
+        definition:
+          to_source:
+            source: #{ rhsSourceName_ }
+            table: #{ rhsTableName }
+            relationship_type: object
+            field_mapping:
+              album_id: id
+    |]
+
+--------------------------------------------------------------------------------
+-- LHS Postgres
 
 lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+  let testEnvironmentPostgres = testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)}
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
-      schemaName = Schema.getSchemaName testEnvironment
+
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: pg_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
-  -- setup tables only
+  Schema.addSource lhsSourceName_ sourceConfig testEnvironmentPostgres
+
+  -- Setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable sourceName track (testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)})
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-      type: bulk
-      args:
-      - type: pg_create_select_permission
-        args:
-          source: *sourceName
-          role: role1
-          table:
-            schema: *schemaName
-            name: track
-          permission:
-            columns: '*'
-            filter: {}
-      - type: pg_create_select_permission
-        args:
-          source: *sourceName
-          role: role2
-          table:
-            schema: *schemaName
-            name: track
-          permission:
-            columns: '*'
-            filter: {}
-      - type: pg_create_remote_relationship
-        args:
-          source: *sourceName
-          table:
-            schema: *schemaName
-            name: track
-          name: album
-          definition:
-            to_source:
-              source: target
-              table: *rhsTableName
-              relationship_type: object
-              field_mapping:
-                album_id: id
-    |]
+  Schema.trackTable (Text.unpack lhsSourceName_) track testEnvironmentPostgres
 
-lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (_testEnvironment, _) =
-  pure ()
+  -- Setup metadata
+  Permissions.createPermission testEnvironmentPostgres lhsRole1
+  Permissions.createPermission testEnvironmentPostgres lhsRole2
+  createRemoteRelationship rhsTableName testEnvironmentPostgres
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
-
--- TODO AS: factor out
-
--- | To circumvent Morpheus' default behaviour, which is to capitalize type
--- names and field names for Haskell records to be consistent with their
--- corresponding GraphQL equivalents, we define most of the schema manually with
--- the following options.
-hasuraTypeOptions :: Morpheus.GQLTypeOptions
-hasuraTypeOptions =
-  Morpheus.defaultTypeOptions
-    { -- transformation to apply to constructors, for enums; we simply map to
-      -- lower case:
-      --   Asc -> asc
-      Morpheus.constructorTagModifier = map toLower,
-      -- transformation to apply to field names; we drop all characters up to and
-      -- including the first underscore:
-      --   hta_where -> where
-      Morpheus.fieldLabelModifier = tail . dropWhile (/= '_'),
-      -- transformation to apply to type names; we split the name on uppercase
-      -- letters, intercalate with underscore, and map everything to lowercase:
-      --   HasuraTrack -> hasura_track
-      Morpheus.typeNameModifier = \_ ->
-        map toLower
-          . intercalate "_"
-          . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
-    }
-
-data Query m = Query
-  { hasura_track :: HasuraTrackArgs -> m [HasuraTrack m]
-  }
-  deriving (Generic)
-
-instance Typeable m => Morpheus.GQLType (Query m)
-
-data HasuraTrackArgs = HasuraTrackArgs
-  { ta_where :: Maybe HasuraTrackBoolExp,
-    ta_order_by :: Maybe [HasuraTrackOrderBy],
-    ta_limit :: Maybe Int
-  }
-  deriving (Generic)
-
-instance Morpheus.GQLType HasuraTrackArgs where
-  typeOptions _ _ = hasuraTypeOptions
-
-data HasuraTrack m = HasuraTrack
-  { t_id :: m (Maybe Int),
-    t_album_id :: m (Maybe Int)
-  }
-  deriving (Generic)
-
-instance Typeable m => Morpheus.GQLType (HasuraTrack m) where
-  typeOptions _ _ = hasuraTypeOptions
-
-data HasuraTrackOrderBy = HasuraTrackOrderBy
-  { tob_id :: Maybe OrderType,
-    tob_album_id :: Maybe OrderType
-  }
-  deriving (Generic)
-
-instance Morpheus.GQLType HasuraTrackOrderBy where
-  typeOptions _ _ = hasuraTypeOptions
-
-data HasuraTrackBoolExp = HasuraTrackBoolExp
-  { tbe__and :: Maybe [HasuraTrackBoolExp],
-    tbe__or :: Maybe [HasuraTrackBoolExp],
-    tbe__not :: Maybe HasuraTrackBoolExp,
-    tbe_id :: Maybe IntCompExp,
-    tbe_album_id :: Maybe IntCompExp
-  }
-  deriving (Generic)
-
-instance Morpheus.GQLType HasuraTrackBoolExp where
-  typeOptions _ _ = hasuraTypeOptions
-
-data OrderType = Asc | Desc
-  deriving (Show, Generic)
-
-instance Morpheus.GQLType OrderType where
-  typeOptions _ _ = hasuraTypeOptions
-
-[gqlDocument|
-
-input IntCompExp {
-  _eq: Int
-}
-
-input StringCompExp {
-  _eq: String
-}
-
-|]
-
-lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
-lhsRemoteServerMkLocalTestEnvironment _ =
-  Just <$> RemoteServer.run (RemoteServer.generateQueryInterpreter (Query {hasura_track}))
-  where
-    -- Implements the @hasura_track@ field of the @Query@ type.
-    hasura_track (HasuraTrackArgs {..}) = do
-      let filterFunction = case ta_where of
-            Nothing -> const True
-            Just whereArg -> flip matchTrack whereArg
-          orderByFunction = case ta_order_by of
-            Nothing -> \_ _ -> EQ
-            Just orderByArg -> orderTrack orderByArg
-          limitFunction = maybe Hasura.Prelude.id take ta_limit
-      pure $
-        tracks
-          & filter filterFunction
-          & sortBy orderByFunction
-          & limitFunction
-          & map mkTrack
-    -- Returns True iif the given track matches the given boolean expression.
-    matchTrack trackInfo@(trackId, maybeAlbumId) (HasuraTrackBoolExp {..}) =
-      and
-        [ all (all (matchTrack trackInfo)) tbe__and,
-          all (any (matchTrack trackInfo)) tbe__or,
-          not (any (matchTrack trackInfo) tbe__not),
-          all (matchInt trackId) tbe_id,
-          all (matchMaybeInt maybeAlbumId) tbe_album_id
-        ]
-    matchInt intField IntCompExp {..} = Just intField == _eq
-    matchMaybeInt maybeIntField IntCompExp {..} = maybeIntField == _eq
-    -- Returns an ordering between the two given tracks.
-    orderTrack
-      orderByList
-      (trackId1, trackAlbumId1)
-      (trackId2, trackAlbumId2) =
-        flip foldMap orderByList \HasuraTrackOrderBy {..} ->
-          if
-              | Just idOrder <- tob_id -> case idOrder of
-                  Asc -> compare trackId1 trackId2
-                  Desc -> compare trackId2 trackId1
-              | Just albumIdOrder <- tob_album_id ->
-                  compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
-              | otherwise ->
-                  error "empty order_by object"
-    compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
-    compareWithNullLast Asc Nothing Nothing = EQ
-    compareWithNullLast Asc (Just _) Nothing = LT
-    compareWithNullLast Asc Nothing (Just _) = GT
-    compareWithNullLast Asc (Just x1) (Just x2) = compare x1 x2
-    tracks = [(1, Just 1)]
-    mkTrack (trackId, albumId) =
-      HasuraTrack
-        { t_id = pure $ Just trackId,
-          t_album_id = pure albumId
-        }
 
 lhsRemoteServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
@@ -386,94 +238,90 @@ lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybe
     let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
     GraphqlEngine.postMetadata_
       testEnvironment
-      [yaml|
-type: bulk
-args:
-- type: add_remote_schema
-  args:
-    name: source
-    definition:
-      url: *remoteSchemaEndpoint
-- type: create_remote_schema_remote_relationship
-  args:
-    remote_schema: source
-    type_name: hasura_track
-    name: album
-    definition:
-      to_source:
-        source: target
-        table: *tableName
-        relationship_type: object
-        field_mapping:
-          album_id: id
+      [interpolateYaml|
+        type: bulk
+        args:
+        - type: add_remote_schema
+          args:
+            name: #{ lhsSourceName_ }
+            definition:
+              url: #{ remoteSchemaEndpoint }
+        - type: create_remote_schema_remote_relationship
+          args:
+            remote_schema: #{ lhsSourceName_ }
+            type_name: hasura_track
+            name: #{ rhsTableName_ }
+            definition:
+              to_source:
+                source: target
+                table: #{ tableName }
+                relationship_type: object
+                field_mapping:
+                  album_id: id
       |]
 
 lhsRemoteServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 --------------------------------------------------------------------------------
+-- RHS
+
+rhsSourceName_ :: Text
+rhsSourceName_ = "target"
+
+rhsTableName_ :: Text
+rhsTableName_ = "album"
+
+rhsRole1 :: Permissions.Permission
+rhsRole1 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionSource = Just rhsSourceName_,
+        selectPermissionRole = "role1",
+        selectPermissionTable = rhsTableName_,
+        selectPermissionColumns = (["title", "artist_id", "play_count", "version"] :: [Text]),
+        selectPermissionRows =
+          [yaml|
+          artist_id:
+            _eq: x-hasura-artist-id
+        |]
+      }
+
+rhsRole2 :: Permissions.Permission
+rhsRole2 =
+  Permissions.SelectPermission
+    Permissions.selectPermission
+      { selectPermissionSource = Just rhsSourceName_,
+        selectPermissionRole = "role2",
+        selectPermissionTable = rhsTableName_,
+        selectPermissionColumns = (["title", "artist_id", "play_count", "version"] :: [Text]),
+        selectPermissionRows =
+          [yaml|
+          artist_id:
+            _eq: x-hasura-artist-id
+        |],
+        selectPermissionAllowAggregations = True
+      }
+
+--------------------------------------------------------------------------------
 -- RHS Postgres
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
-  let sourceName = "target"
+  let testEnvironmentPostgres = testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)}
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
-      schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: pg_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
+  Schema.addSource rhsSourceName_ sourceConfig testEnvironmentPostgres
+
   -- setup tables only
   Postgres.createTable testEnvironment album
   Postgres.insertTable testEnvironment album
-  Schema.trackTable sourceName album (testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)})
+  Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironmentPostgres
 
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: bulk
-args:
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role1
-    table:
-      schema: *schemaName
-      name: album
-    permission:
-      columns:
-        - title
-        - artist_id
-        - play_count
-        - version
-      filter:
-        artist_id:
-          _eq: x-hasura-artist-id
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role2
-    table:
-      schema: *schemaName
-      name: album
-    permission:
-      columns: [id, title, artist_id, play_count, version]
-      filter:
-        artist_id:
-          _eq: x-hasura-artist-id
-      limit: 1
-      allow_aggregations: true
-  |]
-
-rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
-rhsPostgresTeardown (_testEnvironment, _) =
-  pure ()
+  -- setup metadata
+  Permissions.createPermission testEnvironmentPostgres rhsRole1
+  Permissions.createPermission testEnvironmentPostgres rhsRole2
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -500,7 +348,7 @@ executionTests opts = describe "execution" $ do
             }
           |]
         expectedResponse =
-          [yaml|
+          [interpolateYaml|
             data:
               track:
               - album:
