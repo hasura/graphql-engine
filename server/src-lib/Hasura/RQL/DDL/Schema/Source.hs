@@ -404,16 +404,18 @@ instance FromJSON GetTableInfo where
 -- | Fetch a list of tables for the request data source. Currently
 -- this is only supported for Data Connectors.
 runGetTableInfo ::
-  ( Has (L.Logger L.Hasura) r,
+  ( CacheRM m,
+    Has (L.Logger L.Hasura) r,
     HTTP.Manager.HasHttpManagerM m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m
   ) =>
+  Env.Environment ->
   GetTableInfo ->
   m EncJSON
-runGetTableInfo GetTableInfo {..} = do
+runGetTableInfo env GetTableInfo {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
@@ -429,8 +431,6 @@ runGetTableInfo GetTableInfo {..} = do
         logger :: L.Logger L.Hasura <- asks getter
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
-            -- TODO(SOLOMON): Apply Kriti Transform to 'apiConfig':
-            apiConfig = DC.Types.value _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- do
           let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
@@ -438,10 +438,14 @@ runGetTableInfo GetTableInfo {..} = do
             (InsOrdHashMap.lookup dcName =<< backendConfig)
             (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
+        transformedConfig <- transformConnSourceConfig _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        configSchemaResponse <- getConfigSchemaResponse dcName
+        validateConfiguration _gtiSourceName dcName configSchemaResponse transformedConfig
+
         schemaResponse <-
           Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) apiConfig
+            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) transformedConfig
 
         let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue table

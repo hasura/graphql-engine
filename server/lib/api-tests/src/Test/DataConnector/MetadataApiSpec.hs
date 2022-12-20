@@ -135,11 +135,6 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
 
   describe "get_table_info" $ do
     it "success" $ \(testEnvironment@TestEnvironment {backendTypeConfig}, Chinook.ChinookTestEnv {..}) -> do
-      when
-        ( fmap backendType backendTypeConfig /= Just BackendType.DataConnectorSqlite
-            && fmap backendType backendTypeConfig /= Just BackendType.DataConnectorReference
-        )
-        (pendingWith "Currently BrOkEn when source config is provided in a template.")
       let removeDescriptions (J.Object o) = J.Object (KM.delete "description" (removeDescriptions <$> o))
           removeDescriptions (J.Array a) = J.Array (removeDescriptions <$> a)
           removeDescriptions x = x

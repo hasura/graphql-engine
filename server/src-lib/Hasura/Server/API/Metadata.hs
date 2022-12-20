@@ -622,7 +622,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
   RMGetSourceTables q -> runGetSourceTables env q
-  RMGetTableInfo q -> runGetTableInfo q
+  RMGetTableInfo q -> runGetTableInfo env q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
