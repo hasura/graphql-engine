@@ -81,7 +81,6 @@ import {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
 } from './sqlUtils';
 import globals from '../../../Globals';
@@ -895,6 +894,5 @@ export const postgres: DataSourcesAPI = {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
 };

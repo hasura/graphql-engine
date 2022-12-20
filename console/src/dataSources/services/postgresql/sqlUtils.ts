@@ -1339,46 +1339,6 @@ WHERE
 	AND schema_name NOT LIKE 'pg_temp_%';
 `;
 
-export const getDataTriggerLogsCountQuery = (
-  triggerName: string,
-  triggerOp: TriggerOperation
-): string => {
-  const triggerTypes = {
-    pending: 'pending',
-    processed: 'processed',
-    invocation: 'invocation',
-  };
-  const eventRelTable = `"hdb_catalog"."event_log"`;
-  const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-
-  let logsCountQuery = `SELECT
-	COUNT(*)
-  FROM ${eventRelTable} data_table
-  WHERE data_table.trigger_name = '${triggerName}' `;
-
-  switch (triggerOp) {
-    case triggerTypes.pending:
-      logsCountQuery += `AND delivered=false AND error=false AND archived=false;`;
-      break;
-
-    case triggerTypes.processed:
-      logsCountQuery += `AND (delivered=true OR error=true) AND archived=false;`;
-      break;
-
-    case triggerTypes.invocation:
-      logsCountQuery = `SELECT
-      COUNT(*)
-      FROM ${eventInvTable} original_table 
-      LEFT JOIN ${eventRelTable} data_table
-      ON original_table.event_id = data_table.id
-      WHERE data_table.trigger_name = '${triggerName}' OR original_table.trigger_name = '${triggerName}' `;
-      break;
-    default:
-      break;
-  }
-  return logsCountQuery;
-};
-
 export const getDataTriggerLogsQuery = (
   triggerOp: TriggerOperation,
   triggerName: string,
@@ -1411,11 +1371,10 @@ export const getDataTriggerLogsQuery = (
 
     case triggerTypes.invocation:
       sql = `
-      SELECT original_table.*, data_table 
-      FROM ${eventInvTable} original_table 
-      LEFT JOIN ${eventRelTable} data_table ON original_table.event_id = data_table.id    
-      WHERE data_table.trigger_name = '${triggerName}' OR original_table.trigger_name = '${triggerName}'
-      ORDER BY original_table.created_at DESC NULLS LAST `;
+      SELECT data_table.*
+      FROM ${eventInvTable} data_table 
+      WHERE data_table.trigger_name = '${triggerName}'
+      ORDER BY data_table.created_at DESC NULLS LAST`;
       break;
     default:
       break;

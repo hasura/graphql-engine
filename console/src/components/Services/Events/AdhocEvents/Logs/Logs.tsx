@@ -15,7 +15,6 @@ const InvocationLogs: React.FC<Props> = props => {
 
   const renderRows: FilterRenderProp = (
     rows,
-    count,
     filterState,
     setFilterState,
     runQuery
@@ -23,7 +22,6 @@ const InvocationLogs: React.FC<Props> = props => {
     <InvocationLogsTable
       rows={rows}
       filterState={filterState}
-      count={count}
       setFilterState={setFilterState}
       runQuery={runQuery}
       columns={['id', 'status', 'event_id', 'created_at']}

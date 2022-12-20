@@ -433,10 +433,6 @@ export interface DataSourcesAPI {
   generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
   // New Simple Queries to fetch just what we need at a time
   schemaListQuery: string;
-  getDataTriggerLogsCountQuery?: (
-    triggerName: string,
-    triggerOp: TriggerOperation
-  ) => string;
   getDataTriggerLogsQuery?: (
     triggerOp: TriggerOperation,
     triggerName: string,

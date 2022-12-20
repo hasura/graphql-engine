@@ -139,7 +139,6 @@ export type RunQuery = (options?: RunQueryOptions) => void;
 
 export type FilterRenderProp = (
   rows: any[],
-  count: number | undefined,
   state: FilterState,
   setState: SetFilterState,
   runQuery: RunQuery

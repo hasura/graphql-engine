@@ -7,7 +7,6 @@ const {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   createIndexSql,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
   getDataTriggerInvocations,
 } = postgres;
@@ -171,55 +170,6 @@ describe('postgresql datasource tests', () => {
         `);
       }
     });
-  });
-
-  describe('getDataTriggerLogsCountQuery', () => {
-    if (getDataTriggerLogsCountQuery) {
-      it('should generate SQL query for pending event count ', () => {
-        const pendingCountQuery = getDataTriggerLogsCountQuery(
-          'new_user',
-          'pending'
-        );
-        expect(pendingCountQuery).toContain(
-          'delivered=false AND error=false AND archived=false'
-        );
-        expect(pendingCountQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(pendingCountQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(pendingCountQuery).toMatchSnapshot();
-      });
-
-      it('should generate SQL query for processed event count', () => {
-        const processedCountQuery = getDataTriggerLogsCountQuery(
-          'new_user',
-          'processed'
-        );
-        expect(processedCountQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(processedCountQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(processedCountQuery).toContain('FROM "hdb_catalog"."event_log"');
-
-        expect(processedCountQuery).toMatchSnapshot();
-      });
-
-      it('should generate SQL query for invocation event count', () => {
-        const invocationCountQuery = getDataTriggerLogsCountQuery(
-          'test_event',
-          'invocation'
-        );
-        expect(invocationCountQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(invocationCountQuery).toContain(
-          'FROM "hdb_catalog"."event_invocation_logs"'
-        );
-        expect(invocationCountQuery).toMatchSnapshot();
-      });
-    }
   });
 
   describe('getDataTriggerLogsQuery', () => {
