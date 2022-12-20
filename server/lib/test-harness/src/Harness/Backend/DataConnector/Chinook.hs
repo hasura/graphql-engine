@@ -6,12 +6,15 @@ module Harness.Backend.DataConnector.Chinook
   ( setupAction,
     referenceSourceConfig,
     sqliteSourceConfig,
+    testRoleName,
+    ChinookTestEnv (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
+import Data.ByteString (ByteString)
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -22,21 +25,33 @@ import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
+data ChinookTestEnv = ChinookTestEnv
+  { -- | Default configuration JSON for the backend source.
+    backendSourceConfig :: Aeson.Value,
+    -- | Can be used to apply custom formatting to table names. Eg.,
+    -- adjusting the casing.
+    formatTableName :: [Text] -> [Text],
+    -- | Can be used to apply custom formatting to column names. Eg.,
+    -- adjusting the casing.
+    formatColumnName :: Text -> Text,
+    formatForeignKeyName :: Text -> Text
+  }
+
 setupAction :: Aeson.Value -> Aeson.Value -> TestEnvironment -> Fixture.SetupAction
 setupAction sourceMetadata backendConfig' testEnv =
   Fixture.SetupAction
-    (setup sourceMetadata backendConfig' (testEnv, ()))
-    (const $ teardown (testEnv, ()))
+    (setup sourceMetadata backendConfig' testEnv)
+    (const $ teardown testEnv)
 
 -- | Setup the schema given source metadata and backend config.
-setup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, ()) -> IO ()
-setup sourceMetadata backendConfig' (testEnvironment, _) = do
+setup :: Aeson.Value -> Aeson.Value -> TestEnvironment -> IO ()
+setup sourceMetadata backendConfig' testEnvironment = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig')
 
 -- | Teardown the schema and tracking in the most expected way.
-teardown :: (TestEnvironment, ()) -> IO ()
-teardown (testEnvironment, _) = do
+teardown :: TestEnvironment -> IO ()
+teardown testEnvironment = do
   GraphqlEngine.clearMetadata testEnvironment
 
 --------------------------------------------------------------------------------
@@ -151,3 +166,7 @@ tables:
 configuration:
   *config
 |]
+
+-- | Dummy Role Name for testing.
+testRoleName :: ByteString
+testRoleName = "test-role"

@@ -70,4 +70,9 @@ dataconnector:
 
 -- | Reference Agent specific @sources@ entry @configuration@ field.
 sourceConfiguration :: Aeson.Value
-sourceConfiguration = [yaml| {} |]
+sourceConfiguration =
+  [yaml|
+value: {}
+template:
+timeout:
+|]

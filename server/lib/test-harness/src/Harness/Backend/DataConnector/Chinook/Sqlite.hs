@@ -7,6 +7,7 @@ module Harness.Backend.DataConnector.Chinook.Sqlite
   ( agentConfig,
     sourceConfiguration,
     backendTypeMetadata,
+    formatForeignKeyName,
   )
 where
 
@@ -111,5 +112,14 @@ dataconnector:
 sourceConfiguration :: Aeson.Value
 sourceConfiguration =
   [yaml|
-db: "/db.chinook.sqlite"
+value:
+  db: "/db.chinook.sqlite"
+template:
+timeout:
 |]
+
+-- | Construct foreign key relationship names.
+formatForeignKeyName :: Text -> Text
+formatForeignKeyName = \case
+  "Artist" -> "ArtistId->Artist.ArtistId"
+  x -> x

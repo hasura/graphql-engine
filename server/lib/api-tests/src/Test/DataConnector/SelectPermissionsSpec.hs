@@ -1,12 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Select Permissions Tests for Data Connector Backend
-module Test.DataConnector.SelectPermissionsSpec (spec) where
+module Test.DataConnector.SelectPermissionsSpec (spec, tests) where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (Value)
-import Data.ByteString (ByteString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
@@ -14,8 +12,6 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendTypeConfig)
-import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -30,86 +26,15 @@ spec =
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction (sourceConfig Reference.backendTypeMetadata Reference.sourceConfiguration) Reference.agentConfig testEnv]
+                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
             },
           (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction (sourceConfig Sqlite.backendTypeMetadata Sqlite.sourceConfiguration) Sqlite.agentConfig testEnv]
+                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
             }
         ]
     )
     tests
-
---------------------------------------------------------------------------------
-
-testRoleName :: ByteString
-testRoleName = "test-role"
-
-sourceConfig :: BackendTypeConfig -> Value -> Value
-sourceConfig backendTypeMetadata config =
-  let source = BackendType.backendSourceName backendTypeMetadata
-      backendTypeString = BackendType.backendTypeString backendTypeMetadata
-   in [yaml|
-        name : *source
-        kind: *backendTypeString
-        tables:
-          - table: [Employee]
-            array_relationships:
-              - name: SupportRepForCustomers
-                using:
-                  manual_configuration:
-                    remote_table: [Customer]
-                    column_mapping:
-                      EmployeeId: SupportRepId
-            select_permissions:
-              - role: *testRoleName
-                permission:
-                  columns:
-                    - EmployeeId
-                    - FirstName
-                    - LastName
-                    - Country
-                  filter:
-                    SupportRepForCustomers:
-                      Country:
-                        _ceq: [ "$", "Country" ]
-          - table: [Customer]
-            object_relationships:
-              - name: SupportRep
-                using:
-                  manual_configuration:
-                    remote_table: [Employee]
-                    column_mapping:
-                      SupportRepId: EmployeeId
-            select_permissions:
-              - role: *testRoleName
-                permission:
-                  columns:
-                    - CustomerId
-                    - FirstName
-                    - LastName
-                    - Country
-                    - SupportRepId
-                  filter:
-                    SupportRep:
-                      Country:
-                        _ceq: [ "$", "Country" ]
-          - table: [Album]
-            select_permissions:
-              - role: *testRoleName
-                permission:
-                  columns:
-                    - AlbumId
-                    - Title
-                    - ArtistId
-                  filter:
-                    _exists:
-                      _table: [Customer]
-                      _where:
-                        CustomerId:
-                          _eq: X-Hasura-CustomerId
-        configuration: *config
-|]
 
 --------------------------------------------------------------------------------
 
@@ -120,7 +45,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
-          [("X-Hasura-Role", testRoleName)]
+          [("X-Hasura-Role", Chinook.testRoleName)]
           [graphql|
             query getEmployee {
               Employee {
@@ -154,7 +79,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
-          [("X-Hasura-Role", testRoleName)]
+          [("X-Hasura-Role", Chinook.testRoleName)]
           [graphql|
             query getCustomer {
               Customer {
@@ -217,7 +142,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
-          [("X-Hasura-Role", testRoleName)]
+          [("X-Hasura-Role", Chinook.testRoleName)]
           [graphql|
             query getEmployee {
               Employee {
@@ -292,7 +217,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
-          [("X-Hasura-Role", testRoleName)]
+          [("X-Hasura-Role", Chinook.testRoleName)]
           [graphql|
             query getEmployee {
               Employee(order_by: {SupportRepForCustomers_aggregate: {count: desc}}) {
@@ -345,7 +270,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
-          [ ("X-Hasura-Role", testRoleName),
+          [ ("X-Hasura-Role", Chinook.testRoleName),
             ("X-Hasura-CustomerId", "1")
           ]
           [graphql|
@@ -369,7 +294,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
-          [ ("X-Hasura-Role", testRoleName),
+          [ ("X-Hasura-Role", Chinook.testRoleName),
             ("X-Hasura-CustomerId", "0")
           ]
           [graphql|

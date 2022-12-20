@@ -9,6 +9,8 @@ module Harness.Test.Fixture
     runSingleSetup,
     runWithLocalTestEnvironment,
     runWithLocalTestEnvironmentSingleSetup,
+    runWithLocalTestEnvironmentInternal,
+    createDatabases,
     Fixture (..),
     fixture,
     FixtureName (..),
@@ -155,7 +157,10 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of
 -- @bracket@.
-fixtureBracket :: Fixture b -> (ActionWith (TestEnvironment, b)) -> ActionWith GlobalTestEnvironment
+fixtureBracket ::
+  Fixture b ->
+  (ActionWith (TestEnvironment, b)) ->
+  ActionWith GlobalTestEnvironment
 fixtureBracket
   Fixture
     { name,

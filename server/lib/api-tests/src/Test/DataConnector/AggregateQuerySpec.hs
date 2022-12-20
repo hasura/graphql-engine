@@ -1,6 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.DataConnector.AggregateQuerySpec (spec) where
+module Test.DataConnector.AggregateQuerySpec
+  ( spec,
+    tests,
+  )
+where
 
 import Data.Aeson qualified as Aeson
 import Data.List.NonEmpty qualified as NE
@@ -83,13 +87,17 @@ sourceMetadata backendTypeMetadata config =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "Aggregate Query Tests" $ do
-  describe "Nodes Tests" $ do
-    it "works with simple query" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  nodeTests opts
+  aggregateTests opts
+
+nodeTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+nodeTests opts = describe "Nodes Tests" $ do
+  it "works with simple query" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album_aggregate(limit: 2) {
                   nodes {
@@ -99,8 +107,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album_aggregate:
               nodes:
@@ -110,12 +118,12 @@ tests opts = describe "Aggregate Query Tests" $ do
                   Title: Balls to the Wall
         |]
 
-    it "works with multiple nodes fields" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  it "works with multiple nodes fields" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album_aggregate(limit: 2) {
                   AlbumIds: nodes {
@@ -127,8 +135,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album_aggregate:
               AlbumIds:
@@ -139,13 +147,13 @@ tests opts = describe "Aggregate Query Tests" $ do
                 - Title: Balls to the Wall
         |]
 
-    it "works with object relations" $ \(testEnvironment, _) -> do
-      -- NOTE: Ordering is required due to datasets non-matching orders
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  it "works with object relations" $ \(testEnvironment, _) -> do
+    -- NOTE: Ordering is required due to datasets non-matching orders
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album_aggregate(order_by: {AlbumId: asc}, limit: 2) {
                   nodes {
@@ -157,8 +165,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album_aggregate:
               nodes:
@@ -170,27 +178,27 @@ tests opts = describe "Aggregate Query Tests" $ do
                     Name: Accept
         |]
 
-    it "works with array relations" $ \(testEnvironment, _) -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getArtist {
-                Artist_aggregate(limit: 2) {
-                  nodes {
-                    ArtistId
-                    Albums: Albums_aggregate {
-                      nodes {
-                        Title
-                      }
+  it "works with array relations" $ \(testEnvironment, _) -> do
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
+            query getArtist {
+              Artist_aggregate(limit: 2) {
+                nodes {
+                  ArtistId
+                  Albums: Albums_aggregate {
+                    nodes {
+                      Title
                     }
                   }
                 }
               }
-            |]
-        )
-        [yaml|
+            }
+          |]
+      )
+      [yaml|
           data:
             Artist_aggregate:
               nodes:
@@ -206,6 +214,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                       - Title: Restless and Wild
         |]
 
+aggregateTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+aggregateTests opts =
   describe "Aggregate Tests" $ do
     it "works with count queries" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -445,7 +455,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                       count: 14
         |]
     it "works for custom aggregate functions" $ \(testEnvironment, _) -> do
-      when (fmap Fixture.backendType (TE.backendTypeConfig testEnvironment) /= Just Fixture.DataConnectorReference) do
+      when ((fmap Fixture.backendType (TE.backendTypeConfig testEnvironment)) /= Just Fixture.DataConnectorReference) do
         pendingWith "Agent does not support 'longest' and 'shortest' custom aggregate functions"
       shouldReturnYaml
         opts

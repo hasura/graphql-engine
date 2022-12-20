@@ -429,6 +429,7 @@ runGetTableInfo GetTableInfo {..} = do
         logger :: L.Logger L.Hasura <- asks getter
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
+            -- TODO(SOLOMON): Apply Kriti Transform to 'apiConfig':
             apiConfig = DC.Types.value _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- do
