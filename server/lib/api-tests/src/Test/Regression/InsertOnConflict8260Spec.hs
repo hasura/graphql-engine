@@ -155,7 +155,7 @@ tests opts = do
                   [("X-Hasura-Role", encodeUtf8 "role-select-only")]
                   [graphql|
                     query ActualData {
-                      hasura_foo {
+                      hasura_foo(order_by: {id: asc}) {
                         bar
                         id
                       }
