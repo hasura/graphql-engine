@@ -39,7 +39,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 1 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -61,7 +61,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 1 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -82,7 +82,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - cockroach sql --insecure < /dev/null && sleep 1 && cockroach sql --insecure < /dev/null
+        - cockroach sql --insecure < /dev/null && sleep 5 && cockroach sql --insecure < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
