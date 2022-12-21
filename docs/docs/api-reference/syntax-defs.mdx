@@ -1398,7 +1398,7 @@ HGE provides the following functions that can be used in the template:
   eg::
 
   ```
-    > {{not true}}
+    > {{not(true)}}
     false
   ```
 
@@ -1407,7 +1407,7 @@ HGE provides the following functions that can be used in the template:
   eg::
 
   ```
-    > {{ escapeUri "?foo=bar/baz" }}
+    > {{ escapeUri("?foo=bar/baz") }}
     "%3Ffoo%3Dbar%2Fbaz"
   ```
 
@@ -1419,7 +1419,7 @@ HGE provides the following functions that can be used in the template:
   eg::
 
   ```
-    > {{getSessionVariable "myVariableName"}}
+    > {{getSessionVariable("myVariableName")}}
     "myVariableValue"
   ```
 

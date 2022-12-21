@@ -382,7 +382,7 @@ X-Hasura-Role: admin
 
 Note that you must use the `escapeUri` function to urlencode templated values. For example, if you have to use session
 variables in the URL and those may contain non-ASCII values, then you should provide the template URL as
-`{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}`
+`{{$base_url}}/{{escapeUri($session_variables['x-hasura-user-id'])}}`
 
 :::
 
