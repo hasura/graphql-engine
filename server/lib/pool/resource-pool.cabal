@@ -52,7 +52,9 @@ test-suite resource-pool-tests
   build-depends:
       base
     , hspec
+    , async
     , resource-pool
+    , time
   hs-source-dirs: test
   main-is: Main.hs
 
