@@ -4,5 +4,11 @@
       "path": "."
     }
   ],
-  "settings": {}
+  "settings": {
+    "cSpell.words": ["clsx"],
+    "tailwindCSS.experimental.classRegex": [
+      "tw\\w+ ?= ?`([^`]*)`",
+      "tw\\w+: ?`([^`]*)`"
+    ]
+  }
 }
