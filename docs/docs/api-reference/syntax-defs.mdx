@@ -1627,3 +1627,26 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | -------------- | -------- | ----------------------------- | ----------------------------------------- |
 | event_triggers | true     | [[TriggerName]](#triggername) | List of trigger names                     |
 | source_name    | true     | [SourceName](#sourcename)     | Source to which the Event Triggers belong |
+
+## APILimitOption {#apilimitoption}
+
+| Key       | required | Schema                        | Description                                                          |
+|-----------|----------|-------------------------------|----------------------------------------------------------------------|
+| global    | true     | Integer                       | Mandatory limit to be set at the global level                        |
+| per_role  | false    | Object (`String`: Integer)   | Map of role name to limit value. This defines limits for each role    |
+
+## RateLimitOption {#ratelimitoption}
+
+| Key       | required | Schema                                                                | Description                                                                |
+|-----------|----------|-----------------------------------------------------------------------|----------------------------------------------------------------------------|
+| global    | true     | [RateLimitPerRoleOption](#ratelimitperroleoption)                     | Mandatory rate limit to be set at the global level                         |
+| per_role  | false    | Object (`String`: [RateLimitPerRoleOption](#ratelimitperroleoption))  | Map of role name to rate limit config. This defines limits for each role   |
+
+
+## RateLimitPerRoleOption {#ratelimitperroleoption}
+
+| Key              | required | Schema                        | Description                                                          |
+|------------------|----------|-------------------------------|----------------------------------------------------------------------|
+| unique_params    | false    | `String` \| [`String`]        | This would be either fixed value `IP` or a list of Session variables |
+| max_reqs_per_min | true     | Integer                       | Maximum requests per minute to be allowed                            |
+

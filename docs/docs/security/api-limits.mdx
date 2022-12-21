@@ -188,7 +188,8 @@ query query3 {
 API limits can have a _global_ or _per role_ configuration. If an incoming request does not contain a valid role then
 the global limit is applied.
 
-<Thumbnail src="/img/security/pro-tab-apilimits.png" alt="Hasura Cloud Console api limit tab" />
+<Thumbnail src='/img/security/pro-tab-apilimits.png' alt='Hasura Cloud Console api limit tab' />
+<Thumbnail src='/img/security/security-apilimits-details.png' alt='Hasura Cloud Console api limit tab details' />
 
 :::info Admin & IntrospectionQuery exemptions
 
@@ -198,105 +199,5 @@ All API limits are **not** applied for the admin role, and depth limits are **NO
 
 ## Metadata specification
 
-Hasura provides two Metadata API's to manage API limits
+This [API Reference Documentation](/api-reference/metadata-api/api-limits.mdx) describes the metadata API structure to manage API limits.
 
-### Setting API limits
-
-You can configure api limits using the `set_api_limits` API.
-
-```yaml
-type: set_api_limits
-args:
-  disabled: # Optional Field (Either True or False, The value is False by default)
-
-  depth_limit: # Optional API Limit
-    global: # Mandatory Field
-    per_role: # Optional Field
-      <role_name>: <limit value> # Eg: user: 5
-
-  node_limit: # Optional API Limit
-    global: # Mandatory Field
-    per_role: # Optional Field
-      <role_name>: <limit value> # Eg: user: 5
-
-  rate_limit: # Optional API Limit
-    global: # Mandatory Field
-      unique_params: # Optional Field, Can either be IP Address or Session variables
-      max_reqs_per_min: # Mandatory Field
-
-    per_role: # Optional Field
-      <role_name>:
-        max_reqs_per_min: # Mandatory Field
-        unique_params: # Optional Field
-
-  time_limit: # Optional API Limit
-    global: # Mandatory Field
-    per_role: # Optional Field
-      <role_name>: <limit value> # Eg: user: 5
-
-  batch_limit: # Optional API Limit
-    global: # Mandatory Field
-    per_role: # Optional Field
-      <role_name>: <limit value> # Eg: user: 5
-```
-
-In the above Metadata spec:
-
-1.  The API Limits are `Enabled` by default, i.e the default value of `disabled` is `False`
-2.  When `disabled` is `False` and none of the API Limits are set then no API limits are applied.
-3.  The `global` field in all the API Limits is mandatory, and is used as the default API limit if no `per_role` option
-    is set for the user.
-4.  The `per_role` can be used to override the `global` API Limit value
-5.  For `rate_limit` if no `unique_params` are provided then, the requests will be rate-limited on the `role_name` i.e
-    the `X-HASURA-ROLE` that is used to issue the request
-
-Example Metadata Spec:
-
-```yaml
-type: set_api_limits
-args:
-  disabled: false
-
-  depth_limit:
-    global: 5
-    per_role:
-      user: 7
-
-  node_limit:
-    global: 3
-    per_role:
-      user: 10
-
-  rate_limit:
-    global:
-      unique_params: IP
-      max_reqs_per_min: 10
-    per_role:
-      anonymous:
-        max_reqs_per_min: 10
-        unique_params: 'ip'
-      user:
-        unique_params:
-          - x-hasura-user-id
-          - x-hasura-team-id
-        max_reqs_per_min: 20
-
-  time_limit:
-    global: 10
-    per_role:
-      user: 5
-
-  batch_limit:
-    global: 5
-    per_role:
-      user: 2
-```
-
-### Removing API limits
-
-You can remove **all** the api limits that have been set using `remove_api_limit` API.
-
-```yaml
-type: remove_api_limits
-args: {}
-```
