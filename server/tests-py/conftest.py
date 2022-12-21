@@ -9,7 +9,7 @@ import sqlalchemy
 import sys
 import threading
 import time
-from typing import Optional
+from typing import Any, Optional
 import urllib.parse
 import uuid
 
@@ -251,29 +251,32 @@ def pytest_configure_node(node):
         node.workerinput["hge-url"] = node.config.hge_url_list.pop()
         node.workerinput["pg-url"] = node.config.pg_url_list.pop()
 
-def run_on_current_backend(request: pytest.FixtureRequest):
-    current_backend = request.config.getoption('--backend')
+@pytest.fixture(scope='class', autouse=True)
+def current_backend(request: pytest.FixtureRequest) -> str:
+    return request.config.getoption('--backend')  # type: ignore
+
+def run_on_current_backend(request: pytest.FixtureRequest, current_backend: str):
     # Currently, we default all tests to run on Postgres with or without a --backend flag.
     # As our test suite develops, we may consider running backend-agnostic tests on all
     # backends, unless a specific `--backend` flag is passed.
     desired_backends = set(name for marker in request.node.iter_markers('backend') for name in marker.args) or set(['postgres'])
     return current_backend in desired_backends
 
-def per_backend_tests_fixture(request: pytest.FixtureRequest):
+def per_backend_tests_fixture(request: pytest.FixtureRequest, current_backend: str):
     """
     This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
     """
-    if not run_on_current_backend(request):
+    if not run_on_current_backend(request, current_backend):
         desired_backends = set(name for marker in request.node.iter_markers('backend') for name in marker.args)
         pytest.skip('Skipping test. This test can run on ' + ', '.join(desired_backends) + '.')
 
 @pytest.fixture(scope='class', autouse=True)
-def per_backend_test_class(request: pytest.FixtureRequest):
-    return per_backend_tests_fixture(request)
+def per_backend_test_class(request: pytest.FixtureRequest, current_backend: str):
+    return per_backend_tests_fixture(request, current_backend)
 
 @pytest.fixture(scope='function', autouse=True)
-def per_backend_test_function(request: pytest.FixtureRequest):
-    return per_backend_tests_fixture(request)
+def per_backend_test_function(request: pytest.FixtureRequest, current_backend: str):
+    return per_backend_tests_fixture(request, current_backend)
 
 @pytest.fixture(scope='session')
 def owner_engine(request: pytest.FixtureRequest, hge_bin: str):
@@ -317,6 +320,67 @@ def source_backend(
         return
 
     yield from fixtures.postgres.source_backend(request, owner_engine, runner_engine, hge_ctx_fixture)
+
+@pytest.fixture(scope='class')
+def add_source(
+    request: pytest.FixtureRequest,
+    owner_engine: sqlalchemy.engine.Engine,
+    runner_engine: sqlalchemy.engine.Engine,
+    hge_ctx_fixture: HGECtx,
+    hge_bin: Optional[str],
+):
+    # TODO: remove once parallelization work is completed
+    #       `hge_bin` will no longer be optional
+    if not hge_bin:
+        def ignoring_errors(f):
+            def ignoring_errors_impl(*args, **kwargs):
+                try:
+                    f(*args, **kwargs)
+                except:
+                    pass
+            return ignoring_errors_impl
+
+        def impl(name: str, customization: Any = None):
+            if name == 'pg1':
+                env_var = 'HASURA_GRAPHQL_PG_SOURCE_URL_1'
+            elif name == 'pg2' or name == 'postgres':
+                env_var = 'HASURA_GRAPHQL_PG_SOURCE_URL_2'
+            else:
+                raise Exception(f'Cannot add source {name}.')
+
+            hge_ctx_fixture.v1metadataq({
+                'type': 'pg_add_source',
+                'args': {
+                    'name': name,
+                    'configuration': {
+                        'connection_info': {
+                            'database_url': {
+                                'from_env': env_var,
+                            },
+                        },
+                    },
+                    'customization': customization,
+                },
+            })
+            request.addfinalizer(ignoring_errors(lambda: hge_ctx_fixture.v1metadataq({
+                'type': 'pg_drop_source',
+                'args': {
+                    'name': name,
+                },
+            })))
+
+            engine = sqlalchemy.create_engine(os.environ[env_var])
+            return fixtures.postgres.Backend(name, engine)
+
+        return impl
+
+    def impl(name: str, customization: Any = None):
+        backend = fixtures.postgres.create_schema(request, owner_engine, runner_engine, f'source_{name}')
+        fixtures.postgres.add_source(hge_ctx_fixture, backend, name, customization)
+        request.addfinalizer(lambda: fixtures.postgres.drop_source(hge_ctx_fixture, name))
+        return backend
+
+    return impl
 
 @pytest.fixture(scope='class')
 def postgis(owner_engine: sqlalchemy.engine.Engine, source_backend: fixtures.postgres.Backend):

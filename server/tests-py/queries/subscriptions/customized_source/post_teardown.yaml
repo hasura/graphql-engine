@@ -1,3 +1,0 @@
-type: pg_drop_source
-args:
-  name: pg1

@@ -36,10 +36,6 @@ if [[ "$(uname -m)" == 'arm64' ]]; then
 fi
 
 echo
-echo '*** Pulling images ***'
-docker compose pull "${DATABASES[@]}"
-
-echo
 echo '*** Starting databases ***'
 docker compose up -d --wait "${DATABASES[@]}"
 

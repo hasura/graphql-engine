@@ -1,7 +1,6 @@
 import os
 import pytest
 import subprocess
-import threading
 from typing import Optional
 
 import ports
@@ -10,8 +9,15 @@ import ports
 # Other variables are ignored.
 _PASS_THROUGH_ENV_VARS = set([
     'PATH',  # required for basically anything to work
+
     'HASURA_GRAPHQL_PG_SOURCE_URL_1',
     'HASURA_GRAPHQL_PG_SOURCE_URL_2',
+    'HASURA_GRAPHQL_CITUS_SOURCE_URL',
+    'HASURA_GRAPHQL_MSSQL_SOURCE_URL',
+
+    # required for Nix-based ODBC driver configuration
+    'ODBCSYSINI',
+    'ODBCINSTINI',
 ])
 
 

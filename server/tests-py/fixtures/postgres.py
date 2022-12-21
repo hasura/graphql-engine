@@ -70,7 +70,10 @@ def create_schema(
     runner_engine: sqlalchemy.engine.Engine,
     prefix: str,
 ) -> Backend:
-    name = request.node.name.lower().replace('.', '_')
+    # generate a database from the fully-qualified test name
+    # e.g. for the test, 'test_metadata.py::TestMetadata::test_reload_metadata',
+    # the name will be 'tests_py_test_metadata_py_testmetadata_test_reload_metadata'
+    name = '_'.join(re.sub('[\\.\\-]', '_', node.name.lower()) for node in request.node.listchain())
     schema_name = f'test_{prefix}_{name}'
     # PostgreSQL truncates database names to 63 characters.
     if len(schema_name) >= 64:
@@ -187,12 +190,13 @@ def source_backend(
     owner_engine: sqlalchemy.engine.Engine,
     runner_engine: sqlalchemy.engine.Engine,
     hge_ctx: HGECtx,
+    name: Optional[str] = None,
 ):
     disabled_marker = request.node.get_closest_marker('default_source_disabled')
     if disabled_marker:
         yield None
     else:
-        yield from new_source(request, owner_engine, runner_engine, hge_ctx)
+        yield from new_source(request, owner_engine, runner_engine, hge_ctx, name)
 
 
 def postgis(owner_engine: sqlalchemy.engine.Engine, source_backend: Optional[Backend]):
