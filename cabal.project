@@ -42,6 +42,9 @@ package graphql-engine
   ghc-options: -j
   haddock-options: "--show-all"
 
+allow-newer: hedgehog-generic:base
+allow-newer: hedgehog-generic:hedgehog
+
 source-repository-package
   type: git
   location: https://github.com/hasura/kriti-lang.git

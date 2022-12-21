@@ -1025,6 +1025,7 @@ test-suite graphql-engine-tests
     , graphql-parser
     , data-has
     , hedgehog
+    , hedgehog-generic
     , hspec
     , hspec-core
     , hspec-expectations
@@ -1095,6 +1096,7 @@ test-suite graphql-engine-tests
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
     Hasura.Backends.BigQuery.SourceSpec
+    Hasura.Backends.BigQuery.TypesSpec
     Hasura.Backends.DataConnector.Adapter.TypesSpec
     Hasura.Backends.DataConnector.API.V0.AggregateSpec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec

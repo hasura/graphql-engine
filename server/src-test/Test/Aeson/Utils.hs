@@ -19,6 +19,7 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types (parseEither)
 import Data.OpenApi
+import Data.Typeable (Proxy (..), Typeable, typeRep)
 import Data.Vector qualified as Vec
 import Hasura.Prelude
 import Hedgehog
@@ -26,6 +27,9 @@ import Hedgehog.Gen qualified as Gen
 import Hedgehog.Internal.Range
 import Test.Hspec
 import Test.Hspec.Hedgehog
+
+showType :: forall a. (Typeable a) => String
+showType = show $ typeRep (Proxy :: Proxy a)
 
 testFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a) => a -> Value -> Spec
 testFromJSON a v = do
@@ -48,9 +52,9 @@ testToFromJSONToSchema a v = do
   testToFromJSON a v
   validateToJSONOpenApi a
 
-jsonRoundTrip :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
+jsonRoundTrip :: forall a. (HasCallStack, Typeable a, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
 jsonRoundTrip gen =
-  it "JSON roundtrips" $
+  it ("JSON roundtrips " <> showType @a) $
     hedgehog $ do
       a <- forAll gen
       tripping a toJSON (parseEither parseJSON)
@@ -64,7 +68,7 @@ jsonEncodingEqualsValue gen =
           decoded = decode encoded :: Maybe Value
       decoded === Just (toJSON a)
 
-jsonProperties :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
+jsonProperties :: (HasCallStack, Typeable a, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
 jsonProperties gen = do
   jsonRoundTrip gen
   jsonEncodingEqualsValue gen
