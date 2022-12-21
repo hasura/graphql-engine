@@ -37,7 +37,7 @@ This proposal extends the functionality of graphql-engine to allow queries to be
   * [Versioning](#versioning)
   * [Sample Postgres source metadata](#sample-postgres-source-metadata)
 - [Test template API](#test-template-api)
-  * [Spec](#spec)
+  * [Example](#example)
 - [Limitations](#limitations)
   * [1. Postgres schema of connection set](#1-postgres-schema-of-connection-set)
   * [2. Event triggers](#2-event-triggers)
@@ -505,7 +505,7 @@ An admin-only metadata API to test connection templates.
 The API works similar to the [test_webhook_transform](https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#test-webhook-transform) API.
 Payload contains necessary information to resolve the template such as request headers, session variables and GraphQL query parameters like query type and operation name.
 
-### Spec
+### Example
 
 Request:
 ```http
@@ -536,14 +536,15 @@ X-Hasura-Role: admin
 Success Response:
 ```json
 {
-  "resolved_to": "<primary | read_replicas | connection_set | default>",
-  "value": "< null | string_name_incase_of_connection_set>"
+  "result": {
+    "routing_to": "<primary | read_replicas | connection_set | default>",
+    "value": "< null | connection_set_member_name>"
+  }
 }
 ```
 
 Error Response:
 
-A JSON serialization of `QErr` data type. Example as follows,
 ```json
 {
   "path": "$"
