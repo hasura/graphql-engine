@@ -159,7 +159,7 @@ withPermissions (toList -> permissions) = mapSpecForest (map go)
       traverse_ (createPermission testEnvironment) permissions'
 
       test testEnvironment {testingRole = Just "success"}
-        `finally` for_ (backendTypeConfig testEnvironment) \config ->
+        `finally` for_ (getBackendTypeConfig testEnvironment) \config ->
           traverse_ (dropPermission config testEnvironment) permissions'
 
     failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
@@ -185,7 +185,7 @@ withPermissions (toList -> permissions) = mapSpecForest (map go)
                     pure ()
 
           attempt (test testEnvironment {testingRole = Just "failure"})
-            `finally` for_ (backendTypeConfig testEnvironment) \config ->
+            `finally` for_ (getBackendTypeConfig testEnvironment) \config ->
               traverse_ (dropPermission config testEnvironment) permissions'
 
 -- | Update the role on a given permission.
@@ -200,7 +200,7 @@ withRole role = \case
 -- should implement their own variation in its harness module.
 createPermission :: TestEnvironment -> Permission -> IO ()
 createPermission testEnvironment (InsertPermission InsertPermissionDetails {..}) = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       sourceName =
@@ -225,7 +225,7 @@ createPermission testEnvironment (InsertPermission InsertPermissionDetails {..})
           set: {}
     |]
 createPermission testEnvironment (UpdatePermission UpdatePermissionDetails {..}) = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       sourceName =
@@ -250,7 +250,7 @@ createPermission testEnvironment (UpdatePermission UpdatePermissionDetails {..})
           set: {}
     |]
 createPermission testEnvironment (SelectPermission SelectPermissionDetails {..}) = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       sourceName =

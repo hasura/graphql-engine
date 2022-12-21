@@ -21,7 +21,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, focusFixtureLeft, focusFixtureRight, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -180,8 +180,9 @@ lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 lhsPostgresSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresSetup albumJoin artistJoin (testEnvironment, _) = do
-  let sourceName = "source"
+lhsPostgresSetup albumJoin artistJoin (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -230,8 +231,9 @@ rhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 rhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 rhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
-rhsPostgresSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsPostgresSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment

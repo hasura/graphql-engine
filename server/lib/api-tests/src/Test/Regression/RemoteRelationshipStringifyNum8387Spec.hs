@@ -13,12 +13,13 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.FixtureName (FixtureName (..))
 import Harness.Test.Permissions (SelectPermissionDetails (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, backendTypeConfig, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), getBackendTypeConfig, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -185,7 +186,7 @@ lhsRole2 =
 
 createRemoteRelationship :: Value -> TestEnvironment -> IO ()
 createRemoteRelationship rhsTableName testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schemaName = Schema.getSchemaName testEnvironment
   GraphqlEngine.postMetadata_
@@ -212,7 +213,7 @@ createRemoteRelationship rhsTableName testEnvironment = do
 
 lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let testEnvironmentPostgres = testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)}
+  let testEnvironmentPostgres = testEnvironment {fixtureName = Backend Postgres.backendTypeMetadata}
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
@@ -308,7 +309,7 @@ rhsRole2 =
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
-  let testEnvironmentPostgres = testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)}
+  let testEnvironmentPostgres = testEnvironment {fixtureName = Backend Postgres.backendTypeMetadata}
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
   -- Add remote source

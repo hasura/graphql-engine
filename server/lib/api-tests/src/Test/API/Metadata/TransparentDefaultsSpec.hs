@@ -93,7 +93,7 @@ setupMetadata :: TestEnvironment -> Fixture.SetupAction
 setupMetadata testEnvironment = do
   let sourceName = BT.backendSourceName btc
       sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
-      btc = fromMaybe (error "Couldn't find backendTypeConfig") (backendTypeConfig testEnvironment)
+      btc = fromMaybe (error "Couldn't find backendTypeConfig") (getBackendTypeConfig testEnvironment)
 
       setup :: IO ()
       setup =

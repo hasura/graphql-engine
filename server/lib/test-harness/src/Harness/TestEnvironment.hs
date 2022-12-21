@@ -10,6 +10,9 @@ module Harness.TestEnvironment
     UniqueTestId (..),
     getServer,
     getTestingMode,
+    getBackendTypeConfig,
+    focusFixtureLeft,
+    focusFixtureRight,
     serverUrl,
     stopServer,
     testLogTrace,
@@ -27,6 +30,7 @@ import Data.Word
 import Database.PostgreSQL.Simple.Options (Options)
 import Harness.Logging.Messages
 import Harness.Test.BackendType
+import Harness.Test.FixtureName
 import Hasura.Prelude
 import Text.Pretty.Simple
 
@@ -63,9 +67,8 @@ data TestEnvironment = TestEnvironment
     -- | a uuid generated for each test suite used to generate a unique
     -- `SchemaName`
     uniqueTestId :: UniqueTestId,
-    -- | the main backend type of the test, if applicable (ie, where we are not
-    -- testing `remote <-> remote` joins or someting similarly esoteric)
-    backendTypeConfig :: Maybe BackendTypeConfig,
+    -- | the backend types of the tests
+    fixtureName :: FixtureName,
     -- | The role we attach to requests made within the tests. This allows us
     -- to test permissions.
     testingRole :: Maybe Text
@@ -74,6 +77,35 @@ data TestEnvironment = TestEnvironment
 instance Show TestEnvironment where
   show TestEnvironment {globalEnvironment} =
     "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"
+
+-- | the `BackendTypeConfig` is used to decide which schema name to use
+-- and for data connector capabilities
+-- this will fail when used with 'Combine' - we should use `focusFixtureLeft`
+-- and `focusFixtureRight` to solve this
+getBackendTypeConfig :: TestEnvironment -> Maybe BackendTypeConfig
+getBackendTypeConfig testEnvironment = case fixtureName testEnvironment of
+  Backend db -> Just db
+  _ -> Nothing
+
+-- | in remote schema tests, we have two fixtures, but only want to talk about
+-- one at a time
+focusFixtureLeft :: TestEnvironment -> TestEnvironment
+focusFixtureLeft testEnv =
+  testEnv
+    { fixtureName = case fixtureName testEnv of
+        Combine l _ -> l
+        _ -> error "Could not focus on left-hand FixtureName"
+    }
+
+-- | in remote schema tests, we have two fixtures, but only want to talk about
+-- one at a time
+focusFixtureRight :: TestEnvironment -> TestEnvironment
+focusFixtureRight testEnv =
+  testEnv
+    { fixtureName = case fixtureName testEnv of
+        Combine _ r -> r
+        _ -> error "Could not focus on right-hand FixtureName"
+    }
 
 -- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
 -- practical consequences of this type.

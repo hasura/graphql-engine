@@ -316,7 +316,7 @@ aggregateTests opts =
                   Total: 2328.6
         |]
 
-      if (fmap Fixture.backendType (TE.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorReference)
+      if (fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorReference)
         then
           shouldReturnYaml
             opts
@@ -455,7 +455,7 @@ aggregateTests opts =
                       count: 14
         |]
     it "works for custom aggregate functions" $ \(testEnvironment, _) -> do
-      when ((fmap Fixture.backendType (TE.backendTypeConfig testEnvironment)) /= Just Fixture.DataConnectorReference) do
+      when ((fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment)) /= Just Fixture.DataConnectorReference) do
         pendingWith "Agent does not support 'longest' and 'shortest' custom aggregate functions"
       shouldReturnYaml
         opts

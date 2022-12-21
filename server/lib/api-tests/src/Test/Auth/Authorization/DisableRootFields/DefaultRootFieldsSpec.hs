@@ -16,7 +16,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, backendTypeConfig)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Auth.Authorization.DisableRootFields.Common
@@ -115,7 +115,7 @@ tests opts = describe "DefaultRootFieldSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
 
       backendType :: TestEnvironment -> Maybe Fixture.BackendType
-      backendType testEnvironment = fmap Fixture.backendType (backendTypeConfig testEnvironment)
+      backendType testEnvironment = fmap Fixture.backendType (getBackendTypeConfig testEnvironment)
 
   it "'list' root field is enabled and accessible" $ \testEnvironment -> do
     shouldReturnYaml

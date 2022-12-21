@@ -22,7 +22,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -117,7 +117,7 @@ tests opts = do
           -- https://learn.microsoft.com/en-us/sql/t-sql/functions/avg-transact-sql?view=sql-server-ver16#return-types
           avgResult :: String
           avgResult
-            | fmap BackendType.backendType (backendTypeConfig testEnvironment) == Just Fixture.SQLServer = "3"
+            | fmap BackendType.backendType (getBackendTypeConfig testEnvironment) == Just Fixture.SQLServer = "3"
             | otherwise = "3.25"
 
       let expected :: Value

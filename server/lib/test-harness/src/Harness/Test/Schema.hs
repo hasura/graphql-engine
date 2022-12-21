@@ -57,7 +57,7 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SchemaName
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig)
 import Hasura.Prelude
 
 -- | Generic type to use to specify schema tables for all backends.
@@ -303,7 +303,7 @@ parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 -- Data Connector backends expect an @[String]@ for the table name.
 trackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()
 trackTable source Table {tableName} testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
       requestType = backendType <> "_track_table"
@@ -323,7 +323,7 @@ args:
 -- Data Connector backends expect an @[String]@ for the table name.
 untrackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()
 untrackTable source Table {tableName} testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
       requestType = backendType <> "_untrack_table"
@@ -340,7 +340,7 @@ args:
 
 trackFunction :: HasCallStack => String -> String -> TestEnvironment -> IO ()
 trackFunction source functionName testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
       requestType = backendType <> "_track_function"
@@ -358,7 +358,7 @@ args:
 -- | Unified untrack function
 untrackFunction :: HasCallStack => String -> String -> TestEnvironment -> IO ()
 untrackFunction source functionName testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
   let requestType = backendType <> "_untrack_function"
@@ -384,7 +384,7 @@ trackComputedField ::
   TestEnvironment ->
   IO ()
 trackComputedField source Table {tableName} functionName asFieldName argumentMapping returnTable testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
       schemaKey = BackendType.backendSchemaKeyword backendTypeMetadata
@@ -413,7 +413,7 @@ args:
 -- | Unified untrack computed field
 untrackComputedField :: HasCallStack => String -> Table -> String -> TestEnvironment -> IO ()
 untrackComputedField source Table {tableName} fieldName testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
       schemaKey = BackendType.backendSchemaKeyword backendTypeMetadata
@@ -451,7 +451,7 @@ mkTableField backendTypeMetadata schemaName tableName =
 -- | Unified track object relationships
 trackObjectRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
 trackObjectRelationships Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schema = getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       source = BackendType.backendSourceName backendTypeMetadata
@@ -503,7 +503,7 @@ mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn =
 -- | Unified track array relationships
 trackArrayRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
 trackArrayRelationships Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schema = getSchemaName testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       source = BackendType.backendSourceName backendTypeMetadata
@@ -554,7 +554,7 @@ args:
 -- | Unified untrack relationships
 untrackRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
 untrackRelationships Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schema = getSchemaName testEnvironment
       source = BackendType.backendSourceName backendTypeMetadata
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -592,7 +592,7 @@ untrackRelationships Table {tableName, tableReferences, tableManualRelationships
 -- | Unified RunSQL
 runSQL :: HasCallStack => String -> String -> TestEnvironment -> IO ()
 runSQL source sql testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       prefix = case BackendType.backendType backendTypeMetadata of
         BackendType.Postgres -> ""
         _ -> BackendType.backendTypeString backendTypeMetadata <> "_"
@@ -608,9 +608,9 @@ args:
   read_only: false
 |]
 
-addSource :: Text -> Value -> TestEnvironment -> IO ()
+addSource :: HasCallStack => Text -> Value -> TestEnvironment -> IO ()
 addSource sourceName sourceConfig testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
   GraphqlEngine.postMetadata_
     testEnvironment

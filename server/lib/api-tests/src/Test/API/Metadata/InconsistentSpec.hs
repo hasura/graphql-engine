@@ -132,7 +132,7 @@ replaceMetadataWithTable testEnvironment =
             configuration: *sourceConfiguration
   |]
   where
-    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
     sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
     sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
@@ -159,7 +159,7 @@ setupMetadataWithInconsistentSource testEnvironment =
                 pool_settings: {}
   |]
   where
-    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
     sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
@@ -203,7 +203,7 @@ setupMetadataWithTableAndEventTrigger testEnvironment =
             configuration: *sourceConfiguration
   |]
   where
-    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
     sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
     sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
@@ -224,7 +224,7 @@ replaceMetadataDropInconsistentTable testEnvironment =
             configuration: *sourceConfiguration
   |]
   where
-    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
     sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
     sourceName = Fixture.backendSourceName backendTypeMetadata
 
@@ -243,14 +243,14 @@ expectedInconsistentYaml message testEnvironment =
   |]
   where
     messageYaml = maybe "" ("message: " <>) message
-    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
     sourceName = Fixture.backendSourceName backendTypeMetadata
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
 
 setupMetadata :: TestEnvironment -> Fixture.SetupAction
 setupMetadata testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       sourceName = Fixture.backendSourceName backendTypeMetadata
       sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
 
@@ -279,7 +279,7 @@ dropTablesBeforeAndAfter :: TestEnvironment -> Fixture.SetupAction
 dropTablesBeforeAndAfter testEnvironment = do
   Fixture.SetupAction action (const action)
   where
-    action = case BackendType.backendType <$> (backendTypeConfig testEnvironment) of
+    action = case BackendType.backendType <$> (getBackendTypeConfig testEnvironment) of
       Just Fixture.Postgres -> Postgres.dropTableIfExists testEnvironment table
       Just b -> fail $ "Unknown backend:" <> show b
       Nothing -> fail $ "Unknown backend."

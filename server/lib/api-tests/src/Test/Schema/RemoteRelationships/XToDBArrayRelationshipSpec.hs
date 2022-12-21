@@ -40,10 +40,18 @@ import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), stopServer)
+import Harness.TestEnvironment
+  ( GlobalTestEnvironment,
+    Server,
+    TestEnvironment (..),
+    focusFixtureLeft,
+    focusFixtureRight,
+    getBackendTypeConfig,
+    stopServer,
+  )
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (HasCallStack, SpecWith, describe, it)
 
 -------------------------------------------------------------------------------
 -- Preamble
@@ -193,7 +201,8 @@ lhsRole1 =
     Permissions.selectPermission
       { selectPermissionRole = "role1",
         selectPermissionTable = lhsTableName_,
-        selectPermissionColumns = (["id", "name"] :: [Text])
+        selectPermissionColumns = (["id", "name"] :: [Text]),
+        selectPermissionSource = Just lhsSourceName_
       }
 
 lhsRole2 :: Permissions.Permission
@@ -202,12 +211,13 @@ lhsRole2 =
     Permissions.selectPermission
       { selectPermissionRole = "role2",
         selectPermissionTable = lhsTableName_,
-        selectPermissionColumns = (["id", "name"] :: [Text])
+        selectPermissionColumns = (["id", "name"] :: [Text]),
+        selectPermissionSource = Just lhsSourceName_
       }
 
-createRemoteRelationship :: Value -> TestEnvironment -> IO ()
+createRemoteRelationship :: HasCallStack => Value -> TestEnvironment -> IO ()
 createRemoteRelationship rhsTableName testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
       schemaName = Schema.getSchemaName testEnvironment
   GraphqlEngine.postMetadata_
@@ -264,7 +274,8 @@ rhsRole1 =
           [yaml|
         artist_id:
           _eq: x-hasura-artist-id
-      |]
+      |],
+        selectPermissionSource = Just rhsSourceName_
       }
 
 rhsRole2 :: Permissions.Permission
@@ -280,7 +291,8 @@ rhsRole2 =
           [yaml|
         artist_id:
           _eq: x-hasura-artist-id
-      |]
+      |],
+        selectPermissionSource = Just rhsSourceName_
       }
 
 rhsTable :: Aeson.Value
@@ -293,9 +305,10 @@ rhsTable =
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
+lhsPostgresSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource lhsSourceName_ sourceConfig testEnvironment
@@ -314,9 +327,10 @@ lhsPostgresSetup rhsTableName (testEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS Cockroach
 
-lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachSetup rhsTableName (testEnvironment, _) = do
-  let sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
+lhsCockroachSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   -- TODO(SOLOMON): Remove BackendTypeConfig param from all of these functions
@@ -336,9 +350,10 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS Citus
 
-lhsCitusSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsCitusSetup rhsTableName (testEnvironment, _) = do
-  let sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+lhsCitusSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceConfig = Citus.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource lhsSourceName_ sourceConfig testEnvironment
@@ -357,9 +372,10 @@ lhsCitusSetup rhsTableName (testEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
-lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
-  let sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
+lhsSQLServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource lhsSourceName_ sourceConfig testEnvironment
@@ -528,7 +544,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           a_name = pure $ Just artistName
         }
 
-lhsRemoteServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBArrayRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
@@ -564,8 +580,9 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 -- RHS Postgres
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
-rhsPostgresSetup (testEnvironment, _) = do
-  let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
+rhsPostgresSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource rhsSourceName_ sourceConfig testEnvironment
@@ -583,8 +600,9 @@ rhsPostgresSetup (testEnvironment, _) = do
 -- RHS Cockroach
 
 rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
-rhsCockroachSetup (testEnvironment, _) = do
-  let sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
+rhsCockroachSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource rhsSourceName_ sourceConfig testEnvironment
@@ -602,8 +620,9 @@ rhsCockroachSetup (testEnvironment, _) = do
 -- RHS Citus
 
 rhsCitusSetup :: (TestEnvironment, ()) -> IO ()
-rhsCitusSetup (testEnvironment, _) = do
-  let sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+rhsCitusSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceConfig = Citus.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource rhsSourceName_ sourceConfig testEnvironment
@@ -621,8 +640,9 @@ rhsCitusSetup (testEnvironment, _) = do
 -- RHS SQLServer
 
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerSetup (testEnvironment, _) = do
-  let sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
+rhsSQLServerSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
 
   -- Add remote source
   Schema.addSource rhsSourceName_ sourceConfig testEnvironment

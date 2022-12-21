@@ -18,11 +18,11 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.Test.Fixture (Fixture (..))
+import Harness.Test.Fixture (Fixture (..), FixtureName (..))
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (backendTypeConfig), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -270,7 +270,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable sourceName track (testEnvironment {backendTypeConfig = Just (Postgres.backendTypeMetadata)})
+  Schema.trackTable sourceName track (testEnvironment {fixtureName = Backend Postgres.backendTypeMetadata})
 
 rhsPostgresTeardown :: TestEnvironment -> IO ()
 rhsPostgresTeardown testEnvironment = Postgres.dropDatabase testEnvironment

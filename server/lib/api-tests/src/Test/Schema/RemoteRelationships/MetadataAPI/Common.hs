@@ -52,7 +52,7 @@ import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (Server, TestEnvironment, focusFixtureLeft, focusFixtureRight, stopServer)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
@@ -204,8 +204,9 @@ albumTable =
 
 -- | RHS Postgres Setup
 rhsPostgresSetup :: TestEnvironment -> IO ()
-rhsPostgresSetup testEnvironment = do
-  let sourceName = "target"
+rhsPostgresSetup wholeTestEnvironment = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -225,8 +226,9 @@ rhsPostgresTeardown _testEnvironment = pure ()
 
 -- | LHS Postgres Setup
 lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresSetup (testEnvironment, _) = do
-  let sourceName = "source"
+lhsPostgresSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_

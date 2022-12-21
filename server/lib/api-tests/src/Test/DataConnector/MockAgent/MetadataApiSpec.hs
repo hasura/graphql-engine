@@ -17,7 +17,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (backendTypeConfig))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYamlF)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema (Config (..))
 import Hasura.Prelude
@@ -64,7 +64,7 @@ tests opts = do
           sortYamlArray (Aeson.Array a) = pure $ Aeson.Array (Vector.fromList (sort (Vector.toList a)))
           sortYamlArray _ = fail "Should return Array"
 
-      case BackendType.backendSourceName <$> backendTypeConfig testEnvironment of
+      case BackendType.backendSourceName <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
           queryConfig <- IORef.readIORef maeQueryConfig

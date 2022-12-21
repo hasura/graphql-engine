@@ -15,7 +15,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, shouldContain)
@@ -90,7 +90,7 @@ tests query opts = do
 
 postgresRunSqlQuery :: TestEnvironment -> String -> IO Value
 postgresRunSqlQuery testEnvironment bulkType = do
-  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix =
         case BackendType.backendTypeString backendTypeMetadata of
@@ -136,7 +136,7 @@ postgresRunSqlQuery testEnvironment bulkType = do
 
 runSqlDrop :: TestEnvironment -> IO Value
 runSqlDrop testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix =
         case BackendType.backendTypeString backendTypeMetadata of
@@ -159,7 +159,7 @@ runSqlDrop testEnvironment = do
 
 mssqlRunSqlQuery :: TestEnvironment -> String -> IO Value
 mssqlRunSqlQuery testEnvironment bulkType = do
-  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix =
         case BackendType.backendTypeString backendTypeMetadata of

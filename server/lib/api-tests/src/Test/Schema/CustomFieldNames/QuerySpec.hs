@@ -21,7 +21,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
@@ -117,7 +117,7 @@ tests opts = do
 setupTeardown :: TestEnvironment -> Fixture.SetupAction
 setupTeardown testEnvironment = Fixture.SetupAction setupAction mempty
   where
-    backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+    backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
     backendPrefix = Fixture.backendTypeString backendTypeMetadata
     source = Fixture.backendSourceName backendTypeMetadata
     config = backendPrefix <> "_set_table_customization"

@@ -31,10 +31,17 @@ import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction as SetupAction
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment
+  ( GlobalTestEnvironment,
+    Server,
+    TestEnvironment,
+    focusFixtureLeft,
+    focusFixtureRight,
+    stopServer,
+  )
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (HasCallStack, SpecWith, describe, it)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -259,9 +266,10 @@ album =
 lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
-lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsPostgresSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -324,9 +332,10 @@ args:
 lhsCitusMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCitusMkLocalTestEnvironment _ = pure Nothing
 
-lhsCitusSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsCitusSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsCitusSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Citus.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -389,9 +398,10 @@ args:
 lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCockroachMkLocalTestEnvironment _ = pure Nothing
 
-lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsCockroachSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -454,9 +464,10 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
 lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
-lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsSQLServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -680,7 +691,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           t_album_id = pure albumId
         }
 
-lhsRemoteServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
@@ -716,8 +727,9 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 -- RHS Postgres
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
-rhsPostgresSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsPostgresSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -774,8 +786,9 @@ args:
 -- RHS Citus
 
 rhsCitusSetup :: (TestEnvironment, ()) -> IO ()
-rhsCitusSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsCitusSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Citus.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -832,8 +845,9 @@ args:
 -- RHS Cockroach
 
 rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
-rhsCockroachSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsCockroachSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -890,8 +904,9 @@ rhsCockroachSetup (testEnvironment, _) = do
 -- RHS SQLServer
 
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsSQLServerSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 

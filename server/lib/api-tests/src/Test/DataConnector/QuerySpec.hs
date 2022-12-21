@@ -615,7 +615,7 @@ customScalarTypesTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 customScalarTypesTests opts =
   describe "Custom scalar types and operators" $ do
     it "works with custom scalar types and comparison operators" $ \(testEnvironment, _) -> do
-      when (fmap BackendType.backendType (TE.backendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) do
+      when (fmap BackendType.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) do
         pendingWith "TODO: Test currently broken for SQLite DataConnector"
       shouldReturnYaml
         opts

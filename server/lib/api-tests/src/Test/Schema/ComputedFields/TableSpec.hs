@@ -20,7 +20,7 @@ import Harness.Test.Permissions (Permission (SelectPermission), SelectPermission
 import Harness.Test.Permissions qualified as Permission
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -187,7 +187,7 @@ fetch_articles_no_user_args schemaName =
 
 setupMetadata :: TestEnvironment -> [Fixture.SetupAction]
 setupMetadata testEnvironment =
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ backendTypeConfig testEnvironment
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 

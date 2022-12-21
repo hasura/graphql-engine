@@ -42,7 +42,7 @@ instance ToYamlString SchemaName where
 --
 -- For all other backends, we fall back to the Constants that were used before
 getSchemaName :: TestEnvironment -> SchemaName
-getSchemaName testEnv = getSchemaNameInternal (fmap BackendType.backendType $ backendTypeConfig testEnv) (uniqueTestId testEnv)
+getSchemaName testEnv = getSchemaNameInternal (fmap BackendType.backendType $ getBackendTypeConfig testEnv) (uniqueTestId testEnv)
 
 -- | exposed for use when creating a TestEnvironment
 getSchemaNameInternal :: Maybe BackendType -> UniqueTestId -> SchemaName

@@ -117,7 +117,7 @@ hook specs = do
         TestEverything -> True
         TestBackend (DataConnector _) ->
           any (List.isInfixOf "DataConnector") labels
-        TestBackend backendType -> show backendType `elem` labels
+        TestBackend backendType -> any (List.isInfixOf (show backendType)) labels
         TestNoBackends -> True -- this is for catching "everything else"
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 
