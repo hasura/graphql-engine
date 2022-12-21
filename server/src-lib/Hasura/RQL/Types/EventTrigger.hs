@@ -37,7 +37,7 @@ module Hasura.RQL.Types.EventTrigger
   )
 where
 
-import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, listCodec, literalTextCodec, optionalField', optionalFieldWithDefault', requiredField')
+import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, listCodec, literalTextCodec, optionalField', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField')
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Extended ((.=?))
@@ -405,7 +405,11 @@ instance (Backend b) => HasCodec (EventTriggerConf b) where
         <*> optionalField' "request_transform" AC..= etcRequestTransform
         <*> optionalField' "response_transform" AC..= etcResponseTransform
         <*> optionalField' "cleanup_config" AC..= etcCleanupConfig
-        <*> optionalFieldWithDefault' "trigger_on_replication" (defaultTriggerOnReplication @b) AC..= etcTriggerOnReplication
+        <*> triggerOnReplication
+    where
+      triggerOnReplication = case defaultTriggerOnReplication @b of
+        Just (_, defTOR) -> optionalFieldWithOmittedDefault' "trigger_on_replication" defTOR AC..= etcTriggerOnReplication
+        Nothing -> error "No default setting for trigger_on_replication is defined for backend type."
 
 instance Backend b => FromJSON (EventTriggerConf b) where
   parseJSON = withObject "EventTriggerConf" \o -> do
@@ -418,7 +422,10 @@ instance Backend b => FromJSON (EventTriggerConf b) where
     requestTransform <- o .:? "request_transform"
     responseTransform <- o .:? "response_transform"
     cleanupConfig <- o .:? "cleanup_config"
-    triggerOnReplication <- o .:? "trigger_on_replication" .!= defaultTriggerOnReplication @b
+    defTOR <- case defaultTriggerOnReplication @b of
+      Just (_, dt) -> pure dt
+      Nothing -> fail "No default setting for trigger_on_replication is defined for backend type."
+    triggerOnReplication <- o .:? "trigger_on_replication" .!= defTOR
     return $ EventTriggerConf name definition webhook webhookFromEnv retryConf headers requestTransform responseTransform cleanupConfig triggerOnReplication
 
 instance Backend b => ToJSON (EventTriggerConf b) where
@@ -436,9 +443,9 @@ instance Backend b => ToJSON (EventTriggerConf b) where
             "response_transform" .=? responseTransform,
             "cleanup_config" .=? cleanupConfig,
             "trigger_on_replication"
-              .=? if triggerOnReplication == defaultTriggerOnReplication @b
-                then Nothing
-                else Just triggerOnReplication
+              .=? case defaultTriggerOnReplication @b of
+                Just (_, defTOR) -> if triggerOnReplication == defTOR then Nothing else Just triggerOnReplication
+                Nothing -> Just triggerOnReplication
           ]
 
 updateCleanupConfig :: Maybe AutoTriggerLogCleanupConfig -> EventTriggerConf b -> EventTriggerConf b

@@ -197,7 +197,6 @@ deriving instance (Backend b) => Eq (TableMetadata b)
 instance (Backend b) => ToJSON (TableMetadata b) where
   toJSON = genericToJSON hasuraJSON
 
--- TODO: Replace uses of placeholderCodecViaJSON with proper codecs
 instance (Backend b) => HasCodec (TableMetadata b) where
   codec =
     CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
@@ -214,16 +213,14 @@ instance (Backend b) => HasCodec (TableMetadata b) where
           <*> optSortedList "select_permissions" _pdRole .== _tmSelectPermissions
           <*> optSortedList "update_permissions" _pdRole .== _tmUpdatePermissions
           <*> optSortedList "delete_permissions" _pdRole .== _tmDeletePermissions
-          <*> optSortedListViaJSON "event_triggers" etcName .== _tmEventTriggers
+          <*> eventTriggers
           <*> optionalFieldOrNull' "apollo_federation_config" .== _tmApolloFederationConfig
     where
-      optSortedListViaJSON ::
-        (Eq a, FromJSON a, ToJSON a, Hashable k, Ord k, T.ToTxt k) =>
-        Text ->
-        (a -> k) ->
-        ObjectCodec (InsOrdHashMap k a) (InsOrdHashMap k a)
-      optSortedListViaJSON name keyForElem =
-        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodecWith placeholderCodecViaJSON keyForElem) mempty
+      -- Some backends do not implement event triggers. In those cases we tailor
+      -- the codec to omit the @"event_triggers"@ field from the API.
+      eventTriggers = case defaultTriggerOnReplication @b of
+        Just _ -> optSortedList "event_triggers" etcName .== _tmEventTriggers
+        Nothing -> pure mempty
 
       optSortedList ::
         (HasCodec a, Eq a, Hashable k, Ord k, T.ToTxt k) =>

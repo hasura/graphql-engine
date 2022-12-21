@@ -137,7 +137,10 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    triggerOnReplication <- o .:? "trigger_on_replication" .!= defaultTriggerOnReplication @b
+    defTOR <- case defaultTriggerOnReplication @b of
+      Just (_, dt) -> pure dt
+      Nothing -> fail "No default setting for trigger_on_replication is defined for backend type."
+    triggerOnReplication <- o .:? "trigger_on_replication" .!= defTOR
     return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig triggerOnReplication
     where
       checkEmptyCols spec =

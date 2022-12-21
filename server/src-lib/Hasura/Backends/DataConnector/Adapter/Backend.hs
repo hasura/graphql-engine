@@ -74,6 +74,7 @@ instance Backend 'DataConnector where
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable
   type XNodesAgg 'DataConnector = XEnable
+  type XEventTriggers 'DataConnector = XDisable
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
 
@@ -159,7 +160,7 @@ instance Backend 'DataConnector where
     -- Data connectors do not have concept of connection pools
     pure ()
 
-  defaultTriggerOnReplication = error "Event triggers is not implemented for the data connector backend."
+  defaultTriggerOnReplication = Nothing
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,

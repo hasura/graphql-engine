@@ -311,6 +311,9 @@ class
   type XRelay b :: Type
   type XNodesAgg b :: Type
 
+  -- | Flag the availability of event triggers.
+  type XEventTriggers b :: Type
+
   -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
   type XNestedInserts b :: Type
 
@@ -355,8 +358,10 @@ class
   -- Resize source pools based on the count of server replicas
   resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
 
-  -- Default behaviour of SQL triggers on logically replicated database
-  defaultTriggerOnReplication :: TriggerOnReplication
+  -- | Default behaviour of SQL triggers on logically replicated database.
+  -- Setting this to @Nothing@ will disable event trigger configuration in the
+  -- metadata.
+  defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

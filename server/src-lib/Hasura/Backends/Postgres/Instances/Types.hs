@@ -118,6 +118,7 @@ instance
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable
   type XNodesAgg ('Postgres pgKind) = XEnable
+  type XEventTriggers ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
@@ -153,4 +154,4 @@ instance
 
   resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)
 
-  defaultTriggerOnReplication = TORDisableTrigger
+  defaultTriggerOnReplication = Just ((), TORDisableTrigger)

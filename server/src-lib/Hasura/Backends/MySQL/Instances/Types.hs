@@ -42,6 +42,7 @@ instance Backend 'MySQL where
   type XRelay 'MySQL = Void
   type XNodesAgg 'MySQL = XEnable
   type ExtraTableMetadata 'MySQL = ()
+  type XEventTriggers 'MySQL = XDisable
   type XNestedInserts 'MySQL = XDisable
   type XStreamingSubscription 'MySQL = XDisable
 
@@ -145,4 +146,4 @@ instance Backend 'MySQL where
     -- Trim pool by destroying excess resources, if any
     Pool.tryTrimPool pool
 
-  defaultTriggerOnReplication = error "Event triggers are not implemented for the MySQL source."
+  defaultTriggerOnReplication = Nothing

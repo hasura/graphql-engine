@@ -60,6 +60,7 @@ instance Backend 'MSSQL where
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
+  type XEventTriggers 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
   type XStreamingSubscription 'MSSQL = XDisable
 
@@ -121,4 +122,4 @@ instance Backend 'MSSQL where
   resizeSourcePools sourceConfig =
     MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
 
-  defaultTriggerOnReplication = TOREnableTrigger
+  defaultTriggerOnReplication = Just ((), TOREnableTrigger)
