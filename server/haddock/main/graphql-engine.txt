@@ -25249,7 +25249,7 @@ GetTableInfo :: SourceName -> TableName -> GetTableInfo
 
 -- | Fetch a list of tables for the request data source. Currently this is
 --   only supported for Data Connectors.
-runGetTableInfo :: (Has (Logger Hasura) r, HasHttpManagerM m, MonadReader r m, MonadError QErr m, MetadataM m, MonadIO m) => GetTableInfo -> m EncJSON
+runGetTableInfo :: (CacheRM m, Has (Logger Hasura) r, HasHttpManagerM m, MonadReader r m, MonadError QErr m, MetadataM m, MonadIO m) => Environment -> GetTableInfo -> m EncJSON
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Source.DropSource
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Source.DropSource
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.GetTableInfo
