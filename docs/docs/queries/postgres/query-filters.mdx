@@ -1443,6 +1443,14 @@ array of objects related via an array relationship.
 -   In case of an **array relationship**, a row will be returned if
     **any of the nested objects** satisfy the defined condition.
 
+:::caution Limitations
+
+**This is only supported for local relationships**, such as relationships between two local database tables. 
+	
+**This is not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
+
+:::
+
 Let's look at a few use cases based on the above:
 
 ### Fetch if the single nested object defined via an object relationship satisfies a condition
