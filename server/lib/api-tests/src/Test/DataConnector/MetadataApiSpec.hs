@@ -142,6 +142,10 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
       let supportsInserts = isJust $ mutationsCapabilities >>= API._mcInsertCapabilities
       let supportsUpdates = isJust $ mutationsCapabilities >>= API._mcUpdateCapabilities
       let supportsDeletes = isJust $ mutationsCapabilities >>= API._mcDeleteCapabilities
+      let dataSchema = (backendTypeConfig >>= BackendType.parseCapabilities) <&> API._cDataSchema
+      let supportsPrimaryKeys = any API._dscSupportsPrimaryKeys $ dataSchema
+      let supportsForeignKeys = any API._dscSupportsForeignKeys $ dataSchema
+      let columnNullability = fromMaybe API.NullableAndNonNullableColumns $ fmap API._dscColumnNullability $ dataSchema
 
       case BackendType.backendSourceName <$> TestEnvironment.backendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
@@ -154,18 +158,27 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
           shouldReturnYamlF
             (pure . removeDescriptions)
             opts
-            ( GraphqlEngine.postMetadata
-                testEnvironment
-                [yaml|
+            ( ( GraphqlEngine.postMetadata
+                  testEnvironment
+                  [yaml|
                   type: get_table_info
                   args:
                     source: *sourceString
                     table: *album
                 |]
+              )
+                <&> Lens.over (key "columns" . _Array) (Vector.fromList . sortOn (Lens.preview (key "name")) . Vector.toList)
+                <&> Lens.over (atKey "primary_key") (maybe Nothing (\value -> bool Nothing (Just value) supportsPrimaryKeys))
+                <&> Lens.over (atKey "foreign_keys") (maybe Nothing (\value -> bool Nothing (Just value) supportsForeignKeys))
             )
-            [yaml|
+            ( [yaml|
               columns:
               - name: *albumId
+                nullable: false
+                type: number
+                insertable: *supportsInserts
+                updatable: *supportsUpdates
+              - name: *artistId
                 nullable: false
                 type: number
                 insertable: *supportsInserts
@@ -173,11 +186,6 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               - name: *title
                 nullable: false
                 type: string
-                insertable: *supportsInserts
-                updatable: *supportsUpdates
-              - name: *artistId
-                nullable: false
-                type: number
                 insertable: *supportsInserts
                 updatable: *supportsUpdates
               name: *album
@@ -194,6 +202,10 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
                   column_mapping:
                     ArtistId: ArtistId
             |]
+                & applyWhen (columnNullability == API.OnlyNullableColumns) (Lens.set (key "columns" . _Array . Lens.each . key "nullable") (J.Bool True))
+                & Lens.over (atKey "primary_key") (maybe Nothing (\value -> bool Nothing (Just value) supportsPrimaryKeys))
+                & Lens.over (atKey "foreign_keys") (maybe Nothing (\value -> bool Nothing (Just value) supportsForeignKeys))
+            )
 
   describe "get_source_kind_capabilities" $ do
     it "success" $ \(testEnvironment, _) -> do
@@ -214,9 +226,9 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               |]
               ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
-                  . Lens.set (key "config_schema_response" . key "config_schema") J.Null
-                  . Lens.set (key "options" . key "uri") J.Null
-                  . Lens.set (_Object . Lens.at "display_name") (Just J.Null)
+                <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
+                <&> Lens.set (key "options" . key "uri") J.Null
+                <&> Lens.set (_Object . Lens.at "display_name") (Just J.Null)
             )
             [yaml|
             capabilities: *backendCapabilities
