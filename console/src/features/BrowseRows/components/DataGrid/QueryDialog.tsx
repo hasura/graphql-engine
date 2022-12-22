@@ -5,6 +5,7 @@ import { useConsoleForm } from '@/new-components/Form';
 import React from 'react';
 import { UseFormTrigger } from 'react-hook-form';
 import { z } from 'zod';
+import { RiPlayFill } from 'react-icons/ri';
 import { FilterRows } from '../RunQuery/Filter';
 import { SortRows } from '../RunQuery/Sort';
 import { useTableColumns } from '../../hooks/useTableColumns';
@@ -141,6 +142,9 @@ export const QueryDialog = ({
               </div>
               <Dialog.Footer
                 callToAction="Run Query"
+                callToActionIconPosition="start"
+                callToActionIcon={<RiPlayFill />}
+                callToDeny="Cancel"
                 onClose={onClose}
                 onSubmit={() => onSubmitHandler()}
               />

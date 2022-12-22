@@ -4,11 +4,13 @@ import * as RadixDialog from '@radix-ui/react-dialog';
 import clsx from 'clsx';
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
-import { Button } from '../Button/Button';
+import { Button, ButtonProps } from '../Button/Button';
 
 export type FooterProps = {
   callToAction: string;
   callToActionLoadingText?: string;
+  callToActionIcon?: ButtonProps['icon'];
+  callToActionIconPosition?: ButtonProps['iconPosition'];
   callToDeny?: string;
   onSubmit?: () => void;
   onClose: () => void;
@@ -19,9 +21,13 @@ export type FooterProps = {
   disabled?: boolean;
 };
 
+const noop = () => null;
+
 const Footer: React.VFC<FooterProps> = ({
   callToAction,
   callToActionLoadingText = '',
+  callToActionIcon,
+  callToActionIconPosition,
   callToDeny,
   onClose,
   onSubmit,
@@ -31,7 +37,11 @@ const Footer: React.VFC<FooterProps> = ({
   onCancelAnalyticsName,
   disabled = false,
 }) => {
-  const callToActionProps = onSubmit ? { onClick: onSubmit } : {};
+  const callToActionProps: ButtonProps = {
+    icon: callToActionIcon,
+    iconPosition: callToActionIconPosition,
+    onClick: onSubmit || noop,
+  };
 
   const onSubmitAnalyticsAttributes = useGetAnalyticsAttributes(
     onSubmitAnalyticsName

@@ -8,14 +8,15 @@ import {
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 import { TableRow } from '../../../DataSource';
 import { Metadata } from '../../../hasura-metadata-types';
-import { useExportRows, UseExportRowsProps } from './useExportRows';
+import { useExportRows } from './useExportRows';
+import { UseRowsPropType } from '../useRows';
 
 jest.mock('../../../../components/Common/utils/export.utils', () => ({
   downloadObjectAsCsvFile: jest.fn(),
   downloadObjectAsJsonFile: jest.fn(),
 }));
 
-const baseUseExportRowsPros: UseExportRowsProps = {
+const baseUseExportRowsPros: UseRowsPropType = {
   dataSourceName: 'chinook',
   table: { name: 'Album', schema: 'public' },
   options: {
@@ -24,7 +25,6 @@ const baseUseExportRowsPros: UseExportRowsProps = {
     order_by: [{ column: 'Title', type: 'desc' }],
     offset: 15,
   },
-  exportFileFormat: 'CSV',
 };
 
 describe('useExportRows', () => {
@@ -91,15 +91,11 @@ describe('useExportRows', () => {
   });
 
   it('runs the CSV download function', async () => {
-    const props: UseExportRowsProps = {
-      ...baseUseExportRowsPros,
-      exportFileFormat: 'CSV',
-    };
-    const { result } = renderHook(() => useExportRows(props), {
+    const { result } = renderHook(() => useExportRows(baseUseExportRowsPros), {
       wrapper,
     });
 
-    await result.current.onExportRows();
+    await result.current.onExportRows('CSV');
 
     expect(downloadObjectAsJsonFile).not.toHaveBeenCalled();
     expect(downloadObjectAsCsvFile).toHaveBeenCalledWith(
@@ -109,15 +105,11 @@ describe('useExportRows', () => {
   });
 
   it('runs the JSON download function', async () => {
-    const props: UseExportRowsProps = {
-      ...baseUseExportRowsPros,
-      exportFileFormat: 'JSON',
-    };
-    const { result } = renderHook(() => useExportRows(props), {
+    const { result } = renderHook(() => useExportRows(baseUseExportRowsPros), {
       wrapper,
     });
 
-    await result.current.onExportRows();
+    await result.current.onExportRows('JSON');
 
     expect(downloadObjectAsCsvFile).not.toHaveBeenCalled();
     expect(downloadObjectAsJsonFile).toHaveBeenCalledWith(

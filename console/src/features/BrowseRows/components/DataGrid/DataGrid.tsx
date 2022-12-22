@@ -28,6 +28,7 @@ import { ReactTableWrapper } from './parts/ReactTableWrapper';
 import { QueryDialog } from './QueryDialog';
 import { useRows, useTableColumns } from '../../hooks';
 import { transformToOrderByClause } from './utils';
+import { useExportRows } from '../../hooks/useExportRows/useExportRows';
 
 export type DataGridOptions = {
   where?: WhereClause[];
@@ -143,6 +144,19 @@ export const DataGrid = (props: DataGridProps) => {
         where: whereClauses,
       });
   }, [pageIndex, pageSize]);
+
+  const columnNames = (tableColumnQueryResult?.columns || []).map(
+    column => column.name
+  );
+  const { onExportRows } = useExportRows({
+    columns: columnNames,
+    dataSourceName,
+    options: {
+      where: whereClauses,
+      order_by: orderByClauses,
+    },
+    table,
+  });
 
   const handleOnRelationshipClick = ({
     relationship,
@@ -273,6 +287,7 @@ export const DataGrid = (props: DataGridProps) => {
           removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
+          onExportRows,
         }}
       />
 

@@ -5,7 +5,7 @@ import clsx from 'clsx';
 type ButtonModes = 'default' | 'destructive' | 'primary';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends React.ComponentProps<'button'> {
+export interface ButtonProps extends React.ComponentProps<'button'> {
   /**
    * Flag indicating whether the button is disabled
    */

@@ -73,6 +73,10 @@ const ComponentWrapper = () => {
           removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
+          onExportRows: exportFileFormat => {
+            updateStatus(`export to ${exportFileFormat}`);
+            return Promise.resolve(new Error());
+          },
         }}
       />
       <div data-testid="status">{status}</div>

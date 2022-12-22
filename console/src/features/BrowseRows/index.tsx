@@ -11,3 +11,4 @@ export {
 } from './components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
 export { UserQuery } from './components/RunQuery/types';
 export { useTableColumns } from './hooks';
+export type { ExportFileFormat, UseExportRowsReturn } from './hooks';
