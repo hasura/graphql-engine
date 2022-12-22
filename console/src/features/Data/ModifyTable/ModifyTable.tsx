@@ -1,6 +1,11 @@
 import { Table } from '@/features/hasura-metadata-types';
 import React from 'react';
-import { TableColumns, TableComments, TableRootFields } from './components';
+import {
+  TableColumns,
+  TableComments,
+  TableRootFields,
+  ForeignKeys,
+} from './components';
 import { Section } from './parts';
 
 export type ModifyTableProps = {
@@ -17,6 +22,14 @@ export const ModifyTable: React.VFC<ModifyTableProps> = props => {
       </Section>
       <Section headerText="Table Columns">
         <TableColumns {...props} />
+      </Section>
+      <Section
+        headerText="Foreign Keys"
+        tooltipMessage={`
+        Foreign keys are one or more columns that point to another table's primary key. They link both tables.
+        `}
+      >
+        <ForeignKeys {...props} />
       </Section>
       <Section
         headerText="Custom Field Names"

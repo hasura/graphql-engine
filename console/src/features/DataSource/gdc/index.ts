@@ -5,6 +5,7 @@ import {
   getTableColumns,
   getDatabaseConfiguration,
   getSupportedOperators,
+  getFKRelationships,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -27,7 +28,7 @@ export const gdc: Database = {
       return Feature.NotImplemented;
     },
     getTableColumns,
-    getFKRelationships: async () => Feature.NotImplemented,
+    getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
   },

@@ -9,24 +9,7 @@ import {
   runMetadataQuery,
 } from '../../api';
 import { GetTableColumnsProps, TableColumn } from '../../types';
-
-/**
- * Refer - https://github.com/hasura/graphql-engine-mono/blob/main/dc-agents/dc-api-types/src/models/TableInfo.ts
- */
-
-export type GetTableInfoResponse = {
-  name: GDCTable;
-  columns: { name: string; type: string; nullable: boolean }[];
-  primary_key?: string[] | null;
-  description?: string;
-  foreign_keys?: Record<
-    string,
-    {
-      foreign_table: GDCTable;
-      column_mapping: Record<string, string>;
-    }
-  >;
-};
+import { GetTableInfoResponse } from './types';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;

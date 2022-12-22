@@ -419,6 +419,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 export { GDCTable } from './gdc';
 export * from './guards';
 export * from './types';
+export * from './common/utils';
 export {
   PostgresTable,
   exportMetadata,
