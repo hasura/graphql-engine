@@ -82,7 +82,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - cockroach sql --insecure < /dev/null && sleep 5 && cockroach sql --insecure < /dev/null
+        - cockroach sql --insecure < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
