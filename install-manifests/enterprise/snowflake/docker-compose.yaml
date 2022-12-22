@@ -40,6 +40,8 @@ services:
       HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
       HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
       HASURA_GRAPHQL_MAX_CACHE_SIZE: '200'
+    depends_on:
+      - gdw_server
   gdw_server:
     image: hasura/graphql-data-connector:v2.16.0-beta.1
     restart: always
