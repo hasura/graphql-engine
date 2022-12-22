@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli/v2/seed"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/spf13/cobra"
@@ -60,7 +60,7 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return seedCmd
 }
 
-func getSeedDriver(configVersion cli.ConfigVersion) (driver *seed.Driver) {
+func getSeedDriver(ec *cli.ExecutionContext, configVersion cli.ConfigVersion) (driver *seed.Driver) {
 	if configVersion >= cli.V3 {
 		driver = seed.NewDriver(ec.APIClient.V2Query.Bulk, ec.APIClient.PGDump)
 	} else {

@@ -75,7 +75,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			op := genOpName(cmd, "RunE")
 			opts.SeedName = args[0]
 			opts.Source = ec.Source
-			opts.Driver = getSeedDriver(ec.Config.Version)
+			opts.Driver = getSeedDriver(ec, ec.Config.Version)
 			err := opts.Run()
 			if err != nil {
 				return errors.E(op, err)

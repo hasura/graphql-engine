@@ -21,6 +21,12 @@ func newProjectDeployExecutor(ec *cli.ExecutionContext) *projectDeployExecutor {
 
 type ProjectDeployExecutorOptions func(executor *projectDeployExecutor)
 
+func WithSeeds() ProjectDeployExecutorOptions {
+	return func(p *projectDeployExecutor) {
+		p.opts.WithSeeds = true
+	}
+}
+
 func (d *projectDeployExecutor) deploy(opts ...ProjectDeployExecutorOptions) error {
 	var op errors.Op = "deploy.projectDeployExecutor.deploy"
 	for _, opt := range opts {

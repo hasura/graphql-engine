@@ -1,15 +1,15 @@
 package commands
 
 import (
+	stderrors "errors"
 	"fmt"
-
-	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
-
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/seed"
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+	"io/fs"
 )
 
 type SeedApplyOptions struct {
@@ -36,14 +36,11 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: false,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
-			if err := validateConfigV3Prechecks(cmd, ec); err != nil {
-				return errors.E(op, err)
-			}
 			if ec.Config.Version < cli.V3 {
 				return nil
 			}
 
-			if err := databaseChooserWithAllOption(ec); err != nil {
+			if err := validateConfigV3FlagsWithAll(cmd, ec); err != nil {
 				return errors.E(op, err)
 			}
 
@@ -62,15 +59,18 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
-			opts.Driver = getSeedDriver(ec.Config.Version)
+			opts.Driver = getSeedDriver(ec, ec.Config.Version)
 			if err := opts.Run(); err != nil {
 				return errors.E(op, fmt.Errorf("operation failed \n%w", err))
 			}
-			opts.EC.Logger.Info("Seeds planted")
+
 			return nil
 		},
 	}
+
 	cmd.Flags().StringArrayVarP(&opts.FileNames, "file", "f", []string{}, "seed file to apply")
+	cmd.Flags().BoolVar(&opts.EC.AllDatabases, "all-databases", false, "set this flag to attempt to apply seeds on all databases present on server")
+
 	return cmd
 }
 
@@ -78,7 +78,7 @@ func (o *SeedApplyOptions) Run() error {
 	var op errors.Op = "commands.SeedApplyOptions.Run"
 	o.EC.Spin("Applying seeds...")
 	defer o.EC.Spinner.Stop()
-	if o.EC.AllDatabases {
+	if o.EC.AllDatabases && o.EC.Config.Version >= cli.V3 {
 		sourcesAndKind, err := metadatautil.GetSourcesAndKind(o.EC.APIClient.V1Metadata.ExportMetadata)
 		if err != nil {
 			return errors.E(op, fmt.Errorf("got error while getting the sources list : %v", err))
@@ -86,15 +86,24 @@ func (o *SeedApplyOptions) Run() error {
 		for _, source := range sourcesAndKind {
 			o.Source = cli.Source(source)
 			err := o.ApplyOnSource()
+
 			if err != nil {
-				return errors.E(op, fmt.Errorf("error while applying seeds for database %s: %v", o.Source.Name, err))
+				// skip error if no seed files are specified and no seeds are present
+				if len(o.FileNames) > 0 || !stderrors.Is(err, fs.ErrNotExist) {
+					return errors.E(op, fmt.Errorf("error while applying seeds for database '%s': %v", o.Source.Name, err))
+				} else {
+					o.EC.Logger.Infof("No seed data to plant for database: %s", o.Source.Name)
+				}
+			} else {
+				o.EC.Logger.Infof("Seed data planted for database: %s", o.Source.Name)
 			}
 		}
-		return nil
-	}
-	o.Source = o.EC.Source
-	if err := o.ApplyOnSource(); err != nil {
-		return errors.E(op, err)
+	} else {
+		o.Source = o.EC.Source
+		if err := o.ApplyOnSource(); err != nil {
+			return errors.E(op, err)
+		}
+		o.EC.Logger.Info("Seeds planted")
 	}
 	return nil
 }

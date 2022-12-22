@@ -1,12 +1,6 @@
 - table:
-    schema: pub
-    name: t3
-- table:
-    schema: pub
-    name: t4
-- table:
+    name: article
     schema: public
-    name: t1
 - table:
+    name: tag
     schema: public
-    name: t2
