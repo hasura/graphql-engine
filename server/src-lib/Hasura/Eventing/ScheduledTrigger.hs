@@ -353,7 +353,7 @@ processScheduledEvent ::
   ScheduledEventType ->
   m ()
 processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
-  Tracing.runTraceT traceNote do
+  Tracing.runTraceT Tracing.sampleAlways traceNote do
     currentTime <- liftIO getCurrentTime
     let retryConf = _rctxConf retryCtx
         scheduledTime = sewpScheduledTime payload

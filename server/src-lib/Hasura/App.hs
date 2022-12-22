@@ -569,10 +569,11 @@ runHGEServer ::
   -- | A hook which can be called to indicate when the server is started succesfully
   Maybe (IO ()) ->
   PrometheusMetrics ->
+  Tracing.SamplingPolicy ->
   ManagedT m ()
-runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics = do
+runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics traceSamplingPolicy = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serveCtx postPollHook serverMetrics ekgStore prometheusMetrics
+    mkHGEServer setupHook env serveOptions serveCtx postPollHook serverMetrics ekgStore prometheusMetrics traceSamplingPolicy
 
   let logger = _lsLogger $ _scLoggers serveCtx
   -- `startupStatusHook`: add `Service started successfully` message to config_status
@@ -660,8 +661,9 @@ mkHGEServer ::
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   PrometheusMetrics ->
+  Tracing.SamplingPolicy ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMetrics ekgStore prometheusMetrics = do
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMetrics ekgStore prometheusMetrics traceSamplingPolicy = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -732,6 +734,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
           soEnableMetadataQueryLogging
           soDefaultNamingConvention
           soMetadataDefaults
+          traceSamplingPolicy
 
   let serverConfigCtx =
         ServerConfigCtx

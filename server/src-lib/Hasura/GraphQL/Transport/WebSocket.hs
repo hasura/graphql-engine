@@ -794,7 +794,8 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       enableAL
       _keepAliveDelay
       _serverMetrics
-      prometheusMetrics = serverEnv
+      prometheusMetrics
+      _ = serverEnv
 
     gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
@@ -1010,7 +1011,7 @@ onMessage ::
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   m ()
-onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT "websocket" do
+onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT (_wseTraceSamplingPolicy serverEnv) "websocket" do
   case J.eitherDecode msgRaw of
     Left e -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e

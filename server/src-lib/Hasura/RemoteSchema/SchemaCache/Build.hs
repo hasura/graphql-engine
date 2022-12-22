@@ -86,7 +86,7 @@ buildRemoteSchemas env =
 
     -- TODO continue propagating MonadTrace up calls so that we can get tracing
     -- for remote schema introspection. This will require modifying CacheBuild.
-    noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter "buildSchemaCacheRule"
+    noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter Tracing.sampleNever "buildSchemaCacheRule"
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)

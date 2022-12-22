@@ -116,6 +116,7 @@ createWSServerEnv ::
   KeepAliveDelay ->
   ServerMetrics ->
   PrometheusMetrics ->
+  Tracing.SamplingPolicy ->
   m WSServerEnv
 createWSServerEnv
   logger
@@ -128,7 +129,8 @@ createWSServerEnv
   enableAL
   keepAliveDelay
   serverMetrics
-  prometheusMetrics = do
+  prometheusMetrics
+  traceSamplingPolicy = do
     wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
     pure $
       WSServerEnv
@@ -144,6 +146,7 @@ createWSServerEnv
         keepAliveDelay
         serverMetrics
         prometheusMetrics
+        traceSamplingPolicy
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =

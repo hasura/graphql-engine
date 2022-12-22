@@ -61,7 +61,7 @@ runQueryExplain ::
   ) =>
   DBStepInfo 'MySQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action) = run $ runTraceTWithReporter noReporter "explain" action
+runQueryExplain (DBStepInfo _ _ _ action) = run $ ignoreTraceT action
 
 mkQueryLog ::
   GQLReqUnparsed ->

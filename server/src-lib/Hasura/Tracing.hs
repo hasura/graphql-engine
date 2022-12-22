@@ -7,11 +7,17 @@ module Hasura.Tracing
     runTraceTWith,
     runTraceTWithReporter,
     runTraceTInContext,
+    ignoreTraceT,
     interpTraceT,
     TraceContext (..),
     Reporter (..),
     noReporter,
     HasReporter (..),
+    SamplingPolicy,
+    sampleNever,
+    sampleAlways,
+    sampleRandomly,
+    sampleOneInN,
     TracingMetadata,
     extractB3HttpContext,
     tracedHttpRequest,
@@ -41,6 +47,8 @@ import Hasura.Tracing.TraceId
   )
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Refined (Positive, Refined, unrefine)
+import System.Random.Stateful qualified as Random
 
 -- | Any additional human-readable key-value pairs relevant
 -- to the execution of a block of code.
@@ -85,12 +93,97 @@ data TraceContext = TraceContext
   { -- | TODO what is this exactly? The topmost span id?
     tcCurrentTrace :: !TraceId,
     tcCurrentSpan :: !SpanId,
-    tcCurrentParent :: !(Maybe SpanId)
+    tcCurrentParent :: !(Maybe SpanId),
+    tcSamplingState :: !SamplingState
   }
+
+-- | B3 propagation sampling state.
+--
+-- Debug sampling state not represented.
+data SamplingState = SamplingDefer | SamplingDeny | SamplingAccept
+
+-- | Convert a sampling state to a value for the X-B3-Sampled header. A return
+-- value of Nothing indicates that the header should not be set.
+samplingStateToHeader :: IsString s => SamplingState -> Maybe s
+samplingStateToHeader = \case
+  SamplingDefer -> Nothing
+  SamplingDeny -> Just "0"
+  SamplingAccept -> Just "1"
+
+-- | Convert a X-B3-Sampled header value to a sampling state. An input of
+-- Nothing indicates that the header was not set.
+samplingStateFromHeader :: (IsString s, Eq s) => Maybe s -> SamplingState
+samplingStateFromHeader = \case
+  Nothing -> SamplingDefer
+  Just "0" -> SamplingDeny
+  Just "1" -> SamplingAccept
+  Just _ -> SamplingDefer
+
+data TraceTEnv = TraceTEnv
+  { tteTraceContext :: TraceContext,
+    tteReporter :: Reporter,
+    tteSamplingDecision :: SamplingDecision
+  }
+
+-- | A local decision about whether or not to sample spans.
+data SamplingDecision = SampleNever | SampleAlways
+
+-- | An IO action for deciding whether or not to sample a trace.
+--
+-- Currently restricted to deny access to the B3 sampling state, but we may
+-- want to be more flexible in the future.
+type SamplingPolicy = IO SamplingDecision
+
+-- Helper for consistently deciding whether or not to sample a trace based on
+-- trace context and sampling policy.
+decideSampling :: SamplingState -> SamplingPolicy -> IO SamplingDecision
+decideSampling samplingState samplingPolicy =
+  case samplingState of
+    SamplingDefer -> samplingPolicy
+    SamplingDeny -> pure SampleNever
+    SamplingAccept -> pure SampleAlways
+
+-- Helper for consistently updating the sampling state when a sampling decision
+-- is made.
+updateSamplingState :: SamplingDecision -> SamplingState -> SamplingState
+updateSamplingState samplingDecision = \case
+  SamplingDefer ->
+    case samplingDecision of
+      SampleNever -> SamplingDefer
+      SampleAlways -> SamplingAccept
+  SamplingDeny -> SamplingDeny
+  SamplingAccept -> SamplingAccept
+
+sampleNever :: SamplingPolicy
+sampleNever = pure SampleNever
+
+sampleAlways :: SamplingPolicy
+sampleAlways = pure SampleAlways
+
+-- @sampleRandomly p@ returns `SampleAlways` with probability @p@ and
+-- `SampleNever` with probability @1 - p@.
+sampleRandomly :: Double -> SamplingPolicy
+sampleRandomly samplingProbability
+  | samplingProbability <= 0 = pure SampleNever
+  | samplingProbability >= 1 = pure SampleAlways
+  | otherwise = do
+      x <- Random.uniformRM (0, 1) Random.globalStdGen
+      pure $ if x < samplingProbability then SampleAlways else SampleNever
+
+-- Like @sampleRandomly@, but with the probability expressed as the denominator
+-- N of the fraction 1/N.
+sampleOneInN :: Refined Positive Int -> SamplingPolicy
+sampleOneInN denominator
+  | n == 1 = pure SampleAlways
+  | otherwise = do
+      x <- Random.uniformRM (0, n - 1) Random.globalStdGen
+      pure $ if x == 0 then SampleAlways else SampleNever
+  where
+    n = unrefine denominator
 
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
-newtype TraceT m a = TraceT {unTraceT :: ReaderT (TraceContext, Reporter) (WriterT TracingMetadata m) a}
+newtype TraceT m a = TraceT {unTraceT :: ReaderT TraceTEnv (WriterT TracingMetadata m) a}
   deriving (Functor, Applicative, Monad, MonadIO, MonadFix, MonadMask, MonadCatch, MonadThrow, MonadBase b, MonadBaseControl b)
 
 instance MonadTrans TraceT where
@@ -113,34 +206,52 @@ instance (HasHttpManagerM m) => HasHttpManagerM (TraceT m) where
 -- | Run an action in the 'TraceT' monad transformer.
 -- 'runTraceT' delimits a new trace with its root span, and the arguments
 -- specify a name and metadata for that span.
-runTraceT :: (HasReporter m, MonadIO m) => Text -> TraceT m a -> m a
-runTraceT name tma = do
+runTraceT :: (HasReporter m, MonadIO m) => SamplingPolicy -> Text -> TraceT m a -> m a
+runTraceT policy name tma = do
   rep <- askReporter
-  runTraceTWithReporter rep name tma
+  runTraceTWithReporter rep policy name tma
 
-runTraceTWith :: MonadIO m => TraceContext -> Reporter -> Text -> TraceT m a -> m a
-runTraceTWith ctx rep name tma =
-  runReporter rep ctx name $
-    runWriterT $
-      runReaderT (unTraceT tma) (ctx, rep)
+runTraceTWith ::
+  MonadIO m => TraceContext -> Reporter -> SamplingPolicy -> Text -> TraceT m a -> m a
+runTraceTWith ctx rep policy name tma = do
+  samplingDecision <- liftIO $ decideSampling (tcSamplingState ctx) policy
+  let subCtx =
+        ctx
+          { tcSamplingState =
+              updateSamplingState samplingDecision (tcSamplingState ctx)
+          }
+      report =
+        case samplingDecision of
+          SampleNever -> fmap fst
+          SampleAlways -> runReporter rep ctx name
+  report . runWriterT $
+    runReaderT (unTraceT tma) (TraceTEnv subCtx rep samplingDecision)
 
 -- | Run an action in the 'TraceT' monad transformer in an
 -- existing context.
-runTraceTInContext :: (MonadIO m, HasReporter m) => TraceContext -> Text -> TraceT m a -> m a
-runTraceTInContext ctx name tma = do
+runTraceTInContext ::
+  (MonadIO m, HasReporter m) => TraceContext -> SamplingPolicy -> Text -> TraceT m a -> m a
+runTraceTInContext ctx policy name tma = do
   rep <- askReporter
-  runTraceTWith ctx rep name tma
+  runTraceTWith ctx rep policy name tma
 
 -- | Run an action in the 'TraceT' monad transformer in an
 -- existing context.
-runTraceTWithReporter :: MonadIO m => Reporter -> Text -> TraceT m a -> m a
-runTraceTWithReporter rep name tma = do
+runTraceTWithReporter ::
+  MonadIO m => Reporter -> SamplingPolicy -> Text -> TraceT m a -> m a
+runTraceTWithReporter rep policy name tma = do
   ctx <-
     TraceContext
       <$> liftIO randomTraceId
       <*> liftIO randomSpanId
       <*> pure Nothing
-  runTraceTWith ctx rep name tma
+      <*> pure SamplingDefer
+  runTraceTWith ctx rep policy name tma
+
+-- | Run an action in the 'TraceT' monad transformer while suppressing all
+-- tracing-related side-effects.
+ignoreTraceT :: MonadIO m => TraceT m a -> m a
+ignoreTraceT = runTraceTWithReporter noReporter sampleNever ""
 
 -- | Monads which support tracing. 'TraceT' is the standard example.
 class Monad m => MonadTrace m where
@@ -153,6 +264,9 @@ class Monad m => MonadTrace m where
 
   -- | Ask for the current tracing reporter
   currentReporter :: m Reporter
+
+  -- | Ask for the current sampling decision
+  currentSamplingDecision :: m SamplingDecision
 
   -- | Log some metadata to be attached to the current span
   attachMetadata :: TracingMetadata -> m ()
@@ -188,7 +302,8 @@ interpTraceT ::
 interpTraceT f (TraceT rwma) = do
   ctx <- currentContext
   rep <- currentReporter
-  (b, meta) <- f (runWriterT (runReaderT rwma (ctx, rep)))
+  samplingDecision <- currentSamplingDecision
+  (b, meta) <- f (runWriterT (runReaderT rwma (TraceTEnv ctx rep samplingDecision)))
   attachMetadata meta
   pure b
 
@@ -197,18 +312,24 @@ interpTraceT f (TraceT rwma) = do
 instance MonadIO m => MonadTrace (TraceT m) where
   -- Note: this implementation is so awkward because we don't want to give the
   -- derived MonadReader/Writer instances to TraceT
-  trace name ma = TraceT . ReaderT $ \(ctx, rep) -> do
-    spanId <- liftIO randomSpanId
-    let subCtx =
-          ctx
-            { tcCurrentSpan = spanId,
-              tcCurrentParent = Just (tcCurrentSpan ctx)
-            }
-    lift . runReporter rep subCtx name . runWriterT $ runReaderT (unTraceT ma) (subCtx, rep)
+  trace name ma = TraceT . ReaderT $ \env@(TraceTEnv ctx rep samplingDecision) -> do
+    case samplingDecision of
+      SampleNever -> runReaderT (unTraceT ma) env
+      SampleAlways -> do
+        spanId <- liftIO randomSpanId
+        let subCtx =
+              ctx
+                { tcCurrentSpan = spanId,
+                  tcCurrentParent = Just (tcCurrentSpan ctx)
+                }
+        lift . runReporter rep subCtx name . runWriterT $
+          runReaderT (unTraceT ma) (TraceTEnv subCtx rep samplingDecision)
 
-  currentContext = TraceT (asks fst)
+  currentContext = TraceT (asks tteTraceContext)
 
-  currentReporter = TraceT (asks snd)
+  currentReporter = TraceT (asks tteReporter)
+
+  currentSamplingDecision = TraceT (asks tteSamplingDecision)
 
   attachMetadata = TraceT . tell
 
@@ -216,28 +337,33 @@ instance MonadTrace m => MonadTrace (ReaderT r m) where
   trace = mapReaderT . trace
   currentContext = lift currentContext
   currentReporter = lift currentReporter
+  currentSamplingDecision = lift currentSamplingDecision
   attachMetadata = lift . attachMetadata
 
 instance MonadTrace m => MonadTrace (StateT e m) where
   trace = mapStateT . trace
   currentContext = lift currentContext
   currentReporter = lift currentReporter
+  currentSamplingDecision = lift currentSamplingDecision
   attachMetadata = lift . attachMetadata
 
 instance MonadTrace m => MonadTrace (ExceptT e m) where
   trace = mapExceptT . trace
   currentContext = lift currentContext
   currentReporter = lift currentReporter
+  currentSamplingDecision = lift currentSamplingDecision
   attachMetadata = lift . attachMetadata
 
 -- | Inject the trace context as a set of HTTP headers.
 injectB3HttpContext :: TraceContext -> [HTTP.Header]
 injectB3HttpContext TraceContext {..} =
-  ("X-B3-TraceId", traceIdToHex tcCurrentTrace)
-    : ("X-B3-SpanId", spanIdToHex tcCurrentSpan)
-    : [ ("X-B3-ParentSpanId", spanIdToHex parentID)
-        | parentID <- maybeToList tcCurrentParent
-      ]
+  let traceId = (b3HeaderTraceId, traceIdToHex tcCurrentTrace)
+      spanId = (b3HeaderSpanId, spanIdToHex tcCurrentSpan)
+      parentSpanIdMaybe =
+        (,) b3HeaderParentSpanId . spanIdToHex <$> tcCurrentParent
+      samplingStateMaybe =
+        (,) b3HeaderSampled <$> samplingStateToHeader tcSamplingState
+   in traceId : spanId : catMaybes [parentSpanIdMaybe, samplingStateMaybe]
 
 -- | Extract the trace and parent span headers from a HTTP request
 -- and create a new 'TraceContext'. The new context will contain
@@ -245,12 +371,11 @@ injectB3HttpContext TraceContext {..} =
 -- the immediate parent span.
 extractB3HttpContext :: [HTTP.Header] -> IO (Maybe TraceContext)
 extractB3HttpContext hdrs = do
-  freshSpanId <- liftIO randomSpanId
   -- B3 TraceIds can have a length of either 64 bits (16 hex chars) or 128 bits
   -- (32 hex chars). For 64-bit TraceIds, we pad them with zeros on the left to
   -- make them 128 bits long.
-  let traceId =
-        lookup "X-B3-TraceId" hdrs >>= \rawTraceId ->
+  let traceIdMaybe =
+        lookup b3HeaderTraceId hdrs >>= \rawTraceId ->
           if
               | Char8.length rawTraceId == 32 ->
                   traceIdFromHex rawTraceId
@@ -258,30 +383,50 @@ extractB3HttpContext hdrs = do
                   traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
               | otherwise ->
                   Nothing
-  pure $
-    TraceContext
-      <$> traceId
-      <*> pure freshSpanId
-      <*> pure (spanIdFromHex =<< lookup "X-B3-SpanId" hdrs)
+  for traceIdMaybe $ \traceId -> do
+    freshSpanId <- liftIO randomSpanId
+    let parentSpanId = spanIdFromHex =<< lookup b3HeaderSpanId hdrs
+        samplingState = samplingStateFromHeader $ lookup b3HeaderSampled hdrs
+    pure $ TraceContext traceId freshSpanId parentSpanId samplingState
+
+b3HeaderTraceId, b3HeaderSpanId, b3HeaderParentSpanId, b3HeaderSampled :: IsString s => s
+b3HeaderTraceId = "X-B3-TraceId"
+b3HeaderSpanId = "X-B3-SpanId"
+b3HeaderParentSpanId = "X-B3-ParentSpanId"
+b3HeaderSampled = "X-B3-Sampled"
 
 -- | Inject the trace context as a JSON value, appropriate for
 -- storing in (e.g.) an event trigger payload.
 injectEventContext :: TraceContext -> J.Value
 injectEventContext TraceContext {..} =
-  J.object
-    [ "trace_id" J..= bsToTxt (traceIdToHex tcCurrentTrace),
-      "span_id" J..= bsToTxt (spanIdToHex tcCurrentSpan)
-    ]
+  let idFields =
+        [ eventKeyTraceId J..= bsToTxt (traceIdToHex tcCurrentTrace),
+          eventKeySpanId J..= bsToTxt (spanIdToHex tcCurrentSpan)
+        ]
+      samplingFieldMaybe =
+        (J..=) eventKeySamplingState <$> samplingStateToHeader @Text tcSamplingState
+   in J.object $ idFields ++ maybeToList samplingFieldMaybe
 
 -- | Extract a trace context from an event trigger payload.
 extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
-  freshSpanId <- randomSpanId
-  pure $
-    TraceContext
-      <$> (traceIdFromHex . txtToBs =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String)
-      <*> pure freshSpanId
-      <*> pure (spanIdFromHex . txtToBs =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String)
+  let traceIdMaybe =
+        traceIdFromHex . txtToBs
+          =<< e ^? JL.key "trace_context" . JL.key eventKeyTraceId . JL._String
+  for traceIdMaybe $ \traceId -> do
+    freshSpanId <- randomSpanId
+    let parentSpanId =
+          spanIdFromHex . txtToBs
+            =<< e ^? JL.key "trace_context" . JL.key eventKeySpanId . JL._String
+        samplingState =
+          samplingStateFromHeader $
+            e ^? JL.key "trace_context" . JL.key eventKeySamplingState . JL._String
+    pure $ TraceContext traceId freshSpanId parentSpanId samplingState
+
+eventKeyTraceId, eventKeySpanId, eventKeySamplingState :: J.Key
+eventKeyTraceId = "trace_id"
+eventKeySpanId = "span_id"
+eventKeySamplingState = "sampling_state"
 
 -- | Perform HTTP request which supports Trace headers using a
 -- HTTP.Request value

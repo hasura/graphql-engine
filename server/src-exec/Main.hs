@@ -28,6 +28,7 @@ import Hasura.Server.Migrate (downgradeCatalog)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
 import Hasura.ShutdownLatch
+import Hasura.Tracing (sampleAlways)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
 import System.Posix.Signals qualified as Signals
@@ -90,7 +91,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
         flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore Nothing prometheusMetrics
+          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore Nothing prometheusMetrics sampleAlways
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog

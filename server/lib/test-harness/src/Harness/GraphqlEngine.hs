@@ -65,6 +65,7 @@ import Hasura.Prelude
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
+import Hasura.Tracing (sampleAlways)
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
 import System.Metrics qualified as EKG
@@ -336,6 +337,7 @@ runApp serveOptions = do
               ekgStore
               Nothing
               prometheusMetrics
+              sampleAlways
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

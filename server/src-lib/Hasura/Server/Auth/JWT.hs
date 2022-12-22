@@ -319,7 +319,7 @@ jwkRefreshCtrl ::
   m void
 jwkRefreshCtrl logger manager url ref time = do
   liftIO $ C.sleep time
-  forever $ Tracing.runTraceT "jwk refresh" do
+  forever $ Tracing.runTraceT Tracing.sampleAlways "jwk refresh" do
     res <- runExceptT $ updateJwkRef logger manager url ref
     mTime <- onLeft res (const $ logNotice >> return Nothing)
     -- if can't parse time from header, defaults to 1 min

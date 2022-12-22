@@ -461,7 +461,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sl
         liftIO $ sleep $ milliseconds sleepTime
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
-    callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
+    callHandler actionCache actionLogItem = Tracing.runTraceT Tracing.sampleAlways "async actions processor" do
       let ActionLogItem
             actionId
             actionName

@@ -145,7 +145,7 @@ runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
   -- matching instance of BackendExecute. However, Explain doesn't need tracing! Rather than
   -- introducing a separate "ExplainMonad", we simply use @runTraceTWithReporter@ to remove the
   -- TraceT.
-  runQueryTx (_pscExecCtx sourceConfig) $ runTraceTWithReporter noReporter "explain" $ action
+  runQueryTx (_pscExecCtx sourceConfig) $ ignoreTraceT action
 
 mkQueryLog ::
   GQLReqUnparsed ->

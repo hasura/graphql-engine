@@ -136,7 +136,8 @@ data ServerCtx = ServerCtx
     scEnableReadOnlyMode :: !ReadOnlyMode,
     scDefaultNamingConvention :: !(Maybe NamingCase),
     scPrometheusMetrics :: !PrometheusMetrics,
-    scMetadataDefaults :: !MetadataDefaults
+    scMetadataDefaults :: !MetadataDefaults,
+    scTraceSamplingPolicy :: !Tracing.SamplingPolicy
   }
 
 data HandlerCtx = HandlerCtx
@@ -300,11 +301,9 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
         (MonadIO m1, Tracing.HasReporter m1) =>
         Tracing.TraceT m1 a1 ->
         m1 a1
-      runTraceT =
-        maybe
-          Tracing.runTraceT
-          Tracing.runTraceTInContext
-          tracingCtx
+      runTraceT = do
+        (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
+          scTraceSamplingPolicy
           (fromString (B8.unpack pathInfo))
 
       runHandler ::
@@ -825,6 +824,7 @@ mkWaiApp ::
   Maybe NamingCase ->
   -- | default metadata entries
   MetadataDefaults ->
+  Tracing.SamplingPolicy ->
   m HasuraApp
 mkWaiApp
   setupHook
@@ -861,7 +861,8 @@ mkWaiApp
   wsConnInitTimeout
   enableMetadataQueryLogging
   defaultNC
-  metadataDefaults = do
+  metadataDefaults
+  traceSamplingPolicy = do
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -882,6 +883,7 @@ mkWaiApp
         keepAliveDelay
         serverMetrics
         prometheusMetrics
+        traceSamplingPolicy
 
     let serverCtx =
           ServerCtx
@@ -906,7 +908,8 @@ mkWaiApp
               scEnableReadOnlyMode = readOnlyMode,
               scDefaultNamingConvention = defaultNC,
               scPrometheusMetrics = prometheusMetrics,
-              scMetadataDefaults = metadataDefaults
+              scMetadataDefaults = metadataDefaults,
+              scTraceSamplingPolicy = traceSamplingPolicy
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->

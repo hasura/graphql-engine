@@ -47,7 +47,7 @@ import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
-import Hasura.Tracing (noReporter, runTraceTWithReporter)
+import Hasura.Tracing (ignoreTraceT)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Manager
@@ -117,7 +117,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       m (Either QErr DC.DataConnectorInfo)
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
       capabilitiesU <-
-        runTraceTWithReporter noReporter "capabilities"
+        ignoreTraceT
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
           $ genericClient // API._capabilities
 
@@ -151,7 +151,7 @@ resolveSourceConfig'
     validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
 
     schemaResponseU <-
-      runTraceTWithReporter noReporter "resolve source"
+      ignoreTraceT
         . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
         $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 

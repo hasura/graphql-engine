@@ -165,7 +165,10 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager lo
         -- header), do not start a background thread for refreshing the JWK
         getJwkFromUrl url = do
           ref <- liftIO $ newIORef $ JWKSet []
-          maybeExpiry <- hoist lift $ withJwkError $ Tracing.runTraceT "jwk init" $ updateJwkRef logger httpManager url ref
+          maybeExpiry <-
+            hoist lift . withJwkError $
+              Tracing.runTraceT Tracing.sampleAlways "jwk init" $
+                updateJwkRef logger httpManager url ref
           case maybeExpiry of
             Nothing -> return ref
             Just time -> do

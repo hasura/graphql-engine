@@ -369,10 +369,8 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
       let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
           runTraceT =
-            maybe
-              Tracing.runTraceT
-              Tracing.runTraceTInContext
-              tracingCtx
+            (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
+              Tracing.sampleAlways
 
       maintenanceModeVersionEither :: Either QErr (MaintenanceMode MaintenanceModeVersion) <-
         case maintenanceMode of

@@ -380,7 +380,7 @@ runGetSourceTables env GetSourceTables {..} = do
         validateConfiguration _gstSourceName dcName configSchemaResponse transformedConfig
 
         schemaResponse <-
-          Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
+          Tracing.ignoreTraceT
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
             $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) transformedConfig
 
@@ -443,7 +443,7 @@ runGetTableInfo env GetTableInfo {..} = do
         validateConfiguration _gtiSourceName dcName configSchemaResponse transformedConfig
 
         schemaResponse <-
-          Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
+          Tracing.ignoreTraceT
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
             $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) transformedConfig
 
