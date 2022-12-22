@@ -60,6 +60,10 @@ data GlobalTestEnvironment = GlobalTestEnvironment
     server :: Server
   }
 
+instance Show GlobalTestEnvironment where
+  show GlobalTestEnvironment {server} =
+    "<GlobalTestEnvironment: " ++ urlPrefix server ++ ":" ++ show (port server) ++ " >"
+
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
   { -- | shared setup not related to a particular test
