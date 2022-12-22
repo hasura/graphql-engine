@@ -378,7 +378,8 @@ const RawSQL = ({
         </label>
         <Tooltip
           message={
-            'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
+            'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as ' +
+            'top level fields. Functions only intended to be used as computed fields should not be tracked.'
           }
         />
         &nbsp;

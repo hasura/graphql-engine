@@ -43,8 +43,9 @@ from_ [Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction
 
 :::info Note
 
-Functions used as computed fields can also accept other arguments other than the mandatory table row argument. Values
-for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
+- Functions used as computed fields can also accept other arguments other than the mandatory table row argument. Values
+  for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
+- Functions used as computed fields do not need to be tracked by the Hasura GraphQL Engine.
 
 :::
 
@@ -182,14 +183,7 @@ Query data from the `authors` table:
 
 Head to the `Modify` tab of the table/view and click on the `Add` button in the `Computed fields` section:
 
-<Thumbnail src="/img/schema/computed-field-create.png" alt="Add computed field" />
-
-:::tip Supported from
-
-- Console support for tables is available in `v1.1.0` and above
-- Console support for views is available in `v1.3.0` and above
-
-:::
+<Thumbnail src='/img/schema/computed-field-create.png' alt='Add computed field' width='750px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
