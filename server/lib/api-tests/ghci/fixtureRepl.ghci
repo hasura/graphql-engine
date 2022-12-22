@@ -4,12 +4,14 @@ import Data.List
 fixtureReplMacro :: String -> IO String
 fixtureReplMacro module_ = do
   return $ unlines
-    [ "import Harness.Test.Fixture",
+    [ "import Data.Aeson.Encode.Pretty (encodePretty)",
+      "import Data.ByteString.Lazy.Char8 qualified as BS",
+      "import Harness.Test.Fixture",
       "import Harness.Logging",
+      "import System.Environment",
       ":m + *SpecHook *" ++ module_,
-      "logger = Logger mempty",
-      "mode <- setupTestingMode",
-      "te <- setupTestEnvironment mode logger",
+      "Right mode <- fmap lookupTestingMode getEnvironment",
+      "te <- setupTestEnvironment mode (Logger $ BS.putStrLn . encodePretty . fromLoggableMessage)",
       "te",
       "putStrLn \"Now do: \\\"cleanup <- fixtureRepl <fixture name> te\\\"\""
       ]

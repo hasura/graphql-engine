@@ -35,6 +35,7 @@ library
   build-depends:
     , HUnit
     , aeson
+    , aeson-pretty
     , base
     , bytestring
     , dc-api
