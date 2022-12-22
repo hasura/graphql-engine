@@ -14,7 +14,7 @@ module Hasura.Backends.Postgres.Execute.Subscription
     mkMultiplexedQuery,
     mkStreamingMultiplexedQuery,
     resolveMultiplexedValue,
-    validateVariables,
+    validateVariablesTx,
     executeMultiplexedQuery,
     executeStreamingMultiplexedQuery,
     executeQuery,
@@ -88,30 +88,22 @@ makeLenses ''QueryParametersInfo
 
 -- | Checks if the provided arguments are valid values for their corresponding types.
 -- | Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
-validateVariables ::
+validateVariablesTx ::
   forall pgKind f m.
-  (Traversable f, MonadError QErr m, MonadIO m) =>
-  PGExecCtx ->
+  (Traversable f, MonadTx m, MonadIO m) =>
   f (ColumnValue ('Postgres pgKind)) ->
   m (ValidatedVariables f)
-validateVariables pgExecCtx variableValues = do
+validateVariablesTx variableValues = do
   -- no need to test the types when there are no variables to test.
   unless (null variableValues) do
     let valSel = mkValidationSel $ toList variableValues
-    PG.Discard () <-
-      runQueryTx_ $
-        liftTx $
-          PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
+    PG.Discard () <- liftTx $ PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
     pure ()
   pure . ValidatedVariables $ fmap (txtEncodedVal . cvValue) variableValues
   where
     mkExtr = flip S.Extractor Nothing . toTxtValue
     mkValidationSel vars =
       S.mkSelect {S.selExtr = map mkExtr vars}
-    runQueryTx_ tx = do
-      res <- liftIO $ runExceptT (runQueryTx pgExecCtx tx)
-      liftEither res
-
     -- Explicitly look for the class of errors raised when the format of a value
     -- provided for a type is incorrect.
     dataExnErrHandler = mkTxErrorHandler (has _PGDataException)
@@ -312,10 +304,10 @@ executeStreamingMultiplexedQuery (MultiplexedQuery query) cohorts = do
 -- | Internal; used by both 'executeMultiplexedQuery', 'executeStreamingMultiplexedQuery'
 -- and 'pgDBSubscriptionExplain'.
 executeQuery ::
-  (MonadTx m, PG.FromRow a) =>
+  (MonadTx m, PG.FromRes a) =>
   PG.Query ->
   [(CohortId, CohortVariables)] ->
-  m [a]
+  m a
 executeQuery query cohorts =
   let (cohortIds, cohortVars) = unzip cohorts
       preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)

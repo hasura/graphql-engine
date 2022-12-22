@@ -277,12 +277,13 @@ instance PG.ToPrepArg CohortVariablesArray where
 -- to find an existing poller that this can be added to /or/ to create a new poller
 -- if necessary.
 data SubscriptionQueryPlan (b :: BackendType) q = SubscriptionQueryPlan
-  { _sqpParameterizedPlan :: !(ParameterizedSubscriptionQueryPlan b q),
-    _sqpSourceConfig :: !(SourceConfig b),
-    _sqpVariables :: !CohortVariables,
+  { _sqpParameterizedPlan :: ParameterizedSubscriptionQueryPlan b q,
+    _sqpSourceConfig :: SourceConfig b,
+    _sqpCohortId :: CohortId,
+    _sqpVariables :: CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB
-    _sqpNamespace :: !(Maybe G.Name)
+    _sqpNamespace :: Maybe G.Name
   }
 
 data ParameterizedSubscriptionQueryPlan (b :: BackendType) q = ParameterizedSubscriptionQueryPlan

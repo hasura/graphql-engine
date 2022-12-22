@@ -16,6 +16,7 @@ module Harness.Subscriptions
   ( -- * Subscriptions
     SubscriptionHandle,
     withSubscriptions,
+    withSubscriptions',
     getNextResponse,
   )
 where
@@ -72,15 +73,17 @@ startQueryMessage subId query extras =
 -- | A handle to an active subscription. Can be queried for the next message received.
 newtype SubscriptionHandle = SubscriptionHandle {unSubscriptionHandle :: MVar Value}
 
+-- withSubscriptions :: (a -> TestEnvironment) -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, a) -> SpecWith a
+
 -- | A Spec transformer that sets up the ability to run subscriptions against a HGE instance.
 -- Example usage:
 --
 -- > spec :: SpecWith (TestEnvironment)
 -- > spec = do
 -- >   describe "subscriptions" $
--- >     withSubscriptions $ subscriptionsSpec
+-- >     withSubscriptions subscriptionsSpec
 --
--- > subscriptionsSpec :: SpecWith (Value -> IO SubscriptionHandle, TestEnvironment)
+-- > subscriptionsSpec :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment)
 -- > subscriptionsSpec = do
 -- >   it "works" $ \(mkSubscription, _te) -> do
 -- >     let schemaName :: Schema.SchemaName
@@ -96,7 +99,38 @@ newtype SubscriptionHandle = SubscriptionHandle {unSubscriptionHandle :: MVar Va
 -- >         actual = getNextResponse query
 -- >     actual `shouldBe` expected
 withSubscriptions :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
-withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
+withSubscriptions = withSubscriptions' id
+
+-- | A composable @'withSubscriptions'. Helpful in writing tests involving multiple websocket clients.
+-- Example usage:
+--
+-- > spec :: SpecWith (TestEnvironment)
+-- > spec = do
+-- >   describe "subscriptions multiple clients" $
+-- >     withSubscriptions' id (withSubscriptons' snd subscriptionsSpec)
+--
+-- > subscriptionsSpec :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))
+-- > subscriptionsSpec = do
+-- >   it "works" $ \(mkSubscriptionClient2, (mkSubscriptionClient1, _te)) -> do
+-- >     let schemaName :: Schema.SchemaName
+-- >         schemaName = Schema.getSchemaName testEnvironment
+-- >     query1 <- mkSubscriptionClient1 "[graphql| subscription { #{schemaName}_example { id, name }} |]"
+-- >     let expected :: Value
+-- >         expected =
+-- >           [yaml|
+-- >             data:
+-- >               hasura_example: []
+-- >           |]
+-- >         actual1 :: IO Value
+-- >         actual1 = getNextResponse query1
+-- >     actual1 `shouldBe` expected
+-- >     query2 <- mkSubscriptionClient2 "[graphql| subscription { #{schemaName}_example { id, name, age }} |]"
+-- >     let actual2 :: IO Value
+-- >         actual2 = getNextResponse query2
+-- >     actual2 `shouldBe` expected
+withSubscriptions' :: (a -> TestEnvironment) -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, a) -> SpecWith a
+withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a -> do
+  let testEnvironment = getTestEnvironment a
   WS.runClient "127.0.0.1" (fromIntegral $ port $ server $ globalEnvironment testEnvironment) "/v1/graphql" \conn -> do
     -- CAVE: loads of stuff still outstanding:
     --  * trimming threads, NDAT-228
@@ -192,7 +226,7 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
     -- @withAsync@ will take care of cancelling the 'responseListener' thread
     -- for us once the test has been executed.
     Async.withAsync (handleExceptionsAndTimeout responseListener) \_ -> do
-      actionWithSubAndTest (mkSub, testEnvironment)
+      actionWithSubAndTest (mkSub, a)
 
 -- | Get the next response received on a subscription.
 -- Blocks until data is available.

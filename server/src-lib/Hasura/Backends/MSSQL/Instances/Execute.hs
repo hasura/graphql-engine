@@ -151,9 +151,9 @@ msDBSubscriptionExplain ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
   m SubscriptionQueryPlanExplanation
-msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig variables _) = do
+msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig cohortId variables _) = do
   let (MultiplexedQuery' reselect _queryTags) = _plqpQuery plan
-      query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
+      query = toQueryPretty $ fromSelect $ multiplexRootReselect [(cohortId, variables)] reselect
       mssqlExecCtx = (_mscExecCtx sourceConfig)
   explainInfo <- liftEitherM $ runExceptT $ (mssqlRunReadOnly mssqlExecCtx) (runShowplan query)
   pure $ SubscriptionQueryPlanExplanation (T.toTxt query) explainInfo variables
@@ -275,7 +275,7 @@ msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceC
   queryTags <- ask
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ (MultiplexedQuery' reselect queryTags)
   pure $
-    SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+    SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId cohortVariables namespace
 
 prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do

@@ -113,14 +113,13 @@ type StreamingSubscriberDetails = SubscriberDetails (CohortKey, STM.TVar CursorV
 --   existing one.
 findPollerForSubscriber ::
   Subscriber ->
-  CohortId ->
   PollerMap streamCursorVars ->
   PollerKey ->
   CohortKey ->
   (Subscriber -> Cohort streamCursorVars -> STM.STM streamCursorVars) ->
-  (Subscriber -> CohortId -> Poller streamCursorVars -> STM.STM streamCursorVars) ->
+  (Subscriber -> Poller streamCursorVars -> STM.STM streamCursorVars) ->
   STM.STM ((Maybe (Poller streamCursorVars)), streamCursorVars)
-findPollerForSubscriber subscriber cohortId pollerMap pollerKey cohortKey addToCohort addToPoller =
+findPollerForSubscriber subscriber pollerMap pollerKey cohortKey addToCohort addToPoller =
   -- a handler is returned only when it is newly created
   STMMap.lookup pollerKey pollerMap >>= \case
     Just poller -> do
@@ -131,13 +130,13 @@ findPollerForSubscriber subscriber cohortId pollerMap pollerKey cohortKey addToC
           Just cohort -> addToCohort subscriber cohort
           -- cohort not found. Create a cohort with the subscriber and add
           -- the cohort to the poller
-          Nothing -> addToPoller subscriber cohortId poller
+          Nothing -> addToPoller subscriber poller
       return (Nothing, cursorVars)
     Nothing -> do
       -- no poller found, so create one with the cohort
       -- and the subscriber within it.
       !poller <- Poller <$> TMap.new <*> STM.newEmptyTMVar
-      cursorVars <- addToPoller subscriber cohortId poller
+      cursorVars <- addToPoller subscriber poller
       STMMap.insert poller pollerKey pollerMap
       return $ (Just poller, cursorVars)
 
@@ -173,8 +172,7 @@ addLiveQuery
   onResultAction = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
-    -- disposable UUIDs:
-    cohortId <- newCohortId
+    -- disposable subscriber UUID:
     subscriberId <- newSubscriberId
 
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
@@ -184,7 +182,6 @@ addLiveQuery
       STM.atomically $
         findPollerForSubscriber
           subscriber
-          cohortId
           lqMap
           handlerId
           cohortKey
@@ -211,14 +208,14 @@ addLiveQuery
     where
       SubscriptionsState lqOpts _ lqMap _ postPollHook _ = subscriptionState
       SubscriptionsOptions _ refetchInterval = lqOpts
-      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortKey _ = plan
+      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId cohortKey _ = plan
 
       handlerId = PollerKey source role $ toTxt query
 
       addToCohort subscriber handlerC =
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
 
-      addToPoller subscriber cohortId handler = do
+      addToPoller subscriber handler = do
         !newCohort <-
           Cohort cohortId
             <$> STM.newTVar Nothing
@@ -263,8 +260,7 @@ addStreamSubscriptionQuery
   onResultAction = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
-    -- disposable UUIDs:
-    cohortId <- newCohortId
+    -- disposable subscriber UUID:
     subscriberId <- newSubscriberId
 
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
@@ -274,7 +270,6 @@ addStreamSubscriptionQuery
       STM.atomically $
         findPollerForSubscriber
           subscriber
-          cohortId
           streamQueryMap
           handlerId
           cohortKey
@@ -301,7 +296,7 @@ addStreamSubscriptionQuery
     where
       SubscriptionsState _ streamQOpts _ streamQueryMap postPollHook _ = subscriptionState
       SubscriptionsOptions _ refetchInterval = streamQOpts
-      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortKey _ = plan
+      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId cohortKey _ = plan
 
       handlerId = PollerKey source role $ toTxt query
 
@@ -309,7 +304,7 @@ addStreamSubscriptionQuery
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
         pure $ _cStreamCursorVariables handlerC
 
-      addToPoller subscriber cohortId handler = do
+      addToPoller subscriber handler = do
         latestCursorValues <-
           STM.newTVar (CursorVariableValues (_unValidatedVariables (_cvCursorVariables cohortKey)))
         !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new <*> pure latestCursorValues

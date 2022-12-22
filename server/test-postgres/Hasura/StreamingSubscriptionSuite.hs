@@ -347,6 +347,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           requestId2 = RequestId "request-id2"
 
       dummyWSId <- runIO $ WS.mkUnsafeWSId <$> UUID.nextRandom
+      cohortId <- runIO newCohortId
 
       let parameterizedSubscriptionQueryPlan = ParameterizedSubscriptionQueryPlan (mkRoleNameE "user") $ MultiplexedQuery multiplexedQuery
           opID1 = unsafeMkOperationId "1"
@@ -359,6 +360,7 @@ streamingSubscriptionPollingSpec srcConfig = do
             SubscriptionQueryPlan
               parameterizedSubscriptionQueryPlan
               srcConfig
+              cohortId
               cohortKey1
               Nothing
 

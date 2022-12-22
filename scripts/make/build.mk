@@ -16,7 +16,7 @@ build: $(GENERATED_CABAL_FILES)
 .PHONY: build-tests
 ## build-tests: build non-pro graphql executable tests
 build-tests: $(GENERATED_CABAL_FILES)
-	cabal build graphql-engine-tests
+	cabal build graphql-engine-tests graphql-engine-test-mssql graphql-engine-test-postgres
 
 .PHONY: build-integration-tests
 ## build-integration-tests: build hspec integration tests
