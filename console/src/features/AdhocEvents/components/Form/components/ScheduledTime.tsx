@@ -1,5 +1,6 @@
 import React from 'react';
 import DateTimePicker from 'react-datetime';
+import 'react-datetime/css/react-datetime.css';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { useFormContext } from 'react-hook-form';
 import { Moment } from 'moment';

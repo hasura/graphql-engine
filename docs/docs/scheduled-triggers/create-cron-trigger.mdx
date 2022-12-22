@@ -33,6 +33,8 @@ The following fields are required to define a cron trigger:
   timezone. You can use tools like [crontab guru](https://crontab.guru/#*_*_*_*_*) to help build a cron expression.
 - **Payload**: The JSON payload which will be sent to the webhook.
 
+You can also define a **comment** that helps you identify the cron trigger.
+
 For example, we can create a cron trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod` with
 the cron schedule `0 22 * * 1-5`, which means "At 22:00 on every day-of-week from Monday through Friday" (you can check
 this [here](https://crontab.guru/#0_22_*_*_1-5)).
@@ -104,7 +106,6 @@ If you like, you can also define the following values:
 - **Retry configuration**: In case the call to the webhook fails.
 - **Include in metadata**: When set to true, the cron trigger will be included in the metadata and can be exported along
   with it.
-- **Comment**: Custom description of the cron trigger.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -191,5 +192,5 @@ webhooks without needing any middleware or modifications to the upstream code.
 REST Connectors modify the cron trigger's HTTP request to adapt to your webhook's expected format by adding suitable
 transforms.
 
-Currently, rest connectors for cron triggers can only be configured through the CLI and the
-[Metadata API](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger).
+Rest Connectors for cron triggers can be configured in the same way as rest connectors for event triggers. You can read more about it
+in the [REST Connectors](/docs/latest/event-triggers/rest-connectors/) section.

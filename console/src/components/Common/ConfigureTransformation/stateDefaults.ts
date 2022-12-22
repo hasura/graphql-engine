@@ -1,5 +1,8 @@
 import { Action as ReduxAction } from 'redux';
-import { getEventRequestSampleInput } from '@/components/Services/Events/EventTriggers/utils';
+import {
+  getCronTriggerRequestSampleInput,
+  getEventRequestSampleInput,
+} from '@/components/Services/Events/EventTriggers/utils';
 import { getActionRequestSampleInput } from '../../Services/Actions/Add/utils';
 import {
   defaultActionDefSdl,
@@ -224,6 +227,8 @@ export const defaultActionRequestSampleInput = getActionRequestSampleInput(
 
 export const defaultEventRequestSampleInput = getEventRequestSampleInput();
 
+export const defaultCronTriggerSampleInput = getCronTriggerRequestSampleInput();
+
 export const defaultActionRequestBody = `{
   "users": {
     "name": {{$body.input.arg1.username}},
@@ -240,6 +245,10 @@ export const defaultEventRequestBody = `{
     "name": {{$body.table.name}},
     "schema": {{$body.table.schema}}
   }
+}`;
+
+export const defaultCronTriggerRequestBody = `{
+  "payload": {{$body.payload}}
 }`;
 
 const defaultActionRequestJsonPayload = `{

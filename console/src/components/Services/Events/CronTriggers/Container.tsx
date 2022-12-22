@@ -112,7 +112,7 @@ const STContainer: React.FC<Props> = ({
   return (
     <Analytics name="CronTriggers" {...REDACT_EVERYTHING}>
       <div
-        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
+        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper} pt-5`}
       >
         <Helmet
           title={getReactHelmetTitle(
