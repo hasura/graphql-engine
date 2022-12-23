@@ -6,16 +6,13 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
 
 ![Nextjs Postgres GraphQL](./assets/nextjs-postgres-graphql.png)
 
-# Tutorial
+## Tutorial
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
 
   [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
 - Get the GraphQL API URL for your Hasura app from settings (say `nextjs-graphql.hasura.app`)
-
-- Get the `Admin Secret`
-  ![Hasura Variables](./assets/hasura-variables.png)
 
 - Create `author` table:
 
@@ -31,6 +28,14 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
   Verify if the row is inserted successfully
 
   ![Insert data into author table](../gatsby-postgres-graphql/assets/browse_rows.jpg)
+
+- For accessing data from Hasura without `Admin Secret`, we need to create unauthorized role and set permission on that role. Below are the steps for creating the role and setting up the permission:
+
+  1) Add a new variable `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` and assign the value like `anonymous`. For more information read [this](https://hasura.io/docs/latest/deployment/graphql-engine-flags/reference/).
+  ![Add new variable](./assets/add-variable.png)
+
+  1) Second step, assign the permission to the role that you created for unauthorized users (i.e. `anonymous`).
+  ![Create new variable](./assets/Permissions-Table-Data-Hasura.png)
 
 - Clone this repo:
 
@@ -48,14 +53,13 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
 - Rename the `.env.example` to `.env` and set the following variables
 
   - `NEXT_PUBLIC_HASURA_APP_URL`:- to your GraphQL API URL
-  - `NEXT_PUBLIC_HASURA_ADMIN_SECRET`:- to your Hasura Admin Secret
 
 - Create config.js as follows :
-  - In the first step, we initialize ApolloClient by passing its constructor a configuration object with the `uri`, `cache`, and `headers`.
+  - In the first step, we initialize ApolloClient by passing its constructor a configuration object with the `uri` and `cache`.
 
   - In the second step, we create the HOC component using the `withApollo` function that takes 2 inputs:
     1) a callback that returns the ApolloClient object.
-    1) an object with a prop: `render` - used to wrap **your** pages with `<ApolloProvider>`
+    2) an object with a prop: `render` - used to wrap **your** pages with `<ApolloProvider>`
 
   ```jsx
 
@@ -64,9 +68,6 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
 
   // creating the Apollo Client
   const client = new ApolloClient({
-        headers: {
-          'x-hasura-admin-secret': process.env.NEXT_PUBLIC_HASURA_ADMIN_SECRET
-        },
         uri: process.env.NEXT_PUBLIC_HASURA_APP_URL,  // <- Configure GraphQL Server URL (must be absolute)
         cache: new InMemoryCache(),
       });
@@ -144,6 +145,6 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
 
   ![Demo app](./assets/demo-app.png)
 
-# Contributing
+## Contributing
 
 Checkout the [contributing guide](../../../CONTRIBUTING.md#community-content) for more details.

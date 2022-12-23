@@ -6,9 +6,6 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 
 // creating the Apollo Client
 const client = new ApolloClient({
-  headers: {
-    "x-hasura-admin-secret": process.env.NEXT_PUBLIC_HASURA_ADMIN_SECRET
-  },
   uri: process.env.NEXT_PUBLIC_HASURA_APP_URL, // <- Configure GraphQL Server URL (must be absolute)
   cache: new InMemoryCache()
 });
