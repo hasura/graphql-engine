@@ -18,6 +18,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
+# Elastic Connection Pools
+
 <div className="badge badge--primary heading-badge">Available on: Cloud</div>
 
 ## Introduction
@@ -36,7 +38,7 @@ In Hasura Cloud, the connection pool is elastic i.e. shrinks and grows based on 
 limit. There are many other tunable parameters for the pool settings which can help you change the behaviour of the pool
 as required. Read more about these in the [How connection pooling works](#how-connection-pooling-works) section below.
 
-### Getting started
+### Get started
 
 Connection pooling is always turned on and the size of the pool can be specified via the `total_max_connections`
 setting. It is always recommended to set an appropriate `total_max_connections` pool setting based on your workload and
