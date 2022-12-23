@@ -47,7 +47,7 @@ newtype HealthCheckInterval = HealthCheckInterval {unHealthCheckInterval :: Seco
   deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance HasCodec HealthCheckInterval where
-  codec = AC.codecViaAeson "HealthCheckInterval"
+  codec = dimapCodec HealthCheckInterval unHealthCheckInterval codec
 
 newtype HealthCheckRetries = HealthCheckRetries {unHealthCheckRetries :: Int}
   deriving (Eq, Generic, Show, FromJSON, ToJSON)
@@ -59,13 +59,13 @@ newtype HealthCheckRetryInterval = HealthCheckRetryInterval {unHealthCheckRetryI
   deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance HasCodec HealthCheckRetryInterval where
-  codec = AC.codecViaAeson "HealthCheckRetryInterval"
+  codec = dimapCodec HealthCheckRetryInterval unHealthCheckRetryInterval codec
 
 newtype HealthCheckTimeout = HealthCheckTimeout {unHealthCheckTimeout :: Seconds}
   deriving (Eq, Generic, Show, FromJSON, ToJSON)
 
 instance HasCodec HealthCheckTimeout where
-  codec = AC.codecViaAeson "HealthCheckTimeout"
+  codec = dimapCodec HealthCheckTimeout unHealthCheckTimeout codec
 
 data HealthCheckConfig b = HealthCheckConfig
   { _hccTest :: HealthCheckTest b,
