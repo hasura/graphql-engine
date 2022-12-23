@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   hasura:
-    image: hasura/graphql-engine:v2.16.0
+    image: hasura/graphql-engine:v2.16.1
     restart: always
     ports:
       - 8080:8080
@@ -37,11 +37,17 @@ services:
       # HASURA_GRAPHQL_LOG_LEVEL: debug
       HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: '/srv/console-assets'
       HASURA_GRAPHQL_REDIS_URL: redis://redis:6379
-      HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
       HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
       HASURA_GRAPHQL_MAX_CACHE_SIZE: '200'
-  gdw_server:
-    image: hasura/graphql-data-connector:v2.16.0-beta.1
+      # Configures the connection to the Data Connector agent for Snowflake by default
+      # You can also omit this and manually configure the same thing via the 'Data' tab, then 'Add Agent'
+      # in the Hasura console
+      HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"snowflake":{"uri":"http://data-connector-agent:8081/api/v1/snowflake"}}}}'
+    depends_on:
+      data-connector-agent:
+        condition: service_healthy
+  data-connector-agent:
+    image: hasura/graphql-data-connector:v2.16.1-beta.1
     restart: always
     ports:
       - 8081:8081
@@ -50,6 +56,12 @@ services:
       ## https://quarkus.io/guides/opentelemetry#configuration-reference
       QUARKUS_OPENTELEMETRY_ENABLED: 'false'
       ## QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/snowflake/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
   # jaeger:
   #   image: jaegertracing/all-in-one:1.37
   #   restart: always
