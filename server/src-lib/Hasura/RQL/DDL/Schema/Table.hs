@@ -34,6 +34,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
+import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
 import Data.These (These (..))
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
@@ -42,7 +43,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.GraphQL.Schema.Common (textToName)
+import Hasura.GraphQL.Schema.Common (textToGQLIdentifier)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -60,7 +61,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -548,7 +549,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       (QErrM n) =>
       FieldInfoMap (RawColumnInfo b) ->
       TableConfig b ->
-      n (FieldInfoMap (RawColumnInfo b, G.Name, Maybe G.Description))
+      n (FieldInfoMap (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description))
     collectColumnConfiguration columns TableConfig {..} = do
       let configByFieldName = mapKeys (fromCol @b) _tcColumnConfig
       Map.traverseWithKey
@@ -571,9 +572,9 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       QErrM n =>
       FieldName ->
       (RawColumnInfo b, ColumnConfig) ->
-      n (RawColumnInfo b, G.Name, Maybe G.Description)
+      n (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description)
     extractColumnConfiguration fieldName (columnInfo, ColumnConfig {..}) = do
-      name <- _ccfgCustomName `onNothing` textToName (getFieldNameTxt fieldName)
+      name <- (fromCustomName <$> _ccfgCustomName) `onNothing` textToGQLIdentifier (getFieldNameTxt fieldName)
       pure (columnInfo, name, description)
       where
         description :: Maybe G.Description
@@ -586,14 +587,14 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       NamingCase ->
       Map.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
-      (RawColumnInfo b, G.Name, Maybe G.Description) ->
+      (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description) ->
       n (ColumnInfo b)
     processColumnInfo tCase tableEnumReferences tableName (rawInfo, name, description) = do
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
           { ciColumn = pgCol,
-            ciName = (applyFieldNameCaseCust tCase name),
+            ciName = (applyFieldNameCaseIdentifier tCase name),
             ciPosition = rciPosition rawInfo,
             ciType = resolvedType,
             ciIsNullable = rciIsNullable rawInfo,

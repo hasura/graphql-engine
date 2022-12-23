@@ -40,6 +40,9 @@
           select_by_pk: author_detail
           insert_one: add_author
           delete_by_pk: delete_one_author
+        column_config:
+          id:
+            custom_name: author_id
 
 - description: track table
   url: /v1/metadata
@@ -58,10 +61,10 @@
   response:
     data:
       authorDetails:
-        - id: 1
+        - author_id: 1
           name: "Author 1"
           __typename: authorDetails
-        - id: 2
+        - author_id: 2
           name: "Author 2"
           __typename: authorDetails
       articleLocal:
@@ -75,7 +78,7 @@
     query: |
       query {
         authorDetails {
-          id
+          author_id
           name
           __typename
         }
@@ -92,7 +95,7 @@
   response:
     data:
       author_detail:
-        id: 1
+        author_id: 1
         name: "Author 1"
         __typename: authorDetails
       articleLocalByPk:
@@ -101,8 +104,8 @@
   query:
     query: |
       query {
-        author_detail(id: 1) {
-          id
+        author_detail(author_id: 1) {
+          author_id
           name
           __typename
         }
@@ -141,14 +144,14 @@
     data:
       add_author:
         __typename: authorDetails
-        id: 3
+        author_id: 3
         name: Author 3
   query:
     query: |
       mutation MyMutation {
-        add_author(object: {name: "Author 3", id: 3}) {
+        add_author(object: {name: "Author 3", author_id: 3}) {
           __typename
-          id
+          author_id
           name
         }
       }
@@ -160,14 +163,14 @@
     data:
       delete_one_author:
         __typename: authorDetails
-        id: 3
+        author_id: 3
         name: Author 3
   query:
     query: |
       mutation MyMutation {
-        delete_one_author(id: 3) {
+        delete_one_author(author_id: 3) {
           __typename
-          id
+          author_id
           name
         }
       }
