@@ -13,7 +13,7 @@ import LatestRelease from '@site/src/components/LatestRelease';
 
 # Quickstart with Kubernetes
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
 ## Introduction
 
@@ -27,6 +27,8 @@ This tutorial helps you set up Hasura Enterprise Edition on Kubernetes and conne
 
 This tutorial assumes that the following prerequisites have been met:
 
+- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](sales@hasura.io) if you do not already
+  have one.
 - A functioning Kubernetes cluster.
 - This tutorial uses a container image hosted on the public Docker hub, so your Kubernetes cluster must have internet
   access.
@@ -51,7 +53,7 @@ Edit `deployment.yaml` and set the right values:
 ---
 env:
   - name: HASURA_GRAPHQL_EE_LICENSE_KEY
-    value: ''
+    value: '<license key>'
   - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
     value: postgres://<username>:<password>@hostname:<port>/<dbname>
   - name: HASURA_GRAPHQL_REDIS_URL

@@ -13,7 +13,7 @@ import LatestRelease from '@site/src/components/LatestRelease';
 
 # Quickstart with AWS ECS
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
 ## Introduction
 
@@ -28,6 +28,8 @@ Fargate task, and perform other common tasks in Amazon ECS with the AWS CLI.
 
 This tutorial assumes that the following prerequisites have been met:
 
+- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](sales@hasura.io) if you do not already
+  have one.
 - The latest version of the AWS CLI is installed and configured. For more information about installing or upgrading your
   AWS CLI, see
   [Installing the AWS Command Line Interface](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
@@ -74,7 +76,7 @@ Edit `hasura-fargate-task.json` and set the right values:
   "environment": [
     {
       "name": "HASURA_GRAPHQL_EE_LICENSE_KEY",
-      "value": ""
+      "value": "<license key>"
     },
     {
       "name": "HASURA_GRAPHQL_METADATA_DATABASE_URL",
