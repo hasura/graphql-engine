@@ -42,6 +42,20 @@ For example, with the default value, if there are 1000 subscription clients with
 subscriptions into 1 batch and make a single SQL query to the DB for that batch. So, in total there will be only 10 SQL
 queries to the DB for the 1000 subscriptions.
 
+:::info Limitation
+
+**Subscriptions that rely on SQL functions, such as through [custom root fields](/schema/postgres/custom-functions.mdx)
+or [computed fields](/schema/postgres/computed-fields.mdx), may be at risk of multiplexing errors if they throw
+"dynamic" exceptions based on data in the underlying tables.**
+
+For example, if the SQL function throws an exception by reading rows and checking an aggregate then it may be prone to
+such multiplexing errors. On the other hand, if it throws exception based on static values (e.g. input arguments to the
+function), then it is safe from multiplexing errors. To avoid potential issues, it is important to carefully evaluate
+the use of subscriptions with such functions. You can set the env variable
+`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE: 1` to avoid multiplexing errors.
+
+:::
+
 ### Example
 
 A practical use of subscriptions can be for tracking the live locations of delivery agents carrying food orders in a
@@ -54,10 +68,10 @@ The below figure shows multiplexing in action, where the 3 similar subscriptions
 batched into one SQL:
 
 <Thumbnail
-  src="/img/databases/postgres/subscriptions/subscription-multiplexing.png"
-  alt="Hasura subscription multiplexing AST"
-  width="900px"
-  className="no-shadow"
+  src='/img/databases/postgres/subscriptions/subscription-multiplexing.png'
+  alt='Hasura subscription multiplexing AST'
+  width='900px'
+  className='no-shadow'
 />
 
 In this case, all 3 subscriptions are multiplexed into 1 batch resulting in 1 SQL query which is run every 1 second. If
