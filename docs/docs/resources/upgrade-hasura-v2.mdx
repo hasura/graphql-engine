@@ -10,6 +10,8 @@ sidebar_position: 3
 sidebar_label: Updating to Hasura v2
 ---
 
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
 # Updating to Hasura GraphQL Engine v2
 
 ## Introduction
@@ -102,6 +104,40 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
   With Hasura CLI v2.0, each migration file is run in its own transaction block but all the Migrations are not executed
   under one. i.e. if any migration throws an error, applying further Migrations will be stopped but the other
   successfully executed Migrations up till that point will not be rolled back.
+
+- **Passing extra GQL params will now throw validation error**
+
+  According to the discussion in
+  [this GitHub issue](https://github.com/hasura/graphql-engine/issues/9320#issue-1503972127), passing unused, required
+  GQL params will now throw a validation error.
+
+  Per the [GraphQL spec](https://spec.graphql.org/June2018/#sec-All-Variables-Used), any variable - if defined by an
+  operation as required - should be referenced/used in the operation.
+
+  In the example below, the `role_type` variable is defined but not referenced or used in operation. Thus, executing
+  this query will result in a validation error.
+
+<GraphiQLIDE
+  query={`query fetch_users($role_type: String!) { 
+  users { 
+    displayName 
+    id 
+    role 
+    } 
+}`}
+  variables={`{ "role_type": "user" }`}
+  response={`{
+  "errors": [
+    {
+      "extensions": {
+        "code": "validation-failed",
+        "path": "$"
+      },
+      "message": "unexpected variables in variableValues: role_type"
+    }
+  ]
+}`}
+/>
 
 <div id="hasura-v2-env-changes" />
 
