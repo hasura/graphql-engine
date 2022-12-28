@@ -343,6 +343,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.getResolvedExecPlan
           env
           logger
+          prometheusMetrics
           userInfo
           sqlGenCtx
           readOnlyMode

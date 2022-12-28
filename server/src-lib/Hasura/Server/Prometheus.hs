@@ -34,7 +34,13 @@ data PrometheusMetrics = PrometheusMetrics
   { pmConnections :: ConnectionsGauge,
     pmActiveSubscriptions :: Gauge,
     pmGraphQLRequestMetrics :: GraphQLRequestMetrics,
-    pmEventTriggerMetrics :: EventTriggerMetrics
+    pmEventTriggerMetrics :: EventTriggerMetrics,
+    pmWebSocketBytesReceived :: Counter,
+    pmWebSocketBytesSent :: Counter,
+    pmActionBytesReceived :: Counter,
+    pmActionBytesSent :: Counter,
+    pmScheduledTriggerBytesReceived :: Counter,
+    pmScheduledTriggerBytesSent :: Counter
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -52,7 +58,9 @@ data EventTriggerMetrics = EventTriggerMetrics
     eventQueueTimeSeconds :: Histogram,
     eventsFetchTimePerBatch :: Histogram,
     eventWebhookProcessingTime :: Histogram,
-    eventProcessingTime :: Histogram
+    eventProcessingTime :: Histogram,
+    eventTriggerBytesReceived :: Counter,
+    eventTriggerBytesSent :: Counter
   }
 
 -- | Create dummy mutable references without associating them to a metrics
@@ -63,6 +71,12 @@ makeDummyPrometheusMetrics = do
   pmActiveSubscriptions <- Gauge.new
   pmGraphQLRequestMetrics <- makeDummyGraphQLRequestMetrics
   pmEventTriggerMetrics <- makeDummyEventTriggerMetrics
+  pmWebSocketBytesReceived <- Counter.new
+  pmWebSocketBytesSent <- Counter.new
+  pmActionBytesReceived <- Counter.new
+  pmActionBytesSent <- Counter.new
+  pmScheduledTriggerBytesReceived <- Counter.new
+  pmScheduledTriggerBytesSent <- Counter.new
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -83,6 +97,8 @@ makeDummyEventTriggerMetrics = do
   eventsFetchTimePerBatch <- Histogram.new []
   eventWebhookProcessingTime <- Histogram.new []
   eventProcessingTime <- Histogram.new []
+  eventTriggerBytesReceived <- Counter.new
+  eventTriggerBytesSent <- Counter.new
   pure EventTriggerMetrics {..}
 
 --------------------------------------------------------------------------------

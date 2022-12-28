@@ -992,6 +992,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
               (getSchemaCache cacheRef)
               (leActionEvents lockedEventsCtx)
               _scHttpManager
+              prometheusMetrics
               sleepTime
               Nothing
 
@@ -1026,6 +1027,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
           env
           logger
           _scHttpManager
+          prometheusMetrics
           (getSchemaCache cacheRef)
           lockedEventsCtx
 

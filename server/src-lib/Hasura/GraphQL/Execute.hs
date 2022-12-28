@@ -318,6 +318,7 @@ getResolvedExecPlan ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  PrometheusMetrics ->
   UserInfo ->
   SQLGenCtx ->
   ReadOnlyMode ->
@@ -334,6 +335,7 @@ getResolvedExecPlan ::
 getResolvedExecPlan
   env
   logger
+  prometheusMetrics
   userInfo
   sqlGenCtx
   readOnlyMode
@@ -356,6 +358,7 @@ getResolvedExecPlan
             EQ.convertQuerySelSet
               env
               logger
+              prometheusMetrics
               gCtx
               userInfo
               httpManager
@@ -375,6 +378,7 @@ getResolvedExecPlan
             EM.convertMutationSelectionSet
               env
               logger
+              prometheusMetrics
               gCtx
               sqlGenCtx
               userInfo

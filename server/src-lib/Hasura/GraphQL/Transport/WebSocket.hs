@@ -460,6 +460,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       E.getResolvedExecPlan
         env
         logger
+        prometheusMetrics
         userInfo
         sqlGenCtx
         readOnlyMode

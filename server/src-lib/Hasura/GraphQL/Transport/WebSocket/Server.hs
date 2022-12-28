@@ -61,12 +61,16 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (MetricsConfig (..))
 import Hasura.Server.Init.Config (WSConnectionInitTimeout (..))
+import Hasura.Server.Prometheus
+  ( PrometheusMetrics (..),
+  )
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
 import Network.WebSockets qualified as WS
 import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.IO.Error qualified as E
+import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
 
 newtype WSId = WSId {unWSId :: UUID.UUID}
   deriving (Show, Eq, Hashable)
@@ -307,12 +311,13 @@ createServerApp ::
   IO MetricsConfig ->
   WSConnectionInitTimeout ->
   WSServer a ->
+  PrometheusMetrics ->
   -- | user provided handlers
   WSHandlers m a ->
   -- | aka WS.ServerApp
   HasuraServerApp m
 {-# INLINE createServerApp #-}
-createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
+createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) prometheusMetrics wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
@@ -401,18 +406,28 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                       -- Regardless this should be safe:
                       handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed) $
                         WS.receiveData conn
-                  let censoredMessage =
+                  let messageLength = BL.length msg
+                      censoredMessage =
                         MessageDetails
                           (SB.fromLBS (if shouldCaptureVariables then msg else "<censored>"))
-                          (BL.length msg)
+                          messageLength
+                  liftIO $
+                    Prometheus.Counter.add
+                      (pmWebSocketBytesReceived prometheusMetrics)
+                      messageLength
                   logWSLog logger $ WSLog wsId (EMessageReceived censoredMessage) Nothing
                   messageHandler wsConn msg subProtocol
 
             let send = forever $ do
                   WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
-                  let message = MessageDetails (SB.fromLBS msg) (BL.length msg)
+                  let messageLength = BL.length msg
+                      messageDetails = MessageDetails (SB.fromLBS msg) messageLength
                   liftIO $ WS.sendTextData conn msg
-                  logWSLog logger $ WSLog wsId (EMessageSent message) wsInfo
+                  liftIO $
+                    Prometheus.Counter.add
+                      (pmWebSocketBytesSent prometheusMetrics)
+                      messageLength
+                  logWSLog logger $ WSLog wsId (EMessageSent messageDetails) wsInfo
 
             -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
             -- forking that the threads we launched will be cleaned up. See also below.

@@ -74,6 +74,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
+import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
@@ -83,6 +84,7 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq
+import System.Metrics.Prometheus.Counter as Prometheus.Counter
 
 fetchActionLogResponses ::
   (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t) =>
@@ -137,12 +139,13 @@ asSingleRowJsonResp query args =
 resolveActionExecution ::
   Env.Environment ->
   L.Logger L.Hasura ->
+  PrometheusMetrics ->
   UserInfo ->
   IR.AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -155,6 +158,7 @@ resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExe
         callWebhook
           env
           _aecManager
+          prometheusMetrics
           _aaeOutputType
           _aaeOutputFields
           _aecHeaders
@@ -433,10 +437,11 @@ asyncActionsProcessor ::
   IO SchemaCache ->
   STM.TVar (Set LockedActionEventId) ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sleepTime gqlQueryText =
+asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager prometheusMetrics sleepTime gqlQueryText =
   return $
     Forever () $
       const $ do
@@ -487,6 +492,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sl
                 callWebhook
                   env
                   httpManager
+                  prometheusMetrics
                   outputType
                   outputFields
                   reqHeaders
@@ -514,6 +520,7 @@ callWebhook ::
   ) =>
   Env.Environment ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   GraphQLType ->
   IR.ActionOutputFields ->
   [HTTP.Header] ->
@@ -528,6 +535,7 @@ callWebhook ::
 callWebhook
   env
   manager
+  prometheusMetrics
   outputType
   outputFields
   reqHeaders
@@ -577,6 +585,7 @@ callWebhook
                  in pure (Just transformedReq, Just transformedPayloadSize, Just reqTransformCtx)
 
     let actualReq = fromMaybe req transformedReq
+        actualSize = fromMaybe requestBodySize transformedReqSize
 
     httpResponse <-
       Tracing.tracedHttpRequest actualReq $ \request ->
@@ -615,6 +624,13 @@ callWebhook
                   throw500WithDetail "Response Transformation Failed" $ J.toJSON err
 
         -- log the request and response to/from the action handler
+        liftIO $ do
+          Prometheus.Counter.add
+            (pmActionBytesSent prometheusMetrics)
+            actualSize
+          Prometheus.Counter.add
+            (pmActionBytesReceived prometheusMetrics)
+            responseBodySize
         logger :: (L.Logger L.Hasura) <- asks getter
         L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 

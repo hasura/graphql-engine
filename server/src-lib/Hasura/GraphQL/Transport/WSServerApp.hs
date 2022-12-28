@@ -70,7 +70,7 @@ createWSServerApp ::
 --   -- ^ aka generalized 'WS.ServerApp'
 createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
   let getMetricsConfig = scMetricsConfig . fst <$> _wseGCtxMap serverEnv
-  WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) handlers ipAddress pendingConn
+  WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) prometheusMetrics handlers ipAddress pendingConn
   where
     handlers =
       WS.WSHandlers

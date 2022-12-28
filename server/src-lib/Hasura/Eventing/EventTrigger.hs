@@ -86,6 +86,7 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 import Refined (NonNegative, Positive, Refined, refineTH, unrefine)
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
+import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 
@@ -409,7 +410,19 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                 runExceptT $
                   mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
                     let request = extractRequest reqDetails
-                        logger' res details = logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                        logger' res details = do
+                          logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                          liftIO $ do
+                            case res of
+                              Left _err -> pure ()
+                              Right response ->
+                                Prometheus.Counter.add
+                                  (eventTriggerBytesReceived eventTriggerMetrics)
+                                  (hrsSize response)
+                            let RequestDetails {_rdOriginalSize, _rdTransformedSize} = details
+                             in Prometheus.Counter.add
+                                  (eventTriggerBytesSent eventTriggerMetrics)
+                                  (fromMaybe _rdOriginalSize _rdTransformedSize)
                     -- Event Triggers have a configuration parameter called
                     -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
                     -- to control the concurrency of http delivery.
