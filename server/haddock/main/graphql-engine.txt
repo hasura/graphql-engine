@@ -22925,13 +22925,14 @@ SourceMetadata :: Maybe DbUid -> BackendType -> Maybe DbVersion -> SourceMetadat
 [_smDbKind] :: SourceMetadata -> BackendType
 [_smDbVersion] :: SourceMetadata -> Maybe DbVersion
 data HasuraTelemetry
-HasuraTelemetry :: MetadataDbId -> InstanceId -> Version -> Maybe CI -> SourceMetadata -> Metrics -> HasuraTelemetry
+HasuraTelemetry :: MetadataDbId -> InstanceId -> Version -> Maybe CI -> SourceMetadata -> Metrics -> HashSet ExperimentalFeature -> HasuraTelemetry
 [_htMetadataDbUid] :: HasuraTelemetry -> MetadataDbId
 [_htInstanceUid] :: HasuraTelemetry -> InstanceId
 [_htHasuraVersion] :: HasuraTelemetry -> Version
 [_htCi] :: HasuraTelemetry -> Maybe CI
 [_htSourceMetadata] :: HasuraTelemetry -> SourceMetadata
 [_htMetrics] :: HasuraTelemetry -> Metrics
+[_htExperimentalFeatures] :: HasuraTelemetry -> HashSet ExperimentalFeature
 
 -- | The telemetry table to which we'll add telemetry.
 newtype Topic
@@ -22995,7 +22996,7 @@ mkTelemetryLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
 -- | An infinite loop that sends updated telemetry data (<a>Metrics</a>)
 --   every 24 hours. The send time depends on when the server was started
 --   and will naturally drift.
-runTelemetry :: Logger Hasura -> Manager -> IO SchemaCache -> MetadataDbId -> InstanceId -> PGVersion -> IO void
+runTelemetry :: Logger Hasura -> Manager -> IO SchemaCache -> MetadataDbId -> InstanceId -> PGVersion -> HashSet ExperimentalFeature -> IO void
 instance GHC.Show.Show Hasura.Server.Telemetry.TelemetryHttpError
 instance GHC.Show.Show Hasura.Server.Telemetry.TelemetryLog
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Telemetry.TelemetryLog
