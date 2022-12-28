@@ -826,7 +826,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
         telemetryThread <-
           C.forkManagedT "runTelemetry" logger $
             liftIO $
-              runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion
+              runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion soExperimentalFeatures
         return $ Just telemetryThread
       else return Nothing
 
