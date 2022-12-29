@@ -329,6 +329,7 @@ type Metadata struct {
 	RestEndpoints    interface{} `yaml:"rest_endpoints,omitempty" mapstructure:"rest_endpoints,omitempty"`
 	InheritedRoles   interface{} `yaml:"inherited_roles,omitempty" mapstructure:"inherited_roles,omitempty"`
 	Opentelemetry    interface{} `yaml:"opentelemetry,omitempty" mapstructure:"opentelemetry,omitempty"`
+	BackendConfig    interface{} `yaml:"backend_configs,omitempty" mapstructure:"backend_configs,omitempty"`
 
 	// HGE Pro
 	GraphQLSchemaIntrospection interface{} `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`

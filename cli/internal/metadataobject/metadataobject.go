@@ -37,6 +37,7 @@ const (
 	NetworkKey                    string = "network"
 	MetricsConfigKey              string = "metrics_config"
 	OpentelemetryKey              string = "opentelemetry"
+	BackendConfigsKey             string = "backend_configs"
 )
 
 type Objects []Object

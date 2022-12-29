@@ -6,6 +6,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/allowlist"
 	apilimits "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/api_limits"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/backend_configs"
 	crontriggers "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/cron_triggers"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
 	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
@@ -61,6 +62,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 			objects = append(objects, restendpoints.New(ec, metadataDir))
 			objects = append(objects, inheritedroles.New(ec, metadataDir))
 			objects = append(objects, opentelemetry.New(ec, metadataDir))
+			objects = append(objects, backendconfigs.New(ec, metadataDir))
 
 			// hasura pro specific metadata objects
 			objects = append(objects, apilimits.New(ec, metadataDir))
