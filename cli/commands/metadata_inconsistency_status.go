@@ -17,7 +17,8 @@ func newMetadataInconsistencyStatusCmd(ec *cli.ExecutionContext) *cobra.Command 
 
 	metadataInconsistencyStatusCmd := &cobra.Command{
 		Use:          "status",
-		Short:        "Check if the metadata is inconsistent or not",
+		Short:        "Check if the Hasura Metadata is inconsistent or not",
+		Long:         "At times, when developing, the Hasura Metadata can become inconsistent. This command can be used to check if the Metadata is inconsistent or not.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")

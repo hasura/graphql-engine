@@ -36,6 +36,7 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 	updateCmd := &cobra.Command{
 		Use:          updateCLICmdUse,
 		Short:        "Update the CLI to latest or a specific version",
+		Long:         "You can use this command to update the CLI to the latest version or a specific version. Each time you run a CLI command, if a new version is available, you will be prompted to update the CLI.",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")

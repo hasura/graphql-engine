@@ -27,7 +27,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateSquashCmd := &cobra.Command{
 		Use:   "squash",
 		Short: "(PREVIEW) Squash multiple migrations into a single one",
-		Long:  "(PREVIEW) Squash multiple migrations leading up to the latest one into a single migration file",
+		Long:  "As you're developing your Hasura GraphQL API, you may find yourself in a situation where you have a lot of migrations that you want to squash into a single one. This command helps you do that. By running this command, you can squash all the iterative migrations you've created into a single file.",
 		Example: `  # NOTE: This command is in PREVIEW. Correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:

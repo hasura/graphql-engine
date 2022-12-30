@@ -15,7 +15,8 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataApplyCmd := &cobra.Command{
 		Use:   "apply",
-		Short: "Apply Hasura metadata on a database",
+		Short: "Apply Hasura Metadata on a database",
+		Long:  "This command applies the Hasura GraphQL Engine Metadata saved in the database. You can use it to apply Hasura Metadata from one HGE server instance to another, such as when moving between development environments.",
 		Example: `  # Apply Hasura GraphQL engine metadata present in metadata.[yaml|json] file:
   hasura metadata apply
 

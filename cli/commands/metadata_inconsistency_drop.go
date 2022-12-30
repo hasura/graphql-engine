@@ -16,7 +16,8 @@ func newMetadataInconsistencyDropCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	metadataInconsistencyDropCmd := &cobra.Command{
 		Use:          "drop",
-		Short:        "Drop inconsistent objects from the metadata",
+		Short:        "Drop inconsistent objects from the Hasura Metadata",
+		Long:         "At times, when developing, the Hasura Metadata can become inconsistent. This command can be used to drop inconsistent objects from the Hasura Metadata and bring your project's Metadata back to a consistent state.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")

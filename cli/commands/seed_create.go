@@ -39,6 +39,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create seed_name",
 		Short: "Create a new seed file",
+		Long:  "This will create a new seed file with the name provided as an argument. You can export tables from the database and create a seed file from it by using the `--from-table` flag.",
 		Example: `  # Create a new seed file and use editor to add SQL:
   hasura seed create new_table_seed
 

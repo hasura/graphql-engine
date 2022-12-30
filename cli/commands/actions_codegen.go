@@ -18,7 +18,8 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsCodegenCmd := &cobra.Command{
 		Use:   "codegen [action-name]",
-		Short: "Generate code for actions",
+		Short: "Generate code for Actions",
+		Long:  "Running this command will generate code for either specified or all Actions. The CLI allows you to select a framework and language for generating code. Further, you also have the option of cloning a starter kit of your chosen framework and choosing the output directory for the generated code.",
 		Example: `  # Generate code for all actions
   hasura actions codegen
 

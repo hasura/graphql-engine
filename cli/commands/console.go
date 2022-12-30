@@ -25,8 +25,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	consoleCmd := &cobra.Command{
 		Use:   "console",
-		Short: "Open the console to manage the database and try out APIs",
-		Long:  "Run a web server to serve the Hasura console for the GraphQL engine to manage the database and build queries",
+		Short: "Open the Console to manage the database and try out APIs",
+		Long:  "This command will start a web server to serve the Hasura Console for the GraphQL Engine. You can use this to manage the database, build queries, and try out APIs. The Console is served at http://localhost:9695 by default. You can change the port using the --console-port flag and further configure the command by including other available flags.",
 		Example: `  # Start console:
   hasura console
 

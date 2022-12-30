@@ -17,7 +17,8 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataReloadCmd := &cobra.Command{
 		Use:   "reload",
-		Short: "Reload Hasura GraphQL engine metadata on the database",
+		Short: "Reload Hasura GraphQL Engine Metadata on the database",
+		Long:  "This will reload the Hasura GraphQL Engine Metadata on the database. When paired with the `--endpoint` flag, this will reload the Metadata on the specified Hasura instance.",
 		Example: `  # Reload all the metadata information from database:
   hasura metadata reload
 

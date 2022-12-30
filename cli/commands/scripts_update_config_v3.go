@@ -17,11 +17,9 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	var opts scripts.UpdateProjectV3Opts
 	cmd := &cobra.Command{
-		Use:   "update-project-v3",
-		Short: "Update the Hasura project from config v2 to v3",
-		Long: `
-Convenience script used to upgrade your CLI project to use config v3.
-Note that this process is completely independent from your Hasura Graphql Engine server update process`,
+		Use:          "update-project-v3",
+		Short:        "Update the Hasura project from config v2 to v3",
+		Long:         "This helper script upgrades your CLI project to use config v3. This process is completely independent from your Hasura Graphql Engine server update process",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")

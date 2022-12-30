@@ -23,6 +23,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply migrations on the database",
+		Long:  "Migrations represent the modifications needed to reach the desired state of a database schema. Running this command will apply the migrations on the database.",
 		Example: `  # Apply all migrations
   hasura migrate apply
 

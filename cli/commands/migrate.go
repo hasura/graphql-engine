@@ -27,6 +27,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateCmd := &cobra.Command{
 		Use:          "migrate",
 		Short:        "Manage migrations on the database",
+		Long:         "This command, when used with a collection of subcommands, allows you to manage migrations on the database.",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")

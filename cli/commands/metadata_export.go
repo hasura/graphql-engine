@@ -10,10 +10,10 @@ import (
 )
 
 const longHelpMetadataExportCmd = `Export Hasura metadata and save it in the` + " ``/metadata``" + ` directory.
-The output is a bunch of yaml files which captures all the metadata required
-by the GraphQL engine. This includes info about tables that are tracked,
-permission rules, relationships and event triggers that are defined
-on those tables`
+The output is a collection of yaml files which captures all the Metadata required
+by the GraphQL Engine. This includes info about tables that are tracked,
+permission rules, relationships, and event triggers that are defined
+on those tables.`
 
 func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MetadataExportOptions{
@@ -22,7 +22,7 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataExportCmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export Hasura GraphQL engine metadata from the database",
+		Short: "Export Hasura GraphQL Engine Metadata from the database",
 		Example: `  # Export metadata and save it in migrations/metadata.yaml file:
   hasura metadata export
 

@@ -28,6 +28,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply seed data",
+		Long:  "Run this command by passing the seed files you want to apply as arguments. If no arguments are passed, all the seed files in the seeds directory will be applied.",
 		Example: `  # Apply all seeds on the database:
   hasura seed apply
 
