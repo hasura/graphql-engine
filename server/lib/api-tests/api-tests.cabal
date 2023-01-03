@@ -104,6 +104,7 @@ library
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
+    Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec
     Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
     Test.EventTriggers.PG.EventTriggersForReplicationSpec

@@ -61,9 +61,11 @@ import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey (..))
 import Hasura.SQL.Backend
+import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
 
 -- | creates a SQL Values list from haskell list  (('123-abc'), ('456-vgh'), ('234-asd'))
@@ -503,7 +505,7 @@ dropTriggerOp triggerName schemaName triggerOp =
   where
     getDropTriggerSQL :: Ops -> Text
     getDropTriggerSQL op =
-      "DROP TRIGGER IF EXISTS " <> unQualifiedTriggerName (msssqlIdenTrigger op schemaName triggerName)
+      "DROP TRIGGER IF EXISTS " <> qualifiedTriggerNameToText (QualifiedTriggerName schemaName (mkSQLTriggerName triggerName op))
 
 archiveEvents :: TriggerName -> TxE QErr ()
 archiveEvents triggerName =
@@ -628,16 +630,43 @@ checkIfTriggerExistsQ triggerName op = do
 
 ---- MSSQL event trigger utility functions -----------------
 
-newtype QualifiedTriggerName = QualifiedTriggerName {unQualifiedTriggerName :: Text}
+-- | This will quote the object name (similar to the @QUOTENAME@ function in SQL
+-- server), i.e.
+--
+-- >>> mssqlFmtIdentifier "object_name" "[object_name]"
+--
+-- >>> mssqlFmtIdentifier "o]bject_nam[e" "[o]]bject_nam[e]"
+--
+-- TODO: Use some external tool for quoting, we should not quote the names by
+-- ourselves.
+mssqlFmtIdentifier :: Text -> Text
+mssqlFmtIdentifier x =
+  "[" <> T.replace "]" "]]" x <> "]"
+
+-- | A Representation of SQL Trigger name for an event trigger in MSSQL.
+newtype SQLTriggerName = SQLTriggerName {getSQLTriggerName :: Text}
+
+instance ToSQL SQLTriggerName where
+  toSQL = TB.text . mssqlFmtIdentifier . getSQLTriggerName
+
+mkSQLTriggerName :: TriggerName -> Ops -> SQLTriggerName
+mkSQLTriggerName triggerName op = SQLTriggerName $ "notify_hasura_" <> (triggerNameToTxt triggerName) <> "_" <> tshow op
+
+-- | A Representation of qualified SQL trigger object (`schema_name.SQL_trigger_name`).
+data QualifiedTriggerName = QualifiedTriggerName
+  { _qtnSchemaName :: SchemaName,
+    _qtnTriggerName :: SQLTriggerName
+  }
+
+instance ToSQL QualifiedTriggerName where
+  toSQL (QualifiedTriggerName (SchemaName schemaName) triggerName) =
+    TB.text (mssqlFmtIdentifier schemaName) <> "." <> toSQL triggerName
+
+qualifiedTriggerNameToText :: QualifiedTriggerName -> Text
+qualifiedTriggerNameToText = TB.run . toSQL
 
 -- | Store a fragment of SQL expression
 newtype SQLFragment = SQLFragment {unSQLFragment :: Text}
-
-msssqlIdenTrigger :: Ops -> SchemaName -> TriggerName -> QualifiedTriggerName
-msssqlIdenTrigger op (SchemaName schemaName) triggerName =
-  QualifiedTriggerName $ qualifyHasuraTriggerName op $ triggerNameToTxt triggerName
-  where
-    qualifyHasuraTriggerName op' triggerName' = schemaName <> "." <> "notify_hasura_" <> triggerName' <> "_" <> tshow op'
 
 mkAllTriggersQ ::
   MonadMSSQLTx m =>
@@ -763,7 +792,7 @@ qualifyTableName = toTxt . toQueryFlat . fromTableName
 
 mkInsertTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
 mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
-  let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger INSERT schema triggerName
+  let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName INSERT
       triggerNameText = triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
       operation = tshow INSERT
@@ -774,7 +803,7 @@ mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) 
 
 mkDeleteTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
 mkDeleteTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
-  let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger DELETE schema triggerName
+  let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName DELETE
       triggerNameText = triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
       operation = tshow DELETE
@@ -865,7 +894,7 @@ mkUpdateTriggerQuery
   deliveryColumns
   primaryKey
   triggerOnReplication =
-    let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger UPDATE schema triggerName
+    let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName UPDATE
         triggerNameText = triggerNameToTxt triggerName
         qualifiedTableName = qualifyTableName table
         operation = tshow UPDATE
