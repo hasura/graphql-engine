@@ -9,9 +9,17 @@ RFC](../../../rfcs/hspec-test-suite.md).
 
 Most of the required setup concerns (and is documented in the README for)
 [../test-harness/README.md](the test harness), so please follow that link for
-more information. In short, assuming you have a BigQuery account set up (again,
-see [../test-harness/README.md](the test harness README) for instructions), set
-the following environment variables:
+more information. 
+
+The tests need to know the location of the `graphql-engine` executable:
+
+```bash
+$ export GRAPHQL_ENGINE=$(cabal list-bin exe:graphql-engine)
+```
+
+To be able to run tests against the BigQuery backend, in short, set the
+following environment variables (assuming you have a BigQuery account set up,
+see [../test-harness/README.md](the test harness README) for instructions):
 
 ```bash
 $ export HASURA_BIGQUERY_PROJECT_ID=??? # The project ID
