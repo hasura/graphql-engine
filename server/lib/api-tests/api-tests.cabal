@@ -39,7 +39,9 @@ library
     , base
     , bytestring
     , dc-api
+    , directory
     , fast-logger
+    , filepath
     , graphql-parser
     , hasura-prelude
     , hspec
@@ -51,12 +53,12 @@ library
     , managed
     , morpheus-graphql
     , pg-client
-    , postgresql-simple
     , postgres-options
+    , postgresql-simple
     , safe-exceptions
+    , sop-core
     , split
     , string-interpolate
-    , sop-core
     , test-harness
     , text
     , unordered-containers

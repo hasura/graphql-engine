@@ -88,7 +88,7 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
             (const (pure ()))
         )
         ( \(_failure :: ExitCodeException) -> do
-            sleep Constants.httpHealthCheckIntervalSeconds
+            sleep 1
             loop (attempts - 1)
         )
 

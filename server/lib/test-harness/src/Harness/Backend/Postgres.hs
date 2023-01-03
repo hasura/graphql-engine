@@ -169,20 +169,20 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
 -- we started with
 runWithInitialDb_ :: HasCallStack => GlobalTestEnvironment -> String -> IO ()
 runWithInitialDb_ globalTestEnvironment =
-  runInternal globalTestEnvironment $
+  runInternal (logger globalTestEnvironment) $
     Postgres.postgreSQLConnectionString (defaultConnectInfo globalTestEnvironment)
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
-  runInternal (globalEnvironment testEnvironment) (makeFreshDbConnectionString testEnvironment)
+  runInternal (logger $ globalEnvironment testEnvironment) (makeFreshDbConnectionString testEnvironment)
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => GlobalTestEnvironment -> S8.ByteString -> String -> IO ()
-runInternal globalTestEnvironment connectionString query = do
-  runLogger (logger globalTestEnvironment) $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
+runInternal :: HasCallStack => Logger -> S8.ByteString -> String -> IO ()
+runInternal logger connectionString query = do
+  runLogger logger $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
   catch
     ( bracket
         ( Postgres.connectPostgreSQL

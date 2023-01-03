@@ -21,8 +21,6 @@ module Harness.Constants
     bigqueryServiceKeyVar,
     bigqueryProjectIdVar,
     bigqueryDataset,
-    httpHealthCheckAttempts,
-    httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
     defaultCitusConnectionString,
@@ -257,14 +255,6 @@ bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
 
 bigqueryDataset :: String
 bigqueryDataset = "hasura"
-
--- * HTTP health checks
-
-httpHealthCheckAttempts :: Int
-httpHealthCheckAttempts = 5
-
-httpHealthCheckIntervalSeconds :: DiffTime
-httpHealthCheckIntervalSeconds = 1
 
 -- * Server configuration
 

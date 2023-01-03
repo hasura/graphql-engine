@@ -25,10 +25,12 @@ where
 import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
 import Data.Char qualified
+import Data.Has
 import Data.UUID (UUID)
 import Data.Word
 import Database.PostgreSQL.Simple.Options (Options)
 import Harness.Logging.Messages
+import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Harness.Test.FixtureName
 import Hasura.Prelude
@@ -57,8 +59,17 @@ data GlobalTestEnvironment = GlobalTestEnvironment
     -- details'.
     testingMode :: TestingMode,
     -- | connection details for the instance of HGE we're connecting to
-    server :: Server
+    server :: Server,
+    servicesConfig :: Services.TestServicesConfig
   }
+
+instance Has Logger GlobalTestEnvironment where
+  getter = logger
+  modifier f x = x {logger = f (logger x)}
+
+instance Has GlobalTestEnvironment TestEnvironment where
+  getter = globalEnvironment
+  modifier f x = x {globalEnvironment = f (globalEnvironment x)}
 
 instance Show GlobalTestEnvironment where
   show GlobalTestEnvironment {server} =
@@ -77,6 +88,43 @@ data TestEnvironment = TestEnvironment
     -- to test permissions.
     testingRole :: Maybe Text
   }
+
+instance Has Logger TestEnvironment where
+  getter = logger . globalEnvironment
+  modifier f x =
+    x
+      { globalEnvironment =
+          (globalEnvironment x)
+            { logger =
+                f
+                  ( logger $ globalEnvironment x
+                  )
+            }
+      }
+
+instance Has Services.TestServicesConfig GlobalTestEnvironment where
+  getter = servicesConfig
+  modifier f x = x {servicesConfig = f (servicesConfig x)}
+
+instance Has Services.HgeBinPath GlobalTestEnvironment where
+  getter = getter . getter @Services.TestServicesConfig
+  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
+
+instance Has Services.PostgresServerUrl GlobalTestEnvironment where
+  getter = getter . getter @Services.TestServicesConfig
+  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
+
+instance Has Services.TestServicesConfig TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f x = modifier (modifier @_ @GlobalTestEnvironment f) x
+
+instance Has Services.HgeBinPath TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
+
+instance Has Services.PostgresServerUrl TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
 instance Show TestEnvironment where
   show TestEnvironment {globalEnvironment} =

@@ -8,11 +8,14 @@ library
     , aeson
     , aeson-pretty
     , async
+    , attoparsec
     , base
     , bytestring
     , conduit
     , containers
+    , data-has
     , dc-api
+    , directory
     , ekg-core
     , fast-logger
     , graphql-engine
@@ -24,9 +27,9 @@ library
     , http-conduit
     , http-types
     , insert-ordered-containers
-    , libyaml
     , lens
     , lens-aeson
+    , libyaml
     , managed
     , morpheus-graphql
     , mtl
@@ -36,15 +39,16 @@ library
     , openapi3
     , parsec
     , pg-client
-    , postgresql-simple
     , postgres-options
-    , pretty-simple
+    , postgresql-simple
     , pretty-show
+    , pretty-simple
+    , process
     , refined
     , resourcet
     , safe-exceptions
-    , servant-server
     , scientific
+    , servant-server
     , sop-core
     , stm
     , string-interpolate
@@ -75,6 +79,7 @@ library
     GeneralisedNewtypeDeriving
     ImportQualifiedPost
     LambdaCase
+    MultiParamTypeClasses
     NamedFieldPuns
     NoImplicitPrelude
     OverloadedStrings
@@ -112,6 +117,9 @@ library
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
+    Harness.Services.Composed
+    Harness.Services.GraphqlEngine
+    Harness.Services.Postgres
     Harness.Subscriptions
     Harness.Test.BackendType
     Harness.Test.CustomOptions
