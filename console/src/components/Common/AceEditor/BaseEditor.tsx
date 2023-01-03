@@ -12,19 +12,21 @@ interface EditorProps extends IAceEditorProps {
 
 const Editor: React.FC<EditorProps> = ({ mode, editorRef, ...props }) => {
   return (
-    <AceEditor
-      ref={editorRef}
-      mode={mode}
-      theme={ACE_EDITOR_THEME}
-      fontSize={ACE_EDITOR_FONT_SIZE}
-      showGutter
-      tabSize={2}
-      setOptions={{
-        showLineNumbers: true,
-        useWorker: false,
-      }}
-      {...props}
-    />
+    <div className="z-0 relative">
+      <AceEditor
+        ref={editorRef}
+        mode={mode}
+        theme={ACE_EDITOR_THEME}
+        fontSize={ACE_EDITOR_FONT_SIZE}
+        showGutter
+        tabSize={2}
+        setOptions={{
+          showLineNumbers: true,
+          useWorker: false,
+        }}
+        {...props}
+      />
+    </div>
   );
 };
 
