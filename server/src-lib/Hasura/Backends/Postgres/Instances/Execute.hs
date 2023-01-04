@@ -97,6 +97,7 @@ data PreparedSql = PreparedSql
   { _psQuery :: PG.Query,
     _psPrepArgs :: PrepArgMap
   }
+  deriving (Show)
 
 instance
   ( Backend ('Postgres pgKind),

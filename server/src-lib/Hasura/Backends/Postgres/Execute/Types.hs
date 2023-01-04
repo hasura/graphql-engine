@@ -132,6 +132,9 @@ data PGSourceConfig = PGSourceConfig
   }
   deriving (Generic)
 
+instance Show PGSourceConfig where
+  show _ = "(PGSourceConfig <details>)"
+
 instance Eq PGSourceConfig where
   lconf == rconf =
     (_pscConnInfo lconf, _pscReadReplicaConnInfos lconf, _pscExtensionsSchema lconf)

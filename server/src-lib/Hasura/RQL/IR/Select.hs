@@ -1030,6 +1030,13 @@ deriving stock instance
   ) =>
   Eq (RemoteSourceSelect r vf tgt)
 
+deriving stock instance
+  ( Backend tgt,
+    Show (SourceRelationshipSelection tgt r vf),
+    Show (SourceConfig tgt)
+  ) =>
+  Show (RemoteSourceSelect r vf tgt)
+
 -- Permissions
 
 data TablePermG (b :: BackendType) v = TablePerm

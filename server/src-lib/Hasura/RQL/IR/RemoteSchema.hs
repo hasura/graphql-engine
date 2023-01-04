@@ -175,6 +175,7 @@ data RemoteSchemaSelect r = RemoteSchemaSelect
     _rselFieldCall :: NonEmpty FieldCall,
     _rselRemoteSchema :: RemoteSchemaInfo
   }
+  deriving (Show)
 
 -------------------------------------------------------------------------------
 -- Conversion back to a GraphQL document

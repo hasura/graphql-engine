@@ -294,6 +294,9 @@ data BigQuerySourceConfig = BigQuerySourceConfig
   }
   deriving (Eq)
 
+instance Show BigQuerySourceConfig where
+  show _ = "(BigQuerySourceConfig <details>)"
+
 instance J.ToJSON BigQuerySourceConfig where
   toJSON BigQuerySourceConfig {..} =
     J.object $
