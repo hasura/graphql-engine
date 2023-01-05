@@ -1,5 +1,7 @@
 import isObject from 'lodash.isobject';
 
+export { getCurrTimeForFileName } from './jsUtils';
+
 export function isJsonString(str: string) {
   try {
     JSON.parse(str);
