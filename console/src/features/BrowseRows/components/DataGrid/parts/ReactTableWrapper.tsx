@@ -14,9 +14,11 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { Relationship } from '@/features/DatabaseRelationships';
+import { RowDialog } from './RowDialog';
+import { RowOptionsButton } from './RowOptionsButton';
 
 interface ReactTableWrapperProps {
   rows: TableRow[];
@@ -35,6 +37,10 @@ interface ReactTableWrapperProps {
 }
 
 export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
+  const [currentActiveRow, setCurrentActiveRow] = useState<Record<
+    string,
+    any
+  > | null>(null);
   const { rows, sort, relationships } = props;
 
   const columns = Object.keys(rows?.[0] ?? []);
@@ -103,9 +109,19 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
   const relationshipNames =
     relationships?.allRelationships.map(rel => rel.name) ?? [];
 
+  const rowOptionsColumns = {
+    id: 'options-button',
+    cell: (info: any) => (
+      <RowOptionsButton
+        row={info.row.original}
+        onOpen={row => setCurrentActiveRow(row)}
+      />
+    ),
+  };
+
   const ReactTable = useReactTable<TableRow>({
     data: rows,
-    columns: [...tableColumns, ...relationshipColumns],
+    columns: [rowOptionsColumns, ...tableColumns, ...relationshipColumns],
     getCoreRowModel: getCoreRowModel(),
     state: {
       sorting: sort?.sorting,
@@ -117,68 +133,77 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
   if (!rows.length) return <div>No rows Available</div>;
 
   return (
-    <CardedTable.Table
-      className="overflow-y-auto"
-      style={{ maxHeight: '65vh' }}
-    >
-      <CardedTable.TableHead>
-        {ReactTable.getHeaderGroups().map((headerGroup, id) => (
-          <CardedTable.TableHeadRow key={`${headerGroup.id}-${id}`}>
-            {headerGroup.headers.map((header, i) => (
-              <CardedTable.TableHeadCell key={`cell-${i}`}>
-                {header.isPlaceholder ? null : (
-                  <div
-                    onClick={header.column.getToggleSortingHandler()}
-                    className={clsx(
-                      relationshipNames.includes(header.id)
-                        ? 'pointer-events-none'
-                        : 'pointer-events-auto',
-                      header.column.getCanSort()
-                        ? 'cursor-pointer select-none flex gap-4 items-center'
-                        : ''
-                    )}
-                    key={`header-item-${header.id}`}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {!relationshipNames.includes(header.id) &&
-                      ({
-                        asc: <FaCaretUp />,
-                        desc: <FaCaretDown />,
-                      }[header.column.getIsSorted() as string] ?? (
-                        <span className="flex flex-col">
-                          <FaCaretUp />
-                          <FaCaretDown style={{ marginTop: '-5px' }} />
-                        </span>
-                      ))}
-                  </div>
-                )}
-              </CardedTable.TableHeadCell>
-            ))}
-          </CardedTable.TableHeadRow>
-        ))}
-      </CardedTable.TableHead>
+    <>
+      <CardedTable.Table
+        className="overflow-y-auto"
+        style={{ maxHeight: '65vh' }}
+      >
+        <CardedTable.TableHead>
+          {ReactTable.getHeaderGroups().map((headerGroup, id) => (
+            <CardedTable.TableHeadRow key={`${headerGroup.id}-${id}`}>
+              {headerGroup.headers.map((header, i) => (
+                <CardedTable.TableHeadCell key={`cell-${i}`}>
+                  {header.isPlaceholder ? null : (
+                    <div
+                      onClick={header.column.getToggleSortingHandler()}
+                      className={clsx(
+                        relationshipNames.includes(header.id)
+                          ? 'pointer-events-none'
+                          : 'pointer-events-auto',
+                        header.column.getCanSort()
+                          ? 'cursor-pointer select-none flex gap-4 items-center'
+                          : ''
+                      )}
+                      key={`header-item-${header.id}`}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header?.id === 'options-button' ||
+                        (!relationshipNames.includes(header.id) &&
+                          ({
+                            asc: <FaCaretUp />,
+                            desc: <FaCaretDown />,
+                          }[header.column.getIsSorted() as string] ?? (
+                            <span className="flex flex-col">
+                              <FaCaretUp />
+                              <FaCaretDown style={{ marginTop: '-5px' }} />
+                            </span>
+                          )))}
+                    </div>
+                  )}
+                </CardedTable.TableHeadCell>
+              ))}
+            </CardedTable.TableHeadRow>
+          ))}
+        </CardedTable.TableHead>
 
-      <CardedTable.TableBody>
-        {ReactTable.getRowModel().rows.map(row => (
-          <CardedTable.TableBodyRow
-            key={row.id}
-            data-testid={`@table-row-${row.id}`}
-          >
-            {row.getVisibleCells().map((cell, i) => (
-              <CardedTable.TableBodyCell
-                key={i}
-                data-testid={`@table-cell-${row.id}-${i}`}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </CardedTable.TableBodyCell>
-            ))}
-          </CardedTable.TableBodyRow>
-        ))}
-      </CardedTable.TableBody>
-    </CardedTable.Table>
+        <CardedTable.TableBody>
+          {ReactTable.getRowModel().rows.map(row => (
+            <CardedTable.TableBodyRow
+              key={row.id}
+              data-testid={`@table-row-${row.id}`}
+            >
+              {row.getVisibleCells().map((cell, i) => (
+                <CardedTable.TableBodyCell
+                  key={i}
+                  data-testid={`@table-cell-${row.id}-${i}`}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </CardedTable.TableBodyCell>
+              ))}
+            </CardedTable.TableBodyRow>
+          ))}
+        </CardedTable.TableBody>
+      </CardedTable.Table>
+      {currentActiveRow && (
+        <RowDialog
+          row={currentActiveRow}
+          onClose={() => setCurrentActiveRow(null)}
+        />
+      )}
+    </>
   );
 };
 

@@ -25,12 +25,16 @@ export const fetchRows = async ({
     table,
   });
 
+  console.log('>>>', columns, tableColumns);
+
   const result = await DataSource(httpClient).getTableRows({
     dataSourceName,
     table,
     columns: columns ?? tableColumns.map(column => column.name),
     options,
   });
+
+  console.log('>>>', result);
 
   return result;
 };
