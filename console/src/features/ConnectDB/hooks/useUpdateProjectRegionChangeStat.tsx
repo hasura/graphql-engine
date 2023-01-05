@@ -13,8 +13,6 @@ type UpdateDBLatencyTableResponse = {
   };
 };
 
-const client = controlPlaneClient();
-
 export const useUpdateProjectRegionChangeStat = () => {
   return useMutation({
     mutationFn: async (
@@ -31,7 +29,7 @@ export const useUpdateProjectRegionChangeStat = () => {
         return;
       }
 
-      return client.query<UpdateDBLatencyTableResponse>(
+      return controlPlaneClient.query<UpdateDBLatencyTableResponse>(
         updateUserClickedChangeProjectRegion,
         {
           rowId:

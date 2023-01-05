@@ -60,8 +60,6 @@ export type CheckDatabaseLatencyResponse = {
     | undefined;
 };
 
-const client = controlPlaneClient();
-
 const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
   return useQuery({
     queryKey: ['latencyCheckJobSetup'],
@@ -72,9 +70,12 @@ const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
         return undefined;
       }
 
-      return client.query<LatencyActionResponse>(fetchDatabaseLatencyJobId, {
-        project_id: projectId,
-      });
+      return controlPlaneClient.query<LatencyActionResponse>(
+        fetchDatabaseLatencyJobId,
+        {
+          project_id: projectId,
+        }
+      );
     },
     enabled: isEnabled,
   });
@@ -91,15 +92,14 @@ const useInsertIntoDBLatencyTable = () => {
     mutationFn: async (
       props: DbLatencyMutationProps
     ): Promise<CheckDatabaseLatencyResponse['insertDbLatencyData']> => {
-      return client.query<CheckDatabaseLatencyResponse['insertDbLatencyData']>(
-        insertInfoIntoDBLatencyQuery,
-        {
-          jobId: props.jobId,
-          projectId: props.projectId,
-          isLatencyDisplayed: true,
-          datasDifferenceInMilliseconds: props.dateDiff,
-        }
-      );
+      return controlPlaneClient.query<
+        CheckDatabaseLatencyResponse['insertDbLatencyData']
+      >(insertInfoIntoDBLatencyQuery, {
+        jobId: props.jobId,
+        projectId: props.projectId,
+        isLatencyDisplayed: true,
+        datasDifferenceInMilliseconds: props.dateDiff,
+      });
     },
     retry: 1,
   });
@@ -127,10 +127,10 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
         throw Error('Job ID was not found');
       }
 
-      const jobStatusResponse = await client.query<LatencyJobResponse>(
-        fetchInfoFromJobId,
-        { id: jobId }
-      );
+      const jobStatusResponse =
+        await controlPlaneClient.query<LatencyJobResponse>(fetchInfoFromJobId, {
+          id: jobId,
+        });
 
       if (!jobStatusResponse?.data?.jobs_by_pk?.status) {
         throw Error(`status for job ${jobId} not available`);
