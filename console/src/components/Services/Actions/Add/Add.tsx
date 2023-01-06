@@ -72,7 +72,7 @@ interface AddActionProps extends InjectedProps {}
 const AddAction: React.FC<AddActionProps> = ({
   handler,
   dispatch,
-  execution,
+  kind,
   actionDefinition,
   typeDefinition,
   isFetching,
@@ -431,7 +431,7 @@ const AddAction: React.FC<AddActionProps> = ({
 
           <ActionEditor
             handler={handler}
-            execution={execution}
+            execution={kind}
             actionDefinition={actionDefinition}
             typeDefinition={typeDefinition}
             headers={headers}
