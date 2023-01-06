@@ -26333,6 +26333,42 @@ runWebSockets :: ConnectionOptions -> RequestHead -> IpAddress -> (IpAddress -> 
 
 module Hasura.Server.App
 data ServerCtx
+ServerCtx :: !Loggers -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLGenCtx -> !HashSet API -> !InstanceId -> !SubscriptionsState -> !Bool -> !ResponseInternalErrorsConfig -> !Environment -> !RemoteSchemaPermissions -> !InferFunctionPermissions -> !MaintenanceMode () -> !HashSet ExperimentalFeature -> !LoggingSettings -> !EventingMode -> !ReadOnlyMode -> !Maybe NamingCase -> !ServerMetrics -> !MetadataDefaults -> HashSet (EngineLogType Hasura) -> PGPool -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> ServerCtx
+[scLoggers] :: ServerCtx -> !Loggers
+[scCacheRef] :: ServerCtx -> !SchemaCacheRef
+[scAuthMode] :: ServerCtx -> !AuthMode
+[scManager] :: ServerCtx -> !Manager
+[scSQLGenCtx] :: ServerCtx -> !SQLGenCtx
+[scEnabledAPIs] :: ServerCtx -> !HashSet API
+[scInstanceId] :: ServerCtx -> !InstanceId
+[scSubscriptionState] :: ServerCtx -> !SubscriptionsState
+[scEnableAllowlist] :: ServerCtx -> !Bool
+[scResponseInternalErrorsConfig] :: ServerCtx -> !ResponseInternalErrorsConfig
+[scEnvironment] :: ServerCtx -> !Environment
+[scRemoteSchemaPermsCtx] :: ServerCtx -> !RemoteSchemaPermissions
+[scFunctionPermsCtx] :: ServerCtx -> !InferFunctionPermissions
+[scEnableMaintenanceMode] :: ServerCtx -> !MaintenanceMode ()
+[scExperimentalFeatures] :: ServerCtx -> !HashSet ExperimentalFeature
+[scLoggingSettings] :: ServerCtx -> !LoggingSettings
+[scEventingMode] :: ServerCtx -> !EventingMode
+[scEnableReadOnlyMode] :: ServerCtx -> !ReadOnlyMode
+[scDefaultNamingConvention] :: ServerCtx -> !Maybe NamingCase
+[scServerMetrics] :: ServerCtx -> !ServerMetrics
+[scMetadataDefaults] :: ServerCtx -> !MetadataDefaults
+[scEnabledLogTypes] :: ServerCtx -> HashSet (EngineLogType Hasura)
+[scMetadataDbPool] :: ServerCtx -> PGPool
+[scShutdownLatch] :: ServerCtx -> ShutdownLatch
+[scMetaVersionRef] :: ServerCtx -> TMVar MetadataResourceVersion
+[scPrometheusMetrics] :: ServerCtx -> PrometheusMetrics
+[scTraceSamplingPolicy] :: ServerCtx -> SamplingPolicy
+
+-- | Collection of the LoggerCtx, the regular Logger and the PGLogger TODO
+--   (from master): better naming?
+data Loggers
+Loggers :: !LoggerCtx Hasura -> !Logger Hasura -> !PGLogger -> Loggers
+[_lsLoggerCtx] :: Loggers -> !LoggerCtx Hasura
+[_lsLogger] :: Loggers -> !Logger Hasura
+[_lsPgLogger] :: Loggers -> !PGLogger
 data HandlerCtx
 type Handler m = ReaderT HandlerCtx (MetadataStorageT m)
 data APIResp
@@ -26363,7 +26399,7 @@ renderHtmlTemplate :: Template -> Value -> Either String Text
 configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => ServerCtx -> Maybe Text -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> ResponseInternalErrorsConfig -> Maybe SubscriptionPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> PrometheusMetrics -> RemoteSchemaPermissions -> InferFunctionPermissions -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode () -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> MetadataDefaults -> SamplingPolicy -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Bool -> SchemaCacheRef -> ConnectionOptions -> KeepAliveDelay -> HashSet (EngineLogType Hasura) -> ServerCtx -> WSConnectionInitTimeout -> Store EmptyMetrics -> m HasuraApp
 instance Hasura.Server.App.ConsoleRenderer m => Hasura.Server.App.ConsoleRenderer (Hasura.Tracing.TraceT m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Hasura.Metadata.Class.MetadataStorageT m)
@@ -26373,6 +26409,7 @@ instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.
 -- | Imported by 'server<i>src-exec</i>Main.hs'.
 module Hasura.App
 data ExitCode
+AuthConfigurationError :: ExitCode
 DatabaseMigrationError :: ExitCode
 
 -- | used by MT because it initialises the schema cache only these are used
@@ -26405,25 +26442,15 @@ GlobalCtx :: !ConnInfo -> !(Maybe (UrlConf, ConnInfo), Maybe Int) -> GlobalCtx
 readTlsAllowlist :: SchemaCacheRef -> IO [TlsAllow]
 initGlobalCtx :: MonadIO m => Environment -> Maybe String -> PostgresConnInfo (Maybe UrlConf) -> m GlobalCtx
 
--- | Context required for the <tt>serve</tt> CLI command.
-data ServeCtx
-ServeCtx :: Manager -> InstanceId -> Loggers -> HashSet (EngineLogType Hasura) -> PGPool -> ShutdownLatch -> SchemaCacheRef -> TMVar MetadataResourceVersion -> ServeCtx
-
--- | Collection of the LoggerCtx, the regular Logger and the PGLogger TODO
---   (from master): better naming?
-data Loggers
-Loggers :: !LoggerCtx Hasura -> !Logger Hasura -> !PGLogger -> Loggers
-[_lsLoggerCtx] :: Loggers -> !LoggerCtx Hasura
-[_lsLogger] :: Loggers -> !Logger Hasura
-[_lsPgLogger] :: Loggers -> !PGLogger
-
 -- | An application with Postgres database as a metadata storage
 data PGMetadataStorageAppT m a
 resolvePostgresConnInfo :: MonadIO m => Environment -> UrlConf -> Maybe Int -> m ConnInfo
+initAuthMode :: (ForkableMonadIO m, HasReporter m) => ServeOptions impl -> Manager -> Logger Hasura -> m AuthMode
+initSubscriptionsState :: ServeOptions impl -> Logger Hasura -> Maybe SubscriptionPostPollHook -> IO SubscriptionsState
 
 -- | Initializes or migrates the catalog and returns the context required
 --   to start the server.
-initialiseServeCtx :: (ForkableMonadIO m, MonadCatch m) => Environment -> GlobalCtx -> ServeOptions Hasura -> ServerMetrics -> ManagedT m ServeCtx
+initialiseServerCtx :: (ForkableMonadIO m, MonadCatch m) => Environment -> GlobalCtx -> ServeOptions Hasura -> Maybe SubscriptionPostPollHook -> ServerMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m ServerCtx
 mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura) -> LogLevel -> ManagedT m Loggers
 
 -- | helper function to initialize or migrate the <tt>hdb_catalog</tt>
@@ -26456,12 +26483,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe SubscriptionPostPollHook -> ServerMetrics -> Store EmptyMetrics -> Maybe (IO ()) -> PrometheusMetrics -> SamplingPolicy -> ManagedT m ()
+runHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServerCtx -> UTCTime -> Maybe (IO ()) -> Store EmptyMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> Maybe SubscriptionPostPollHook -> ServerMetrics -> Store EmptyMetrics -> PrometheusMetrics -> SamplingPolicy -> ManagedT m Application
+mkHGEServer :: forall m impl. (MonadIO m, MonadFix m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadVersionAPIWithExtraData m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServerCtx -> Store EmptyMetrics -> ManagedT m Application
 accessDeniedErrMsg :: Text
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState
