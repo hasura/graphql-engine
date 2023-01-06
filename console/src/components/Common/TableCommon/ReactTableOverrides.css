@@ -22,7 +22,7 @@
 
 .ReactTable .rt-noData {
   padding: 0;
-  top: 93px;
+  top: 105px;
   background: none;
 }
 
@@ -50,7 +50,6 @@
 .ReactTable .rt-thead.-header {
   box-shadow: none;
   min-height: 32px;
-  top: 59px;
   position: sticky;
   z-index: 1;
 }
