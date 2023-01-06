@@ -81,7 +81,7 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableReferences =
-          [ Schema.Reference "author_id" "author" "id"
+          [ Schema.reference "author_id" "author" "id"
           ]
       }
   ]

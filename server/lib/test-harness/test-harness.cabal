@@ -46,6 +46,7 @@ library
     , process
     , refined
     , resourcet
+    , safe
     , safe-exceptions
     , scientific
     , servant-server

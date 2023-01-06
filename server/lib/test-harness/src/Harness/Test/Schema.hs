@@ -5,11 +5,14 @@ module Harness.Test.Schema
   ( Table (..),
     table,
     Reference (..),
+    reference,
     Column (..),
     ScalarType (..),
     defaultSerialType,
     ScalarValue (..),
     WKT (..),
+    formatTableQualifier,
+    TableQualifier (..),
     Constraint (..),
     UniqueIndex (..),
     BackendScalarType (..),
@@ -17,6 +20,8 @@ module Harness.Test.Schema
     BackendScalarValueType (..),
     ManualRelationship (..),
     SchemaName (..),
+    resolveTableSchema,
+    resolveReferenceSchema,
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -59,6 +64,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SchemaName
 import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig)
 import Hasura.Prelude
+import Safe (lastMay)
 
 -- | Generic type to use to specify schema tables for all backends.
 -- Usually a list of these make up a "schema" to pass to the respective
@@ -78,9 +84,18 @@ data Table = Table
     tableManualRelationships :: [Reference],
     tableData :: [[ScalarValue]],
     tableConstraints :: [Constraint],
-    tableUniqueIndexes :: [UniqueIndex]
+    tableUniqueIndexes :: [UniqueIndex],
+    tableQualifiers :: [TableQualifier]
   }
   deriving (Show, Eq)
+
+-- | Used to qualify a tracked table by schema (and additionally by GCP projectId, in the case
+-- of BigQuery)
+newtype TableQualifier = TableQualifier Text
+  deriving (Show, Eq)
+
+formatTableQualifier :: TableQualifier -> Text
+formatTableQualifier (TableQualifier t) = t
 
 data Constraint = UniqueConstraintColumns [Text] | CheckConstraintExpression Text
   deriving (Show, Eq)
@@ -100,16 +115,27 @@ table tableName =
       tableManualRelationships = [],
       tableData = [],
       tableConstraints = [],
-      tableUniqueIndexes = []
+      tableUniqueIndexes = [],
+      tableQualifiers = []
     }
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference
   { referenceLocalColumn :: Text,
     referenceTargetTable :: Text,
-    referenceTargetColumn :: Text
+    referenceTargetColumn :: Text,
+    referenceTargetQualifiers :: [Text]
   }
   deriving (Show, Eq)
+
+reference :: Text -> Text -> Text -> Reference
+reference localColumn targetTable targetColumn =
+  Reference
+    { referenceLocalColumn = localColumn,
+      referenceTargetTable = targetTable,
+      referenceTargetColumn = targetColumn,
+      referenceTargetQualifiers = mempty
+    }
 
 -- | Type representing manual relationship between tables. This is
 -- only used for BigQuery backend currently where additional
@@ -298,25 +324,43 @@ columnNull name typ = Column name typ True Nothing
 parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 
+-- | we assume we are using the default schema unless a table tells us
+-- otherwise
+-- when multiple qualifiers are passed, we assume the last one is the schema
+resolveTableSchema :: TestEnvironment -> Table -> SchemaName
+resolveTableSchema testEnv tbl =
+  case resolveReferenceSchema (coerce $ tableQualifiers tbl) of
+    Nothing -> getSchemaName testEnv
+    Just schemaName -> schemaName
+
+-- | when given a list of qualifiers, we assume that the schema is the last one
+-- io Postgres, it'll be the only item
+-- in BigQuery, it could be ['project','schema']
+resolveReferenceSchema :: [Text] -> Maybe SchemaName
+resolveReferenceSchema qualifiers =
+  case lastMay qualifiers of
+    Nothing -> Nothing
+    Just schemaName -> Just (SchemaName schemaName)
+
 -- | Native Backend track table
 --
 -- Data Connector backends expect an @[String]@ for the table name.
 trackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()
-trackTable source Table {tableName} testEnvironment = do
+trackTable source tbl@(Table {tableName}) testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
-      schema = getSchemaName testEnvironment
+      schema = resolveTableSchema testEnvironment tbl
       requestType = backendType <> "_track_table"
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    schema: *schema
-    name: *tableName
-|]
+      type: *requestType
+      args:
+        source: *source
+        table:
+          schema: *schema
+          name: *tableName
+    |]
 
 -- | Native Backend track table
 --
@@ -418,22 +462,26 @@ untrackComputedField source Table {tableName} fieldName testEnvironment = do
       schema = getSchemaName testEnvironment
       schemaKey = BackendType.backendSchemaKeyword backendTypeMetadata
   let requestType = backendType <> "_drop_computed_field"
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    *schemaKey: *schema
-    name: *tableName
-  name: *fieldName
-|]
+      type: *requestType
+      args:
+        source: *source
+        table:
+          *schemaKey: *schema
+          name: *tableName
+        name: *fieldName
+      |]
 
 -- | Helper to create the object relationship name
 mkObjectRelationshipName :: Reference -> Text
-mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
+mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
+  let columnName = case resolveReferenceSchema referenceTargetQualifiers of
+        Just (SchemaName targetSchema) -> targetSchema <> "_" <> referenceTargetColumn
+        Nothing -> referenceTargetColumn
+   in referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> columnName
 
 -- | Build an 'Aeson.Value' representing a 'BackendType' specific @TableName@.
 mkTableField :: BackendTypeConfig -> SchemaName -> Text -> Aeson.Value
@@ -450,12 +498,12 @@ mkTableField backendTypeMetadata schemaName tableName =
 
 -- | Unified track object relationships
 trackObjectRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
-trackObjectRelationships Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
+trackObjectRelationships tbl@(Table {tableName, tableReferences, tableManualRelationships}) testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-      schema = getSchemaName testEnvironment
+      localSchema = resolveTableSchema testEnvironment tbl
       backendType = BackendType.backendTypeString backendTypeMetadata
       source = BackendType.backendSourceName backendTypeMetadata
-      tableField = mkTableField backendTypeMetadata schema tableName
+      tableField = mkTableField backendTypeMetadata localSchema tableName
       requestType = backendType <> "_create_object_relationship"
 
   for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
@@ -463,18 +511,21 @@ trackObjectRelationships Table {tableName, tableReferences, tableManualRelations
     GraphqlEngine.postMetadata_
       testEnvironment
       [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *tableField
-  name: *relationshipName
-  using:
-    foreign_key_constraint_on: *referenceLocalColumn
-|]
+        type: *requestType
+        args:
+          source: *source
+          table: *tableField
+          name: *relationshipName
+          using:
+            foreign_key_constraint_on: *referenceLocalColumn
+      |]
 
-  for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let relationshipName = mkObjectRelationshipName ref
-        targetTableField = mkTableField backendTypeMetadata schema referenceTargetTable
+  for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkObjectRelationshipName ref
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
         manualConfiguration :: Aeson.Value
         manualConfiguration =
           Aeson.object
@@ -484,52 +535,61 @@ args:
             ]
         payload =
           [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *tableField
-  name: *relationshipName
-  using:
-    manual_configuration: *manualConfiguration
-|]
+            type: *requestType
+            args:
+              source: *source
+              table: *tableField
+              name: *relationshipName
+              using:
+                manual_configuration: *manualConfiguration
+          |]
 
     GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Helper to create the array relationship name
-mkArrayRelationshipName :: Text -> Text -> Text -> Text
-mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn =
-  tableName <> "s_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
+mkArrayRelationshipName :: Text -> Text -> Text -> [Text] -> Text
+mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn referenceTargetQualifiers =
+  let columnName = case resolveReferenceSchema referenceTargetQualifiers of
+        Just (SchemaName targetSchema) -> targetSchema <> "_" <> referenceTargetColumn
+        Nothing -> referenceTargetColumn
+   in tableName <> "s_by_" <> referenceLocalColumn <> "_to_" <> columnName
 
 -- | Unified track array relationships
 trackArrayRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
-trackArrayRelationships Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
+trackArrayRelationships tbl@(Table {tableName, tableReferences, tableManualRelationships}) testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-      schema = getSchemaName testEnvironment
+      localSchema = resolveTableSchema testEnvironment tbl
       backendType = BackendType.backendTypeString backendTypeMetadata
       source = BackendType.backendSourceName backendTypeMetadata
-      tableField = mkTableField backendTypeMetadata schema tableName
+      tableField = mkTableField backendTypeMetadata localSchema tableName
       requestType = backendType <> "_create_array_relationship"
 
-  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
-        targetTableField = mkTableField backendTypeMetadata schema referenceTargetTable
+  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
     GraphqlEngine.postMetadata_
       testEnvironment
       [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *targetTableField
-  name: *relationshipName
-  using:
-    foreign_key_constraint_on:
-      table: *tableField
-      column: *referenceLocalColumn
-|]
+        type: *requestType
+        args:
+          source: *source
+          table: *targetTableField
+          name: *relationshipName
+          using:
+            foreign_key_constraint_on:
+              table: *tableField
+              column: *referenceLocalColumn
+      |]
 
-  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
-        targetTableField = mkTableField backendTypeMetadata schema referenceTargetTable
+  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
         manualConfiguration :: Aeson.Value
         manualConfiguration =
           Aeson.object
@@ -561,8 +621,8 @@ untrackRelationships Table {tableName, tableReferences, tableManualRelationships
       tableField = mkTableField backendTypeMetadata schema tableName
       requestType = backendType <> "_drop_relationship"
 
-  forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
+  forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
         objectRelationshipName = mkObjectRelationshipName ref
         targetTableField = mkTableField backendTypeMetadata schema referenceTargetTable
     finally

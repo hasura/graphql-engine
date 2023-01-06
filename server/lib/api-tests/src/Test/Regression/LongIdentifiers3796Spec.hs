@@ -128,7 +128,8 @@ longtable =
         [ Schema.Reference
             { referenceLocalColumn = "regular_id",
               referenceTargetTable = "regular_table_with_a_long_name_to_test_rename_identifiers",
-              referenceTargetColumn = "id"
+              referenceTargetColumn = "id",
+              referenceTargetQualifiers = mempty
             }
         ],
       tableData =
@@ -165,12 +166,14 @@ multitable =
         [ Schema.Reference
             { referenceLocalColumn = "reference_for_longtable_id",
               referenceTargetTable = "i_need_a_table_with_a_long_name_to_test_rename_identifiers",
-              referenceTargetColumn = "id"
+              referenceTargetColumn = "id",
+              referenceTargetQualifiers = mempty
             },
           Schema.Reference
             { referenceLocalColumn = "reference_for_longtable2_id",
               referenceTargetTable = "i_need_a_table_with_a_long_name_to_test_rename_identifiers2",
-              referenceTargetColumn = "id"
+              referenceTargetColumn = "id",
+              referenceTargetQualifiers = mempty
             }
         ],
       tableData =

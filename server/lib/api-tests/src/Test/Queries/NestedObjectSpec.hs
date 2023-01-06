@@ -91,7 +91,7 @@ schema =
             Schema.column "author_id" Schema.TInt
           ],
         tablePrimaryKey = ["id"],
-        tableReferences = [Schema.Reference "author_id" "author" "id"],
+        tableReferences = [Schema.reference "author_id" "author" "id"],
         tableData =
           [ [Schema.VInt 1, Schema.VStr "Article 1", Schema.VBool False, Schema.VInt 1],
             [Schema.VInt 2, Schema.VStr "Article 2", Schema.VBool True, Schema.VInt 1],

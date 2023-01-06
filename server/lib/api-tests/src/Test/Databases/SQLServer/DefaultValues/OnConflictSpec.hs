@@ -64,7 +64,7 @@ schema =
             Schema.column "time_id" Schema.TInt
           ],
         Schema.tablePrimaryKey = ["nickname"],
-        Schema.tableReferences = [Schema.Reference "time_id" "alldefaults" "id"]
+        Schema.tableReferences = [Schema.reference "time_id" "alldefaults" "id"]
       }
   ]
 

@@ -15,7 +15,7 @@ import Harness.TestEnvironment
 import Prelude
 
 newtype SchemaName = SchemaName {unSchemaName :: Text}
-  deriving newtype (Semigroup)
+  deriving newtype (Eq, Show, Semigroup)
 
 instance ToJSON SchemaName where
   toJSON (SchemaName sn) = toJSON sn

@@ -1,14 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Schema.TableRelationships.ArrayRelationshipsSpec (spec) where
+-- | we can fetch across schemas! Yes, we can!
+module Test.Schema.TableRelationships.CrossSchemaArrayRelationshipsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.BigQuery qualified as BigQuery
-import Harness.Backend.Citus qualified as Citus
-import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
@@ -27,27 +24,6 @@ spec = do
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Postgres.setupTablesAction schema testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Citus.setupTablesAction schema testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Cockroach.setupTablesAction schema testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Sqlserver.setupTablesAction schema testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [BigQuery.setupTablesAction schema testEnv],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True
-                    }
             }
         ]
     )
@@ -67,17 +43,26 @@ schema =
         tableData =
           [ [Schema.VInt 1, Schema.VStr "Author 1"],
             [Schema.VInt 2, Schema.VStr "Author 2"]
-          ]
+          ],
+        tableQualifiers = [Schema.TableQualifier "thisschema"]
       },
     (table "article")
-      { tableColumns =
+      { tableQualifiers =
+          [ Schema.TableQualifier "thatschema"
+          ],
+        tableColumns =
           [ Schema.column "id" Schema.TInt,
             Schema.column "title" Schema.TStr,
             Schema.column "author_id" Schema.TInt
           ],
         tablePrimaryKey = ["id"],
         tableReferences =
-          [ Schema.reference "author_id" "author" "id"
+          [ Schema.Reference
+              { Schema.referenceLocalColumn = "author_id",
+                Schema.referenceTargetTable = "author",
+                Schema.referenceTargetColumn = "id",
+                Schema.referenceTargetQualifiers = ["thisschema"]
+              }
           ],
         tableData =
           [ [ Schema.VInt 1,
@@ -104,22 +89,20 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Array relationships" do
+  describe "Array relationships across schemas" do
     it "Select authors and their articles" \testEnvironment -> do
-      let schemaName = Schema.getSchemaName testEnvironment
-
       let expected :: Value
           expected =
             [interpolateYaml|
               data:
-                #{schemaName}_author:
+                thisschema_author:
                 - id: 1
-                  articles_by_id_to_author_id:
+                  articles_by_id_to_thisschema_author_id:
                   - id: 1
                   - id: 2
 
                 - id: 2
-                  articles_by_id_to_author_id:
+                  articles_by_id_to_thisschema_author_id:
                   - id: 3
             |]
 
@@ -131,10 +114,10 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  #{schemaName}_author(order_by: [{ id: asc }]) {
+                  thisschema_author(order_by: [{ id: asc }]) {
                     id
 
-                    articles_by_id_to_author_id(order_by: [{ id: asc }]) {
+                    articles_by_id_to_thisschema_author_id(order_by: [{ id: asc }]) {
                       id
                     }
                   }

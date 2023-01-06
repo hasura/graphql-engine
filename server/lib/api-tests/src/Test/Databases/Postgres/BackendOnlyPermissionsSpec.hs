@@ -60,7 +60,7 @@ schema =
             Schema.column "author_id" Schema.TInt
           ],
         tablePrimaryKey = ["id"],
-        tableReferences = [Schema.Reference "author_id" "author" "id"]
+        tableReferences = [Schema.reference "author_id" "author" "id"]
       }
   ]
 

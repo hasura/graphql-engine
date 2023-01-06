@@ -53,20 +53,20 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableReferences =
-          [ Schema.Reference "author_id" "author" "id",
-            Schema.Reference "user_id" "user" "id"
+          [ Schema.reference "author_id" "author" "id",
+            Schema.reference "user_id" "user" "id"
           ]
       },
     -- The regression specifically is that the `_aggregate` root field for this
     -- table will conflict with the aggregation predicate for the array relationship
     -- between author and article.
-    (table $ Schema.mkArrayRelationshipName "author_article" "id" "author_id")
+    (table $ Schema.mkArrayRelationshipName "author_article" "id" "author_id" mempty)
       { tableColumns =
           [ Schema.column "id" Schema.defaultSerialType
           ],
         tablePrimaryKey = ["id"]
       },
-    (table $ Schema.mkArrayRelationshipName "article" "id" "author_id")
+    (table $ Schema.mkArrayRelationshipName "article" "id" "author_id" mempty)
       { tableColumns =
           [ Schema.column "id" Schema.defaultSerialType
           ],

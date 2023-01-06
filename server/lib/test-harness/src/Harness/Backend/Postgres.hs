@@ -258,15 +258,23 @@ defaultSourceConfiguration testEnv = do
       pool_settings: {}
   |]
 
+qualifiedTableName :: TestEnvironment -> Schema.Table -> Text
+qualifiedTableName testEnv table =
+  let schemaName = Schema.resolveTableSchema testEnv table
+   in [i| #{ Schema.unSchemaName schemaName }."#{ Schema.tableName table }" |]
+
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
-createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
-  let schemaName = Schema.getSchemaName testEnv
+createTable testEnv table@(Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes}) = do
+  let schemaName = Schema.resolveTableSchema testEnv table
+
+  -- \| create schema for this table
+  createSchema testEnv table
 
   run_
     testEnv
     [i|
-      CREATE TABLE #{ Constants.postgresDb }."#{ tableName }"
+      CREATE TABLE #{ qualifiedTableName testEnv table }
         (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
@@ -320,20 +328,21 @@ mkPrimaryKeySql key =
     ]
 
 mkReferenceSql :: SchemaName -> Schema.Reference -> Text
-mkReferenceSql (SchemaName schemaName) Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  [i|
+mkReferenceSql (SchemaName localSchemaName) Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
+  let schemaName = maybe localSchemaName Schema.unSchemaName (Schema.resolveReferenceSchema referenceTargetQualifiers)
+   in [i|
     FOREIGN KEY ("#{ referenceLocalColumn }")
-    REFERENCES #{ schemaName }."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
+    REFERENCES "#{ schemaName }"."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
     ON DELETE CASCADE ON UPDATE CASCADE
   |]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
 insertTable :: TestEnvironment -> Schema.Table -> IO ()
-insertTable testEnv Schema.Table {tableName, tableColumns, tableData} = unless (null tableData) do
+insertTable testEnv table@(Schema.Table {tableColumns, tableData}) = unless (null tableData) do
   run_
     testEnv
     [i|
-      INSERT INTO "#{ Constants.postgresDb }"."#{ tableName }"
+      INSERT INTO #{ qualifiedTableName testEnv table }
         (#{ commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns) })
       VALUES
         #{ commaSeparated $ mkRow <$> tableData };
@@ -405,7 +414,6 @@ createDatabase testEnvironment = do
   runWithInitialDb_
     (globalEnvironment testEnvironment)
     ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
-  createSchema testEnvironment
 
 dropDatabase :: TestEnvironment -> IO ()
 dropDatabase testEnvironment = do
@@ -434,9 +442,9 @@ dropDatabaseInternal dbName testEnvironment = do
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
-createSchema :: TestEnvironment -> IO ()
-createSchema testEnvironment = do
-  let schemaName = Schema.getSchemaName testEnvironment
+createSchema :: TestEnvironment -> Schema.Table -> IO ()
+createSchema testEnvironment table = do
+  let schemaName = Schema.resolveTableSchema testEnvironment table
 
   -- A transaction means that the @SET LOCAL@ is scoped to this operation.
   -- In other words, whatever the @client_min_messages@ flag's previous value

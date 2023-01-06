@@ -186,6 +186,8 @@ library
     Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec
     Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
     Test.Schema.RemoteSchemaCustomizationSpec
+    Test.Schema.TableRelationships.CrossSchemaArrayRelationshipsSpec
+    Test.Schema.TableRelationships.CrossSchemaObjectRelationshipsSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.TableRelationships.PortedSpec
