@@ -9,6 +9,7 @@
     "tailwindCSS.experimental.classRegex": [
       "tw\\w+ ?= ?`([^`]*)`",
       "tw\\w+: ?`([^`]*)`"
-    ]
+    ],
+    "tailwindCSS.rootFontSize": 14
   }
 }
