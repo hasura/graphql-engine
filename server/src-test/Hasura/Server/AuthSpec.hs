@@ -2,9 +2,10 @@
 
 module Hasura.Server.AuthSpec (spec) where
 
+import Control.Concurrent.Extended (ForkableMonadIO)
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Managed (lowerManagedT)
+import Control.Monad.Trans.Managed
 import Crypto.JOSE.JWK qualified as Jose
 import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
@@ -17,13 +18,14 @@ import Data.Parser.JSONPath
 import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
-import Hasura.Logging
+import Hasura.Logging (Logger (..))
 import Hasura.Prelude
 import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec
 
@@ -629,26 +631,32 @@ newtype NoReporter a = NoReporter {runNoReporter :: IO a}
 
 instance Tracing.HasReporter NoReporter
 
+instance Tracing.HasReporter (ManagedT NoReporter)
+
 setupAuthMode' ::
+  ( Tracing.HasReporter m,
+    ForkableMonadIO m
+  ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
   [JWTConfig] ->
   Maybe RoleName ->
-  IO (Either () AuthMode)
-setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole =
+  m (Either () AuthMode)
+setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
+  httpManager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
   -- just throw away the error message for ease of testing:
   fmap (either (const $ Left ()) Right) $
-    runNoReporter $
-      lowerManagedT $
-        runExceptT $
-          setupAuthMode
-            (fromMaybe Set.empty mAdminSecretHash)
-            mWebHook
-            jwtSecrets
-            mUnAuthRole
-            -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
-            (error "H.Manager")
-            (Logger $ void . return)
+    liftIO $
+      runNoReporter $
+        lowerManagedT $
+          runExceptT $
+            setupAuthMode
+              (fromMaybe Set.empty mAdminSecretHash)
+              mWebHook
+              jwtSecrets
+              mUnAuthRole
+              (Logger $ void . return)
+              httpManager
 
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =

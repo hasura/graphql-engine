@@ -86,6 +86,8 @@ instance HasReporter m => HasReporter (ReaderT r m) where
 instance HasReporter m => HasReporter (ExceptT e m) where
   askReporter = lift askReporter
 
+instance HasReporter IO
+
 -- | A trace context records the current active trace,
 -- the active span within that trace, and the span's parent,
 -- unless the current span is the root.

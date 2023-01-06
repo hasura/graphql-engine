@@ -684,16 +684,22 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
       Loggers loggerCtx logger _ = _scLoggers
 
   authModeRes <-
-    runExceptT $
-      setupAuthMode
-        soAdminSecret
-        soAuthHook
-        soJwtSecret
-        soUnAuthRole
-        _scHttpManager
-        logger
+    lift $
+      runExceptT $
+        setupAuthMode
+          soAdminSecret
+          soAuthHook
+          soJwtSecret
+          soUnAuthRole
+          logger
+          _scHttpManager
 
   authMode <- onLeft authModeRes (throwErrExit AuthConfigurationError . T.unpack)
+
+  -- forking a dedicated polling thread to dynamically get the latest JWK settings
+  -- set by the user and update the JWK accordingly. This will help in applying the
+  -- updates without restarting HGE.
+  _ <- C.forkManagedT "update JWK" logger $ updateJwkCtx authMode _scHttpManager logger
 
   HasuraApp app cacheRef actionSubState stopWsServer <-
     lift $

@@ -7,6 +7,7 @@ module Hasura.Server.Auth
     AdminSecretHash,
     unsafeMkAdminSecretHash,
     hashAdminSecret,
+    updateJwkCtx,
 
     -- * WebHook related
     AuthHookType (..),
@@ -18,7 +19,6 @@ module Hasura.Server.Auth
     JWTCtx (..),
     JWKSet (..),
     processJwt,
-    updateJwkRef,
     UserAuthentication (..),
 
     -- * Exposed for testing
@@ -26,19 +26,17 @@ module Hasura.Server.Auth
   )
 where
 
-import Control.Concurrent.Extended (ForkableMonadIO, forkManagedT)
-import Control.Monad.Morph (hoist)
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Trans.Managed (ManagedT)
 import Crypto.Hash qualified as Crypto
 import Data.ByteArray qualified as BA
 import Data.ByteString (ByteString)
 import Data.HashSet qualified as Set
 import Data.Hashable qualified as Hash
-import Data.IORef (newIORef)
+import Data.IORef (newIORef, readIORef)
 import Data.List qualified as L
 import Data.Text.Encoding qualified as T
-import Data.Time.Clock (UTCTime)
+import Data.Time.Clock (UTCTime, getCurrentTime)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging
@@ -108,17 +106,18 @@ data AuthMode
 --
 -- This must only be run once, on launch.
 setupAuthMode ::
-  ( ForkableMonadIO m,
-    Tracing.HasReporter m
+  ( Tracing.HasReporter m,
+    MonadError Text m,
+    MonadIO m
   ) =>
   Set.HashSet AdminSecretHash ->
   Maybe AuthHook ->
   [JWTConfig] ->
   Maybe RoleName ->
-  HTTP.Manager ->
   Logger Hasura ->
-  ExceptT Text (ManagedT m) AuthMode
-setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager logger =
+  HTTP.Manager ->
+  m AuthMode
+setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole logger httpManager =
   case (not (Set.null adminSecretHashSet), mWebHook, not (null mJwtSecrets)) of
     (True, Nothing, False) -> return $ AMAdminSecret adminSecretHashSet mUnAuthRole
     (True, Nothing, True) -> do
@@ -148,43 +147,63 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager lo
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
         <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
 
-    mkJwtCtx ::
-      ( ForkableMonadIO m,
-        Tracing.HasReporter m
-      ) =>
-      JWTConfig ->
-      ExceptT Text (ManagedT m) JWTCtx
+    mkJwtCtx :: (MonadIO m, MonadError Text m) => JWTConfig -> m JWTCtx
     mkJwtCtx JWTConfig {..} = do
-      jwkRef <- case jcKeyOrUrl of
-        Left jwk -> liftIO $ newIORef (JWKSet [jwk])
-        Right url -> getJwkFromUrl url
+      (jwkUri, jwkKeyConfig) <- case jcKeyOrUrl of
+        Left jwk -> do
+          jwkRef <- liftIO $ newIORef (JWKSet [jwk], Nothing)
+          return (Nothing, jwkRef)
+        -- in case JWT url is provided, an empty JWKSet is initialised,
+        -- which will be populated by the 'updateJWKCtx' poller thread
+        Right uri -> do
+          -- fetch JWK initially and throw error if it fails
+          void $ liftEitherM $ liftIO $ runExceptT $ withJwkError $ Tracing.runTraceT Tracing.sampleAlways "jwk init" $ fetchJwk logger httpManager uri
+          jwkRef <- liftIO $ newIORef (JWKSet [], Nothing)
+          return (Just uri, jwkRef)
       let jwtHeader = fromMaybe JHAuthorization jcHeader
-      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
-      where
-        -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
-        -- header), do not start a background thread for refreshing the JWK
-        getJwkFromUrl url = do
-          ref <- liftIO $ newIORef $ JWKSet []
-          maybeExpiry <-
-            hoist lift . withJwkError $
-              Tracing.runTraceT Tracing.sampleAlways "jwk init" $
-                updateJwkRef logger httpManager url ref
-          case maybeExpiry of
-            Nothing -> return ref
-            Just time -> do
-              void . lift $
-                forkManagedT "jwkRefreshCtrl" logger $
-                  jwkRefreshCtrl logger httpManager url ref (convertDuration time)
-              return ref
+      return $ JWTCtx jwkUri jwkKeyConfig jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
 
-        withJwkError act = do
-          res <- runExceptT act
-          onLeft res $ \case
-            -- when fetching JWK initially, except expiry parsing error, all errors are critical
-            JFEHttpException _ msg -> throwError msg
-            JFEHttpError _ _ _ e -> throwError e
-            JFEJwkParseError _ e -> throwError e
-            JFEExpiryParseError _ _ -> return Nothing
+    withJwkError :: ExceptT JwkFetchError IO (JWKSet, HTTP.ResponseHeaders) -> ExceptT Text IO (JWKSet, HTTP.ResponseHeaders)
+    withJwkError act = do
+      res <- lift $ runExceptT act
+      onLeft res $ \case
+        -- when fetching JWK initially, except expiry parsing error, all errors are critical
+        JFEHttpException _ msg -> throwError msg
+        JFEHttpError _ _ _ e -> throwError e
+        JFEJwkParseError _ e -> throwError e
+        JFEExpiryParseError _ _ -> pure (JWKSet [], [])
+
+-- | Core logic to fork a poller thread to update the JWK based on the
+-- expiry time specified in @Expires@ header or @Cache-Control@ header
+updateJwkCtx ::
+  (MonadIO m, Tracing.HasReporter m) =>
+  AuthMode ->
+  HTTP.Manager ->
+  Logger Hasura ->
+  m Void
+updateJwkCtx authMode httpManager logger = forever $ do
+  case authMode of
+    AMAdminSecretAndJWT _ jwtCtxs _ -> traverse_ updateJwkFromUrl jwtCtxs
+    _ -> pure ()
+  liftIO $ sleep $ seconds 1
+  where
+    updateJwkFromUrl ::
+      (Tracing.HasReporter m, MonadIO m) =>
+      JWTCtx ->
+      m ()
+    updateJwkFromUrl (JWTCtx url ref _ _ _ _ _) =
+      for_ url \uri -> do
+        (jwkSet, jwkExpiry) <- liftIO $ readIORef ref
+        case jwkSet of
+          -- get the JWKs initially if the JWKSet is empty
+          JWKSet [] -> fetchAndUpdateJWKs logger httpManager uri ref
+          -- if the JWKSet is not empty, get the new JWK based on the
+          -- expiry time
+          _ -> do
+            currentTime <- liftIO getCurrentTime
+            for_ jwkExpiry \expiryTime ->
+              when (currentTime >= expiryTime) $
+                fetchAndUpdateJWKs logger httpManager uri ref
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime ::

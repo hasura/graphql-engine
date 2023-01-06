@@ -37,8 +37,8 @@ module Hasura.Server.Auth.JWT
     JWTCustomClaimsMapAllowedRoles,
     JWTCustomClaimsMapValue,
     ClaimsMap,
-    updateJwkRef,
-    jwkRefreshCtrl,
+    fetchAndUpdateJWKs,
+    fetchJwk,
     defaultClaimsFormat,
     defaultClaimsNamespace,
 
@@ -54,7 +54,6 @@ module Hasura.Server.Auth.JWT
   )
 where
 
-import Control.Concurrent.Extended qualified as C
 import Control.Exception.Lifted (try)
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -73,7 +72,7 @@ import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as HM
 import Data.Hashable
-import Data.IORef (IORef, readIORef, writeIORef)
+import Data.IORef (IORef, modifyIORef, readIORef, writeIORef)
 import Data.Map.Strict qualified as M
 import Data.Parser.CacheControl
 import Data.Parser.Expires
@@ -83,7 +82,7 @@ import Data.Text.Encoding qualified as T
 import Data.Time.Clock
   ( NominalDiffTime,
     UTCTime,
-    diffUTCTime,
+    addUTCTime,
     getCurrentTime,
   )
 import GHC.AssertNF.CPP
@@ -282,12 +281,12 @@ data JWTConfig = JWTConfig
   deriving (Show, Eq)
 
 -- | The validated runtime JWT configuration returned by 'mkJwtCtx' in 'setupAuthMode'.
---
--- This is also evidence that the 'jwkRefreshCtrl' thread is running, if an
--- expiration schedule could be determined.
 data JWTCtx = JWTCtx
-  { -- | This needs to be a mutable variable for 'updateJwkRef'.
-    jcxKey :: !(IORef Jose.JWKSet),
+  { jcxUrl :: !(Maybe URI),
+    -- | This needs to be a mutable variable for 'fetchJwk'.
+    -- | We add the expiry time of the JWK to the IORef, to determine
+    -- | if the JWK has expired and needs to be refreshed.
+    jcxKeyConfig :: !(IORef (Jose.JWKSet, Maybe UTCTime)),
     jcxAudience :: !(Maybe Jose.Audience),
     jcxIssuer :: !(Maybe Jose.StringOrURI),
     jcxClaims :: !JWTClaims,
@@ -297,8 +296,8 @@ data JWTCtx = JWTCtx
   deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ audM iss claims allowedSkew headers) =
-    show ["<IORef JWKSet>", show audM, show iss, show claims, show allowedSkew, show headers]
+  show (JWTCtx url _ audM iss claims allowedSkew headers) =
+    show [show url, "<IORef JWKSet, Expiry>", show audM, show iss, show claims, show allowedSkew, show headers]
 
 data HasuraClaims = HasuraClaims
   { _cmAllowedRoles :: ![RoleName],
@@ -308,31 +307,49 @@ data HasuraClaims = HasuraClaims
 
 $(J.deriveJSON hasuraJSON ''HasuraClaims)
 
--- | An action that refreshes the JWK at intervals in an infinite loop.
-jwkRefreshCtrl ::
-  (MonadIO m, MonadBaseControl IO m, Tracing.HasReporter m) =>
+-- | An action that fetches the JWKs and updates the expiry time and JWKs in the
+-- IORef
+fetchAndUpdateJWKs ::
+  (MonadIO m) =>
   Logger Hasura ->
   HTTP.Manager ->
   URI ->
-  IORef Jose.JWKSet ->
-  DiffTime ->
-  m void
-jwkRefreshCtrl logger manager url ref time = do
-  liftIO $ C.sleep time
-  forever $ Tracing.runTraceT Tracing.sampleAlways "jwk refresh" do
-    res <- runExceptT $ updateJwkRef logger manager url ref
-    mTime <- onLeft res (const $ logNotice >> return Nothing)
-    -- if can't parse time from header, defaults to 1 min
-    -- and never use a smaller delay than one second to avoid a tight loop
-    let delay = max (seconds 1) $ maybe (minutes 1) convertDuration mTime
-    liftIO $ C.sleep delay
+  IORef (Jose.JWKSet, Maybe UTCTime) ->
+  m ()
+fetchAndUpdateJWKs logger httpManager url jwkRef = do
+  res <-
+    liftIO $
+      runExceptT $
+        Tracing.runTraceT Tracing.sampleAlways "jwk fetch" $
+          fetchJwk logger httpManager url
+  case res of
+    -- As this 'fetchJwk' is going to happen always in background thread, we are
+    -- not going to throw fatal error(s). If there is any error fetching JWK -
+    -- don't do anything; this will get retried again in 1 second
+    -- TODO: we need to do a 'fetchJwk' check in 'setupAuthMode' and throw any
+    -- fatal error(s) there
+    Left _e -> pure ()
+    Right (jwkSet, responseHeaders) -> do
+      expiryRes <-
+        runExceptT $
+          determineJwkExpiryLifetime (liftIO getCurrentTime) logger responseHeaders
+      maybeExpiry <- onLeft expiryRes (const $ pure Nothing)
+      case maybeExpiry of
+        Nothing -> liftIO $ do
+          $assertNFHere jwkSet -- so we don't write thunks to mutable vars
+          -- If there is an error in parsing the expiry time, then we
+          -- keep the previous expiry time in the jwkRef,so that we can fetch the JWK
+          -- in the next iteration
+          modifyIORef jwkRef (\(_, previousExpiry) -> (jwkSet, previousExpiry))
+          logNotice
+        Just expiryTime -> liftIO $ writeIORef jwkRef (jwkSet, Just expiryTime)
   where
     logNotice = do
-      let err = JwkRefreshLog LevelInfo (Just "retrying again in 60 secs") Nothing
+      let err = JwkRefreshLog LevelInfo (Just "Either the expiry is not present or cannot be parsed (retrying again after 1 second)") Nothing
       liftIO $ unLogger logger err
 
--- | Given a JWK url, fetch JWK from it and update the IORef
-updateJwkRef ::
+-- | Given a JWK url, fetch JWK from it
+fetchJwk ::
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError JwkFetchError m,
@@ -341,9 +358,8 @@ updateJwkRef ::
   Logger Hasura ->
   HTTP.Manager ->
   URI ->
-  IORef Jose.JWKSet ->
-  m (Maybe NominalDiffTime)
-updateJwkRef (Logger logger) manager url jwkRef = do
+  m (Jose.JWKSet, ResponseHeaders)
+fetchJwk (Logger logger) manager url = do
   let urlT = tshow url
       infoMsg = "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
@@ -365,11 +381,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
   !jwkset <- onLeft (J.eitherDecode' respBody) (logAndThrow . parseErr)
-  liftIO $ do
-    $assertNFHere jwkset -- so we don't write thunks to mutable vars
-    writeIORef jwkRef jwkset
-
-  determineJwkExpiryLifetime (liftIO getCurrentTime) (Logger logger) (resp ^. Wreq.responseHeaders)
+  return (jwkset, resp ^. Wreq.responseHeaders)
   where
     logAndThrow :: (MonadIO m, MonadError JwkFetchError m) => JwkFetchError -> m a
     logAndThrow err = do
@@ -393,7 +405,7 @@ determineJwkExpiryLifetime ::
   m UTCTime ->
   Logger Hasura ->
   ResponseHeaders ->
-  m (Maybe NominalDiffTime)
+  m (Maybe UTCTime)
 determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
   runMaybeT $ timeFromCacheControl <|> timeFromExpires
   where
@@ -409,24 +421,28 @@ determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
         Nothing
         "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
 
-    timeFromCacheControl :: MaybeT m NominalDiffTime
+    timeFromCacheControl :: MaybeT m UTCTime
     timeFromCacheControl = do
       header <- afold $ bsToTxt <$> lookup "Cache-Control" responseHeaders
       cacheControl <- parseCacheControl header `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
       maxAgeMaybe <- fmap fromInteger <$> findMaxAge cacheControl `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
+      currTime <- lift getCurrentTime'
+      maxExpiryMaybe <- case maxAgeMaybe of
+        Just maxAge -> return $ Just $ addUTCTime maxAge currTime
+        Nothing -> return Nothing
+
       if
           -- If a max-age is specified with a must-revalidate we use it, but if not we use an immediate expiry time
-          | mustRevalidateExists cacheControl -> pure $ fromMaybe 0 maxAgeMaybe
+          | mustRevalidateExists cacheControl -> pure $ fromMaybe currTime maxExpiryMaybe
           -- In these cases we want don't want to cache the JWK, so we use an immediate expiry time
-          | noCacheExists cacheControl || noStoreExists cacheControl -> pure 0
+          | noCacheExists cacheControl || noStoreExists cacheControl -> pure currTime
           -- Use max-age, if it exists
-          | otherwise -> hoistMaybe maxAgeMaybe
+          | otherwise -> hoistMaybe maxExpiryMaybe
 
-    timeFromExpires :: MaybeT m NominalDiffTime
+    timeFromExpires :: MaybeT m UTCTime
     timeFromExpires = do
       header <- afold $ bsToTxt <$> lookup "Expires" responseHeaders
-      expiry <- parseExpirationTime header `onLeft` const (logAndThrowInfo parseTimeErr)
-      diffUTCTime expiry <$> lift getCurrentTime'
+      parseExpirationTime header `onLeft` const (logAndThrowInfo parseTimeErr)
 
     logAndThrowInfo :: (MonadIO m1, MonadError JwkFetchError m1) => JwkFetchError -> m1 a
     logAndThrowInfo err = do
@@ -733,10 +749,10 @@ verifyJwt ::
   RawJWT ->
   m Jose.ClaimsSet
 verifyJwt ctx (RawJWT rawJWT) = do
-  key <- liftIO $ readIORef $ jcxKey ctx
+  keyConfig <- liftIO $ readIORef $ jcxKeyConfig ctx
   jwt <- Jose.decodeCompact rawJWT
   t <- liftIO getCurrentTime
-  Jose.verifyClaimsAt config key t jwt
+  Jose.verifyClaimsAt config (fst keyConfig) t jwt
   where
     validationSettingsWithSkew =
       case jcxAllowedSkew ctx of
