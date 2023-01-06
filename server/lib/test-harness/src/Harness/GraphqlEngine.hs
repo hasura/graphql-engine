@@ -58,10 +58,10 @@ import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
 import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLogMessage)
-import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
+import Hasura.Server.App (Loggers (..), ServerCtx (..))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
@@ -320,24 +320,20 @@ runApp serveOptions = do
           liftIO $ createServerMetrics $ EKG.subset ServerSubset store
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
     prometheusMetrics <- makeDummyPrometheusMetrics
-    runManagedT (App.initialiseServeCtx env globalCtx serveOptions serverMetrics) $ \serveCtx ->
+    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \serverCtx@ServerCtx {..} ->
       do
-        let Loggers _ _logger pgLogger = _scLoggers serveCtx
-        flip App.runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger)
+        let Loggers _ _ pgLogger = scLoggers
+        flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger)
           . lowerManagedT
           $ do
             App.runHGEServer
               (const $ pure ())
               env
               serveOptions
-              serveCtx
+              serverCtx
               initTime
               Nothing
-              serverMetrics
               ekgStore
-              Nothing
-              prometheusMetrics
-              sampleAlways
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

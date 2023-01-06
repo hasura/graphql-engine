@@ -22,6 +22,7 @@ import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
+import Hasura.Server.App (Loggers (..), ServerCtx (..))
 import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
@@ -66,32 +67,26 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
-      -- below depends on serveCtx.
-      runManagedT (initialiseServeCtx env globalCtx serveOptions serverMetrics) $ \serveCtx -> do
+      -- below depends on serverCtx.
+      runManagedT (initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \serverCtx@ServerCtx {..} -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
         -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
         -- once again, we terminate the process immediately.
 
-        -- The function is written in this style to avoid the shutdown
-        -- handler retaining a reference to the entire serveCtx (see #344)
-        -- If you modify this code then you should check the core to see
-        -- that serveCtx is not retained.
-        _ <- case serveCtx of
-          ServeCtx {_scShutdownLatch} ->
-            liftIO $ do
-              void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully _scShutdownLatch)) Nothing
-              void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully _scShutdownLatch)) Nothing
+        liftIO $ do
+          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully scShutdownLatch)) Nothing
+          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully scShutdownLatch)) Nothing
 
-        let Loggers _ logger pgLogger = _scLoggers serveCtx
+        let Loggers _ logger pgLogger = scLoggers
 
         _idleGCThread <-
           C.forkImmortal "ourIdleGC" logger $
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore Nothing prometheusMetrics sampleAlways
+        flip runPGMetadataStorageAppT (scMetadataDbPool, pgLogger) . lowerManagedT $ do
+          runHGEServer (const $ pure ()) env serveOptions serverCtx initTime Nothing ekgStore
     HCExport -> do
       GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
