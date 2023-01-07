@@ -335,7 +335,8 @@
     "whatwg-fetch": "^3.6.2"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=16",
+    "npm": ">=8"
   },
   "msw": {
     "workerDirectory": "static"
