@@ -393,7 +393,7 @@ const AddAction: React.FC<AddActionProps> = ({
     transformDispatch(setRequestSampleInput(sampleInput));
     requestMethodOnChange(method);
     requestUrlTransformOnChange(true);
-    requestUrlOnChange(path.replace(/\{([^}]+)\}/g, '{{$body.input.$1}}'));
+    requestUrlOnChange(path);
     requestQueryParamsOnChange(
       queryParams.map(name => ({
         name,

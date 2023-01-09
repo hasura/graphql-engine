@@ -339,8 +339,8 @@ export const translateAction = (
       .replace(/"""[^]*?"""/g, '')
       .replace(/type Query {[^]*?}/g, '')
       .replace(/type Mutation {[^]*?}/g, '')
-      .replace('type Query', '')
-      .replace('type Mutation', '')
+      .replace(/type Query\s+/, '')
+      .replace(/type Mutation\s+/, '')
   );
 
   let sampleInput = JSON.parse(
@@ -385,7 +385,12 @@ export const translateAction = (
     description: operation?.operation?.description ?? '',
     method: parseRequestMethod(operation?.method),
     baseUrl: graphqlSchema.data?.oass?.[0]?.servers?.[0]?.url ?? '',
-    path: operation.path,
+    // replace the regex /\{([^}]+)\}/g occurrences with {{$body.input.$1}} with the first letter lowercased
+    // e.g. /user/{UserId} -> /user/{{$body.input.userId}}
+    path: operation.path.replace(
+      /\{([^}]+)\}/g,
+      (_, p1) => `{{$body.input.${p1[0].toLowerCase()}${p1.slice(1)}}}`
+    ),
     requestTransforms: createRequestTransform(operation) ?? '',
     responseTransforms: createResponseTransform(operation) ?? '',
     sampleInput: JSON.stringify(sampleInput, null, 2),
@@ -400,14 +405,19 @@ const applyWorkarounds = (properties: (SchemaObject | ReferenceObject)[]) => {
     if (!('$ref' in property)) {
       // fix boolean enum issue
       if (property.type === 'boolean') {
-        console.log(property);
         delete property.enum;
       }
-      // fix empty type issue
+      if (
+        property.type === 'string' &&
+        (property.enum || []).some(v => v === 'true' || v === 'false')
+      ) {
+        delete property.enum;
+      }
       if (
         property.type === 'object' &&
         JSON.stringify(property.properties) === '{}'
       ) {
+        // fix empty type issue
         property.type = 'string';
         delete property.properties;
       }

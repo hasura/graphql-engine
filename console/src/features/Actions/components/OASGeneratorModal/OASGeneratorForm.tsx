@@ -115,15 +115,15 @@ export const OasGeneratorForm = (props: {
             localParsedOas = YAML.load(oas) as Oas3;
           } catch (e2) {
             setError('oas', {
-              message: 'Invalid spec',
+              message: 'Invalid JSON or YAML format',
             });
           }
         }
       }
       try {
         if (localParsedOas) {
-          if (!url && localParsedOas.servers?.[0].url) {
-            setValue('url', localParsedOas.servers?.[0].url);
+          if (!url && localParsedOas.servers?.[0]?.url) {
+            setValue('url', localParsedOas.servers?.[0]?.url);
           }
           const ops = await getOperations(localParsedOas);
           setOperations(ops);
@@ -148,6 +148,7 @@ export const OasGeneratorForm = (props: {
           );
         }
       } catch (e) {
+        console.error(e);
         setError('oas', {
           message: `Invalid spec: ${(e as Error).message}`,
         });
