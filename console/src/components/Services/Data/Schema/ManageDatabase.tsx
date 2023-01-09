@@ -367,7 +367,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   };
 
   const [showCheckLatencyButton, setLatencyButtonVisibility] = useState(
-    isPgMssqlSourceConnected && isCloudConsole(globals)
+    sourcesFromMetadata.length !== 0 &&
+      isPgMssqlSourceConnected &&
+      isCloudConsole(globals)
   );
 
   const [latencyCheckData, setLatencyCheckData] = useState<
