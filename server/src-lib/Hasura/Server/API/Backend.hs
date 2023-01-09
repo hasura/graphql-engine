@@ -135,7 +135,8 @@ relationshipCommands =
     commandParser "create_array_relationship" $ RMCreateArrayRelationship . mkAnyBackend @b,
     commandParser "set_relationship_comment" $ RMSetRelationshipComment . mkAnyBackend @b,
     commandParser "rename_relationship" $ RMRenameRelationship . mkAnyBackend @b,
-    commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b
+    commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b,
+    commandParser "suggest_relationships" $ RMSuggestRelationships . mkAnyBackend @b
   ]
 
 remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]

@@ -2,6 +2,8 @@
 module Harness.Yaml
   ( combinationsObject,
     fromObject,
+    mapObject,
+    sortArray,
     combinationsObjectUsingValue,
     shouldReturnYaml,
     shouldReturnYamlF,
@@ -34,6 +36,14 @@ import Test.Hspec (HasCallStack, shouldBe, shouldContain)
 fromObject :: Value -> Object
 fromObject (Object x) = x
 fromObject v = error $ "fromObject: Expected object, received" <> show v
+
+mapObject :: (Value -> Value) -> Value -> Value
+mapObject f (Object x) = Object $ fmap f x
+mapObject _ _ = error "mapObject can only be called on Object Values"
+
+sortArray :: Value -> Value
+sortArray (Array a) = Array (V.fromList (sort (V.toList a)))
+sortArray _ = error "sortArray can only be called on Array Values"
 
 -- | Compute all variations of an object and construct a list of
 -- 'Value' based on the higher order function that is passed to it.  A

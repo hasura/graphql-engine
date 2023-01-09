@@ -71,6 +71,7 @@ library
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.Metadata.ComputedFieldsSpec
+    Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.TransparentDefaultsSpec
     Test.API.Schema.RunSQLSpec

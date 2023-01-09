@@ -799,6 +799,7 @@ library
                      , Hasura.RQL.DDL.QueryTags
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
+                     , Hasura.RQL.DDL.Relationship.Suggest
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.Webhook.Transform
                      , Hasura.RQL.DDL.Webhook.Transform.Body

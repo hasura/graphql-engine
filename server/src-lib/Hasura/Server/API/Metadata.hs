@@ -40,6 +40,7 @@ import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
+import Hasura.RQL.DDL.Relationship.Suggest
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
@@ -111,6 +112,7 @@ data RQLMetadataV1
   | RMDropRelationship !(AnyBackend DropRel)
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
+  | RMSuggestRelationships !(AnyBackend SuggestRels)
   | -- Tables remote relationships
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
@@ -475,6 +477,7 @@ queryModifiesMetadata = \case
       RMListSourceKinds _ -> False
       RMGetSourceTables _ -> False
       RMGetTableInfo _ -> False
+      RMSuggestRelationships _ -> False
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -643,6 +646,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropRelationship q -> dispatchMetadata runDropRel q
   RMSetRelationshipComment q -> dispatchMetadata runSetRelComment q
   RMRenameRelationship q -> dispatchMetadata runRenameRel q
+  RMSuggestRelationships q -> dispatchMetadata runSuggestRels q
   RMCreateRemoteRelationship q -> dispatchMetadata runCreateRemoteRelationship q
   RMUpdateRemoteRelationship q -> dispatchMetadata runUpdateRemoteRelationship q
   RMDeleteRemoteRelationship q -> dispatchMetadata runDeleteRemoteRelationship q

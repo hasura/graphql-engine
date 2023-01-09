@@ -12,6 +12,7 @@ import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
+import Hasura.RQL.DDL.Relationship.Suggest
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
@@ -66,6 +67,7 @@ data RQLMetadataV1
   | RMDropRelationship !(AnyBackend DropRel)
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
+  | RMSuggestRelationships !(AnyBackend SuggestRels)
   | -- Tables remote relationships
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
