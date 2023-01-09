@@ -3,44 +3,24 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
 import { z } from 'zod';
-import { SimpleForm, Select, useConsoleForm } from '@/new-components/Form';
+import { SimpleForm, MultiSelect, useConsoleForm } from '@/new-components/Form';
+import { screen, userEvent, within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
 
 export default {
-  title: 'components/Forms 📁/Select 🧬',
-  component: Select,
+  title: 'components/Forms 📁/MultiSelect 🧬',
+  component: MultiSelect,
   parameters: {
     docs: {
       description: {
-        component: `A component wrapping native \`<select>\` element ([see MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/select)),
-its description, hint and error message.<br>
-Default CSS display is \`block\`, provided without padding and margin (displayed here with the \`<SimpleForm>\` padding).`,
+        component: ``,
       },
       source: { type: 'code' },
     },
   },
-} as ComponentMeta<typeof Select>;
+} as ComponentMeta<typeof MultiSelect>;
 
-export const ApiPlayground: ComponentStory<typeof Select> = args => {
-  const validationSchema = z.object({});
-
-  return (
-    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      <Select {...args} />
-    </SimpleForm>
-  );
-};
-ApiPlayground.storyName = '⚙️ API';
-ApiPlayground.args = {
-  name: 'selectNames',
-  label: 'Play with me!',
-  options: [
-    { value: 'value0', label: 'Value 0' },
-    { value: 'value1', label: 'Value 1', disabled: true },
-    { value: 'value2', label: 'Value 2' },
-  ],
-};
-
-export const Basic: ComponentStory<typeof Select> = () => {
+export const Basic: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', disabled: true },
@@ -51,7 +31,11 @@ export const Basic: ComponentStory<typeof Select> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      <Select name="selectNames" label="The select label" options={options} />
+      <MultiSelect
+        name="selectNames"
+        label="The select label"
+        options={options}
+      />
     </SimpleForm>
   );
 };
@@ -62,34 +46,76 @@ Basic.parameters = {
   },
 };
 
-export const VariantWithDescription: ComponentStory<typeof Select> = () => {
-  const options = [
-    { value: 'value0', label: 'Value 0' },
-    { value: 'value1', label: 'Value 1', disabled: true },
-    { value: 'value2', label: 'Value 2' },
-  ];
+Basic.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
-  const validationSchema = z.object({});
+  // Open select
+  await userEvent.click(await canvas.findByText('Select...'));
 
-  return (
-    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      <Select
-        name="selectNames"
-        label="The select label"
-        description="Select description"
-        options={options}
-      />
-    </SimpleForm>
-  );
+  // Select first element
+  await userEvent.click(await canvas.findByText('Value 0'));
+
+  // Verify placeholder is gone and it's replaced by selected value
+  expect(canvas.queryByText('Select...')).not.toBeInTheDocument();
+  expect(canvas.getByText('Value 0')).toBeInTheDocument();
+
+  // Open select
+  await userEvent.click(await canvas.findByText('Value 0'));
+
+  // Select non disabled element
+  await userEvent.click(await canvas.findByText('Value 2'));
+
+  // Verify both elements are selected
+  expect(canvas.getByText('Value 0')).toBeInTheDocument();
+  expect(canvas.getByText('Value 2')).toBeInTheDocument();
+
+  // Open select
+  await userEvent.click(await canvas.findByText('Value 0'));
+
+  // Click on disabled element
+  await userEvent.click(await canvas.findByText('Value 1'));
+
+  // Click on canvas to close select
+  await userEvent.click(canvasElement);
+
+  // Verify disabled element is not selected
+  expect(canvas.queryByText('Value 1')).not.toBeInTheDocument();
 };
+
+export const VariantWithDescription: ComponentStory<typeof MultiSelect> =
+  () => {
+    const options = [
+      { value: 'value0', label: 'Value 0' },
+      { value: 'value1', label: 'Value 1', disabled: true },
+      { value: 'value2', label: 'Value 2' },
+    ];
+
+    const validationSchema = z.object({});
+
+    return (
+      <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+        <MultiSelect
+          name="selectNames"
+          label="The select label"
+          description="Select description"
+          options={options}
+        />
+      </SimpleForm>
+    );
+  };
 VariantWithDescription.storyName = '🎭 Variant - With description';
 VariantWithDescription.parameters = {
   docs: {
     source: { state: 'open' },
   },
 };
+VariantWithDescription.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  // Verify description is present
+  expect(canvas.getByText('Select description')).toBeInTheDocument();
+};
 
-export const VariantWithTooltip: ComponentStory<typeof Select> = () => {
+export const VariantWithTooltip: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', disabled: true },
@@ -100,7 +126,7 @@ export const VariantWithTooltip: ComponentStory<typeof Select> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      <Select
+      <MultiSelect
         name="selectNames"
         label="The select label"
         tooltip="Select tooltip"
@@ -115,15 +141,26 @@ VariantWithTooltip.parameters = {
     source: { state: 'open' },
   },
 };
+VariantWithTooltip.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
-export const StateWithDefaultValue: ComponentStory<typeof Select> = () => {
+  // Hover on tooltip
+  await userEvent.hover(await canvas.findByTestId('tooltip-trigger'));
+
+  // Verify tooltip is present
+  expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+};
+
+export const StateWithDefaultValue: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', disabled: true },
     { value: 'value2', label: 'Value 2' },
   ];
 
-  const defaultValues = { selectNames: 'value2' };
+  const defaultValues = {
+    selectNames: [{ value: 'value2', label: 'Value 2' }],
+  };
 
   const validationSchema = z.object({});
 
@@ -133,7 +170,11 @@ export const StateWithDefaultValue: ComponentStory<typeof Select> = () => {
       options={{ defaultValues }}
       onSubmit={action('onSubmit')}
     >
-      <Select name="selectNames" label="The select label" options={options} />
+      <MultiSelect
+        name="selectNames"
+        label="The select label"
+        options={options}
+      />
     </SimpleForm>
   );
 };
@@ -146,8 +187,14 @@ StateWithDefaultValue.parameters = {
     source: { state: 'open' },
   },
 };
+StateWithDefaultValue.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
-export const StateLoading: ComponentStory<typeof Select> = () => {
+  // Verify default value is selected
+  expect(canvas.getByText('Value 2')).toBeInTheDocument();
+};
+
+export const StateLoading: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', loading: true },
@@ -158,14 +205,12 @@ export const StateLoading: ComponentStory<typeof Select> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <Select
-          name="selectNames"
-          label="The select label"
-          options={options}
-          loading
-        />
-      )}
+      <MultiSelect
+        name="selectNames"
+        label="The select label"
+        options={options}
+        loading
+      />
     </SimpleForm>
   );
 };
@@ -176,7 +221,7 @@ StateLoading.parameters = {
   },
 };
 
-export const StateDisabled: ComponentStory<typeof Select> = () => {
+export const StateDisabled: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', disabled: true },
@@ -187,7 +232,7 @@ export const StateDisabled: ComponentStory<typeof Select> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      <Select
+      <MultiSelect
         name="selectNames"
         label="The select label"
         options={options}
@@ -202,8 +247,16 @@ StateDisabled.parameters = {
     source: { state: 'open' },
   },
 };
+StateDisabled.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
-export const StateWithErrorMessage: ComponentStory<typeof Select> = () => {
+  const disabledSelect = await canvas.findByText('Select...');
+
+  // Verify select has pointer-events: none
+  expect(disabledSelect).toHaveStyle('pointer-events: none');
+};
+
+export const StateWithErrorMessage: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', disabled: true },
@@ -211,7 +264,15 @@ export const StateWithErrorMessage: ComponentStory<typeof Select> = () => {
   ];
 
   const schema = z.object({
-    selectNames: z.enum(['value0', 'value1']),
+    selectNames: z
+      .array(
+        z.object({
+          value: z.enum(['value0', 'value2']),
+          label: z.string(),
+          disabled: z.boolean().optional(),
+        })
+      )
+      .min(1),
   });
 
   const {
@@ -223,12 +284,16 @@ export const StateWithErrorMessage: ComponentStory<typeof Select> = () => {
 
   React.useEffect(() => {
     // Use useEffect hook to wait for the form to be rendered before triggering validation
-    trigger();
+    trigger('selectNames');
   }, []);
 
   return (
     <Form onSubmit={action('onSubmit')}>
-      <Select name="selectNames" label="The select label" options={options} />
+      <MultiSelect
+        name="selectNames"
+        label="The select label"
+        options={options}
+      />
     </Form>
   );
 };
@@ -241,8 +306,14 @@ StateWithErrorMessage.parameters = {
     source: { state: 'open' },
   },
 };
+StateWithErrorMessage.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
-export const TestingScalability: ComponentStory<typeof Select> = () => {
+  // Verify error message is displayed
+  expect(await canvas.findByText('Required')).toBeInTheDocument();
+};
+
+export const TestingScalability: ComponentStory<typeof MultiSelect> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },
     { value: 'value1', label: 'Value 1', disabled: true },
@@ -258,7 +329,7 @@ export const TestingScalability: ComponentStory<typeof Select> = () => {
 
   return (
     <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-      <Select
+      <MultiSelect
         name="selectNames"
         label="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
