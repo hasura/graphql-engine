@@ -29,6 +29,7 @@ import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
 import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
+import { supportedFeatures as AlloySupportedFeatures } from './services/alloydb';
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
 import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
@@ -458,6 +459,7 @@ export const isFeatureSupported = (
 export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
   [
     PGSupportedFeatures,
+    AlloySupportedFeatures,
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
     CitusQuerySupportedFeatures,
