@@ -1183,9 +1183,8 @@ UserInfo
  SourceRelationshipSelection 'MSSQL Void UnpreparedValue)
 </span><a href="#local-6989586621690503553"><span class="hs-identifier hs-var">relationship</span></a></span></span><span> </span><span id="local-6989586621690503552"><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621690503552"><span class="hs-identifier hs-var">_stringifyNumbers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-433"></span><span>  </span><span class="hs-comment">-- TODO: handle `stringifyNumbers` in remote database relationships</span><span>
-</span><span id="line-434"></span><span>  </span><span class="hs-comment">-- https://hasurahq.atlassian.net/browse/NDAT-438</span><span>
-</span><span id="line-435"></span><span>  </span><span id="local-6989586621690503551"><span class="annot"><span class="annottext">Select
+</span><span id="line-433"></span><span>  </span><span class="hs-comment">-- `stringifyNumbers` is not currently handled in any SQL Server operation</span><span>
+</span><span id="line-434"></span><span>  </span><span id="local-6989586621690503551"><span class="annot"><span class="annottext">Select
 </span><a href="#local-6989586621690503551"><span class="hs-identifier hs-var">statement</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SessionVariables
@@ -1203,23 +1202,23 @@ SessionVariables
 </span><a href="#local-6989586621690503554"><span class="hs-identifier hs-var">argumentId</span></a></span><span> </span><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection 'MSSQL Void UnpreparedValue)
 </span><a href="#local-6989586621690503553"><span class="hs-identifier hs-var">relationship</span></a></span><span>
-</span><span id="line-436"></span><span>
-</span><span id="line-437"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690503549"><span class="annot"><span class="annottext">printer :: Printer
+</span><span id="line-435"></span><span>
+</span><span id="line-436"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690503549"><span class="annot"><span class="annottext">printer :: Printer
 </span><a href="#local-6989586621690503549"><span class="hs-identifier hs-var hs-var">printer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelect"><span class="hs-identifier hs-var">fromSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="#local-6989586621690503551"><span class="hs-identifier hs-var">statement</span></a></span><span>
-</span><span id="line-438"></span><span>      </span><span id="local-6989586621690503548"><span class="annot"><span class="annottext">queryString :: Text
+</span><span id="line-437"></span><span>      </span><span id="local-6989586621690503548"><span class="annot"><span class="annottext">queryString :: Text
 </span><a href="#local-6989586621690503548"><span class="hs-identifier hs-var hs-var">queryString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><span class="hs-identifier hs-var">ODBC.renderQuery</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryPretty"><span class="hs-identifier hs-var">toQueryPretty</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690503549"><span class="hs-identifier hs-var">printer</span></a></span><span>
-</span><span id="line-439"></span><span>      </span><span id="local-6989586621690503547"><span class="annot"><span class="annottext">odbcQuery :: ExceptT QErr IO EncJSON
+</span><span id="line-438"></span><span>      </span><span id="local-6989586621690503547"><span class="annot"><span class="annottext">odbcQuery :: ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690503547"><span class="hs-identifier hs-var hs-var">odbcQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690503546"><span class="hs-identifier hs-var">runSelectQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690503549"><span class="hs-identifier hs-var">printer</span></a></span><span>
-</span><span id="line-440"></span><span>
-</span><span id="line-441"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-439"></span><span>
+</span><span id="line-440"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceName
@@ -1233,12 +1232,12 @@ SourceName
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690503548"><span class="hs-identifier hs-var">queryString</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690503547"><span class="hs-identifier hs-var">odbcQuery</span></a></span><span>
-</span><span id="line-442"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-443"></span><span>    </span><span class="annot"><a href="#local-6989586621690503546"><span class="hs-identifier hs-type">runSelectQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#Printer"><span class="hs-identifier hs-type">Printer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
-</span><span id="line-444"></span><span>    </span><span id="local-6989586621690503546"><span class="annot"><span class="annottext">runSelectQuery :: Printer -&gt; ExceptT QErr IO EncJSON
+</span><span id="line-441"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-442"></span><span>    </span><span class="annot"><a href="#local-6989586621690503546"><span class="hs-identifier hs-type">runSelectQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#Printer"><span class="hs-identifier hs-type">Printer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-443"></span><span>    </span><span id="local-6989586621690503546"><span class="annot"><span class="annottext">runSelectQuery :: Printer -&gt; ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690503546"><span class="hs-identifier hs-var hs-var">runSelectQuery</span></a></span></span><span> </span><span id="local-6989586621690503545"><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690503545"><span class="hs-identifier hs-var">queryPrinter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-445"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690503544"><span class="annot"><span class="annottext">queryTx :: TxET QErr IO EncJSON
+</span><span id="line-444"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690503544"><span class="annot"><span class="annottext">queryTx :: TxET QErr IO EncJSON
 </span><a href="#local-6989586621690503544"><span class="hs-identifier hs-var hs-var">queryTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromText"><span class="hs-identifier hs-var">encJFromText</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
@@ -1248,9 +1247,9 @@ SourceName
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690503545"><span class="hs-identifier hs-var">queryPrinter</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-446"></span><span>      </span><span class="annot"><span class="annottext">MSSQLExecCtx -&gt; MSSQLRunTx
+</span><span id="line-445"></span><span>      </span><span class="annot"><span class="annottext">MSSQLExecCtx -&gt; MSSQLRunTx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadOnly"><span class="hs-identifier hs-var">mssqlRunReadOnly</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; MSSQLExecCtx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mscExecCtx"><span class="hs-identifier hs-var">_mscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><a href="#local-6989586621690503557"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxET QErr IO EncJSON
 </span><a href="#local-6989586621690503544"><span class="hs-identifier hs-var">queryTx</span></a></span><span>
-</span><span id="line-447"></span></pre></body></html>
+</span><span id="line-446"></span></pre></body></html>
