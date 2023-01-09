@@ -20,7 +20,13 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 	deployCmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "(PREVIEW) Utility command to apply Hasura Metadata & database migrations to graphql-engine",
-		Long:  "When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks (`hasura metadata apply` and `hasura migrate apply`) in one command.",
+		Long: `When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks (` + " ``hasura metadata apply``" + " and ``hasura migrate apply``" + `) in one command.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/index/#migrations-in-graphql-engine
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
+`,
 		Example: `  
   # Apply metadata and migrations on Hasura GraphQL engine
   hasura deploy

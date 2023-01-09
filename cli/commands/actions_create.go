@@ -23,7 +23,11 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	actionsCreateCmd := &cobra.Command{
 		Use:   "create [action-name]",
 		Short: "Create a Hasura Action",
-		Long:  "This command allows you to create an Action to extend Hasura's schema with custom business logic using queries and mutations. Optional flags can be used to derive the Action from an existing GraphQL query or mutation. Additionally, codegen can be bundled with the creation of the Action to provide you ready-to-use boilerplate with your framework of choice.",
+		Long: `This command allows you to create an Action to extend Hasura's schema with custom business logic using queries and mutations. Optional flags can be used to derive the Action from an existing GraphQL query or mutation. Additionally, codegen can be bundled with the creation of the Action to provide you ready-to-use boilerplate with your framework of choice.
+		
+Further Reading:
+- https://hasura.io/docs/latest/actions/create/
+`,
 		Example: `  # Create a Hasura Action
   hasura actions create [action-name]
 

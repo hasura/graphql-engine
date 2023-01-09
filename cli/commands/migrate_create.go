@@ -40,9 +40,13 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	migrateCreateCmd := &cobra.Command{
-		Use:          "create [migration-name]",
-		Short:        "Create ``sql`` files required for a migration",
-		Long:         "As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ``sql`` file that contains the changes you made that can then be applied to a database.",
+		Use:   "create [migration-name]",
+		Short: "Create ``sql`` files required for a migration",
+		Long: `As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ` + "``sql``" + ` file that contains the changes you made that can then be applied to a database.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+`,
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),

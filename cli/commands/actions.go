@@ -17,9 +17,15 @@ import (
 func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	actionsCmd := &cobra.Command{
-		Use:          "actions",
-		Short:        "Manage Hasura Actions",
-		Long:         "Running `hasura actions` enables the use of additional sub-commands to create, modify, and export code related to a project's Actions. You can use these available sub-commands to manage your Actions from the CLI:\n\n `hasura actions create`, `hasura actions codegen`, `hasura actions use-codegen`",
+		Use:   "actions",
+		Short: "Manage Hasura Actions",
+		Long: `Running this command enables the use of additional sub-commands to create, modify, and export code related to a project's Actions.
+
+Further Reading:
+- https://hasura.io/docs/latest/actions/index/
+- https://hasura.io/docs/latest/actions/create/
+- https://hasura.io/docs/latest/actions/derive/
+`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")

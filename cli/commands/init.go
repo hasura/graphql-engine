@@ -43,7 +43,11 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	initCmd := &cobra.Command{
 		Use:   "init [directory-name]",
 		Short: "Initialize a new Hasura GraphQL Engine project",
-		Long:  "This is generally the first command that you would run in a new project. It creates a directory with the necessary files and directories to configure an instance of the Hasura GraphQL Engine. You can pass various flags to customize the behavior of the command and pre-configure environment variables.",
+		Long: `This is generally the first command that you would run in a new project. It creates a directory with the necessary files and directories to configure an instance of the Hasura GraphQL Engine. You can pass various flags to customize the behavior of the command and pre-configure environment variables.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/migrations-metadata-setup/
+`,
 		Example: `  # Create a directory to store migrations
   hasura init [directory-name]
 
