@@ -17,18 +17,10 @@ source-repository head
   location: https://github.com/hasura/graphql-parser-hs
 
 common common-all
-  -- This warning strategy was inspired by Max Tagher's 'Enable All the
-  -- Warnings' blog post.
-  --
-  -- NOTE: '-Wno-prepositive-qualified-module' is currently a workaround for
-  -- https://github.com/haskell/cabal/pull/7352
   ghc-options:
-    -Weverything -Wno-missing-exported-signatures
-    -Wno-missing-import-lists -Wno-missing-export-lists
-    -Wno-missed-specialisations -Wno-all-missed-specializations
-    -Wno-unsafe -Wno-safe -Wno-missing-safe-haskell-mode
-    -Wno-missing-local-signatures -Wno-monomorphism-restriction
-    -Wno-prepositive-qualified-module -Wno-unrecognised-pragmas
+    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+    -- Insisting on export lists might help with compile times, and help to document modules:
+    -Wmissing-export-lists
 
   if impl(ghc >=9.2)
     ghc-options: -Wno-implicit-lift
@@ -57,7 +49,6 @@ common common-all
     RankNTypes
     RecordWildCards
     RoleAnnotations
-    StandaloneKindSignatures
     StrictData
     TupleSections
 

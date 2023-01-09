@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | The 'Transform' typeclass with various types and helper functions
@@ -33,7 +32,7 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Builder.Extra (toLazyByteStringWith, untrimmedStrategy)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
-import Data.Kind (Constraint, Type)
+import Data.Kind (Type)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Validation (Validation)
 import Hasura.Prelude
@@ -42,7 +41,6 @@ import Hasura.Prelude
 
 -- | 'Transform' describes how to reify a defunctionalized transformation for
 -- a particular request field.
-type Transform :: Type -> Constraint
 class Transform a where
   -- | The associated type 'TransformFn a' is the defunctionalized version
   -- of some transformation that should be applied to a given request field.

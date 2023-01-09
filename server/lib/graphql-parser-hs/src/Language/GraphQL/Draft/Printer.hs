@@ -1,6 +1,17 @@
 {-# HLINT ignore "Use tshow" #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Language.GraphQL.Draft.Printer where
+module Language.GraphQL.Draft.Printer
+  ( Printer (..),
+    executableDocument,
+    graphQLType,
+    renderExecutableDoc,
+    schemaDocument,
+    selectionSet,
+    typeDefinitionP,
+    value,
+  )
+where
 
 -------------------------------------------------------------------------------
 
@@ -11,7 +22,6 @@ import Data.ByteString.Builder.Scientific qualified as BSBS
 import Data.Char (isControl)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as M
-import Data.Kind (Constraint, Type)
 import Data.List (intersperse, sort)
 import Data.Scientific (Scientific)
 import Data.String (IsString)
@@ -32,7 +42,6 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-type Printer :: Type -> Constraint
 class (Monoid a, IsString a) => Printer a where
   textP :: Text -> a
   charP :: Char -> a
@@ -114,7 +123,6 @@ instance Printer T.Text where
   intP = T.pack . show
   doubleP = T.pack . show
 
-type Print :: Type -> Constraint
 class Print a where
   printP :: Printer b => a -> b
 
@@ -369,7 +377,6 @@ schemaDocument (SchemaDocument typeDefns) =
     -- According to https://spec.graphql.org/June2018/#sec-Scalars:
     --   > When representing a GraphQL schema using the type system definition language, the built‐in scalar types should
     --   > be omitted for brevity.
-    isNotBuiltInScalar :: TypeSystemDefinition -> Bool
     isNotBuiltInScalar
       ( TypeSystemDefinitionType
           (TypeDefinitionScalar (ScalarTypeDefinition _ name _))

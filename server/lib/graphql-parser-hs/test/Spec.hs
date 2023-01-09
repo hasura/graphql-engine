@@ -11,7 +11,6 @@ import BlockStrings (blockTest)
 import Control.Monad (unless)
 import Data.ByteString.Builder qualified as BSB
 import Data.ByteString.Lazy qualified as LBS
-import Data.Kind (Type)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding.Error qualified as TEE
@@ -44,7 +43,6 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-type TestMode :: Type
 data TestMode = TMDev | TMQuick | TMRelease
   deriving stock (Show)
 
