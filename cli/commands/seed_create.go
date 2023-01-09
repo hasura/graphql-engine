@@ -72,7 +72,7 @@ Further reading:
 			}
 			// check if seed ops are supported for the database
 			if !seed.IsSeedsSupported(ec.Source.Kind) {
-				return errors.E(op, fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind))
+				return errors.E(op, fmt.Errorf("seed operations on database '%s' of kind '%s' is not supported", ec.Source.Name, ec.Source.Kind))
 			}
 			return nil
 		},

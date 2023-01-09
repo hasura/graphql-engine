@@ -151,7 +151,7 @@ var testMigrateApplyAllDatabasesWithError = func(projectDirectory string, databa
 			WorkingDirectory: projectDirectory,
 		})
 		wantKeywordList := []string{
-			fmt.Sprintf("operation failed on : %s", databases[0]),
+			fmt.Sprintf("applying migrations failed on database(s): %s", databases[0]),
 		}
 
 		if len(databases) > 0 {

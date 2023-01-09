@@ -191,7 +191,7 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 			},
 			[]ApplyResult{
 				{
-					Error: fmt.Errorf("skipping applying migrations on database , encountered: \nMigration not applied in database"),
+					Error: fmt.Errorf("skipping applying migrations on database '', encountered: \nMigration not applied in database"),
 				},
 			},
 			false,

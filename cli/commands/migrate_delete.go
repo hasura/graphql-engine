@@ -105,7 +105,7 @@ func (o *MigrateDeleteOptions) Run() error {
 			o.Source = cli.Source(source)
 			err := o.RunOnSource()
 			if err != nil {
-				return errors.E(op, fmt.Errorf("error while deleting status for database %s: %v", o.Source.Name, err))
+				return errors.E(op, fmt.Errorf("error while deleting status for database '%s': %v", o.Source.Name, err))
 			}
 		}
 		return nil

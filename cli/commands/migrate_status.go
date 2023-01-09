@@ -64,7 +64,7 @@ func (o *MigrateStatusOptions) Run() error {
 			o.Source = cli.Source(source)
 			status, err := o.RunOnSource()
 			if err != nil {
-				return errors.E(op, fmt.Errorf("error getting status for database %s: %v", o.Source.Name, err))
+				return errors.E(op, fmt.Errorf("error getting status for database '%s': %v", o.Source.Name, err))
 			}
 			o.StatusOpts[o.Source] = status
 		}
@@ -73,7 +73,7 @@ func (o *MigrateStatusOptions) Run() error {
 	o.Source = ec.Source
 	status, err := o.RunOnSource()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("error getting status for database %s: %v", o.Source.Name, err))
+		return errors.E(op, fmt.Errorf("error getting status for database '%s': %v", o.Source.Name, err))
 	}
 	o.StatusOpts[o.Source] = status
 	return nil

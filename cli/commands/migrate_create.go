@@ -70,7 +70,7 @@ Further reading:
 					// this can be ignored for `migrate create`
 					// we can allow users to create migration files for databases
 					// which are not connected
-					ec.Logger.Warnf("database %s is not connected to hasura", ec.Source.Name)
+					ec.Logger.Warnf("database '%s' is not connected to hasura", ec.Source.Name)
 					ec.Source.Kind = hasura.SourceKindPG // the default kind is postgres
 					return nil
 				}
