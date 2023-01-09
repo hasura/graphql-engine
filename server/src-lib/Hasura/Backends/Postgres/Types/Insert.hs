@@ -1,4 +1,3 @@
-{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Postgres Types Insert
@@ -9,7 +8,6 @@ module Hasura.Backends.Postgres.Types.Insert
   )
 where
 
-import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.IR.Conflict (OnConflictClause)
 import Hasura.RQL.Types.Backend (Backend)
@@ -20,7 +18,6 @@ import Hasura.SQL.Backend
 -- This is parameterised over @v@ which enables different phases of IR
 -- transformation to maintain the overall structure while enriching/transforming
 -- the data at the leaves.
-type BackendInsert :: PostgresKind -> Type -> Type
 newtype BackendInsert pgKind v = BackendInsert
   { _biConflictClause :: Maybe (OnConflictClause ('Postgres pgKind) v)
   }

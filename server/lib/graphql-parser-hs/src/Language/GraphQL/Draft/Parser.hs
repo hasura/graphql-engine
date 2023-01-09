@@ -2,6 +2,7 @@
 {-# HLINT ignore "Use mkName" #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 -- | Description: Parse text into GraphQL ASTs
 module Language.GraphQL.Draft.Parser
@@ -50,7 +51,6 @@ import Data.Char
 import Data.Functor (($>))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as M
-import Data.Kind (Constraint, Type)
 import Data.Maybe (fromMaybe)
 import Data.Scientific (Scientific)
 import Data.Text (Text, find)
@@ -121,7 +121,6 @@ variableDefinition =
 defaultValue :: Parser (AST.Value Void)
 defaultValue = tok "=" *> value
 
-type Variable :: Type -> Constraint
 class Variable var where
   variable :: Parser var
 
@@ -131,7 +130,6 @@ instance Variable Void where
 instance Variable AST.Name where
   variable = tok "$" *> nameParser <?> "variable"
 
-type PossibleTypes :: Type -> Constraint
 class PossibleTypes pos where
   possibleTypes :: Parser pos
 
@@ -531,13 +529,11 @@ between open close p = tok open *> p <* tok close
 optempty :: Monoid a => Parser a -> Parser a
 optempty = option mempty
 
-type Expecting :: Type
 data Expecting
   = Anything
   | Open
   | Closed
 
-type BlockState :: Type
 data BlockState
   = Escaped Expecting
   | Quoting Expecting

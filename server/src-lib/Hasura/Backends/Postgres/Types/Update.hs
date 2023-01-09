@@ -1,4 +1,3 @@
-{-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Postgres Types Update
@@ -13,17 +12,15 @@ module Hasura.Backends.Postgres.Types.Update
 where
 
 import Data.HashMap.Strict qualified as Map
-import Data.Kind (Type)
 import Data.Monoid (All (..))
 import Data.Typeable (Typeable)
 import Hasura.Backends.Postgres.SQL.Types (PGCol)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, AnnBoolExpFld)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind)
+import Hasura.SQL.Backend (BackendType (Postgres))
 
 -- | Represents an entry in an /update_table_many/ update.
-type MultiRowUpdate :: PostgresKind -> Type -> Type
 data MultiRowUpdate pgKind v = MultiRowUpdate
   { -- | The /where/ clause for each individual update.
     --
@@ -69,7 +66,6 @@ deriving instance
 -- This is parameterised over @v@ which enables different phases of IR
 -- transformation to maintain the overall structure while enriching/transforming
 -- the data at the leaves.
-type BackendUpdate :: PostgresKind -> Type -> Type
 data BackendUpdate pgKind v
   = -- | The update operations to perform on each colum.
     BackendUpdate (HashMap PGCol (UpdateOpExpression v))
