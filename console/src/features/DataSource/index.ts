@@ -40,6 +40,8 @@ import {
   NetworkArgs,
   runIntrospectionQuery,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
@@ -425,6 +427,8 @@ export {
   exportMetadata,
   getTableName,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
   getDriverPrefix,
   runIntrospectionQuery,
   AlloyDbTable,

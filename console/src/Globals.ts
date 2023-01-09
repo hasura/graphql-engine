@@ -74,6 +74,7 @@ type CloudServerEnv = {
   consoleId: string; // e.g. "40d778e7-1324-4500-bf69-5f9e58f70803_console"
   consolePath: string;
   dataApiUrl: string; // e.g. "https://rich-jackass-37.hasura.app"
+  enableTelemetry: boolean;
   eeMode: string;
   herokuOAuthClientId: UUID;
   isAdminSecretSet: boolean;
@@ -194,7 +195,7 @@ const globals = {
     false,
   consoleMode: window.__env?.consoleMode || SERVER_CONSOLE_MODE,
   enableTelemetry: window.__env?.enableTelemetry,
-  telemetryTopic: isProduction ? 'console' : 'console_test',
+  telemetryTopic: isProduction ? 'console-v2' : 'console-test-v2', // updated to v2 to ignore legacy redux based events from earlier console versions
   assetsPath: window.__env?.assetsPath,
   serverVersion: window.__env?.serverVersion || '',
   consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build

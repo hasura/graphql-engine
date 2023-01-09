@@ -1403,3 +1403,11 @@ export const getDataTriggerInvocations = (eventId: string): string => {
 
   return sql;
 };
+
+export const getDatabaseTableNames = `
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
+      AND table_schema NOT LIKE 'pg_toast%'
+      AND table_schema NOT LIKE 'pg_temp_%';
+`;

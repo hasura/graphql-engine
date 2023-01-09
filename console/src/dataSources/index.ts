@@ -440,6 +440,7 @@ export interface DataSourcesAPI {
     offset?: number
   ) => string;
   getDataTriggerInvocations?: (eventId: string) => string;
+  getDatabaseTableNames?: string;
 }
 
 export let currentDriver: Driver = 'postgres';
