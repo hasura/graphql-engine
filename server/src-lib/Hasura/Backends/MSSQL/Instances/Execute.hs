@@ -430,8 +430,7 @@ msDBRemoteRelationshipPlan ::
   Options.StringifyNumbers ->
   m (DBStepInfo 'MSSQL)
 msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _stringifyNumbers = do
-  -- TODO: handle `stringifyNumbers` in remote database relationships
-  -- https://hasurahq.atlassian.net/browse/NDAT-438
+  -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 
   let printer = fromSelect statement
