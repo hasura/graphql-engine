@@ -48,8 +48,8 @@ Head to the `Data > Manage databases` section on the Console to add your Snowfla
 :::info Make sure your Snowflake service is reachable by Hasura Cloud:
 
 1.  **Allow public connections or
-    [whitelist the Hasura Cloud IP](/projects/create.mdx#cloud-projects-create-allow-nat-ip) on your Snowflake
-    firewall:** This is good for testing and will allow you to quickly try out Hasura with your database!
+    [whitelist the Hasura Cloud IP](/projects/create.mdx#cloud-projects-create-allow-nat-ip) on your [Snowflake
+    firewall](https://docs.snowflake.com/en/user-guide/network-policies.html):** This is good for testing and will allow you to quickly try out Hasura with your database!
 2.  **VPC peering:** VPC peering and private network access is available on Hasura Cloud paid tiers and is
     recommended for production. Get in touch with us if you'd like to try this out against your existing databases.
 
@@ -63,13 +63,22 @@ Head to the `Data > Manage databases` section on the Console to add your Snowfla
 
 <Thumbnail src='/img/databases/snowflake/choose-snowflake.png' alt='temp' width='1000px' />
 
-#### Step 2.3: Enter your Snowflake database URL
+#### Step 2.3: Enter your Snowflake JDBC Connection string
 
 <Thumbnail
   src='/img/databases/snowflake/database-config.png'
   alt='Setting the Snowflake connection details.'
   width='1000px'
 />
+
+Snowflake JDBC connection strings have the [following formats](https://docs.snowflake.com/en/user-guide/jdbc-configure.html#examples):
+
+- `jdbc:snowflake://myorganization-myaccount.snowflakecomputing.com/?user=peter&warehouse=mywh&db=mydb&schema=public`
+- `jdbc:snowflake://xy12345.snowflakecomputing.com/?user=peter&warehouse=mywh&db=mydb&schema=public`
+
+You can get your `account id` for the second syntax by logging in to Snowflake and navigating to `Admin -> Accounts`.
+
+You can find more info on Snowflake's [JDBC Connection docs](https://docs.snowflake.com/en/user-guide/jdbc-configure.html#jdbc-driver-connection-string) here.
 
 Once you add the Snowflake service, you will find it listed as an available database on the sidebar.
 
