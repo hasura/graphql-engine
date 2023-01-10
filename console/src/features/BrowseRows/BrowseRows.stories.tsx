@@ -15,11 +15,23 @@ export default {
 } as ComponentMeta<typeof BrowseRows>;
 
 export const Basic: ComponentStory<typeof BrowseRows> = () => {
-  return <BrowseRows table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <BrowseRows
+      table={['Album']}
+      dataSourceName="sqlite_test"
+      primaryKeys={[]}
+    />
+  );
 };
 
 export const BasicDisplayTest: ComponentStory<typeof BrowseRows> = () => {
-  return <BrowseRows table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <BrowseRows
+      table={['Album']}
+      dataSourceName="sqlite_test"
+      primaryKeys={[]}
+    />
+  );
 };
 
 BasicDisplayTest.storyName = '🧪 Test - Table with Relationships';
@@ -53,19 +65,19 @@ BasicDisplayTest.play = async ({ canvasElement }) => {
   /**
    * Each row should have 5 columns - Id, Title, ArtistId, Tracks, Artist. So we'll sample the first row to check that
    */
-  expect(firstRowOfAlbum.length).toBe(6);
+  expect(firstRowOfAlbum.length).toBe(5);
 
   /**
    * Each row should have 5 columns - Id, Title, ArtistId, Tracks, Artist. So we'll sample the first row to check that
    * and we'll also check the row values
    */
-  expect(firstRowOfAlbum[1]).toHaveTextContent('1');
-  expect(firstRowOfAlbum[2]).toHaveTextContent(
+  expect(firstRowOfAlbum[0]).toHaveTextContent('1');
+  expect(firstRowOfAlbum[1]).toHaveTextContent(
     'For Those About To Rock We Salute You'
   );
-  expect(firstRowOfAlbum[3]).toHaveTextContent('1');
+  expect(firstRowOfAlbum[2]).toHaveTextContent('1');
+  expect(firstRowOfAlbum[3]).toHaveTextContent('View'); // This is a relationship
   expect(firstRowOfAlbum[4]).toHaveTextContent('View'); // This is a relationship
-  expect(firstRowOfAlbum[5]).toHaveTextContent('View'); // This is a relationship
 
   /**
    * Click on the relationship of Artist
@@ -93,13 +105,13 @@ BasicDisplayTest.play = async ({ canvasElement }) => {
   );
 
   const firstRowOfArtist = await canvas.findAllByTestId(/^@table-cell-0-.*$/);
-  expect(firstRowOfArtist.length).toBe(3);
+  expect(firstRowOfArtist.length).toBe(2);
 
   /**
    * Validate that the row values are correct
    */
-  expect(firstRowOfArtist[1]).toHaveTextContent('1'); // ArtistId
-  expect(firstRowOfArtist[2]).toHaveTextContent('AC/DC');
+  expect(firstRowOfArtist[0]).toHaveTextContent('1'); // ArtistId
+  expect(firstRowOfArtist[1]).toHaveTextContent('AC/DC');
 
   // Go back to Album
   userEvent.click(albumTab);
@@ -115,7 +127,7 @@ BasicDisplayTest.play = async ({ canvasElement }) => {
 
   // No change to columns length
   firstRowOfAlbum = await canvas.findAllByTestId(/^@table-cell-0-.*$/);
-  expect(firstRowOfAlbum.length).toBe(6);
+  expect(firstRowOfAlbum.length).toBe(5);
 
   /**
    * The go-to Artist relationship view link should be visible

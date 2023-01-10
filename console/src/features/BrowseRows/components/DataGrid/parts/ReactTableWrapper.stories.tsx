@@ -4,6 +4,7 @@ import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { Relationship } from '@/features/DatabaseRelationships';
 import { expect } from '@storybook/jest';
 import { waitFor, within } from '@storybook/testing-library';
+import { action } from '@storybook/addon-actions';
 import { ReactTableWrapper } from './ReactTableWrapper';
 import { handlers } from '../../../__mocks__/handlers.mock';
 
@@ -33,12 +34,35 @@ const mockDataForRows = [
 ];
 
 export const Default: ComponentStory<typeof ReactTableWrapper> = () => {
-  return <ReactTableWrapper rows={mockDataForRows} />;
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+    />
+  );
 };
 
 export const Basic: ComponentStory<typeof ReactTableWrapper> = () => {
-  return <ReactTableWrapper rows={mockDataForRows} />;
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+    />
+  );
 };
+
+export const SelectionDisabled: ComponentStory<typeof ReactTableWrapper> =
+  () => {
+    return (
+      <ReactTableWrapper
+        rows={mockDataForRows}
+        isRowsSelectionEnabled={false}
+        onRowsSelect={action('onRowsSelect')}
+      />
+    );
+  };
 
 Basic.storyName = '🧪 Test - Basic data with columns';
 
@@ -53,10 +77,10 @@ Basic.play = async ({ canvasElement }) => {
       const firstRowOfAlbum = await canvas.findAllByTestId(
         /^@table-cell-0-.*$/
       );
-      expect(firstRowOfAlbum.length).toBe(3);
+      expect(firstRowOfAlbum.length).toBe(4);
 
-      expect(firstRowOfAlbum[0]).toHaveTextContent('1'); // AlbumId
-      expect(firstRowOfAlbum[1]).toHaveTextContent(
+      expect(firstRowOfAlbum[1]).toHaveTextContent('1'); // AlbumId
+      expect(firstRowOfAlbum[2]).toHaveTextContent(
         'For Those About To Rock We Salute You'
       );
     },
@@ -103,6 +127,8 @@ export const WithRelationships: ComponentStory<typeof ReactTableWrapper> =
           onClick: () => {},
           onClose: () => {},
         }}
+        isRowsSelectionEnabled
+        onRowsSelect={action('onRowsSelect')}
       />
     );
   };

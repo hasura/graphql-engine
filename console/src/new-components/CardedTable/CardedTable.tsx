@@ -80,7 +80,7 @@ const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
 const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
     <td
-      style={{ maxWidth: '20ch' }}
+      // style={{ maxWidth: '20ch' }}
       className="px-sm py-xs whitespace-nowrap text-muted overflow-hidden text-ellipsis"
       {...cellAttributes}
     >

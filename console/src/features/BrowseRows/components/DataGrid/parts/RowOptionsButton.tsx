@@ -18,7 +18,7 @@ export const RowOptionsButton: React.VFC<{
         ]}
       >
         <div className="flex items-start">
-          <div className="mx-2 my-1 cursor-pointer">
+          <div className="mx-2 my-1 cursor-pointer group-hover:opacity-100">
             <FaEllipsisV />
           </div>
         </div>

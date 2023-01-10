@@ -122,7 +122,10 @@ type columnName = string;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 export type WhereClause = Record<
   columnName,
-  Record<validOperators, string | number | boolean>
+  Record<
+    validOperators,
+    string | number | boolean | string[] | number[] | boolean[]
+  >
 >;
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';

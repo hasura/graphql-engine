@@ -15,11 +15,15 @@ export default {
 } as ComponentMeta<typeof DataGrid>;
 
 export const Primary: ComponentStory<typeof DataGrid> = () => {
-  return <DataGrid table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <DataGrid table={['Album']} dataSourceName="sqlite_test" primaryKeys={[]} />
+  );
 };
 
 export const Testing: ComponentStory<typeof DataGrid> = () => {
-  return <DataGrid table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <DataGrid table={['Album']} dataSourceName="sqlite_test" primaryKeys={[]} />
+  );
 };
 
 Testing.storyName = '🧪 Test - Pagination';
@@ -31,15 +35,15 @@ Testing.play = async ({ canvasElement }) => {
     async () => {
       await userEvent.click(await canvas.findByTestId('@nextPageBtn'));
       const firstRow = await canvas.findAllByTestId(/^@table-cell-0-.*$/);
-      expect(firstRow.length).toBe(6);
-      expect(firstRow[1]).toHaveTextContent('11'); // AlbumId
+      expect(firstRow.length).toBe(5);
+      expect(firstRow[0]).toHaveTextContent('11'); // AlbumId
     },
     { timeout: 5000 }
   );
 
   const firstRow = await canvas.findAllByTestId(/^@table-cell-0-.*$/);
-  expect(firstRow[2]).toHaveTextContent('Out Of Exile');
-  expect(firstRow[3]).toHaveTextContent('8'); // ArtistId
+  expect(firstRow[1]).toHaveTextContent('Out Of Exile');
+  expect(firstRow[2]).toHaveTextContent('8'); // ArtistId
+  expect(firstRow[3]).toHaveTextContent('View');
   expect(firstRow[4]).toHaveTextContent('View');
-  expect(firstRow[5]).toHaveTextContent('View');
 };

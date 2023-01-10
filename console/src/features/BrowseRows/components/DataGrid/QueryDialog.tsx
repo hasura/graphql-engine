@@ -25,7 +25,7 @@ interface QueryDialogProps {
   filters?: {
     column: string;
     operator: string;
-    value: number | string | boolean;
+    value: number | string | boolean | number[] | string[] | boolean[];
   }[];
   sorts?: OrderBy[];
 }

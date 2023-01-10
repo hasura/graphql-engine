@@ -77,6 +77,11 @@ const ComponentWrapper = () => {
             updateStatus(`export to ${exportFileFormat}`);
             return Promise.resolve(new Error());
           },
+          onExportSelectedRows: exportFileFormat => {
+            updateStatus(`export to ${exportFileFormat}`);
+            return Promise.resolve(new Error());
+          },
+          disableExportSelectedRows: false,
         }}
       />
       <div data-testid="status">{status}</div>

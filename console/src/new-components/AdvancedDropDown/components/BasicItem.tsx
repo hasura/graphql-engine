@@ -9,7 +9,7 @@ export const BasicItem: React.FC<{
 }> = ({ disabled, onClick, children, dangerous }) => (
   <DropdownMenu.Item
     disabled={disabled}
-    className="group/item outline-none"
+    className="group/item outline-none cursor-pointer"
     onClick={onClick}
   >
     <StyleWrappers.Item dangerous={dangerous}>{children}</StyleWrappers.Item>

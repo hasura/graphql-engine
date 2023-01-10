@@ -14,34 +14,40 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { Relationship } from '@/features/DatabaseRelationships';
-import { RowDialog } from './RowDialog';
+import { CheckboxItem } from './CheckboxItem';
 import { RowOptionsButton } from './RowOptionsButton';
+import { RowDialog } from './RowDialog';
 
 interface ReactTableWrapperProps {
-  rows: TableRow[];
-
-  sort?: {
-    sorting: ColumnSort[];
-    setSorting: React.Dispatch<React.SetStateAction<ColumnSort[]>>;
-  };
-
+  isRowsSelectionEnabled: boolean;
+  onRowsSelect: (rows: Record<number, boolean>) => void;
   relationships?: {
     allRelationships: Relationship[];
     onClick: (props: { relationship: Relationship; rowData: TableRow }) => void;
     onClose: (relationshipName: string) => void;
     activeRelationships?: string[];
   };
+  rows: TableRow[];
+  sort?: {
+    sorting: ColumnSort[];
+    setSorting: React.Dispatch<React.SetStateAction<ColumnSort[]>>;
+  };
 }
 
-export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
+export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
+  isRowsSelectionEnabled,
+  onRowsSelect,
+  relationships,
+  rows,
+  sort,
+}) => {
   const [currentActiveRow, setCurrentActiveRow] = useState<Record<
     string,
     any
   > | null>(null);
-  const { rows, sort, relationships } = props;
 
   const columns = Object.keys(rows?.[0] ?? []);
 
@@ -50,10 +56,17 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
   const tableColumns = columns.map(column =>
     columnHelper.accessor(row => row[column], {
       id: column,
-      cell: (info: any) => info.getValue() ?? '',
       header: () => <span key={column}>{column}</span>,
+      enableSorting: true,
+      enableMultiSort: true,
+      cell: (info: any) => info.getValue() ?? '',
     })
   );
+
+  const [rowSelection, setRowSelection] = useState<Record<number, boolean>>({});
+  useEffect(() => {
+    onRowsSelect(rowSelection);
+  }, [rowSelection]);
 
   const relationshipColumns = useMemo(
     () =>
@@ -66,6 +79,15 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
           ...cols,
           columnHelper.accessor(row => row, {
             id: relationship.name,
+            header: () => (
+              <span
+                className="flex items-center gap-0.5"
+                key={relationship.name}
+              >
+                <FaLink />
+                {relationship.name}
+              </span>
+            ),
             cell: (info: any) =>
               (relationships?.activeRelationships ?? []).includes(
                 relationship.name
@@ -91,15 +113,6 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
                   View
                 </a>
               ),
-            header: () => (
-              <span
-                className="flex items-center gap-0.5"
-                key={relationship.name}
-              >
-                <FaLink />
-                {relationship.name}
-              </span>
-            ),
           }),
         ];
       }, []),
@@ -109,22 +122,53 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
   const relationshipNames =
     relationships?.allRelationships.map(rel => rel.name) ?? [];
 
-  const rowOptionsColumns = {
-    id: 'options-button',
-    cell: (info: any) => (
-      <RowOptionsButton
-        row={info.row.original}
-        onOpen={row => setCurrentActiveRow(row)}
-      />
-    ),
-  };
-
   const ReactTable = useReactTable<TableRow>({
     data: rows,
-    columns: [rowOptionsColumns, ...tableColumns, ...relationshipColumns],
+    columns: [
+      {
+        id: 'selected',
+        enableSorting: false,
+        enableMultiSort: false,
+        header: ({ table }) => (
+          <div
+            className="px-1 flex justify-end"
+            style={{ paddingLeft: '15px' }}
+          >
+            <CheckboxItem
+              {...{
+                isChecked: table.getIsAllRowsSelected(),
+                isIndeterminate: table.getIsSomeRowsSelected(),
+                onChange: table.getToggleAllRowsSelectedHandler(),
+              }}
+              disabled={!isRowsSelectionEnabled}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="px-1 flex items-center justify-between group-hover:opacity-100">
+            <RowOptionsButton
+              row={row.original}
+              onOpen={(r: any) => setCurrentActiveRow(r)}
+            />
+            <CheckboxItem
+              {...{
+                isChecked: row.getIsSelected(),
+                isIndeterminate: row.getIsSomeSelected(),
+                onChange: row.getToggleSelectedHandler(),
+              }}
+              disabled={!isRowsSelectionEnabled}
+            />
+          </div>
+        ),
+      },
+      ...tableColumns,
+      ...relationshipColumns,
+    ],
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     state: {
       sorting: sort?.sorting,
+      rowSelection,
     },
     onSortingChange: sort?.setSorting,
     manualPagination: true,
@@ -135,8 +179,12 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
   return (
     <>
       <CardedTable.Table
-        className="overflow-y-auto"
-        style={{ maxHeight: '65vh' }}
+        className="overflow-y-auto !rounded-t-none border-t-0"
+        style={{
+          maxHeight: '65vh',
+          borderTopLeftRadius: '0',
+          borderTopRightRadius: '0',
+        }}
       >
         <CardedTable.TableHead>
           {ReactTable.getHeaderGroups().map((headerGroup, id) => (
@@ -162,6 +210,7 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
                       )}
                       {header?.id === 'options-button' ||
                         (!relationshipNames.includes(header.id) &&
+                          header.column.getCanSort() &&
                           ({
                             asc: <FaCaretUp />,
                             desc: <FaCaretDown />,
@@ -185,14 +234,30 @@ export const ReactTableWrapper = (props: ReactTableWrapperProps) => {
               key={row.id}
               data-testid={`@table-row-${row.id}`}
             >
-              {row.getVisibleCells().map((cell, i) => (
-                <CardedTable.TableBodyCell
-                  key={i}
-                  data-testid={`@table-cell-${row.id}-${i}`}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </CardedTable.TableBodyCell>
-              ))}
+              {row.getVisibleCells().map((cell, i) => {
+                if (i === 0)
+                  return (
+                    <td
+                      style={{ width: '75px', paddingLeft: '0px' }}
+                      className="px-sm py-xs whitespace-nowrap text-muted overflow-hidden text-ellipsis"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  );
+
+                return (
+                  <CardedTable.TableBodyCell
+                    key={i}
+                    data-testid={`@table-cell-${row.id}-${i}`}
+                    style={{ maxWidth: '20ch' }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </CardedTable.TableBodyCell>
+                );
+              })}
             </CardedTable.TableBodyRow>
           ))}
         </CardedTable.TableBody>
