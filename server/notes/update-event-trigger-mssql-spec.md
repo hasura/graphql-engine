@@ -1,6 +1,6 @@
-This note is in [Hasura.Backends.MSSQL.DDL.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/MSSQL/DDL/EventTrigger.hs#L847).
+This note is in [Hasura.Backends.MSSQL.DDL.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/MSSQL/DDL/EventTrigger.hs#L852).
 It is referenced at:
-  - line 907 of [Hasura.Backends.MSSQL.DDL.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/MSSQL/DDL/EventTrigger.hs#L907)
+  - line 912 of [Hasura.Backends.MSSQL.DDL.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/MSSQL/DDL/EventTrigger.hs#L912)
 
 # Update Event Trigger MSSQL Spec
 
