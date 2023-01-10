@@ -23,6 +23,7 @@ module Hasura.RQL.Types.SourceCustomization
     getNamingCase,
     getTextFieldName,
     getTextTypeName,
+    setFieldNameCase,
 
     -- * Field name builders
     mkSelectField,
@@ -81,6 +82,7 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RootFieldsCustomization = RootFieldsCustomization
@@ -172,6 +174,23 @@ applyEnumValueCase :: NamingCase -> G.Name -> G.Name
 applyEnumValueCase tCase v = case tCase of
   HasuraCase -> v
   GraphqlCase -> C.transformNameWith (T.toUpper) v
+
+-- | Builds field name with proper case. Please note that this is a pure
+--   function as all the validation has already been done while preparing
+--   @GQLNameIdentifier@.
+setFieldNameCase ::
+  NamingCase ->
+  TableInfo b ->
+  CustomRootField ->
+  (C.GQLNameIdentifier -> C.GQLNameIdentifier) ->
+  C.GQLNameIdentifier ->
+  G.Name
+setFieldNameCase tCase tInfo crf getFieldName tableName =
+  (applyFieldNameCaseIdentifier tCase fieldIdentifier)
+  where
+    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
+    crfName = fmap C.fromCustomName (_crfName crf)
+    fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
 
 -- | append/prepend the suffix/prefix in the graphql name
 applyPrefixSuffix :: Maybe G.Name -> Maybe G.Name -> NamingCase -> Bool -> G.Name -> G.Name

@@ -25,6 +25,7 @@ import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Update
+import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
@@ -190,9 +191,13 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   return $
     AnnotatedUpdateG
       tableName
-      (resolvedUpdFltr, annSQLBoolExp)
+      resolvedUpdFltr
       resolvedUpdCheck
-      (BackendUpdate $ Map.fromList $ fmap UpdateSet <$> setExpItems)
+      ( SingleBatch $
+          UpdateBatch
+            (Map.fromList $ fmap UpdateSet <$> setExpItems)
+            annSQLBoolExp
+      )
       (mkDefaultMutFlds mAnnRetCols)
       allCols
       Nothing

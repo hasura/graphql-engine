@@ -176,7 +176,7 @@ common common-all
       -- Use O1 over O2, as (as of writing) it improves compile times a little, without
       -- hurting performance:
       -O1
-      -- This seems like a better default for us, lowering memory residency without 
+      -- This seems like a better default for us, lowering memory residency without
       -- impacting compile times too much, though it does increase binary size:
       -funfolding-use-threshold=640
   else
@@ -651,6 +651,7 @@ library
                      , Hasura.Backends.DataConnector.Adapter.SchemaCache
                      , Hasura.Backends.DataConnector.Adapter.Transport
                      , Hasura.Backends.DataConnector.Adapter.Types
+                     , Hasura.Backends.DataConnector.Adapter.Types.Mutations
                      , Hasura.Backends.DataConnector.Agent.Client
                      , Hasura.Backends.DataConnector.Logging
                      , Hasura.Backends.DataConnector.Plan
@@ -847,6 +848,7 @@ library
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Update
+                     , Hasura.RQL.IR.Update.Batch
                      , Hasura.RQL.IR.Value
                      , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR
@@ -908,6 +910,7 @@ library
                      , Hasura.GraphQL.Schema.Table
                      , Hasura.GraphQL.Schema.Typename
                      , Hasura.GraphQL.Schema.Update
+                     , Hasura.GraphQL.Schema.Update.Batch
                      , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol

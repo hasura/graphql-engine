@@ -170,9 +170,9 @@ class
     Show (XStreamingSubscription b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
-    Functor (BackendUpdate b),
-    Foldable (BackendUpdate b),
-    Traversable (BackendUpdate b),
+    Functor (UpdateVariant b),
+    Foldable (UpdateVariant b),
+    Traversable (UpdateVariant b),
     Functor (BackendInsert b),
     Foldable (BackendInsert b),
     Traversable (BackendInsert b),
@@ -288,14 +288,17 @@ class
 
   type AggregationPredicates b = Const Void
 
-  -- | Intermediate Representation of Update Mutations.
+  -- | The different variants of update supported by a backend for their
+  -- intermediate representation. For example, a backend could use a sum type
+  -- encapsulating either a single batch update or multiple batch updates.
+  --
   -- The default implementation makes update expressions uninstantiable.
   --
   -- It is parameterised over the type of fields, which changes during the IR
   -- translation phases.
-  type BackendUpdate b :: Type -> Type
+  type UpdateVariant b :: Type -> Type
 
-  type BackendUpdate b = Const Void
+  type UpdateVariant b = Const Void
 
   -- | Intermediate Representation of Insert Mutations.
   -- The default implementation makes insert expressions uninstantiable.

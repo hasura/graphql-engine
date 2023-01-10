@@ -5,8 +5,8 @@
 module Test.Parser.Expectation
   ( UpdateTestSetup (..),
     UpdateExpectationBuilder (..),
-    BackendUpdateBuilder (..),
-    MultiRowUpdateBuilder (..),
+    UpdateVariantBuilder (..),
+    UpdateBatchBuilder (..),
     runUpdateFieldTest,
     module I,
     AnnotatedUpdateBuilder (..),
@@ -15,10 +15,9 @@ module Test.Parser.Expectation
   )
 where
 
-import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HM
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
-import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..), MultiRowUpdate (..), UpdateOpExpression (..))
+import Hasura.Backends.Postgres.Types.Update (PgUpdateVariant (..), UpdateOpExpression (..))
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Schema (Definition (..))
 import Hasura.GraphQL.Parser.Variable (Variable (..))
@@ -28,6 +27,7 @@ import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
+import Hasura.RQL.IR.Update.Batch (UpdateBatch (..))
 import Hasura.RQL.IR.Value (UnpreparedValue)
 import Hasura.RQL.Types.Column (ColumnInfo (..))
 import Hasura.RQL.Types.Common (SourceName (..))
@@ -50,9 +50,7 @@ type Output r = MutationOutputG PG r (UnpreparedValue PG)
 
 type Field = Syntax.Field Syntax.NoFragments Variable
 
-type Where = (ColumnInfoBuilder, [OpExpG PG (UnpreparedValue PG)])
-
-type Update = BackendUpdateBuilder ColumnInfoBuilder
+type Update = UpdateVariantBuilder ColumnInfoBuilder
 
 -- | Holds all the information required to setup and run a field parser update
 -- test.
@@ -73,15 +71,11 @@ data UpdateExpectationBuilder = UpdateExpectationBuilder
     --
     -- > MOutMultirowFields [("affected_rows", MCount)]
     utbOutput :: Output (RemoteRelationshipFieldWrapper UnpreparedValue),
-    -- | expected where condition(s), e.g. given a @nameColumn ::
-    -- ColumnInfoBuilder@ and @oldValue :: UnpreparedValue PG@:
+    -- | expected update clause(s), including the where condition as update operations,
+    -- e.g. given a @nameColumn :: ColumnInfoBuilder@ and
+    -- @newValue :: UnpreparedValue PG@:
     --
-    -- > [(nameColumn, [AEQ true oldvalue])]
-    utbWhere :: [Where],
-    -- | expected update clause(s), e.g. given a @nameColumn ::
-    -- ColumnInfoBuilder@ and @newValue :: UnpreparedValue PG@:
-    --
-    -- > [(namecolumn, UpdateSet newValue)]
+    -- > SingleBatchUpdate (UpdateBatchBuilder [(nameColumn, [AEQ true oldvalue])] [(nameColumn, UpdateSet newValue)])
     utbUpdate :: Update
   }
 
@@ -132,10 +126,9 @@ runUpdateFieldTest UpdateTestSetup {..} =
           { aubTable = table,
             aubOutput = utbOutput,
             aubColumns = mkColumnInfo <$> utsColumns,
-            aubWhere = first mkColumnInfo <$> utbWhere,
-            aubUpdate = mkUpdateColumns utbUpdate
+            aubUpdateVariant = mkUpdateColumns utbUpdate
           }
-    mkUpdateColumns :: BackendUpdateBuilder ColumnInfoBuilder -> BackendUpdateBuilder (ColumnInfo PG)
+    mkUpdateColumns :: UpdateVariantBuilder ColumnInfoBuilder -> UpdateVariantBuilder (ColumnInfo PG)
     mkUpdateColumns = fmap mkColumnInfo
 
 -- | Internal use only. The intended use is through 'runUpdateFieldTest'.
@@ -148,20 +141,18 @@ data AnnotatedUpdateBuilder r = AnnotatedUpdateBuilder
     aubOutput :: Output r,
     -- | the table columns (all of them)
     aubColumns :: [ColumnInfo PG],
-    -- | the where clause(s)
-    aubWhere :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])],
     -- | the update statement(s)
-    aubUpdate :: BackendUpdateBuilder (ColumnInfo PG)
+    aubUpdateVariant :: UpdateVariantBuilder (ColumnInfo PG)
   }
 
-data BackendUpdateBuilder col
-  = UpdateTable [(col, UpdateOpExpression (UnpreparedValue PG))]
-  | UpdateMany [MultiRowUpdateBuilder col]
+data UpdateVariantBuilder col
+  = SingleBatchUpdate (UpdateBatchBuilder col)
+  | MultipleBatchesUpdate [UpdateBatchBuilder col]
   deriving stock (Functor)
 
-data MultiRowUpdateBuilder col = MultiRowUpdateBuilder
-  { mrubWhere :: [(col, [OpExpG PG (UnpreparedValue PG)])],
-    mrubUpdate :: [(col, UpdateOpExpression (UnpreparedValue PG))]
+data UpdateBatchBuilder col = UpdateBatchBuilder
+  { ubbWhere :: [(col, [OpExpG PG (UnpreparedValue PG)])],
+    ubbOperations :: [(col, UpdateOpExpression (UnpreparedValue PG))]
   }
   deriving stock (Functor)
 
@@ -187,27 +178,22 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     _auTable :: QualifiedTable
     _auTable = aubTable
 
-    _auWhere :: (BoolExp, BoolExp)
-    _auWhere = (column, toBoolExp aubWhere)
-
     _auCheck :: BoolExp
     _auCheck = BoolAnd []
 
-    _auBackend :: BackendUpdate 'Vanilla (UnpreparedValue PG)
-    _auBackend =
-      case aubUpdate of
-        UpdateTable items ->
-          BackendUpdate $
-            HM.fromList $
-              fmap (first ciColumn) items
-        UpdateMany rows ->
-          BackendMultiRowUpdate $ fmap mapRows rows
+    _auUpdateVariant :: PgUpdateVariant 'Vanilla (UnpreparedValue PG)
+    _auUpdateVariant =
+      case aubUpdateVariant of
+        SingleBatchUpdate batch ->
+          SingleBatch $ mapUpdateBatch batch
+        MultipleBatchesUpdate batches ->
+          MultipleBatches $ mapUpdateBatch <$> batches
 
-    mapRows :: MultiRowUpdateBuilder (ColumnInfo PG) -> MultiRowUpdate 'Vanilla (UnpreparedValue PG)
-    mapRows MultiRowUpdateBuilder {..} =
-      MultiRowUpdate
-        { mruWhere = toBoolExp mrubWhere,
-          mruExpression = HM.fromList $ fmap (bimap ciColumn id) mrubUpdate
+    mapUpdateBatch :: UpdateBatchBuilder (ColumnInfo PG) -> UpdateBatch ('Postgres 'Vanilla) UpdateOpExpression (UnpreparedValue PG)
+    mapUpdateBatch UpdateBatchBuilder {..} =
+      UpdateBatch
+        { _ubWhere = toBoolExp ubbWhere,
+          _ubOperations = HM.fromList $ fmap (first ciColumn) ubbOperations
         }
 
     _auOutput :: Output r
@@ -216,8 +202,8 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     _auAllCols :: [ColumnInfo PG]
     _auAllCols = aubColumns
 
-    column :: BoolExp
-    column =
+    _auUpdatePermissions :: BoolExp
+    _auUpdatePermissions =
       BoolAnd
         . fmap (\c -> BoolField . AVColumn c $ [])
         $ aubColumns

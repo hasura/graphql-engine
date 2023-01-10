@@ -30,9 +30,6 @@ module Hasura.Backends.DataConnector.Adapter.Types
     ScalarType (..),
     mkScalarType,
     fromGQLType,
-    BackendInsert (..),
-    BackendUpdate (..),
-    UpdateOperator (..),
   )
 where
 
@@ -369,35 +366,6 @@ fromGQLType typeName =
       | typeName == _Float -> API.NumberTy
       | typeName == _Boolean -> API.BoolTy
       | otherwise -> API.CustomTy $ GQL.unName typeName
-
---------------------------------------------------------------------------------
-
--- | The Data Connector-specific data of an Insert expression. Currently, we don't
--- have any.
---
--- This is parameterised over @v@ which enables different phases of IR
--- transformation to maintain the overall structure while enriching/transforming
--- the data at the leaves.
-data BackendInsert v = BackendInsert
-  deriving stock (Functor, Foldable, Traversable)
-
---------------------------------------------------------------------------------
-
--- | The Data Connector-specific data of an Update expression.
---
--- This is parameterised over @v@ which enables different phases of IR
--- transformation to maintain the overall structure while enriching/transforming
--- the data at the leaves.
-data BackendUpdate v = BackendUpdate
-  {_buUpdateOperations :: HashMap ColumnName (UpdateOperator v)}
-  deriving stock (Functor, Foldable, Traversable)
-
---------------------------------------------------------------------------------
-
--- | The operators that are used to mutate specific columns on a table
-data UpdateOperator v
-  = UpdateSet v
-  deriving stock (Functor, Foldable, Traversable)
 
 --------------------------------------------------------------------------------
 

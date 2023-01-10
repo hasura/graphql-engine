@@ -19,6 +19,7 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
+import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -68,8 +69,8 @@ instance Backend 'DataConnector where
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
   type ComputedFieldReturn 'DataConnector = Unimplemented
 
+  type UpdateVariant 'DataConnector = DC.DataConnectorUpdateVariant
   type BackendInsert 'DataConnector = DC.BackendInsert
-  type BackendUpdate 'DataConnector = DC.BackendUpdate
 
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable

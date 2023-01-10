@@ -730,7 +730,7 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
     inserts <-
       mkRFs (MDBR . MDBInsert) $ buildTableInsertMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
     updates <-
-      mkRFs (MDBR . MDBUpdate) $ buildTableUpdateMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
+      mkRFs (MDBR . MDBUpdate) $ buildTableUpdateMutationFields scenario tableInfo tableIdentifierName
     deletes <-
       mkRFs (MDBR . MDBDelete) $ buildTableDeleteMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
     pure $ concat [inserts, updates, deletes]

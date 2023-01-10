@@ -26,6 +26,7 @@ module Hasura.GraphQL.Schema.Backend
   ( -- * Main Types
     BackendSchema (..),
     BackendTableSelectSchema (..),
+    BackendUpdateOperatorsSchema (..),
     MonadBuildSchema,
 
     -- * Auxiliary Types
@@ -36,6 +37,7 @@ module Hasura.GraphQL.Schema.Backend
   )
 where
 
+import Data.Kind (Type)
 import Data.Text.Casing (GQLNameIdentifier)
 import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
@@ -137,10 +139,7 @@ class
   -- its namesake @GSB.@'Hasura.GraphQL.Schema.Build.buildTableUpdateMutationFields'.
   buildTableUpdateMutationFields ::
     MonadBuildSchema b r m n =>
-    MkRootFieldName ->
     Scenario ->
-    -- | The name of the table being acted on
-    TableName b ->
     -- | table info
     TableInfo b ->
     -- | field display name
@@ -290,6 +289,21 @@ class Backend b => BackendTableSelectSchema (b :: BackendType) where
     SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
+
+class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where
+  -- | Intermediate Representation of the set of update operators that act
+  -- upon table fields during an update mutation. (For example, _set and _inc)
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type UpdateOperators b :: Type -> Type
+
+  parseUpdateOperators ::
+    forall m n r.
+    MonadBuildSchema b r m n =>
+    TableInfo b ->
+    UpdPermInfo b ->
+    SchemaT r m (InputFieldsParser n (HashMap (Column b) (UpdateOperators b (UnpreparedValue b))))
 
 -- $modelling
 -- #modelling#

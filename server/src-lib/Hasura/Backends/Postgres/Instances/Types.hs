@@ -108,7 +108,7 @@ instance
   type ComputedFieldImplicitArguments ('Postgres pgKind) = Postgres.ComputedFieldImplicitArguments
   type ComputedFieldReturn ('Postgres pgKind) = Postgres.ComputedFieldReturn
 
-  type BackendUpdate ('Postgres pgKind) = Postgres.BackendUpdate pgKind
+  type UpdateVariant ('Postgres pgKind) = Postgres.PgUpdateVariant pgKind
 
   type AggregationPredicates ('Postgres pgKind) = Agg.AggregationPredicatesImplementation ('Postgres pgKind)
 
