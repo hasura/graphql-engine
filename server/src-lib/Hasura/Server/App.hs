@@ -459,6 +459,7 @@ v1QueryHandler query = do
               readOnlyMode
               defaultNamingCase
               metadataDefaults
+              defaultUsePQNP
       runQuery
         env
         logger
@@ -499,6 +500,7 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
   _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   _sccDefaultNamingConvention <- asks (scDefaultNamingConvention . hcServerCtx)
   _sccMetadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
+  let _sccUsePQNP = defaultUsePQNP
   let serverConfigCtx = ServerConfigCtx {..}
   r <-
     withSchemaCacheUpdate
@@ -565,6 +567,7 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
               readOnlyMode
               defaultNamingCase
               defaultMetadata
+              defaultUsePQNP
 
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 

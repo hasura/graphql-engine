@@ -17,6 +17,7 @@ module Hasura.Server.Types
     HasServerConfigCtx (..),
     askMetadataDefaults,
     getRequestId,
+    defaultUsePQNP,
   )
 where
 
@@ -147,9 +148,9 @@ data ServerConfigCtx = ServerConfigCtx
     _sccReadOnlyMode :: ReadOnlyMode,
     -- | stores global default naming convention
     _sccDefaultNamingConvention :: Maybe NamingCase,
-    _sccMetadataDefaults :: MetadataDefaults
+    _sccMetadataDefaults :: MetadataDefaults,
+    _sccUsePQNP :: IO Bool
   }
-  deriving (Show, Eq)
 
 askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
 askMetadataDefaults = do
@@ -167,3 +168,6 @@ instance HasServerConfigCtx m => HasServerConfigCtx (ExceptT e m) where
 
 instance HasServerConfigCtx m => HasServerConfigCtx (StateT s m) where
   askServerConfigCtx = lift askServerConfigCtx
+
+defaultUsePQNP :: IO Bool
+defaultUsePQNP = pure False

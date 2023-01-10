@@ -403,6 +403,7 @@ initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryH
           soReadOnlyMode
           soDefaultNamingConvention
           soMetadataDefaults
+          defaultUsePQNP
 
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -743,6 +744,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore = 
           soReadOnlyMode
           soDefaultNamingConvention
           soMetadataDefaults
+          defaultUsePQNP
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)
