@@ -104,6 +104,7 @@ library
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
+    Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec

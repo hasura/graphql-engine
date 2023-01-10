@@ -31,12 +31,13 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
-import Data.ByteString.Lazy qualified as BL
+import Data.ByteString.Lazy (fromStrict)
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as HashSet
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (ToTxt, commaSeparated, toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
@@ -444,7 +445,7 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- 'IN' MSSQL operator.
     triggerNamesTxt = "(" <> commaSeparated (map (\t -> "'" <> toTxt t <> "'") triggerNames) <> ")"
 
-    uncurryEvent (id', sn, tn, trn, payload' :: BL.ByteString, tries, created_at :: B.ByteString, next_retry_at :: Maybe B.ByteString) = do
+    uncurryEvent (id', sn, tn, trn, payload' :: Text, tries, created_at :: B.ByteString, next_retry_at :: Maybe B.ByteString) = do
       payload <- encodePayload payload'
       createdAt <- convertTime created_at
       retryAt <- traverse convertTime next_retry_at
@@ -469,10 +470,14 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- We ensure that the values in 'hd_catalog.event_log' is always a JSON is by
     -- using the 'FOR JSON PATH' MSSQL operand when inserting value into the
     -- 'hdb_catalog.event_log' table.
-    encodePayload :: (J.FromJSON a, QErrM m) => BL.ByteString -> m a
+    encodePayload :: (J.FromJSON a, QErrM m) => Text -> m a
     encodePayload payload =
       onLeft
-        (J.eitherDecode payload)
+        -- The NVARCHAR column has UTF-16 or UCS-2 encoding. Ref: https://learn.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16#nvarchar---n--max--
+        -- But JSON strings are expected to have UTF-8 encoding as per spec. Ref: https://www.rfc-editor.org/rfc/rfc8259#section-8.1
+        -- Hence it's important to encode the payload into UTF-8 else the decoding of
+        -- text to JSON will fail.
+        (J.eitherDecode $ fromStrict $ TE.encodeUtf8 payload)
         (\_ -> throw500 $ T.pack "payload decode failed while fetching MSSQL events")
 
     -- Note: The ODBC server does not have a FromJSON instance of UTCTime and only

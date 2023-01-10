@@ -26,8 +26,13 @@ $ export HASURA_BIGQUERY_PROJECT_ID=??? # The project ID
 $ export HASURA_BIGQUERY_SERVICE_KEY=??? # The service account key
 ```
 
-After that, BigQuery will be ready to test. For everything else, run
-`docker-compose up` in the root of `graphql-engine`.
+After that, BigQuery will be ready to test. 
+
+
+For everything else, run the following in the root of `graphql-engine`:
+```
+$ docker-compose up
+```
 
 _Note to Hasura team: a service account is already setup for internal use,
 please check the wiki for further details._
@@ -37,29 +42,29 @@ please check the wiki for further details._
 To run all the tests, execute the following command:
 
 ```bash
-$ cabal run api-tests
+$ cabal run api-tests:exe:api-tests
 ```
 
 To run only tests whose name contains a certain string, use the `-m` or
 `--match=` flag:
 
 ```sh
-$ cabal run api-tests -- -m "SQLServer" # SQLServer tests only
-$ cabal run api-tests -- --match="Views" # All tests concerning views
+$ cabal run api-tests:exe:api-tests -- -m "SQLServer" # SQLServer tests only
+$ cabal run api-tests:exe:api-tests -- --match="Views" # All tests concerning views
 ```
 
 The opposite flag is `-s` or `--skip=`, which will ignore tests containing the
 given string:
 
 ```sh
-$ cabal run api-tests -- -s "BigQuery" # Skip BigQuery tests
-$ cabal run api-tests -- --skip="Mutations" # Skip tests around mutations
+$ cabal run api-tests:exe:api-tests -- -s "BigQuery" # Skip BigQuery tests
+$ cabal run api-tests:exe:api-tests -- --skip="Mutations" # Skip tests around mutations
 ```
 
 For additional information, consult the help section:
 
 ```bash
-cabal run api-tests -- --help
+cabal run api-tests:exe:api-tests -- --help
 ```
 
 The local databases persist even after shutting down the containers. If this is
