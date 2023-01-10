@@ -47,13 +47,13 @@ export const RemoteSchemaRelationshipTable = ({
 
   if (remoteSchemaRels) {
     const remoteRelationsOnTheSelectedRS = remoteSchemaRels.filter(
-      (x) => x.rsName === remoteSchema
+      x => x.rsName === remoteSchema
     );
     if (remoteRelationsOnTheSelectedRS.length)
-      remoteRelationsOnTheSelectedRS.forEach((remoteRel) => {
+      remoteRelationsOnTheSelectedRS.forEach(remoteRel => {
         const { type_name } = remoteRel;
 
-        remoteRel.relationships.forEach((relationship) => {
+        remoteRel.relationships.forEach(relationship => {
           const [name, sourceType, type] =
             getRemoteSchemaRelationType(relationship);
           const relType =
@@ -150,7 +150,7 @@ export const RemoteSchemaRelationshipTable = ({
           data-test="remote-schema-relationships-table"
         />
         <div className="text-right mb-4">
-          {legend.map((item) => {
+          {legend.map(item => {
             const { Icon, name } = item;
             return (
               <span>

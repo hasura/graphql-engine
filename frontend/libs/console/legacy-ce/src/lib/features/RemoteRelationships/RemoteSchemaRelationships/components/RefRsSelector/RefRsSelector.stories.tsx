@@ -1,11 +1,12 @@
 import React from 'react';
 import * as z from 'zod';
-import { Story, Meta } from '@storybook/react';
-import { Form } from '@/new-components/Form';
+import { Meta, Story } from '@storybook/react';
+import { action } from '@storybook/addon-actions';
+import { SimpleForm } from '@/new-components/Form';
 import {
+  refRemoteSchemaSelectorKey,
   RefRsSelector,
   RefRsSelectorProps,
-  refRemoteSchemaSelectorKey,
 } from './RefRsSelector';
 
 const defaultValues = {
@@ -17,19 +18,20 @@ export default {
     'Features/Remote Relationships/Components/Reference Remote Schema Selector',
   component: RefRsSelector,
   decorators: [
-    (StoryComponent) => (
-      <Form
+    StoryComponent => (
+      <SimpleForm
         schema={z.any()}
-        onSubmit={(o) => console.log(o)}
+        onSubmit={action('onSubmit')}
         options={{ defaultValues }}
+        className="p-4"
       >
-        {() => <StoryComponent />}
-      </Form>
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
 } as Meta;
 
-export const Primary: Story<RefRsSelectorProps> = (args) => (
+export const Primary: Story<RefRsSelectorProps> = args => (
   <RefRsSelector {...args} />
 );
 Primary.args = {

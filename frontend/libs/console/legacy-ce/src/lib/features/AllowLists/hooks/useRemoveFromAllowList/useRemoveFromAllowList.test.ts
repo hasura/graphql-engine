@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useRemoveFromAllowList } from './useRemoveFromAllowList';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -11,7 +11,7 @@ afterAll(() => server.close());
 
 describe('useRemoveFromAllowList', () => {
   beforeEach(() => {
-    server.use(...handlers(0, ''));
+    server.use(...handlers({ url: '' }));
   });
 
   test('should work correctly when deleting an existing collection', async () => {

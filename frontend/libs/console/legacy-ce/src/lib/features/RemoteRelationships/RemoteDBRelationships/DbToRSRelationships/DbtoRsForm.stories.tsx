@@ -15,7 +15,7 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story<DbToRsFormProps> = (args) => (
+export const Primary: Story<DbToRsFormProps> = args => (
   <div>
     <h1 className="text-2xl bold">DbToRsForm</h1>
     <br />
@@ -51,10 +51,10 @@ Primary.args = {
   },
 };
 
-export const PlaygroundWithPrimaryTest: Story<DbToRsFormProps> = (args) => (
+export const PlaygroundWithPrimaryTest: Story<DbToRsFormProps> = args => (
   <DbToRsForm
     {...args}
-    onComplete={(d) => {
+    onComplete={d => {
       // eslint-disable-next-line no-alert
       alert(JSON.stringify(d, null, 2));
     }}
@@ -102,7 +102,7 @@ PlaygroundWithPrimaryTest.play = async ({ canvasElement }) => {
   userEvent.click(submitButton);
 };
 
-export const EditMode: Story<DbToRsFormProps> = (args) => (
+export const EditMode: Story<DbToRsFormProps> = args => (
   <div>
     <h1 className="text-2xl bold">DbToRsForm</h1>
     <br />
@@ -127,7 +127,7 @@ export const EditMode: Story<DbToRsFormProps> = (args) => (
     <br />
     <DbToRsForm
       {...args}
-      onComplete={(d) => {
+      onComplete={d => {
         // eslint-disable-next-line no-alert
         alert(JSON.stringify(d, null, 2));
       }}
@@ -156,10 +156,10 @@ EditMode.args = {
 
 let callbackResponse = {};
 
-export const PlaygroundWithEditModeTest: Story<DbToRsFormProps> = (args) => (
+export const PlaygroundWithEditModeTest: Story<DbToRsFormProps> = args => (
   <DbToRsForm
     {...args}
-    onComplete={(d) => {
+    onComplete={d => {
       callbackResponse = d;
     }}
   />
@@ -168,7 +168,7 @@ export const PlaygroundWithEditModeTest: Story<DbToRsFormProps> = (args) => (
 PlaygroundWithEditModeTest.args = EditMode.args;
 
 PlaygroundWithEditModeTest.play = async ({ canvasElement }) => {
-  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
   const canvas = within(canvasElement);
 

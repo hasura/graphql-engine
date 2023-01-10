@@ -156,7 +156,7 @@ data RestType
   | DECIMAL
   | BIGDECIMAL
   | STRUCT -- (same as RECORD).
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance FromJSON RestType where
   parseJSON j = do
@@ -199,7 +199,7 @@ getTables BigQuerySourceConfig {..} =
 getTablesForDataSet ::
   MonadIO m =>
   BigQueryConnection ->
-  Text ->
+  BigQueryDataset ->
   m (Either RestProblem [RestTable])
 getTablesForDataSet conn dataSet = do
   result <-
@@ -235,12 +235,13 @@ getTablesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack (_bqProjectId conn)
-            <> "/datasets/"
-            <> T.unpack dataSet
-            <> "/tables?alt=json&"
-            <> T.unpack (encodeParams extraParameters)
+          T.unpack $
+            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+              <> getBigQueryProjectId (_bqProjectId conn)
+              <> "/datasets/"
+              <> getBigQueryDataset dataSet
+              <> "/tables?alt=json&"
+              <> encodeParams extraParameters
         extraParameters = pageTokenParam
           where
             pageTokenParam =
@@ -252,7 +253,7 @@ getTablesForDataSet conn dataSet = do
 getTable ::
   MonadIO m =>
   BigQueryConnection ->
-  Text ->
+  BigQueryDataset ->
   Text ->
   m (Either RestProblem RestTable)
 getTable conn dataSet tableId = do
@@ -274,14 +275,15 @@ getTable conn dataSet tableId = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack (_bqProjectId conn)
-            <> "/datasets/"
-            <> T.unpack dataSet
-            <> "/tables/"
-            <> T.unpack tableId
-            <> "?alt=json&"
-            <> T.unpack (encodeParams extraParameters)
+          T.unpack $
+            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+              <> getBigQueryProjectId (_bqProjectId conn)
+              <> "/datasets/"
+              <> getBigQueryDataset dataSet
+              <> "/tables/"
+              <> tableId
+              <> "?alt=json&"
+              <> encodeParams extraParameters
         extraParameters = []
 
 encodeParams :: [(Text, Text)] -> Text
@@ -307,7 +309,7 @@ data RestArgument = RestArgument
     _raName :: Maybe Text,
     _raDataType :: Maybe RestType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestArgument where
   parseJSON =
@@ -334,7 +336,7 @@ data RestStandardSqlField = RestStandardSqlField
     _rssfName :: Maybe Text,
     _rssType :: Maybe RestType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestStandardSqlField where
   parseJSON =
@@ -359,7 +361,7 @@ instance FromJSON RestStandardSqlField where
 data RestStandardSqlTableType = RestStandardSqlTableType
   { _rrttColumns :: [RestStandardSqlField]
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestStandardSqlTableType where
   parseJSON = genericParseJSON hasuraJSON
@@ -371,7 +373,7 @@ data RestRoutineReference = RestRoutineReference
     projectId :: Text,
     routineId :: Text
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestRoutineReference
 
@@ -391,7 +393,7 @@ data RestRoutine = RestRoutine
     -- | Routines defined with 'RETURNS TABLE' clause has this information
     returnTableType :: Maybe RestStandardSqlTableType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 instance FromJSON RestRoutine
 
@@ -422,7 +424,7 @@ getRoutines BigQuerySourceConfig {..} =
 getRoutinesForDataSet ::
   MonadIO m =>
   BigQueryConnection ->
-  Text ->
+  BigQueryDataset ->
   m (Either RestProblem [RestRoutine])
 getRoutinesForDataSet conn dataSet = do
   liftIO (catchAny (run Nothing mempty) (pure . Left . GetRoutineProblem))
@@ -446,12 +448,13 @@ getRoutinesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack (_bqProjectId conn)
-            <> "/datasets/"
-            <> T.unpack dataSet
-            <> "/routines?alt=json&"
-            <> T.unpack (encodeParams extraParameters)
+          T.unpack $
+            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+              <> getBigQueryProjectId (_bqProjectId conn)
+              <> "/datasets/"
+              <> getBigQueryDataset dataSet
+              <> "/routines?alt=json&"
+              <> encodeParams extraParameters
         extraParameters = pageTokenParam <> readMaskParam
           where
             pageTokenParam =

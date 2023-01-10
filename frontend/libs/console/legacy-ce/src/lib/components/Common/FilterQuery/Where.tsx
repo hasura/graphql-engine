@@ -13,7 +13,7 @@ type Props = {
   table: BaseTable;
 };
 
-const Where: React.FC<Props> = (props) => {
+const Where: React.FC<Props> = props => {
   const { filters, setFilters, table } = props;
 
   return (
@@ -68,7 +68,7 @@ const Where: React.FC<Props> = (props) => {
                     -- column --
                   </option>
                 ) : null}
-                {table.columns.map((c) => (
+                {table.columns.map(c => (
                   <option key={c.column_name} value={c.column_name}>
                     {c.column_name}
                   </option>
@@ -87,7 +87,7 @@ const Where: React.FC<Props> = (props) => {
                     -- op --
                   </option>
                 ) : null}
-                {allOperators.map((o) => (
+                {allOperators.map(o => (
                   <option key={o.operator} value={o.operator}>
                     {`[${o.alias}] ${o.name}`}
                   </option>

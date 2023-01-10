@@ -155,14 +155,7 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 
 			// populate !include syntax
 			var tablesKey []struct {
-				Table struct {
-					Name string `yaml:"name"`
-					// Depending on the datasource the namespacing parameter can change.
-					// for example in pg and mssql the namespacing is done with the concept of schemas
-					// and in cases like bigquery it'll be called "dataset"
-					Schema  *string `yaml:"schema"`
-					Dataset *string `yaml:"dataset"`
-				} `yaml:"table"`
+				Table yaml.Node `yaml:"table"`
 			}
 			tablebs, err := yaml.Marshal(source.Tables)
 			if err != nil {
@@ -176,18 +169,10 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 				return nil, t.error(err)
 			}
 			for idx, table := range tablesKey {
-				var tableNamespaceIdentifier string
-				// according to what namespacing parameter is set w.r.t to the source
-				// return the name of the namespacing identifier
-				// for pg and mssql it'll be schema name
-				// for big query this will be dataset name
-				if table.Table.Schema != nil {
-					tableNamespaceIdentifier = *table.Table.Schema
-				} else if table.Table.Dataset != nil {
-					tableNamespaceIdentifier = *table.Table.Dataset
+				tableFileName, err := getTableYamlFileName(table.Table)
+				if err != nil {
+					return nil, t.error(err)
 				}
-
-				tableFileName := fmt.Sprintf("%s_%s.yaml", tableNamespaceIdentifier, table.Table.Name)
 				tableIncludeTag := yaml.Node{
 					Kind:  yaml.ScalarNode,
 					Tag:   "!!str",

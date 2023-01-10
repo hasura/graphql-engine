@@ -42,7 +42,7 @@ export default {
   },
 } as ComponentMeta<typeof QueryScreen>;
 
-export const Base: Story<Props> = (args) => (
+export const Base: Story<Props> = args => (
   <QueryScreen
     schemaImage={args.schemaImage}
     onRunHandler={args.onRunHandler}

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import Toggle from '../../../Common/Toggle/Toggle';
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -37,33 +38,35 @@ const Migrations = ({ dispatch, migrationMode }) => {
   };
 
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
-    >
-      <Helmet title="Migrations - Data | Hasura" />
-      <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Database Migrations
-        </h2>
-        <div className="clearfix" />
-      </div>
-      <div className={styles.add_mar_top}>
-        <div className={`${styles.padd_left_remove} col-xs-8`}>
-          {getNotesSection()}
+    <Analytics name="Migrations" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
+      >
+        <Helmet title="Migrations - Data | Hasura" />
+        <div className={styles.subHeader}>
+          <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+            Database Migrations
+          </h2>
+          <div className="clearfix" />
         </div>
-        <div className="clearfix" />
-        <div className={styles.migration_mode + ' ' + styles.add_mar_top}>
-          <label>
-            <span> Allow Postgres schema changes via console </span>
-            <Toggle
-              checked={migrationMode}
-              icons={false}
-              onChange={handleMigrationModeToggle}
-            />
-          </label>
+        <div className={styles.add_mar_top}>
+          <div className={`${styles.padd_left_remove} col-xs-8`}>
+            {getNotesSection()}
+          </div>
+          <div className="clearfix" />
+          <div className={styles.migration_mode + ' ' + styles.add_mar_top}>
+            <label>
+              <span> Allow Postgres schema changes via console </span>
+              <Toggle
+                checked={migrationMode}
+                icons={false}
+                onChange={handleMigrationModeToggle}
+              />
+            </label>
+          </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

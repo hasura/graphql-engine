@@ -4,14 +4,13 @@ import { z } from 'zod';
 import { AllowedRESTMethods } from '@/metadata/types';
 import { isQueryValid } from '@/components/Services/ApiExplorer/Rest/utils';
 import {
-  Form,
+  Checkbox,
+  CodeEditorField,
   InputField,
   Textarea,
-  CodeEditorField,
-  Checkbox,
+  useConsoleForm,
 } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
-import { UseFormReturn } from 'react-hook-form';
 
 type RestEndpointFormProps = {
   /**
@@ -76,72 +75,70 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
   onSubmit = () => {},
   onCancel = () => {},
 }) => {
-  const restEndpointFormRef = React.useRef<UseFormReturn>(null);
-  setTimeout(() => {
-    restEndpointFormRef.current?.setFocus('name');
-  }, 100);
+  const {
+    methods: { setFocus },
+    Form,
+  } = useConsoleForm({
+    schema: validationSchema,
+    options: {
+      defaultValues: formState,
+    },
+  });
+
+  React.useEffect(() => {
+    setFocus('name');
+  }, []);
+
   return (
-    <Form
-      ref={restEndpointFormRef}
-      schema={validationSchema}
-      className="p-4"
-      options={{
-        defaultValues: formState,
-      }}
-      onSubmit={onSubmit}
-    >
-      {() => (
-        <div className="space-y-2">
-          <h1 className="text-xl font-semibold mb-sm">
-            {{ create: 'Create', edit: 'Edit' }[mode]} Endpoint
-          </h1>
-          <InputField name="name" label="Name *" placeholder="Name" />
-          <Textarea
-            name="comment"
-            label="Description"
-            placeholder="Description"
-          />
-          <InputField
-            name="url"
-            label="Location *"
-            placeholder="Location"
-            description="This is the location of your endpoint (must be unique). Any parameterized variables (eg. http://localhost:8080/api/rest/example/:id will be made available to your request."
-            prependLabel="http://localhost:8080/api/rest/"
-          />
-          <Checkbox
-            name="methods"
-            label="Methods *"
-            options={[
-              { value: 'GET', label: 'GET' },
-              { value: 'POST', label: 'POST' },
-              { value: 'PUT', label: 'PUT' },
-              { value: 'PATCH', label: 'PATCH' },
-              { value: 'DELETE', label: 'DELETE' },
-            ]}
-            orientation="horizontal"
-          />
-          <CodeEditorField
-            name="request"
-            label="GraphQL Request *"
-            tooltip="The request your endpoint will run. All variables will be mapped to REST endpoint variables."
-          />
-          <div className="flex gap-4">
-            <Button type="button" onClick={onCancel} disabled={loading}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              mode="primary"
-              isLoading={loading}
-              loadingText={
-                { create: 'Creating...', edit: 'Modifying ..' }[mode]
-              }
-            >
-              {{ create: 'Create', edit: 'Modify' }[mode]}
-            </Button>
-          </div>
+    <Form onSubmit={onSubmit} className="p-9">
+      <div className="space-y-2 w-full max-w-xl">
+        <h1 className="text-xl font-semibold mb-sm">
+          {{ create: 'Create', edit: 'Edit' }[mode]} Endpoint
+        </h1>
+        <InputField name="name" label="Name *" placeholder="Name" />
+        <Textarea
+          name="comment"
+          label="Description"
+          placeholder="Description"
+        />
+        <InputField
+          name="url"
+          label="Location *"
+          placeholder="Location"
+          description="This is the location of your endpoint (must be unique). Any parameterized variables (eg. http://localhost:8080/api/rest/example/:id will be made available to your request."
+          prependLabel="http://localhost:8080/api/rest/"
+        />
+        <Checkbox
+          name="methods"
+          label="Methods *"
+          options={[
+            { value: 'GET', label: 'GET' },
+            { value: 'POST', label: 'POST' },
+            { value: 'PUT', label: 'PUT' },
+            { value: 'PATCH', label: 'PATCH' },
+            { value: 'DELETE', label: 'DELETE' },
+          ]}
+          orientation="horizontal"
+        />
+        <CodeEditorField
+          name="request"
+          label="GraphQL Request *"
+          tooltip="The request your endpoint will run. All variables will be mapped to REST endpoint variables."
+        />
+        <div className="flex gap-4">
+          <Button type="button" onClick={onCancel} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            mode="primary"
+            isLoading={loading}
+            loadingText={{ create: 'Creating...', edit: 'Modifying ..' }[mode]}
+          >
+            {{ create: 'Create', edit: 'Modify' }[mode]}
+          </Button>
         </div>
-      )}
+      </div>
     </Form>
   );
 };

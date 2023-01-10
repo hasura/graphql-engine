@@ -11,13 +11,13 @@ export default {
   },
 } as ComponentMeta<typeof Dialog>;
 
-export const Base: Story<DialogProps> = (args) => <Dialog {...args} />;
+export const Base: Story<DialogProps> = args => <Dialog {...args} />;
 
 Base.args = {
   children: 'Body of the modal',
 };
 
-export const Complete: Story<DialogProps & FooterProps> = (args) => (
+export const Complete: Story<DialogProps & FooterProps> = args => (
   <Dialog
     hasBackdrop={args.hasBackdrop}
     title={args.title}
@@ -46,7 +46,7 @@ Complete.args = {
   isLoading: false,
 };
 
-export const CustomFooter: Story<DialogProps & FooterProps> = (args) => (
+export const CustomFooter: Story<DialogProps & FooterProps> = args => (
   <Dialog
     hasBackdrop={args.hasBackdrop}
     title={args.title}

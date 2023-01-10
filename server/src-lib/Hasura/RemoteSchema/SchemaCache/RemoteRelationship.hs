@@ -65,8 +65,12 @@ errorToText = \case
           case NE.nonEmpty $ map dquote $ toList allowedJoinFields of
             Nothing -> ""
             Just allowedFields -> ", the allowed fields are " <> englishList "or" allowedFields
-     in "field with name " <> fieldName <<> "is not provided by the lhs entity" <>> lhs
-          <<> "for defining a join condition" <> helpText
+     in "field with name "
+          <> fieldName
+            <<> "is not provided by the lhs entity"
+            <>> lhs
+            <<> "for defining a join condition"
+          <> helpText
   ExpectedTypeButGot expTy actualTy ->
     "expected type " <> G.getBaseType expTy <<> " but got " <>> G.getBaseType actualTy
   InvalidType ty err ->
@@ -86,7 +90,8 @@ errorToText = \case
   IDTypeJoin typeName ->
     "Only ID, Int, uuid or String scalar types can be joined to the ID type, but received " <>> typeName
   CannotGenerateGraphQLTypeName typeName ->
-    "the name of the scalar type " <> toTxt typeName
+    "the name of the scalar type "
+      <> toTxt typeName
       <> " is not a valid GraphQL identifier, "
       <> " so columns of such type cannot be used in a remote schema mapping "
 
@@ -104,14 +109,17 @@ validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, intros
   requiredLHSJoinFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
     fmap (fieldName,) $
       onNothing (HM.lookup fieldName lhsJoinFields) $
-        throwError $ JoinFieldNonExistent lhsIdentifier fieldName $ HM.keysSet lhsJoinFields
+        throwError $
+          JoinFieldNonExistent lhsIdentifier fieldName $
+            HM.keysSet lhsJoinFields
   hasuraFieldsVariablesMap <-
     fmap HM.fromList $ for requiredLHSJoinFields $ \(fieldName, field) -> (,field) <$> hasuraFieldToVariable fieldName
   let schemaDoc = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <-
     onNothing (lookupObject schemaDoc queryRootName) $
-      throwError $ FieldNotFoundInRemoteSchema queryRootName
+      throwError $
+        FieldNotFoundInRemoteSchema queryRootName
   (_, (leafParamMap, leafTypeMap)) <-
     foldlM
       (buildRelationshipTypeInfo hasuraFieldsVariablesMap schemaDoc)
@@ -465,16 +473,16 @@ isTypeCoercible actualType expectedType =
       (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
    in if
           | expectedBaseType == GName._ID ->
-            bool
-              (throwError $ IDTypeJoin actualBaseType)
-              (pure ())
-              -- Check under `Input Coercion` https://spec.graphql.org/June2018/#sec-ID
-              -- We can also include the `ID` type in the below list but it will be
-              -- extraneous because at the time of writing this, we don't generate
-              -- the `ID` type in the DB schema
-              ( G.unName actualBaseType
-                  `elem` ["ID", "Int", "String", "bigint", "smallint", "uuid"]
-              )
+              bool
+                (throwError $ IDTypeJoin actualBaseType)
+                (pure ())
+                -- Check under `Input Coercion` https://spec.graphql.org/June2018/#sec-ID
+                -- We can also include the `ID` type in the below list but it will be
+                -- extraneous because at the time of writing this, we don't generate
+                -- the `ID` type in the DB schema
+                ( G.unName actualBaseType
+                    `elem` ["ID", "Int", "String", "bigint", "smallint", "uuid"]
+                )
           | actualBaseType /= expectedBaseType -> raiseValidationError
           -- we cannot coerce two types with different nesting levels,
           -- for example, we cannot coerce [Int] to [[Int]]

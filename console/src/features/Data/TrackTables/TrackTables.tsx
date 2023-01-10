@@ -33,6 +33,7 @@ export const TrackTables = ({ dataSourceName }: Props) => {
   return (
     <Tabs.Root
       defaultValue="untracked"
+      data-testid="track-tables"
       className="space-y-4"
       onValueChange={value =>
         setTab(value === 'tracked' ? 'tracked' : 'untracked')

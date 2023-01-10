@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
     runCreateScheduledEvent,
     runDeleteScheduledEvent,
     runGetScheduledEvents,
-    runGetEventInvocations,
+    runGetScheduledEventInvocations,
     populateInitialCronTriggerEvents,
     runGetCronTriggers,
   )
@@ -195,19 +195,19 @@ runGetScheduledEvents gse = do
     SECron name -> checkExists name
   encJFromJValue <$> fetchScheduledEvents gse
 
-runGetEventInvocations ::
+runGetScheduledEventInvocations ::
   ( CacheRM m,
     MonadMetadataStorageQueryAPI m
   ) =>
-  GetEventInvocations ->
+  GetScheduledEventInvocations ->
   m EncJSON
-runGetEventInvocations getEventInvocations@GetEventInvocations {..} = do
+runGetScheduledEventInvocations getEventInvocations@GetScheduledEventInvocations {..} = do
   case _geiInvocationsBy of
     GIBEventId _ _ -> pure ()
     GIBEvent event -> case event of
       SEOneOff -> pure ()
       SECron name -> checkExists name
-  WithOptionalTotalCount countMaybe invocations <- fetchInvocations getEventInvocations
+  WithOptionalTotalCount countMaybe invocations <- fetchScheduledEventInvocations getEventInvocations
   pure $
     encJFromJValue $
       J.object $

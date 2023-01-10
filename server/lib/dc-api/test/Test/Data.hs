@@ -25,20 +25,15 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
+    _RelationshipFieldRows,
     orderByColumn,
-    guardQueryResponse,
-    guardedQuery,
-    guardErrorResponse,
-    guardedCapabilities,
-    guardCapabilitiesResponse,
-    errorQuery,
   )
 where
 
 import Codec.Compression.GZip qualified as GZip
 import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?))
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Number, _String)
@@ -58,11 +53,7 @@ import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import Hasura.Backends.DataConnector.API (capabilitiesCase, queryCase)
 import Hasura.Backends.DataConnector.API qualified as API
-import Servant.API qualified as Servant
-import Servant.Client ((//))
-import Servant.Client qualified as Servant
 import Text.XML qualified as XML
 import Text.XML.Lens qualified as XML
 import Prelude
@@ -450,6 +441,7 @@ applyNameCasing :: NameCasing -> Text -> Text
 applyNameCasing casing text = case casing of
   PascalCase -> text
   Lowercase -> Text.toLower text
+  Uppercase -> Text.toUpper text
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
@@ -516,6 +508,9 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
 
+_RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
+_RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
+
 columnField :: Text -> API.ScalarType -> API.Field
 columnField name scalarType = API.ColumnField (API.ColumnName name) scalarType
 
@@ -528,33 +523,3 @@ currentComparisonColumn columnName scalarType = API.ComparisonColumn API.Current
 orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
   API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection
-
-guardQueryResponse :: Servant.Union API.QueryResponses -> IO API.QueryResponse
-guardQueryResponse = queryCase defaultAction successAction errorAction
-  where
-    defaultAction = fail "Expected QueryResponse"
-    successAction q = pure q
-    errorAction e = fail $ "Expected QueryResponse, got " <> show e
-
-guardedQuery :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.QueryRequest -> IO API.QueryResponse
-guardedQuery api sourceName config queryRequest = guardQueryResponse =<< (api // API._query) sourceName config queryRequest
-
-guardedCapabilities :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> IO API.CapabilitiesResponse
-guardedCapabilities api = guardCapabilitiesResponse =<< (api // API._capabilities)
-
-guardCapabilitiesResponse :: Servant.Union API.CapabilitiesResponses -> IO API.CapabilitiesResponse
-guardCapabilitiesResponse = capabilitiesCase defaultAction successAction errorAction
-  where
-    defaultAction = fail "Expected QueryResponse"
-    successAction c = pure c
-    errorAction e = fail $ "Expected QueryResponse, got " <> show e
-
-guardErrorResponse :: Servant.Union API.QueryResponses -> IO API.ErrorResponse
-guardErrorResponse = queryCase defaultAction successAction errorAction
-  where
-    defaultAction = fail "Expected ErrorResponse"
-    successAction q = fail $ "Expected ErrorResponse, got " <> show q
-    errorAction e = pure e
-
-errorQuery :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.QueryRequest -> IO API.ErrorResponse
-errorQuery api sourceName config queryRequest = guardErrorResponse =<< (api // API._query) sourceName config queryRequest

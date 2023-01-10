@@ -1,6 +1,7 @@
 import React from 'react';
 import { MdRefresh } from 'react-icons/md';
 import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
 const iconMap = {
@@ -56,23 +57,24 @@ export function NeonBanner(props: Props) {
           database branching.
         </div>
         <div>
-          <Button
-            data-trackid="neon-connect-db-button"
-            data-testid="neon-connect-db-button"
-            mode={status.status === 'loading' ? 'default' : 'primary'}
-            isLoading={status.status === 'loading'}
-            loadingText={buttonText}
-            size="md"
-            icon={icon ? iconMap[icon] : undefined}
-            onClick={() => {
-              if (!isButtonDisabled) {
-                onClickConnect();
-              }
-            }}
-            disabled={isButtonDisabled}
-          >
-            <div className="text-xs 2xl:text-sm">{props.buttonText}</div>
-          </Button>
+          <Analytics name="neon-connect-db-button" passHtmlAttributesToChildren>
+            <Button
+              data-testid="neon-connect-db-button"
+              mode={status.status === 'loading' ? 'default' : 'primary'}
+              isLoading={status.status === 'loading'}
+              loadingText={buttonText}
+              size="md"
+              icon={icon ? iconMap[icon] : undefined}
+              onClick={() => {
+                if (!isButtonDisabled) {
+                  onClickConnect();
+                }
+              }}
+              disabled={isButtonDisabled}
+            >
+              <div className="text-xs 2xl:text-sm">{props.buttonText}</div>
+            </Button>
+          </Analytics>
         </div>
       </div>
       {status.status === 'error' && (

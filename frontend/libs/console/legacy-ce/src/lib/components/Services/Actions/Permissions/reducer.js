@@ -2,7 +2,7 @@ import defaultState from './state';
 
 const SET_ACTION_PERMISSIONS = 'Actions/Permissions/SET_ACTION_PERMISSIONS';
 
-export const setActionPermissiosn = (perms) => ({
+export const setActionPermissiosn = perms => ({
   type: SET_ACTION_PERMISSIONS,
   perms,
 });
@@ -21,7 +21,7 @@ export const permCloseEdit = () => ({
 });
 
 const SET_ROLE_NAME = 'Actions/Permissions/SET_ROLE_NAME';
-export const permSetRoleName = (rolename) => ({
+export const permSetRoleName = rolename => ({
   type: SET_ROLE_NAME,
   rolename,
 });

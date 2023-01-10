@@ -1,7 +1,7 @@
 ---
-sidebar_label: Event trigger payload
+sidebar_label: Event Trigger payload
 sidebar_position: 2
-description: Event trigger payload in Hasura
+description: Event Trigger payload in Hasura
 keywords:
   - hasura
   - docs
@@ -9,11 +9,14 @@ keywords:
   - payload
 ---
 
-# Event trigger payload
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Event Trigger Payload
 
 ## Introduction
 
-The following is the payload and delivery mechanism of an event to the webhook when an event trigger is invoked.
+The following is the payload and delivery mechanism of an event to the webhook when an Event Trigger is invoked.
 
 ## HTTP request method
 
@@ -47,16 +50,19 @@ Content-Type: application/json
 }
 ```
 
-| Key               | Type                      | Description                                                                                                               |
-| ----------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| session-variables | [Object](#object) or NULL | Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found) |
-| op-name           | [OpName](#opname)         | Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"                                                 |
-| column-values     | [Object](#object)         | Key-value pairs of column name and their values of the table                                                              |
-| timestamp         | String                    | Timestamp at which event was created                                                                                      |
-| uuid              | String                    | UUID identifier for the event                                                                                             |
-| name-of-trigger   | String                    | Name of the trigger                                                                                                       |
-| schema-name       | String                    | Name of the schema for the table                                                                                          |
-| table-name        | String                    | Name of the table                                                                                                         |
+| Key               | Type                      | Description                                                                                                                                                 |
+| ----------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| session-variables | [Object](#object) or NULL | Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found) (**Only available for Postgres**) |
+| op-name           | [OpName](#opname)         | Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"                                                                                   |
+| column-values     | [Object](#object)         | Key-value pairs of column name and their values of the table                                                                                                |
+| timestamp         | String                    | Timestamp at which event was created                                                                                                                        |
+| uuid              | String                    | UUID identifier for the event                                                                                                                               |
+| name-of-trigger   | String                    | Name of the trigger                                                                                                                                         |
+| schema-name       | String                    | Name of the schema for the table                                                                                                                            |
+| table-name        | String                    | Name of the table                                                                                                                                           |
+
+<Tabs groupId="user-preference" className="json-payloads">
+<TabItem value="postgres" label="Postgres">
 
 **In case of**:
 
@@ -79,7 +85,7 @@ Content-Type: application/json
   [composite type comparison](https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON)
   is used to compare the old and new rows. If rows contain columns, which cannot be compared using `<>` operator, then
   internal binary representation of rows by Postgres is compared.
-- [Table computed fields](/schema/postgres/computed-fields.mdx) are not included in the event trigger payload data
+- [Table computed fields](/schema/postgres/computed-fields.mdx) are not included in the Event Trigger payload data
 
 :::
 
@@ -113,6 +119,72 @@ Content-Type: application/json
   }
 }
 ```
+
+</TabItem>
+<TabItem value="mssql" label="MSSQL">
+
+**In case of**:
+
+- INSERT
+  - `event.data.old` will be `null`
+  - `event.data.new` will contain the insert row
+- UPDATE
+  - If a row is updated and the primary key is also updated
+    - `event.data.old` will be `null`
+    - `event.data.new` will contain the values after the update
+  - If a row is updated and the primary key is unchanged
+    - `event.data.old` will be values before the update
+    - `event.data.new` will contain the values after the update
+- DELETE
+  - `event.data.old` will contain the row that is deleted
+  - `event.data.new` will be `null`
+- MANUAL
+  - `event.data.old` will be `null`
+  - `event.data.new` will contain the current row
+
+:::info Note
+
+- In case of `UPDATE`, the events are delivered only if new data is distinct from old data. We use the primary keys to
+  join the temporary tables `inserted` and `deleted` tables to correlate the old and new data.
+- `UPDATE` event triggers will only work on tables which have primary keys.
+- Since we use the primary key to co-relate DELETED and INSERTED table, if the primary key is updated then it is not
+  possible to correlate the `old` and `new` data. Hence, only `new` data is sent in this case.
+
+:::
+
+**For example**:
+
+```json
+{
+  "id": "85558393-c75d-4d2f-9c15-e80591b83894",
+  "created_at": "2018-09-05T07:14:21.601701Z",
+  "trigger": {
+    "name": "insert_user_trigger"
+  },
+  "table": {
+    "schema": "public",
+    "name": "users"
+  },
+  "event": {
+    "session_variables": {
+      "x-hasura-role": "admin",
+      "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
+      "x-hasura-user-id": "1"
+    },
+    "op": "INSERT",
+    "data": {
+      "old": null,
+      "new": {
+        "id": "42",
+        "name": "john doe"
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
 
 ## Syntax definitions
 

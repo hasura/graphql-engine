@@ -1,7 +1,14 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
+module Hasura.Backends.DataConnector.API.V0.QuerySpec
+  ( spec,
+    genFieldName,
+    genFieldMap,
+    genField,
+    genFieldValue,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Aeson.QQ.Simple (aesonQQ)
@@ -14,7 +21,7 @@ import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -143,27 +150,26 @@ spec = do
             "aggregates": {} }
         |]
 
-genField :: MonadGen m => m Field
+genField :: Gen Field
 genField =
   Gen.recursive
     Gen.choice
     [ColumnField <$> genColumnName <*> genScalarType]
     [RelField <$> genRelationshipField]
 
-genFieldName :: MonadGen m => m FieldName
+genFieldName :: Gen FieldName
 genFieldName = FieldName <$> genArbitraryAlphaNumText defaultRange
 
-genFieldMap :: MonadGen m => m value -> m (HashMap FieldName value)
-genFieldMap genValue' =
-  HashMap.fromList <$> Gen.list defaultRange ((,) <$> genFieldName <*> genValue')
+genFieldMap :: Gen value -> Gen (HashMap FieldName value)
+genFieldMap genValue' = genHashMap genFieldName genValue' defaultRange
 
-genRelationshipField :: MonadGen m => m RelationshipField
+genRelationshipField :: Gen RelationshipField
 genRelationshipField =
   RelationshipField
     <$> genRelationshipName
     <*> genQuery
 
-genQuery :: MonadGen m => m Query
+genQuery :: Gen Query
 genQuery =
   Query
     <$> Gen.maybe (genFieldMap genField)
@@ -173,21 +179,21 @@ genQuery =
     <*> Gen.maybe genExpression
     <*> Gen.maybe genOrderBy
 
-genQueryRequest :: MonadGen m => m QueryRequest
+genQueryRequest :: Gen QueryRequest
 genQueryRequest =
   QueryRequest
     <$> genTableName
     <*> Gen.list defaultRange genTableRelationships
     <*> genQuery
 
-genFieldValue :: MonadGen m => m FieldValue
+genFieldValue :: Gen FieldValue
 genFieldValue =
   Gen.recursive
     Gen.choice
     [mkColumnFieldValue <$> genValue]
     [mkRelationshipFieldValue <$> genQueryResponse]
 
-genQueryResponse :: MonadGen m => m QueryResponse
+genQueryResponse :: Gen QueryResponse
 genQueryResponse =
   QueryResponse
     <$> Gen.maybe (Gen.list defaultRange (genFieldMap genFieldValue))

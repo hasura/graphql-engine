@@ -6,7 +6,7 @@ import { expect } from '@storybook/jest';
 import { LegacyRunQuery } from './LegacyRunQuery';
 
 export default {
-  title: 'Browse Rows/Run Query 📁/Legacy 🦠',
+  title: 'GDC Console/Browse Rows/parts/Run Query 📁/Legacy 🦠',
   component: LegacyRunQuery,
 } as ComponentMeta<typeof LegacyRunQuery>;
 
@@ -63,6 +63,12 @@ export const Primary: ComponentStory<typeof LegacyRunQuery> = () => (
 
 Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
+
+  // click on the filter add button
+  userEvent.click((await canvas.findAllByText('Add'))[0]);
+
+  // click on the sort add button
+  userEvent.click((await canvas.findAllByText('Add'))[1]);
 
   expect(await canvas.findAllByDisplayValue('Select a column')).toHaveLength(2);
   expect(await canvas.findByDisplayValue('Select an operator')).toBeVisible();

@@ -217,17 +217,7 @@ function mssql_start() {
   if [ $MSSQL_RUNNING -eq 0 ]; then
     mssql_launch_container
     MSSQL_RUNNING=1
-    if [[ "$(uname -m)" == 'arm64' ]]; then
-      # mssql_wait uses the tool sqlcmd to wait for a database connection which unfortunately
-      # is not available for the azure-sql-edge docker image - which is the only image from microsoft
-      # that runs on M1 computers. So we sleep for 20 seconds, cross fingers and hope for the best
-      # see https://github.com/microsoft/mssql-docker/issues/668
-
-      echo "Sleeping for 20 sec while mssql comes up..."
-      sleep 20
-    else
-      mssql_wait
-    fi
+    mssql_wait
   fi
 }
 
@@ -408,12 +398,6 @@ elif [ "$MODE" = "mssql" ]; then
   mssql_start
   echo_pretty "MSSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
   echo_pretty "shutdown this container."
-  echo_pretty ""
-  echo_pretty "You can use the following to connect to the running instance:"
-  echo_pretty "    $ $MSSQL_DOCKER"
-  echo_pretty ""
-  echo_pretty "If you want to import a SQL file into MSSQL:"
-  echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
   echo_pretty "    $MSSQL_CONN_STR"

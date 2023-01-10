@@ -22,7 +22,7 @@ const RemoteRelationshipList: React.FC<Props> = ({
 }) => {
   return (
     <React.Fragment>
-      {relationships.map((r) => (
+      {relationships.map(r => (
         <RemoteRelationshipEditor
           key={r.remote_relationship_name}
           relationship={r}

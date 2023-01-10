@@ -1,0 +1,6 @@
+- table:
+    name: article
+    schema: public
+- table:
+    name: tag
+    schema: public

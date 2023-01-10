@@ -91,7 +91,7 @@ export default {
 
 export const WithLgacyandNewRemoteRelationships: ComponentStory<
   typeof RemoteSchemaRelationshipTable
-> = (args) => <RemoteSchemaRelationshipTable {...args} />;
+> = args => <RemoteSchemaRelationshipTable {...args} />;
 
 WithLgacyandNewRemoteRelationships.args = {
   remoteSchemaRels:

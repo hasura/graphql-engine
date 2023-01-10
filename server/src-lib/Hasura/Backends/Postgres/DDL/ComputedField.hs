@@ -55,18 +55,24 @@ showError qf = \case
   CFVEInvalidTableArgument (ITANotComposite functionArg) ->
     showFunctionTableArgument functionArg <> " is not COMPOSITE type"
   CFVEInvalidTableArgument (ITANotTable ty functionArg) ->
-    showFunctionTableArgument functionArg <> " of type " <> ty
-      <<> " is not the table to which the computed field is being added"
+    showFunctionTableArgument functionArg
+      <> " of type "
+      <> ty
+        <<> " is not the table to which the computed field is being added"
   CFVEInvalidSessionArgument (ISANotFound argName) ->
     argName <<> " is not an input argument of the function " <>> qf
   CFVEInvalidSessionArgument (ISANotJSON functionArg) ->
     showFunctionSessionArgument functionArg <> " is not of type JSON"
   CFVENotBaseReturnType scalarType ->
-    "the function " <> qf <<> " returning type " <> pgScalarTypeToText scalarType
+    "the function "
+      <> qf <<> " returning type "
+      <> pgScalarTypeToText scalarType
       <> " is not a BASE type"
   CFVEReturnTableNotFound table ->
-    "the function " <> qf <<> " returning set of table " <> table
-      <<> " is not tracked or not found in database"
+    "the function "
+      <> qf <<> " returning set of table "
+      <> table
+        <<> " is not tracked or not found in database"
   CFVENoInputArguments ->
     "the function " <> qf <<> " has no input arguments"
   CFVEFunctionVolatile ->
@@ -109,11 +115,14 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
       unless (isJust computedFieldGraphQLName) $
-        MV.dispute $ pure $ CFVENotValidGraphQLName computedField
+        MV.dispute $
+          pure $
+            CFVENotValidGraphQLName computedField
 
       -- Check if function is VOLATILE
       when (rfiFunctionType rawFunctionInfo == FTVOLATILE) $
-        MV.dispute $ pure CFVEFunctionVolatile
+        MV.dispute $
+          pure CFVEFunctionVolatile
 
       -- Validate and resolve return type
       returnType <-
@@ -181,10 +190,16 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
       n ()
     validateTableArgumentType tableArg qpt = do
       when (_qptType qpt /= PGKindComposite) $
-        MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotComposite tableArg
+        MV.dispute $
+          pure $
+            CFVEInvalidTableArgument $
+              ITANotComposite tableArg
       let typeTable = typeToTable qpt
       unless (table == typeTable) $
-        MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotTable typeTable tableArg
+        MV.dispute $
+          pure $
+            CFVEInvalidTableArgument $
+              ITANotTable typeTable tableArg
 
     validateSessionArgumentType ::
       (MV.MonadValidate [ComputedFieldValidateError] n) =>
@@ -193,11 +208,15 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
       n ()
     validateSessionArgumentType sessionArg qpt = do
       unless (isJSONType $ _qptName qpt) $
-        MV.dispute $ pure $ CFVEInvalidSessionArgument $ ISANotJSON sessionArg
+        MV.dispute $
+          pure $
+            CFVEInvalidSessionArgument $
+              ISANotJSON sessionArg
 
     showErrors :: [ComputedFieldValidateError] -> Text
     showErrors allErrors =
-      "the computed field " <> computedField <<> " cannot be added to table "
+      "the computed field "
+        <> computedField <<> " cannot be added to table "
         <> table <<> " "
         <> reasonMessage
       where

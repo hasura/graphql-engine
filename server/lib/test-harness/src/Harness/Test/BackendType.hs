@@ -1,129 +1,65 @@
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 -- | Definition of backend types and a few helper functions.
 module Harness.Test.BackendType
   ( BackendType (..),
-    defaultSource,
-    defaultBackendTypeString,
-    defaultBackendServerUrl,
-    defaultBackendCapabilities,
-    schemaKeyword,
+    BackendTypeConfig (..),
+    parseCapabilities,
+    pattern DataConnectorMock,
+    pattern DataConnectorReference,
+    pattern DataConnectorSqlite,
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Aeson (Value)
 import Data.Aeson.Key (Key)
-import Harness.Quoter.Yaml (yaml)
+import Data.Aeson.Types qualified as Aeson
+import Hasura.Backends.DataConnector.API.V0 qualified as API
 import Hasura.Prelude
+
+--------------------------------------------------------------------------------
+
+data BackendTypeConfig = BackendTypeConfig
+  { backendType :: BackendType,
+    -- | The default hasura metadata source name used for a given
+    -- backend in this test suite project.
+    backendSourceName :: String,
+    -- | The default capabilities for the backend. NOTE: This
+    -- currently only applies to DataConnector backends.
+    backendCapabilities :: Maybe Value,
+    -- | The default hasura metadata backend type used for a given
+    -- backend in this test suite project.
+    backendTypeString :: String,
+    backendDisplayNameString :: String,
+    -- | The default backend URL for the given backend in this test
+    -- suite project.
+    backendServerUrl :: Maybe String,
+    backendSchemaKeyword :: Key
+  }
+
+parseCapabilities :: BackendTypeConfig -> Maybe API.Capabilities
+parseCapabilities = backendCapabilities >=> Aeson.parseMaybe Aeson.parseJSON
 
 -- | A supported backend type.
 -- NOTE: Different data-connector agents are represented by seperate constructors
 --       If we want to be able to test these generatively we may want to have a
---       parameterized constructor for data-connectors in future.
+--       parameterized constructor for new data-connectors in future.
 data BackendType
   = Postgres
-  | MySQL
   | SQLServer
   | BigQuery
   | Citus
   | Cockroach
-  | DataConnectorMock
-  | DataConnectorReference
-  | DataConnectorSqlite
-  deriving (Eq, Show)
+  | DataConnector String
+  deriving (Eq, Ord, Show)
 
--- | The default hasura metadata source name used for a given backend in this test suite project.
-defaultSource :: BackendType -> String
-defaultSource = \case
-  Postgres -> "postgres"
-  MySQL -> "mysql"
-  SQLServer -> "mssql"
-  BigQuery -> "bigquery"
-  Citus -> "citus"
-  Cockroach -> "cockroach"
-  DataConnectorMock -> "chinook_mock"
-  DataConnectorReference -> "chinook_reference"
-  DataConnectorSqlite -> "chinook_sqlite"
+pattern DataConnectorSqlite :: BackendType
+pattern DataConnectorSqlite = DataConnector "sqlite"
 
--- | The default hasura metadata backend type used for a given backend in this test suite project.
-defaultBackendCapabilities :: BackendType -> Maybe Value
-defaultBackendCapabilities = \case
-  DataConnectorSqlite ->
-    Just
-      [yaml|
-        data_schema:
-          supports_primary_keys: true
-          supports_foreign_keys: true
-        scalar_types:
-          DateTime: {}
-        graphql_schema: |-
-          scalar DateTime
-        queries: {}
-        relationships: {}
-        comparisons:
-          subquery:
-            supports_relations: true
-        explain: {}
-        metrics: {}
-        raw: {}
-    |]
-  DataConnectorReference ->
-    Just
-      [yaml|
-        data_schema:
-          supports_primary_keys: true
-          supports_foreign_keys: true
-        queries: {}
-        graphql_schema: |-
-          scalar DateTime
+pattern DataConnectorMock :: BackendType
+pattern DataConnectorMock = DataConnector "mock"
 
-          input DateTimeComparisons {in_year: Int
-            same_day_as: DateTime
-          }
-        relationships: {}
-        comparisons:
-          subquery:
-            supports_relations: true
-        scalar_types:
-          DateTime:
-            comparison_type: DateTimeComparisons
-    |]
-  _ -> Nothing
-
--- | The default hasura metadata backend type used for a given backend in this test suite project.
-defaultBackendTypeString :: BackendType -> String
-defaultBackendTypeString = \case
-  Postgres -> "postgres"
-  MySQL -> "mysql"
-  SQLServer -> "mssql"
-  BigQuery -> "bigquery"
-  Citus -> "citus"
-  Cockroach -> "cockroach"
-  DataConnectorMock -> "mock"
-  DataConnectorReference -> "reference"
-  DataConnectorSqlite -> "sqlite"
-
--- | The default hasura metadata backend type used for a given backend in this test suite project.
-defaultBackendServerUrl :: BackendType -> Maybe String
-defaultBackendServerUrl = \case
-  Postgres -> Nothing
-  MySQL -> Nothing
-  SQLServer -> Nothing
-  BigQuery -> Nothing
-  Citus -> Nothing
-  Cockroach -> Nothing
-  DataConnectorMock -> Nothing
-  DataConnectorReference -> Just "http://localhost:65005"
-  DataConnectorSqlite -> Just "http://localhost:65007"
-
-schemaKeyword :: BackendType -> Key
-schemaKeyword = \case
-  Postgres -> "schema"
-  MySQL -> "schema"
-  SQLServer -> "schema"
-  BigQuery -> "dataset"
-  Citus -> "schema"
-  Cockroach -> "schema"
-  DataConnectorMock -> "schema"
-  DataConnectorReference -> "schema"
-  DataConnectorSqlite -> "schema"
+pattern DataConnectorReference :: BackendType
+pattern DataConnectorReference = DataConnector "reference"

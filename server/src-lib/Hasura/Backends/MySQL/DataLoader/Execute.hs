@@ -385,14 +385,14 @@ joinObjectRows ::
 joinObjectRows wantedFields fieldName leftRow rightRows
   | V.length rightRows /= 1 = Left . BrokenJoinInvariant . foldMap OMap.keys $ rightRows
   | otherwise =
-    let row = V.head rightRows
-     in pure $
-          OMap.insert
-            (DataLoaderPlan.FieldName fieldName)
-            ( RecordOutputValue
-                ( OMap.filterWithKey
-                    (\(DataLoaderPlan.FieldName k) _ -> all (elem k) wantedFields)
-                    row
-                )
-            )
-            leftRow
+      let row = V.head rightRows
+       in pure $
+            OMap.insert
+              (DataLoaderPlan.FieldName fieldName)
+              ( RecordOutputValue
+                  ( OMap.filterWithKey
+                      (\(DataLoaderPlan.FieldName k) _ -> all (elem k) wantedFields)
+                      row
+                  )
+              )
+              leftRow

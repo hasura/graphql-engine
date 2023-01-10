@@ -1,8 +1,10 @@
-import { IconTooltip } from '@/new-components/Tooltip';
 import * as React from 'react';
 import { FieldError } from 'react-hook-form';
 import clsx from 'clsx';
+import Skeleton from 'react-loading-skeleton';
 import { FaExclamationCircle } from 'react-icons/fa';
+
+import { IconTooltip } from '@/new-components/Tooltip';
 
 type FieldWrapperProps = {
   /**
@@ -41,19 +43,23 @@ type FieldWrapperProps = {
   /**
    * The field tooltip label
    */
-  tooltip?: string;
-  /**
-   * Flag indicating wheteher the field is horizontally aligned
-   */
-  horizontal?: boolean;
+  tooltip?: React.ReactNode;
   /**
    * The field data test id for testing
    */
   dataTest?: string;
   /**
+   * Flag indicating wheteher the field is loading
+   */
+  loading?: boolean;
+  /**
    * Removing styling only necessary for the error placeholder
    */
   noErrorPlaceholder?: boolean;
+  /**
+   * Render line breaks in the description
+   */
+  renderDescriptionLineBreaks?: boolean;
 };
 
 export type FieldWrapperPassThroughProps = Omit<
@@ -97,72 +103,96 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     children,
     description,
     tooltip,
-    horizontal,
-    noErrorPlaceholder,
+    loading,
+    noErrorPlaceholder = false,
+    renderDescriptionLineBreaks = false,
   } = props;
+
+  let FieldLabel = () => <></>;
+  let FieldLabelIcon = () => <></>;
+  let FieldDescription = () => <></>;
+  let FieldErrors = () =>
+    noErrorPlaceholder ? null : <ErrorComponentTemplate label={<>&nbsp;</>} />;
+
+  if (description) {
+    FieldDescription = () => (
+      <span
+        className={clsx(
+          'text-gray-600 mb-xs font-normal text-sm ',
+          loading ? 'relative' : ''
+        )}
+      >
+        <span
+          className={clsx(renderDescriptionLineBreaks && 'whitespace-pre-line')}
+        >
+          {description}
+        </span>
+        {loading ? <Skeleton className="absolute inset-0" /> : null}
+      </span>
+    );
+  }
+
+  if (labelIcon) {
+    FieldLabelIcon = () =>
+      React.cloneElement(labelIcon, {
+        className: 'h-4 w-4 mr-xs',
+      });
+  }
+
+  if (label) {
+    FieldLabel = () => (
+      <label htmlFor={id} className={clsx('block pt-1 text-gray-600 mb-xs')}>
+        <span className={clsx('flex items-center font-semibold')}>
+          <span className={loading ? 'relative' : ''}>
+            <FieldLabelIcon />
+            {label}
+            {loading ? <Skeleton className="absolute inset-0" /> : null}
+          </span>
+          {!loading && tooltip ? <IconTooltip message={tooltip} /> : null}
+        </span>
+        <FieldDescription />
+      </label>
+    );
+  }
+
+  if (error) {
+    FieldErrors = () => (
+      <ErrorComponentTemplate
+        label={
+          <>
+            <FaExclamationCircle className="fill-current h-4 w-4 mr-xs shrink-0" />
+            {props.error?.message}
+          </>
+        }
+        ariaLabel={props.error?.message ?? ''}
+        role="alert"
+      />
+    );
+  }
+
   return (
     <div
       className={clsx(
         className,
         size === 'medium' ? 'w-1/2' : 'w-full',
-        horizontal
-          ? 'flex flex-row flex-wrap w-full max-w-screen-md justify-between'
-          : size === 'full'
-          ? ''
-          : 'max-w-xl'
+        size === 'full' ? '' : 'max-w-xl'
       )}
     >
-      {label ? (
-        <label
-          htmlFor={id}
-          className={clsx(
-            'block pt-1 text-gray-600 mb-xs',
-            horizontal && 'pr-8 flex-grow220px'
+      <FieldLabel />
+      <div>
+        {/*
+          Remove line height to prevent skeleton bug
+        */}
+        <div className={loading ? 'relative' : ''}>
+          {children}
+          {loading && (
+            <Skeleton
+              containerClassName="block leading-[0]"
+              className="absolute inset-0"
+            />
           )}
-        >
-          <span
-            className={clsx(
-              'flex items-center',
-              horizontal ? 'text-muted' : 'font-semibold'
-            )}
-          >
-            <span>
-              {labelIcon
-                ? React.cloneElement(labelIcon, {
-                    className: 'h-4 w-4 mr-xs',
-                  })
-                : null}
-              {label}
-            </span>
-            {tooltip ? <IconTooltip message={tooltip} /> : null}
-          </span>
-          {description ? (
-            <span className="text-gray-600 mb-xs font-normal text-sm">
-              {description}
-            </span>
-          ) : null}
-        </label>
-      ) : null}
-
-      <div className={clsx(horizontal && 'flex-grow320px')}>
-        <div>{children}</div>
-        {error ? (
-          <ErrorComponentTemplate
-            label={
-              <>
-                <FaExclamationCircle className="fill-current h-4 w-4 mr-xs shrink-0" />
-                {props.error?.message}
-              </>
-            }
-            ariaLabel={props.error?.message ?? ''}
-            role="alert"
-          />
-        ) : (
-          /* A &nbsp; character is displayed even if there is no error to
-          book some space for the error message. It prevents other fields to
-          be pushed down when an error is displayed. */
-          noErrorPlaceholder ?? <ErrorComponentTemplate label={<>&nbsp;</>} />
-        )}
+        </div>
+        <FieldErrors />
       </div>
     </div>
   );

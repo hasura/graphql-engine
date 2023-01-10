@@ -58,7 +58,8 @@ commandParserWithExplicitParser parseJSONWithBackendKind expected constructor ba
   -- the correct branch, the name matches, but the argument fails to parse, we must fail" and "this
   -- is not the command we were expecting here, it is fine to continue with another".
   whenMaybe (expected == provided) $
-    modifyFailure withDetails $ constructor <$> (parseJSONWithBackendKind backendKind arguments <?> J.Key "args")
+    modifyFailure withDetails $
+      constructor <$> (parseJSONWithBackendKind backendKind arguments <?> J.Key "args")
   where
     withDetails internalErrorMessage =
       intercalate
@@ -134,7 +135,8 @@ relationshipCommands =
     commandParser "create_array_relationship" $ RMCreateArrayRelationship . mkAnyBackend @b,
     commandParser "set_relationship_comment" $ RMSetRelationshipComment . mkAnyBackend @b,
     commandParser "rename_relationship" $ RMRenameRelationship . mkAnyBackend @b,
-    commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b
+    commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b,
+    commandParser "suggest_relationships" $ RMSuggestRelationships . mkAnyBackend @b
   ]
 
 remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]

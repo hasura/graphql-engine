@@ -17,11 +17,11 @@ export const getTablesListAsTree = async ({
 
   if (!metadata) throw Error('Unable to fetch metadata');
 
-  const source = metadata.sources.find((s) => s.name === dataSourceName);
+  const source = metadata.sources.find(s => s.name === dataSourceName);
 
   if (!source) throw Error('Unable to fetch metadata source');
 
-  const tables = source.tables.map((table) => table.table as PostgresTable);
+  const tables = source.tables.map(table => table.table as PostgresTable);
 
   return {
     title: (

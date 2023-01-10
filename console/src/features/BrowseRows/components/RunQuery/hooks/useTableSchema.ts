@@ -1,5 +1,5 @@
 import { NormalizedTable } from '@/dataSources/types';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useAppSelector } from '@/store';
 import { getTableSchemaName } from './useTableSchema.utils';
 

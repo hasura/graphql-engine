@@ -1,4 +1,5 @@
 import { useQueries } from 'react-query';
+import { z } from 'zod';
 import { useHttpClient } from '@/features/Network';
 import { DataSource } from '@/features/DataSource';
 import { useDefaultValues } from './useDefaultValues';
@@ -33,16 +34,16 @@ export const useLoadSchema = ({ name, driver }: Args) => {
   } = useDefaultValues({ name, driver });
 
   const isLoading =
-    results.some((result) => result.isLoading) || defaultValuesIsLoading;
+    results.some(result => result.isLoading) || defaultValuesIsLoading;
   const isError =
-    results.some((result) => result.isError) || defaultValuesIsError;
+    results.some(result => result.isError) || defaultValuesIsError;
 
   const [schemaResult, driversResult] = results;
 
-  const schema = schemaResult.data;
+  const schema = schemaResult.data || z.any();
   const drivers = driversResult.data;
 
-  const error = results.some((result) => result.error) || defaultValuesError;
+  const error = results.some(result => result.error) || defaultValuesError;
   return {
     data: { schema, drivers, defaultValues },
     isLoading,

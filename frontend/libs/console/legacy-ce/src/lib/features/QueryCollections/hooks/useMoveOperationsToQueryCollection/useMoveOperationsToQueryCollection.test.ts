@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '../../../..//mocks/metadata.mock';
 import { useMoveOperationsToQueryCollection } from '.';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -11,7 +11,7 @@ afterAll(() => server.close());
 
 describe('useMoveOperationsToQueryCollection', () => {
   beforeEach(() => {
-    server.use(...handlers(100, ''));
+    server.use(...handlers({ url: '' }));
   });
 
   test('When useMoveOperationsToQueryCollection is used with a valid input Then it should call the API with correct payload', async () => {
@@ -21,11 +21,11 @@ describe('useMoveOperationsToQueryCollection', () => {
     );
 
     await result.current.moveOperationToQueryCollection(
-      'fromCollection',
-      'targetCollection',
+      'allowed-queries',
+      'other_queries',
       [
         {
-          name: 'NewMyQuery',
+          name: 'MyQuery',
           query: 'query NewMyQuery { user { email name}}',
         },
       ]

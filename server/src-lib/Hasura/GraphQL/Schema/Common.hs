@@ -10,8 +10,10 @@ module Hasura.GraphQL.Schema.Common
     SchemaT (..),
     MonadBuildSourceSchema,
     MonadBuildRemoteSchema,
+    MonadBuildActionSchema,
     runSourceSchema,
     runRemoteSchema,
+    runActionSchema,
     ignoreRemoteRelationship,
     isHasuraSchema,
     AggSelectExp,
@@ -41,6 +43,7 @@ module Hasura.GraphQL.Schema.Common
     takeValidFunctions,
     takeValidTables,
     textToName,
+    textToGQLIdentifier,
     RemoteSchemaParser (..),
     mkEnumTypeName,
     addEnumSuffix,
@@ -53,14 +56,15 @@ import Data.Either (isRight)
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List (uncons)
 import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Node
 import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -105,11 +109,10 @@ isHasuraSchema = \case
   RelaySchema _ -> False
 
 -- | The set of common constraints required to build the schema.
-type MonadBuildSchemaBase r m n =
+type MonadBuildSchemaBase m n =
   ( MonadError QErr m,
     P.MonadMemoize m,
-    P.MonadParse n,
-    Has SchemaContext r
+    P.MonadParse n
   )
 
 -- | How a remote relationship field should be processed when building a
@@ -124,7 +127,7 @@ type MonadBuildSchemaBase r m n =
 newtype RemoteRelationshipParserBuilder
   = RemoteRelationshipParserBuilder
       ( forall lhsJoinField r n m.
-        MonadBuildSchemaBase r m n =>
+        MonadBuildSchemaBase m n =>
         RemoteFieldInfo lhsJoinField ->
         SchemaT r m (Maybe [P.FieldParser n (IR.RemoteRelationshipField IR.UnpreparedValue)])
       )
@@ -141,9 +144,11 @@ ignoreRemoteRelationship = RemoteRelationshipParserBuilder $ const $ pure Nothin
 -- the cross-sources cycles it creates otherwise.
 newtype NodeInterfaceParserBuilder = NodeInterfaceParserBuilder
   { runNodeBuilder ::
-      ( forall r m n.
-        MonadBuildSourceSchema r m n =>
-        SchemaT r m (P.Parser 'P.Output n NodeMap)
+      ( forall m n.
+        MonadBuildSchemaBase m n =>
+        SchemaContext ->
+        SchemaOptions ->
+        m (P.Parser 'P.Output n NodeMap)
       )
   }
 
@@ -213,30 +218,32 @@ calling monad with a simple `lift`, as demonstrated in
 newtype SchemaT r m a = SchemaT {runSchemaT :: ReaderT r m a}
   deriving newtype (Functor, Applicative, Monad, MonadReader r, P.MonadMemoize, MonadTrans, MonadError e)
 
-type MonadBuildSourceSchema r m n =
-  ( MonadBuildSchemaBase r m n,
+type MonadBuildSourceSchema b r m n =
+  ( MonadBuildSchemaBase m n,
+    Has SchemaContext r,
     Has SchemaOptions r,
-    Has MkTypename r,
-    Has NamingCase r
+    Has (SourceInfo b) r
   )
 
 -- | Runs a schema-building computation with all the context required to build a source.
 runSourceSchema ::
+  forall b m a.
   SchemaContext ->
   SchemaOptions ->
+  SourceInfo b ->
   SchemaT
     ( SchemaContext,
       SchemaOptions,
-      MkTypename,
-      NamingCase
+      SourceInfo b
     )
     m
     a ->
   m a
-runSourceSchema context options (SchemaT action) = runReaderT action (context, options, mempty, HasuraCase)
+runSourceSchema context options sourceInfo (SchemaT action) = runReaderT action (context, options, sourceInfo)
 
 type MonadBuildRemoteSchema r m n =
-  ( MonadBuildSchemaBase r m n,
+  ( MonadBuildSchemaBase m n,
+    Has SchemaContext r,
     Has CustomizeRemoteFieldName r,
     Has MkTypename r
   )
@@ -253,6 +260,25 @@ runRemoteSchema ::
     a ->
   m a
 runRemoteSchema context (SchemaT action) = runReaderT action (context, mempty, mempty)
+
+type MonadBuildActionSchema r m n =
+  ( MonadBuildSchemaBase m n,
+    Has SchemaContext r,
+    Has SchemaOptions r
+  )
+
+-- | Runs a schema-building computation with all the context required to build actions.
+runActionSchema ::
+  SchemaContext ->
+  SchemaOptions ->
+  SchemaT
+    ( SchemaContext,
+      SchemaOptions
+    )
+    m
+    a ->
+  m a
+runActionSchema context options (SchemaT action) = runReaderT action (context, options)
 
 -------------------------------------------------------------------------------
 
@@ -300,12 +326,12 @@ getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
 -- supposed to ensure all dependencies are resolved.
 -- TODO: deduplicate this with `CacheRM`.
 askTableInfo ::
-  forall b m.
-  (Backend b, MonadError QErr m) =>
-  SourceInfo b ->
+  forall b r m.
+  (Backend b, MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
   TableName b ->
   m (TableInfo b)
-askTableInfo SourceInfo {..} tableName =
+askTableInfo tableName = do
+  SourceInfo {..} <- asks getter
   Map.lookup tableName _siTables
     `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
 
@@ -317,7 +343,23 @@ textToName textName =
   G.mkName textName
     `onNothing` throw400
       ValidationFailed
-      ( "cannot include " <> textName <<> " in the GraphQL schema because "
+      ( "cannot include "
+          <> textName <<> " in the GraphQL schema because "
+          <> " it is not a valid GraphQL identifier"
+      )
+
+textToGQLIdentifier :: MonadError QErr m => Text -> m GQLNameIdentifier
+textToGQLIdentifier textName = do
+  let gqlIdents = do
+        (pref, suffs) <- uncons (C.fromSnake textName)
+        prefName <- G.mkName pref
+        suffNames <- traverse G.mkNameSuffix suffs
+        pure $ C.fromAutogeneratedTuple (prefName, suffNames)
+  gqlIdents
+    `onNothing` throw400
+      ValidationFailed
+      ( "cannot include "
+          <> textName <<> " in the GraphQL schema because "
           <> " it is not a valid GraphQL identifier"
       )
 
@@ -401,14 +443,17 @@ optionalFieldParser ::
 optionalFieldParser = fmap . fmap . fmap
 
 -- | Builds the type name for referenced enum tables.
-mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => TableName b -> Maybe G.Name -> m G.Name
+mkEnumTypeName :: forall b r m. (Backend b, MonadError QErr m, Has (SourceInfo b) r) => TableName b -> Maybe G.Name -> SchemaT r m G.Name
 mkEnumTypeName enumTableName enumTableCustomName = do
-  tCase <- asks getter
+  customization <- retrieve $ _siCustomization @b
   enumTableGQLName <- getTableIdentifier @b enumTableName `onLeft` throwError
-  addEnumSuffix enumTableGQLName enumTableCustomName tCase
+  pure $ addEnumSuffix customization enumTableGQLName enumTableCustomName
 
-addEnumSuffix :: (MonadReader r m, Has MkTypename r) => GQLNameIdentifier -> Maybe G.Name -> NamingCase -> m G.Name
-addEnumSuffix enumTableGQLName enumTableCustomName tCase = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkEnumTableTypeName enumTableGQLName enumTableCustomName
+addEnumSuffix :: ResolvedSourceCustomization -> GQLNameIdentifier -> Maybe G.Name -> G.Name
+addEnumSuffix customization enumTableGQLName enumTableCustomName =
+  runMkTypename (_rscTypeNames customization) $
+    applyTypeNameCaseIdentifier (_rscNamingConvention customization) $
+      mkEnumTableTypeName enumTableGQLName enumTableCustomName
 
 -- TODO: figure out what the purpose of this method is.
 peelWithOrigin :: P.MonadParse m => P.Parser 'P.Both m a -> P.Parser 'P.Both m (IR.ValueWithOrigin a)
@@ -427,10 +472,10 @@ getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
   if
       | -- admin doesn't have a custom annotated introspection, defaulting to the original one
         role == adminRoleName ->
-        pure $ _rscIntroOriginal remoteSchemaContext
+          pure $ _rscIntroOriginal remoteSchemaContext
       | -- if permissions are disabled, the role map will be empty, defaulting to the original one
         remoteSchemaPermsCtx == Options.DisableRemoteSchemaPermissions ->
-        pure $ _rscIntroOriginal remoteSchemaContext
+          pure $ _rscIntroOriginal remoteSchemaContext
       | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
         otherwise ->
-        Map.lookup role (_rscPermissions remoteSchemaContext)
+          Map.lookup role (_rscPermissions remoteSchemaContext)

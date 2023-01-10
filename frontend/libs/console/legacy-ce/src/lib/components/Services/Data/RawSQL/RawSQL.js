@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -96,7 +97,7 @@ const RawSQL = ({
   );
   const { fireNotification } = useFireNotification();
   const { fetchRunSQLResult, data, isLoading } = useRunSQL({
-    onError: (err) => {
+    onError: err => {
       fireNotification({
         type: 'error',
         title: 'failed to run SQL statement',
@@ -128,7 +129,7 @@ const RawSQL = ({
       setStatementTimeout(null);
   }, [selectedDatabase, metadataSources]);
 
-  const dropDownSelectorValueChange = (value) => {
+  const dropDownSelectorValueChange = value => {
     const driver = getSourceDriver(metadataSources, value);
     if (!nativeDrivers.includes(driver)) {
       setSelectedDatabase(value);
@@ -246,7 +247,7 @@ const RawSQL = ({
   };
 
   const getSQLSection = () => {
-    const handleSQLChange = (val) => {
+    const handleSQLChange = val => {
       const cleanSql = removeCommentsSQL(val);
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
@@ -264,11 +265,11 @@ const RawSQL = ({
         if (objects?.length) {
           let allObjectsTrackable = true;
 
-          const trackedObjectNames = allSchemas.map((schema) => {
+          const trackedObjectNames = allSchemas.map(schema => {
             return [schema.table_schema, schema.table_name].join('.');
           });
 
-          allObjectsTrackable = objects.every((object) => {
+          allObjectsTrackable = objects.every(object => {
             if (object.type === 'function') {
               return false;
             }
@@ -320,6 +321,7 @@ const RawSQL = ({
           onChange={handleSQLChange}
           // prevents unwanted frequent event triggers
           debounceChangePeriod={200}
+          setOptions={{ useWorker: false }}
         />
       </div>
     );
@@ -466,7 +468,7 @@ const RawSQL = ({
     return migrationSection;
   };
 
-  const updateStatementTimeout = (value) => {
+  const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
     setLSItem(LS_KEYS.rawSqlStatementTimeout, timeoutInSeconds);
@@ -474,113 +476,118 @@ const RawSQL = ({
   };
 
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
-    >
-      <Helmet title="Run SQL - Data | Hasura" />
-      <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Raw SQL
-        </h2>
-        <div className="clearfix" />
-      </div>
-      <div className={styles.add_mar_top}>
-        <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <NotesSection suggestLangChange={suggestLangChange} />
+    <Analytics name="RawSQL" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
+      >
+        <Helmet title="Run SQL - Data | Hasura" />
+        <div className={styles.subHeader}>
+          <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+            Raw SQL
+          </h2>
+          <div className="clearfix" />
         </div>
-        <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <label>
-            <b>Database</b>
-          </label>{' '}
-          <DropDownSelector
-            options={metadataSources
-              .filter((source) => {
-                if (areGDCFeaturesEnabled) return source;
-                return nativeDrivers.includes(source.kind);
-              })
-              .map((source) => ({
-                name: source.name,
-                driver: source.kind,
-              }))}
-            defaultValue={currentDataSource}
-            onChange={dropDownSelectorValueChange}
-          />
-        </div>
-        <div className={`${styles.padd_left_remove} col-xs-10`}>
-          {getSQLSection()}
-        </div>
-
-        <div
-          className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
-        >
-          {unsupportedRawSQLDrivers.includes(selectedDriver) ? null : (
-            <>
-              {isFeatureSupported('rawSQL.tracking')
-                ? getTrackThisSection()
-                : null}
-              {getMetadataCascadeSection()}
-              {getMigrationSection()}
-            </>
-          )}
-
-          {isFeatureSupported('rawSQL.statementTimeout') && (
-            <StatementTimeout
-              statementTimeout={statementTimeout}
-              isMigrationChecked={
-                globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
-              }
-              updateStatementTimeout={updateStatementTimeout}
+        <div className={styles.add_mar_top}>
+          <div className={`${styles.padd_left_remove} col-xs-8`}>
+            <NotesSection suggestLangChange={suggestLangChange} />
+          </div>
+          <div className={`${styles.padd_left_remove} col-xs-8`}>
+            <label>
+              <b>Database</b>
+            </label>{' '}
+            <DropDownSelector
+              options={metadataSources
+                .filter(source => {
+                  if (areGDCFeaturesEnabled) return source;
+                  return nativeDrivers.includes(source.kind);
+                })
+                .map(source => ({
+                  name: source.name,
+                  driver: source.kind,
+                }))}
+              defaultValue={currentDataSource}
+              onChange={dropDownSelectorValueChange}
             />
-          )}
-          <Button
-            type="submit"
-            className={styles.add_mar_top}
-            onClick={submitSQL}
-            mode="primary"
-            data-test="run-sql"
-            disabled={
-              !sqlText?.length ||
-              unsupportedRawSQLDrivers.includes(selectedDriver)
-            }
-            isLoading={isLoading}
-          >
-            Run!
-          </Button>
-        </div>
+          </div>
+          <div className={`${styles.padd_left_remove} col-xs-10`}>
+            {getSQLSection()}
+          </div>
 
-        <div className="hidden col-xs-4">
-          <div className={`${styles.padd_left_remove} col-xs-12`}>
-            {ongoingRequest && <Alert type="warning" text="Running..." />}
-            {lastError && (
-              <Alert
-                type="danger"
-                text={`Error: ${JSON.stringify(lastError)}`}
+          <div
+            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+          >
+            {unsupportedRawSQLDrivers.includes(selectedDriver) ? null : (
+              <>
+                {isFeatureSupported('rawSQL.tracking')
+                  ? getTrackThisSection()
+                  : null}
+                {getMetadataCascadeSection()}
+                {getMigrationSection()}
+              </>
+            )}
+
+            {isFeatureSupported('rawSQL.statementTimeout') && (
+              <StatementTimeout
+                statementTimeout={statementTimeout}
+                isMigrationChecked={
+                  globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
+                }
+                updateStatementTimeout={updateStatementTimeout}
               />
             )}
-            {lastSuccess && <Alert type="success" text="Executed Query" />};
+            <Button
+              type="submit"
+              className={styles.add_mar_top}
+              onClick={submitSQL}
+              mode="primary"
+              data-test="run-sql"
+              disabled={
+                !sqlText?.length ||
+                unsupportedRawSQLDrivers.includes(selectedDriver)
+              }
+              isLoading={isLoading}
+            >
+              Run!
+            </Button>
+          </div>
+
+          <div className="hidden col-xs-4">
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {ongoingRequest && <Alert type="warning" text="Running..." />}
+              {lastError && (
+                <Alert
+                  type="danger"
+                  text={`Error: ${JSON.stringify(lastError)}`}
+                />
+              )}
+              {lastSuccess && <Alert type="success" text="Executed Query" />};
+            </div>
           </div>
         </div>
-      </div>
 
-      {getMigrationWarningModal()}
+        {getMigrationWarningModal()}
 
-      {nativeDrivers.includes(selectedDriver) ? (
-        <div className={styles.add_mar_bottom}>
-          {resultType &&
-            resultType !== 'command' &&
-            result &&
-            result?.length > 0 && (
-              <ResultTable rows={result} headers={resultHeaders} />
+        {nativeDrivers.includes(selectedDriver) ? (
+          <div className={styles.add_mar_bottom}>
+            {resultType &&
+              resultType !== 'command' &&
+              result &&
+              result?.length > 0 && (
+                <ResultTable rows={result} headers={resultHeaders} />
+              )}
+          </div>
+        ) : (
+          <div className={styles.add_mar_bottom}>
+            {data && data.result?.length > 0 && (
+              <ResultTable
+                rows={data.result.slice(1)}
+                headers={data.result[0]}
+              />
             )}
-        </div>
-      ) : (
-        <div className={styles.add_mar_bottom}>
-          {data && data.result?.length > 0 && (
-            <ResultTable rows={data.result.slice(1)} headers={data.result[0]} />
-          )}
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </div>
+    </Analytics>
   );
 };
 
@@ -602,7 +609,7 @@ RawSQL.propTypes = {
   statementTimeout: PropTypes.string.isRequired,
 };
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
   ...state.rawSQL,
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
@@ -613,6 +620,6 @@ const mapStateToProps = (state) => ({
   metadataSources: state.metadata.metadataObject.sources,
 });
 
-const rawSQLConnector = (connect) => connect(mapStateToProps)(RawSQL);
+const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);
 
 export default rawSQLConnector;

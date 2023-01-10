@@ -1,12 +1,14 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
+import { action } from '@storybook/addon-actions';
 
-import { AggregationSection, AggregationProps } from './Aggregation';
+import { AggregationProps, AggregationSection } from './Aggregation';
 
 export default {
-  title: 'Features/Permissions Form/Components/Aggregation Section',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Aggregation Section',
   component: AggregationSection,
   parameters: {
     // Disable storybook for playground stories
@@ -26,14 +28,14 @@ AggregationEnabled.args = {
 };
 AggregationEnabled.decorators = [
   (StoryComponent: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
-      onSubmit={() => {}}
+      onSubmit={action('onSubmit')}
       options={{ defaultValues: { enableAggregation: true } }}
       className="p-4"
     >
-      {() => <StoryComponent />}
-    </Form>
+      <StoryComponent />
+    </SimpleForm>
   ),
 ];
 
@@ -45,14 +47,14 @@ AggregationDisabled.args = {
 };
 AggregationDisabled.decorators = [
   (StoryComponent: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
-      onSubmit={() => {}}
+      onSubmit={action('onSubmit')}
       options={{ defaultValues: { enableAggregation: false } }}
       className="p-4"
     >
-      {() => <StoryComponent />}
-    </Form>
+      <StoryComponent />
+    </SimpleForm>
   ),
 ];
 

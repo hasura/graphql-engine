@@ -19,7 +19,7 @@ export const RsSourceTypeSelector = ({
   const { watch } = useFormContext<RsToRsSchema>();
   const remoteSchemaName = watch(remoteSchemaSelectorKey);
   const typeOptions = React.useMemo(
-    () => types.map((t) => ({ value: t, label: t })),
+    () => types.map(t => ({ value: t, label: t })),
     [types]
   );
   const schemaOptions = [{ value: remoteSchemaName, label: remoteSchemaName }];

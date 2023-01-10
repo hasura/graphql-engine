@@ -5,6 +5,7 @@ import { updateQsHistory, transformToTypeValueArr } from '../utils';
 import { retrieveFilterData, retrieveDefaultDropdownOptions } from './utils';
 import BrowseRows from './BrowseRows';
 import { applyFilterByQueryParam } from '../utils';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
 
 import {
   TITLE_MAP,
@@ -13,10 +14,10 @@ import {
   FILTER_MAP,
 } from './constants';
 
-export const Websockets = (props) => {
+export const Websockets = props => {
   const { queryParams, RenderLink, projectId } = props;
 
-  const onFilterChangeCb = (nextFilters) => {
+  const onFilterChangeCb = nextFilters => {
     if (nextFilters.length > 0) {
       const qs = `?filters=${window.encodeURI(JSON.stringify(nextFilters))}`;
       updateQsHistory(qs);
@@ -25,11 +26,11 @@ export const Websockets = (props) => {
     }
   };
 
-  const getTitle = (value) => {
+  const getTitle = value => {
     return TITLE_MAP[value];
   };
 
-  const getEmptyTitle = (value) => {
+  const getEmptyTitle = value => {
     return NO_TITLE_MAP[value];
   };
 
@@ -50,15 +51,17 @@ export const Websockets = (props) => {
     >
       {({ filters, groups }) => {
         return (
-          <div className="infoWrapper">
-            <BrowseRows
-              RenderLink={RenderLink}
-              filters={filters}
-              groupBys={groups}
-              label={'Websockets List'}
-              projectId={projectId}
-            />
-          </div>
+          <Analytics name="MonitoringWebsocket" {...REDACT_EVERYTHING}>
+            <div className="infoWrapper">
+              <BrowseRows
+                RenderLink={RenderLink}
+                filters={filters}
+                groupBys={groups}
+                label={'Websockets List'}
+                projectId={projectId}
+              />
+            </div>
+          </Analytics>
         );
       }}
     </StatsPanel>
@@ -81,5 +84,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-export const websocketsConnector = (connect) =>
+export const websocketsConnector = connect =>
   connect(mapStateToProps)(Websockets);

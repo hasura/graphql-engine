@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof AllTables>;
 
-export const Playground: ComponentStory<typeof AllTables> = (args) => {
+export const Playground: ComponentStory<typeof AllTables> = args => {
   return <AllTables {...args} />;
 };
 

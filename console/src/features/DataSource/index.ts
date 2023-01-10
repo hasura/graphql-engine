@@ -1,15 +1,20 @@
-import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
+import {
+  Source,
+  SupportedDrivers,
+  Table,
+} from '@/features/hasura-metadata-types';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
+import pickBy from 'lodash.pickby';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
 import { postgres, PostgresTable } from './postgres';
-
+import { alloy, AlloyDbTable } from './alloydb';
 import type {
   DriverInfoResponse,
   GetFKRelationshipProps,
@@ -33,7 +38,10 @@ import {
   exportMetadata,
   getDriverPrefix,
   NetworkArgs,
+  runIntrospectionQuery,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
@@ -48,6 +56,7 @@ export const nativeDrivers = [
   'mssql',
   'citus',
   'cockroach',
+  'alloy',
 ];
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
@@ -105,6 +114,7 @@ const drivers: Record<SupportedDrivers, Database> = {
   mssql,
   gdc,
   cockroach,
+  alloy,
 };
 
 const getDatabaseMethods = async ({
@@ -140,11 +150,16 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
     getAllSourceKinds: async () => {
       const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
-      const allDrivers = serverSupportedDrivers.map(async driver => {
+
+      const allSupportedDrivers = serverSupportedDrivers
+        // NOTE: AlloyDB is added here and not returned by the server because it's not a new data source (it's Postgres)
+        .concat([{ builtin: true, kind: 'alloy', display_name: 'AlloyDB' }])
+        .sort((a, b) => (a.kind > b.kind ? 1 : -1));
+
+      const allDrivers = allSupportedDrivers.map(async driver => {
         const driverInfo = await getDriverMethods(
           driver.kind
         ).introspection?.getDriverInfo();
-        console.log(driver, driverInfo);
 
         if (driverInfo && driverInfo !== Feature.NotImplemented)
           return {
@@ -156,7 +171,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
         return {
           name: driver.kind,
-          displayName: driver.kind,
+          displayName: driver.display_name,
           release: 'Beta',
           native: driver.builtin,
         };
@@ -207,12 +222,14 @@ export const DataSource = (httpClient: AxiosInstance) => ({
                 prefix: z.string().optional(),
                 suffix: z.string().optional(),
               })
+              .transform(value => pickBy(value, d => d !== ''))
               .optional(),
             type_names: z
               .object({
                 prefix: z.string().optional(),
                 suffix: z.string().optional(),
               })
+              .transform(value => pickBy(value, d => d !== ''))
               .optional(),
           })
           .deepPartial()
@@ -404,10 +421,15 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 export { GDCTable } from './gdc';
 export * from './guards';
 export * from './types';
+export * from './common/utils';
 export {
   PostgresTable,
   exportMetadata,
   getTableName,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
   getDriverPrefix,
+  runIntrospectionQuery,
+  AlloyDbTable,
 };

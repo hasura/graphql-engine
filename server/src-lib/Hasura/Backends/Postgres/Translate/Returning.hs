@@ -168,8 +168,8 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
     sel =
       S.mkSelect
         { S.selExtr =
-            S.Extractor extrExp Nothing :
-            bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
+            S.Extractor extrExp Nothing
+              : bool [] [S.Extractor checkErrorExp Nothing] (checkPermissionRequired cte)
         }
       where
         checkErrorExp = mkCheckErrorExp mutationResultIdentifier

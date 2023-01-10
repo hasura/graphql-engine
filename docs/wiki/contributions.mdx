@@ -29,7 +29,7 @@ As such, there's a few steps needed to get your 'station' in order and to ready 
 the fast-paced world of documentation.
 
 We use Yarn as our package-manager- / project-manager-of-choice. Please make sure you follow
-[their installation instructions](https://classic.yarnpkg.com/lang/en/docs/install/) if not already on your system.
+[their installation instructions](https://yarnpkg.com/getting-started/install) if not already on your system.
 
 Two `hasura/graphql-engine` repositories exist: one is our OSS repo whereas the other is a private repository only
 available to employees at Hasura. We utilize these two repos so we can maintain open-source contributions and also
@@ -263,7 +263,7 @@ update `CHANGELOG.md` in the root directory of the repo as well.
 
 :::
 
-## Common Errors
+## Common errors
 
 We all make mistakes! Here's the most common ones we encounter. This is not an exhaustive list, but if you find lots of
 errors getting thrown, chances are the issue is one of the items below. These are rank-ordered according to what we
@@ -276,7 +276,7 @@ With Docusaurus's file-based routing system, markdown links commonly break due t
 - Filename changes
 
   The url path for a particular page is dependent upon its filename. If you change the name of a file, any link
-  referencing it will break. The error thrown to the console will alert you to which page contains the error and to
+  referencing it will break. The error thrown to the Console will alert you to which page contains the error and to
   which file is being referenced. If there are multiple broken links, it will list out each.
 
 - File location changes
@@ -297,10 +297,10 @@ client (webpack 5.70.0) compiled with 1 error
 ### Broken image links
 
 Assets are stored in `static/img/<feature-folder>`. Just like the file-based routing Docusaurus uses to render pages,
-file paths are important for images as well. However, instead of any output to the console, the page will simply crash
+file paths are important for images as well. However, instead of any output to the Console, the page will simply crash
 and present a message indicating which image's path cannot be resolved.
 
-<Thumbnail src='/img/wiki/broken-image.png' alt='Add check constraint' width='1000px' />
+<Thumbnail src="/img/wiki/broken-image.png" alt="Add check constraint" width="1000px" />
 
 Use the erroneous image path to identify the error, facepalm, and then fix your typo.
 
@@ -315,7 +315,7 @@ automatically 🚀
 
 This is a sneaky one. If you forget to import a component - such as the `<Thumbnail />` component used for images -
 there won't be any errors thrown by the server. However, if you check your browser's developer tools, you'll notice the
-quite prominent error. Thus, when something just isn't appearing...check the browser's console.
+quite prominent error. Thus, when something just isn't appearing...check the browser's Console.
 
 Simply import the missing component at the top of the page and viola 🤌
 
@@ -325,3 +325,31 @@ Perhaps the biggest pitfall we've encountered with Docusaurus is how delicate `.
 placement of code blocks and other text. If you've included a code block using common markdown syntax, and things aren't
 rendering as you think they should, try giving the block a bit of breathing room with a single empty line above and
 below it.
+
+## Codespaces
+
+:::info Note
+
+For Hasurians, we've recently introduced a new way to contribute to the docs:
+[Codespaces](https://docs.github.com/en/codespaces). This is a new feature from GitHub that allows you to spin up a
+fully-configured docs dev environment in the cloud. This means you can get started contributing to the docs without
+having to install any dependencies on your local machine.
+
+:::
+
+### Step 1: Create a Codespace
+
+Head to the `hasura/graphql-engine-mono` repo and click the `Code` button. You should see a `Open with Codespaces`
+button. Click it and choose `...` and then `+ New with options...` as in the example below:
+
+<Thumbnail src="/img/wiki/codespaces-1.gif" alt="Create Codespace" width="1000px" />
+
+### Step 2: Configure your Codespace
+
+You'll be presented with a few options. Select the `docs` devcontainer, the region nearest to you, and a machine type
+before clicking `Create codespace`:
+
+<Thumbnail src="/img/wiki/codespaces-2.gif" alt="Create Codespace" width="1000px" />
+
+The Codespace will spin up and you'll be presented with a fully-configured dev environment. We automatically open you to
+the `CODESPACES.md` file where you can follow the instructions to get started quickly.

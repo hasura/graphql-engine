@@ -1,19 +1,19 @@
-const compose = (sourceFn) => (type) => (value) => {
+const compose = sourceFn => type => value => {
   sourceFn(type, value);
 };
 const splitByType = (filters, type) => {
-  const allNonDropdownFilters = filters.filter((f) => f.type !== type);
-  const allDropdownFilters = filters.filter((f) => f.type === type);
+  const allNonDropdownFilters = filters.filter(f => f.type !== type);
+  const allDropdownFilters = filters.filter(f => f.type === type);
 
   return [allDropdownFilters, allNonDropdownFilters];
 };
 
-const detectAdjective = (n) => {
+const detectAdjective = n => {
   if (n > 1) return 's';
   return '';
 };
 
-const getSelectedFiltersCount = (selectedValues) => {
+const getSelectedFiltersCount = selectedValues => {
   let filteredElement = 'No filter applied';
 
   if (selectedValues.length > 0) {
@@ -24,7 +24,7 @@ const getSelectedFiltersCount = (selectedValues) => {
   return filteredElement;
 };
 
-const filterByType = (filters, type) => filters.filter((f) => f.type === type);
+const filterByType = (filters, type) => filters.filter(f => f.type === type);
 
 /* Converts an array of json with the following structure [{
  *   type: "operation_type",
@@ -35,7 +35,7 @@ const filterByType = (filters, type) => filters.filter((f) => f.type === type);
  * */
 const getJson = (list, key) => {
   const r = {};
-  list.forEach((l) => {
+  list.forEach(l => {
     if (typeof l[key] === 'string') {
       r[l[key]] = true;
     } else {

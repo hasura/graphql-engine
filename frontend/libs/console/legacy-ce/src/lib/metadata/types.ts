@@ -1,3 +1,4 @@
+import { Moment } from 'moment';
 import { Nullable } from './../components/Common/utils/tsUtils';
 import { Driver } from '../dataSources';
 import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
@@ -536,6 +537,21 @@ export interface CronTrigger {
   comment?: string;
   /** Rest connectors. */
   request_transform?: RequestTransform;
+}
+
+export interface ScheduledTrigger {
+  /**	URL of the webhook */
+  webhook: WebhookURL;
+  /**	Scheduled time at which the trigger should be invoked. */
+  schedule_at: string | Moment;
+  /** Any JSON payload which will be sent when the webhook is invoked. */
+  payload?: Record<string, any>;
+  /** List of headers to be sent with the webhook */
+  headers: ServerHeader[];
+  /**	Retry configuration if scheduled invocation delivery fails */
+  retry_conf?: RetryConfST;
+  /**	Custom comment. */
+  comment?: string;
 }
 
 /**
@@ -1094,7 +1110,7 @@ export type GraphQLFieldCustomization = {
     prefix?: string;
     suffix?: string;
   };
-  namingConvention?: NamingConventionOptions;
+  namingConvention?: NamingConventionOptions | null;
 };
 
 export interface SourceConnectionInfo {
@@ -1138,7 +1154,14 @@ type GraphQLCustomizationMetadata = {
 
 export interface MetadataDataSource {
   name: string;
-  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus' | 'cockroach';
+  kind:
+    | 'postgres'
+    | 'mssql'
+    | 'mysql'
+    | 'bigquery'
+    | 'citus'
+    | 'cockroach'
+    | 'alloy';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     extensions_schema?: string;

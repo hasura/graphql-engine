@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
 
 import { updateQsHistory, applyFilterByQueryParam } from '../utils';
 
@@ -19,10 +20,10 @@ import StatsPanel from '../StatsPanel/StatsPanel';
 
 import { transformToTypeValueArr } from '../utils';
 
-export const Operations = (props) => {
+export const Operations = props => {
   const { queryParams, projectId, projectConfig } = props;
 
-  const onFilterChangeCb = (nextFilters) => {
+  const onFilterChangeCb = nextFilters => {
     if (nextFilters.length > 0) {
       const qs = `?filters=${window.encodeURI(JSON.stringify(nextFilters))}`;
       updateQsHistory(qs);
@@ -31,11 +32,11 @@ export const Operations = (props) => {
     }
   };
 
-  const getTitle = (value) => {
+  const getTitle = value => {
     return OPERATIONS_TITLE_MAP[value];
   };
 
-  const getEmptyTitle = (value) => {
+  const getEmptyTitle = value => {
     return OPERATIONS_NO_TITLE_MAP[value];
   };
 
@@ -56,14 +57,16 @@ export const Operations = (props) => {
     >
       {({ filters }) => {
         return (
-          <div className="infoWrapper">
-            <BrowserRows
-              filters={filters}
-              label={'Operations List'}
-              projectId={projectId}
-              projectConfig={projectConfig}
-            />
-          </div>
+          <Analytics name="Operations" {...REDACT_EVERYTHING}>
+            <div className="infoWrapper">
+              <BrowserRows
+                filters={filters}
+                label={'Operations List'}
+                projectId={projectId}
+                projectConfig={projectConfig}
+              />
+            </div>
+          </Analytics>
         );
       }}
     </StatsPanel>
@@ -84,6 +87,6 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const operationsConnector = (connect) => connect(mapStateToProps)(Operations);
+const operationsConnector = connect => connect(mapStateToProps)(Operations);
 
 export default operationsConnector;

@@ -93,7 +93,7 @@ func MigrateAPI(c *gin.Context) {
 				return
 			}
 			if kind == nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine database kind for '%v'", sourceName)})
 				return
 			}
 			sourceKind = *kind
@@ -157,7 +157,7 @@ func MigrateAPI(c *gin.Context) {
 				case "citus":
 					sourceKind = hasura.SourceKindCitus
 				default:
-					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine database kind for '%v'", sourceName)})
 					return
 				}
 			}

@@ -68,8 +68,9 @@ createWSServerApp ::
   WSConnectionInitTimeout ->
   WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn ->
-  WS.createServerApp connInitTimeout (_wseServer serverEnv) handlers ipAddress pendingConn
+createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
+  let getMetricsConfig = scMetricsConfig . fst <$> _wseGCtxMap serverEnv
+  WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) prometheusMetrics handlers ipAddress pendingConn
   where
     handlers =
       WS.WSHandlers
@@ -115,6 +116,7 @@ createWSServerEnv ::
   KeepAliveDelay ->
   ServerMetrics ->
   PrometheusMetrics ->
+  Tracing.SamplingPolicy ->
   m WSServerEnv
 createWSServerEnv
   logger
@@ -127,7 +129,8 @@ createWSServerEnv
   enableAL
   keepAliveDelay
   serverMetrics
-  prometheusMetrics = do
+  prometheusMetrics
+  traceSamplingPolicy = do
     wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
     pure $
       WSServerEnv
@@ -143,6 +146,7 @@ createWSServerEnv
         keepAliveDelay
         serverMetrics
         prometheusMetrics
+        traceSamplingPolicy
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =

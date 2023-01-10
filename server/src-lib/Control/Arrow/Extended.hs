@@ -11,12 +11,10 @@ module Control.Arrow.Extended
   ( module Control.Arrow,
     module Control.Arrow.Trans,
     (>->),
-    (<-<),
     dup,
     bothA,
     orA,
     foldlA',
-    traverseA_,
     traverseA,
     onNothingA,
     ArrowKleisli (..),
@@ -33,8 +31,6 @@ import Prelude hiding (id, (.))
 
 infixl 1 >->
 
-infixr 1 <-<
-
 -- | The analog to '>>=' for arrow commands. In @proc@ notation, '>->' can be used to chain the
 -- output of one command into the input of another.
 --
@@ -44,10 +40,6 @@ f >-> g = proc (e, s) -> do
   x <- f -< (e, s)
   g -< (e, (x, s))
 {-# INLINE (>->) #-}
-
-(<-<) :: (Arrow arr) => arr (e, (a, s)) b -> arr (e, s) a -> arr (e, s) b
-(<-<) = flip (>->)
-{-# INLINE (<-<) #-}
 
 dup :: (Arrow arr) => arr a (a, a)
 dup = arr \x -> (x, x)
@@ -75,11 +67,6 @@ foldlA' f = arr (\(e, (v, (xs, s))) -> (e, (v, (toList xs, s)))) >>> go
       x : xs' -> Right ((e, (v, (x, s))), (e, (xs', s)))
     step = first f >>> arr (\(!v, (e, (xs, s))) -> (e, (v, (xs, s)))) >>> go
 {-# INLINEABLE foldlA' #-}
-
-traverseA_ :: (ArrowChoice arr, Foldable t) => arr (e, (a, s)) b -> arr (e, (t a, s)) ()
-traverseA_ f = proc (e, (xs, s)) ->
-  (| foldlA' (\() x -> do (e, (x, s)) >- f; () >- returnA) |) () xs
-{-# INLINEABLE traverseA_ #-}
 
 -- | An indexed version of Twan van Laarhoven’s @FunList@ type (see
 -- <https://twanvl.nl/blog/haskell/non-regular1>). A value of type @'Traversal' a b (t b)@ is a

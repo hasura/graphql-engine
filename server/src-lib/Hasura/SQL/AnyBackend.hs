@@ -88,6 +88,7 @@ module Hasura.SQL.AnyBackend
   ( AnyBackend,
     SatisfiesForAllBackends,
     liftTag,
+    lowerTag,
     mkAnyBackend,
     mapBackend,
     traverseBackend,
@@ -109,11 +110,11 @@ where
 
 import Control.Applicative
 import Control.Arrow.Extended (ArrowChoice)
+import Control.Lens (preview, _Right)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
-import Hasura.Incremental (Cacheable)
+import Hasura.Backends.DataConnector.Adapter.Types (mkDataConnectorName)
 import Hasura.Prelude
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
@@ -181,6 +182,16 @@ liftTag MSSQL = MSSQLValue MSSQLTag
 liftTag BigQuery = BigQueryValue BigQueryTag
 liftTag MySQL = MySQLValue MySQLTag
 liftTag DataConnector = DataConnectorValue DataConnectorTag
+
+-- | Obtain a @BackendType@ from a runtime value.
+lowerTag :: AnyBackend i -> BackendType
+lowerTag (PostgresVanillaValue _) = Postgres Vanilla
+lowerTag (PostgresCitusValue _) = Postgres Citus
+lowerTag (PostgresCockroachValue _) = Postgres Cockroach
+lowerTag (MSSQLValue _) = MSSQL
+lowerTag (BigQueryValue _) = BigQuery
+lowerTag (MySQLValue _) = MySQL
+lowerTag (DataConnectorValue _) = DataConnector
 
 -- | Transforms an @AnyBackend i@ into an @AnyBackend j@.
 mapBackend ::
@@ -492,8 +503,6 @@ deriving instance i `SatisfiesForAllBackends` Ord => Ord (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
 
-instance i `SatisfiesForAllBackends` Cacheable => Cacheable (AnyBackend i)
-
 backendSourceKindFromText :: Text -> Maybe (AnyBackend BackendSourceKind)
 backendSourceKindFromText text =
   PostgresVanillaValue <$> staticKindFromText PostgresVanillaKind
@@ -503,7 +512,7 @@ backendSourceKindFromText text =
     <|> BigQueryValue <$> staticKindFromText BigQueryKind
     <|> MySQLValue <$> staticKindFromText MySQLKind
     -- IMPORTANT: This must be the last thing here, since it will accept (almost) any string
-    <|> DataConnectorValue . DataConnectorKind . DataConnectorName <$> GQL.mkName text
+    <|> DataConnectorValue . DataConnectorKind <$> (preview _Right . mkDataConnectorName =<< GQL.mkName text)
   where
     staticKindFromText :: BackendSourceKind b -> Maybe (BackendSourceKind b)
     staticKindFromText kind =

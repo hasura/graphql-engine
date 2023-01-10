@@ -23,7 +23,7 @@ import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended (toTxt)
-import Hasura.Incremental.Internal.Dependency (Cacheable, Dependency (..), selectD)
+import Hasura.Incremental.Internal.Dependency (Dependency (..), selectD)
 import Hasura.Incremental.Select
 import Hasura.Prelude hiding (empty, lookup, modify)
 import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', mergeAnyBackend, mkAnyBackend, parseAnyBackendFromJSON, unpackAnyBackend)
@@ -41,8 +41,6 @@ newtype BackendMap (i :: BackendType -> Type) = BackendMap (Map BackendType (Any
 deriving newtype instance i `SatisfiesForAllBackends` Show => Show (BackendMap i)
 
 deriving newtype instance i `SatisfiesForAllBackends` Eq => Eq (BackendMap i)
-
-deriving newtype instance i `SatisfiesForAllBackends` Cacheable => Cacheable (BackendMap i)
 
 instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
   parseJSON =

@@ -9,7 +9,6 @@ import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '../constants';
 import { handlers } from '../../../__mocks__/handlers.mock';
 
 export default {
-  title: 'Browse Rows/Data Table Options 🧬',
   component: DataTableOptions,
   decorators: [ReactQueryDecorator()],
   parameters: {
@@ -17,7 +16,7 @@ export default {
   },
 } as ComponentMeta<typeof DataTableOptions>;
 
-export const Basic: ComponentStory<typeof DataTableOptions> = () => {
+const ComponentWrapper = () => {
   const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>([
@@ -36,13 +35,13 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
       <DataTableOptions
         pagination={{
           goToNextPage: () => {
-            setPageIndex((currentPage) => {
+            setPageIndex(currentPage => {
               updateStatus(`pageIndex is : ${currentPage + 1}`);
               return currentPage + 1;
             });
           },
           goToPreviousPage: () => {
-            setPageIndex((currentPage) => {
+            setPageIndex(currentPage => {
               updateStatus(`pageIndex is : ${currentPage - 1}`);
               return currentPage - 1;
             });
@@ -50,7 +49,7 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
           isNextPageDisabled: false,
           isPreviousPageDisabled: pageIndex <= 0,
           pageSize,
-          setPageSize: (newPageSize) => {
+          setPageSize: newPageSize => {
             updateStatus(`pageSize is : ${newPageSize}`);
             setPageSize(newPageSize);
           },
@@ -68,10 +67,10 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
             { name: '>=', value: '_gte' },
             { name: '<=', value: '_lte' },
           ],
-          removeWhereClause: (id) => {
+          removeWhereClause: id => {
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
           },
-          removeOrderByClause: (id) => {
+          removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
         }}
@@ -81,7 +80,17 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
   );
 };
 
-Basic.play = async ({ canvasElement }) => {
+export const Basic: ComponentStory<typeof DataTableOptions> = () => (
+  <ComponentWrapper />
+);
+
+export const Testing: ComponentStory<typeof DataTableOptions> = () => (
+  <ComponentWrapper />
+);
+
+Testing.storyName = '🧪 Testing - user interactions';
+
+Testing.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // the two where clauses should be present
@@ -93,7 +102,7 @@ Basic.play = async ({ canvasElement }) => {
   expect(await canvas.findByText('Last Name (desc)')).toBeVisible();
 
   // The query button should be updated with the number
-  expect(await canvas.findByText('(4)')).toBeVisible();
+  expect(await canvas.findByText('Query (4)')).toBeVisible();
 
   userEvent.click(await canvas.findByTestId('@runQueryBtn'));
 

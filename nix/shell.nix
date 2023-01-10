@@ -52,10 +52,6 @@ let
     # The correct version of GHC.
     pkgs.haskell.compiler.${pkgs.ghcName}
 
-    # We use the default versions of these packages.
-    (versions.ensureVersion pkgs.haskellPackages.ormolu)
-
-    # We build these packages using our custom GHC.
     pkgs.haskell.packages.${pkgs.ghcName}.alex
     pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
     pkgs.haskell.packages.${pkgs.ghcName}.cabal-install
@@ -66,11 +62,14 @@ let
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hpack)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu)
   ];
 
   devInputs = [
     pkgs.nixpkgs-fmt
     pkgs.shellcheck
+    pkgs.terraform
+    pkgs.gopls
   ];
 
   ciInputs = [
@@ -92,7 +91,7 @@ let
     freetdsWithODBC
     pkgs.libmysqlclient
     pkgs.mariadb
-    pkgs.postgresql
+    pkgs.postgresql_15
     pkgs.unixODBC
     msodbcsql
   ]

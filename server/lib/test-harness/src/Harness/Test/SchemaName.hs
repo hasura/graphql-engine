@@ -3,20 +3,19 @@
 module Harness.Test.SchemaName (SchemaName (..), getSchemaName) where
 
 import Data.Aeson (ToJSON (..))
-import Data.Char qualified
 import Data.String
 import Data.Text (Text)
 import Data.Text qualified as T
-import Data.UUID
 import Harness.Constants qualified as Constants
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.Test.BackendType
+import Harness.Test.BackendType (BackendType)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.TestEnvironment
 import Prelude
 
 newtype SchemaName = SchemaName {unSchemaName :: Text}
-  deriving newtype (Semigroup)
+  deriving newtype (Eq, Show, Semigroup)
 
 instance ToJSON SchemaName where
   toJSON (SchemaName sn) = toJSON sn
@@ -43,31 +42,19 @@ instance ToYamlString SchemaName where
 --
 -- For all other backends, we fall back to the Constants that were used before
 getSchemaName :: TestEnvironment -> SchemaName
-getSchemaName testEnv = case backendType testEnv of
-  Nothing -> SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
-  Just db -> case db of
-    Postgres -> SchemaName $ T.pack Constants.postgresDb
-    MySQL -> SchemaName $ T.pack Constants.mysqlDb
-    SQLServer -> SchemaName $ T.pack Constants.sqlserverDb
-    BigQuery ->
-      SchemaName $
-        T.pack $
-          "hasura_test_"
-            <> showUUID (uniqueTestId testEnv)
-    Citus -> SchemaName $ T.pack Constants.citusDb
-    Cockroach -> SchemaName $ T.pack Constants.cockroachDb
-    DataConnectorMock -> SchemaName $ T.pack Constants.dataConnectorDb
-    DataConnectorReference -> SchemaName $ T.pack Constants.dataConnectorDb
-    DataConnectorSqlite -> SchemaName "main"
+getSchemaName testEnv = getSchemaNameInternal (fmap BackendType.backendType $ getBackendTypeConfig testEnv) (uniqueTestId testEnv)
 
--- | Sanitise UUID for use in BigQuery dataset name
--- must be alphanumeric (plus underscores)
-showUUID :: UUID -> String
-showUUID =
-  map
-    ( \a ->
-        if Data.Char.isAlphaNum a
-          then a
-          else '_'
-    )
-    . show
+-- | exposed for use when creating a TestEnvironment
+getSchemaNameInternal :: Maybe BackendType -> UniqueTestId -> SchemaName
+getSchemaNameInternal Nothing _ = SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
+getSchemaNameInternal (Just BackendType.BigQuery) uniqueTestId =
+  SchemaName $
+    T.pack $
+      "hasura_test_"
+        <> show uniqueTestId
+getSchemaNameInternal (Just BackendType.Postgres) _ = SchemaName $ T.pack Constants.postgresDb
+getSchemaNameInternal (Just BackendType.SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
+getSchemaNameInternal (Just BackendType.Citus) _ = SchemaName $ T.pack Constants.citusDb
+getSchemaNameInternal (Just BackendType.Cockroach) _ = SchemaName $ T.pack Constants.cockroachDb
+getSchemaNameInternal (Just (BackendType.DataConnector "sqlite")) _ = SchemaName "main"
+getSchemaNameInternal (Just (BackendType.DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb

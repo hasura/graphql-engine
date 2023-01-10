@@ -9,9 +9,17 @@ RFC](../../../rfcs/hspec-test-suite.md).
 
 Most of the required setup concerns (and is documented in the README for)
 [../test-harness/README.md](the test harness), so please follow that link for
-more information. In short, assuming you have a BigQuery account set up (again,
-see [../test-harness/README.md](the test harness README) for instructions), set
-the following environment variables:
+more information. 
+
+The tests need to know the location of the `graphql-engine` executable:
+
+```bash
+$ export GRAPHQL_ENGINE=$(cabal list-bin exe:graphql-engine)
+```
+
+To be able to run tests against the BigQuery backend, in short, set the
+following environment variables (assuming you have a BigQuery account set up,
+see [../test-harness/README.md](the test harness README) for instructions):
 
 ```bash
 $ export HASURA_BIGQUERY_PROJECT_ID=??? # The project ID
@@ -78,13 +86,15 @@ Sometimes, tests are backend-specific. Particularly in the case of Postgres,
 there are features we support that aren't available on other backends. In other
 cases (such as BigQuery's handling of stringified numbers), there are
 backend-specific behaviours we wish to verify. In these cases, these tests
-should live under backend directories such as `Test/Postgres` or
-`Test/BigQuery`. Note that a feature matrix test currently only running on one
+should live under backend directories such as `Test/Databases/Postgres` or
+`Test/Databases/BigQuery`. Note that a feature matrix test currently only running on one
 backend should _still_ be in the feature matrix structure.
 
 When tests are written to verify that a particular bug has been fixed, these
 tests should be placed in the `Test/Regression` directory. They should contain
-both a descriptive name _and_ the issue number that they address.
+both a descriptive name _and_ the [`graphql-engine` repo](https://github.com/hasura/graphql-engine) issue number that they address.
+
+Lastly, tests that don't seem to fit under any of the feature matrix, `Regression`, or `Databases` directories should be organized to mirror the [Hasura Docs](https://hasura.io/docs/latest/) left-hand navigation.
 
 ## Adding a new test
 
@@ -93,7 +103,7 @@ Tests are written using [`hspec`](http://hspec.github.io/) and
 
 - Modules are declared under the `Test` namespace.
 - Module names must end with `Spec` (e.g. `HelloWorldSpec`).
-- Module names must contain some value `spec :: SpecWith TestEnvironment`,
+- Module names must contain some value `spec :: SpecWith GlobalTestEnvironment`,
   which serves as the entry point for the module.
 
 See the documentation for `hspec` and `hspec-discover`, as well as other
@@ -146,10 +156,10 @@ data and the tables onces the test suite finishes. To prevent that,
 you can modify your test module to prevent teardown. Example:
 
 ```diff
-spec :: SpecWith TestEnvironment
+spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
-    [ Fixture.fixture (Fixture.Backend Fixture.SQLServer)
+    [ Fixture.fixture (Fixture.Backend Sqlserver.backendTypeMetadata)
         { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
           setupTeardown = \testEnv ->
             [ Fixture.SetupAction
@@ -166,6 +176,12 @@ You will still have access to that data once the test suite finishes running.
 Now based on what you want to, you can either run the Hasura's Graphql engine
 to debug this further or directly inspect the database using [any of its
 clients](https://en.wikipedia.org/wiki/Comparison_of_database_administration_tools).
+
+## Logging
+
+By default logs are written to `tests-hspec.log`. To view the logs as the tests
+run, use
+`HASURA_TEST_LOGTYPE=stdout` or `HASURA_TYPE_LOGTYPE=stderr`.
 
 ### Using GHCI
 

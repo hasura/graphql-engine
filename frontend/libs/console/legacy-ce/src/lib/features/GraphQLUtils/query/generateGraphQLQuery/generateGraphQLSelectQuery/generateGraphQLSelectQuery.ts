@@ -1,4 +1,4 @@
-import { MetadataTable, Source } from '@/features/MetadataAPI';
+import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { OrderBy, WhereClause } from '../../../types';
 import {
   getFields,
@@ -61,12 +61,12 @@ export const generateGraphQLSelectQuery = async ({
   const offsetClause = getOffsetClause(options?.offset);
 
   const clauses = [whereClauses, orderByClauses, limitClause, offsetClause]
-    .filter((clause) => clause.length)
+    .filter(clause => clause.length)
     .join(',');
 
   const mergedClauses = clauses.length ? `(${clauses})` : '';
 
-  const selectedFields = fields.map((field) => `${field} \n`);
+  const selectedFields = fields.map(field => `${field} \n`);
   const GQLOperationName = operationName ?? 'MyQuery';
   /**
    * If the source has a GQL namespace set for it, then we query for our `queryRoot` under that namespace
@@ -86,7 +86,7 @@ export const generateGraphQLSelectQuery = async ({
   return {
     query: `query ${GQLOperationName} {
       ${queryRoot} ${mergedClauses} {
-        ${fields.map((field) => `${field} \n`)}
+        ${fields.map(field => `${field} \n`)}
       }
     }`,
     resultPath: queryRoot,

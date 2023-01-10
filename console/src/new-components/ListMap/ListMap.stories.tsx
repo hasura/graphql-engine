@@ -2,16 +2,13 @@ import { ComponentMeta, Story } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import React from 'react';
 import { expect } from '@storybook/jest';
+import { action } from '@storybook/addon-actions';
 import { GiCarrot, GiShinyApple } from 'react-icons/gi';
 import { FaCircle } from 'react-icons/fa';
 import { z } from 'zod';
 import { ListMap } from '.';
 import { Button } from '../Button';
-import { Form } from '../Form';
-
-const submit = (values: Record<string, unknown>) => {
-  console.log(JSON.stringify(values));
-};
+import { SimpleForm } from '../Form';
 
 const schema = z.object({
   mapping: z.record(z.string()),
@@ -23,17 +20,17 @@ export default {
   decorators: [
     StoryComponent => {
       return (
-        <Form
+        <SimpleForm
           options={{
             defaultValues: {
               mapping: { apple: 'tomato', cherry: 'chilli' },
             },
           }}
-          onSubmit={submit}
+          onSubmit={action('onSubmit')}
           schema={schema}
         >
-          {() => <StoryComponent />}
-        </Form>
+          <StoryComponent />
+        </SimpleForm>
       );
     },
   ],

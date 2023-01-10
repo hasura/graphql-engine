@@ -27,15 +27,15 @@ import ErrorsOverTime from './ErrorsOverTime';
 
 import styles from '../Metrics.module.scss';
 
-export const Error = (props) => {
+export const Error = props => {
   const { queryParams, projectId, RenderLink } = props;
   // const { preFilters } = props;
 
-  const getTitle = (value) => {
+  const getTitle = value => {
     return TITLE_MAP[value];
   };
 
-  const getEmptyTitle = (value) => {
+  const getEmptyTitle = value => {
     return NO_TITLE_MAP[value];
   };
 
@@ -96,5 +96,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const errorConnector = (connect) => connect(mapStateToProps)(Error);
+const errorConnector = connect => connect(mapStateToProps)(Error);
 export default errorConnector;

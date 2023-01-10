@@ -21,8 +21,8 @@ import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
@@ -30,7 +30,7 @@ import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
-type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
+type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -86,9 +86,11 @@ class
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
     Representable (HealthCheckTest b),
+    Eq (RawFunctionInfo b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
+    Ord (Column b),
     Data (TableName b),
     FromJSON (BackendConfig b),
     FromJSON (BackendInfo b),
@@ -105,6 +107,7 @@ class
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
+    HasCodec (FunctionName b),
     HasCodec (SourceConnConfiguration b),
     HasCodec (TableName b),
     ToJSON (BackendConfig b),
@@ -137,11 +140,9 @@ class
     ToErrorValue (ScalarType b),
     ToErrorValue (TableName b),
     ToErrorValue (ConstraintName b),
-    Cacheable (SourceConfig b),
-    Cacheable (BackendConfig b),
-    Cacheable (BackendInfo b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
+    Typeable (Column b),
     Typeable b,
     HasTag b,
     -- constraints of function argument
@@ -159,6 +160,7 @@ class
     Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
+    Eq (SourceConfig b),
     -- Extension constraints.
     Eq (XNodesAgg b),
     Show (XNodesAgg b),
@@ -168,9 +170,9 @@ class
     Show (XStreamingSubscription b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
-    Functor (BackendUpdate b),
-    Foldable (BackendUpdate b),
-    Traversable (BackendUpdate b),
+    Functor (UpdateVariant b),
+    Foldable (UpdateVariant b),
+    Traversable (UpdateVariant b),
     Functor (BackendInsert b),
     Foldable (BackendInsert b),
     Traversable (BackendInsert b),
@@ -258,6 +260,16 @@ class
   healthCheckImplementation :: Maybe (HealthCheckImplementation (HealthCheckTest b))
   healthCheckImplementation = Nothing
 
+  -- | An Implementation for version checking when adding a source.
+  versionCheckImplementation :: SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation = const (pure $ Right ())
+
+  -- | A backend type can opt into providing an implementation for
+  -- fingerprinted pings to the source,
+  -- useful for attribution that the user is using Hasura
+  runPingSource :: (String -> IO ()) -> SourceName -> SourceConnConfiguration b -> IO ()
+  runPingSource _ _ _ = pure ()
+
   -- Backend-specific IR types
 
   -- | Intermediate Representation of extensions to the shared set of boolean
@@ -276,14 +288,17 @@ class
 
   type AggregationPredicates b = Const Void
 
-  -- | Intermediate Representation of Update Mutations.
+  -- | The different variants of update supported by a backend for their
+  -- intermediate representation. For example, a backend could use a sum type
+  -- encapsulating either a single batch update or multiple batch updates.
+  --
   -- The default implementation makes update expressions uninstantiable.
   --
   -- It is parameterised over the type of fields, which changes during the IR
   -- translation phases.
-  type BackendUpdate b :: Type -> Type
+  type UpdateVariant b :: Type -> Type
 
-  type BackendUpdate b = Const Void
+  type UpdateVariant b = Const Void
 
   -- | Intermediate Representation of Insert Mutations.
   -- The default implementation makes insert expressions uninstantiable.
@@ -299,6 +314,9 @@ class
   type XRelay b :: Type
   type XNodesAgg b :: Type
 
+  -- | Flag the availability of event triggers.
+  type XEventTriggers b :: Type
+
   -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
   type XNestedInserts b :: Type
 
@@ -307,6 +325,17 @@ class
   -- functions on types
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
+
+  -- | Custom aggregate operators supported by the backend.
+  -- Backends that support custom aggregate operators should
+  -- return a HashMap from operator name to a scalar type mapping.
+  -- In the scalar type mapping the key represents the input type for the operator
+  -- and the value represents the result type.
+  -- Backends that do not support custom aggregate operators can use the default implementation
+  -- which returns an empty map.
+  getCustomAggregateOperators :: SourceConfig b -> HashMap G.Name (HashMap (ScalarType b) (ScalarType b))
+  getCustomAggregateOperators = const mempty
+
   textToScalarValue :: Maybe Text -> ScalarValue b
   parseScalarValue :: ScalarType b -> Value -> Either QErr (ScalarValue b)
   scalarValueToJSON :: ScalarValue b -> Value
@@ -331,6 +360,11 @@ class
 
   -- Resize source pools based on the count of server replicas
   resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
+
+  -- | Default behaviour of SQL triggers on logically replicated database.
+  -- Setting this to @Nothing@ will disable event trigger configuration in the
+  -- metadata.
+  defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

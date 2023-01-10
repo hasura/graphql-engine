@@ -9,11 +9,11 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Text qualified as T
 import Data.Validation
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( TemplatingEngine,
@@ -45,7 +45,7 @@ instance Transform Url where
   -- wrapper.
   newtype TransformFn Url = UrlTransformFn_ UrlTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
 
   newtype TransformCtx Url = TransformCtx RequestTransformCtx
 
@@ -61,7 +61,10 @@ instance Transform Url where
 newtype UrlTransformFn
   = Modify UnescapedTemplate
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+  deriving newtype (NFData, FromJSON, ToJSON)
+
+instance HasCodec UrlTransformFn where
+  codec = dimapCodec Modify coerce codec
 
 -- | Provide an implementation for the transformations defined by
 -- 'UrlTransformFn'.

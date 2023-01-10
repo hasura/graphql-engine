@@ -1,11 +1,12 @@
 import { CustomizationForm } from '@/features/ConnectDB';
-import { Forms } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { expect } from '@storybook/jest';
 import { ComponentStory, Meta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { screen } from '@testing-library/dom';
 import React from 'react';
 import { z } from 'zod';
+import { action } from '@storybook/addon-actions';
 
 const schema = z.object({
   customization: z
@@ -29,14 +30,9 @@ export default {
   decorators: [
     s => {
       return (
-        <Forms.New
-          schema={schema}
-          onSubmit={d => {
-            console.log(d);
-          }}
-        >
+        <SimpleForm schema={schema} onSubmit={action('onSubmit')}>
           {s}
-        </Forms.New>
+        </SimpleForm>
       );
     },
   ],

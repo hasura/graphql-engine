@@ -13,7 +13,7 @@ import { deleteOperationsFromTestSuite } from './graphql.queries';
  *
  * @param {Props} props
  */
-export const DeleteOperationsFromTests = (props) => {
+export const DeleteOperationsFromTests = props => {
   const { operationNames, testSuiteId, refetch } = props;
 
   const [removeFromTestSuite, { loading }] = useMutation(
@@ -24,7 +24,7 @@ export const DeleteOperationsFromTests = (props) => {
         operationNames,
       },
       onCompleted: () => refetch(),
-      onError: (err) => alert(err.toString()),
+      onError: err => alert(err.toString()),
     }
   );
 

@@ -25,12 +25,12 @@ export const WithExistingRelationship: ComponentStory<typeof Form> = args => (
 WithExistingRelationship.args = {
   existingRelationship: {
     name: 'Customers',
-    type: 'toLocalTableFk',
+    type: 'toSameTableFk',
     toLocalTable: {
       name: 'Customer',
       schema: 'public',
     },
-    relationship_type: 'Array',
+    relationship_type: 'Object',
     mapping: {
       from: {
         source: 'chinook',

@@ -21,7 +21,7 @@ const customSelectBoxStyles = {
   },
 };
 
-const SelectProject = (props) => {
+const SelectProject = props => {
   const { currentProjectId, selected, onChange } = props;
 
   const { data } = useQuery(fetchUserProjects);

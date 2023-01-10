@@ -9,7 +9,7 @@ export const NotSupportedNote = ({ unsupported }: NotSupportedNoteProps) => {
     return null;
   }
 
-  if (!unsupported.find((elem) => elem === currentDriver)) {
+  if (!unsupported.find(elem => elem === currentDriver)) {
     return null;
   }
   return (

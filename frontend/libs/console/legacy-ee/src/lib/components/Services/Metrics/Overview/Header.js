@@ -47,14 +47,14 @@ const Header = ({ setFromTime }) => {
             icon={<FaChevronDown />}
             iconPosition="end"
             className={`${styles.mr_xs}`}
-            onClick={() => setDropDownOpen((b) => !b)}
+            onClick={() => setDropDownOpen(b => !b)}
           >
             {currentBucket?.name}
           </Button>
           <div
             className={`${styles.menu} ${dropDownOpen ? styles.active : ''}`}
           >
-            {BucketTypes.map((bucket) => (
+            {BucketTypes.map(bucket => (
               <li
                 key={bucket?.name}
                 className={`${styles.link} ${styles.single_line} ${

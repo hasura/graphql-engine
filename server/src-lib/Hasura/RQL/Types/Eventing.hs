@@ -23,13 +23,12 @@ import Data.SerializableBlob qualified as SB
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import PostgreSQL.Binary.Encoding qualified as PE
 
 newtype EventId = EventId {unEventId :: Text}
-  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, PG.FromCol, PG.ToPrepArg, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, PG.FromCol, PG.ToPrepArg, Generic, NFData)
 
 -- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)
 data TriggerTypes = EventType | ScheduledType

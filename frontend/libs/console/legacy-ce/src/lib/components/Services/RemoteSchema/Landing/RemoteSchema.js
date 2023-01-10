@@ -17,7 +17,7 @@ class RemoteSchema extends React.Component {
         return null;
       }
 
-      const handleClick = (e) => {
+      const handleClick = e => {
         e.preventDefault();
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
@@ -74,13 +74,12 @@ class RemoteSchema extends React.Component {
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     readOnlyMode: state.main.readOnlyMode,
   };
 };
 
-const remoteSchemaConnector = (connect) =>
-  connect(mapStateToProps)(RemoteSchema);
+const remoteSchemaConnector = connect => connect(mapStateToProps)(RemoteSchema);
 
 export default remoteSchemaConnector;

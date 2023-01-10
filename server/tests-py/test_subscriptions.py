@@ -104,7 +104,7 @@ class TestSubscriptionCtrl(object):
     not os.getenv('HASURA_GRAPHQL_ADMIN_SECRET'),
     reason="This test is applicable only when HGE runs with admin-secret")
 class TestSubscriptionBasicNoAuth:
-    
+
     def test_closed_connection(self, ws_client):
         # sends empty header so that there is not authentication present in the test
         init_msg = {
@@ -763,8 +763,39 @@ class TestSubscriptionUDFWithSessionArg:
         assert ev['type'] == 'data', ev
         assert ev['payload']['data'] == {'me': [{'id': '42', 'name': 'Charlie'}]}, ev['payload']['data']
 
+@pytest.fixture(scope='class')
+def add_customized_source(current_backend, add_source, hge_ctx):
+    customization = {
+        'root_fields': {
+            'namespace': 'my_source',
+            'prefix': 'fpref_',
+            'suffix': '_fsuff',
+        },
+        'type_names': {
+            'prefix': 'tpref_',
+            'suffix': '_tsuff',
+        }
+    }
+    if current_backend == 'mssql':
+        hge_ctx.v1metadataq({
+            'type': 'mssql_add_source',
+            'args': {
+                'name': 'mssql1',
+                'configuration': {
+                    'connection_info': {
+                        'database_url': {
+                            'from_env': 'HASURA_GRAPHQL_MSSQL_SOURCE_URL',
+                        },
+                    },
+                },
+                'customization': customization,
+            },
+        })
+    else:
+        add_source('pg1', customization=customization)
+
 @pytest.mark.backend('mssql', 'postgres')
-@usefixtures('per_class_tests_db_state', 'ws_conn_init')
+@usefixtures('add_customized_source', 'per_class_tests_db_state', 'ws_conn_init')
 @pytest.mark.admin_secret
 class TestSubscriptionCustomizedSourceMSSQLPostgres:
     @classmethod

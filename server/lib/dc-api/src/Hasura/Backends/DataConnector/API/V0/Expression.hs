@@ -128,7 +128,7 @@ data Expression
     -- 'UnaryComparisonOperator'; the result of this application will return "true" or
     -- "false" depending on the 'UnaryComparisonOperator' that's being applied.
     ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Expression
 
@@ -235,7 +235,7 @@ data ComparisonColumn = ComparisonColumn
     -- | The scalar type of the column
     _ccColumnType :: API.V0.ScalarType
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonColumn
   deriving anyclass (Hashable, NFData)
 
@@ -283,7 +283,7 @@ data ComparisonValue
   = -- | Allows a comparison to a column on the current table or another table
     AnotherColumn ComparisonColumn
   | ScalarValue Value API.V0.ScalarType
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonValue
 

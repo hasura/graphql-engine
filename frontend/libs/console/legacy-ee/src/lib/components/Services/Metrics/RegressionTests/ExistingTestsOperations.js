@@ -10,7 +10,7 @@ import { ContentWithTestSuite } from './ContentWithTestSuite';
  *
  * @param {Props} props
  */
-export const ExistingTestsOperations = (props) => {
+export const ExistingTestsOperations = props => {
   return (
     <ContentWithTestSuite {...props}>
       {({ testSuiteId }) => <BrowseRows {...props} testSuiteId={testSuiteId} />}

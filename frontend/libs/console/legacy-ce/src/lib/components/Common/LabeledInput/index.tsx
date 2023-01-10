@@ -10,7 +10,7 @@ interface LabeledInputProps extends InputHTMLAttributes<HTMLInputElement> {
   icon?: boolean;
 }
 
-export const LabeledInput: React.FC<LabeledInputProps> = (props) => (
+export const LabeledInput: React.FC<LabeledInputProps> = props => (
   <>
     <label
       className={`flex items-center gap-1 ${

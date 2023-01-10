@@ -17,6 +17,7 @@ import {
 } from '../../../../dataSources';
 import { getTableConfiguration } from './utils';
 import { reloadDataSource } from '@/metadata/actions';
+import { updateLimit } from './ViewAction.utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -25,6 +26,7 @@ const V_EXPAND_REL = 'ViewTable/V_EXPAND_REL';
 const V_CLOSE_REL = 'ViewTable/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ViewTable/V_SET_ACTIVE';
 const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
+const V_SET_QUERY_LIMIT = 'ViewTable/V_SET_QUERY_LIMIT';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
@@ -38,7 +40,7 @@ const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 
 /* ****************** action creators *************/
 
-const vExpandRow = (rowKey) => ({
+const vExpandRow = rowKey => ({
   type: V_EXPAND_ROW,
   data: rowKey,
 });
@@ -47,7 +49,13 @@ const vCollapseRow = () => ({
   type: V_COLLAPSE_ROW,
 });
 
-const vSetDefaults = (limit) => ({ type: V_SET_DEFAULTS, limit });
+const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
+
+const vSetLimit = (limit, curPath) => ({
+  type: V_SET_QUERY_LIMIT,
+  limit,
+  curPath,
+});
 
 const showError = (err, msg, dispatch) =>
   dispatch(showErrorNotification(msg, err.error, err));
@@ -59,9 +67,9 @@ const getConfiguration = (tables, sources) => {
     currentDataSource,
   } = tables;
   return sources
-    ?.find((s) => s.name === currentDataSource)
+    ?.find(s => s.name === currentDataSource)
     ?.tables.find(
-      (t) => originalTable === t.table.name && currentSchema === t.table.schema
+      t => originalTable === t.table.name && currentSchema === t.table.schema
     )?.configuration;
 };
 
@@ -83,9 +91,8 @@ const vMakeRowsRequest = () => {
       headers,
       credentials: globalCookiePolicy,
     };
-
     return dispatch(requestAction(endpoint, options)).then(
-      (data) => {
+      data => {
         if (data?.errors) {
           Promise.all([
             dispatch(
@@ -115,6 +122,7 @@ const vMakeRowsRequest = () => {
           originalTable,
           tableConfiguration,
         });
+
         const currentTable = getState().tables.currentTable;
         if (currentTable === originalTable) {
           Promise.all([
@@ -127,7 +135,7 @@ const vMakeRowsRequest = () => {
           ]);
         }
       },
-      (error) => {
+      error => {
         Promise.all([
           dispatch(
             showErrorNotification('Browse query failed!', error.error, error)
@@ -157,7 +165,7 @@ const vMakeExportRequest = () => {
     };
     return new Promise((resolve, reject) => {
       dispatch(requestAction(endpoint, options))
-        .then((data) => {
+        .then(data => {
           const { currentSchema, currentTable: originalTable } = tables;
           const { rows } = processTableRowData(data, {
             currentSchema,
@@ -200,7 +208,7 @@ const vMakeCountRequest = () => {
     };
 
     return dispatch(requestAction(endpoint, options)).then(
-      (data) => {
+      data => {
         if (!isEmpty(data)) {
           const { currentTable: originalTable, currentSchema } = tables;
           const count = processCount({
@@ -219,7 +227,7 @@ const vMakeCountRequest = () => {
           }
         }
       },
-      (error) => {
+      error => {
         dispatch({
           type: V_COUNT_REQUEST_ERROR,
         });
@@ -263,7 +271,7 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
     const { currentTable: originalTable, allSchemas, currentSchema } = tables;
 
     const currentTable = allSchemas.find(
-      (t) => t.table_name === originalTable && t.table_schema === currentSchema
+      t => t.table_name === originalTable && t.table_schema === currentSchema
     );
     const columnTypeInfo = currentTable?.columns || [];
 
@@ -292,7 +300,7 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
       credentials: globalCookiePolicy,
     };
     dispatch(requestAction(endpoint, options)).then(
-      (data) => {
+      data => {
         try {
           const affectedRows = processDeleteRowData(
             data,
@@ -310,7 +318,7 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
           showError(err, 'Deleting row failed!', dispatch);
         }
       },
-      (err) => {
+      err => {
         showError(err, 'Deleting row failed!', dispatch);
       }
     );
@@ -332,7 +340,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
     const { currentTable: originalTable, allSchemas, currentSchema } = tables;
 
     const currentTable = allSchemas.find(
-      (t) => t.table_name === originalTable && t.table_schema === currentSchema
+      t => t.table_name === originalTable && t.table_schema === currentSchema
     );
     const columnTypeInfo = currentTable?.columns || [];
 
@@ -360,7 +368,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
     };
 
     dispatch(requestAction(endpoint, options)).then(
-      (data) => {
+      data => {
         try {
           const affected = processBulkDeleteRowData(
             data,
@@ -378,7 +386,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
           showError(err, 'Deleting rows failed!', dispatch);
         }
       },
-      (err) => {
+      err => {
         showError(err, 'Deleting rows failed!', dispatch);
       }
     );
@@ -386,7 +394,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
 };
 
 const vExpandRel = (path, relname, pk) => {
-  return (dispatch) => {
+  return dispatch => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_EXPAND_REL, path, relname, pk });
     // Make a request
@@ -394,18 +402,30 @@ const vExpandRel = (path, relname, pk) => {
   };
 };
 const vCloseRel = (path, relname) => {
-  return (dispatch) => {
+  return dispatch => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_CLOSE_REL, path, relname });
     // Make a request
     return dispatch(vMakeTableRequests());
   };
 };
+
+const DEFAULT_PAGE_LIMIT = 5;
+
 /* ************ helpers ************************/
-const defaultSubQuery = (relname, tableSchema) => {
-  return {
+const defaultSubQuery = (relname, tableSchema, isObjRel) => {
+  const baseSubQuery = {
     name: relname,
-    columns: tableSchema.columns.map((c) => c.column_name),
+    columns: tableSchema.columns.map(c => c.column_name),
+  };
+  if (isObjRel) {
+    return baseSubQuery;
+  }
+
+  return {
+    ...baseSubQuery,
+    limit: DEFAULT_PAGE_LIMIT,
+    offset: 0,
   };
 };
 
@@ -419,12 +439,12 @@ const expandQuery = (
   isObjRel = false
 ) => {
   if (curPath.length === 0) {
-    const rel = curTable.relationships.find((r) => r.rel_name === relname);
+    const rel = curTable.relationships.find(r => r.rel_name === relname);
     const childTableSchema = findTableFromRel(schemas, curTable, rel);
 
     const newColumns = [
       ...curQuery.columns,
-      defaultSubQuery(relname, childTableSchema),
+      defaultSubQuery(relname, childTableSchema, rel.rel_type === 'object'),
     ];
     if (isObjRel) {
       return { ...curQuery, columns: newColumns };
@@ -437,20 +457,26 @@ const expandQuery = (
 
     // If there's no oldStuff then set it
     const oldStuff = {};
-    ['where', 'limit', 'offset'].map((k) => {
+    ['where', 'limit', 'offset'].map(k => {
       if (k in curQuery) {
         oldStuff[k] = curQuery[k];
       }
     });
-    return { name: curQuery.name, where: pk, columns: newColumns, oldStuff };
+
+    return {
+      name: curQuery.name,
+      where: pk,
+      columns: newColumns,
+      oldStuff,
+      limit: curQuery.limit || DEFAULT_PAGE_LIMIT,
+      offset: curQuery.offset || 0,
+    };
   }
 
   const curRelName = curPath[0];
-  const curRel = curTable.relationships.find((r) => r.rel_name === curRelName);
+  const curRel = curTable.relationships.find(r => r.rel_name === curRelName);
   const childTableSchema = findTableFromRel(schemas, curTable, curRel);
-  const curRelColIndex = curQuery.columns.findIndex(
-    (c) => c.name === curRelName
-  );
+  const curRelColIndex = curQuery.columns.findIndex(c => c.name === curRelName);
   return {
     ...curQuery,
     columns: [
@@ -472,7 +498,7 @@ const expandQuery = (
 const closeQuery = (curQuery, curTable, curPath, relname, schemas) => {
   // eslint-disable-line no-unused-vars
   if (curPath.length === 0) {
-    const expandedIndex = curQuery.columns.findIndex((c) => c.name === relname);
+    const expandedIndex = curQuery.columns.findIndex(c => c.name === relname);
     const newColumns = [
       ...curQuery.columns.slice(0, expandedIndex),
       ...curQuery.columns.slice(expandedIndex + 1),
@@ -483,9 +509,9 @@ const closeQuery = (curQuery, curTable, curPath, relname, schemas) => {
       newStuff.name = curQuery.name;
     }
     // If no other expanded columns are left
-    if (!newColumns.find((c) => typeof c === 'object')) {
+    if (!newColumns.find(c => typeof c === 'object')) {
       if (curQuery.oldStuff) {
-        ['where', 'limit', 'order_by', 'offset'].map((k) => {
+        ['where', 'limit', 'order_by', 'offset'].map(k => {
           if (k in curQuery.oldStuff) {
             newStuff[k] = curQuery.oldStuff[k];
           }
@@ -497,11 +523,9 @@ const closeQuery = (curQuery, curTable, curPath, relname, schemas) => {
   }
 
   const curRelName = curPath[0];
-  const curRel = curTable.relationships.find((r) => r.rel_name === curRelName);
+  const curRel = curTable.relationships.find(r => r.rel_name === curRelName);
   const childTableSchema = findTableFromRel(schemas, curTable, curRel);
-  const curRelColIndex = curQuery.columns.findIndex(
-    (c) => c.name === curRelName
-  );
+  const curRelColIndex = curQuery.columns.findIndex(c => c.name === curRelName);
   return {
     ...curQuery,
     columns: [
@@ -529,14 +553,14 @@ const setActivePath = (activePath, curPath, relname, query) => {
   let subBase = basePath.slice(1);
 
   while (subBase.length > 0) {
-    subQuery = subQuery.columns.find((c) => c.name === subBase[0]); // eslint-disable-line no-loop-func
+    subQuery = subQuery.columns.find(c => c.name === subBase[0]); // eslint-disable-line no-loop-func
     subBase = subBase.slice(1);
   }
 
-  subQuery = subQuery.columns.find((c) => typeof c === 'object');
+  subQuery = subQuery.columns.find(c => typeof c === 'object');
   while (subQuery) {
     basePath.push(subQuery.name);
-    subQuery = subQuery.columns.find((c) => typeof c === 'object');
+    subQuery = subQuery.columns.find(c => typeof c === 'object');
   }
 
   return basePath;
@@ -582,12 +606,16 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   const newQuery = { ...query };
   let curQuery = newQuery;
   while (curPath.length > 0) {
-    curQuery = curQuery.columns.find((c) => c.name === curPath[0]); // eslint-disable-line no-loop-func
+    curQuery = curQuery.columns.find(c => c.name === curPath[0]); // eslint-disable-line no-loop-func
     curPath = curPath.slice(1);
   }
 
-  ['where', 'order_by', 'limit', 'offset'].map((k) => {
-    delete curQuery[k];
+  ['where', 'order_by', 'limit', 'offset'].map(k => {
+    try {
+      delete curQuery[k];
+    } catch (err) {
+      console.error('Error while deleting key', k, 'from', curQuery);
+    }
   });
 
   for (const k in queryStuff) {
@@ -606,17 +634,17 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
     };
   }
   const tableSchema = schemas.find(
-    (x) => x.table_name === tableName && x.table_schema === currentSchema
+    x => x.table_name === tableName && x.table_schema === currentSchema
   );
   switch (action.type) {
     case V_SET_DEFAULTS:
       // check if table exists and then process.
       const currentTable = schemas.find(
-        (t) => t.table_name === tableName && t.table_schema === currentSchema
+        t => t.table_name === tableName && t.table_schema === currentSchema
       );
       let currentColumns = [];
       if (currentTable) {
-        currentColumns = currentTable.columns.map((c) => c.column_name);
+        currentColumns = currentTable.columns.map(c => c.column_name);
       }
       return {
         ...defaultViewState,
@@ -639,6 +667,20 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
           viewState.query,
           action.queryStuff,
           viewState.activePath
+        ),
+      };
+    case V_SET_QUERY_LIMIT:
+      const updateQueryLimitState = updateLimit(
+        viewState,
+        action.limit,
+        action.curPath
+      );
+      return {
+        ...viewState,
+        query: addQueryOptsActivePath(
+          updateQueryLimitState.query,
+          updateQueryLimitState.query,
+          action.curPath
         ),
       };
     case V_EXPAND_REL:
@@ -740,6 +782,7 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
 export default viewReducer;
 export {
   vSetDefaults,
+  vSetLimit,
   vExpandRel,
   vCloseRel,
   vExpandRow,

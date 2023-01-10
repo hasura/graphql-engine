@@ -16,7 +16,7 @@ type Props = {
   dispatch: Dispatch;
 };
 
-const InvocationLogs: React.FC<Props> = (props) => {
+const InvocationLogs: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
 
   const triggerName = currentTrigger?.name ?? '';

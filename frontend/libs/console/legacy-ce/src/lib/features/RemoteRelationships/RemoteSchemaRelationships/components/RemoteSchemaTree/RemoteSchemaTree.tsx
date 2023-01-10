@@ -80,11 +80,11 @@ export const RemoteSchemaTree = ({
 
     if (selectedField) {
       setRelationshipFields(
-        relationshipFields.filter((field) => !(field.key === nodeInfo.key))
+        relationshipFields.filter(field => !(field.key === nodeInfo.key))
       );
     } else {
       setRelationshipFields([
-        ...relationshipFields.filter((field) => !(field.key === nodeInfo.key)),
+        ...relationshipFields.filter(field => !(field.key === nodeInfo.key)),
         fieldData,
       ]);
     }
@@ -106,7 +106,7 @@ export const RemoteSchemaTree = ({
       // and remove all its children
       setRelationshipFields(
         relationshipFields.filter(
-          (field) =>
+          field =>
             !(
               field.key === nodeInfo.key ||
               field.key.includes(`${nodeInfo.key}.`)
@@ -119,23 +119,22 @@ export const RemoteSchemaTree = ({
         nodeInfo.type === 'field'
           ? relationshipFields
               .filter(
-                (field) =>
-                  field.type === 'field' && field.depth >= nodeInfo.depth
+                field => field.type === 'field' && field.depth >= nodeInfo.depth
               )
-              .map((field) => field.key)
+              .map(field => field.key)
           : [];
 
       // remove all the fields and their children which are on same/higher depth, and add the current field
       // as one parent can have only one field at a certain depth
       setRelationshipFields([
         ...relationshipFields.filter(
-          (field) =>
+          field =>
             !(
               field.key === nodeInfo.key ||
               // remove all current or higher depth fields and their children
               (nodeInfo.type === 'field' &&
                 levelDepthFields.some(
-                  (refFieldKey) =>
+                  refFieldKey =>
                     field.key === refFieldKey ||
                     field.key.includes(`${refFieldKey}.`)
                 ))

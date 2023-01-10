@@ -48,7 +48,7 @@ export const findRemoteSchemaPermission = (
   perms: PermissionsType[],
   role: string
 ) => {
-  return perms.find((p) => p.role === role);
+  return perms.find(p => p.role === role);
 };
 
 export const getCreateRemoteSchemaPermissionQuery = (
@@ -139,7 +139,7 @@ export const updateBulkSelect = (
 ) => {
   const bulkRes = isAdd
     ? [...bulkSelect, selectedRole]
-    : bulkSelect.filter((e) => e !== selectedRole);
+    : bulkSelect.filter(e => e !== selectedRole);
   return bulkRes;
 };
 
@@ -276,7 +276,7 @@ export const getType = (
         key in permissionsSchemaFields
       )
         checked = true;
-      values.forEach((val) => {
+      values.forEach(val => {
         childArray.push({
           name: val.name,
           checked,
@@ -354,7 +354,6 @@ export const getType = (
             return { ...p, [c.name]: { ...c } };
           }, {});
         }
-
         childArray.push(field);
       });
 
@@ -608,7 +607,7 @@ const formatArg = ({ argName, arg }: FormatParamArgs): string | undefined => {
 
   if (typeof argName === 'object') {
     if (Array.isArray(argName)) {
-      const argList = argName.map((argListItem) =>
+      const argList = argName.map(argListItem =>
         formatArg({ arg, argName: argListItem })
       );
 
@@ -650,7 +649,7 @@ const getSDLField = (
   // add union fields to SDL
   if (typeName.startsWith('union') && type.children) {
     result = `${typeName} =`;
-    type.children.forEach((t) => {
+    type.children.forEach(t => {
       if (t.checked) {
         result = `${result} ${t.name} |`;
       }
@@ -663,7 +662,7 @@ const getSDLField = (
   result = `${typeName}{`;
 
   if (type.children)
-    type.children.forEach((f) => {
+    type.children.forEach(f => {
       if (!f.checked) return null;
 
       let fieldStr = f.name;
@@ -731,7 +730,7 @@ export const generateSDL = (
   let prefix = `schema{`;
   let result = '';
 
-  types.forEach((type) => {
+  types.forEach(type => {
     const fieldDef = getSDLField(type, argTree);
 
     if (!isEmpty(fieldDef) && type.typeName === '__query_root' && type.name) {
@@ -860,9 +859,7 @@ const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
 
 const getDirectives = (field: InputValueDefinitionNode) => {
   let res: unknown | Record<string, any>;
-  const preset = field?.directives?.find(
-    (dir) => dir?.name?.value === 'preset'
-  );
+  const preset = field?.directives?.find(dir => dir?.name?.value === 'preset');
   if (preset?.arguments && preset?.arguments[0])
     res = parseObjectField(preset.arguments[0]);
   if (typeof res === 'object') return res;
@@ -872,7 +869,7 @@ const getDirectives = (field: InputValueDefinitionNode) => {
 
 const getPresets = (field: FieldDefinitionNode) => {
   const res: Record<string, any> = {};
-  field?.arguments?.forEach((arg) => {
+  field?.arguments?.forEach(arg => {
     if (arg.directives && arg.directives.length > 0)
       res[arg?.name?.value] = getDirectives(arg);
   });
@@ -882,7 +879,7 @@ const getPresets = (field: FieldDefinitionNode) => {
 const getFieldsMap = (fields: FieldDefinitionNode[], parentName: string) => {
   const type = `type ${parentName}`;
   const res: Record<string, any> = { [type]: {} };
-  fields.forEach((field) => {
+  fields.forEach(field => {
     res[type][field?.name?.value] = getPresets(field);
   });
   return res;
@@ -913,7 +910,7 @@ export const getArgTreeFromPermissionSDL = (
         if (i.name && i.fields && i.kind === 'InputObjectTypeDefinition') {
           const type = `input ${i.name.value}`;
           const res: Record<string, any> = { [type]: {} };
-          i.fields.forEach((field) => {
+          i.fields.forEach(field => {
             if (field.directives && field.directives.length > 0) {
               res[type][field.name?.value] = {};
               res[type][field.name?.value][field.name?.value] =
@@ -943,7 +940,7 @@ const getDeps = (field: FieldType, res = new Set<string>([])) => {
   if (field.return) res.add(getTrimmedReturnType(field.return));
 
   if (field.args)
-    Object.values(field.args).forEach((arg) => {
+    Object.values(field.args).forEach(arg => {
       if (!(arg.type instanceof GraphQLScalarType)) {
         const subType = getTrimmedReturnType(arg.type.inspect());
         res.add(subType);
@@ -959,12 +956,12 @@ const addTypesRecursively = (
   alreadyChecked: Array<string>
 ): FieldType[] => {
   // if "alreadychecked" has then remove from typelist, if not then add to alreadychecked
-  alreadyChecked.forEach((key) => {
+  alreadyChecked.forEach(key => {
     if (typeList.has(key)) {
       typeList.delete(key);
     }
   });
-  typeList.forEach((value) => {
+  typeList.forEach(value => {
     alreadyChecked.push(value);
   });
 
@@ -981,7 +978,7 @@ const addTypesRecursively = (
           return false;
         });
         if (!partiallyChecked)
-          newField.children = newField.children.map((ch) => {
+          newField.children = newField.children.map(ch => {
             if (ch.return) typeList.add(getTrimmedReturnType(ch.return));
             return {
               ...ch,
@@ -1005,7 +1002,7 @@ export const addDepFields = (list: FieldType[], field: FieldType) => {
 export const getExpandedItems = (list: FieldType[]) => {
   const res: ExpandedItems = {};
   list.forEach((item: FieldType, ix) => {
-    const hasValidChildren = item?.children?.find((i) => i.checked === true);
+    const hasValidChildren = item?.children?.find(i => i.checked === true);
     if (!isEmpty(hasValidChildren)) res[ix] = true;
   });
   return res;

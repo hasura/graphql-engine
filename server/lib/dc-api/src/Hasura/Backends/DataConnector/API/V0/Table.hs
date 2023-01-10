@@ -1,15 +1,21 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 
---
 module Hasura.Backends.DataConnector.API.V0.Table
-  ( TableInfo (..),
+  ( TableName (..),
+    TableInfo (..),
+    tableNameToText,
     tiName,
+    tiType,
     tiColumns,
     tiPrimaryKey,
     tiForeignKeys,
     tiDescription,
-    TableName (..),
+    tiInsertable,
+    tiUpdatable,
+    tiDeletable,
+    TableType (..),
     ForeignKeys (..),
     ConstraintName (..),
     Constraint (..),
@@ -28,9 +34,9 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
 import Data.Hashable (Hashable)
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.OpenApi (ToSchema)
-import Data.Text (Text)
+import Data.Text (Text, intercalate)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Prelude
@@ -40,10 +46,13 @@ import Prelude
 -- | The fully qualified name of a table. The last element in the list is the table name
 -- and all other elements represent namespacing of the table name.
 -- For example, for a database that has schemas, the name would be '[<schema>,<table name>]'
-newtype TableName = TableName {unTableName :: NonEmpty Text}
+newtype TableName = TableName {unTableName :: NonEmpty.NonEmpty Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
+
+tableNameToText :: TableName -> Text
+tableNameToText (TableName tns) = intercalate "." (NonEmpty.toList tns)
 
 instance HasCodec TableName where
   codec =
@@ -56,12 +65,16 @@ instance HasCodec TableName where
 -- | Table schema data from the 'SchemaResponse'.
 data TableInfo = TableInfo
   { _tiName :: TableName,
+    _tiType :: TableType,
     _tiColumns :: [API.V0.ColumnInfo],
     _tiPrimaryKey :: [API.V0.ColumnName],
     _tiForeignKeys :: ForeignKeys,
-    _tiDescription :: Maybe Text
+    _tiDescription :: Maybe Text,
+    _tiInsertable :: Bool,
+    _tiUpdatable :: Bool,
+    _tiDeletable :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableInfo
 
@@ -70,10 +83,31 @@ instance HasCodec TableInfo where
     object "TableInfo" $
       TableInfo
         <$> requiredField "name" "The name of the table" .= _tiName
+        <*> optionalFieldWithDefault "type" Table "The type of table" .= _tiType
         <*> requiredField "columns" "The columns of the table" .= _tiColumns
         <*> optionalFieldWithOmittedDefault "primary_key" [] "The primary key of the table" .= _tiPrimaryKey
         <*> optionalFieldWithOmittedDefault "foreign_keys" (ForeignKeys mempty) "Foreign key constraints" .= _tiForeignKeys
         <*> optionalFieldOrNull "description" "Description of the table" .= _tiDescription
+        <*> optionalFieldWithDefault "insertable" False "Whether or not new rows can be inserted into the table" .= _tiInsertable
+        <*> optionalFieldWithDefault "updatable" False "Whether or not existing rows can be updated in the table" .= _tiUpdatable
+        <*> optionalFieldWithDefault "deletable" False "Whether or not existing rows can be deleted in the table" .= _tiDeletable
+
+--------------------------------------------------------------------------------
+
+data TableType
+  = Table
+  | View
+  deriving stock (Eq, Ord, Show, Generic, Enum, Bounded)
+  deriving anyclass (NFData, Hashable)
+
+instance HasCodec TableType where
+  codec =
+    named "TableType" $
+      ( stringConstCodec
+          [ (Table, "table"),
+            (View, "view")
+          ]
+      )
 
 --------------------------------------------------------------------------------
 
@@ -84,6 +118,8 @@ newtype ForeignKeys = ForeignKeys {unForeignKeys :: HashMap ConstraintName Const
 
 instance HasCodec ForeignKeys where
   codec = dimapCodec ForeignKeys unForeignKeys $ codec @(HashMap ConstraintName Constraint)
+
+--------------------------------------------------------------------------------
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -104,6 +140,8 @@ instance HasCodec Constraint where
       Constraint
         <$> requiredField "foreign_table" "The table referenced by the foreign key in the child table." .= _cForeignTable
         <*> requiredField "column_mapping" "The columns on which you want want to define the foreign key." .= _cColumnMapping
+
+--------------------------------------------------------------------------------
 
 $(makeLenses ''TableInfo)
 $(makeLenses ''Constraint)

@@ -6,7 +6,7 @@ import {
 } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { DataTarget } from '@/features/Datasources';
-import { Form } from '@/new-components/Form';
+import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
@@ -49,6 +49,16 @@ export const LocalRelationshipWidget = ({
   });
 
   const { data: defaultValues, isLoading, isError } = useValues;
+
+  const {
+    methods: { formState },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: {
+      defaultValues,
+    },
+  });
 
   const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
@@ -184,37 +194,30 @@ export const LocalRelationshipWidget = ({
   }
 
   return (
-    <Form
-      schema={schema}
-      onSubmit={submit}
-      options={{ defaultValues }}
-      className="p-4"
-    >
-      {options => (
-        <>
-          <div>
-            <FormElements
-              existingRelationshipName={existingRelationshipName || ''}
-            />
+    <Form onSubmit={submit} className="p-4">
+      <>
+        <div>
+          <FormElements
+            existingRelationshipName={existingRelationshipName || ''}
+          />
 
-            <Button
-              mode="primary"
-              type="submit"
-              isLoading={mutation.isLoading}
-              loadingText="Saving relationship"
-              data-test="add-local-db-relationship"
-            >
-              Save Relationship
-            </Button>
-          </div>
+          <Button
+            mode="primary"
+            type="submit"
+            isLoading={mutation.isLoading}
+            loadingText="Saving relationship"
+            data-test="add-local-db-relationship"
+          >
+            Save Relationship
+          </Button>
+        </div>
 
-          {!!Object.keys(options.formState.errors).length && (
-            <IndicatorCard status="negative">
-              Error saving relationship
-            </IndicatorCard>
-          )}
-        </>
-      )}
+        {!!Object.keys(formState.errors).length && (
+          <IndicatorCard status="negative">
+            Error saving relationship
+          </IndicatorCard>
+        )}
+      </>
     </Form>
   );
 };

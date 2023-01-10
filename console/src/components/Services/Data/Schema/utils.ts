@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckDatabaseLatencyResponse, TaskEvent } from '@/features/ConnectDB';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 import { LS_KEYS, getLSItem, setLSItem } from '../../../../utils/localStorage';
 import globals from '../../../../Globals';
@@ -49,4 +50,51 @@ export const useVPCBannerVisibility = () => {
     show,
     dismiss,
   };
+};
+
+export type DBLatencyData = Exclude<
+  TaskEvent['public_event_data']['sources'],
+  null
+>[number];
+
+const isSourceLatencyGood = (
+  sourceLatencyData: DBLatencyData | null | undefined
+) => {
+  return (
+    sourceLatencyData &&
+    sourceLatencyData.avg_latency <= 100 &&
+    sourceLatencyData.error === ''
+  );
+};
+
+export const checkHighLatencySources = (
+  checkDbResponse: CheckDatabaseLatencyResponse | undefined
+) => {
+  if (
+    !checkDbResponse ||
+    !checkDbResponse.taskEvent.public_event_data.sources
+  ) {
+    return false;
+  }
+
+  return Object.keys(checkDbResponse.taskEvent.public_event_data.sources).every(
+    sourceName =>
+      isSourceLatencyGood(
+        checkDbResponse.taskEvent.public_event_data.sources &&
+          checkDbResponse.taskEvent.public_event_data.sources[sourceName]
+      )
+  );
+};
+
+export const getSourceInfoFromLatencyData = (
+  sourceName: string,
+  latencyData?: CheckDatabaseLatencyResponse
+) => {
+  if (!latencyData?.taskEvent?.public_event_data?.sources) {
+    return undefined;
+  }
+
+  return (
+    latencyData.taskEvent.public_event_data.sources[sourceName] || undefined
+  );
 };

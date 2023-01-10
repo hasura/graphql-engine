@@ -76,7 +76,7 @@ export const defaultState: ConnectDBState = {
   preparedStatements: false,
   isolationLevel: 'read-committed',
   customization: {
-    namingConvention: 'hasura-default',
+    namingConvention: null,
   },
 };
 
@@ -118,10 +118,10 @@ const setDataFromEnv = (str: string) => {
     : undefined;
 };
 
-const checkUndef = (obj?: Record<string, any>) =>
-  obj && Object.values(obj).some((el) => el !== undefined && el !== null);
+const checkUndef = (obj?: Record<string, any> | string | null) =>
+  obj && Object.values(obj).some(el => el !== undefined && el !== null);
 
-const checkEmpty = (obj?: Record<string, any>) =>
+const checkEmpty = (obj?: Record<string, any> | null | string) =>
   obj && Object.keys(obj).length !== 0 && checkUndef(obj);
 
 export const connectDataSource = (
@@ -197,17 +197,17 @@ export const connectDataSource = (
         }),
       preparedStatements: currentState.preparedStatements,
       isolationLevel: currentState.isolationLevel,
-      ...(checkEmpty(currentState.customization) && {
-        customization: {
-          ...(checkEmpty(currentState.customization?.rootFields) && {
-            rootFields: currentState.customization?.rootFields,
-          }),
-          ...(checkEmpty(currentState.customization?.typeNames) && {
-            typeNames: currentState.customization?.typeNames,
-          }),
+      customization: {
+        ...(checkEmpty(currentState.customization?.rootFields) && {
+          rootFields: currentState.customization?.rootFields,
+        }),
+        ...(checkEmpty(currentState.customization?.typeNames) && {
+          typeNames: currentState.customization?.typeNames,
+        }),
+        ...(checkEmpty(currentState.customization?.namingConvention) && {
           namingConvention: currentState.customization?.namingConvention,
-        },
-      }),
+        }),
+      },
     },
   };
 
@@ -226,7 +226,7 @@ export const connectDataSource = (
 };
 
 export const removeEmptyValues = (obj: any) =>
-  pickBy(obj, (value) => value !== '');
+  pickBy(obj, value => value !== '');
 
 export type ConnectDBActions =
   | {
@@ -642,7 +642,7 @@ export const readReplicaReducer = (
     case 'ADD_READ_REPLICA':
       return [...state, action.data];
     case 'REMOVE_READ_REPLICA':
-      return state.filter((st) => st.displayName !== action.data);
+      return state.filter(st => st.displayName !== action.data);
     case 'RESET_READ_REPLICA_STATE':
       return defaultReadReplicasState;
     default:
@@ -685,5 +685,8 @@ export const makeReadReplicaConnectionObject = (
   return {
     database_url,
     pool_settings,
+    use_prepared_statements: stateVal.preparedStatements,
+    ssl_configuration: stateVal.sslConfiguration,
+    isolation_level: stateVal.isolationLevel,
   };
 };

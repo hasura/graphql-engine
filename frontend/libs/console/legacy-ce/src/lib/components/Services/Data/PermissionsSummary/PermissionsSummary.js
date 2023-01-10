@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
@@ -85,7 +86,7 @@ class PermissionsSummary extends Component {
     let allRoles = getAllRoles(allSchemas);
 
     // add newly added roles
-    const newRoles = copyState.copyToRoles.filter((r) => !allRoles.includes(r));
+    const newRoles = copyState.copyToRoles.filter(r => !allRoles.includes(r));
     allRoles = allRoles.concat(newRoles);
 
     // ------------------------------------------------------------------------------
@@ -105,12 +106,12 @@ class PermissionsSummary extends Component {
     // ------------------------------------------------------------------------------
 
     const getActionSelector = () => {
-      const setAction = (e) => {
+      const setAction = e => {
         this.setState({ currAction: e.target.value });
       };
 
       const getActionsOptions = () => {
-        return allActions.map((action) => (
+        return allActions.map(action => (
           <option key={action} value={action}>
             {action}
           </option>
@@ -130,8 +131,8 @@ class PermissionsSummary extends Component {
       );
     };
 
-    const getBackBtn = (dimension) => {
-      const clear = (e) => {
+    const getBackBtn = dimension => {
+      const clear = e => {
         e.preventDefault();
 
         this.setState({ [dimension]: null });
@@ -253,7 +254,7 @@ class PermissionsSummary extends Component {
     const getRolesCells = (table, roleCellRenderer) => {
       const tablePermissions = getTablePermissionsByRoles(table);
 
-      return allRoles.map((role) => {
+      return allRoles.map(role => {
         const rolePermissions = tablePermissions[role];
         const actionPermission = rolePermissions
           ? rolePermissions[currAction]
@@ -279,7 +280,7 @@ class PermissionsSummary extends Component {
       const tablePermissions = getTablePermissionsByRoles(table);
       const rolePermission = tablePermissions[currRole] || {};
 
-      return allActions.map((action) => {
+      return allActions.map(action => {
         const actionPermission = rolePermission[action];
 
         const cellKey = action;
@@ -456,7 +457,7 @@ class PermissionsSummary extends Component {
           const rowRows = [];
 
           const getTableActionRolesRowPermissions = () => {
-            const roleRowPermissionsRenderer = (actionPermission) => {
+            const roleRowPermissionsRenderer = actionPermission => {
               let rowsDisplay = noAccessDisplay;
 
               const filterString = getPermissionFilterString(
@@ -485,7 +486,7 @@ class PermissionsSummary extends Component {
           };
 
           const getTableActionRolesRowLimits = () => {
-            const roleRowLimitRenderer = (actionPermission) => {
+            const roleRowLimitRenderer = actionPermission => {
               return (
                 <div className={styles.text_center}>
                   {actionPermission && actionPermission.limit !== undefined
@@ -499,7 +500,7 @@ class PermissionsSummary extends Component {
           };
 
           const getTableActionRolesAggregationAllowed = () => {
-            const roleAggregateAllowedRenderer = (actionPermission) => {
+            const roleAggregateAllowedRenderer = actionPermission => {
               return (
                 <div className={styles.text_center}>
                   {actionPermission &&
@@ -544,11 +545,11 @@ class PermissionsSummary extends Component {
         };
 
         const getColumnRows = () => {
-          return currTableInfo.columns.map((column) => {
+          return currTableInfo.columns.map(column => {
             const columnName = column.column_name;
 
             const getTableActionRolesColumnPermissions = () => {
-              const roleColumnPermissionRenderer = (actionPermission) => {
+              const roleColumnPermissionRenderer = actionPermission => {
                 const columnAllowed =
                   actionPermission &&
                   actionPermission.columns &&
@@ -622,7 +623,7 @@ class PermissionsSummary extends Component {
       const getRoleAllTablesAllActionsTable = () => {
         const getActionsHeaderRow = () => {
           const getActionsHeaders = () => {
-            return allActions.map((action) => <th key={action}>{action}</th>);
+            return allActions.map(action => <th key={action}>{action}</th>);
           };
 
           return (
@@ -634,7 +635,7 @@ class PermissionsSummary extends Component {
         };
 
         const getRoleAllTablesAllActionsRows = () => {
-          const tablePermissionListRenderer = (table) => {
+          const tablePermissionListRenderer = table => {
             return getActionsCells(table, rolePermissionsRenderer);
           };
 
@@ -670,7 +671,7 @@ class PermissionsSummary extends Component {
       };
 
       const getAllTableAllRolesRows = () => {
-        const tablePermissionListRenderer = (table) => {
+        const tablePermissionListRenderer = table => {
           return getRolesCells(table, rolePermissionsRenderer);
         };
 
@@ -740,7 +741,7 @@ class PermissionsSummary extends Component {
       };
 
       const getFromRoleOptions = () => {
-        return allRoles.map((role) => {
+        return allRoles.map(role => {
           return (
             <option key={role} value={role}>
               {role}
@@ -750,7 +751,7 @@ class PermissionsSummary extends Component {
       };
 
       const getFromTableOptions = () => {
-        return currSchemaTrackedTables.map((table) => {
+        return currSchemaTrackedTables.map(table => {
           const tableName = table.table_name;
           const tableValue = getTableNameWithSchema(getTableDef(table));
 
@@ -763,7 +764,7 @@ class PermissionsSummary extends Component {
       };
 
       const getFromActionOptions = () => {
-        return allActions.map((action) => {
+        return allActions.map(action => {
           return (
             <option key={action} value={action}>
               {action}
@@ -772,19 +773,19 @@ class PermissionsSummary extends Component {
         });
       };
 
-      const onFromRoleChange = (e) => {
+      const onFromRoleChange = e => {
         this.setState({
           copyState: { ...copyState, copyFromRole: e.target.value },
         });
       };
 
-      const onFromTableChange = (e) => {
+      const onFromTableChange = e => {
         this.setState({
           copyState: { ...copyState, copyFromTable: e.target.value },
         });
       };
 
-      const onFromActionChange = (e) => {
+      const onFromActionChange = e => {
         this.setState({
           copyState: { ...copyState, copyFromAction: e.target.value },
         });
@@ -797,11 +798,11 @@ class PermissionsSummary extends Component {
           const getToRoleOptions = () => {
             return allRoles
               .filter(
-                (role) =>
+                role =>
                   role === value ||
                   (role !== copyFromRole && !copyToRoles.includes(role))
               )
-              .map((role) => {
+              .map(role => {
                 return (
                   <option key={role} value={role}>
                     {role}
@@ -810,7 +811,7 @@ class PermissionsSummary extends Component {
               });
           };
 
-          const onSelect = (e) => {
+          const onSelect = e => {
             const _newCopyToRoles = [...copyToRoles];
 
             const selectedValue = e.target.value;
@@ -856,7 +857,7 @@ class PermissionsSummary extends Component {
       };
 
       const getNewRoleCreator = () => {
-        const setNewRole = (e) => {
+        const setNewRole = e => {
           this.setState({
             copyState: {
               ...copyState,
@@ -988,12 +989,13 @@ class PermissionsSummary extends Component {
           className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
         >
           <Helmet title="Permissions Summary | Hasura" />
-          <div className={styles.add_mar_bottom}>
-            <h2 className={styles.heading_text}>
-              Permissions summary - {currentSchema}
-            </h2>
-          </div>
-
+          <Analytics name="PermissionsSummary" {...REDACT_EVERYTHING}>
+            <div className={styles.add_mar_bottom}>
+              <h2 className={styles.heading_text}>
+                Permissions summary - {currentSchema}
+              </h2>
+            </div>
+          </Analytics>
           {getTable()}
 
           {getCopyModal()}
@@ -1003,8 +1005,8 @@ class PermissionsSummary extends Component {
   }
 }
 
-const permissionsSummaryConnector = (connect) => {
-  const mapStateToProps = (state) => {
+const permissionsSummaryConnector = connect => {
+  const mapStateToProps = state => {
     return {
       allSchemas: state.tables.allSchemas,
       currentSchema: state.tables.currentSchema,

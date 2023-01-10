@@ -328,8 +328,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
           >>= flip onLeft throwError
 
-      operationLimit <- askGraphqlOperationLimit reqId
-      let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      operationLimit <- askGraphqlOperationLimit reqId userInfo (scApiLimits sc)
+      let runLimits = runResourceLimits operationLimit
 
       -- 2. Construct the first step of the execution plan from 'reqParsed :: GQLParsed'.
       queryParts <- getSingleOperation reqParsed
@@ -343,6 +343,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.getResolvedExecPlan
           env
           logger
+          prometheusMetrics
           userInfo
           sqlGenCtx
           readOnlyMode
@@ -694,7 +695,8 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
   dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <-
     onNothing (JO.lookup fieldName' dataObj) $
-      do400 $ "expecting key " <> fieldName'
+      do400 $
+        "expecting key " <> fieldName'
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
@@ -726,7 +728,6 @@ runGQBatched ::
     MonadQueryLog m,
     MonadTrace m,
     MonadExecuteQuery m,
-    HttpLog m,
     MonadMetadataStorage (MetadataStorageT m),
     EB.MonadQueryTags m,
     HasResourceLimits m
@@ -741,13 +742,13 @@ runGQBatched ::
   E.GraphQLQueryType ->
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
-  m (HttpLogMetadata m, HttpResponse EncJSON)
+  m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
       (gqlQueryOperationLog, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
-      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)) L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog)))
-      pure (httpLoggingMetadata, snd <$> httpResp)
+      let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
+      pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -770,7 +771,7 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
               )
               responses
           parameterizedQueryHashes = map gqolParameterizedQueryHash requestsOperationLogs
-          httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetBatched parameterizedQueryHashes) L.RequestModeBatched (Just (GQLBatchedReqs batchOperationLogs))
-      pure (httpLoggingMetadata, removeHeaders (map ((fmap snd) . snd) responses))
+          httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeBatched ((Just (GQLBatchedReqs batchOperationLogs))), PQHSetBatched parameterizedQueryHashes)
+      pure (httpLoggingGQInfo, removeHeaders (map ((fmap snd) . snd) responses))
   where
     try = flip catchError (pure . Left) . fmap Right

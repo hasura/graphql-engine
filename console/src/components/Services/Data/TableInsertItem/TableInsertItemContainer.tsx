@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setTable } from '../DataActions';
-import { fetchEnumOptions, I_RESET, insertItem } from './InsertActions';
-import { ColumnName, RowValues } from '../TableCommon/DataTableRowItem.types';
-import { DataTableRowItemProps } from '../TableCommon/DataTableRowItem';
+import { useReadOnlyMode } from '@/hooks';
+import { useMetadata } from '@/features/MetadataAPI';
+import { HasuraMetadataV3 } from '@/metadata/types';
+import Spinner from '@/components/Common/Spinner/Spinner';
+import isObject from 'lodash.isobject';
+
+import { fetchEnumOptions, insertItem } from './InsertActions';
 import { TableInsertItems } from './TableInsertItems';
+import { useSchemas } from './hooks/useSchemas';
+import { findTable, generateTableDef } from '../../../../dataSources';
+import { ordinalColSort } from '../utils';
+import { ColumnName } from '../TableCommon/DataTableRowItem.types';
+import { isColumnAutoIncrement } from '../Common/Components/utils';
+import { setTable } from '../DataActions';
 
 type GetButtonTextArgs = {
   insertedRows: number;
@@ -23,73 +32,95 @@ const getButtonText = ({ insertedRows, ongoingRequest }: GetButtonTextArgs) => {
   return 'Save';
 };
 
+const getTableMetadata = (
+  source: string,
+  table: string,
+  metadata: HasuraMetadataV3 | undefined
+) => {
+  return metadata?.sources
+    ?.find((s: { name: string }) => s.name === source)
+    ?.tables.filter(
+      (t: { table: { name: string } }) => t?.table?.name === table
+    )?.[0];
+};
+
 type TableInsertItemContainerContainer = {
   params: {
     schema: string;
     source: string;
     table: string;
   };
+  router: { location: { state: any } };
 };
 
 export const TableInsertItemContainer = (
   props: TableInsertItemContainerContainer
 ) => {
-  const { table: tableName } = props.params;
+  const {
+    table: tableName,
+    source: dataSourceName,
+    schema: schemaName,
+  } = props.params;
+  const currentRow = props.router?.location?.state?.row;
 
   const dispatch = useAppDispatch();
-
-  const [isMigration, setIsMigration] = useState(false);
-  const [insertedRows, setInsertedRows] = useState(0);
-  const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
-
-  const onColumnUpdate: DataTableRowItemProps['onColumnUpdate'] = (
-    columnName,
-    rowValues
-  ) => {
-    const newValues = { ...values };
-    if (!newValues[columnName]) {
-      newValues[columnName] = {
-        valueNode: rowValues.valueNode,
-        nullNode: rowValues.nullNode,
-        defaultNode: rowValues.defaultNode,
-        radioNode: rowValues.radioNode,
-      };
-    }
-    newValues[columnName] = rowValues;
-    setValues(newValues);
-  };
 
   useEffect(() => {
     dispatch(setTable(tableName));
     dispatch(fetchEnumOptions());
-
-    return () => {
-      dispatch({ type: I_RESET });
-    };
   }, [tableName]);
 
-  const nextInsert = () =>
-    setInsertedRows(prevInsertedRows => prevInsertedRows + 1);
+  const [isMigration, setIsMigration] = useState(false);
+  const [insertedRows, setInsertedRows] = useState(0);
+  const [values, setValues] = useState<Record<ColumnName, unknown>>(
+    currentRow ?? {}
+  );
+  const [nullCheckedValues, setNullCheckedValues] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleNullChecks = (columnName: string, value: boolean) => {
+    setNullCheckedValues({
+      ...nullCheckedValues,
+      [columnName]: value,
+    });
+  };
+
+  const [defaultValueColumns, setDefaultValueColumns] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleDefaultValueColumns = (columnName: string, value: boolean) => {
+    setDefaultValueColumns({
+      ...defaultValueColumns,
+      [columnName]: value,
+    });
+  };
+
+  const migrationMode = useAppSelector(store => store.main.migrationMode);
+
+  const { data: metadata } = useMetadata();
+  const tableMetadata = getTableMetadata(
+    dataSourceName,
+    tableName,
+    metadata?.metadata
+  );
+
+  const { data: readOnlyMode } = useReadOnlyMode();
+  const { data: schemas, isLoading: schemasIsLoading } = useSchemas({
+    dataSourceName,
+    schemaName,
+  });
+
+  const insertTable = useAppSelector(store => store.tables.insert);
+  const { enumOptions } = insertTable;
+
+  const onColumnUpdate = (columnName: string, value: unknown) => {
+    setValues({ ...values, [columnName]: value });
+  };
 
   const toggleMigrationCheckBox = () =>
     setIsMigration(prevIsMigration => !prevIsMigration);
-
-  const insert = useAppSelector(store => store.tables.insert);
-  const allSchemas = useAppSelector(store => store.tables.allSchemas);
-  const tablesView = useAppSelector(store => store.tables.view);
-  const currentSchema = useAppSelector(store => store.tables.currentSchema);
-  const currentDataSource = useAppSelector(
-    store => store.tables.currentDataSource
-  );
-  const migrationMode = useAppSelector(store => store.main.migrationMode);
-  const readOnlyMode = useAppSelector(store => store.main.readOnlyMode);
-
-  const { count } = tablesView;
-  const { ongoingRequest, lastError, lastSuccess, clone, enumOptions } = insert;
-  const buttonText = getButtonText({
-    insertedRows,
-    ongoingRequest,
-  });
 
   const onClickClear = () => {
     const form = document.getElementById('insertForm');
@@ -111,51 +142,82 @@ export const TableInsertItemContainer = (
     });
   };
 
+  // Refactor in next iteration: --- Insert section start ---
+  const insert = useAppSelector(
+    (store: { tables: { insert: any } }) => store.tables.insert
+  );
+  const { ongoingRequest, lastError, lastSuccess } = insert;
+
+  const nextInsert = () =>
+    setInsertedRows(prevInsertedRows => prevInsertedRows + 1);
+
+  const buttonText = getButtonText({
+    insertedRows,
+    ongoingRequest,
+  });
+
   const onClickSave: React.MouseEventHandler = e => {
     e.preventDefault();
-    const inputValues = Object.keys(values).reduce<
-      Record<ColumnName, string | null | undefined>
-    >((acc, colName) => {
-      if (values?.[colName]?.nullNode?.checked) {
-        acc[colName] = null;
-        return acc;
+
+    const currentTable = findTable(
+      schemas,
+      generateTableDef(tableName, schemaName)
+    );
+
+    const columns = currentTable?.columns.sort(ordinalColSort) || [];
+    const inputValues = columns.reduce((tally, col) => {
+      const colName = col.column_name;
+      if (defaultValueColumns[colName]) {
+        return tally;
       }
-
-      if (values?.[colName]?.defaultNode?.checked) {
-        return acc;
+      if (nullCheckedValues[colName]) {
+        return {
+          ...tally,
+          [colName]: null,
+        };
       }
-
-      acc[colName] = values?.[colName]?.valueNode?.value?.toString();
-
-      return acc;
+      const isAutoIncrement = isColumnAutoIncrement(col);
+      if (!isAutoIncrement && typeof values[colName] !== 'undefined') {
+        return {
+          ...tally,
+          [colName]: isObject(values[colName])
+            ? JSON.stringify(values[colName])
+            : values[colName],
+        };
+      }
+      return tally;
     }, {});
 
-    dispatch(
-      insertItem(
-        tableName,
-        clone ? { ...clone, ...inputValues } : inputValues,
-        isMigration
-      )
-    ).then(() => {
+    dispatch(insertItem(tableName, inputValues, isMigration)).then(() => {
       nextInsert();
     });
   };
 
+  if (schemasIsLoading)
+    return (
+      <p className="m-4">
+        <Spinner width="16px" height="16px" />
+      </p>
+    );
+
   return (
     <TableInsertItems
+      values={values}
+      setNullCheckedValues={handleNullChecks}
+      setDefaultValueColumns={handleDefaultValueColumns}
+      isEnum={!!tableMetadata?.is_enum}
       toggleMigrationCheckBox={toggleMigrationCheckBox}
       onColumnUpdate={onColumnUpdate}
       isMigration={isMigration}
       dispatch={dispatch}
       tableName={tableName}
-      currentSchema={currentSchema}
-      clone={clone}
-      schemas={allSchemas}
-      migrationMode={migrationMode}
-      readOnlyMode={readOnlyMode}
-      count={count}
+      currentSchema={schemaName}
+      schemas={schemas}
+      migrationMode={!!migrationMode}
+      readOnlyMode={!!readOnlyMode}
+      count={0}
       enumOptions={enumOptions}
-      currentSource={currentDataSource}
+      currentSource={dataSourceName}
       onClickSave={onClickSave}
       onClickClear={onClickClear}
       lastError={lastError}

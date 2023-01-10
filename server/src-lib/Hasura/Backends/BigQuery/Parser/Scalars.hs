@@ -62,9 +62,9 @@ bqInt64 = mkScalar name "64-bit integers. Accepts both string and number literal
     integralSci :: Text -> Scientific -> m BigQuery.Int64
     integralSci inputText sci
       | Scientific.isInteger sci =
-        case Scientific.toBoundedInteger @Int64 sci of
-          Just v -> return $ BigQuery.intToInt64 v
-          Nothing -> boundsFailure inputText
+          case Scientific.toBoundedInteger @Int64 sci of
+            Just v -> return $ BigQuery.intToInt64 v
+            Nothing -> boundsFailure inputText
       | otherwise = integralFailure inputText
 
     boundsFailure, integralFailure :: forall a. Text -> m a
@@ -142,7 +142,10 @@ typeNamed name description = TNamed NonNullable $ Definition name description No
 stringNotationError :: MonadParse m => G.Name -> Text -> m a
 stringNotationError typeName actualString =
   parseError $
-    "expected " <> toErrorMessage (tshow typeName) <> " represented as a string, but got " <> dquote actualString
+    "expected "
+      <> toErrorMessage (tshow typeName)
+      <> " represented as a string, but got "
+      <> dquote actualString
       <> ", which is not a recognizable "
       <> toErrorMessage (tshow typeName)
       <> "."

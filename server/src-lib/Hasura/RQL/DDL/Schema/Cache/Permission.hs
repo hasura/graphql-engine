@@ -1,8 +1,5 @@
-{-# LANGUAGE Arrows #-}
-
 module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions,
-    mkPermissionMetadataObject,
     orderRoles,
     OrderedRoles,
     _unOrderedRoles,
@@ -11,16 +8,12 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
   )
 where
 
-import Control.Arrow.Extended
-import Control.Arrow.Interpret
 import Data.Aeson
 import Data.Graph qualified as G
 import Data.HashMap.Strict qualified as M
-import Data.Proxy
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -109,8 +102,6 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
 newtype OrderedRoles = OrderedRoles {_unOrderedRoles :: [Role]}
   deriving (Eq, Generic)
 
-instance Inc.Cacheable OrderedRoles
-
 -- | 'orderRoles' is used to order the roles, in such a way that given
 --   a role R with n parent roles - PR1, PR2 .. PRn, then the 'orderRoles'
 --   function will order the roles in such a way that all the parent roles
@@ -153,8 +144,7 @@ orderRoles allRoles = do
 -- | `resolveCheckPermission` is a helper function which will convert the indermediate
 --    type `CheckPermission` to its original type. It will record any metadata inconsistencies, if exists.
 resolveCheckPermission ::
-  forall m p.
-  (MonadWriter (Seq CollectedInfo) m) =>
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
   CheckPermission p ->
   RoleName ->
   InconsistentRoleEntity ->
@@ -164,7 +154,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPInconsistent -> do
       let inconsistentObj =
             -- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`
-            CIInconsistency $
+            Left $
               ConflictingInheritedPermission roleName inconsistentEntity
       tell $ Seq.singleton inconsistentObj
       pure Nothing
@@ -172,8 +162,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPUndefined -> pure Nothing
 
 resolveCheckTablePermission ::
-  forall b perm m.
-  ( MonadWriter (Seq CollectedInfo) m,
+  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
     BackendMetadata b
   ) =>
   CheckPermission perm ->
@@ -192,172 +181,98 @@ resolveCheckTablePermission inheritedRolePermission accumulatedRolePermInfo perm
   resolveCheckPermission checkPermission roleName inconsistentRoleEntity
 
 buildTablePermissions ::
-  forall b m arr.
-  ( ArrowChoice arr,
-    Inc.ArrowDistribute arr,
-    Inc.ArrowCache m arr,
-    MonadError QErr m,
-    ArrowWriter (Seq CollectedInfo) arr,
+  forall b m.
+  ( MonadError QErr m,
+    MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
     BackendMetadata b,
-    Inc.Cacheable (Proxy b),
     GetAggregationPredicatesDeps b
   ) =>
-  ( Proxy b,
-    SourceName,
-    Inc.Dependency (TableCoreCache b),
-    FieldInfoMap (FieldInfo b),
-    TablePermissionInputs b,
-    OrderedRoles
-  )
-    `arr` (RolePermInfoMap b)
-buildTablePermissions = Inc.cache proc (proxy, source, tableCache, tableFields, tablePermissions, orderedRoles) -> do
+  SourceName ->
+  TableCoreCache b ->
+  FieldInfoMap (FieldInfo b) ->
+  TablePermissionInputs b ->
+  OrderedRoles ->
+  m (RolePermInfoMap b)
+buildTablePermissions source tableCache tableFields tablePermissions orderedRoles = do
   let alignedPermissions = alignPermissions tablePermissions
-      table = _tpiTable tablePermissions
+      go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
+        parentRolePermissions <-
+          for (toList parentRoles) $ \role ->
+            onNothing (M.lookup role accumulatedRolePermMap) $
+              throw500 $
+                -- this error will ideally never be thrown, but if it's thrown then
+                -- it's possible that the permissions for the role do exist, but it's
+                -- not yet built due to wrong ordering of the roles, check `orderRoles`
+                "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
+        let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
+            selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
+            accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
+            roleSelectPermission =
+              onNothing (_permSel =<< accumulatedRolePermission) $
+                combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
+        roleInsertPermission <- resolveCheckTablePermission (crpiInsPerm combinedParentRolePermInfo) accumulatedRolePermission _permIns roleName source table PTInsert
+        roleUpdatePermission <- resolveCheckTablePermission (crpiUpdPerm combinedParentRolePermInfo) accumulatedRolePermission _permUpd roleName source table PTUpdate
+        roleDeletePermission <- resolveCheckTablePermission (crpiDelPerm combinedParentRolePermInfo) accumulatedRolePermission _permDel roleName source table PTDelete
+        let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
+        pure $ M.insert roleName rolePermInfo accumulatedRolePermMap
+
   metadataRolePermissions <-
-    (|
-      Inc.keyed
-        ( \_ (insertPermission, selectPermission, updatePermission, deletePermission) -> do
-            insert <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe insertPermission)
-            select <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe selectPermission)
-            update <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe updatePermission)
-            delete <- buildPermission -< (proxy, tableCache, source, table, tableFields, listToMaybe deletePermission)
-            returnA -< RolePermInfo insert select update delete
-        )
-      |) alignedPermissions
-  (|
-    foldlA'
-      ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-          parentRolePermissions <-
-            bindA
-              -< for (toList parentRoles) $ \role ->
-                onNothing (M.lookup role accumulatedRolePermMap) $
-                  throw500 $
-                    -- this error will ideally never be thrown, but if it's thrown then
-                    -- it's possible that the permissions for the role do exist, but it's
-                    -- not yet built due to wrong ordering of the roles, check `orderRoles`
-                    "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
-          let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
-              selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
-          let accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
-          let roleSelectPermission =
-                case (_permSel =<< accumulatedRolePermission) of
-                  Just metadataSelectPerm -> Just metadataSelectPerm
-                  Nothing -> combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
-          roleInsertPermission <- interpretWriter -< resolveCheckTablePermission (crpiInsPerm combinedParentRolePermInfo) accumulatedRolePermission _permIns roleName source table PTInsert
-          roleUpdatePermission <- interpretWriter -< resolveCheckTablePermission (crpiUpdPerm combinedParentRolePermInfo) accumulatedRolePermission _permUpd roleName source table PTUpdate
-          roleDeletePermission <- interpretWriter -< resolveCheckTablePermission (crpiDelPerm combinedParentRolePermInfo) accumulatedRolePermission _permDel roleName source table PTDelete
-          let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
-          returnA -< M.insert roleName rolePermInfo accumulatedRolePermMap
-      )
-    |) metadataRolePermissions (_unOrderedRoles orderedRoles)
+    for alignedPermissions \(insertPermission, selectPermission, updatePermission, deletePermission) -> do
+      insert <- buildPermission insertPermission
+      select <- buildPermission selectPermission
+      update <- buildPermission updatePermission
+      delete <- buildPermission deletePermission
+      pure $ RolePermInfo insert select update delete
+  foldlM go metadataRolePermissions (_unOrderedRoles orderedRoles)
   where
+    table = _tpiTable tablePermissions
+
     mkMap :: [PermDef b e] -> HashMap RoleName (PermDef b e)
     mkMap = mapFromL _pdRole
 
     alignPermissions TablePermissionInputs {..} =
-      let insertsMap = M.map (\a -> ([a], [], [], [])) (mkMap _tpiInsert)
-          selectsMap = M.map (\a -> ([], [a], [], [])) (mkMap _tpiSelect)
-          updatesMap = M.map (\a -> ([], [], [a], [])) (mkMap _tpiUpdate)
-          deletesMap = M.map (\a -> ([], [], [], [a])) (mkMap _tpiDelete)
-          unionMap = M.unionWith (<>)
+      let insertsMap = (\a -> (Just a, Nothing, Nothing, Nothing)) <$> mkMap _tpiInsert
+          selectsMap = (\a -> (Nothing, Just a, Nothing, Nothing)) <$> mkMap _tpiSelect
+          updatesMap = (\a -> (Nothing, Nothing, Just a, Nothing)) <$> mkMap _tpiUpdate
+          deletesMap = (\a -> (Nothing, Nothing, Nothing, Just a)) <$> mkMap _tpiDelete
+          unionMap = M.unionWith \(a, b, c, d) (a', b', c', d') -> (a <|> a', b <|> b', c <|> c', d <|> d')
        in insertsMap `unionMap` selectsMap `unionMap` updatesMap `unionMap` deletesMap
 
-mkPermissionMetadataObject ::
-  forall b a.
-  (BackendMetadata b) =>
-  SourceName ->
-  TableName b ->
-  PermDef b a ->
-  MetadataObject
-mkPermissionMetadataObject source table permDef =
-  let permType = reflectPermDefPermission (_pdPermission permDef)
-      objectId =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b table $
-              MTOPerm (_pdRole permDef) permType
-      definition = toJSON $ WithTable @b source table permDef
-   in MetadataObject objectId definition
-
-withPermission ::
-  forall bknd a b c s arr.
-  (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, BackendMetadata bknd) =>
-  WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b ->
-  ( a,
-    ((SourceName, TableName bknd, PermDef bknd c, Proxy bknd), s)
-  )
-    `arr` (Maybe b)
-withPermission f = proc (e, ((source, table, permDef, _proxy), s)) -> do
-  let metadataObject = mkPermissionMetadataObject @bknd source table permDef
-      permType = reflectPermDefPermission (_pdPermission permDef)
-      roleName = _pdRole permDef
-      schemaObject =
-        SOSourceObj source $
-          AB.mkAnyBackend $
-            SOITableObj @bknd table $
-              TOPerm roleName permType
-      addPermContext err = "in permission for role " <> roleName <<> ": " <> err
-  (|
-    withRecordInconsistency
-      ( (|
-          withRecordDependencies
-            ( (|
-                modifyErrA
-                  (f -< (e, s))
-              |) (addTableContext @bknd table . addPermContext)
+    buildPermission :: Maybe (PermDef b a) -> m (Maybe (PermInfo a b))
+    buildPermission Nothing = pure Nothing
+    buildPermission (Just permission) = do
+      let metadataObject = mkPermissionMetadataObject permission
+          permType = reflectPermDefPermission (_pdPermission permission)
+          roleName = _pdRole permission
+          schemaObject =
+            SOSourceObj source $
+              AB.mkAnyBackend $
+                SOITableObj @b table $
+                  TOPerm roleName permType
+          addPermContext err = "in permission for role " <> roleName <<> ": " <> err
+      withRecordInconsistencyM metadataObject $ modifyErr (addTableContext @b table . addPermContext) do
+        when (_pdRole permission == adminRoleName) $
+          throw400 ConstraintViolation "cannot define permission for admin role"
+        (info, dependencies) <-
+          runTableCoreCacheRT
+            ( buildPermInfo
+                source
+                table
+                tableFields
+                (_pdRole permission)
+                (_pdPermission permission)
             )
-        |) metadataObject schemaObject
-      )
-    |) metadataObject
+            tableCache
+        recordDependenciesM metadataObject schemaObject dependencies
+        pure info
 
-buildPermission ::
-  forall b a arr m.
-  ( ArrowChoice arr,
-    ArrowWriter (Seq CollectedInfo) arr,
-    Inc.ArrowCache m arr,
-    Inc.Cacheable (a b),
-    Inc.Cacheable (Proxy b),
-    MonadError QErr m,
-    BackendMetadata b,
-    GetAggregationPredicatesDeps b
-  ) =>
-  ( Proxy b,
-    Inc.Dependency (TableCoreCache b),
-    SourceName,
-    TableName b,
-    FieldInfoMap (FieldInfo b),
-    Maybe (PermDef b a)
-  )
-    `arr` Maybe (PermInfo a b)
-buildPermission = Inc.cache proc (proxy, tableCache, source, table, tableFields, maybePermission) ->
-  do
-    (|
-      traverseA
-        ( \permission ->
-            (|
-              withPermission
-                ( do
-                    bindErrorA
-                      -<
-                        when (_pdRole permission == adminRoleName) $
-                          throw400 ConstraintViolation "cannot define permission for admin role"
-                    (info, dependencies) <-
-                      liftEitherA <<< Inc.bindDepend
-                        -<
-                          runExceptT $
-                            runTableCoreCacheRT
-                              ( buildPermInfo
-                                  source
-                                  table
-                                  tableFields
-                                  (_pdRole permission)
-                                  (_pdPermission permission)
-                              )
-                              (source, tableCache)
-                    tellA -< Seq.fromList dependencies
-                    returnA -< info
-                )
-            |) (source, table, permission, proxy)
-        )
-      |) maybePermission
-    >-> (\info -> join info >- returnA)
+    mkPermissionMetadataObject :: PermDef b a -> MetadataObject
+    mkPermissionMetadataObject permDef =
+      let permType = reflectPermDefPermission (_pdPermission permDef)
+          objectId =
+            MOSourceObjId source $
+              AB.mkAnyBackend $
+                SMOTableObj @b table $
+                  MTOPerm (_pdRole permDef) permType
+          definition = toJSON $ WithTable @b source table permDef
+       in MetadataObject objectId definition

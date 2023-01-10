@@ -46,12 +46,12 @@ class InvokeManualTrigger extends React.PureComponent {
   componentDidMount() {
     const { name, args, dispatch } = this.props;
     dispatch(invokeManualTrigger(name, args, this.props.source))
-      .then((data) => {
+      .then(data => {
         const currThis = this;
         const pollId = setInterval(() => {
           dispatch(
             loadEventInvocations(data.event_id, currThis.props.source)
-          ).then((d) => {
+          ).then(d => {
             if (d.length > 0) {
               clearInterval(currThis.state.pollId);
             }
@@ -59,7 +59,7 @@ class InvokeManualTrigger extends React.PureComponent {
         }, 5000);
         this.setPoll(pollId);
       })
-      .catch((err) => console.error(`Error invoking trigger: ${err}`));
+      .catch(err => console.error(`Error invoking trigger: ${err}`));
   }
 
   setPoll(pollId) {
@@ -112,6 +112,7 @@ class InvokeManualTrigger extends React.PureComponent {
               showPrintMargin={false}
               showGutter={false}
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
+              setOptions={{ useWorker: false }}
             />
           </div>
           <div className={`pl-0 w-1/2`}>
@@ -130,6 +131,7 @@ class InvokeManualTrigger extends React.PureComponent {
                 backgroundColor: '#fdf9ed',
                 marginTop: '10px',
               }}
+              setOptions={{ useWorker: false }}
             />
           </div>
         </div>
@@ -138,7 +140,7 @@ class InvokeManualTrigger extends React.PureComponent {
     /*
      * If there is no error, get the event info. Otherwise check if the err is an object with `error` as key. Print a default message finally
      * */
-    const getEventIdErrorText = (error) => {
+    const getEventIdErrorText = error => {
       return <span className="text-red-600">{error}</span>;
     };
     const eventInfo =
@@ -182,7 +184,7 @@ InvokeManualTrigger.propTypes = {
   invokeEventTrigger: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     invokeEventTrigger: state.invokeEventTrigger,
   };

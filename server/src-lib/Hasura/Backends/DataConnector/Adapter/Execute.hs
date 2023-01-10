@@ -67,7 +67,7 @@ instance BackendExecute 'DataConnector where
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
   mkDBStreamingSubscriptionPlan _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
-  mkDBRemoteRelationshipPlan _ _ _ _ _ _ _ =
+  mkDBRemoteRelationshipPlan _ _ _ _ _ _ _ _ =
     throw500 "mkDBRemoteRelationshipPlan: not implemented for the Data Connector backend."
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."

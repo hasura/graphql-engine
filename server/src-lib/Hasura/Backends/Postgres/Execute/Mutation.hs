@@ -95,7 +95,8 @@ runMutation ::
   m EncJSON
 runMutation mut =
   bool (mutateAndReturn mut) (mutateAndSel mut) $
-    hasNestedFld $ _mOutput mut
+    hasNestedFld $
+      _mOutput mut
 
 mutateAndReturn ::
   ( MonadTx m,
@@ -276,8 +277,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     select =
       S.mkSelect
         { S.selExtr =
-            S.Extractor extrExp Nothing :
-            bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
+            S.Extractor extrExp Nothing
+              : bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
         }
     checkErrExp = mkCheckErrorExp rawIdentifier
     extrExp =

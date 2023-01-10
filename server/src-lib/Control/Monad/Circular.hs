@@ -120,7 +120,7 @@ instance MonadState s m => MonadState s (CircularT k v m) where
   put x = lift $ put x
 
 -- | Runs a computation in 'CircularT'.
-runCircularT :: (Eq k, Hashable k, MonadFix m) => CircularT k v m a -> m a
+runCircularT :: (Hashable k, MonadFix m) => CircularT k v m a -> m a
 runCircularT (CircularT m) = evalStateT m mempty
 
 -- | Cache a computation under a given key.
@@ -129,7 +129,7 @@ runCircularT (CircularT m) = evalStateT m mempty
 -- type @v@, return an action that builds said value @v@ but that prevents
 -- cycles by looking into and populating a stateful cache.
 withCircular ::
-  (Eq k, Hashable k, MonadFix m) =>
+  (Hashable k, MonadFix m) =>
   k ->
   CircularT k v m v ->
   CircularT k v m v

@@ -7,8 +7,9 @@ import (
 	"strconv"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,12 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsUseCodegenCmd := &cobra.Command{
 		Use:   "use-codegen",
-		Short: "Use the codegen to generate code for Hasura actions",
+		Short: "Use the codegen to generate code for Hasura Actions",
+		Long: `This command generates code for Hasura Actions using the codegen framework of your choice. While not required, you can pass the ` + "``--framework``" + ` flag to select a framework. If you do not pass the ` + "``--framework``" + ` flag, you will be prompted to select a framework from a list of available options.
+
+Further Reading:
+- https://hasura.io/docs/latest/actions/codegen/index/#codegen-for-your-framework
+`,
 		Example: `  # Use codegen by providing framework
   hasura actions use-codegen --framework nodejs-express
 
@@ -37,21 +43,26 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura actions use-codegen --with-starter-kit true`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			if err := ec.SetupCodegenAssetsRepo(); err != nil {
-				return fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err)
+				return errors.E(op, fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err))
 			}
 
 			if err := ec.SetupCodegenAssetsRepo(); err != nil {
-				return fmt.Errorf("setting up codengen assets repo failed")
+				return errors.E(op, "setting up codengen assets repo failed")
 			}
 			// ensure codegen-assets repo exists
 			if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
-				return fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err)
+				return errors.E(op, fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err))
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			op := genOpName(cmd, "RunE")
+			if err := opts.run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
@@ -73,6 +84,7 @@ type actionsUseCodegenOptions struct {
 }
 
 func (o *actionsUseCodegenOptions) run() error {
+	var op errors.Op = "commands.actionsUseCodegenOptions.run"
 	o.EC.Spin("Ensuring codegen-assets repo is updated...")
 	defer o.EC.Spinner.Stop()
 	// ensure the the actions-codegen repo is updated
@@ -87,7 +99,7 @@ func (o *actionsUseCodegenOptions) run() error {
 	o.EC.Spin("Fetching frameworks...")
 	allFrameworks, err := getCodegenFrameworks()
 	if err != nil {
-		return errors.Wrap(err, "error in fetching codegen frameworks")
+		return errors.E(op, fmt.Errorf("error in fetching codegen frameworks: %w", err))
 	}
 
 	o.EC.Spinner.Stop()
@@ -100,7 +112,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		sort.Strings(frameworkList)
 		newCodegenExecutionConfig.Framework, err = util.GetSelectPrompt("Choose a codegen framework to use", frameworkList)
 		if err != nil {
-			return errors.Wrap(err, "error in selecting framework")
+			return errors.E(op, fmt.Errorf("error in selecting framework: %w", err))
 		}
 	} else {
 		for _, f := range allFrameworks {
@@ -109,7 +121,7 @@ func (o *actionsUseCodegenOptions) run() error {
 			}
 		}
 		if newCodegenExecutionConfig.Framework == "" {
-			return fmt.Errorf("framework %s is not found", o.framework)
+			return errors.E(op, fmt.Errorf("framework %s is not found", o.framework))
 		}
 	}
 
@@ -122,14 +134,14 @@ func (o *actionsUseCodegenOptions) run() error {
 
 	// if with-starter-kit flag is set and the same is not available for the framework, return error
 	if o.withStarterKit && !hasStarterKit {
-		return fmt.Errorf("starter kit is not available for framework %s", newCodegenExecutionConfig.Framework)
+		return errors.E(op, fmt.Errorf("starter kit is not available for framework %s", newCodegenExecutionConfig.Framework))
 	}
 
 	// if with-starter-kit flag is not provided, give an option to clone a starterkit
 	if !o.withStarterKit && hasStarterKit {
 		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
 		if err != nil {
-			return errors.Wrap(err, "error in getting input from user")
+			return errors.E(op, fmt.Errorf("error in getting input from user: %w", err))
 		}
 		o.withStarterKit = shouldCloneStarterKit
 	}
@@ -156,7 +168,7 @@ func (o *actionsUseCodegenOptions) run() error {
 			destinationDir,
 		)
 		if err != nil {
-			return errors.Wrap(err, "error in copying starter kit")
+			return errors.E(op, fmt.Errorf("error in copying starter kit: %w", err))
 		}
 		o.EC.Logger.Info("Starter kit cloned at " + destinationDir)
 	}
@@ -166,7 +178,7 @@ func (o *actionsUseCodegenOptions) run() error {
 	if o.outputDir == "" {
 		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.ActionConfig.Codegen.OutputDir)
 		if err != nil {
-			return errors.Wrap(err, "error in getting output directory input")
+			return errors.E(op, fmt.Errorf("error in getting output directory input: %w", err))
 		}
 		newCodegenExecutionConfig.OutputDir = outputDir
 	} else {
@@ -177,7 +189,7 @@ func (o *actionsUseCodegenOptions) run() error {
 	newConfig.ActionConfig.Codegen = newCodegenExecutionConfig
 	err = o.EC.WriteConfig(newConfig)
 	if err != nil {
-		return errors.Wrap(err, "error in writing config")
+		return errors.E(op, fmt.Errorf("error in writing config: %w", err))
 	}
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Info("Codegen configuration updated in config.yaml")

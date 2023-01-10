@@ -1,11 +1,11 @@
 import React from 'react';
+import { handlers } from '@/mocks/metadata.mock';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 
 import { useEnabledRolesFromAllowList } from './useEnabledRolesFromAllowList';
-import { handlers } from './mock/handlers.mocks';
 
 const UseEnabledRolesFromAllowList: React.FC = () => {
   const { data, isLoading, isError } =
@@ -22,7 +22,7 @@ const UseEnabledRolesFromAllowList: React.FC = () => {
   return data ? <ReactJson src={data} /> : null;
 };
 
-export const Primary: Story = (args) => {
+export const Primary: Story = args => {
   return <UseEnabledRolesFromAllowList {...args} />;
 };
 
@@ -37,6 +37,6 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
 } as Meta;

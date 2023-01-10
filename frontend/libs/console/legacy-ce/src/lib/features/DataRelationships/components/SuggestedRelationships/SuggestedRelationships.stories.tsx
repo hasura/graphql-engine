@@ -26,14 +26,14 @@ const target: DataTarget = {
   table: 'user',
 };
 
-export const Primary: Story<SuggestedRelationshipProps> = (args) => (
+export const Primary: Story<SuggestedRelationshipProps> = args => (
   <SuggestedRelationships {...args} />
 );
 Primary.args = {
   target,
 };
 
-export const WithInteraction: Story<SuggestedRelationshipProps> = (args) => (
+export const WithInteraction: Story<SuggestedRelationshipProps> = args => (
   <SuggestedRelationships {...args} />
 );
 WithInteraction.args = Primary.args;

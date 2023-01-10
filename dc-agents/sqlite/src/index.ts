@@ -6,11 +6,11 @@ import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
 import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
-import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
 import * as fs from 'fs'
 import { runRawOperation } from './raw';
+import { LOG_LEVEL, METRICS, PERMISSIVE_CORS, PRETTY_PRINT_LOGS } from './environment';
 
 const port = Number(process.env.PORT) || 8100;
 
@@ -21,9 +21,9 @@ const port = Number(process.env.PORT) || 8100;
 const server = Fastify({
   logger:
     {
-      level: envToString("LOG_LEVEL", "info"),
+      level: LOG_LEVEL,
       ...(
-        (envToBool('PRETTY_PRINT_LOGS'))
+        PRETTY_PRINT_LOGS
           ? { transport: { target: 'pino-pretty' } }
           : {}
       )
@@ -47,9 +47,7 @@ server.setErrorHandler(function (error, _request, reply) {
   reply.status(500).send(errorResponse);
 })
 
-const METRICS_ENABLED = envToBool('METRICS');
-
-if(METRICS_ENABLED) {
+if(METRICS) {
   // See: https://www.npmjs.com/package/fastify-metrics
   server.register(metrics, {
     endpoint: '/metrics',
@@ -60,7 +58,7 @@ if(METRICS_ENABLED) {
   });
 }
 
-if(envToBool('PERMISSIVE_CORS')) {
+if(PERMISSIVE_CORS) {
   // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
   server.register(FastifyCors, {
     origin: true,
@@ -72,7 +70,7 @@ if(envToBool('PERMISSIVE_CORS')) {
 // Register request-hook metrics.
 // This is done in a closure so that the metrics are scoped here.
 (() => {
-  if(! METRICS_ENABLED) {
+  if(! METRICS) {
     return;
   }
 

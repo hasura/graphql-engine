@@ -79,8 +79,9 @@ runDBQueryExplain' ::
   DBStepInfo 'DataConnector ->
   m EncJSON
 runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action) =
-  liftEitherM . liftIO
+  liftEitherM
+    . liftIO
     . runExceptT
-    . Tracing.runTraceTWithReporter Tracing.noReporter "explain"
+    . Tracing.ignoreTraceT
     . flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds)
     $ action

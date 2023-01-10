@@ -3,11 +3,11 @@ module Hasura.RemoteSchema.Metadata.Base
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson qualified as J
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as PG
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 
 -- | Remote schema identifier.
@@ -29,6 +29,8 @@ newtype RemoteSchemaName = RemoteSchemaName
       PG.FromCol,
       ToTxt,
       NFData,
-      Generic,
-      Cacheable
+      Generic
     )
+
+instance HasCodec RemoteSchemaName where
+  codec = dimapCodec RemoteSchemaName unRemoteSchemaName codec

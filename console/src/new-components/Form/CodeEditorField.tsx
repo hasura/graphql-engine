@@ -6,6 +6,7 @@ import AceEditor, {
   IAceEditorProps,
   ICommandManager,
 } from 'react-ace';
+import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-github';
 import 'ace-builds/src-noconflict/theme-eclipse';
 import 'ace-builds/src-noconflict/ext-language_tools';
@@ -70,7 +71,12 @@ export type CodeEditorFieldProps = FieldWrapperPassThroughProps & {
   disabled?: boolean;
 };
 
-const DEFAULT_EDITOR_OPTIONS = { minLines: 5, maxLines: 8, showGutter: false };
+const DEFAULT_EDITOR_OPTIONS = {
+  minLines: 5,
+  maxLines: 8,
+  showGutter: false,
+  useWorker: false,
+};
 
 export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
   name,
@@ -180,14 +186,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
             );
           }}
         />
-        {/* This is to let form errors to appear below the tip */}
-        {tipState === 'ANY' && (
-          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
-            {' '}
-          </div>
-        )}
         {tipState === 'ESC' && (
-          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+          <div className="absolute bg-legacybg top-full pl-1 text-gray-600 text-sm mt-1">
             Tip:{' '}
             <strong>
               Press <em>Esc</em> key
@@ -196,7 +196,7 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
           </div>
         )}
         {tipState === 'TAB' && (
-          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+          <div className="absolute bg-legacybg top-full pl-1 text-gray-600 text-sm mt-1">
             Tip: Press <em>Esc</em> key then{' '}
             <strong>
               navigate with <em>Tab</em>

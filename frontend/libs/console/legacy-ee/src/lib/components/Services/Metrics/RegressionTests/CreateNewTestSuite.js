@@ -16,7 +16,7 @@ export const CreateNewTestSuite = ({ projectId, projectName, refetch }) => {
         ],
       },
       onCompleted: () => refetch(),
-      onError: (err) => alert(err.toString()),
+      onError: err => alert(err.toString()),
     }
   );
 

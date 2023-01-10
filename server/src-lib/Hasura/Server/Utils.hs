@@ -110,7 +110,8 @@ parseStringAsBool t
     falseVals = ["false", "f", "no", "n"]
 
     errMsg =
-      " Not a valid boolean text. " ++ "True values are "
+      " Not a valid boolean text. "
+        ++ "True values are "
         ++ show truthVals
         ++ " and  False values are "
         ++ show falseVals

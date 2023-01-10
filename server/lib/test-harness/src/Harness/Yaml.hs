@@ -2,6 +2,8 @@
 module Harness.Yaml
   ( combinationsObject,
     fromObject,
+    mapObject,
+    sortArray,
     combinationsObjectUsingValue,
     shouldReturnYaml,
     shouldReturnYamlF,
@@ -16,8 +18,8 @@ import Data.Aeson
   )
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.KeyMap.Extended qualified as KM (mapWithKey)
 import Data.List (permutations)
+import Data.Scientific (FPFormat (Fixed), formatScientific, toBoundedInteger)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -34,6 +36,14 @@ import Test.Hspec (HasCallStack, shouldBe, shouldContain)
 fromObject :: Value -> Object
 fromObject (Object x) = x
 fromObject v = error $ "fromObject: Expected object, received" <> show v
+
+mapObject :: (Value -> Value) -> Value -> Value
+mapObject f (Object x) = Object $ fmap f x
+mapObject _ _ = error "mapObject can only be called on Object Values"
+
+sortArray :: Value -> Value
+sortArray (Array a) = Array (V.fromList (sort (V.toList a)))
+sortArray _ = error "sortArray can only be called on Array Values"
 
 -- | Compute all variations of an object and construct a list of
 -- 'Value' based on the higher order function that is passed to it.  A
@@ -86,22 +96,26 @@ shouldReturnYaml = shouldReturnYamlF pure
 -- If the zipping doesn't line up, we assume this is probably a bad result and
 -- consequently should result in a failing test. In these cases, we leave the
 -- actual output exactly as-is, and wait for the test to fail.
-parseToMatch :: Value -> Value -> Value
-parseToMatch (Array expected) (Array actual) =
-  Array (Vector.zipWith parseToMatch expected actual)
-parseToMatch (Number _) (String text) =
+tryToMatch :: Value -> Value -> Value
+tryToMatch (Array expected) (Array actual) =
+  Array (Vector.zipWith tryToMatch expected actual)
+tryToMatch (Number _) (String text) =
   case readMaybe (T.unpack text) of
     Just actual -> Number actual
     Nothing -> String text
-parseToMatch (Object expected) (Object actual) = do
+tryToMatch (String _) (Number actual) = do
+  -- format floats with decimal places and ints without, as we do in production
+  let decimalPlaces = 0 <$ (toBoundedInteger actual :: Maybe Int)
+  String $ T.pack $ formatScientific Fixed decimalPlaces actual
+tryToMatch (Object expected) (Object actual) = do
   let walk :: KM.KeyMap Value -> Aeson.Key -> Value -> Value
       walk reference key current =
         case KM.lookup key reference of
-          Just this -> parseToMatch this current
+          Just this -> tryToMatch this current
           Nothing -> current
 
   Object (KM.mapWithKey (walk expected) actual)
-parseToMatch _ actual = actual
+tryToMatch _ actual = actual
 
 -- | The function @transform@ converts the returned YAML
 -- prior to comparison. It exists in IO in order to be able
@@ -118,7 +132,7 @@ shouldReturnYamlF transform options actualIO expected = do
     actualIO >>= transform >>= \actual ->
       pure
         if Fixture.stringifyNumbers options
-          then parseToMatch expected actual
+          then tryToMatch expected actual
           else actual
 
   actual `shouldBe` expected
@@ -137,7 +151,7 @@ shouldReturnOneOfYaml Fixture.Options {stringifyNumbers} actualIO candidates = d
 
       actuals :: Set Value
       actuals
-        | stringifyNumbers = Set.map (`parseToMatch` actual) expecteds
+        | stringifyNumbers = Set.map (`tryToMatch` actual) expecteds
         | otherwise = Set.singleton actual
 
   case Set.lookupMin (Set.intersection expecteds actuals) of

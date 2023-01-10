@@ -31,7 +31,7 @@ type PermissionEditorProps = {
   ) => void;
 };
 
-const PermissionEditor: React.FC<PermissionEditorProps> = (props) => {
+const PermissionEditor: React.FC<PermissionEditorProps> = props => {
   const {
     permissionEdit,
     isEditing,

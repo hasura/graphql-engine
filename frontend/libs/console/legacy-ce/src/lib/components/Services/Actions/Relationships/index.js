@@ -5,7 +5,7 @@ import {
   getDataSources,
 } from '../../../../metadata/selector';
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.actions.relationships,
     allActions: actionsSelector(state),
@@ -17,5 +17,5 @@ const mapStateToProps = (state) => {
   };
 };
 
-const connector = (connect) => connect(mapStateToProps)(Relationships);
+const connector = connect => connect(mapStateToProps)(Relationships);
 export default connector;

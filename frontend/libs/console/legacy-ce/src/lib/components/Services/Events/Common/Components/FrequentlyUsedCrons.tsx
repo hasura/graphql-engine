@@ -30,7 +30,7 @@ type Props = {
 };
 
 const FrequentlyUsedCrons: React.FC<Props> = ({ setCron }) => {
-  const options = FREQ_USED_CRONS.map((cron) => {
+  const options = FREQ_USED_CRONS.map(cron => {
     return {
       content: (
         <div>

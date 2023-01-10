@@ -44,6 +44,7 @@ instance Backend 'BigQuery where
   type XComputedField 'BigQuery = XEnable
   type XRelay 'BigQuery = XDisable
   type XNodesAgg 'BigQuery = XEnable
+  type XEventTriggers 'BigQuery = XDisable
   type XNestedInserts 'BigQuery = XDisable
   type XStreamingSubscription 'BigQuery = XDisable
 
@@ -112,3 +113,5 @@ instance Backend 'BigQuery where
   resizeSourcePools _sourceConfig _serverReplicas =
     -- BigQuery does not posses connection pooling
     pure ()
+
+  defaultTriggerOnReplication = Nothing

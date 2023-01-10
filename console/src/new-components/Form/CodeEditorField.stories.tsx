@@ -2,9 +2,12 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
-import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
-import { Form, CodeEditorField } from '@/new-components/Form';
+import {
+  SimpleForm,
+  CodeEditorField,
+  useConsoleForm,
+} from '@/new-components/Form';
 
 export default {
   title: 'components/Forms 📁/CodeEditorField 🧬',
@@ -13,7 +16,7 @@ export default {
     docs: {
       description: {
         component: `A component wrapping an Ace editor ([see Docs](https://ace.c9.io/)),<br>
-Default CSS display is \`block\`, provided without padding and margin (displayed here with the \`<Form>\` padding).`,
+Default CSS display is \`block\`, provided without padding and margin (displayed here with the \`<SimpleForm>\` padding).`,
       },
       source: { type: 'code' },
     },
@@ -24,9 +27,9 @@ export const ApiPlayground: ComponentStory<typeof CodeEditorField> = args => {
   const validationSchema = z.object({});
 
   return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => <CodeEditorField {...args} />}
-    </Form>
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <CodeEditorField {...args} />
+    </SimpleForm>
   );
 };
 ApiPlayground.storyName = '⚙️ API';
@@ -39,14 +42,12 @@ export const Basic: ComponentStory<typeof CodeEditorField> = () => {
   const validationSchema = z.object({});
 
   return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-        />
-      )}
-    </Form>
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <CodeEditorField
+        name="codeEditorFieldName"
+        label="The codeEditor label"
+      />
+    </SimpleForm>
   );
 };
 Basic.storyName = '🧰 Basic';
@@ -61,15 +62,13 @@ export const VariantWithDescription: ComponentStory<typeof CodeEditorField> =
     const validationSchema = z.object({});
 
     return (
-      <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-        {() => (
-          <CodeEditorField
-            name="codeEditorFieldName"
-            label="The codeEditor label"
-            description="CodeEditorField description"
-          />
-        )}
-      </Form>
+      <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="The codeEditor label"
+          description="CodeEditorField description"
+        />
+      </SimpleForm>
     );
   };
 VariantWithDescription.storyName = '🎭 Variant - With description';
@@ -84,15 +83,13 @@ export const VariantWithTooltip: ComponentStory<typeof CodeEditorField> =
     const validationSchema = z.object({});
 
     return (
-      <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-        {() => (
-          <CodeEditorField
-            name="codeEditorFieldName"
-            label="The codeEditor label"
-            tooltip="CodeEditorField tooltip"
-          />
-        )}
-      </Form>
+      <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="The codeEditor label"
+          tooltip="CodeEditorField tooltip"
+        />
+      </SimpleForm>
     );
   };
 VariantWithTooltip.storyName = '🎭 Variant - With tooltip';
@@ -106,15 +103,13 @@ export const VariantSizeFull: ComponentStory<typeof CodeEditorField> = () => {
   const validationSchema = z.object({});
 
   return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-          size="full"
-        />
-      )}
-    </Form>
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <CodeEditorField
+        name="codeEditorFieldName"
+        label="The codeEditor label"
+        size="full"
+      />
+    </SimpleForm>
   );
 };
 VariantSizeFull.storyName = '🎭 Variant - Size full';
@@ -128,15 +123,13 @@ export const VariantSizeMedium: ComponentStory<typeof CodeEditorField> = () => {
   const validationSchema = z.object({});
 
   return (
-    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-          size="medium"
-        />
-      )}
-    </Form>
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <CodeEditorField
+        name="codeEditorFieldName"
+        label="The codeEditor label"
+        size="medium"
+      />
+    </SimpleForm>
   );
 };
 VariantSizeMedium.storyName = '🎭 Variant - Size medium';
@@ -153,25 +146,23 @@ export const StateWithDefaultValue: ComponentStory<typeof CodeEditorField> =
     const validationSchema = z.object({});
 
     return (
-      <Form
+      <SimpleForm
         schema={validationSchema}
         options={{ defaultValues }}
         onSubmit={action('onSubmit')}
       >
-        {() => (
-          <CodeEditorField
-            name="codeEditorFieldName"
-            label="The codeEditor label"
-          />
-        )}
-      </Form>
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="The codeEditor label"
+        />
+      </SimpleForm>
     );
   };
 StateWithDefaultValue.storyName = '🔁 State - With default value';
 StateWithDefaultValue.parameters = {
   docs: {
     description: {
-      story: `Use \`<Form>\` options to set default value.`,
+      story: `Use \`<SimpleForm>\` options to set default value.`,
     },
     source: { state: 'open' },
   },
@@ -183,19 +174,17 @@ export const StateLoading: ComponentStory<typeof CodeEditorField> = () => {
   const validationSchema = z.object({});
 
   return (
-    <Form
+    <SimpleForm
       schema={validationSchema}
       options={{ defaultValues }}
       onSubmit={action('onSubmit')}
     >
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-          loading
-        />
-      )}
-    </Form>
+      <CodeEditorField
+        name="codeEditorFieldName"
+        label="The codeEditor label"
+        loading
+      />
+    </SimpleForm>
   );
 };
 StateLoading.storyName = '🔁 State - Loading';
@@ -211,19 +200,17 @@ export const StateDisabled: ComponentStory<typeof CodeEditorField> = () => {
   const validationSchema = z.object({});
 
   return (
-    <Form
+    <SimpleForm
       schema={validationSchema}
       options={{ defaultValues }}
       onSubmit={action('onSubmit')}
     >
-      {() => (
-        <CodeEditorField
-          name="codeEditorFieldName"
-          label="The codeEditor label"
-          disabled
-        />
-      )}
-    </Form>
+      <CodeEditorField
+        name="codeEditorFieldName"
+        label="The codeEditor label"
+        disabled
+      />
+    </SimpleForm>
   );
 };
 StateDisabled.storyName = '🔁 State - Disabled';
@@ -235,28 +222,28 @@ StateDisabled.parameters = {
 
 export const StateWithErrorMessage: ComponentStory<typeof CodeEditorField> =
   () => {
-    const formRef = React.useRef<UseFormReturn>();
-
-    React.useEffect(() => {
-      formRef?.current?.trigger();
-    });
-
-    const validationSchema = z.object({
+    const schema = z.object({
       codeEditorFieldName: z.enum(['value0', 'value1']),
     });
 
+    const {
+      methods: { trigger },
+      Form,
+    } = useConsoleForm({
+      schema,
+    });
+
+    React.useEffect(() => {
+      // Use useEffect hook to wait for the form to be rendered before triggering validation
+      trigger();
+    });
+
     return (
-      <Form
-        ref={formRef}
-        schema={validationSchema}
-        onSubmit={action('onSubmit')}
-      >
-        {() => (
-          <CodeEditorField
-            name="codeEditorFieldName"
-            label="The codeEditor label"
-          />
-        )}
+      <Form onSubmit={action('onSubmit')}>
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="The codeEditor label"
+        />
       </Form>
     );
   };
@@ -264,7 +251,7 @@ StateWithErrorMessage.storyName = '🔁 State - With error message';
 StateWithErrorMessage.parameters = {
   docs: {
     description: {
-      story: `Incorrect value is set then \`<Form>\` validation is automatically triggered.`,
+      story: `Incorrect value is set then \`<SimpleForm>\` validation is automatically triggered.`,
     },
     source: { state: 'open' },
   },
@@ -275,16 +262,14 @@ export const TestingScalability: ComponentStory<typeof CodeEditorField> =
     const validationSchema = z.object({});
 
     return (
-      <Form schema={validationSchema} onSubmit={action('onSubmit')}>
-        {() => (
-          <CodeEditorField
-            name="codeEditorFieldName"
-            label="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-            description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-            tooltip="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-          />
-        )}
-      </Form>
+      <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+          tooltip="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        />
+      </SimpleForm>
     );
   };
 TestingScalability.storyName = '🧪 Testing - Scalability';

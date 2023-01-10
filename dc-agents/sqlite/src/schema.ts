@@ -1,7 +1,8 @@
 import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
+import { ScalarTypeKey } from "./capabilities";
 import { Config } from "./config";
 import { connect, SqlLogger } from './db';
-import { logDeep } from "./util";
+import { MUTATIONS } from "./environment";
 
 var sqliteParser = require('sqlite-parser');
 
@@ -18,7 +19,9 @@ type Datatype = {
   variant: string, // Declared type, lowercased
 }
 
-function determineScalarType(datatype: Datatype): ScalarType {
+// Note: Using ScalarTypeKey here instead of ScalarType to show that we have only used
+//       the capability documented types, and that ScalarTypeKey is a subset of ScalarType
+function determineScalarType(datatype: Datatype): ScalarTypeKey {
   switch (datatype.variant) {
     case "bool": return "bool";
     case "boolean": return "bool";
@@ -35,17 +38,21 @@ function determineScalarType(datatype: Datatype): ScalarType {
   }
 }
 
-function getColumns(ast : Array<any>) : Array<ColumnInfo> {
+function getColumns(ast: any[], primaryKeys: string[]) : ColumnInfo[] {
   return ast.map(c => {
-    return ({
+    const isPrimaryKey = primaryKeys.includes(c.name);
+
+    return {
       name: c.name,
       type: determineScalarType(c.datatype),
-      nullable: nullableCast(c.definition)
-    })
+      nullable: nullableCast(c.definition),
+      insertable: MUTATIONS,
+      updatable: MUTATIONS && !isPrimaryKey,
+    };
   })
 }
 
-function nullableCast(ds: Array<any>): boolean {
+function nullableCast(ds: any[]): boolean {
   for(var d of ds) {
     if(d.type === 'constraint' && d.variant == 'not null') {
       return false;
@@ -56,20 +63,23 @@ function nullableCast(ds: Array<any>): boolean {
 
 const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
   const ast = sqliteParser(info.sql);
-  const ddl = ddlColumns(ast);
+  const columnsDdl = getColumnsDdl(ast);
   const primaryKeys = ddlPKs(ast);
   const foreignKeys = ddlFKs(config, ast);
   const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
   const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
   const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
-  // TODO: Should we include something for the description here?
   return {
     name: tableName,
+    type: "table",
     ...primaryKey,
     ...foreignKey,
     description: info.sql,
-    columns: getColumns(ddl)
+    columns: getColumns(columnsDdl, primaryKeys),
+    insertable: MUTATIONS,
+    updatable: MUTATIONS,
+    deletable: MUTATIONS,
   }
 }
 
@@ -100,7 +110,7 @@ function includeTable(config: Config, table: TableInfoInternal): boolean {
  * @param ddl - The output of sqlite-parser
  * @returns - List of columns as present in the output of sqlite-parser.
  */
-function ddlColumns(ddl: any): Array<any> {
+function getColumnsDdl(ddl: any): any[] {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list when parsing DDL for table.");
   }
@@ -134,9 +144,9 @@ function ddlColumns(ddl: any): Array<any> {
  * NOTE: Composite keys are not currently supported.
  *
  * @param ddl
- * @returns Array<[name, FK constraint definition]>
+ * @returns [name, FK constraint definition][]
  */
-function ddlFKs(config: Config, ddl: any): Array<[string, Constraint]>  {
+function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
@@ -178,7 +188,7 @@ function ddlFKs(config: Config, ddl: any): Array<[string, Constraint]>  {
   })
 }
 
-function ddlPKs(ddl: any): Array<string> {
+function ddlPKs(ddl: any): string[] {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
@@ -203,11 +213,11 @@ function ddlPKs(ddl: any): Array<string> {
 }
 
 export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<SchemaResponse> {
-  const db                                        = connect(config, sqlLogger);
-  const [results, metadata]                       = await db.query("SELECT * from sqlite_schema");
-  const resultsT: Array<TableInfoInternal>        = results as Array<TableInfoInternal>;
-  const filtered: Array<TableInfoInternal>        = resultsT.filter(table => includeTable(config,table));
-  const result:   Array<TableInfo>                = filtered.map(formatTableInfo(config));
+  const db                            = connect(config, sqlLogger);
+  const [results, metadata]           = await db.query("SELECT * from sqlite_schema");
+  const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
+  const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
+  const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
 
   return {
     tables: result

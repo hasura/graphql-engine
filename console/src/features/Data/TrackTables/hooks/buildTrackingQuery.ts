@@ -1,7 +1,5 @@
-import {
-  allowedMetadataTypes,
-  MetadataTableConfig,
-} from '@/features/MetadataAPI';
+import { MetadataTableConfig } from '@/features/hasura-metadata-types';
+import { allowedMetadataTypes } from '@/features/MetadataAPI';
 import { TrackableTable } from '../types';
 
 export const buildTrackingQuery = (

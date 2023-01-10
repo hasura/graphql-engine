@@ -9,9 +9,7 @@ export default {
   component: Form,
 } as ComponentMeta<typeof Form>;
 
-export const Primary: ComponentStory<typeof Form> = (args) => (
-  <Form {...args} />
-);
+export const Primary: ComponentStory<typeof Form> = args => <Form {...args} />;
 Primary.args = {
   sourceTableInfo: {
     database: 'default',
@@ -21,18 +19,18 @@ Primary.args = {
   driver: 'postgres',
 };
 
-export const WithExistingRelationship: ComponentStory<typeof Form> = (args) => (
+export const WithExistingRelationship: ComponentStory<typeof Form> = args => (
   <Form {...args} />
 );
 WithExistingRelationship.args = {
   existingRelationship: {
     name: 'Customers',
-    type: 'toLocalTableFk',
+    type: 'toSameTableFk',
     toLocalTable: {
       name: 'Customer',
       schema: 'public',
     },
-    relationship_type: 'Array',
+    relationship_type: 'Object',
     mapping: {
       from: {
         source: 'chinook',

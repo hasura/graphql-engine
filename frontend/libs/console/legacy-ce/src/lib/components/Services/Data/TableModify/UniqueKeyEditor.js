@@ -27,10 +27,10 @@ const UniqueKeyEditor = ({
   const initialiseState = () => {
     dispatch(
       setUniqueKeys([
-        ...existingConstraints.map((ec) => {
+        ...existingConstraints.map(ec => {
           const cols = [];
-          ec.columns.forEach((c) => {
-            cols.push(orderedColumns.find((oc) => oc.name === c).index);
+          ec.columns.forEach(c => {
+            cols.push(orderedColumns.find(oc => oc.name === c).index);
           });
           return cols;
         }),
@@ -99,7 +99,7 @@ const UniqueKeyEditor = ({
     // remove unique key function (disabled if it is not an existing constraint)
     let removeFunc;
     if (!isLast) {
-      removeFunc = (toggle) => {
+      removeFunc = toggle => {
         const isOk = getConfirmation();
         if (isOk) {
           dispatch(

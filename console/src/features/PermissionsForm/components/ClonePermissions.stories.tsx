@@ -1,8 +1,8 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import * as z from 'zod';
 
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import {
   ClonePermissionsSection,
@@ -10,13 +10,14 @@ import {
 } from './ClonePermissions';
 
 export default {
-  title: 'Features/Permissions Form/Components/Clone Permissions',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Clone Permissions',
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}} className="p-4">
-        {() => <StoryComponent />}
-      </Form>
+      <SimpleForm schema={z.any()} onSubmit={() => {}} className="p-4">
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
 } as Meta;

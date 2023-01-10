@@ -17,6 +17,10 @@ module Hasura.RemoteSchema.Metadata.RemoteRelationship
   )
 where
 
+import Autodocodec
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec, graphQLValueCodec, hashSetCodec)
+import Control.Exception.Safe (Typeable)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
@@ -25,10 +29,11 @@ import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (prependFailure)
 import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Scientific (floatingOrInteger)
 import Data.Text qualified as T
-import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.Metadata.Base
@@ -46,7 +51,13 @@ data ToSchemaRelationshipDef = ToSchemaRelationshipDef
 
 instance NFData ToSchemaRelationshipDef
 
-instance Cacheable ToSchemaRelationshipDef
+instance HasCodec ToSchemaRelationshipDef where
+  codec =
+    object "ToSchemaRelationshipDef" $
+      ToSchemaRelationshipDef
+        <$> requiredField' "remote_schema" .= _trrdRemoteSchema
+        <*> requiredFieldWith' "lhs_fields" hashSetCodec .= _trrdLhsFields
+        <*> requiredField' "remote_field" .= _trrdRemoteField
 
 -- | Targeted field in a remote schema relationship.
 -- TODO: explain about subfields and why this is a container
@@ -55,7 +66,35 @@ newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
 
 instance NFData RemoteFields
 
-instance Cacheable RemoteFields
+instance HasCodec RemoteFields where
+  codec =
+    named "RemoteFields" $
+      bimapCodec dec enc $
+        hashMapCodec argumentsCodec
+          <?> "Remote fields are represented by an object that maps each field name to its arguments."
+    where
+      argumentsCodec :: JSONCodec (RemoteArguments, Maybe RemoteFields)
+      argumentsCodec =
+        object "FieldCall" $
+          (,)
+            <$> requiredField' "arguments"
+              .= fst
+            <*> optionalField' "field"
+              .= snd
+
+      dec :: HashMap G.Name (RemoteArguments, Maybe RemoteFields) -> Either String RemoteFields
+      dec hashmap = case HM.toList hashmap of
+        [(fieldName, (arguments, maybeSubField))] ->
+          let subfields = maybe [] (toList . unRemoteFields) maybeSubField
+           in Right $
+                RemoteFields $
+                  FieldCall {fcName = fieldName, fcArguments = arguments} :| subfields
+        [] -> Left "Expecting one single mapping, received none."
+        _ -> Left "Expecting one single mapping, received too many."
+
+      enc :: RemoteFields -> HashMap G.Name (RemoteArguments, Maybe RemoteFields)
+      enc (RemoteFields (field :| subfields)) =
+        HM.singleton (fcName field) (fcArguments field, RemoteFields <$> nonEmpty subfields)
 
 instance J.FromJSON RemoteFields where
   parseJSON = prependFailure details . fmap RemoteFields . parseRemoteFields
@@ -100,8 +139,6 @@ data FieldCall = FieldCall
 
 instance NFData FieldCall
 
-instance Cacheable FieldCall
-
 instance Hashable FieldCall
 
 -- | Arguments to a remote GraphQL fields, represented as a mapping from name to
@@ -111,9 +148,29 @@ instance Hashable FieldCall
 newtype RemoteArguments = RemoteArguments
   { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
   }
-  deriving (Show, Eq, Generic, Cacheable, NFData)
+  deriving (Show, Eq, Generic, NFData)
 
 instance Hashable RemoteArguments
+
+instance HasCodec RemoteArguments where
+  codec =
+    named "RemoteArguments" $
+      CommentCodec "Remote arguments are represented by an object that maps each argument name to its value." $
+        dimapCodec RemoteArguments getRemoteArguments $
+          hashMapCodec (graphQLValueCodec varCodec)
+    where
+      varCodec = bimapCodec decodeVariable encodeVariable textCodec
+
+      decodeVariable text = case T.uncons text of
+        Just ('$', rest)
+          | T.null rest -> Left $ "Empty variable name"
+          | otherwise ->
+              onNothing
+                (G.mkName rest)
+                (Left $ "Invalid variable name '" <> T.unpack rest <> "'")
+        _ -> Left $ "Variable name must start with $"
+
+      encodeVariable name = "$" <> G.unName name
 
 instance J.FromJSON RemoteArguments where
   parseJSON = prependFailure details . fmap RemoteArguments . J.withObject "RemoteArguments" parseObjectFieldsToGValue
@@ -136,8 +193,8 @@ instance J.FromJSON RemoteArguments where
             Just ('$', rest)
               | T.null rest -> fail $ "Empty variable name"
               | otherwise -> case G.mkName rest of
-                Nothing -> fail $ "Invalid variable name '" <> T.unpack rest <> "'"
-                Just name' -> pure $ G.VVariable name'
+                  Nothing -> fail $ "Invalid variable name '" <> T.unpack rest <> "'"
+                  Just name' -> pure $ G.VVariable name'
             _ -> pure (G.VString text)
         J.Number !scientificNum ->
           pure $ case floatingOrInteger scientificNum of
@@ -176,6 +233,17 @@ data RemoteSchemaTypeRelationships r = RemoteSchemaTypeRelationships
   }
   deriving (Show, Eq, Generic)
 
+instance (HasCodec (RemoteRelationshipG r), Typeable r) => HasCodec (RemoteSchemaTypeRelationships r) where
+  codec =
+    AC.object ("RemoteSchemaMetadata_" <> typeableName @r) $
+      RemoteSchemaTypeRelationships
+        <$> requiredFieldWith' "type_name" graphQLFieldNameCodec AC..= _rstrsName
+        <*> optionalFieldWithDefaultWith'
+          "relationships"
+          (insertionOrderedElemsCodec _rrName)
+          mempty
+          AC..= _rstrsRelationships
+
 instance J.FromJSON (RemoteRelationshipG r) => J.FromJSON (RemoteSchemaTypeRelationships r) where
   parseJSON = J.withObject "RemoteSchemaMetadata" \obj ->
     RemoteSchemaTypeRelationships
@@ -188,8 +256,6 @@ instance J.ToJSON (RemoteRelationshipG r) => J.ToJSON (RemoteSchemaTypeRelations
       [ "type_name" J..= _rstrsName,
         "relationships" J..= OM.elems _rstrsRelationships
       ]
-
-instance Cacheable r => Cacheable (RemoteSchemaTypeRelationships r)
 
 type SchemaRemoteRelationships r = InsOrdHashMap G.Name (RemoteSchemaTypeRelationships r)
 

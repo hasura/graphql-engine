@@ -3,6 +3,7 @@ module Hasura.Generator.Common
     genNonEmptyText,
     genArbitraryUnicodeText,
     genArbitraryAlphaNumText,
+    genArbitraryAlphaNumTextExcluding,
     genFieldName,
     genGName,
     genDescription,
@@ -21,7 +22,6 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 genHashMap ::
   MonadGen m =>
-  Eq a =>
   Hashable a =>
   m a ->
   m b ->
@@ -37,6 +37,9 @@ genArbitraryUnicodeText range = Gen.text range Gen.unicode
 
 genArbitraryAlphaNumText :: MonadGen m => Range Int -> m Text
 genArbitraryAlphaNumText range = Gen.text range Gen.alphaNum
+
+genArbitraryAlphaNumTextExcluding :: (MonadGen m, GenBase m ~ Identity) => [Text] -> Range Int -> m Text
+genArbitraryAlphaNumTextExcluding excluded = Gen.filter (`notElem` excluded) . genArbitraryAlphaNumText
 
 genFieldName :: MonadGen m => Range Int -> m FieldName
 genFieldName range = FieldName <$> genArbitraryUnicodeText range

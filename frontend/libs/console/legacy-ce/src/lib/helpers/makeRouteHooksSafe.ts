@@ -7,7 +7,7 @@ import { PlainRoute, EnterHook } from 'react-router';
 
 function makeHooksSafe(routes: PlainRoute[] | PlainRoute, store: any): unknown {
   if (Array.isArray(routes)) {
-    return routes.map((route) => makeHooksSafe(route, store));
+    return routes.map(route => makeHooksSafe(route, store));
   }
 
   const onEnter = routes.onEnter;

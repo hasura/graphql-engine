@@ -6,12 +6,12 @@ const requestActionPlain = (url, options, SUCCESS, ERROR) => {
     options.credentials = 'include';
   }
   */
-  return (dispatch) => {
+  return dispatch => {
     const p1 = new Promise((resolve, reject) => {
       fetch(url, options).then(
-        (response) => {
+        response => {
           if (response.ok) {
-            return response.text().then((results) => {
+            return response.text().then(results => {
               if (SUCCESS) {
                 dispatch({ type: SUCCESS, data: results });
               }
@@ -19,7 +19,7 @@ const requestActionPlain = (url, options, SUCCESS, ERROR) => {
             });
           }
           if (response.status >= 400 && response.status < 500) {
-            return response.text().then((errorMsg) => {
+            return response.text().then(errorMsg => {
               if (ERROR) {
                 dispatch({ type: ERROR, data: errorMsg });
               }
@@ -31,7 +31,7 @@ const requestActionPlain = (url, options, SUCCESS, ERROR) => {
           }
           reject();
         },
-        (error) => {
+        error => {
           if (ERROR) {
             dispatch({
               type: ERROR,

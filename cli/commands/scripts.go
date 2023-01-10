@@ -10,6 +10,7 @@ func NewScriptsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	scriptsCmd := &cobra.Command{
 		Use:          "scripts",
 		Short:        "Execute helper scripts to manage Hasura projects",
+		Long:         "The scripts command offers a set of helper scripts to manage a Hasura project's configuration settings. This is used when upgrading between `v1`, `v2`, or `v3` configs.",
 		SilenceUsage: true,
 	}
 	scriptsCmd.AddCommand(

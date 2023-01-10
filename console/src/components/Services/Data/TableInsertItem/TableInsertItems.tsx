@@ -3,7 +3,6 @@ import { AppDispatch } from '@/store';
 import { Button } from '@/new-components/Button';
 import { RightContainer } from '@/components/Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';
-import { NotFoundError } from '../../../Error/PageNotFound';
 import {
   findTable,
   isFeatureSupported,
@@ -45,9 +44,9 @@ const Alert = ({ lastError, lastSuccess }: AlertProps) => {
 };
 
 type TableInsertItemsProps = {
+  isEnum: boolean;
   tableName: string;
   currentSchema: string;
-  clone: Record<string, unknown>;
   schemas: Table[];
   migrationMode: boolean;
   readOnlyMode: boolean;
@@ -63,12 +62,15 @@ type TableInsertItemsProps = {
   lastError: Record<any, any>;
   lastSuccess: Record<any, any>;
   buttonText: string;
+  values: Record<string, unknown>;
+  setNullCheckedValues: (colName: string, isNullChecked: boolean) => void;
+  setDefaultValueColumns: (colName: string, isDefaultChecked: boolean) => void;
 };
 
 export const TableInsertItems = ({
+  isEnum,
   tableName,
   currentSchema,
-  clone,
   schemas,
   migrationMode,
   readOnlyMode,
@@ -84,6 +86,9 @@ export const TableInsertItems = ({
   lastError,
   lastSuccess,
   buttonText,
+  values,
+  setNullCheckedValues,
+  setDefaultValueColumns,
 }: TableInsertItemsProps) => {
   if (!isFeatureSupported('tables.insert.enabled')) {
     return (
@@ -101,7 +106,7 @@ export const TableInsertItems = ({
   );
 
   if (!currentTable) {
-    throw new NotFoundError();
+    return null;
   }
 
   const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
@@ -120,7 +125,7 @@ export const TableInsertItems = ({
             tabName="insert"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
-            isCountEstimated={false}
+            isCountEstimated
           />
           <br />
           <div>
@@ -129,11 +134,13 @@ export const TableInsertItems = ({
                 <div className="flex flex-col pt-sm">
                   {columns.map((column, index) => (
                     <DataTableRowItem
+                      setNullCheckedValues={setNullCheckedValues}
+                      setDefaultValueColumns={setDefaultValueColumns}
+                      values={values}
                       key={column?.column_name}
                       column={column}
                       onColumnUpdate={onColumnUpdate}
                       enumOptions={enumOptions}
-                      baseCopyRow={clone}
                       index={index.toString()}
                     />
                   ))}
@@ -161,7 +168,7 @@ export const TableInsertItems = ({
                       Clear
                     </Button>
                   </div>
-                  {currentTable.is_enum ? (
+                  {isEnum ? (
                     <ReloadEnumValuesButton dispatch={dispatch} />
                   ) : null}
                 </div>

@@ -443,8 +443,8 @@ export const modifyEventTrigger =
                 columns: state.isAllColumnChecked
                   ? '*'
                   : state.operationColumns
-                      .filter((c) => !!c.enabled)
-                      .map((c) => c.name),
+                      .filter(c => !!c.enabled)
+                      .map(c => c.name),
               }
             : null,
           delete: state.operations.delete ? { columns: '*' } : null,
@@ -731,7 +731,7 @@ export const getEventLogs =
         if (successCallback) successCallback(formattedData);
         return formattedData;
       })
-      .catch((err) => {
+      .catch(err => {
         if (errorCallback) errorCallback(err);
         return null;
       });
@@ -739,7 +739,7 @@ export const getEventLogs =
 
 export const cancelEvent =
   (type: SupportedEvents, id: string, onSuccessCallback: () => void): Thunk =>
-  (dispatch) => {
+  dispatch => {
     const url = Endpoints.metadata;
     const payload = deleteScheduledEvent(type, id);
     const options = {
@@ -754,7 +754,7 @@ export const cancelEvent =
         dispatch(showSuccessNotification(successText));
         onSuccessCallback();
       })
-      .catch((err) => {
+      .catch(err => {
         dispatch(showErrorNotification(errorText, err.message, err));
       });
   };

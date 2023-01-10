@@ -1,21 +1,25 @@
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { NewDataTarget } from '../../PermissionsTab/types/types';
 
-import { AccessType, FormOutput, QueryType } from '../types';
-import { createInsertArgs, driverPrefixes } from './utils';
+import { AccessType, QueryType } from '../types';
+import { PermissionsSchema } from '../utils';
+import { createInsertArgs } from './utils';
 
 interface CreateBodyArgs {
-  dataTarget: NewDataTarget;
+  dataSourceName: string;
+  table: unknown;
   roleName: string;
   resourceVersion: number;
 }
 
 interface CreateDeleteBodyArgs extends CreateBodyArgs {
   queries: QueryType[];
+  driver: string;
 }
 
 const createDeleteBody = ({
-  dataTarget,
+  driver,
+  dataSourceName,
+  table,
   roleName,
   resourceVersion,
   queries,
@@ -25,18 +29,12 @@ const createDeleteBody = ({
   resource_version: number;
   args: BulkArgs[];
 } => {
-  const driverPrefix = driverPrefixes[dataTarget.dataSource.driver];
-
-  if (!['postgres', 'mssql'].includes(dataTarget.dataSource.driver)) {
-    throw new Error(`${dataTarget.dataSource.driver} not supported`);
-  }
-
-  const args = queries.map((queryType) => ({
-    type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
+  const args = queries.map(queryType => ({
+    type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
     args: {
-      table: dataTarget.dataLeaf.leaf?.name || '',
+      table,
       role: roleName,
-      source: dataTarget.dataSource.database,
+      source: dataSourceName,
     },
   }));
 
@@ -50,17 +48,23 @@ const createDeleteBody = ({
   return body;
 };
 
-interface CreateBulkDeleteBodyArgs extends CreateBodyArgs {
-  roleList?: Array<{ roleName: string; queries: QueryType[] }>;
+interface CreateBulkDeleteBodyArgs {
+  dataSourceName: string;
+  table: unknown;
+  resourceVersion: number;
+  roleList?: Array<{ roleName: string; queries: string[] }>;
+  driver: string;
 }
 
 interface BulkArgs {
   type: allowedMetadataTypes;
-  args: Record<string, string | allowedMetadataTypes>;
+  args: Record<string, string | allowedMetadataTypes | unknown>;
 }
 
 const createBulkDeleteBody = ({
-  dataTarget,
+  dataSourceName,
+  driver,
+  table,
   resourceVersion,
   roleList,
 }: CreateBulkDeleteBodyArgs): {
@@ -69,21 +73,15 @@ const createBulkDeleteBody = ({
   resource_version: number;
   args: BulkArgs[];
 } => {
-  const driverPrefix = driverPrefixes[dataTarget.dataSource.driver];
-
-  if (!['postgres', 'mssql'].includes(dataTarget.dataSource.driver)) {
-    throw new Error(`${dataTarget.dataSource.driver} not supported`);
-  }
-
   const args =
     roleList?.reduce<BulkArgs[]>((acc, role) => {
-      role.queries.forEach((queryType) => {
+      role.queries.forEach(queryType => {
         acc.push({
-          type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
+          type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
           args: {
-            table: dataTarget.dataLeaf.leaf?.name || '',
+            table,
             role: role.roleName,
-            source: dataTarget.dataSource.database,
+            source: dataSourceName,
           },
         });
       });
@@ -93,7 +91,7 @@ const createBulkDeleteBody = ({
 
   const body = {
     type: 'bulk' as allowedMetadataTypes,
-    source: dataTarget.dataSource.database,
+    source: dataSourceName,
     resource_version: resourceVersion,
     args: args ?? [],
   };
@@ -103,9 +101,10 @@ const createBulkDeleteBody = ({
 
 interface CreateInsertBodyArgs extends CreateBodyArgs {
   queryType: QueryType;
-  formData: FormOutput;
+  formData: PermissionsSchema;
   accessType: AccessType;
   existingPermissions: any;
+  driver: string;
 }
 
 export interface InsertBodyResult {
@@ -115,27 +114,24 @@ export interface InsertBodyResult {
 }
 
 const createInsertBody = ({
-  dataTarget,
+  dataSourceName,
+  table,
   queryType,
   roleName,
   formData,
-  // accessType,
+  accessType,
   resourceVersion,
   existingPermissions,
+  driver,
 }: CreateInsertBodyArgs): InsertBodyResult => {
-  const driverPrefix = driverPrefixes[dataTarget.dataSource.driver];
-
-  if (!['postgres', 'mssql'].includes(dataTarget.dataSource.driver)) {
-    throw new Error(`${dataTarget.dataSource.driver} not supported`);
-  }
-
   const args = createInsertArgs({
-    driverPrefix,
-    database: dataTarget.dataSource.database,
-    table: dataTarget.dataLeaf.leaf?.name || '',
+    driver,
+    dataSourceName,
+    table,
     queryType,
     role: roleName,
     formData,
+    accessType,
     existingPermissions,
   });
 

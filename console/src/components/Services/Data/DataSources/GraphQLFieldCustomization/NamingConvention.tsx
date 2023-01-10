@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NamingConventionOptions } from '@/metadata/types';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { useServerConfig } from '@/hooks';
@@ -43,14 +43,24 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
   connectionDBState,
 }) => {
   const { data: configData, isLoading, isError } = useServerConfig();
+  const [enableNamingConvention, setEnableNamingConvention] = useState(
+    !!namingConvention
+  );
 
-  if (isError) {
-    return <div>Error in fetching server configuration</div>;
-  }
+  const namingConventionEnabled = () => {
+    if (enableNamingConvention) {
+      onChange('namingConvention', null);
+    } else {
+      onChange(
+        'namingConvention',
+        configData?.default_naming_convention === null
+          ? 'hasura-default'
+          : configData?.default_naming_convention
+      );
+    }
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+    return setEnableNamingConvention(!enableNamingConvention);
+  };
 
   const isNamingConventionEnabled =
     configData?.experimental_features.includes('naming_convention');
@@ -60,6 +70,59 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
     getSupportedDrivers('connectDbForm.namingConvention').includes(
       connectionDBState?.dbType
     );
+
+  const namingconventionFields = () => {
+    if (isLoading) {
+      return (
+        <div className="font-normal flex items-center text-gray-600">
+          Loading Naming convention...
+        </div>
+      );
+    }
+    if (isError) {
+      return (
+        <div className="font-normal flex items-center text-gray-600">
+          Error in fetching server configuration
+        </div>
+      );
+    }
+    return (
+      <>
+        {!isNamingConventionEnabled ? (
+          <div className="font-thin">
+            Naming convention is not enabled. To enable naming convention, start
+            the Hasura server with environment variable
+            <code>
+              HASURA_GRAPHQL_EXPERIMENTAL_FEATURES:
+              &quot;naming_convention&quot;
+            </code>
+          </div>
+        ) : (
+          <>
+            <div className="mr-md text-gray-600 checkbox">
+              <label className="cursor-pointer flex">
+                <input
+                  type="checkbox"
+                  checked={enableNamingConvention}
+                  onChange={() => namingConventionEnabled()}
+                  className="cursor-pointer"
+                />
+                <span className="ml-xs">Enable Naming Convention</span>
+              </label>
+            </div>
+            <span className="p-sm py-8">
+              <CardRadioGroup
+                items={namingConventionRadioGroupItems}
+                onChange={ncType => onChange('namingConvention', ncType)}
+                value={namingConvention ?? undefined}
+                disabled={!enableNamingConvention}
+              />
+            </span>
+          </>
+        )}
+      </>
+    );
+  };
 
   return (
     <div>
@@ -76,24 +139,7 @@ export const NamingConvention: React.FC<GraphQLFieldCustomizationProps> = ({
               <span className="italic font-thin text-sm	pl-1">(Know More)</span>
             </a>
           </p>
-          {!isNamingConventionEnabled ? (
-            <div className="font-thin">
-              Naming convention is not enabled. To enable naming convention,
-              start the Hasura server with environment variable
-              <code>
-                HASURA_GRAPHQL_EXPERIMENTAL_FEATURES:
-                &quot;naming_convention&quot;
-              </code>
-            </div>
-          ) : (
-            <span className="p-sm py-8">
-              <CardRadioGroup
-                items={namingConventionRadioGroupItems}
-                onChange={ncType => onChange('namingConvention', ncType)}
-                value={namingConvention}
-              />
-            </span>
-          )}
+          {namingconventionFields()}
         </div>
       ) : null}
     </div>

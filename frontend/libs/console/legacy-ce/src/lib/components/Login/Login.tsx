@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Connect } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
-import { Form, InputField, Checkbox } from '@/new-components/Form';
+import { Checkbox, InputField, SimpleForm } from '@/new-components/Form';
 import { push } from 'react-router-redux';
 import { z } from 'zod';
 import Helmet from 'react-helmet';
@@ -13,13 +14,14 @@ import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 import { ConnectInjectedProps } from '../../types';
 
 import hasuraLogo from './black-logo.svg';
+import hasuraEELogo from './black-logo-ee.svg';
 
 const validationSchema = z.object({
   password: z.string().min(1, { message: 'Please add password' }),
   savePassword: z.boolean().or(z.string()).optional(),
 });
 
-const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
+const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
   // request state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -67,16 +69,16 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
     };
 
     return (
-      <Form
+      <SimpleForm
         schema={validationSchema}
         options={{
           defaultValues: undefined,
         }}
         onSubmit={onSubmit}
-        className="p-0"
       >
-        {() => (
+        <Analytics name="Login" {...REDACT_EVERYTHING}>
           <div className="flex flex-col bg-white p-4">
+            {!!children && <div>{children}</div>}
             <div>
               <div className="w-full">
                 <InputField
@@ -112,8 +114,8 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
               </label>
             </div>
           </div>
-        )}
-      </Form>
+        </Analytics>
+      </SimpleForm>
     );
   };
 
@@ -143,14 +145,19 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
     );
   };
 
+  const showLogo =
+    globals.consoleType === 'pro' || globals.consoleType === 'pro-lite' ? (
+      <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="Hasura EE" />
+    ) : (
+      <img src={hasuraLogo} alt="Hasura" />
+    );
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="flex" id="login">
         <div className="">
           <Helmet title="Login | Hasura" />
-          <div className="flex justify-center mb-md">
-            <img src={hasuraLogo} alt="Hasura" />
-          </div>
+          <div className="flex justify-center mb-md">{showLogo}</div>
           <div className="w-[400px] border shadow-lg p-md rounded-lg bg-white">
             {globals.consoleMode !== CLI_CONSOLE_MODE
               ? getLoginForm()

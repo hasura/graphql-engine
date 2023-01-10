@@ -319,7 +319,7 @@ simulateDistinctOn select distinctOnColumns orderByColumns = do
               finalDistinctFields = case mExtraPartitionField of
                 Just extraFields
                   | Just neExtraFields <- nonEmpty extraFields ->
-                    neExtraFields <> distinctFields
+                      neExtraFields <> distinctFields
                 _ -> distinctFields
               (distinctOnOrderBy, innerOrderBy) =
                 case orderByColumns of
@@ -1378,7 +1378,8 @@ fromArrayAggregateSelectG annRelationSelectG = do
         joinOn,
         joinProvenance =
           ArrayAggregateJoinProvenance $
-            mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $ select,
+            mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $
+              select,
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,

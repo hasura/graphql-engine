@@ -12,7 +12,7 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Upsert mutation
+# Postgres: Upsert Mutation
 
 ## Introduction
 
@@ -43,6 +43,12 @@ Partial unique indexes cannot be used in the `constraint` field.
 
 :::
 
+:::info Note
+
+Partial unique indexes cannot be used in the `constraint` field.
+
+:::
+
 :::info Fetching Postgres constraint names
 
 You can fetch details of unique or primary key constraints on a table by running the following SQL:
@@ -51,7 +57,7 @@ You can fetch details of unique or primary key constraints on a table by running
 SELECT * FROM "information_schema"."table_constraints" WHERE table_name='<table>' AND table_schema='<schema>';
 ```
 
-GraphQL engine will automatically generate constraint names as enum values for the `constraint` field _(try
+GraphQL Engine will automatically generate constraint names as enum values for the `constraint` field _(try
 autocompleting in GraphiQL)_. Typically, the constraint is automatically named as `<table-name>_<column-name>_key`.
 
 :::

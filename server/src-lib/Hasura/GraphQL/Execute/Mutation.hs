@@ -31,6 +31,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -45,14 +46,16 @@ convertMutationAction ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  PrometheusMetrics ->
   UserInfo ->
   HTTP.Manager ->
   HTTP.RequestHeaders ->
   Maybe GH.GQLQueryText ->
   ActionMutation Void ->
   m ActionExecutionPlan
-convertMutationAction env logger userInfo manager reqHeaders gqlQueryText = \case
-  AMSync s -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext gqlQueryText
+convertMutationAction env logger prometheusMetrics userInfo manager reqHeaders gqlQueryText = \case
+  AMSync s ->
+    pure $ AEPSync $ resolveActionExecution env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
   AMAsync s ->
     AEPAsyncMutation
       <$> liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
@@ -71,6 +74,7 @@ convertMutationSelectionSet ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  PrometheusMetrics ->
   GQLContext ->
   SQLGenCtx ->
   UserInfo ->
@@ -88,6 +92,7 @@ convertMutationSelectionSet ::
 convertMutationSelectionSet
   env
   logger
+  prometheusMetrics
   gqlContext
   SQLGenCtx {stringifyNum}
   userInfo
@@ -136,7 +141,7 @@ convertMutationSelectionSet
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-              plan <- convertMutationAction env logger userInfo manager reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
+              plan <- convertMutationAction env logger prometheusMetrics userInfo manager reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
               pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations
             RFRaw customFieldVal -> flip onLeft throwError =<< executeIntrospection userInfo customFieldVal introspectionDisabledRoles

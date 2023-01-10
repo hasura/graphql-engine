@@ -28,7 +28,7 @@ export namespace MetadataSelector {
     return (
       m.metadata?.sources.reduce((accTables, source) => {
         return accTables.concat(
-          source.tables.map((t) => ({ ...t, source: source.name }))
+          source.tables.map(t => ({ ...t, source: source.name }))
         );
       }, [] as (TableEntry & { source: string })[]) || []
     );
@@ -43,7 +43,7 @@ export namespace MetadataSelector {
     (dataSource: string) => (m: MetadataResponse) => {
       // TODO: open a issue about return type
       if (!dataSource) return;
-      return m.metadata?.sources.find((source) => source.name === dataSource);
+      return m.metadata?.sources.find(source => source.name === dataSource);
     };
 
   export const listRemoteSchemas = () => (m: MetadataResponse) => {
@@ -53,7 +53,7 @@ export namespace MetadataSelector {
   export const getRemoteSchema =
     (schemaName: string) => (m: MetadataResponse) => {
       const schemaMeta = m?.metadata.remote_schemas?.find(
-        (s) => s.name === schemaName
+        s => s.name === schemaName
       );
       return schemaMeta;
     };
@@ -65,11 +65,11 @@ export namespace MetadataSelector {
         | rsToRsRelDef
       ))[] = [];
 
-      m.metadata?.remote_schemas?.forEach((rs) => {
+      m.metadata?.remote_schemas?.forEach(rs => {
         const rsName = rs?.name;
 
         if (rs?.remote_relationships) {
-          const temp_rels = rs.remote_relationships.map((rel) => {
+          const temp_rels = rs.remote_relationships.map(rel => {
             return { ...rel, rsName };
           });
 
@@ -85,7 +85,7 @@ export namespace MetadataSelector {
   export const getRemoteSchemaRelationship =
     (sourceRemoteSchema: string) => (m: MetadataResponse) => {
       return m?.metadata?.remote_schemas?.find(
-        (rs) => rs.name === sourceRemoteSchema
+        rs => rs.name === sourceRemoteSchema
       );
     };
 
@@ -96,9 +96,9 @@ export namespace MetadataSelector {
       // Qualified table needs to be replaced with DataTarget everywhere so that we can support all targets
       if ('dataset' in target) {
         tableEntry = m.metadata.sources
-          .find((s) => s.name === target.database)
+          .find(s => s.name === target.database)
           ?.tables.find(
-            (t) =>
+            t =>
               t.table.name === target.table &&
               'dataset' in t.table &&
               target.dataset === t.table?.dataset
@@ -106,9 +106,9 @@ export namespace MetadataSelector {
       } else {
         // find relevant table from metadata
         tableEntry = m.metadata.sources
-          .find((s) => s.name === target.database)
+          .find(s => s.name === target.database)
           ?.tables.find(
-            (t) =>
+            t =>
               t.table.name === target.table &&
               'schema' in t.table &&
               'schema' in target &&
@@ -117,7 +117,7 @@ export namespace MetadataSelector {
       }
       // ensure relationship is to remote schema not remote db
       return tableEntry?.remote_relationships?.filter(
-        (relationship) => !relationship.definition.to_source
+        relationship => !relationship.definition.to_source
       );
     };
 
@@ -133,12 +133,11 @@ export namespace MetadataSelector {
 
       if ('dataset' in table && table.dataset !== '') {
         return tables.find(
-          (t) =>
-            t.table.name === table.name && t.table.dataset === table.dataset
+          t => t.table.name === table.name && t.table.dataset === table.dataset
         );
       }
       return tables.find(
-        (t) => t.table.name === table.name && t.table.schema === table.schema
+        t => t.table.name === table.name && t.table.schema === table.schema
       );
     };
 
@@ -160,14 +159,12 @@ export namespace MetadataSelector {
         }
         return rpm;
       }, {});
-      const permissions: Permission[] = Object.keys(rolePermMap).map(
-        (role) => ({
-          role_name: role,
-          permissions: rolePermMap[role].permissions,
-          table_name: table.name,
-          table_schema: table.schema,
-        })
-      );
+      const permissions: Permission[] = Object.keys(rolePermMap).map(role => ({
+        role_name: role,
+        permissions: rolePermMap[role].permissions,
+        table_name: table.name,
+        table_schema: table.schema,
+      }));
       return permissions;
     };
 
@@ -176,7 +173,7 @@ export namespace MetadataSelector {
       const metadataTable = getTable(dataSource, table)(m);
       const computed_fields: ComputedField[] = (
         metadataTable?.computed_fields || []
-      ).map((field) => ({
+      ).map(field => ({
         comment: field.comment,
         computed_field_name: field.name,
         name: field.name,
@@ -197,18 +194,18 @@ export namespace MetadataSelector {
       // find relevant table from metadata
       if ('dataset' in target) {
         tableEntry = m.metadata.sources
-          .find((s) => s.name === target.database)
+          .find(s => s.name === target.database)
           ?.tables.find(
-            (t) =>
+            t =>
               t.table.name === target.table &&
               'dataset' in t.table &&
               target.dataset === t.table?.dataset
           );
       } else {
         tableEntry = m.metadata.sources
-          .find((s) => s.name === target.database)
+          .find(s => s.name === target.database)
           ?.tables.find(
-            (t) =>
+            t =>
               t.table.name === target.table &&
               'schema' in t.table &&
               'schema' in target &&
@@ -218,7 +215,7 @@ export namespace MetadataSelector {
 
       const remote_database_relationships: RemoteRelationship[] = (
         tableEntry?.remote_relationships ?? []
-      ).filter((field) => 'to_source' in field.definition);
+      ).filter(field => 'to_source' in field.definition);
       return remote_database_relationships;
     };
 
@@ -228,7 +225,7 @@ export namespace MetadataSelector {
       const metadataTable = getTable(currentDataSource, table)(m);
       const remote_schema_relationships: RemoteRelationship[] = (
         metadataTable?.remote_relationships ?? []
-      ).filter((field) => 'to_remote_schema' in field.definition);
+      ).filter(field => 'to_remote_schema' in field.definition);
       return remote_schema_relationships;
     };
 
@@ -266,7 +263,7 @@ export namespace MetadataSelector {
     };
 
   export const getAllDriversList = (m: MetadataResponse) =>
-    m.metadata?.sources.map((s) => ({ source: s.name, kind: s.kind }));
+    m.metadata?.sources.map(s => ({ source: s.name, kind: s.kind }));
 
   export const getQueryCollections = (
     m: MetadataResponse
@@ -275,14 +272,14 @@ export namespace MetadataSelector {
   export const getOperationsFromQueryCollection =
     (queryCollectionName: string) => (m: MetadataResponse) => {
       const queryCollectionDefinition = m.metadata?.query_collections?.find(
-        (qs) => qs.name === queryCollectionName
+        qs => qs.name === queryCollectionName
       );
       return queryCollectionDefinition?.definition?.queries ?? [];
     };
   export const getNewRolePermission =
     (queryCollectionName: string) => (m: MetadataResponse) => {
       const queryCollectionDefinition = m.metadata?.allowlist?.find(
-        (qs) => qs.collection === queryCollectionName
+        qs => qs.collection === queryCollectionName
       );
       return queryCollectionDefinition?.scope?.global === false
         ? queryCollectionDefinition?.scope?.roles
@@ -294,7 +291,7 @@ export namespace MetadataSelector {
     (m: MetadataResponse): boolean => {
       return (
         m.metadata?.allowlist?.find(
-          (entry) => entry?.collection === collectionName
+          entry => entry?.collection === collectionName
         ) !== undefined
       );
     };

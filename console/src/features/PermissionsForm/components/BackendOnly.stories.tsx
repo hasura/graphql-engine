@@ -1,12 +1,13 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 
 export default {
-  title: 'Features/Permissions Form/Components/Backend Only Section',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Backend Only Section',
   component: BackendOnlySection,
   parameters: {
     // Disable storybook for playground stories
@@ -26,14 +27,14 @@ BackendOnlyEnabled.args = {
 };
 BackendOnlyEnabled.decorators = [
   (StoryComponent: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: true } }}
       className="p-4"
     >
-      {() => <StoryComponent />}
-    </Form>
+      <StoryComponent />
+    </SimpleForm>
   ),
 ];
 
@@ -45,14 +46,14 @@ BackendOnlyDisabled.args = {
 };
 BackendOnlyDisabled.decorators = [
   (StoryComponent: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: false } }}
       className="p-4"
     >
-      {() => <StoryComponent />}
-    </Form>
+      <StoryComponent />
+    </SimpleForm>
   ),
 ];
 

@@ -18,7 +18,7 @@ const RemoteSchemaSubSidebar = ({
 }) => {
   const { inconsistentObjects } = props.metadata;
   const inconsistentRemoteSchemas = inconsistentObjects.filter(
-    (inconObject) => inconObject.type === 'remote_schema'
+    inconObject => inconObject.type === 'remote_schema'
   );
 
   function tableSearch(e) {
@@ -64,7 +64,7 @@ const RemoteSchemaSubSidebar = ({
           }
 
           const inconsistentCurrentSchema = inconsistentRemoteSchemas.find(
-            (elem) => elem.definition.name === d.name
+            elem => elem.definition.name === d.name
           );
 
           return (

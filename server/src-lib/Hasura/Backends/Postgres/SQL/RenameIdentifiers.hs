@@ -94,7 +94,7 @@ identifierPrefixHash (Identifier name) = Identifier $ prefixHash name
 
 -- * Prefix table names with underscore
 
--- $prefix_md5_implementation
+-- \$prefix_md5_implementation
 
 -- | Prefix table names with underscores to avoid issues where column names and tables conflict.
 --   This can happen because we give columns and tables the name @root@ for some reason,

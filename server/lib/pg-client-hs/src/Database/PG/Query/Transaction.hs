@@ -120,8 +120,12 @@ type TxT m a = TxET PGTxErr m a
 catchE :: (Functor m) => (e -> e') -> TxET e m a -> TxET e' m a
 catchE f action = TxET $ mapReaderT (withExceptT f) $ txHandler action
 
-data PGTxErr
-  = PGTxErr !Text ![PrepArg] !Bool !PGErrInternal
+data PGTxErr = PGTxErr
+  { pgteStatement :: !Text,
+    pgteArguments :: ![PrepArg],
+    pgteIsPrepared :: !Bool,
+    pgteError :: !PGErrInternal
+  }
   -- PGCustomErr !T.Text
   deriving stock (Eq)
 
@@ -191,7 +195,8 @@ rawQE ef q args prep = TxET $
   ReaderT $ \pgConn ->
     withExceptT (ef . txErrF) $
       hoist liftIO $
-        execQuery pgConn $ PGQuery (mkTemplate stmt) args prep fromRes
+        execQuery pgConn $
+          PGQuery (mkTemplate stmt) args prep fromRes
   where
     txErrF = PGTxErr stmt args prep
     stmt = getQueryText q

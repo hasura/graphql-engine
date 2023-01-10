@@ -19,7 +19,7 @@ const formatters = {
   hour: 'H:mm',
 };
 
-const getOptions = (dataSize) => {
+const getOptions = dataSize => {
   return {
     legend: {
       display: false,

@@ -11,10 +11,12 @@ import {
   FaSort,
   FaTrash,
 } from 'react-icons/fa';
+import clsx from 'clsx';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
 } from '../../../Common/TableCommon/DragFoldTable';
+import { vMakeTableRequests, vSetLimit } from './ViewActions';
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
@@ -44,12 +46,10 @@ import {
   addOrder,
 } from './FilterActions';
 
-import _push from '../push';
 import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
 import { E_SET_EDITITEM } from '../TableEditItem/EditActions';
-import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import {
   getTableInsertRowRoute,
   getTableEditRowRoute,
@@ -64,39 +64,47 @@ import {
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  persistColumnCollapseChange,
   getPersistedCollapsedColumns,
-  persistColumnOrderChange,
   getPersistedColumnsOrder,
+  persistColumnCollapseChange,
+  persistColumnOrderChange,
+  setPersistedPageSize,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
+import { push } from 'react-router-redux';
+import globals from '@/Globals';
 
-const ViewRows = (props) => {
+const ViewRows = props => {
   const {
-    curTableName,
-    currentSchema,
-    curQuery,
-    curFilter,
-    curRows,
-    curPath = [],
-    parentTableName,
-    curDepth,
     activePath,
-    schemas,
+    count,
+    curDepth,
+    curFilter,
+    curPath = [],
+    curQuery,
+    currentSchema,
+    currentSource,
+    curRows,
+    curTableName,
     dispatch,
-    ongoingRequest,
+    expandedRow,
+    filtersAndSort,
     isProgressing,
+    isView,
     lastError,
     lastSuccess,
-    isView,
-    count,
-    expandedRow,
     manualTriggers = [],
+    onChangePageSize,
+    ongoingRequest,
+    onRunQuery,
+    parentTableName,
     readOnlyMode,
+    schemas,
     shouldHidePagination,
-    currentSource,
     useCustomPagination,
+    paginationUserQuery,
   } = props;
+
   const [invokedRow, setInvokedRow] = useState(null);
   const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -117,7 +125,7 @@ const ViewRows = (props) => {
     setInvokedRow(null);
   };
 
-  const handleAllCheckboxChange = (e) => {
+  const handleAllCheckboxChange = e => {
     if (e.target.checked) {
       setSelectedRows(curRows);
     } else {
@@ -125,21 +133,21 @@ const ViewRows = (props) => {
     }
   };
 
-  const checkIfSingleRow = (_curRelName) => {
+  const checkIfSingleRow = _curRelName => {
     let _isSingleRow = false;
 
     const parentTableSchema = parentTableName
-      ? schemas.find((t) => t.table_name === parentTableName)
+      ? schemas.find(t => t.table_name === parentTableName)
       : null;
 
-    if (curQuery.columns.find((c) => typeof c === 'object')) {
+    if (curQuery.columns.find(c => typeof c === 'object')) {
       // Do I have any children
       _isSingleRow = true;
     } else if (
       _curRelName &&
       parentTableSchema &&
-      parentTableSchema.relationships.find(
-        (r) => r.rel_name === _curRelName && r.rel_type === 'object'
+      (parentTableSchema?.relationships || []).find(
+        r => r.rel_name === _curRelName && r.rel_type === 'object'
       )
     ) {
       // Am I an obj_rel for my parent?
@@ -186,12 +194,12 @@ const ViewRows = (props) => {
       width: 60,
     });
 
-    _columns.map((col) => {
+    _columns.map(col => {
       const columnName = col.column_name;
 
       let sortIcon = <FaSort />;
       if (curQuery.order_by && curQuery.order_by.length) {
-        curQuery.order_by.forEach((orderBy) => {
+        curQuery.order_by.forEach(orderBy => {
           if (orderBy.column === col.id) {
             sortIcon = orderBy.type === 'asc' ? <FaCaretUp /> : <FaCaretDown />;
           }
@@ -212,7 +220,7 @@ const ViewRows = (props) => {
       });
     });
 
-    _relationships.map((rel) => {
+    _relationships.map(rel => {
       const relName = rel.rel_name;
 
       _gridHeadings.push({
@@ -233,12 +241,10 @@ const ViewRows = (props) => {
 
   const handleCheckboxChange = (row, e, tableSchema) => {
     if (e.target.checked) {
-      setSelectedRows((prev) => [...prev, row]);
+      setSelectedRows(prev => [...prev, row]);
     } else {
-      setSelectedRows((prev) =>
-        prev.filter(
-          (prevRow) => !compareRows(prevRow, row, tableSchema, isView)
-        )
+      setSelectedRows(prev =>
+        prev.filter(prevRow => !compareRows(prevRow, row, tableSchema, isView))
       );
     }
   };
@@ -247,22 +253,22 @@ const ViewRows = (props) => {
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.forEach((key) => {
+      tableSchema.primary_key.columns.forEach(key => {
         pkClause[key] = row[key];
       });
     } else if (tableSchema.unique_constraints?.length) {
-      tableSchema.unique_constraints[0].columns.forEach((key) => {
+      tableSchema.unique_constraints[0].columns.forEach(key => {
         pkClause[key] = row[key];
       });
     } else {
       tableSchema.columns
-        .filter((c) => !dataSource.isJsonColumn(c))
-        .forEach((key) => {
+        .filter(c => !dataSource.isJsonColumn(c))
+        .forEach(key => {
           pkClause[key.column_name] = row[key.column_name];
         });
     }
 
-    Object.keys(pkClause).forEach((key) => {
+    Object.keys(pkClause).forEach(key => {
       if (Array.isArray(pkClause[key])) {
         pkClause[key] = dataSource.arrayToPostgresArray(pkClause[key]);
       }
@@ -272,7 +278,7 @@ const ViewRows = (props) => {
   };
 
   const tableSchema = schemas.find(
-    (x) => x.table_name === curTableName && x.table_schema === currentSchema
+    x => x.table_name === curTableName && x.table_schema === currentSchema
   );
 
   const getGridRows = (
@@ -305,7 +311,7 @@ const ViewRows = (props) => {
         ) => {
           const disabled = requirePK && !_hasPrimaryKey;
 
-          const disabledOnClick = (e) => {
+          const disabledOnClick = e => {
             e.preventDefault();
             e.stopPropagation();
           };
@@ -359,23 +365,25 @@ const ViewRows = (props) => {
           return getActionButton('expand', icon, title, handleClick);
         };
 
-        const getEditButton = (pkClause) => {
+        const getEditButton = pkClause => {
           const editIcon = <FaEdit />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableEditRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableEditRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+              })
             );
           };
-
           const editTitle = 'Edit row';
 
           return getActionButton(
@@ -388,14 +396,12 @@ const ViewRows = (props) => {
           );
         };
 
-        const getDeleteButton = (pkClause) => {
+        const getDeleteButton = pkClause => {
           const deleteIcon = <FaTrash />;
 
           const handleDeleteClick = () => {
-            setSelectedRows((prev) =>
-              prev.filter(
-                (r) => !compareRows(r, pkClause, _tableSchema, isView)
-              )
+            setSelectedRows(prev =>
+              prev.filter(r => !compareRows(r, pkClause, _tableSchema, isView))
             );
             dispatch(deleteItem(pkClause, curTableName, currentSchema));
           };
@@ -416,16 +422,19 @@ const ViewRows = (props) => {
           const cloneIcon = <FaClone />;
 
           const handleCloneClick = () => {
-            dispatch({ type: I_SET_CLONE, clone: row });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableInsertRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableInsertRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+                state: { row },
+              })
             );
           };
 
@@ -445,7 +454,7 @@ const ViewRows = (props) => {
             return;
           }
 
-          const triggerOptions = manualTriggers.map((m) => {
+          const triggerOptions = manualTriggers.map(m => {
             return {
               content: (
                 <div>
@@ -533,10 +542,10 @@ const ViewRows = (props) => {
             title={
               _disableBulkSelect ? NO_PRIMARY_KEY_MSG : 'feature not supported'
             }
-            checked={selectedRows.some((selectedRow) =>
+            checked={selectedRows.some(selectedRow =>
               compareRows(selectedRow, row, _tableSchema, isView)
             )}
-            onChange={(e) => handleCheckboxChange(row, e, _tableSchema, isView)}
+            onChange={e => handleCheckboxChange(row, e, _tableSchema, isView)}
             data-test={`row-checkbox-${rowIndex}`}
           />
         </div>
@@ -544,7 +553,7 @@ const ViewRows = (props) => {
 
       // Insert column cells
       _tableSchema.columns
-        .map((col) => {
+        .map(col => {
           const customColumnName = getTableCustomColumnName(
             tableSchema,
             col.column_name
@@ -558,7 +567,7 @@ const ViewRows = (props) => {
           }
           return { ...col, id: col.column_name };
         })
-        .forEach((col) => {
+        .forEach(col => {
           const columnName = col.column_name;
 
           /* Row is a JSON object with `key` as the column name in the db
@@ -613,7 +622,7 @@ const ViewRows = (props) => {
         });
 
       // Insert relationship cells
-      _tableSchema.relationships.forEach((rel) => {
+      _tableSchema.relationships.forEach(rel => {
         const relName = rel.rel_name;
 
         const getRelCellContent = () => {
@@ -628,10 +637,10 @@ const ViewRows = (props) => {
           };
 
           const isRelExpanded =
-            curQuery.columns.find((c) => c.name === rel.rel_name) !== undefined;
+            curQuery.columns.find(c => c.name === rel.rel_name) !== undefined;
 
           if (isRelExpanded) {
-            const handleCloseClick = (e) => {
+            const handleCloseClick = e => {
               e.preventDefault();
               dispatch(vCloseRel(curPath, rel.rel_name));
             };
@@ -652,7 +661,7 @@ const ViewRows = (props) => {
               // can be expanded
               const pkClause = getPKClause(row, _hasPrimaryKey, _tableSchema);
 
-              const handleViewClick = (e) => {
+              const handleViewClick = e => {
                 e.preventDefault();
 
                 const childTableDef = getRelationshipRefTable(
@@ -686,8 +695,9 @@ const ViewRows = (props) => {
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableColumnsSorted = tableSchema.columns
-    .map((col) => {
+
+  const tableColumnsSorted = tableSchema?.columns
+    .map(col => {
       const customColumnName = getTableCustomColumnName(
         tableSchema,
         col.column_name
@@ -703,7 +713,11 @@ const ViewRows = (props) => {
     })
     .sort(ordinalColSort);
 
-  const tableRelationships = tableSchema.relationships;
+  if (!tableSchema) {
+    return <p>Loading...</p>;
+  }
+
+  const tableRelationships = tableSchema?.relationships || [];
 
   const hasPrimaryKey = isTableWithPK(tableSchema);
 
@@ -726,7 +740,7 @@ const ViewRows = (props) => {
 
   const getSelectedRowsSection = () => {
     const handleDeleteItems = () => {
-      const pkClauses = selectedRows.map((row) =>
+      const pkClauses = selectedRows.map(row =>
         getPKClause(row, hasPrimaryKey, tableSchema)
       );
       dispatch(deleteItems(pkClauses, curTableName, currentSchema));
@@ -759,40 +773,43 @@ const ViewRows = (props) => {
     let _childComponent = null;
 
     const childQueries = [];
-    curQuery.columns.map((c) => {
+    curQuery.columns.map(c => {
       if (typeof c === 'object') {
         childQueries.push(c);
       }
     });
 
-    const childTabs = childQueries.map((q, i) => {
+    const childTabs = childQueries.map(q => {
       const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
       return (
-        <li key={i} className={isActive} role="presentation">
-          <a
-            href="#"
-            onClick={(e) => {
+        <div>
+          <Button
+            className={clsx(
+              'mr-2',
+              isActive === 'active' ? 'border-4' : 'border-white'
+            )}
+            onClick={e => {
               e.preventDefault();
               dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });
             }}
           >
             {[...activePath.slice(0, 1), ...curPath, q.name].join('.')}
-          </a>
-        </li>
+          </Button>
+        </div>
       );
     });
 
-    const childViewRows = childQueries.map((cq, i) => {
+    const childViewRows = childQueries.map((childQuery, i) => {
       // Render child only if data is available
-      if (curRows[0] && curRows[0][cq.name]) {
+      if (curRows[0] && curRows[0][childQuery.name]) {
         const rel = tableSchema.relationships.find(
-          (r) => r.rel_name === cq.name
+          r => r.rel_name === childQuery.name
         );
 
         if (rel) {
           const isObjectRel = rel.rel_type === 'object';
 
-          let childRows = curRows[0][cq.name];
+          let childRows = curRows[0][childQuery.name];
           if (isObjectRel) {
             childRows = [childRows];
           }
@@ -800,26 +817,46 @@ const ViewRows = (props) => {
 
           const childTable = findTable(schemas, childTableDef);
 
+          const onChangePageSizeNested = newPageSize => {
+            dispatch(vSetLimit(newPageSize, [...curPath, rel.rel_name]));
+            dispatch(vMakeTableRequests());
+          };
+
+          const nestedPaginationUserQuery = {
+            where: { $and: childQuery?.where?.$and || [] },
+            order_by: childQuery?.order_by || [],
+          };
+
+          const limit = childQuery.limit || curFilter.limit;
+          const filter = {
+            ...curFilter,
+            limit,
+          };
+
           return (
             <ViewRows
               key={i}
-              curTableName={childTable.table_name}
-              currentSchema={childTable.table_schema}
-              curQuery={cq}
-              curFilter={curFilter}
-              curPath={[...curPath, rel.rel_name]}
-              curRows={childRows}
-              parentTableName={curTableName}
               activePath={activePath}
-              ongoingRequest={ongoingRequest}
-              lastError={lastError}
-              lastSuccess={lastSuccess}
-              schemas={schemas}
               curDepth={curDepth + 1}
+              curFilter={filter}
+              curPath={[...curPath, rel.rel_name]}
+              curQuery={childQuery}
+              currentSchema={childTable.table_schema}
+              currentSource={currentSource}
+              curRows={childRows}
+              curTableName={childTable.table_name}
               dispatch={dispatch}
               expandedRow={expandedRow}
+              lastError={lastError}
+              lastSuccess={lastSuccess}
+              onChangePageSize={onChangePageSizeNested}
+              ongoingRequest={ongoingRequest}
+              onRunQuery={() => null}
+              paginationUserQuery={nestedPaginationUserQuery}
+              parentTableName={curTableName}
               readOnlyMode={readOnlyMode}
-              currentSource={currentSource}
+              schemas={schemas}
+              useCustomPagination
             />
           );
         }
@@ -831,7 +868,7 @@ const ViewRows = (props) => {
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul>{childTabs}</ul>
+          <div className="flex">{childTabs}</div>
           {childViewRows}
         </div>
       );
@@ -840,17 +877,12 @@ const ViewRows = (props) => {
     return _childComponent;
   };
 
-  const [userQuery, setUserQuery] = useState({
-    where: { $and: [] },
-    order_by: [],
-  });
-
   const renderTableBody = () => {
     if (isProgressing) {
       return (
         <div>
           {' '}
-          <Spinner />{' '}
+          <Spinner width="16px" height="16px" />{' '}
         </div>
       );
     }
@@ -864,7 +896,7 @@ const ViewRows = (props) => {
     let disableSortColumn = false;
 
     const sortByColumn = (col, clearExisting = true) => {
-      const columnNames = tableColumnsSorted.map((column) => column.id);
+      const columnNames = tableColumnsSorted.map(column => column.id);
       if (!columnNames.includes(col)) {
         return;
       }
@@ -930,7 +962,7 @@ const ViewRows = (props) => {
     };
 
     const getTheadThProps = (finalState, some, column) => ({
-      onClick: (e) => {
+      onClick: e => {
         if (!disableSortColumn && column.id) {
           sortByColumn(column.id, !e.shiftKey);
         }
@@ -940,21 +972,23 @@ const ViewRows = (props) => {
     });
 
     const getResizerProps = (finalState, none, column, ctx) => ({
-      onMouseDown: (e) => {
+      onMouseDown: e => {
         disableSortColumn = true;
         ctx.resizeColumnStart(e, column, false);
       },
     });
 
-    const handlePageChange = (page) => {
+    const handlePageChange = page => {
       if (curFilter.offset !== page * curFilter.limit) {
         setSelectedRows([]);
       }
     };
 
-    const handlePageSizeChange = (size) => {
-      if (curFilter.size !== size) {
+    const handlePageSizeChange = size => {
+      if (curFilter.limit !== size) {
         setSelectedRows([]);
+        onChangePageSize(size);
+        setPersistedPageSize(size);
       }
     };
 
@@ -966,10 +1000,10 @@ const ViewRows = (props) => {
           offset={curFilter.offset}
           onChangePage={handlePageChange}
           onChangePageSize={handlePageSizeChange}
-          pageSize={curFilter.size}
+          pageSize={curFilter.limit}
           rows={curRows}
           tableSchema={tableSchema}
-          userQuery={userQuery}
+          userQuery={paginationUserQuery}
         />
       );
     }
@@ -990,7 +1024,7 @@ const ViewRows = (props) => {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
-        onCollapseChange={(collapsedData) =>
+        onCollapseChange={collapsedData =>
           persistColumnCollapseChange(
             curTableName,
             currentSchema,
@@ -998,7 +1032,7 @@ const ViewRows = (props) => {
           )
         }
         defaultCollapsed={collapsedColumns}
-        onOrderChange={(reorderData) =>
+        onOrderChange={reorderData =>
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
@@ -1029,7 +1063,10 @@ const ViewRows = (props) => {
               [schemaKey]: tableSchema.table_schema,
               name: curTableName,
             }}
-            onRunQuery={(newUserQuery) => setUserQuery(newUserQuery)}
+            initialFiltersAndSort={filtersAndSort}
+            onRunQuery={newUserQuery => {
+              onRunQuery(newUserQuery);
+            }}
           />
         </div>
       )}

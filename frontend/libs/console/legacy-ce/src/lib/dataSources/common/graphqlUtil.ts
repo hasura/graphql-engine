@@ -52,7 +52,7 @@ export const getColQuery = (
   relationships: Relationship[],
   tableConfiguration: TableConfig
 ): string[] => {
-  return cols.map((c) => {
+  return cols.map(c => {
     const columnConfig = tableConfiguration?.column_config ?? {};
     if (typeof c === 'string') return columnConfig[c]?.custom_name ?? c;
     const rel = relationships.find((r: any) => r.rel_name === c.name);
@@ -81,12 +81,12 @@ export const generateWhereClauseQueryString = (
   getFormattedValue: (type: string, value: any) => string | number | undefined
 ): string | null => {
   const columnConfig = tableConfiguration?.column_config ?? {};
-  const whereClausesArr = wheres.map((whereClause) => {
+  const whereClausesArr = wheres.map(whereClause => {
     const columnName = Object.keys(whereClause)[0];
     const rqlOperator = Object.keys(whereClause[columnName])[0];
     const value = whereClause[columnName][rqlOperator];
     const currentColumnInfo = columnTypeInfo?.find(
-      (c) => c.column_name === columnName
+      c => c.column_name === columnName
     );
 
     // NOTE: the usage of `data_type` has been introduced as a workaround to support BigQuery, for which `data_type_name` is not defined here
@@ -133,8 +133,8 @@ export const getGraphQLQueryBase = ({
     } else {
       isRelationshipView = true;
       whereConditions = Object.keys(view.query.where)
-        .filter((k) => view.query.where[k])
-        .map((k) => {
+        .filter(k => view.query.where[k])
+        .map(k => {
           const obj = {} as any;
           obj[k] = { $eq: view.query.where[k] };
           return obj;

@@ -10,13 +10,18 @@ import (
 	"runtime"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 func getCliExtFileContent(ec *cli.ExecutionContext) ([]byte, error) {
+	var op errors.Op = "cliext.getCliExtFileContent"
 	if ec.CliExtSourceBinPath != "" {
 		ec.Logger.Debug("cli-ext: setting up using --cli-ext-path binary")
-		return ioutil.ReadFile(ec.CliExtSourceBinPath)
+		b, err := ioutil.ReadFile(ec.CliExtSourceBinPath)
+		if err != nil {
+			return b, errors.E(op, err)
+		}
+		return b, nil
 	}
 
 	var cliExtBinName string = "cli-ext"
@@ -39,25 +44,30 @@ func getCliExtFileContent(ec *cli.ExecutionContext) ([]byte, error) {
 	)
 	resp, err := http.Get(CDNpath)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error downloading cli-ext from CDN %s with status code: %d", CDNpath, resp.StatusCode)
+		return nil, errors.E(op, fmt.Errorf("error downloading cli-ext from CDN %s with status code: %d", CDNpath, resp.StatusCode))
 	}
-	return ioutil.ReadAll(bufio.NewReader(resp.Body))
+	b, err := ioutil.ReadAll(bufio.NewReader(resp.Body))
+	if err != nil {
+		return b, errors.E(op, err)
+	}
+	return b, nil
 }
 
 // Setup sets up cli-ext binary for using it in various cli commands
 func Setup(ec *cli.ExecutionContext) error {
+	var op errors.Op = "cliext.Setup"
 	parentDirPath := filepath.Join(ec.GlobalConfigDir, "cli-ext", ec.Version.GetCLIVersion())
 	err := os.MkdirAll(parentDirPath, 0755)
 	if err != nil {
-		return errors.Wrapf(err, "error creating base directory while setting up cli-ext")
+		return errors.E(op, fmt.Errorf("error creating base directory while setting up cli-ext: %w", err))
 	}
 	cliExtDirPath, err := ioutil.TempDir(parentDirPath, "cli-ext-*")
 	if err != nil {
-		return errors.Wrapf(err, "error creating directory while setting up cli-ext")
+		return errors.E(op, fmt.Errorf("error creating directory while setting up cli-ext: %w", err))
 	}
 	ec.CliExtDestinationDir = cliExtDirPath
 
@@ -68,11 +78,11 @@ func Setup(ec *cli.ExecutionContext) error {
 	cliExtBinPath := filepath.Join(cliExtDirPath, cliExtBinName)
 	cliExtFileContent, err := getCliExtFileContent(ec)
 	if err != nil {
-		return fmt.Errorf("error reading cli-ext binary: %w", err)
+		return errors.E(op, fmt.Errorf("error reading cli-ext binary: %w", err))
 	}
 	err = ioutil.WriteFile(cliExtBinPath, cliExtFileContent, 0755)
 	if err != nil {
-		return errors.Wrap(err, "error unpacking binary while setting up cli-ext")
+		return errors.E(op, fmt.Errorf("error unpacking binary while setting up cli-ext: %w", err))
 	}
 	ec.CliExtDestinationBinPath = cliExtBinPath
 

@@ -1,25 +1,24 @@
-# Compile a graphql-engine executable using brew and ghc-9.2.4
+# Compile a graphql-engine executable using brew and ghc-9.2.5
 
 *Note: These instructions use the path `/opt/homebrew` in various places, but this path may be different on your machine depending on where you have installed homebrew (for example, many older homebrew installation were installed to `/usr/local`). You can find out the path of your homebrew installation by running the command `brew --prefix`, and if the output is not `/opt/homebrew`, then you should replace any instances of `/opt/homebrew` in these instructions with the path output by `brew --prefix`.*
 
-1.  Install ghc-9.2.4 and cabal-install via [ghcup](https://www.haskell.org/ghcup/).
+1.  Install ghc-9.2.5 and cabal-install via [ghcup](https://www.haskell.org/ghcup/).
 
 2.  Install dependencies:
 
     ```sh
-    brew install google-cloud-sdk
-    brew install node@14
-    brew install openssl
-    brew install pcre
-    brew install unixodbc
-    brew install libpq
-    brew install mysql-client@5.7
-    brew install libffi
-    brew install llvm@11
-    brew install microsoft/mssql-release/mssql-tools
-    brew install direnv
-    brew install coreutils
-    brew install pcre
+    brew install google-cloud-sdk \
+                 node@16 \
+                 openssl \
+                 pcre \
+                 unixodbc \
+                 libpq \
+                 mysql-client@5.7 \                 
+                 libffi \
+                 microsoft/mssql-release/mssql-tools18 \
+                 direnv \
+                 coreutils \
+                 pcre
     ```
 
      And add them to your environment:
@@ -27,12 +26,13 @@
     ```sh
     echo 'export PATH="/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"' >> ~/.zshrc
-    echo 'export PATH="/opt/homebrew/opt/node@14/bin:$PATH"' >> ~/.zshrc
+    echo 'export PATH="/opt/homebrew/opt/node@16/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/mysql-client@5.7/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
-    echo 'export PATH="/opt/homebrew/opt/llvm@11/bin:$PATH"' >> ~/.zshrc
     ```
 
+If you are re-running this command to update your Mac, you may need to run
+`cabal clean` before things start working again.
 
 3. Install console assets
 

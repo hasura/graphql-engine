@@ -14,7 +14,7 @@ export default {
   },
 } as ComponentMeta<typeof TableTrackingCustomizationModal>;
 
-export const Primary: Story<TableTrackingCustomizationModalProps> = (args) => (
+export const Primary: Story<TableTrackingCustomizationModalProps> = args => (
   <TableTrackingCustomizationModal {...args} />
 );
 

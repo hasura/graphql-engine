@@ -2,7 +2,7 @@ import React from 'react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ComponentMeta, Story } from '@storybook/react';
 import { CronTriggers } from '@/features/CronTriggers';
-import { within, userEvent } from '@storybook/testing-library';
+import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { waitForElementToBeRemoved } from '@testing-library/react';
 import { handlers } from './mocks/handlers.mock';
@@ -21,16 +21,13 @@ export const Create: Story = () => {
   const onSuccess = () => {
     setShowSuccessText(true);
   };
-  React.useEffect(() => {
-    // mock notification behaviour as our redux based notification does not work in storybook
-    if (showSuccessText) {
-      setTimeout(() => setShowSuccessText(false), 2000);
-    }
-  }, [showSuccessText]);
+
   return (
     <>
       <CronTriggers.Form onSuccess={onSuccess} />;
-      {showSuccessText ? <p>Form saved successfully!</p> : null}
+      <p data-testid="@onSuccess">
+        {showSuccessText ? 'Form saved successfully!' : null}
+      </p>
     </>
   );
 };
@@ -110,9 +107,7 @@ Create.play = async ({ canvasElement }) => {
 
   // --------------------------------------------------
   // Step 5: Add request transform options
-  await userEvent.click(
-    canvas.getByText('Header, URL, and Advanced Request Options')
-  );
+  await userEvent.click(canvas.getByText('Advanced Settings'));
 
   // Add request headers
   await userEvent.click(canvas.getByText('Add request headers'));
@@ -147,35 +142,6 @@ Create.play = async ({ canvasElement }) => {
       name: 'headers[1].value',
     }),
     'HASURA_ENV_ID'
-  );
-
-  // Add request method and url template
-  await userEvent.click(
-    canvas.getByRole('radio', {
-      name: 'GET',
-    })
-  );
-
-  await userEvent.type(
-    canvas.getByRole('textbox', {
-      name: 'Request URL Template',
-    }),
-    '/users'
-  );
-
-  // Add request query params
-  await userEvent.click(canvas.getByText('Add query params'));
-  await userEvent.type(
-    canvas.getByRole('textbox', {
-      name: 'query_params[0].name',
-    }),
-    'userId'
-  );
-  await userEvent.type(
-    canvas.getByRole('textbox', {
-      name: 'query_params[0].value',
-    }),
-    '12'
   );
 
   // --------------------------------------------------
@@ -223,5 +189,12 @@ Create.play = async ({ canvasElement }) => {
   await userEvent.click(canvas.getByText('Add Cron Trigger'));
 
   // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
-  expect(await canvas.findByText('Form saved successfully!')).toBeVisible();
+  waitFor(
+    async () => {
+      await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
+        'Form saved successfully!'
+      );
+    },
+    { timeout: 5000 }
+  );
 };

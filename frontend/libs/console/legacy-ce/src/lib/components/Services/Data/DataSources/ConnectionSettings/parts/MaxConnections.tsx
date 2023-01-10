@@ -15,7 +15,7 @@ export const MaxConnections: React.VFC<ConnectionSettingsFormProps> = ({
       className={`form-control ${styles.connnection_settings_form_input}`}
       placeholder="50"
       value={connectionDBState.connectionSettings?.max_connections ?? undefined}
-      onChange={(e) =>
+      onChange={e =>
         connectionDBStateDispatch({
           type: 'UPDATE_MAX_CONNECTIONS',
           data: e.target.value,

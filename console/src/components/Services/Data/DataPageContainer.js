@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -45,39 +46,41 @@ const DataPageContainer = ({
   }
 
   const sidebarContent = (
-    <ul>
-      <li
-        role="presentation"
-        className={
-          currentLocation.match(
-            /(\/)?data((\/manage)|(\/(\w+)\/)|(\/(\w|%)+\/schema?(\w+)))/
-          )
-            ? styles.active
-            : ''
-        }
-      >
-        <Link className={styles.linkBorder} to={`/data/manage`}>
-          Data Manager
-        </Link>
-
-        <DataSubSidebar />
-      </li>
-      {currentDataSource && (
+    <Analytics name="DataPageContainerSidebar" {...REDACT_EVERYTHING}>
+      <ul>
         <li
           role="presentation"
-          className={currentLocation.includes('/sql') ? styles.active : ''}
+          className={
+            currentLocation.match(
+              /(\/)?data((\/manage)|(\/(\w+)\/)|(\/(\w|%)+\/schema?(\w+)))/
+            )
+              ? styles.active
+              : ''
+          }
         >
-          <Link
-            className={styles.linkBorder}
-            to={`/data/sql`}
-            data-test="sql-link"
-          >
-            SQL
+          <Link className={styles.linkBorder} to={`/data/manage`}>
+            Data Manager
           </Link>
+
+          <DataSubSidebar />
         </li>
-      )}
-      {migrationTab}
-    </ul>
+        {currentDataSource && (
+          <li
+            role="presentation"
+            className={currentLocation.includes('/sql') ? styles.active : ''}
+          >
+            <Link
+              className={styles.linkBorder}
+              to={`/data/sql`}
+              data-test="sql-link"
+            >
+              SQL
+            </Link>
+          </li>
+        )}
+        {migrationTab}
+      </ul>
+    </Analytics>
   );
 
   const helmet = 'Data | Hasura';

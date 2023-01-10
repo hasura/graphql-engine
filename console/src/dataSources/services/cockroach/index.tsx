@@ -54,7 +54,6 @@ import {
   getAlterColumnCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
 } from './sqlUtils';
 import {
@@ -65,6 +64,7 @@ import {
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
 } from './utils';
+import globals from '../../../Globals';
 import { SupportedFeaturesType } from '../../types';
 import {
   postgres,
@@ -75,10 +75,14 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   ...PgSupportedFeatures,
   connectDbForm: {
     ...PgSupportedFeatures?.connectDbForm,
+    connectionParameters: false,
     enabled: false,
     namingConvention: false,
     extensions_schema: false,
-    ssl_certificates: true,
+    ssl_certificates:
+      globals.consoleType === 'cloud' ||
+      globals.consoleType === 'pro' ||
+      globals.consoleType === 'pro-lite',
   },
   driver: {
     name: 'cockroach',
@@ -210,7 +214,6 @@ export const cockroach: DataSourcesAPI = {
   getAlterColumnCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
   createIndexSql: getCreateIndexSql,
   dropIndexSql: getDropIndexSql,

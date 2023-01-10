@@ -70,7 +70,7 @@ const SelectGroup: React.FC<SelectGroupProps> = ({
 
 export default SelectGroup;
 
-export const QuotedSelectGroup: React.FC<SelectGroupProps> = (props) => {
+export const QuotedSelectGroup: React.FC<SelectGroupProps> = props => {
   return (
     <span>
       &quot;&nbsp;

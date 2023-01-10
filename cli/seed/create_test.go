@@ -26,12 +26,13 @@ func TestDriver_ExportDatadump(t *testing.T) {
 		sourceName string
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
-		before  func(t *testing.T)
+		name      string
+		fields    fields
+		args      args
+		want      string
+		wantErr   bool
+		before    func(t *testing.T)
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can export data dump",
@@ -76,6 +77,7 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 				})
 				require.NoError(t, err)
 			},
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -88,14 +90,13 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 				tt.before(t)
 			}
 			got, err := d.ExportDatadump(tt.args.tableNames, tt.args.sourceName)
+			tt.assertErr(t, err)
 			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				gotb, err := ioutil.ReadAll(got)
-				require.NoError(t, err)
-				require.Equal(t, tt.want, string(gotb))
+				return
 			}
+			gotb, err := ioutil.ReadAll(got)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, string(gotb))
 		})
 	}
 }

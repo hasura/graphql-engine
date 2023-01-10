@@ -51,7 +51,7 @@ const editItem = (tableName, colValues) => {
       errorMessage = 'No fields modified';
     }
 
-    Object.keys(colValues).map((colName) => {
+    Object.keys(colValues).map(colName => {
       const colValue = colValues[colName];
 
       const column = getTableColumn(table, colName);
@@ -65,9 +65,9 @@ const editItem = (tableName, colValues) => {
         } else if (Reals.indexOf(colType) > 0) {
           _setObject[colName] = parseFloat(colValue);
         } else if (colType === 'boolean') {
-          if (colValue === 'true') {
+          if (colValue === 'true' || colValue === true) {
             _setObject[colName] = true;
-          } else if (colValue === 'false') {
+          } else if (colValue === 'false' || colValue === false) {
             _setObject[colName] = false;
           } else {
             _setObject[colName] = null;
@@ -77,7 +77,8 @@ const editItem = (tableName, colValues) => {
           colType === dataSource.columnDataTypes.JSONDTYPE
         ) {
           try {
-            _setObject[colName] = JSON.parse(colValue);
+            _setObject[colName] =
+              typeof colValue === 'string' ? JSON.parse(colValue) : colValue;
           } catch (e) {
             errorMessage =
               colName +
@@ -137,7 +138,7 @@ const editItem = (tableName, colValues) => {
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
     ).then(
-      (data) => {
+      data => {
         dispatch(
           showSuccessNotification(
             'Edited!',
@@ -146,7 +147,7 @@ const editItem = (tableName, colValues) => {
           )
         );
       },
-      (err) => {
+      err => {
         dispatch(showErrorNotification('Edit failed!', err.error, err));
       }
     );
@@ -174,7 +175,7 @@ const fetchEnumOptions = () => {
     };
     const url = Endpoints.query;
 
-    requests.forEach((request) => {
+    requests.forEach(request => {
       const req = getEnumOptionsQuery(
         request,
         currentSchema,
@@ -187,7 +188,7 @@ const fetchEnumOptions = () => {
           body: JSON.stringify(req),
         })
       ).then(
-        (data) =>
+        data =>
           dispatch({
             type: E_FETCH_ENUM_OPTIONS_SUCCESS,
             data: {

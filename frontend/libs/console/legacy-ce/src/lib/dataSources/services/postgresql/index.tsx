@@ -1,6 +1,11 @@
 import React from 'react';
 import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
+import {
+  ColumnsInfoResult,
+  currentDriver,
+  DataSourcesAPI,
+} from '@/dataSources';
 
 import {
   Table,
@@ -14,7 +19,6 @@ import {
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
-import { DataSourcesAPI, ColumnsInfoResult, currentDriver } from '../..';
 import {
   generateTableRowRequest,
   generateInsertRequest,
@@ -179,7 +183,7 @@ export const isFunctionCompatibleToTable = (
   let hasTableRowInArguments = false;
   let hasUnsupportedArguments = false;
 
-  inputArgTypes.forEach((inputArgType) => {
+  inputArgTypes.forEach(inputArgType => {
     if (!hasTableRowInArguments) {
       hasTableRowInArguments =
         inputArgType.name === tableName && inputArgType.schema === tableSchema;
@@ -201,7 +205,7 @@ export const getSchemaFunctions = (
   tableSchema: string
 ) => {
   return allFunctions.filter(
-    (fn) =>
+    fn =>
       getFunctionSchema(fn) === fnSchema &&
       isFunctionCompatibleToTable(fn, tableName, tableSchema)
   );
@@ -217,7 +221,7 @@ export const findFunction = (
   functionSchema: string
 ) => {
   return allFunctions.find(
-    (f) =>
+    f =>
       f.function_name === functionName &&
       getFunctionSchema(f) === functionSchema
   );
@@ -232,7 +236,7 @@ export const getGroupedTableComputedFields = (
     table: ComputedField[];
   } = { scalar: [], table: [] };
 
-  computed_fields?.forEach((computedField) => {
+  computed_fields?.forEach(computedField => {
     const computedFieldFnDef = computedField.definition.function;
     const computedFieldFn = findFunction(
       allFunctions,
@@ -270,7 +274,7 @@ export const getComputedFieldsWithoutArgs = (
   allFunctions: PGFunction[],
   tableName: string
 ) => {
-  return computedFields.filter((computedField) => {
+  return computedFields.filter(computedField => {
     const computedFieldFunc = getComputedFieldFunction(
       computedField,
       allFunctions
@@ -342,7 +346,7 @@ const isColumnIdentity = (isIdentity: ColumnsInfoPayload['is_identity']) =>
 
 const parseColumnsInfoResult = (data: string[][]) => {
   const formattedData: ColumnsInfoPayload[] = data.slice(1).map(
-    (arr) =>
+    arr =>
       ({
         column_name: arr[0],
         table_name: arr[1],

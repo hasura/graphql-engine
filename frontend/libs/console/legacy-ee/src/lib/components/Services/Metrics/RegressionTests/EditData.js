@@ -16,7 +16,7 @@ export const EditData = ({ label, data, onSave, onCancel }) => {
   const [value, setValue] = useState(data);
   const [validJSON, setValidJSON] = useState(true);
 
-  const handleChange = (v) => {
+  const handleChange = v => {
     setValue(v);
     try {
       JSON.parse(v);
@@ -52,6 +52,7 @@ export const EditData = ({ label, data, onSave, onCancel }) => {
             className={styles.aceEditor}
             setOptions={{
               tabSize: 2,
+              useWorker: false,
             }}
             height="300px"
             width="unset"

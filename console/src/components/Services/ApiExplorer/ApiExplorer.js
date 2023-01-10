@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import ApiRequestWrapper from './ApiRequestWrapper';
 
@@ -31,28 +32,30 @@ class ApiExplorer extends Component {
       globals.urlPrefix;
 
     return (
-      <div className="p-0">
-        <Helmet title="API Explorer | Hasura" />
-        <div>
-          <ApiRequestWrapper
-            dispatch={this.props.dispatch}
-            credentials={credentials}
-            explorerData={explorerData}
-            details={displayedApi.details}
-            request={displayedApi.request}
-            route={route}
-            mode={mode}
-            dataHeaders={dataHeaders}
-            numberOfTables={tables.length}
-            headerFocus={headerFocus}
-            urlParams={location.query}
-            serverVersion={serverVersion}
-            consoleUrl={consoleUrl}
-            loading={loading}
-            serverConfig={serverConfig}
-          />
+      <Analytics name="ApiExplorer" {...REDACT_EVERYTHING}>
+        <div className="p-0">
+          <Helmet title="API Explorer | Hasura" />
+          <div>
+            <ApiRequestWrapper
+              dispatch={this.props.dispatch}
+              credentials={credentials}
+              explorerData={explorerData}
+              details={displayedApi.details}
+              request={displayedApi.request}
+              route={route}
+              mode={mode}
+              dataHeaders={dataHeaders}
+              numberOfTables={tables.length}
+              headerFocus={headerFocus}
+              urlParams={location.query}
+              serverVersion={serverVersion}
+              consoleUrl={consoleUrl}
+              loading={loading}
+              serverConfig={serverConfig}
+            />
+          </div>
         </div>
-      </div>
+      </Analytics>
     );
   }
 }

@@ -42,7 +42,7 @@ import { FeatureFlags } from './features/FeatureFlags';
 import { AllowListDetail } from './components/Services/AllowList';
 
 const routes = store => {
-  // load hasuractl migration status
+  // load hasuraCliServer migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
     const { dispatch } = store;
 

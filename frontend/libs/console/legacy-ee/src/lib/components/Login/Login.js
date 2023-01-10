@@ -18,12 +18,18 @@ import { IconTooltip } from '@hasura/console-oss';
 import { getFromLS, initLS } from './localStorage';
 
 import LoginWith from './LoginWith';
+import { clearAdminSecretState } from '../AppState';
 
-import { isClientSet } from './utils';
+import { isClientSet, initiateOAuthRequest } from './utils';
 
 import loginIcon from './login.svg';
 import styles from './Login.module.scss';
 import hasuraLogo from './black-logo.svg';
+import hasuraEELogo from './mono-dark-ee.svg';
+import ssoIcon from './black-building.svg';
+import keyIcon from './black-key.svg';
+import { AdminSecretLogin } from './AdminSecretLogin';
+import { SSOLogin } from './SSOLogin';
 
 class Login extends Component {
   constructor(props) {
@@ -33,6 +39,7 @@ class Login extends Component {
     } else {
       this.state = { loginMethod: 'admin-secret' };
     }
+    this.state = { ...this.state, showAdminSecretLogin: false };
   }
 
   componentDidMount() {
@@ -42,14 +49,14 @@ class Login extends Component {
     }
   }
 
-  handleAdminSecret = (e) => {
+  handleAdminSecret = e => {
     this.props.dispatch({
       type: UPDATE_ADMIN_SECRET_INPUT,
       data: e.target.value,
     });
   };
 
-  handlePAT = (e) => {
+  handlePAT = e => {
     this.props.dispatch({
       type: UPDATE_PERSONAL_ACCESS_TOKEN,
       data: e.target.value,
@@ -95,7 +102,7 @@ class Login extends Component {
       }
     };
 
-    const handleLoginClick = (e) => {
+    const handleLoginClick = e => {
       e.preventDefault();
       if (this.state.loginMethod === 'admin-secret') {
         dispatch(loginClicked());
@@ -126,7 +133,7 @@ class Login extends Component {
       return `Enter ${globals.patLabel}`;
     };
 
-    const handleInputChange = (e) => {
+    const handleInputChange = e => {
       if (this.state.loginMethod === 'admin-secret') {
         this.handleAdminSecret(e);
       }
@@ -157,7 +164,7 @@ class Login extends Component {
     };
 
     const renderDropdownOptions = () => {
-      return dropdownOptions.map((option) => {
+      return dropdownOptions.map(option => {
         if (option.value === 'access-token' && globals.pro !== true) {
           return null;
         }
@@ -191,7 +198,7 @@ class Login extends Component {
           <select
             className={styles.form_input + ' form-control'}
             value={this.state.loginMethod}
-            onChange={(e) => {
+            onChange={e => {
               this.setState({ loginMethod: e.target.value });
             }}
             placeholder="Select Login Method"
@@ -201,6 +208,41 @@ class Login extends Component {
         </div>
       );
     };
+
+    const doSSOLogin = () => {
+      clearAdminSecretState();
+      initiateOAuthRequest(location, false);
+    };
+
+    const doAdminSecretLogin = () => {
+      this.setState({ ...this.state, showAdminSecretLogin: true });
+    };
+
+    const backToLoginHome = () => {
+      this.setState({ ...this.state, showAdminSecretLogin: false });
+    };
+
+    if (globals.consoleType === 'pro-lite' && !globals.ssoEnabled) {
+      return <AdminSecretLogin />;
+    }
+
+    if (globals.consoleType === 'pro-lite' && globals.ssoEnabled) {
+      return (
+        <div>
+          {this.state.showAdminSecretLogin ? (
+            <AdminSecretLogin backToLoginHome={backToLoginHome} />
+          ) : (
+            <SSOLogin
+              ssoIcon={ssoIcon}
+              hasuraEELogo={hasuraEELogo}
+              doAdminSecretLogin={doAdminSecretLogin}
+              doSSOLogin={doSSOLogin}
+              keyIcon={keyIcon}
+            />
+          )}
+        </div>
+      );
+    }
 
     return (
       <div className={styles.mainWrapper + ' container-fluid'}>
@@ -232,7 +274,7 @@ Login.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const generatedLoginConnector = (connect) => {
+const generatedLoginConnector = conn => {
   const mapStateToProps = (state, ownProps) => {
     return {
       location: ownProps.location,
@@ -241,7 +283,7 @@ const generatedLoginConnector = (connect) => {
       featuresCompatibility: state.main.featuresCompatibility,
     };
   };
-  return connect(mapStateToProps)(Login);
+  return conn(mapStateToProps)(Login);
 };
 
 export default generatedLoginConnector;

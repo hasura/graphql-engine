@@ -23,7 +23,6 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
@@ -49,8 +48,6 @@ data AddRemoteSchemaQuery = AddRemoteSchemaQuery
   deriving (Show, Eq, Generic)
 
 instance NFData AddRemoteSchemaQuery
-
-instance Cacheable AddRemoteSchemaQuery
 
 $(J.deriveJSON hasuraJSON ''AddRemoteSchemaQuery)
 

@@ -112,6 +112,7 @@ class InvokeManualTrigger extends React.PureComponent {
               showPrintMargin={false}
               showGutter={false}
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
+              setOptions={{ useWorker: false }}
             />
           </div>
           <div className={`pl-0 w-1/2`}>
@@ -130,6 +131,7 @@ class InvokeManualTrigger extends React.PureComponent {
                 backgroundColor: '#fdf9ed',
                 marginTop: '10px',
               }}
+              setOptions={{ useWorker: false }}
             />
           </div>
         </div>

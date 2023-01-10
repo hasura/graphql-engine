@@ -34,7 +34,7 @@ const createHerokuApp = (session: HerokuSession) => {
     headers: getHerokuHeaders(session),
     body: '{}',
   })
-    .then((httpResp) => {
+    .then(httpResp => {
       if (httpResp.status < 300) {
         return httpResp.json().then((response: HerokuApp) => {
           return response;
@@ -45,11 +45,11 @@ const createHerokuApp = (session: HerokuSession) => {
         .then((errorBody: HerokuError) => {
           throw new Error(`Error from Heroku: ${errorBody.message || ''}`);
         })
-        .catch((e) => {
+        .catch(e => {
           throw e;
         });
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };
@@ -61,7 +61,7 @@ const installPostgresOnApp = (herokuApp: HerokuApp, session: HerokuSession) => {
     body: JSON.stringify({
       plan: 'heroku-postgresql:hobby-dev',
     }),
-  }).then((httpResp) => {
+  }).then(httpResp => {
     if (httpResp.status >= 300) {
       return httpResp.json().then((errorBody: HerokuError) => {
         throw new Error(`Error from Heroku: ${errorBody.message || ''}`);
@@ -78,7 +78,7 @@ export const getAppConfigVars = (
   return fetch(`https://api.heroku.com/apps/${herokuApp.name}/config-vars`, {
     method: 'GET',
     headers: getHerokuHeaders(session),
-  }).then((httpResp) => {
+  }).then(httpResp => {
     if (httpResp.status < 300) {
       return httpResp.json().then((responseBody: HerokuConfigVars) => {
         return responseBody;
@@ -116,13 +116,13 @@ export const useHerokuDBCreation = (
   const start = (sess: HerokuSession) => {
     setState(initialState);
     setError(null);
-    setState((s) => ({ ...s, 'creating-app': { status: 'in-progress' } }));
+    setState(s => ({ ...s, 'creating-app': { status: 'in-progress' } }));
     createHerokuApp(sess)
-      .then((herokuApp) => {
+      .then(herokuApp => {
         if (!herokuApp) {
           return;
         }
-        setState((s) => ({
+        setState(s => ({
           ...s,
           'creating-app': {
             status: 'success',
@@ -133,7 +133,7 @@ export const useHerokuDBCreation = (
           },
         }));
         installPostgresOnApp(herokuApp, sess).then(() => {
-          setState((s) => ({
+          setState(s => ({
             ...s,
             'installing-postgres': {
               status: 'success',
@@ -143,11 +143,11 @@ export const useHerokuDBCreation = (
               status: 'in-progress',
             },
           }));
-          getAppConfigVars(herokuApp, sess).then((configVars) => {
+          getAppConfigVars(herokuApp, sess).then(configVars => {
             if (!configVars) {
               return;
             }
-            setState((s) => ({
+            setState(s => ({
               ...s,
               'getting-config': {
                 status: 'success',
@@ -157,7 +157,7 @@ export const useHerokuDBCreation = (
           });
         });
       })
-      .catch((e) => {
+      .catch(e => {
         setError(e.message);
       });
   };
@@ -173,13 +173,13 @@ export const useHerokuDBCreation = (
         },
       };
       if (state['creating-app'].status === 'in-progress') {
-        setState((s) => ({ ...s, 'creating-app': errorStatus }));
+        setState(s => ({ ...s, 'creating-app': errorStatus }));
       }
       if (state['installing-postgres'].status === 'in-progress') {
-        setState((s) => ({ ...s, 'installing-postgres': errorStatus }));
+        setState(s => ({ ...s, 'installing-postgres': errorStatus }));
       }
       if (state['getting-config'].status === 'in-progress') {
-        setState((s) => ({ ...s, 'getting-config': errorStatus }));
+        setState(s => ({ ...s, 'getting-config': errorStatus }));
       }
     }
   }, [error]);
@@ -226,18 +226,18 @@ export const exchangeHerokuCode = (code: string) => {
       variables,
     }),
   })
-    .then((r) => {
+    .then(r => {
       if (r.status >= 300) {
         throw new Error('Invalid login. Please try again.');
       }
-      return r.json().then((response) => {
+      return r.json().then(response => {
         if (response.errors) {
           throw new Error(response.errors[0]?.message || 'Unexpected');
         }
         return response.data.herokuTokenExchange as HerokuSession;
       });
     })
-    .catch((e) => {
+    .catch(e => {
       throw e;
     });
 };
@@ -296,7 +296,7 @@ export const startHerokuDBURLSync = (
       variables,
     }),
   })
-    .then((r) => {
+    .then(r => {
       return r.json().then(({ data, errors }) => {
         if (errors) {
           throw new Error(errors[0]?.message || 'unexpected');
@@ -304,7 +304,7 @@ export const startHerokuDBURLSync = (
         return data;
       });
     })
-    .catch((e) => {
+    .catch(e => {
       console.error('Failed to start database URL sync', e.message);
     });
 };

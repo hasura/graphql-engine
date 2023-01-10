@@ -66,7 +66,6 @@ import Data.UUID qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -92,8 +91,6 @@ data ActionMetadata = ActionMetadata
 
 instance NFData ActionMetadata
 
-instance Cacheable ActionMetadata
-
 data ActionPermissionMetadata = ActionPermissionMetadata
   { _apmRole :: RoleName,
     _apmComment :: Maybe Text
@@ -102,10 +99,8 @@ data ActionPermissionMetadata = ActionPermissionMetadata
 
 instance NFData ActionPermissionMetadata
 
-instance Cacheable ActionPermissionMetadata
-
 newtype ActionName = ActionName {unActionName :: G.Name}
-  deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Cacheable, Hashable)
+  deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Hashable)
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
   deriving (Show, Eq, PG.ToPrepArg, PG.FromCol, J.ToJSON, J.FromJSON, Hashable)
@@ -148,8 +143,6 @@ data ActionDefinition arg webhook = ActionDefinition
 
 instance (NFData a, NFData w) => NFData (ActionDefinition a w)
 
-instance (Cacheable a, Cacheable w) => Cacheable (ActionDefinition a w)
-
 data ActionType
   = ActionQuery
   | ActionMutation ActionMutationKind
@@ -157,16 +150,12 @@ data ActionType
 
 instance NFData ActionType
 
-instance Cacheable ActionType
-
 data ActionMutationKind
   = ActionSynchronous
   | ActionAsynchronous
   deriving (Show, Eq, Generic)
 
 instance NFData ActionMutationKind
-
-instance Cacheable ActionMutationKind
 
 --------------------------------------------------------------------------------
 -- Arguments
@@ -180,10 +169,8 @@ data ArgumentDefinition a = ArgumentDefinition
 
 instance (NFData a) => NFData (ArgumentDefinition a)
 
-instance (Cacheable a) => Cacheable (ArgumentDefinition a)
-
 newtype ArgumentName = ArgumentName {unArgumentName :: G.Name}
-  deriving (Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Cacheable)
+  deriving (Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData)
 
 --------------------------------------------------------------------------------
 -- Schema cache

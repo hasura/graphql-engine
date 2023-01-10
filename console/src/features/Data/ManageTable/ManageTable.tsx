@@ -1,66 +1,88 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
+import { DatabaseRelationships } from '@/features/DatabaseRelationships';
 import { getTableName } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { PermissionsTab } from '@/features/PermissionsTab';
+import { Table } from '@/features/hasura-metadata-types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
-import React, { useState } from 'react';
-import { useDatabaseHierarchy } from '../hooks';
+import { getRoute } from '@/features/Data';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
 import { Breadcrumbs, TableName } from './parts';
+import _push from '../../../components/Services/Data/push';
 
+type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
 export interface ManageTableProps {
-  dataSourceName: string;
-  table: Table;
+  params: {
+    operation: AllowedTabs;
+  };
 }
 
-const FeatureNotImplemented = () => {
-  return (
-    <div className="my-4">
-      <IndicatorCard headline="Feature is currently unavailable">
-        Feature not implemented
-      </IndicatorCard>
-    </div>
-  );
-};
-
-const STARTING_TAB = 'Modify';
-
-const availableTabs = (props: ManageTableProps) => [
+const availableTabs = (
+  dataSourceName: string,
+  table: Table,
+  tableName: string
+) => [
   {
-    value: 'Browse',
+    value: 'browse',
     label: 'Browse',
-    content: <BrowseRowsContainer {...props} />,
+    content: (
+      <BrowseRowsContainer dataSourceName={dataSourceName} table={table} />
+    ),
   },
   {
-    value: 'Modify',
+    value: 'modify',
     label: 'Modify',
-    content: <ModifyTable {...props} />,
+    content: (
+      <ModifyTable
+        dataSourceName={dataSourceName}
+        table={table}
+        tableName={tableName}
+      />
+    ),
   },
   {
-    value: 'Relationships',
+    value: 'relationships',
     label: 'Relationships',
-    content: <FeatureNotImplemented />,
+    content: (
+      <DatabaseRelationships dataSourceName={dataSourceName} table={table} />
+    ),
   },
   {
-    value: 'Permissions',
+    value: 'permissions',
     label: 'Permissions',
-    content: <FeatureNotImplemented />,
+    content: <PermissionsTab dataSourceName={dataSourceName} table={table} />,
   },
 ];
 
-export const ManageTable: React.VFC<ManageTableProps> = props => {
-  const { table, dataSourceName } = props;
+export const ManageTable: React.VFC<ManageTableProps> = (
+  props: ManageTableProps
+) => {
+  const {
+    params: { operation },
+  } = props;
 
-  const { data: databaseHierarchy, isLoading } =
-    useDatabaseHierarchy(dataSourceName);
+  const urlData = useTableDefinition(window.location);
+  const dispatch = useDispatch();
 
-  const [tab, setTab] = useState(STARTING_TAB);
+  if (urlData.querystringParseResult === 'error')
+    throw Error('Unable to render');
+
+  const { database: dataSourceName, table } = urlData.data;
+
+  const {
+    data: databaseHierarchy,
+    isLoading,
+    isError,
+  } = useDatabaseHierarchy(dataSourceName);
 
   const tableName = databaseHierarchy
     ? getTableName(table, databaseHierarchy)
     : '';
 
-  if (!databaseHierarchy)
+  if (isError)
     return (
       <IndicatorCard status="negative">
         Could not fetch the database hierarchy for the table.
@@ -74,7 +96,15 @@ export const ManageTable: React.VFC<ManageTableProps> = props => {
       <div className="px-md pt-md mb-xs">
         <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
         <TableName dataSourceName={dataSourceName} tableName={tableName} />
-        <Tabs value={tab} onValueChange={setTab} items={availableTabs(props)} />
+        <Tabs
+          value={operation}
+          onValueChange={_operation => {
+            dispatch(
+              _push(getRoute().table(dataSourceName, table, _operation))
+            );
+          }}
+          items={availableTabs(dataSourceName, table, tableName)}
+        />
       </div>
     </div>
   );

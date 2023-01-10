@@ -1,5 +1,5 @@
 import { Dialog } from '@/new-components/Dialog';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { SchemaType } from './types';
 import React from 'react';
 import { schema, TypeGeneratorForm } from './TypeGeneratorForm';
@@ -44,6 +44,8 @@ export const TypeGeneratorModal = (props: TypeGeneratorModalProps) => {
           onClose={onClose}
           callToDeny="Cancel"
           callToAction="Insert Types"
+          onSubmitAnalyticsName="actions-tab-generate-types-submit"
+          onCancelAnalyticsName="actions-tab-generate-types-cancel"
         />
       }
       title="Type Generator"
@@ -55,7 +57,7 @@ export const TypeGeneratorModal = (props: TypeGeneratorModalProps) => {
           Generate your GraphQL Types from a sample of your request and response
           body.
         </p>
-        <Form
+        <SimpleForm
           options={{
             defaultValues: values,
           }}
@@ -63,8 +65,8 @@ export const TypeGeneratorModal = (props: TypeGeneratorModalProps) => {
           schema={schema}
           onSubmit={() => {}}
         >
-          {() => <TypeGeneratorForm setValues={setValues} />}
-        </Form>
+          <TypeGeneratorForm setValues={setValues} />
+        </SimpleForm>
       </div>
     </Dialog>
   );

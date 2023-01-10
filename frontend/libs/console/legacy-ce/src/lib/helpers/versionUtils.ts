@@ -27,7 +27,7 @@ export const getFeaturesCompatibility = (serverVersion: string) => {
 
   const isValidServerVersion = checkValidServerVersion(serverVersion);
 
-  Object.keys(featureLaunchVersions).forEach((_feature) => {
+  Object.keys(featureLaunchVersions).forEach(_feature => {
     const feature = _feature as Feature;
     featuresCompatibility[feature] = isValidServerVersion
       ? semver.satisfies(

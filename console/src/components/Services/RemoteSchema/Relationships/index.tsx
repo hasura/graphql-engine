@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Tabs } from '../Common/Tabs';
 import { appPrefix } from '../constants';
 import { RemoteSchemaRelationRenderer } from './RemoteSchemaRelationRenderer';
@@ -38,9 +39,11 @@ const RelationshipsConnector = (props: Props) => {
         showLoader={false}
         testPrefix="remote-schema-container-tabs"
       />
-      <div className="pt-sm">
-        <RemoteSchemaRelationRenderer remoteSchemaName={remoteSchemaName} />
-      </div>
+      <Analytics name="RemoteSchemaRelationships" {...REDACT_EVERYTHING}>
+        <div className="pt-sm">
+          <RemoteSchemaRelationRenderer remoteSchemaName={remoteSchemaName} />
+        </div>
+      </Analytics>
     </>
   );
 };

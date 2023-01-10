@@ -1,18 +1,18 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { handlers } from '@/mocks/metadata.mock';
 import {
   AllowListPermissions,
   AllowListPermissionsTabProps,
 } from './AllowListPermissions';
-import { handlers } from '../../hooks/AllowListPermissions/mock/handlers.mocks';
 
 export default {
   title: 'Features/Allow List/Allow List Permissions',
   component: AllowListPermissions,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
 } as Meta;
 

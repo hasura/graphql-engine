@@ -209,7 +209,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
           let userType = 'admin';
 
           const headerHasAdminToken = Object.keys(headers).find(
-            (header) => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+            header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
           );
           if (headerHasAdminToken) {
             const collabToken = headers[headerHasAdminToken];
@@ -322,7 +322,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
               // eslint-disable-next-line no-use-before-define
               dispatch(loadConsoleOpts());
             })
-            .catch((error) => {
+            .catch(error => {
               console.error(
                 'There was an error in updating the read console notifications.',
                 error
@@ -332,7 +332,7 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
         }
         return null;
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(
           'There was an error in fetching the latest state from the DB.',
           err
@@ -357,7 +357,7 @@ const loadConsoleOpts =
     let userType = 'admin';
 
     const headerHasAdminToken = Object.keys(headers).find(
-      (header) => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+      header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
     );
     if (headerHasAdminToken) {
       const collabToken = headers[headerHasAdminToken];

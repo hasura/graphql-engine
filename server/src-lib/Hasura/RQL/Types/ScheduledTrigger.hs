@@ -27,8 +27,8 @@ module Hasura.RQL.Types.ScheduledTrigger
     GetScheduledEvents (..),
     WithOptionalTotalCount (..),
     DeleteScheduledEvent (..),
-    GetInvocationsBy (..),
-    GetEventInvocations (..),
+    GetScheduledEventInvocationsBy (..),
+    GetScheduledEventInvocations (..),
     ClearCronEvents (..),
     cctName,
     cctWebhook,
@@ -55,7 +55,6 @@ import Data.Time.Clock
 import Data.Time.Clock.Units
 import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as PG
-import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common (InputWebhook (..))
@@ -87,8 +86,6 @@ data STRetryConf = STRetryConf
   deriving (Show, Eq, Generic)
 
 instance NFData STRetryConf
-
-instance Cacheable STRetryConf
 
 instance FromJSON STRetryConf where
   parseJSON = withObject "STRetryConf" \o -> do
@@ -130,8 +127,6 @@ data CronTriggerMetadata = CronTriggerMetadata
 
 instance NFData CronTriggerMetadata
 
-instance Cacheable CronTriggerMetadata
-
 instance FromJSON CronTriggerMetadata where
   parseJSON =
     withObject "CronTriggerMetadata" $ \o -> do
@@ -167,8 +162,6 @@ data CreateCronTrigger = CreateCronTrigger
 $(makeLenses ''CreateCronTrigger)
 
 instance NFData CreateCronTrigger
-
-instance Cacheable CreateCronTrigger
 
 instance FromJSON CreateCronTrigger where
   parseJSON =
@@ -214,7 +207,8 @@ data CreateScheduledEvent = CreateScheduledEvent
 instance FromJSON CreateScheduledEvent where
   parseJSON =
     withObject "CreateScheduledEvent" $ \o ->
-      CreateScheduledEvent <$> o .: "webhook"
+      CreateScheduledEvent
+        <$> o .: "webhook"
         <*> o .: "schedule_at"
         <*> o .:? "payload"
         <*> o .:? "headers" .!= []
@@ -318,7 +312,9 @@ instance ToJSON ScheduledEventStatus where
 instance FromJSON ScheduledEventStatus where
   parseJSON = withText "String" $ \s ->
     onNothing (textToScheduledEventStatus s) $
-      fail $ T.unpack $ "unexpected status: " <> s
+      fail $
+        T.unpack $
+          "unexpected status: " <> s
 
 data OneOffScheduledEvent = OneOffScheduledEvent
   { _ooseId :: OneOffScheduledEventId,
@@ -422,13 +418,13 @@ data DeleteScheduledEvent = DeleteScheduledEvent
 
 $(deriveJSON hasuraJSON ''DeleteScheduledEvent)
 
-data GetInvocationsBy
+data GetScheduledEventInvocationsBy
   = GIBEventId EventId ScheduledEventType
   | GIBEvent ScheduledEvent
   deriving (Show, Eq)
 
-data GetEventInvocations = GetEventInvocations
-  { _geiInvocationsBy :: GetInvocationsBy,
+data GetScheduledEventInvocations = GetScheduledEventInvocations
+  { _geiInvocationsBy :: GetScheduledEventInvocationsBy,
     _geiPagination :: ScheduledEventPagination,
     -- | Option to include the total rows corresponding in
     --   response.
@@ -436,9 +432,9 @@ data GetEventInvocations = GetEventInvocations
   }
   deriving (Eq, Show)
 
-instance FromJSON GetEventInvocations where
-  parseJSON = withObject "GetEventInvocations" $ \o ->
-    GetEventInvocations
+instance FromJSON GetScheduledEventInvocations where
+  parseJSON = withObject "GetScheduledEventInvocations" $ \o ->
+    GetScheduledEventInvocations
       <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
       <*> parseScheduledEventPagination o
       <*> o .:? "get_rows_count" .!= DontIncludeRowsCount
@@ -446,8 +442,8 @@ instance FromJSON GetEventInvocations where
       parseEventId o =
         GIBEventId <$> o .: "event_id" <*> o .: "type"
 
-instance ToJSON GetEventInvocations where
-  toJSON GetEventInvocations {..} =
+instance ToJSON GetScheduledEventInvocations where
+  toJSON GetScheduledEventInvocations {..} =
     object $
       case _geiInvocationsBy of
         GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]

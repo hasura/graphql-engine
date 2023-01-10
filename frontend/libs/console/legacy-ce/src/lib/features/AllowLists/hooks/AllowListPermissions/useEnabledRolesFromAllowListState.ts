@@ -10,7 +10,7 @@ export const useEnabledRolesFromAllowListState = (collectionName: string) => {
   return {
     allAvailableRoles,
     enabledRoles: enabledRoles || [],
-    newRoles: newRoles.filter((role) => !allAvailableRoles.includes(role)),
+    newRoles: newRoles.filter(role => !allAvailableRoles.includes(role)),
     setNewRoles,
   };
 };

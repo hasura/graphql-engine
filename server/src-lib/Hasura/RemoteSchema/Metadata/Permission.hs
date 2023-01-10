@@ -6,9 +6,10 @@ module Hasura.RemoteSchema.Metadata.Permission
   )
 where
 
+import Autodocodec (HasCodec (codec), object, optionalField', requiredField', requiredFieldWith, (.=))
+import Autodocodec.Extended (graphQLSchemaDocumentCodec)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Session
 import Language.GraphQL.Draft.Printer qualified as G
@@ -22,9 +23,17 @@ newtype RemoteSchemaPermissionDefinition = RemoteSchemaPermissionDefinition
 
 instance NFData RemoteSchemaPermissionDefinition
 
-instance Cacheable RemoteSchemaPermissionDefinition
-
 instance Hashable RemoteSchemaPermissionDefinition
+
+instance HasCodec RemoteSchemaPermissionDefinition where
+  codec =
+    object "RemoteSchemaPermissionDefinition" $
+      RemoteSchemaPermissionDefinition
+        <$> requiredFieldWith
+          "schema"
+          graphQLSchemaDocumentCodec
+          "GraphQL schema document, e.g. the content of schema.gql"
+          .= _rspdSchema
 
 instance J.FromJSON RemoteSchemaPermissionDefinition where
   parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
@@ -41,6 +50,12 @@ data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable RemoteSchemaPermissionMetadata
+instance HasCodec RemoteSchemaPermissionMetadata where
+  codec =
+    object "RemoteSchemaPermissionMetadata" $
+      RemoteSchemaPermissionMetadata
+        <$> requiredField' "role" .= _rspmRole
+        <*> requiredField' "definition" .= _rspmDefinition
+        <*> optionalField' "comment" .= _rspmComment
 
 $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaPermissionMetadata)

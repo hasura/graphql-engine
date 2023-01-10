@@ -174,7 +174,7 @@ export const getDropNotNullSql = (
 
   if (columnType?.toLowerCase().includes('not null')) {
     const typeSplit = columnType.split('not null');
-    colType = typeSplit.map((type) => type.trim()).join(' ');
+    colType = typeSplit.map(type => type.trim()).join(' ');
   }
   sql += colType;
   return sql;
@@ -280,10 +280,10 @@ export const checkSchemaModification = (sql: string) => {
   const sqlStatements = sql
     .toLowerCase()
     .split(';')
-    .map((sqlStr) => sqlStr.trim());
+    .map(sqlStr => sqlStr.trim());
 
   return sqlStatements.some(
-    (statement) =>
+    statement =>
       statement.startsWith('create ') ||
       statement.startsWith('alter ') ||
       statement.startsWith('drop ')
@@ -327,11 +327,11 @@ export const getCreateTableQueries = (
   checkConstraints: any[],
   tableComment?: string
 ) => {
-  const currentCols = columns.filter((c) => c.name !== '');
+  const currentCols = columns.filter(c => c.name !== '');
 
   const pKeys = primaryKeys
-    .filter((p) => p !== '')
-    .map((p) => currentCols[p as number].name);
+    .filter(p => p !== '')
+    .map(p => currentCols[p as number].name);
 
   let tableDefSql = '';
   for (let i = 0; i < currentCols.length; i++) {
@@ -361,7 +361,7 @@ export const getCreateTableQueries = (
   // add primary key
   if (pKeys.length > 0) {
     tableDefSql += ', PRIMARY KEY (';
-    tableDefSql += pKeys.map((col) => `\`${col}\``).join(',');
+    tableDefSql += pKeys.map(col => `\`${col}\``).join(',');
     tableDefSql += ') ';
   }
 
@@ -413,7 +413,7 @@ export const getCreateTableQueries = (
   // add unique keys
   const numUniqueConstraints = uniqueKeys.length;
   if (numUniqueConstraints > 0) {
-    uniqueKeys.forEach((uk) => {
+    uniqueKeys.forEach(uk => {
       if (!uk.length) {
         return;
       }
@@ -425,7 +425,7 @@ export const getCreateTableQueries = (
 
   // add check constraints
   if (checkConstraints.length > 0) {
-    checkConstraints.forEach((constraint) => {
+    checkConstraints.forEach(constraint => {
       if (!constraint.name || !constraint.check) {
         return;
       }
@@ -469,7 +469,7 @@ const whereQuery = (
   options?.schemas.length
     ? `
 ${start} ${schemaColName} IN (${options.schemas
-        .map((schema) => `'${schema}'`)
+        .map(schema => `'${schema}'`)
         .join(', ')})
 `
     : '';

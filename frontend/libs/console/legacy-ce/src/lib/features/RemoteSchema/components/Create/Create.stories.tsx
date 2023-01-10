@@ -17,7 +17,7 @@ export default {
 } as ComponentMeta<typeof RemoteSchema.Create>;
 
 export const Playground: Story = () => {
-  const [formSuccess, toggle] = useReducer((s) => !s, false);
+  const [formSuccess, toggle] = useReducer(s => !s, false);
   return (
     <>
       <RemoteSchema.Create onSuccess={() => toggle()} />

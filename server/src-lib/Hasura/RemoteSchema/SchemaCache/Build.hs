@@ -37,11 +37,11 @@ import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 buildRemoteSchemas ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
     HasHttpManagerM m,
-    Inc.Cacheable remoteRelationshipDefinition,
+    Eq remoteRelationshipDefinition,
     ToJSON remoteRelationshipDefinition,
     MonadError QErr m
   ) =>
@@ -86,7 +86,7 @@ buildRemoteSchemas env =
 
     -- TODO continue propagating MonadTrace up calls so that we can get tracing
     -- for remote schema introspection. This will require modifying CacheBuild.
-    noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter "buildSchemaCacheRule"
+    noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter Tracing.sampleNever "buildSchemaCacheRule"
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)
@@ -95,7 +95,7 @@ buildRemoteSchemas env =
 buildRemoteSchemaPermissions ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadError QErr m
   ) =>
@@ -130,14 +130,11 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
           (_unOrderedRoles orderedRoles)
   -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
   resolvedPermissions <-
-    (|
-      traverseA
-        ( \(roleName, checkPermission) -> do
-            let inconsistentRoleEntity = InconsistentRemoteSchemaPermission remoteSchemaName
-            resolvedCheckPermission <- interpretWriter -< resolveCheckPermission checkPermission roleName inconsistentRoleEntity
-            returnA -< (roleName, resolvedCheckPermission)
-        )
-      |) (M.toList allRolesUnresolvedPermissionsMap)
+    interpretWriter
+      -< for (M.toList allRolesUnresolvedPermissionsMap) \(roleName, checkPermission) -> do
+        let inconsistentRoleEntity = InconsistentRemoteSchemaPermission remoteSchemaName
+        resolvedCheckPermission <- resolveCheckPermission checkPermission roleName inconsistentRoleEntity
+        return (roleName, resolvedCheckPermission)
   returnA -< catMaybes $ M.fromList resolvedPermissions
   where
     buildRemoteSchemaPermission = proc (originalIntrospection, (remoteSchemaName, remoteSchemaPerm)) -> do
@@ -148,17 +145,13 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
           addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err
       (|
         withRecordInconsistency
-          ( (|
-              modifyErrA
-                ( do
-                    (resolvedSchemaIntrospection, dependencies) <-
-                      liftEitherA <<< bindA
-                        -<
-                          runExceptT $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
-                    recordDependencies -< (metadataObject, schemaObject, dependencies)
-                    returnA -< resolvedSchemaIntrospection
-                )
-            |) addPermContext
+          ( do
+              (resolvedSchemaIntrospection, dependency) <-
+                liftEitherA <<< bindA
+                  -<
+                    runExceptT $ modifyErr addPermContext $ resolveRoleBasedRemoteSchema roleName remoteSchemaName originalIntrospection providedSchemaDoc
+              recordDependencies -< (metadataObject, schemaObject, pure dependency)
+              returnA -< resolvedSchemaIntrospection
           )
         |) metadataObject
 

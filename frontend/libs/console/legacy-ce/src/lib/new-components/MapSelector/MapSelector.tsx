@@ -108,7 +108,7 @@ export const MapSelector = ({
               <SelectOne
                 options={[
                   ...types.filter(
-                    (t) => !existingMaps.map((x) => x.field).includes(t)
+                    t => !existingMaps.map(x => x.field).includes(t)
                   ),
                   field,
                 ]}
@@ -116,7 +116,7 @@ export const MapSelector = ({
                 placeholder="Select a field..."
                 key={i}
                 dataTest="select-source-field"
-                onChange={(e) => {
+                onChange={e => {
                   onModifyItem(i, {
                     field: e.target.value,
                     column,
@@ -135,7 +135,7 @@ export const MapSelector = ({
                 placeholder="Select a column..."
                 dataTest="select-ref-col"
                 key={i}
-                onChange={(e) => {
+                onChange={e => {
                   onModifyItem(i, {
                     field,
                     column: e.target.value,
@@ -156,12 +156,12 @@ export const MapSelector = ({
         <div className="col-span-5">
           <SelectOne
             options={types.filter(
-              (t) => !existingMaps.map((x) => x.field).includes(t)
+              t => !existingMaps.map(x => x.field).includes(t)
             )}
             value={newMap.field}
             dataTest="select-source-field"
             placeholder="Select a field..."
-            onChange={(e) => {
+            onChange={e => {
               setNewMap({ ...newMap, field: e.target.value });
               onAddItem({ ...newMap, field: e.target.value });
             }}
@@ -175,7 +175,7 @@ export const MapSelector = ({
             options={columns}
             value={newMap.column}
             placeholder="Select a column..."
-            onChange={(e) => {
+            onChange={e => {
               setNewMap({ ...newMap, column: e.target.value });
             }}
           />

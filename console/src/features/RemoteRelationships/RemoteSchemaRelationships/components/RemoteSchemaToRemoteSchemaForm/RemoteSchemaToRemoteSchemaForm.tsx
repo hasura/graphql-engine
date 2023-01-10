@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Form } from '@/new-components/Form';
+import { useConsoleForm } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Button } from '@/new-components/Button';
 import {
@@ -11,8 +11,8 @@ import {
 import { useFireNotification } from '@/new-components/Notifications';
 import { useFormContext } from 'react-hook-form';
 import {
-  RemoteRelOption,
   RelationshipTypeCardRadioGroup,
+  RemoteRelOption,
 } from './RelationshipTypeCardRadioGroup';
 
 import { FormElements } from './FormElements';
@@ -123,74 +123,74 @@ export const RemoteSchemaToRemoteSchemaForm = (
     });
   };
 
+  const {
+    methods: { formState },
+    Form,
+  } = useConsoleForm({
+    schema: rsToRsFormSchema,
+  });
+
   return (
-    <Form
-      schema={rsToRsFormSchema}
-      options={{ defaultValues: {} }}
-      onSubmit={submit}
-      className="p-4"
-    >
-      {options => (
-        <>
-          <SetDefaults
+    <Form onSubmit={submit} className="p-4">
+      <>
+        <SetDefaults
+          sourceRemoteSchema={sourceRemoteSchema}
+          typeName={typeName}
+          existingRelationshipName={existingRelationshipName}
+        />
+        <div className="grid border border-gray-300 rounded shadow-sm p-4 w-full">
+          <div className="flex items-center gap-4 w-full mb-md">
+            <Button type="button" size="sm" onClick={closeHandler}>
+              Cancel
+            </Button>
+            <p className="font-semibold m-0">
+              {existingRelationshipName
+                ? 'Edit Relationship'
+                : 'Create New Relationship'}
+            </p>
+          </div>
+
+          <hr className="mb-md border-gray-300" />
+
+          {existingRelationshipName ? null : (
+            <RelationshipTypeCardRadioGroup
+              value="remoteSchema"
+              onChange={relModeHandler}
+            />
+          )}
+
+          <FormElements
             sourceRemoteSchema={sourceRemoteSchema}
-            typeName={typeName}
             existingRelationshipName={existingRelationshipName}
           />
-          <div className="grid border border-gray-300 rounded shadow-sm p-4 w-full">
-            <div className="flex items-center gap-4 w-full mb-md">
-              <Button type="button" size="sm" onClick={closeHandler}>
-                Cancel
-              </Button>
-              <p className="font-semibold m-0">
-                {existingRelationshipName
-                  ? 'Edit Relationship'
-                  : 'Create New Relationship'}
-              </p>
-            </div>
 
-            <hr className="mb-md border-gray-300" />
-
-            {existingRelationshipName ? null : (
-              <RelationshipTypeCardRadioGroup
-                value="remoteSchema"
-                onChange={relModeHandler}
-              />
-            )}
-
-            <FormElements
-              sourceRemoteSchema={sourceRemoteSchema}
-              existingRelationshipName={existingRelationshipName}
-            />
-
-            {/* submit */}
-            <div>
-              <Button
-                mode="primary"
-                size="md"
-                type="submit"
-                isLoading={mutation.isLoading}
-                loadingText={
-                  existingRelationshipName
-                    ? 'Updating relationship'
-                    : 'Creating relationship'
-                }
-                data-test="add-rs-relationship"
-              >
-                {existingRelationshipName
-                  ? 'Edit Relationship'
-                  : 'Add Relationship'}
-              </Button>
-            </div>
-
-            {!!Object.keys(options.formState.errors).length && (
-              <IndicatorCard status="negative">
-                Error saving relationship
-              </IndicatorCard>
-            )}
+          {/* submit */}
+          <div>
+            <Button
+              mode="primary"
+              size="md"
+              type="submit"
+              isLoading={mutation.isLoading}
+              loadingText={
+                existingRelationshipName
+                  ? 'Updating relationship'
+                  : 'Creating relationship'
+              }
+              data-test="add-rs-relationship"
+            >
+              {existingRelationshipName
+                ? 'Edit Relationship'
+                : 'Add Relationship'}
+            </Button>
           </div>
-        </>
-      )}
+
+          {!!Object.keys(formState.errors).length && (
+            <IndicatorCard status="negative">
+              Error saving relationship
+            </IndicatorCard>
+          )}
+        </div>
+      </>
     </Form>
   );
 };

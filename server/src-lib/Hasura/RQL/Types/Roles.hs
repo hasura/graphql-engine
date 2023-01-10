@@ -11,7 +11,6 @@ where
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Session
 
@@ -19,8 +18,6 @@ newtype ParentRoles = ParentRoles {_unParentRoles :: HashSet RoleName}
   deriving (Show, Eq, ToJSON, FromJSON, Generic)
 
 instance Hashable ParentRoles
-
-instance Cacheable ParentRoles
 
 -- | The `Role` type represents a role by
 --   containing its name and the names of its parent roles.
@@ -37,8 +34,6 @@ data Role = Role
   deriving (Show, Eq, Generic)
 
 instance Hashable Role
-
-instance Cacheable Role
 
 instance ToJSON Role where
   toJSON (Role roleName parentRoles) =

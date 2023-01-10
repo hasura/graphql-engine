@@ -1,3 +1,4 @@
+import { programmaticallyTraceError } from '@/features/Analytics';
 import GraphiQLExplorer from 'graphiql-explorer';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 import { setForceIntrospectAt, setGraphiQLQuery } from '../Actions';
@@ -19,7 +20,7 @@ export const getExplorerWidth = () => {
   return !isNaN(widthLS) ? widthLS : defaultWidth;
 };
 
-export const setExplorerWidth = (width) => {
+export const setExplorerWidth = width => {
   setLSItem(LS_KEYS.oneGraphExplorerWidth, width);
 };
 
@@ -31,11 +32,11 @@ export const getExplorerIsOpen = () => {
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
-export const setExplorerIsOpen = (isOpen) => {
+export const setExplorerIsOpen = isOpen => {
   setLSItem(LS_KEYS.oneGraphExplorerOpen, isOpen);
 };
 
-export const persistCodeExporterOpen = (isOpen) => {
+export const persistCodeExporterOpen = isOpen => {
   setLSItem(LS_KEYS.oneGraphExplorerCodeExporterOpen, JSON.stringify(isOpen));
 };
 
@@ -59,13 +60,16 @@ export const clickRunQueryButton = () => {
   if (runQueryButton && runQueryButton[0]) {
     runQueryButton[0].click();
   } else {
-    // TODO throw Sentry alert
-    console.error('could not find run query button in the DOM');
+    const error = new Error(
+      'Could not find run query button in the DOM (.execute-button)'
+    );
+    programmaticallyTraceError(error);
+    console.warn(error);
   }
 };
 
 // ATTENTION: use with care -- this function forces introspection in graphiql
-export const forceGraphiQLIntrospection = (dispatch) => {
+export const forceGraphiQLIntrospection = dispatch => {
   dispatch(setForceIntrospectAt(new Date().getTime().toString()));
 };
 

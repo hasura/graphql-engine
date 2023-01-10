@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Metadata.Serialization
     allowlistToOrdJSONList,
     apiLimitsToOrdJSON,
     backendConfigsToOrdJSON,
+    openTelemetryConfigToOrdJSON,
     cronTriggersToOrdJSONList,
     customTypesToOrdJSON,
     endpointsToOrdJSONList,
@@ -35,7 +36,7 @@ import Hasura.RQL.Types.Action
   )
 import Hasura.RQL.Types.Allowlist (AllowlistEntry (..), MetadataAllowlist)
 import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
-import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.Backend (Backend, defaultTriggerOnReplication)
 import Hasura.RQL.Types.Column (ColumnValues)
 import Hasura.RQL.Types.Common (Comment, MetricsConfig, RemoteRelationshipG (..), commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes
@@ -70,6 +71,10 @@ import Hasura.RQL.Types.Metadata.Common
     getSourceName,
   )
 import Hasura.RQL.Types.Network (Network, emptyNetwork)
+import Hasura.RQL.Types.OpenTelemetry
+  ( OpenTelemetryConfig (..),
+    emptyOpenTelemetryConfig,
+  )
 import Hasura.RQL.Types.Permission
   ( AllowedRootFields (..),
     DelPerm (..),
@@ -103,7 +108,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 sourcesToOrdJSONList :: Sources -> AO.Array
 sourcesToOrdJSONList sources =
   Vector.fromList $
-    map sourceMetaToOrdJSON $ sortOn getSourceName $ OM.elems sources
+    map sourceMetaToOrdJSON $
+      sortOn getSourceName $
+        OM.elems sources
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
@@ -321,21 +328,26 @@ sourcesToOrdJSONList sources =
               ]
                 <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-          eventTriggerConfToOrdJSON :: Backend b => EventTriggerConf b -> AO.Value
-          eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform cleanupConfig) =
-            AO.object $
-              [ ("name", AO.toOrdered name),
-                ("definition", AO.toOrdered definition),
-                ("retry_conf", AO.toOrdered retryConf)
-              ]
-                <> catMaybes
-                  [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
-                    maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
-                    headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
-                    fmap (("request_transform",) . AO.toOrdered) reqTransform,
-                    fmap (("response_transform",) . AO.toOrdered) respTransform,
-                    maybeAnyToMaybeOrdPair "cleanup_config" AO.toOrdered cleanupConfig
+          eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
+          eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform cleanupConfig triggerOnReplication) =
+            let triggerOnReplicationMaybe =
+                  case defaultTriggerOnReplication @b of
+                    Just (_, defTOR) -> if triggerOnReplication == defTOR then Nothing else Just triggerOnReplication
+                    Nothing -> Just triggerOnReplication
+             in AO.object $
+                  [ ("name", AO.toOrdered name),
+                    ("definition", AO.toOrdered definition),
+                    ("retry_conf", AO.toOrdered retryConf)
                   ]
+                    <> catMaybes
+                      [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
+                        maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
+                        headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
+                        fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                        fmap (("response_transform",) . AO.toOrdered) respTransform,
+                        maybeAnyToMaybeOrdPair "cleanup_config" AO.toOrdered cleanupConfig,
+                        maybeAnyToMaybeOrdPair "trigger_on_replication" AO.toOrdered triggerOnReplicationMaybe
+                      ]
 
     functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
     functionMetadataToOrdJSON FunctionMetadata {..} =
@@ -410,6 +422,18 @@ backendConfigsToOrdJSON = ifNotEmpty (== mempty) configsToOrdJSON
             val = AO.toOrdered backendConfig'
          in (backendTypeStr, val)
 
+openTelemetryConfigToOrdJSON :: OpenTelemetryConfig -> Maybe AO.Value
+openTelemetryConfigToOrdJSON = ifNotEmpty (== emptyOpenTelemetryConfig) configToOrdJSON
+  where
+    configToOrdJSON :: OpenTelemetryConfig -> AO.Value
+    configToOrdJSON (OpenTelemetryConfig status enabledDataTypes exporterOtlp batchSpanProcessor) =
+      AO.object
+        [ ("status", AO.toOrdered status),
+          ("data_types", AO.toOrdered enabledDataTypes),
+          ("exporter_otlp", AO.toOrdered exporterOtlp),
+          ("batch_span_processor", AO.toOrdered batchSpanProcessor)
+        ]
+
 inheritedRolesToOrdJSONList :: InheritedRoles -> Maybe AO.Array
 inheritedRolesToOrdJSONList = listToMaybeArraySort inheritedRolesQToOrdJSON _rRoleName
   where
@@ -472,12 +496,12 @@ customTypesToOrdJSON :: CustomTypes -> Maybe AO.Object
 customTypesToOrdJSON customTypes@(CustomTypes inpObjs objs scalars enums)
   | customTypes == emptyCustomTypes = Nothing
   | otherwise =
-    Just . AO.fromList . catMaybes $
-      [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
-        listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
-        listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
-        listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
-      ]
+      Just . AO.fromList . catMaybes $
+        [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
+          listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
+          listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
+          listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
+        ]
   where
     inputObjectToOrdJSON :: InputObjectTypeDefinition -> AO.Value
     inputObjectToOrdJSON (InputObjectTypeDefinition tyName descM fields) =

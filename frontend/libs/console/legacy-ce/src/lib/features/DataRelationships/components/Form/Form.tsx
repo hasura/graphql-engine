@@ -2,7 +2,7 @@ import React from 'react';
 import { DataTarget } from '@/features/Datasources';
 import { Driver } from '@/dataSources';
 // eslint-disable-next-line no-restricted-imports
-import { Relationship } from '@/features/RelationshipsTable/DatabaseRelationshipsTable/types';
+import { Relationship } from '@/features/DataRelationships/components/DatabaseRelationshipsTable/types';
 import { FormLayout } from './FormLayout';
 import { CreateRelationshipForm } from './CreateRelationshipForm';
 import { EditRelationshipForm } from './EditRelationshipForm';
@@ -20,6 +20,7 @@ interface Props {
     message?: string;
     type: 'success' | 'error' | 'cancel';
   }) => void;
+  onClose?: () => void;
 }
 
 export const Form = ({
@@ -27,6 +28,7 @@ export const Form = ({
   sourceTableInfo,
   onComplete,
   driver,
+  onClose,
 }: Props) => {
   if (existingRelationship) {
     return (
@@ -36,6 +38,7 @@ export const Form = ({
           sourceTableInfo={sourceTableInfo}
           existingRelationship={existingRelationship}
           onComplete={onComplete}
+          onClose={onClose}
         />
       </FormLayout>
     );

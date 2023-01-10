@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/new-components/Button';
 import { DropdownMenu } from '@/new-components/DropdownMenu';
 import { Operator, TableColumn } from '@/features/DataSource';
@@ -7,6 +7,7 @@ import { FaFileExport } from 'react-icons/fa';
 import { FilterRows } from '../Filter';
 import { SortRows } from '../Sort';
 import { FiltersAndSortFormValues } from '../types';
+import { getFiltersAndSortFromUrlQueryParams } from './LegacyRunQueryContainer';
 
 type LegacyRunQueryProps = {
   columns: TableColumn[];
@@ -16,6 +17,13 @@ type LegacyRunQueryProps = {
     formValues: FiltersAndSortFormValues
   ) => void;
   onSubmit: (values: FiltersAndSortFormValues) => void;
+  initialFiltersAndSort?: FiltersAndSortFormValues;
+  uniqueTableName?: string;
+};
+
+export const defaultFiltersAndSortFormValues: FiltersAndSortFormValues = {
+  filters: [],
+  sorts: [],
 };
 
 export const LegacyRunQuery = ({
@@ -23,19 +31,30 @@ export const LegacyRunQuery = ({
   onSubmit,
   operators,
   columns,
+  initialFiltersAndSort = defaultFiltersAndSortFormValues,
+  uniqueTableName = '',
 }: LegacyRunQueryProps) => {
   const methods = useForm<FiltersAndSortFormValues>({
-    defaultValues: {
-      filter: [{}],
-      sort: [{}],
-    },
+    defaultValues: initialFiltersAndSort,
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, reset } = methods;
+
+  useEffect(() => {
+    const filtersAndSortFromUrl = getFiltersAndSortFromUrlQueryParams();
+    if (
+      filtersAndSortFromUrl.filters.length > 0 ||
+      filtersAndSortFromUrl.sorts.length > 0
+    ) {
+      return;
+    }
+
+    reset(initialFiltersAndSort);
+  }, [uniqueTableName]);
 
   const exportItems = [
-    [<div onClick={handleSubmit((arg) => onExport('CSV', arg))}>CSV</div>],
-    [<div onClick={handleSubmit((arg) => onExport('JSON', arg))}>JSON</div>],
+    [<div onClick={handleSubmit(arg => onExport('CSV', arg))}>CSV</div>],
+    [<div onClick={handleSubmit(arg => onExport('JSON', arg))}>JSON</div>],
   ];
 
   return (
@@ -47,11 +66,18 @@ export const LegacyRunQuery = ({
               <FilterRows
                 columns={columns}
                 operators={operators}
-                name="filter"
+                name="filters"
+                initialFilters={initialFiltersAndSort.filters}
+                onRemove={() => handleSubmit(onSubmit)()}
               />
             </div>
             <div className="flex-grow w-1/2 pr-4">
-              <SortRows columns={columns} name="sort" />
+              <SortRows
+                columns={columns}
+                name="sorts"
+                initialSorts={initialFiltersAndSort.sorts}
+                onRemove={() => handleSubmit(onSubmit)()}
+              />
             </div>
           </div>
           <div className="flex mt-4">

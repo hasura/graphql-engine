@@ -1,6 +1,7 @@
 import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 import { IconTooltip } from '@/new-components/Tooltip';
+import globals from '@/Globals';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -12,12 +13,10 @@ import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
 import ConnectionSettingsForm from './ConnectionSettings/ConnectionSettingsForm';
 import { GraphQLFieldCustomizationContainer } from './GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
-import { SampleDBTrial } from './SampleDatabase';
 
 export interface ConnectDatabaseFormProps {
   // Connect DB State Props
   connectionDBState: ConnectDBState;
-  sampleDBTrial?: SampleDBTrial;
   connectionDBStateDispatch: Dispatch<ConnectDBActions>;
   // Connection Type Props - for the Radio buttons
   updateConnectionTypeRadio: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -31,15 +30,15 @@ export interface ConnectDatabaseFormProps {
 
 export const connectionRadios = [
   {
-    value: connectionTypes.ENV_VAR,
+    value: connectionTypes?.ENV_VAR,
     title: 'Environment Variable',
   },
   {
-    value: connectionTypes.DATABASE_URL,
+    value: connectionTypes?.DATABASE_URL,
     title: 'Database URL',
   },
   {
-    value: connectionTypes.CONNECTION_PARAMS,
+    value: connectionTypes?.CONNECTION_PARAMS,
     title: 'Connection Parameters',
   },
 ];
@@ -48,29 +47,46 @@ const dbTypePlaceholders: Record<Driver, string> = {
   postgres: 'postgresql://username:password@hostname:5432/database',
   citus: 'postgresql://username:password@hostname:5432/database',
   mssql:
-    'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
+    'Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password',
   mysql: 'MySQL connection string',
   bigquery: 'SERVICE_ACCOUNT_KEY_FROM_ENV',
   cockroach: 'postgresql://username:password@hostname:5432/database',
+  alloy: 'postgresql://username:password@hostname:5432/database',
 };
 
 const defaultTitle = 'Connect Database Via';
 
 const driverToLabel: Record<
   Driver,
-  { label: string; defaultConnection: string; info?: string; beta?: boolean }
+  {
+    label: string;
+    defaultConnection: string;
+    info?: React.ReactElement[];
+    beta?: boolean;
+  }
 > = {
   mysql: { label: 'MySQL', defaultConnection: 'DATABASE_URL' },
   postgres: { label: 'PostgreSQL', defaultConnection: 'DATABASE_URL' },
+  alloy: { label: 'AlloyDB', defaultConnection: 'DATABASE_URL' },
   mssql: {
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
-    info: 'Only Database URLs and Environment Variables are available for MS SQL Server',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for MS SQL
+        Server
+      </>,
+    ],
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
-    info: 'Only Connection Parameters and Environment Variables are available for BigQuery',
+    info: [
+      <>
+        Only Connection Parameters and Environment Variables are available for
+        BigQuery
+      </>,
+    ],
   },
   citus: {
     label: 'Citus',
@@ -79,6 +95,47 @@ const driverToLabel: Record<
   cockroach: {
     label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for
+        CockroachDB
+      </>,
+      globals.consoleType === 'oss' ? (
+        <div className="flex whitespace-nowrap">
+          SSL for Cockroach is only available on{' '}
+          <a
+            href="https://hasura.io/pricing/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-gray-500 px-1"
+          >
+            Hasura Cloud
+          </a>
+          and
+          <a
+            href="https://hasura.io/pricing/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-gray-500 px-1"
+          >
+            Self-Hosted EE.
+          </a>
+        </div>
+      ) : (
+        <div className="flex whitespace-nowrap">
+          Please make sure to not use the
+          <div className="font-semibold text-gray-500 px-1">
+            &quot;sslverify=verify-full&quot;
+          </div>
+          parameter in your connection string. SSL mode needs to be configured
+          under the
+          <div className="font-semibold text-gray-500 px-1">
+            SSL Certificate Section
+          </div>
+          section below
+        </div>
+      ),
+    ],
   },
 };
 
@@ -92,7 +149,6 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
     title,
     isEditState,
   } = props;
-
   const isDBSupported = (driver: Driver, connectionType: string) => {
     let ts = 'databaseURL';
     if (connectionType === 'CONNECTION_PARAMETERS') {
@@ -127,7 +183,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
         className={styles.connect_db_radios}
         onChange={updateConnectionTypeRadio}
       >
-        {connectionRadios.map((radioBtn) => (
+        {connectionRadios.map(radioBtn => (
           <label
             key={`label-${radioBtn.title}`}
             className={`${styles.connect_db_radio_label} inline-flex ${
@@ -168,21 +224,21 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             </span>
           </div>
         ) : null}
-        {driverToLabel[connectionDBState.dbType].info ? (
-          <div>
-            <FaInfoCircle className={`${styles.padd_small_right}`} />
-            <span className={styles.text_muted}>
-              {driverToLabel[connectionDBState.dbType].info}
-            </span>
-          </div>
-        ) : null}
+        {driverToLabel[connectionDBState.dbType].info?.map(info => {
+          return (
+            <div className="flex">
+              <FaInfoCircle className={`${styles.padd_small_right} mt-1`} />
+              <span className={styles.text_muted}>{info}</span>
+            </div>
+          );
+        })}
       </div>
       {connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
       (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
         connectionDBState.dbType === 'mssql') ? (
         <LabeledInput
           label="Database URL"
-          onChange={(e) =>
+          onChange={e =>
             connectionDBStateDispatch({
               type: 'UPDATE_DB_URL',
               data: e.target.value,
@@ -198,7 +254,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
         <LabeledInput
           label="Environment Variable"
           placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
-          onChange={(e) =>
+          onChange={e =>
             connectionDBStateDispatch({
               type: 'UPDATE_DB_URL_ENV_VAR',
               data: e.target.value,
@@ -217,7 +273,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             <LabeledInput
               label="Environment Variable"
               placeholder={dbTypePlaceholders[connectionDBState.dbType]}
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_DB_URL_ENV_VAR',
                   data: e.target.value,
@@ -237,7 +293,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
               <JSONEditor
                 minLines={5}
                 initData="{}"
-                onChange={(value) => {
+                onChange={value => {
                   connectionDBStateDispatch({
                     type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT',
                     data: value,
@@ -249,7 +305,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
           )}
           <LabeledInput
             label="Project Id"
-            onChange={(e) =>
+            onChange={e =>
               connectionDBStateDispatch({
                 type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
                 data: e.target.value,
@@ -261,7 +317,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
           />
           <LabeledInput
             label="Datasets"
-            onChange={(e) =>
+            onChange={e =>
               connectionDBStateDispatch({
                 type: 'UPDATE_DB_BIGQUERY_DATASETS',
                 data: e.target.value,
@@ -273,7 +329,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
           />
           <LabeledInput
             label="Global Select Limit"
-            onChange={(e) => {
+            onChange={e => {
               let data = Number.parseInt(e.target.value, 10);
               if (Number.isNaN(data) || data <= 0) {
                 data = 0;
@@ -300,7 +356,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             <LabeledInput
               label="Host"
               placeholder="localhost"
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_DB_HOST',
                   data: e.target.value,
@@ -312,7 +368,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             <LabeledInput
               label="Port"
               placeholder="5432"
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_DB_PORT',
                   data: e.target.value,
@@ -324,7 +380,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             <LabeledInput
               label="Username"
               placeholder="postgres_user"
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_DB_USERNAME',
                   data: e.target.value,
@@ -338,7 +394,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
               key="connect-db-password"
               type="password"
               placeholder="postgrespassword"
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_DB_PASSWORD',
                   data: e.target.value,
@@ -351,7 +407,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
               key="connect-db-database-name"
               label="Database Name"
               placeholder="postgres"
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_DB_DATABASE_NAME',
                   data: e.target.value,
@@ -367,7 +423,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
       ) ? (
         <LabeledInput
           label="Extensions Schema"
-          onChange={(e) => {
+          onChange={e => {
             const data =
               e.target?.value?.length > 1 ? e.target.value : undefined;
             connectionDBStateDispatch({
@@ -393,13 +449,15 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
         https://github.com/hasura/graphql-engine-mono/issues/4700
       */}
 
-      <GraphQLFieldCustomizationContainer
-        rootFields={connectionDBState.customization?.rootFields}
-        typeNames={connectionDBState.customization?.typeNames}
-        namingConvention={connectionDBState.customization?.namingConvention}
-        connectionDBStateDispatch={connectionDBStateDispatch}
-        connectionDBState={connectionDBState}
-      />
+      {!isReadReplica && (
+        <GraphQLFieldCustomizationContainer
+          rootFields={connectionDBState.customization?.rootFields}
+          typeNames={connectionDBState.customization?.typeNames}
+          namingConvention={connectionDBState.customization?.namingConvention}
+          connectionDBStateDispatch={connectionDBStateDispatch}
+          connectionDBState={connectionDBState}
+        />
+      )}
     </>
   );
 };

@@ -16,12 +16,15 @@ export const useFireNotification = () => {
       title,
       message,
       type,
+      error,
     }: {
       title: string;
       message: string;
       type: 'success' | 'error' | 'warning' | 'info';
+      error?: Record<string, any>;
     }) => {
-      if (type === 'error') dispatch(showErrorNotification(title, message));
+      if (type === 'error')
+        dispatch(showErrorNotification(title, message, error));
       else if (type === 'success')
         dispatch(showSuccessNotification(title, message));
       else if (type === 'warning')

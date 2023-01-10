@@ -9,6 +9,6 @@ The most up-to-date information for the docs site can be found on our wiki. You 
 
 - I want to contribute! [[live](https://hasura.io/docs/wiki/contributions/) / [in-repo](wiki/contributions.mdx)]
 - I have questions about page structure...? [[live](https://hasura.io/docs/wiki/page-structure/) /
-  [in-repo](wiki/page-structure.mdx)]
+  [in-repo](wiki/docusaurus-mdx-guide/page-structure.mdx)]
 - How does Docusaurus work? [[live](https://hasura.io/docs/wiki/working-with-docusaurus/) /
   [in-repo](wiki/working-with-docusaurus.mdx)]

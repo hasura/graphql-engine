@@ -56,7 +56,7 @@ unresolveVariables =
 
 collectVariables ::
   forall fragments var.
-  (Foldable fragments, Hashable var, Eq var) =>
+  (Foldable fragments, Hashable var) =>
   G.SelectionSet fragments var ->
   Set.HashSet var
 collectVariables =
@@ -158,7 +158,8 @@ resolveRemoteVariable userInfo = \case
   SessionPresetVariable sessionVar typeName presetInfo -> do
     sessionVarVal <-
       onNothing (getSessionVariableValue sessionVar $ _uiSession userInfo) $
-        throw400 NotFound $ sessionVar <<> " session variable expected, but not found"
+        throw400 NotFound $
+          sessionVar <<> " session variable expected, but not found"
     varName <-
       sessionVariableToGraphQLName sessionVar
         `onNothing` throw500 ("'" <> sessionVariableToText sessionVar <> "' cannot be made into a valid GraphQL name")
@@ -173,9 +174,9 @@ resolveRemoteVariable userInfo = \case
             "Boolean" ->
               if
                   | sessionVarVal `elem` ["true", "false"] ->
-                    pure $ G.VBoolean $ "true" == sessionVarVal
+                      pure $ G.VBoolean $ "true" == sessionVarVal
                   | otherwise ->
-                    throw400 CoercionError $ sessionVarVal <<> " cannot be coerced into a Boolean value"
+                      throw400 CoercionError $ sessionVarVal <<> " cannot be coerced into a Boolean value"
             "Float" ->
               case readMaybe $ T.unpack sessionVarVal of
                 Nothing ->

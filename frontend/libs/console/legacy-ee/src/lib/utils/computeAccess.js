@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { PRIVILEGES } from '../constants';
 
-export const decodeToken = (idToken) => {
+export const decodeToken = idToken => {
   const decoded = jwt.decode(idToken, { complete: true });
   return decoded;
 };
@@ -17,7 +17,7 @@ export const defaultAccessState = {
   hasActionAccess: true,
 };
 
-export const checkAccess = (privileges) => {
+export const checkAccess = privileges => {
   if (!privileges) {
     return { ...defaultAccessState };
   }
@@ -38,5 +38,6 @@ export const checkAccess = (privileges) => {
     hasMetricAccess:
       isIn(privileges, PRIVILEGES.Admin) ||
       isIn(privileges, PRIVILEGES.ViewMetrics),
+
   };
 };

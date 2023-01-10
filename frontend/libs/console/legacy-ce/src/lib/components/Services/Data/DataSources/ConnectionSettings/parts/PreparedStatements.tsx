@@ -13,7 +13,7 @@ export const PreparedStatements: React.VFC<ConnectionSettingsFormProps> = ({
         type="checkbox"
         checked={connectionDBState.preparedStatements}
         className="legacy-input-fix"
-        onChange={(e) => {
+        onChange={e => {
           connectionDBStateDispatch({
             type: 'UPDATE_PREPARED_STATEMENTS',
             data: e.target.checked,

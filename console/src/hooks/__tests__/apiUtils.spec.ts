@@ -2,6 +2,7 @@ import 'whatwg-fetch';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Api } from '../apiUtils';
+import { APIError } from '../error';
 
 const server = setupServer();
 
@@ -118,7 +119,7 @@ describe('API functions', () => {
             );
             const response = Api.get({ url, headers });
             await expect(response).rejects.toStrictEqual(
-              new Error(MOCK_ERROR_RESPONSE_STANDARD.message)
+              new APIError(MOCK_ERROR_RESPONSE_STANDARD.message)
             );
           });
           it('should handle unexpected error object', async () => {
@@ -132,7 +133,7 @@ describe('API functions', () => {
             );
             const response = Api.get({ url, headers });
             await expect(response).rejects.toStrictEqual(
-              new Error(JSON.stringify(REST_BODY.object))
+              new APIError(JSON.stringify(REST_BODY.object))
             );
           });
           it('should not call transFrom function on Error', async () => {
@@ -149,7 +150,7 @@ describe('API functions', () => {
               d => d.invalid
             );
             await expect(response).rejects.toStrictEqual(
-              new Error(MOCK_ERROR_RESPONSE_STANDARD.message)
+              new APIError(MOCK_ERROR_RESPONSE_STANDARD.message)
             );
           });
         });
@@ -165,7 +166,7 @@ describe('API functions', () => {
             );
             const response = Api.get({ url, headers });
             await expect(response).rejects.toStrictEqual(
-              new Error(MOCK_ERROR_STRING)
+              new APIError(MOCK_ERROR_STRING)
             );
           });
         });

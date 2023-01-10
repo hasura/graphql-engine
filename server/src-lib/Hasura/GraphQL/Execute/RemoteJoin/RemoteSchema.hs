@@ -229,7 +229,10 @@ combineValues name v1 v2 = case (v1, v2) of
   (G.VList l, G.VList r) -> pure $ G.VList $ l <> r
   (l, r) ->
     throw500 $
-      "combineValues: cannot combine values (" <> tshow l <> ") and (" <> tshow r
+      "combineValues: cannot combine values ("
+        <> tshow l
+        <> ") and ("
+        <> tshow r
         <> ") for field "
         <> G.unName name
         <> "; lists can only be merged with lists, objects can only be merged with objects"
@@ -281,16 +284,16 @@ executeRemoteSchemaCall networkFunction (RemoteSchemaCall customizer request _) 
   let errors = AO.lookup "errors" responseObject
   if
       | isNothing errors || errors == Just AO.Null ->
-        case AO.lookup "data" responseObject of
-          Nothing -> throw500 "\"data\" field not found in remote response"
-          Just v ->
-            let v' = applyResultCustomizer customizer v
-             in AO.asObject v' `onLeft` throw500
+          case AO.lookup "data" responseObject of
+            Nothing -> throw500 "\"data\" field not found in remote response"
+            Just v ->
+              let v' = applyResultCustomizer customizer v
+               in AO.asObject v' `onLeft` throw500
       | otherwise ->
-        throwError
-          (err400 Unexpected "Errors from remote server")
-            { qeInternal = Just $ ExtraInternal $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
-            }
+          throwError
+            (err400 Unexpected "Errors from remote server")
+              { qeInternal = Just $ ExtraInternal $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
+              }
 
 -------------------------------------------------------------------------------
 -- Step 3: extracting the join index

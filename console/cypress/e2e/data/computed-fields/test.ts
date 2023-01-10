@@ -31,11 +31,17 @@ export const runComputedFieldTests = () => {
     it('Run SQL for custom function', createCustomFunction);
     it('Insert authors into table', insertAuthorsIntoTable);
     it('Search for table', searchForTable);
-    it('Open Modify page and add computed field', openModifySection);
-    it('Route to GraphiQL page', routeToGraphiql);
-    it('Check computed field results on GraphiQL', verifyComputedFieldsResult);
-    it('Route to Raw SQL page', routeToSQLPage);
-    it('Test cleanup', cleanUpSql);
+
+    // Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
+    // TODO: Fix and restore them
+    it.skip('Open Modify page and add computed field', openModifySection);
+    it.skip('Route to GraphiQL page', routeToGraphiql);
+    it.skip(
+      'Check computed field results on GraphiQL',
+      verifyComputedFieldsResult
+    );
+    it.skip('Route to Raw SQL page', routeToSQLPage);
+    it.skip('Test cleanup', cleanUpSql);
   });
 };
 

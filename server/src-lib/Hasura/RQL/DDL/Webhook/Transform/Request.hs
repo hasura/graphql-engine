@@ -34,7 +34,6 @@ import Data.Bifunctor
 import Data.ByteString (ByteString)
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation, fromEither)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class (Template (..), TemplatingEngine (..), TransformErrorBundle (..), UnescapedTemplate, encodeScalar, wrapUnescapedTemplate)
 import Hasura.Session (SessionVariables)
@@ -140,7 +139,7 @@ data Version
   = V1
   | V2
   deriving stock (Eq, Generic, Show)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance FromJSON Version where
   parseJSON v = do

@@ -32,7 +32,7 @@ const TableRow = ({
     );
   }
 
-  permTypes.forEach((p) => {
+  permTypes.forEach(p => {
     rowCells.push(
       <td
         key={p.dataTest}

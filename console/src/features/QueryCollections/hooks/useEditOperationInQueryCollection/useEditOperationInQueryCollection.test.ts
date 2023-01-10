@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useEditOperationInQueryCollection } from '.';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
@@ -11,7 +11,7 @@ afterAll(() => server.close());
 
 describe('useEditOperationInQueryCollection', () => {
   beforeEach(() => {
-    server.use(...handlers(100, ''));
+    server.use(...handlers({ url: '' }));
   });
 
   test('When useEditOperationInQueryCollection is used with a valid input Then it should call the API with correct payload', async () => {
@@ -21,7 +21,7 @@ describe('useEditOperationInQueryCollection', () => {
     );
 
     await result.current.editOperationInQueryCollection(
-      'testCollection',
+      'allowed-queries',
       'MyQuery',
       [
         {

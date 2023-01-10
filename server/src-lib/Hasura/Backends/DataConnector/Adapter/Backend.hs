@@ -3,6 +3,7 @@
 module Hasura.Backends.DataConnector.Adapter.Backend
   ( CustomBooleanOperator (..),
     columnTypeToScalarType,
+    parseValue,
   )
 where
 
@@ -10,13 +11,16 @@ import Data.Aeson qualified as J
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Types qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Scientific (fromFloatDigits)
 import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
+import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
-import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
@@ -65,9 +69,13 @@ instance Backend 'DataConnector where
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
   type ComputedFieldReturn 'DataConnector = Unimplemented
 
+  type UpdateVariant 'DataConnector = DC.DataConnectorUpdateVariant
+  type BackendInsert 'DataConnector = DC.BackendInsert
+
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable
   type XNodesAgg 'DataConnector = XEnable
+  type XEventTriggers 'DataConnector = XDisable
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
 
@@ -78,11 +86,26 @@ instance Backend 'DataConnector where
     DC.NumberTy -> True
     DC.StringTy -> True
     DC.BoolTy -> False
-    DC.CustomTy _ -> False -- TODO: extend Capabilities for custom types
+    DC.CustomTy _ _ -> False
 
   isNumType :: ScalarType 'DataConnector -> Bool
   isNumType DC.NumberTy = True
   isNumType _ = False
+
+  getCustomAggregateOperators :: DC.SourceConfig -> HashMap G.Name (HashMap DC.ScalarType DC.ScalarType)
+  getCustomAggregateOperators DC.SourceConfig {..} =
+    HashMap.foldrWithKey insertOps mempty scalarTypesCapabilities
+    where
+      scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
+      insertOps typeName API.ScalarTypeCapabilities {..} m =
+        HashMap.foldrWithKey insertOp m $
+          API.unAggregateFunctions _stcAggregateFunctions
+        where
+          insertOp funtionName resultTypeName =
+            HashMap.insertWith HashMap.union funtionName $
+              HashMap.singleton
+                (DC.mkScalarType _scCapabilities typeName)
+                (DC.mkScalarType _scCapabilities resultTypeName)
 
   textToScalarValue :: Maybe Text -> ScalarValue 'DataConnector
   textToScalarValue = error "textToScalarValue: not implemented for the Data Connector backend."
@@ -91,7 +114,7 @@ instance Backend 'DataConnector where
   parseScalarValue type' value = runAesonParser (parseValue type') value
 
   scalarValueToJSON :: ScalarValue 'DataConnector -> J.Value
-  scalarValueToJSON = error "scalarValueToJSON: not implemented for the Data Connector backend."
+  scalarValueToJSON = id
 
   functionToTable :: FunctionName 'DataConnector -> TableName 'DataConnector
   functionToTable = error "functionToTable: not implemented for the Data Connector backend."
@@ -138,6 +161,8 @@ instance Backend 'DataConnector where
     -- Data connectors do not have concept of connection pools
     pure ()
 
+  defaultTriggerOnReplication = Nothing
+
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
     _cboRHS :: Maybe (Either (RootOrCurrentColumn 'DataConnector) a) -- TODO turn Either into a specific type
@@ -147,8 +172,6 @@ data CustomBooleanOperator a = CustomBooleanOperator
 instance NFData a => NFData (CustomBooleanOperator a)
 
 instance Hashable a => Hashable (CustomBooleanOperator a)
-
-instance Cacheable a => Cacheable (CustomBooleanOperator a)
 
 instance J.ToJSON a => ToJSONKeyValue (CustomBooleanOperator a) where
   toJSONKeyValue CustomBooleanOperator {..} = (fromText _cboName, J.toJSON _cboRHS)
@@ -160,9 +183,15 @@ parseValue type' val =
     (DC.StringTy, value) -> J.String <$> J.parseJSON value
     (DC.BoolTy, value) -> J.Bool <$> J.parseJSON value
     (DC.NumberTy, value) -> J.Number <$> J.parseJSON value
-    -- For custom scalar types we don't know what subset of JSON values
-    -- they accept, so we just accept any value.
-    (DC.CustomTy _, value) -> pure value
+    (DC.CustomTy _ graphQLType, value) -> case graphQLType of
+      Nothing -> pure value
+      Just DC.GraphQLInt -> (J.Number . fromIntegral) <$> J.parseJSON @Int value
+      Just DC.GraphQLFloat -> (J.Number . fromFloatDigits) <$> J.parseJSON @Double value
+      Just DC.GraphQLString -> J.String <$> J.parseJSON value
+      Just DC.GraphQLBoolean -> J.Bool <$> J.parseJSON value
+      Just DC.GraphQLID -> J.String <$> parseID value
+  where
+    parseID value = J.parseJSON @Text value <|> tshow <$> J.parseJSON @Int value
 
 columnTypeToScalarType :: ColumnType 'DataConnector -> DC.ScalarType
 columnTypeToScalarType = \case

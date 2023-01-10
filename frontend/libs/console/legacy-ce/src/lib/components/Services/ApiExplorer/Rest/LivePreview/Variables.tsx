@@ -32,7 +32,7 @@ const Variables: React.FC<VariableComponentProps> = ({
 
   return (
     <PreviewTable headings={requestVariablesHeadings}>
-      {variablesState.map((v) => (
+      {variablesState.map(v => (
         <tr className="border-b border-gray-300" key={`rest-var-${v.name}`}>
           <td className="">
             <b>{v.name}</b>

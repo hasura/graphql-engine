@@ -171,7 +171,7 @@ label {
 
 /* Customize skeleton colors */
 .react-loading-skeleton {
-  --base-color: #E2E8F0 !important;
-  --highlight-color: #F1F5F9 !important;
+  --base-color: #e2e8f0 !important;
+  --highlight-color: #f1f5f9 !important;
   --animation-duration: 1.5s !important;
 }

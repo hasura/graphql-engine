@@ -3,6 +3,7 @@
 
 module Hasura.Backends.DataConnector.API.V0.ErrorResponse
   ( ErrorResponse (..),
+    ErrorResponse400,
     ErrorResponseType (..),
     errorResponseJsonText,
     errorResponseSummary,
@@ -36,12 +37,18 @@ import Prelude
 
 data ErrorResponseType
   = UncaughtError
+  | MutationConstraintViolation
+  | MutationPermissionCheckFailure
   deriving stock (Eq, Show, Generic)
 
 instance HasCodec ErrorResponseType where
   codec =
     named "ErrorResponseType" $
-      stringConstCodec [(UncaughtError, "uncaught-error")]
+      stringConstCodec
+        [ (UncaughtError, "uncaught-error"),
+          (MutationConstraintViolation, "mutation-constraint-violation"),
+          (MutationPermissionCheckFailure, "mutation-permission-check-failure")
+        ]
 
 data ErrorResponse = ErrorResponse
   { _crType :: ErrorResponseType,
@@ -53,6 +60,8 @@ data ErrorResponse = ErrorResponse
 
 instance HasStatus ErrorResponse where
   type StatusOf ErrorResponse = 500
+
+type ErrorResponse400 = Servant.WithStatus 400 ErrorResponse
 
 {-# HLINT ignore "Use tshow" #-}
 errorResponseSummary :: ErrorResponse -> Text

@@ -32,9 +32,9 @@ const transformData =
     let fkConstraints: PartialFKConstraint[] = [];
     if (driver === 'mssql') {
       const parsed: MSSqlFk[] = JSON.parse(data.result?.[1]?.[0] ?? '[]');
-      fkConstraints = parsed.map((fk) => {
+      fkConstraints = parsed.map(fk => {
         const mapping: Record<string, string> = {};
-        fk.column_mapping.forEach((cols) => {
+        fk.column_mapping.forEach(cols => {
           mapping[cols.column] = cols.referenced_column;
         });
         return {
@@ -49,14 +49,14 @@ const transformData =
       fkConstraints = JSON.parse(data.result?.[1]?.[0] ?? '[]');
     }
 
-    return fkConstraints.map((fk) => ({
+    return fkConstraints.map(fk => ({
       ...fk,
       is_table_tracked: !!metadataTables.some(
-        (t) =>
+        t =>
           t.table.name === fk.table_name && t.table.schema === fk.table_schema
       ),
       is_ref_table_tracked: !!metadataTables.some(
-        (t) =>
+        t =>
           t.table.name === fk.ref_table &&
           t.table.schema === fk.ref_table_table_schema
       ),

@@ -310,7 +310,7 @@ instance (Monoid w, ArrowDistribute arr) => ArrowDistribute (WriterA w arr) wher
 instance ArrowDistribute (Rule m) where
   keyed ::
     forall a b k e s.
-    (Eq k, Hashable k) =>
+    Hashable k =>
     Rule m (e, (k, (a, s))) b ->
     Rule m (e, (HashMap k a, s)) (HashMap k b)
   keyed r0 = keyedWith HM.empty

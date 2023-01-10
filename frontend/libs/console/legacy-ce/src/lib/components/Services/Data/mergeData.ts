@@ -118,7 +118,7 @@ export const mergeDataMssql = (
   let uniqueKeys: Table['unique_constraints'] = [];
   let checkConstraints: MSSqlCheckConstraint[] = [];
 
-  data[0].result.slice(1).forEach((row) => {
+  data[0].result.slice(1).forEach(row => {
     try {
       tables.push({
         table_schema: row[0],
@@ -155,7 +155,7 @@ export const mergeDataMssql = (
       const { table_name, table_schema, constraints } = pk;
 
       const columnsByConstraintName: { [name: string]: string[] } = {};
-      constraints.forEach((c) => {
+      constraints.forEach(c => {
         columnsByConstraintName[c.constraint_name] = [
           ...(columnsByConstraintName[c.constraint_name] || []),
           c.name,
@@ -163,7 +163,7 @@ export const mergeDataMssql = (
       });
 
       const constraintInfo = Object.keys(columnsByConstraintName).map(
-        (pkName) => ({
+        pkName => ({
           table_schema,
           table_name,
           constraint_name: pkName,
@@ -181,7 +181,7 @@ export const mergeDataMssql = (
       const { table_name, table_schema, constraints } = uk;
 
       const columnsByConstraintName: { [name: string]: string[] } = {};
-      constraints.forEach((c) => {
+      constraints.forEach(c => {
         columnsByConstraintName[c.constraint_name] = [
           ...(columnsByConstraintName[c.constraint_name] || []),
           c.name,
@@ -189,7 +189,7 @@ export const mergeDataMssql = (
       });
 
       const constraintInfo = Object.keys(columnsByConstraintName).map(
-        (pkName) => ({
+        pkName => ({
           table_schema,
           table_name,
           constraint_name: pkName,
@@ -207,21 +207,21 @@ export const mergeDataMssql = (
   }
 
   const trackedFkData = fkRelations
-    .map((fk) => ({
+    .map(fk => ({
       ...fk,
       is_table_tracked: !!metadataTables.some(
-        (t) =>
+        t =>
           t.table.name === fk.table_name && t.table.schema === fk.table_schema
       ),
       is_ref_table_tracked: !!metadataTables.some(
-        (t) =>
+        t =>
           t.table.name === fk.ref_table &&
           t.table.schema === fk.ref_table_schema
       ),
     }))
-    .map((fk) => {
+    .map(fk => {
       const mapping: Record<string, string> = {};
-      fk.column_mapping.forEach((cols) => {
+      fk.column_mapping.forEach(cols => {
         mapping[cols.column] = cols.referenced_column;
       });
       return {
@@ -233,9 +233,9 @@ export const mergeDataMssql = (
       };
     });
 
-  tables.forEach((table) => {
+  tables.forEach(table => {
     const metadataTable = metadataTables?.find(
-      (t) =>
+      t =>
         t.table.schema === table.table_schema &&
         t.table.name === table.table_name
     );
@@ -256,17 +256,17 @@ export const mergeDataMssql = (
     const check =
       checkConstraints
         .filter(
-          (key) =>
+          key =>
             key?.table_name === table.table_name &&
             key.table_schema === table.table_schema
         )
-        .map((c) => ({
+        .map(c => ({
           ...c,
           check: c.check_definition,
         })) || [];
 
     const relationships = [] as Table['relationships'];
-    metadataTable?.array_relationships?.forEach((rel) => {
+    metadataTable?.array_relationships?.forEach(rel => {
       relationships.push({
         rel_def: rel.using,
         rel_name: rel.name,
@@ -276,7 +276,7 @@ export const mergeDataMssql = (
       });
     });
 
-    metadataTable?.object_relationships?.forEach((rel) => {
+    metadataTable?.object_relationships?.forEach(rel => {
       relationships.push({
         rel_def: rel.using,
         rel_name: rel.name,
@@ -288,14 +288,14 @@ export const mergeDataMssql = (
 
     const primaryKeysInfo =
       primaryKeys?.find(
-        (key) =>
+        key =>
           key?.table_name === table.table_name &&
           key.table_schema === table.table_schema
       ) || null;
 
     const uniqueKeysInfo =
       uniqueKeys?.filter(
-        (key) =>
+        key =>
           key?.table_name === table.table_name &&
           key.table_schema === table.table_schema
       ) || null;
@@ -316,7 +316,7 @@ export const mergeDataMssql = (
     }, {});
 
     const permissions: Table['permissions'] = Object.keys(rolePermMap).map(
-      (role) => ({
+      role => ({
         role_name: role,
         permissions: rolePermMap[role].permissions,
         table_name: table.table_name,
@@ -338,7 +338,7 @@ export const mergeDataMssql = (
       table_name: table.table_name,
       table_type: table.table_type,
       is_table_tracked: metadataTables.some(
-        (t) =>
+        t =>
           t.table.name === table.table_name &&
           t.table.schema === table.table_schema
       ),
@@ -373,6 +373,7 @@ export const mergeLoadSchemaDataPostgres = (
     Table['foreign_key_constraints'][0],
     'is_table_tracked' | 'is_ref_table_tracked'
   >[];
+
   const primaryKeys = JSON.parse(data[2].result[1]) as Table['primary_key'][];
   const uniqueKeys = JSON.parse(data[3].result[1]) as any;
 
@@ -381,24 +382,23 @@ export const mergeLoadSchemaDataPostgres = (
     : ([] as Table['check_constraints']);
   const _mergedTableData: Table[] = [];
 
-  const trackedFkData = fkList.map((fk) => ({
+  const trackedFkData = fkList.map(fk => ({
     ...fk,
     is_table_tracked: !!metadataTables.some(
-      (t) =>
-        t.table.name === fk.table_name && t.table.schema === fk.table_schema
+      t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
     ),
     is_ref_table_tracked: !!metadataTables.some(
-      (t) =>
+      t =>
         t.table.name === fk.ref_table &&
         t.table.schema === fk.ref_table_table_schema
     ),
   }));
 
-  tableList.forEach((infoSchemaTableInfo) => {
+  tableList.forEach(infoSchemaTableInfo => {
     const tableSchema = infoSchemaTableInfo.table_schema;
     const tableName = infoSchemaTableInfo.table_name;
     const metadataTable = metadataTables?.find(
-      (t) => t.table.schema === tableSchema && t.table.name === tableName
+      t => t.table.schema === tableSchema && t.table.name === tableName
     );
 
     const columns = infoSchemaTableInfo.columns;
@@ -409,8 +409,7 @@ export const mergeLoadSchemaDataPostgres = (
 
     const keys =
       primaryKeys.find(
-        (key) =>
-          key?.table_name === tableName && key.table_schema === tableSchema
+        key => key?.table_name === tableName && key.table_schema === tableSchema
       ) || null;
 
     const unique =
@@ -461,7 +460,7 @@ export const mergeLoadSchemaDataPostgres = (
         })
       );
 
-      computed_fields = (metadataTable?.computed_fields || []).map((field) => ({
+      computed_fields = (metadataTable?.computed_fields || []).map(field => ({
         comment: field.comment,
         computed_field_name: field.name,
         name: field.name,
@@ -471,7 +470,7 @@ export const mergeLoadSchemaDataPostgres = (
           field.definition as Table['computed_fields'][0]['definition'],
       }));
 
-      metadataTable?.array_relationships?.forEach((rel) => {
+      metadataTable?.array_relationships?.forEach(rel => {
         relationships.push({
           rel_def: rel.using,
           rel_name: rel.name,
@@ -481,7 +480,7 @@ export const mergeLoadSchemaDataPostgres = (
         });
       });
 
-      metadataTable?.object_relationships?.forEach((rel) => {
+      metadataTable?.object_relationships?.forEach(rel => {
         relationships.push({
           rel_def: rel.using,
           rel_name: rel.name,
@@ -493,7 +492,7 @@ export const mergeLoadSchemaDataPostgres = (
 
       const rolePermMap: Record<string, any> = {};
 
-      permKeys.forEach((key) => {
+      permKeys.forEach(key => {
         if (metadataTable) {
           metadataTable[key]?.forEach((perm: any) => {
             rolePermMap[perm.role] = {
@@ -507,7 +506,7 @@ export const mergeLoadSchemaDataPostgres = (
         }
       });
 
-      Object.keys(rolePermMap).forEach((role) => {
+      Object.keys(rolePermMap).forEach(role => {
         permissions.push({
           role_name: role,
           permissions: rolePermMap[role].permissions,
@@ -568,7 +567,7 @@ export const mergeDataBigQuery = (
 ): Table[] => {
   const result = [] as Table[];
   const tables = [] as BigQueryTable[];
-  data[0].result.slice(1).forEach((row) => {
+  data[0].result.slice(1).forEach(row => {
     try {
       tables.push({
         table_schema: row[0],
@@ -583,15 +582,15 @@ export const mergeDataBigQuery = (
     }
   });
 
-  tables.forEach((table) => {
+  tables.forEach(table => {
     const metadataTable = metadataTables?.find(
-      (t) =>
+      t =>
         t.table.schema === table.table_schema &&
         t.table.name === table.table_name
     );
     const configuration = metadataTable?.configuration ?? {};
     const relationships = [] as Table['relationships'];
-    metadataTable?.array_relationships?.forEach((rel) => {
+    metadataTable?.array_relationships?.forEach(rel => {
       relationships.push({
         rel_def: rel.using,
         rel_name: rel.name,
@@ -601,7 +600,7 @@ export const mergeDataBigQuery = (
       });
     });
 
-    metadataTable?.object_relationships?.forEach((rel) => {
+    metadataTable?.object_relationships?.forEach(rel => {
       relationships.push({
         rel_def: rel.using,
         rel_name: rel.name,
@@ -628,7 +627,7 @@ export const mergeDataBigQuery = (
     }, {});
 
     const permissions: Table['permissions'] = Object.keys(rolePermMap).map(
-      (role) => ({
+      role => ({
         role_name: role,
         permissions: rolePermMap[role].permissions,
         table_name: table.table_name,
@@ -649,7 +648,7 @@ export const mergeDataBigQuery = (
       table_name: table.table_name,
       table_type: table.table_type,
       is_table_tracked: metadataTables.some(
-        (t) =>
+        t =>
           t.table.name === table.table_name &&
           t.table.schema === table.table_schema
       ),
@@ -695,24 +694,23 @@ export const mergeDataCitus = (
     : ([] as Table['check_constraints']);
   const _mergedTableData: Table[] = [];
 
-  const trackedFkData = fkList.map((fk) => ({
+  const trackedFkData = fkList.map(fk => ({
     ...fk,
     is_table_tracked: !!metadataTables.some(
-      (t) =>
-        t.table.name === fk.table_name && t.table.schema === fk.table_schema
+      t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
     ),
     is_ref_table_tracked: !!metadataTables.some(
-      (t) =>
+      t =>
         t.table.name === fk.ref_table &&
         t.table.schema === fk.ref_table_table_schema
     ),
   }));
 
-  tableList.forEach((infoSchemaTableInfo) => {
+  tableList.forEach(infoSchemaTableInfo => {
     const tableSchema = infoSchemaTableInfo.table_schema;
     const tableName = infoSchemaTableInfo.table_name;
     const metadataTable = metadataTables?.find(
-      (t) => t.table.schema === tableSchema && t.table.name === tableName
+      t => t.table.schema === tableSchema && t.table.name === tableName
     );
 
     const columns = infoSchemaTableInfo.columns;
@@ -724,8 +722,7 @@ export const mergeDataCitus = (
 
     const keys =
       primaryKeys.find(
-        (key) =>
-          key?.table_name === tableName && key.table_schema === tableSchema
+        key => key?.table_name === tableName && key.table_schema === tableSchema
       ) || null;
 
     const unique =
@@ -776,7 +773,7 @@ export const mergeDataCitus = (
         })
       );
 
-      computed_fields = (metadataTable?.computed_fields ?? []).map((field) => ({
+      computed_fields = (metadataTable?.computed_fields ?? []).map(field => ({
         comment: field.comment,
         computed_field_name: field.name,
         name: field.name,
@@ -786,7 +783,7 @@ export const mergeDataCitus = (
           field.definition as Table['computed_fields'][0]['definition'],
       }));
 
-      metadataTable?.array_relationships?.forEach((rel) => {
+      metadataTable?.array_relationships?.forEach(rel => {
         relationships.push({
           rel_def: rel.using,
           rel_name: rel.name,
@@ -796,7 +793,7 @@ export const mergeDataCitus = (
         });
       });
 
-      metadataTable?.object_relationships?.forEach((rel) => {
+      metadataTable?.object_relationships?.forEach(rel => {
         relationships.push({
           rel_def: rel.using,
           rel_name: rel.name,
@@ -808,7 +805,7 @@ export const mergeDataCitus = (
 
       const rolePermMap: Record<string, any> = {};
 
-      permKeys.forEach((key) => {
+      permKeys.forEach(key => {
         if (metadataTable) {
           metadataTable[key]?.forEach((perm: any) => {
             rolePermMap[perm.role] = {
@@ -822,7 +819,7 @@ export const mergeDataCitus = (
         }
       });
 
-      Object.keys(rolePermMap).forEach((role) => {
+      Object.keys(rolePermMap).forEach(role => {
         permissions.push({
           role_name: role,
           permissions: rolePermMap[role].permissions,

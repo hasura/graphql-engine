@@ -126,7 +126,7 @@ export const QuickAdd = (props: QuickAddProps) => {
   }, []);
 
   return (
-    <div className="max-w-xl flex justify-end">
+    <div className="flex justify-end">
       <DropdownMenu
         options={{
           content: {
@@ -134,7 +134,7 @@ export const QuickAdd = (props: QuickAddProps) => {
           },
         }}
         items={[
-          [...quickOperations, ...graphiqlQueries].map((operation) => (
+          [...quickOperations, ...graphiqlQueries].map(operation => (
             <div
               key={operation.name}
               onClick={() => onAdd(operation)}

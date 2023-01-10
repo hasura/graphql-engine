@@ -80,8 +80,8 @@ const trackAllItems =
     if (isMigration) {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         url = currMigrationMode
-          ? Endpoints.hasuractlMigrate
-          : Endpoints.hasuractlMetadata;
+          ? Endpoints.hasuraCliServerMigrate
+          : Endpoints.hasuraCliServerMetadata;
       }
       request = {
         name: migrationName,
@@ -109,7 +109,7 @@ const trackAllItems =
       () => {
         dispatch(showSuccessNotification('Items were tracked successfuly'));
       },
-      (err) => {
+      err => {
         if (err.code === 'conflict') {
           dispatch(handleOutOfDateMetadata);
         }
@@ -157,7 +157,7 @@ const executeSQL =
       args: schemaChangesUp,
     };
 
-    // check if its a migration and send to hasuractl migrate
+    // check if its a migration and send to hasuraCliServer migrate
     if (isMigration) {
       url = migrateUrl;
       requestBody = {
@@ -174,7 +174,7 @@ const executeSQL =
       body: JSON.stringify(requestBody),
     };
 
-    const callback = (data) => {
+    const callback = data => {
       if (isMigration) {
         dispatch(loadMigrationStatus());
       }
@@ -189,7 +189,7 @@ const executeSQL =
 
     return dispatch(requestAction(url, options))
       .then(
-        (data) => {
+        data => {
           if (isTableTrackChecked) {
             dispatch(exportMetadata()).then(() => {
               dispatch(
@@ -200,7 +200,7 @@ const executeSQL =
           }
           callback(data);
         },
-        (err) => {
+        err => {
           const title = 'SQL Execution Failed';
           dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
           dispatch({ type: REQUEST_ERROR, data: err });
@@ -211,7 +211,7 @@ const executeSQL =
           }
         }
       )
-      .catch((errorMsg) => {
+      .catch(errorMsg => {
         const parsedErrorMsg = errorMsg;
         parsedErrorMsg.message = JSON.parse(errorMsg.message);
         dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });

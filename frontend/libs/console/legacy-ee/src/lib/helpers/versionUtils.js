@@ -4,6 +4,7 @@ export const FT_JWT_ANALYZER = 'JWTAnalyzer';
 export const RELOAD_METADATA_API_CHANGE = 'reloadMetaDataApiChange';
 export const FT_LOGIN_WITH_HASURA = 'LOGINWITHHASURA';
 
+
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.0'
@@ -12,13 +13,13 @@ const featureLaunchVersions = {
   [FT_LOGIN_WITH_HASURA]: 'v1.0.0-beta4',
 };
 
-export const getFeaturesCompatibility = (serverVersion) => {
+export const getFeaturesCompatibility = serverVersion => {
   const featuresCompatibility = {};
 
   const isPullRequest = serverVersion.startsWith('pull');
 
   try {
-    Object.keys(featureLaunchVersions).forEach((feature) => {
+    Object.keys(featureLaunchVersions).forEach(feature => {
       featuresCompatibility[feature] =
         isPullRequest ||
         semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);

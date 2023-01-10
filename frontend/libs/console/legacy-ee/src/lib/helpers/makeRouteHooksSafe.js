@@ -5,7 +5,7 @@ import { createRoutes } from 'react-router/lib/RouteUtils';
 // client render of a route that has an onEnter hook
 function makeHooksSafe(routes, store) {
   if (Array.isArray(routes)) {
-    return routes.map((route) => makeHooksSafe(route, store));
+    return routes.map(route => makeHooksSafe(route, store));
   }
 
   const onEnter = routes.onEnter;
@@ -39,5 +39,5 @@ function makeHooksSafe(routes, store) {
 }
 
 export default function makeRouteHooksSafe(_getRoutes) {
-  return (store) => makeHooksSafe(createRoutes(_getRoutes(store)), store);
+  return store => makeHooksSafe(createRoutes(_getRoutes(store)), store);
 }

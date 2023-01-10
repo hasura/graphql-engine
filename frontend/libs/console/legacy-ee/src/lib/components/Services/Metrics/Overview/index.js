@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Row } from 'react-bootstrap';
 import moment from 'moment';
 import { useSubscription } from 'react-apollo';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
 
 import { loadInconsistentObjects as loadInconsistentObjectsAction } from '@hasura/console-oss';
 
@@ -28,33 +29,39 @@ const Overview = ({
     if (!metadata.loading && _isAdmin) refetchMetadata();
   }, []);
   const [fromTime, setFromTime] = useState(
-    moment().subtract(1, 'hour').toISOString()
+    moment()
+      .subtract(1, 'hour')
+      .toISOString()
   );
 
   const liveStats = useSubscription(fetchLiveStats, {
     variables,
   });
   return (
-    <div className={`${styles.pl_sm} ${styles.pr_sm} ${styles.negativeMT_xl}`}>
-      <Row className={styles.no_pad} style={{ minHeight: 130 }}>
-        <APIHealth
-          projectId={projectId}
-          liveStats={liveStats}
-          fromTime={fromTime}
-          setFromTime={setFromTime}
-        />
-      </Row>
-      <hr className="my-md" />
-      <Row
-        className={`${styles.animated} ${styles.fadeIn} ${styles.sourecHealth_botton_pad}`}
+    <Analytics name="MonitoringOverview" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.pl_sm} ${styles.pr_sm} ${styles.negativeMT_xl}`}
       >
-        <SourceHealth
-          project={project}
-          inconsistentObjects={inconsistentObjects || []}
-          metadata={metadata.metadataObject || {}}
-        />
-      </Row>
-    </div>
+        <Row className={styles.no_pad} style={{ minHeight: 130 }}>
+          <APIHealth
+            projectId={projectId}
+            liveStats={liveStats}
+            fromTime={fromTime}
+            setFromTime={setFromTime}
+          />
+        </Row>
+        <hr className="my-md" />
+        <Row
+          className={`${styles.animated} ${styles.fadeIn} ${styles.sourecHealth_botton_pad}`}
+        >
+          <SourceHealth
+            project={project}
+            inconsistentObjects={inconsistentObjects || []}
+            metadata={metadata.metadataObject || {}}
+          />
+        </Row>
+      </div>
+    </Analytics>
   );
 };
 
@@ -67,7 +74,7 @@ const mapStateToProps = (state, ownProps) => {
     inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   return {
     refetchMetadata: () => {
       dispatch(refetchMetadataAction());
@@ -79,6 +86,6 @@ const mapDispatchToProps = (dispatch) => {
     },
   };
 };
-const overViewConnector = (connect) =>
+const overViewConnector = connect =>
   connect(mapStateToProps, mapDispatchToProps)(Overview);
 export default overViewConnector;

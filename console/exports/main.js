@@ -11,10 +11,15 @@ export {
 export { fetchConsoleNotifications } from '../src/components/Main/Actions';
 export { default as NotificationSection } from '../src/components/Main/NotificationSection';
 export { default as Onboarding } from '../src/components/Common/Onboarding';
-export { tracingTools } from '../src/features/TracingTools';
-export { OnboardingWizard } from '../src/features/OnboardingWizard';
+export {
+  Analytics,
+  startTracing,
+  addUserProperties,
+  programmaticallyTraceError,
+} from '../src/features/Analytics';
+export { CloudOnboarding } from '../src/features/CloudOnboarding';
 export { prefetchSurveysData } from '../src/features/Surveys';
-export { makeGrowthExperimentsClient } from '../src/features/GrowthExperiments';
+export { prefetchOnboardingData } from '../src/features/CloudOnboarding/OnboardingWizard';
 export { default as PageNotFound } from '../src/components/Error/PageNotFound';
 export * from '../src/new-components/Button/';
 export * from '../src/new-components/Tooltip/';
@@ -87,9 +92,6 @@ export {
   isEnvironmentSupportMultiTenantConnectionPooling,
 } from '../src/utils/proConsole';
 
-export {
-  SampleDBBanner,
-  newSampleDBTrial,
-} from '../src/components/Services/Data/DataSources/SampleDatabase';
-
 export { AllowListDetail } from '../src/components/Services/AllowList/AllowListDetail';
+
+export { default as generatedAdminSecretLoginConnector } from '../src/components/Login/Login';

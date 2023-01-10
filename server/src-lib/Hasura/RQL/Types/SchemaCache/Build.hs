@@ -5,11 +5,10 @@
 -- | Types and functions used in the process of building the schema cache from metadata information
 -- stored in the @hdb_catalog@ schema in Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
-  ( CollectedInfo (..),
-    partitionCollectedInfo,
+  ( MetadataDependency (..),
     recordInconsistency,
     recordInconsistencyM,
-    recordInconsistencies,
+    recordInconsistenciesM,
     recordDependencies,
     recordDependenciesM,
     withRecordInconsistency,
@@ -30,7 +29,6 @@ module Hasura.RQL.Types.SchemaCache.Build
 where
 
 import Control.Arrow.Extended
-import Control.Lens
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson (Value, toJSON)
@@ -66,79 +64,56 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
--- ----------------------------------------------------------------------------
--- types used during schema cache construction
+-- * Inconsistencies
 
-data CollectedInfo
-  = CIInconsistency InconsistentMetadata
-  | CIDependency
+recordInconsistency ::
+  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, MetadataObject), Text) `arr` ()
+recordInconsistency = proc ((val, mo), reason) ->
+  tellA -< Seq.singleton $ Left $ InconsistentObject reason val mo
+
+recordInconsistencyM ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => Maybe Value -> MetadataObject -> Text -> m ()
+recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
+
+recordInconsistenciesM ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [MetadataObject] -> Text -> m ()
+recordInconsistenciesM metadataObjects reason = recordInconsistenciesM' ((Nothing,) <$> metadataObjects) reason
+
+recordInconsistenciesM' ::
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [(Maybe Value, MetadataObject)] -> Text -> m ()
+recordInconsistenciesM' metadataObjects reason =
+  tell $ Seq.fromList $ map (Left . uncurry (InconsistentObject reason)) metadataObjects
+
+-- * Dependencies
+
+data MetadataDependency
+  = MetadataDependency
       MetadataObject
       -- ^ for error reporting on missing dependencies
       SchemaObjId
       SchemaDependency
   deriving (Eq)
 
-$(makePrisms ''CollectedInfo)
-
-class AsInconsistentMetadata s where
-  _InconsistentMetadata :: Prism' s InconsistentMetadata
-
-instance AsInconsistentMetadata InconsistentMetadata where
-  _InconsistentMetadata = id
-
-instance AsInconsistentMetadata CollectedInfo where
-  _InconsistentMetadata = _CIInconsistency
-
-partitionCollectedInfo ::
-  Seq CollectedInfo ->
-  ([InconsistentMetadata], [(MetadataObject, SchemaObjId, SchemaDependency)])
-partitionCollectedInfo =
-  flip foldr ([], []) \info (inconsistencies, dependencies) -> case info of
-    CIInconsistency inconsistency -> (inconsistency : inconsistencies, dependencies)
-    CIDependency metadataObject objectId schemaDependency ->
-      let dependency = (metadataObject, objectId, schemaDependency)
-       in (inconsistencies, dependency : dependencies)
-
-recordInconsistency ::
-  (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
-recordInconsistency = first (arr (: [])) >>> recordInconsistencies'
-
-recordInconsistencyM ::
-  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => Maybe Value -> MetadataObject -> Text -> m ()
-recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
-
-recordInconsistencies ::
-  (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
-recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
-
-recordInconsistenciesM' ::
-  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => [(Maybe Value, MetadataObject)] -> Text -> m ()
-recordInconsistenciesM' metadataObjects reason =
-  tell $ Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
-
-recordInconsistencies' ::
-  (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
-recordInconsistencies' = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
-
 recordDependencies ::
-  (ArrowWriter (Seq CollectedInfo) arr) =>
-  (MetadataObject, SchemaObjId, [SchemaDependency]) `arr` ()
+  (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
+  (MetadataObject, SchemaObjId, Seq SchemaDependency) `arr` ()
 recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
-  tellA -< Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
+  tellA -< Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
 
 recordDependenciesM ::
-  (MonadWriter (Seq CollectedInfo) m) =>
+  (MonadWriter (Seq (Either im MetadataDependency)) m) =>
   MetadataObject ->
   SchemaObjId ->
-  [SchemaDependency] ->
+  Seq SchemaDependency ->
   m ()
 recordDependenciesM metadataObject schemaObjectId dependencies = do
-  tell $ Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
+  tell $ Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
+
+-- * Helpers
 
 -- | Monadic version of 'withRecordInconsistency'
 withRecordInconsistencyM ::
-  (MonadWriter (Seq w) m, AsInconsistentMetadata w) =>
+  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
   MetadataObject ->
   ExceptT QErr m a ->
   m (Maybe a)
@@ -155,6 +130,8 @@ withRecordInconsistencyM metadataObject f = do
           recordInconsistencyM (Just (toJSON exts)) metadataObject "withRecordInconsistency: unexpected ExtraExtensions"
         Just (ExtraInternal internal) ->
           recordInconsistencyM (Just (toJSON internal)) metadataObject (qeError err)
+        Just HideInconsistencies ->
+          pure ()
         Nothing ->
           recordInconsistencyM Nothing metadataObject (qeError err)
       return Nothing
@@ -162,7 +139,7 @@ withRecordInconsistencyM metadataObject f = do
 
 -- | Record any errors resulting from a computation as inconsistencies
 withRecordInconsistency ::
-  (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w) =>
+  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
   ErrorA QErr arr (e, s) a ->
   arr (e, (MetadataObject, s)) (Maybe a)
 withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
@@ -178,6 +155,8 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
           recordInconsistency -< ((Just (toJSON exts), metadataObject), "withRecordInconsistency: unexpected ExtraExtensions")
         Just (ExtraInternal internal) ->
           recordInconsistency -< ((Just (toJSON internal), metadataObject), qeError err)
+        Just HideInconsistencies ->
+          returnA -< ()
         Nothing ->
           recordInconsistency -< ((Nothing, metadataObject), qeError err)
       returnA -< Nothing
@@ -252,7 +231,6 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       MonadReader r,
       MonadError e,
       MonadTx,
-      SourceM,
       TableCoreInfoRM b,
       CacheRM,
       CacheRWM,
@@ -348,17 +326,17 @@ withNewInconsistentObjsCheck action = do
 -- static analysis over the saved queries and reports any inconsistenties
 -- with the current schema.
 getInconsistentQueryCollections ::
-  (MonadError QErr m) =>
   G.SchemaIntrospection ->
   QueryCollections ->
   ((CollectionName, ListedQuery) -> MetadataObject) ->
   EndpointTrie GQLQueryWithText ->
   [NormalizedQuery] ->
-  m [InconsistentMetadata]
-getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = do
-  inconsistentMetaObjs <- lefts <$> traverse (validateQuery rs (lqToMetadataObj) formatError) lqLst
-  pure $ map (\(o, t) -> InconsistentObject t Nothing o) inconsistentMetaObjs
+  [InconsistentMetadata]
+getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
+  map (\(o, t) -> InconsistentObject t Nothing o) inconsistentMetaObjs
   where
+    inconsistentMetaObjs = lefts $ validateQuery <$> lqLst
+
     zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), [G.ExecutableDefinition G.Name])]
     zipLQwithDef (cName, cc) = map (\lq -> ((cName, lq), (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq))) lqs
       where
@@ -391,21 +369,15 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = 
 
         isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
 
-validateQuery ::
-  (MonadError QErr m) =>
-  G.SchemaIntrospection ->
-  (a -> MetadataObject) ->
-  (a -> [Text] -> Text) ->
-  (a, [G.ExecutableDefinition G.Name]) ->
-  m (Either (MetadataObject, Text) ())
-validateQuery rSchema getMetaObj formatError (eMeta, eDefs) = do
-  -- create the gql request object
-  let gqlRequest = GQLReq Nothing (GQLExecDoc eDefs) Nothing
+    validateQuery (eMeta, eDefs) = do
+      -- create the gql request object
+      let gqlRequest = GQLReq Nothing (GQLExecDoc eDefs) Nothing
 
-  -- @getSingleOperation@ will do the fragment inlining
-  singleOperation <- getSingleOperation gqlRequest
+      -- @getSingleOperation@ will do the fragment inlining
+      singleOperation <- case getSingleOperation gqlRequest of
+        Left err -> throwError (lqToMetadataObj eMeta, formatError eMeta [qeError err])
+        Right singleOp -> Right singleOp
 
-  -- perform the validation
-  pure $ case diagnoseGraphQLQuery rSchema singleOperation of
-    Nothing -> Right ()
-    Just errors -> Left (getMetaObj eMeta, formatError eMeta errors)
+      -- perform the validation
+      for_ (diagnoseGraphQLQuery rs singleOperation) \errors ->
+        throwError (lqToMetadataObj eMeta, formatError eMeta errors)

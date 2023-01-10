@@ -27,7 +27,7 @@ export const IsolationLevel: React.VFC<ConnectionSettingsFormProps> = ({
     </label>
     <select
       className={`form-control ${styles.connnection_settings_form_input} cursor-pointer`}
-      onChange={(e) => {
+      onChange={e => {
         // any way to do this?
         if (isIsolationLevelOption(e.target.value)) {
           connectionDBStateDispatch({
@@ -38,7 +38,7 @@ export const IsolationLevel: React.VFC<ConnectionSettingsFormProps> = ({
       }}
       value={connectionDBState.isolationLevel}
     >
-      {ISOLATION_LEVEL_OPTIONS.map((o) => (
+      {ISOLATION_LEVEL_OPTIONS.map(o => (
         <option key={o} value={o}>
           {o}
         </option>

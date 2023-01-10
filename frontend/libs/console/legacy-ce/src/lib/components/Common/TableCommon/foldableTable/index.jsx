@@ -33,7 +33,7 @@ const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {
   );
 };
 
-export default (ReactTable) => {
+export default ReactTable => {
   const wrapper = class RTFoldableTable extends React.Component {
     constructor(props, context) {
       super(props, context);
@@ -50,7 +50,7 @@ export default (ReactTable) => {
       }
     }
 
-    onResizedChange = (resized) => {
+    onResizedChange = resized => {
       const { onResizedChange } = this.props;
       if (onResizedChange) {
         onResizedChange(resized);
@@ -65,10 +65,10 @@ export default (ReactTable) => {
       const { resized } = this.state;
       if (!resized) return;
 
-      const rs = resized.find((r) => r.id === id);
+      const rs = resized.find(r => r.id === id);
       if (!rs) return;
 
-      const newResized = resized.filter((r) => r !== rs);
+      const newResized = resized.filter(r => r !== rs);
       this.onResizedChange(newResized);
     };
 
@@ -83,22 +83,22 @@ export default (ReactTable) => {
       return this.wrappedInstance;
     };
 
-    getCopiedKey = (key) => {
+    getCopiedKey = key => {
       const { foldableOriginalKey } = this.props;
       return `${foldableOriginalKey}${key}`;
     };
 
-    copyOriginals = (column) => {
+    copyOriginals = column => {
       const { FoldedColumn } = this.props;
 
       //Stop copy if the column already copied
       if (column.original_Header) return;
 
-      Object.keys(FoldedColumn).forEach((k) => {
+      Object.keys(FoldedColumn).forEach(k => {
         const copiedKey = this.getCopiedKey(k);
 
         if (k === 'Cell') {
-          column[copiedKey] = column[k] ? column[k] : (c) => c.value;
+          column[copiedKey] = column[k] ? column[k] : c => c.value;
         } else column[copiedKey] = column[k];
       });
 
@@ -113,10 +113,10 @@ export default (ReactTable) => {
       }
     };
 
-    restoreToOriginal = (column) => {
+    restoreToOriginal = column => {
       const { FoldedColumn } = this.props;
 
-      Object.keys(FoldedColumn).forEach((k) => {
+      Object.keys(FoldedColumn).forEach(k => {
         //ignore header as handling by foldableHeaderRender
         if (k === 'Header') return;
 
@@ -133,12 +133,12 @@ export default (ReactTable) => {
       return this.props.onFoldChange ? this.props.folded : this.state.folded;
     };
 
-    isFolded = (col) => {
+    isFolded = col => {
       const folded = this.getFoldedState();
       return folded[col.id] === true;
     };
 
-    foldingHandler = (col) => {
+    foldingHandler = col => {
       if (!col || !col.id) return;
 
       const { onFoldChange } = this.props;
@@ -160,7 +160,7 @@ export default (ReactTable) => {
       const { FoldButtonComponent, FoldIconComponent } = this.props;
       const collapsed = this.isFolded(column);
       const icon = <FoldIconComponent collapsed={collapsed} name={column.id} />;
-      const onClick = (e) => {
+      const onClick = e => {
         e.stopPropagation();
         this.foldingHandler(column);
       };
@@ -175,7 +175,7 @@ export default (ReactTable) => {
       );
     };
 
-    applyFoldableForColumn = (column) => {
+    applyFoldableForColumn = column => {
       const collapsed = this.isFolded(column);
       const { FoldedColumn } = this.props;
 
@@ -190,7 +190,7 @@ export default (ReactTable) => {
       } else this.restoreToOriginal(column);
     };
 
-    applyFoldableForColumns = (columns) => {
+    applyFoldableForColumns = columns => {
       return columns.filter(Boolean).map((col, index) => {
         if (!col.foldable) return col;
 
@@ -201,7 +201,7 @@ export default (ReactTable) => {
 
         this.copyOriginals(col);
         //Replace current header with internal header render.
-        col.Header = (c) => this.foldableHeaderRender(c);
+        col.Header = c => this.foldableHeaderRender(c);
         //apply foldable
         this.applyFoldableForColumn(col);
 
@@ -224,7 +224,7 @@ export default (ReactTable) => {
         <ReactTable
           {...rest}
           {...extra}
-          ref={(r) => (this.wrappedInstance = r)}
+          ref={r => (this.wrappedInstance = r)}
         />
       );
     }

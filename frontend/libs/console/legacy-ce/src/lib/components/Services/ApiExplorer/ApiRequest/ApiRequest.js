@@ -65,7 +65,7 @@ import {
 const ActionIcon = ({ message, dataHeaderID }) => (
   <Tooltip placement="left" message={message}>
     <FaQuestionCircle
-      className="cursor-pointer text-md p-sm inline-block"
+      className="cursor-pointer mr-sm"
       data-header-id={dataHeaderID}
       aria-hidden="true"
     />
@@ -110,7 +110,7 @@ class ApiRequest extends Component {
       const adminSecret = getAdminSecret();
       const adminSecretHeaderWasAdded = getPersistedAdminSecretHeaderWasAdded();
       if (adminSecret && !adminSecretHeaderWasAdded) {
-        const headerKeys = graphiqlHeaders.map((h) => h.key);
+        const headerKeys = graphiqlHeaders.map(h => h.key);
 
         // add admin secret header if not present
         if (!headerKeys.includes(ADMIN_SECRET_HEADER_KEY)) {
@@ -129,7 +129,7 @@ class ApiRequest extends Component {
 
       // if admin secret is not set and admin secret header was ever added to headers, remove admin secret header if present
       if (!adminSecret && adminSecretHeaderWasAdded) {
-        const headerKeys = graphiqlHeaders.map((h) => h.key);
+        const headerKeys = graphiqlHeaders.map(h => h.key);
 
         // remove admin secret header if present
         const adminSecretHeaderIndex = headerKeys.indexOf(
@@ -189,7 +189,7 @@ class ApiRequest extends Component {
       },
     });
 
-    const decodeAndSetState = (serverResp) => {
+    const decodeAndSetState = serverResp => {
       const decoded = jwt.decode(token, { complete: true });
 
       if (decoded) {
@@ -218,10 +218,10 @@ class ApiRequest extends Component {
 
     if (token) {
       dispatch(verifyJWTToken(token))
-        .then((data) => {
+        .then(data => {
           decodeAndSetState(data);
         })
-        .catch((err) => {
+        .catch(err => {
           decodeAndSetState(err);
         });
     }
@@ -312,20 +312,20 @@ class ApiRequest extends Component {
           this.props.dispatch(unfocusTypingHeader());
         };
 
-        const onDeleteHeaderClicked = (e) => {
+        const onDeleteHeaderClicked = e => {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           this.props
             .dispatch(removeRequestHeader(index))
-            .then((r) => persistGraphiQLHeaders(r));
+            .then(r => persistGraphiQLHeaders(r));
         };
 
-        const onHeaderValueChanged = (e) => {
+        const onHeaderValueChanged = e => {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           const key = e.target.getAttribute('data-element-name');
           const newValue = e.target.value;
           this.props
             .dispatch(changeRequestHeader(index, key, newValue, false))
-            .then((r) => persistGraphiQLHeaders(r));
+            .then(r => persistGraphiQLHeaders(r));
         };
 
         const onShowAdminSecretClicked = () => {
@@ -443,7 +443,7 @@ class ApiRequest extends Component {
                   message="Show admin secret"
                 >
                   <FaEye
-                    className="cursor-pointer mr-md"
+                    className="cursor-pointer mr-sm"
                     data-header-id={i}
                     aria-hidden="true"
                     onClick={onShowAdminSecretClicked}
@@ -466,12 +466,12 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <FaSpinner className="cursor-pointer mr-md animate-spin" />
+                  <FaSpinner className="cursor-pointer mr-sm animate-spin" />
                 );
               } else {
                 analyzeIcon = (
                   <FaUserSecret
-                    className="cursor-pointer mr-md"
+                    className="cursor-pointer mr-sm"
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -514,21 +514,23 @@ class ApiRequest extends Component {
             if (!header.isNewHeader) {
               headerActions = (
                 <td className="text-right">
-                  {getHeaderAdminVal()}
-                  {getJWTInspectorIcon()}
-                  {getHeaderRemoveBtn()}
-                  {isClientName && (
-                    <ActionIcon
-                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
-                      dataHeaderID={i}
-                    />
-                  )}
-                  {isCollaboratorToken && (
-                    <ActionIcon
-                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
-                      dataHeaderID={i}
-                    />
-                  )}
+                  <div className="flex justify-end items-center">
+                    {getHeaderAdminVal()}
+                    {getJWTInspectorIcon()}
+                    {isClientName && (
+                      <ActionIcon
+                        message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
+                        dataHeaderID={i}
+                      />
+                    )}
+                    {isCollaboratorToken && (
+                      <ActionIcon
+                        message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
+                        dataHeaderID={i}
+                      />
+                    )}
+                    {getHeaderRemoveBtn()}
+                  </div>
                 </td>
               );
             }
@@ -693,7 +695,7 @@ class ApiRequest extends Component {
 
           let claimData = '';
 
-          const generateValidNameSpaceData = (claimD) => {
+          const generateValidNameSpaceData = claimD => {
             return JSON.stringify(claimD, null, 2);
           };
 

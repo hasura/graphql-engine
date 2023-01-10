@@ -132,7 +132,7 @@ const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
 interface ColumnCreatorProps {
   dispatch: Dispatch;
   tableName: string;
-  dataTypes: string[];
+  dataTypes: string[][];
   validTypeCasts: Record<string, string[]>;
   columnDefaultFunctions: Record<string, string[]>;
   postgresVersion: string;
@@ -160,7 +160,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
     return (
       <input
         value={colName.value}
-        onChange={(e) => colName.onChange(e.target.value)}
+        onChange={e => colName.onChange(e.target.value)}
         placeholder="column name"
         type="text"
         className={inputStyles}
@@ -181,7 +181,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
         {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
           <ColumnTypeSelector
             options={columnDataTypes}
-            onChange={(option) => colType.onChange(option.value)}
+            onChange={option => colType.onChange(option.value)}
             value={(columnTypeValueMap as any)[colType.value] || colType.value}
             colIdentifier={0}
             bsClass="col-type-0"
@@ -190,7 +190,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
           <input
             type="text"
             className={inputStyles}
-            onChange={(e) => {
+            onChange={e => {
               e.persist();
               colType.onChange(e.target.value);
             }}
@@ -208,7 +208,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
           <input
             type="checkbox"
             checked={colNull.checked}
-            onChange={(e) => colNull.onChange(e.target.checked)}
+            onChange={e => colNull.onChange(e.target.checked)}
             style={{ margin: '0' }}
             className={focusYellowRing}
             data-test="nullable-checkbox"
@@ -226,7 +226,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
           <input
             type="checkbox"
             checked={colUnique.checked}
-            onChange={(e) => colUnique.onChange(e.target.checked)}
+            onChange={e => colUnique.onChange(e.target.checked)}
             style={{ margin: '0' }}
             className={focusYellowRing}
             data-test="unique-checkbox"

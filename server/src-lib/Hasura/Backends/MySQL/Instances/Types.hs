@@ -42,6 +42,7 @@ instance Backend 'MySQL where
   type XRelay 'MySQL = Void
   type XNodesAgg 'MySQL = XEnable
   type ExtraTableMetadata 'MySQL = ()
+  type XEventTriggers 'MySQL = XDisable
   type XNestedInserts 'MySQL = XDisable
   type XStreamingSubscription 'MySQL = XDisable
 
@@ -137,8 +138,12 @@ instance Backend 'MySQL where
         maxConnections =
           fromInteger $
             toInteger $
-              MySQL._cscMaxConnections $ MySQL._cscPoolSettings $ MySQL.scConfig sourceConfig
+              MySQL._cscMaxConnections $
+                MySQL._cscPoolSettings $
+                  MySQL.scConfig sourceConfig
     -- Resize the pool max resources
     Pool.resizePool pool (maxConnections `div` getServerReplicasInt serverReplicas)
     -- Trim pool by destroying excess resources, if any
     Pool.tryTrimPool pool
+
+  defaultTriggerOnReplication = Nothing

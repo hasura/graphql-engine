@@ -34,10 +34,10 @@ data Trie k v = Trie
 -- The resulting 'Trie' will contain all paths present in either tries. If both
 -- tries contain a value at a given path, we use the value's semigroup instance
 -- to compute the resulting value.
-instance (Eq k, Hashable k, Semigroup v) => Semigroup (Trie k v) where
+instance (Hashable k, Semigroup v) => Semigroup (Trie k v) where
   Trie m0 v0 <> Trie m1 v1 = Trie (M.unionWith (<>) m0 m1) (v0 <> v1)
 
-instance (Eq k, Hashable k, Semigroup v) => Monoid (Trie k v) where
+instance (Hashable k, Semigroup v) => Monoid (Trie k v) where
   mempty = empty
 
 instance (ToJSONKey a, ToJSON v) => ToJSON (Trie a v)
@@ -61,21 +61,21 @@ singleton ps v = foldr (\p t -> Trie (M.singleton p t) Nothing) (Trie M.empty (J
 -------------------------------------------------------------------------------
 
 -- | Find a value at the given path, if any.
-lookup :: (Eq k, Hashable k) => [k] -> Trie k v -> Maybe v
+lookup :: Hashable k => [k] -> Trie k v -> Maybe v
 lookup [] (Trie _ value) = value
 lookup (p : ps) (Trie tmap _) = lookup ps =<< M.lookup p tmap
 
 -- | Insert the given value at the given path.
 --
 -- If there's already a value at the given path, it is replaced.
-insert :: (Eq k, Hashable k) => [k] -> v -> Trie k v -> Trie k v
+insert :: Hashable k => [k] -> v -> Trie k v -> Trie k v
 insert = insertWith const
 
 -- | Insert the value at the given path.
 --
 -- If there's already a value at the given path, the old value is replaced by
 -- the result of applying the given function to the new and old value.
-insertWith :: (Eq k, Hashable k) => (v -> v -> v) -> [k] -> v -> Trie k v -> Trie k v
+insertWith :: Hashable k => (v -> v -> v) -> [k] -> v -> Trie k v -> Trie k v
 insertWith fun path newValue t = go t path
   where
     go (Trie tmap value) = \case

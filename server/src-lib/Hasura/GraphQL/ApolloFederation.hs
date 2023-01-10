@@ -14,6 +14,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KMap
 import Data.Aeson.Ordered qualified as JO
+import Data.Bifunctor (Bifunctor (bimap))
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
@@ -112,7 +113,8 @@ modifyApolloFedParserFunc
           Just va -> liftQErr $ parseScalarValueColumnType (ciType columnInfo) va
         pure $
           IR.BoolField . IR.AVColumn columnInfo . pure . IR.AEQ True . IR.mkParameter $
-            ValueNoOrigin $ ColumnValue {..}
+            ValueNoOrigin $
+              ColumnValue {..}
     let whereExpr = Just $ IR.BoolAnd $ toList allConstraints
         sourceName = _siName
         sourceConfig = _siConfiguration
@@ -176,9 +178,9 @@ apolloRootFields expFeatures apolloFedTableParsers =
       -- is essential only if we have types that has @key directive
       if
           | EFApolloFederation `elem` expFeatures && not (null apolloFedTableParsers) ->
-            [serviceField, entityField]
+              [serviceField, entityField]
           | EFApolloFederation `elem` expFeatures ->
-            [serviceField]
+              [serviceField]
           | otherwise -> []
 
 -- helpers
@@ -193,7 +195,7 @@ generateSDL (G.SchemaIntrospection sIntro) = sdl
 
     -- first we filter out the type definitions which are not relevent such as
     -- schema fields and types (starts with `__`)
-    typeDefns = mapMaybe filterAndWrapTypeSystemDefinition (Map.elems sIntro)
+    typeDefns = map (G.TypeSystemDefinitionType . filterTypeDefinition . bimap (const ()) id) (Map.elems sIntro)
 
     -- next we get the root operation type definitions
     rootOpTypeDefns =
@@ -213,22 +215,16 @@ generateSDL (G.SchemaIntrospection sIntro) = sdl
     getSchemaDocument :: G.SchemaDocument
     getSchemaDocument =
       G.SchemaDocument $
-        G.TypeSystemDefinitionSchema (G.SchemaDefinition Nothing (rootOpTypeDefns)) : typeDefns
+        G.TypeSystemDefinitionSchema (G.SchemaDefinition Nothing rootOpTypeDefns) : typeDefns
 
--- | Filter out schema components from sdl which are not required by apollo federation and
--- wraps it in `TypeSystemDefinition`
-filterAndWrapTypeSystemDefinition :: G.TypeDefinition [G.Name] G.InputValueDefinition -> Maybe G.TypeSystemDefinition
-filterAndWrapTypeSystemDefinition = \case
-  G.TypeDefinitionScalar (G.ScalarTypeDefinition {}) -> Nothing
-  G.TypeDefinitionInterface (G.InterfaceTypeDefinition a b c d _) ->
-    Just $ G.TypeSystemDefinitionType (G.TypeDefinitionInterface (G.InterfaceTypeDefinition a b c d ()))
+-- | Filter out schema components from sdl which are not required by apollo federation
+filterTypeDefinition :: G.TypeDefinition possibleTypes G.InputValueDefinition -> G.TypeDefinition possibleTypes G.InputValueDefinition
+filterTypeDefinition = \case
   G.TypeDefinitionObject (G.ObjectTypeDefinition a b c d e) ->
     -- We are skipping the schema types here
-    Just . G.TypeSystemDefinitionType . G.TypeDefinitionObject $
+    G.TypeDefinitionObject $
       G.ObjectTypeDefinition a b c d (filter (not . T.isPrefixOf "__" . G.unName . G._fldName) e)
-  G.TypeDefinitionUnion defn -> Just $ G.TypeSystemDefinitionType (G.TypeDefinitionUnion defn)
-  G.TypeDefinitionEnum defn -> Just $ G.TypeSystemDefinitionType (G.TypeDefinitionEnum defn)
-  G.TypeDefinitionInputObject defn -> Just $ G.TypeSystemDefinitionType (G.TypeDefinitionInputObject defn)
+  typeDef -> typeDef
 
 -------------------------------------------------------------------------------
 -- Related to @_entities@ field

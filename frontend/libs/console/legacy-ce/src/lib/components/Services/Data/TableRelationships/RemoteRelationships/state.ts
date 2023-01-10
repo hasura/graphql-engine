@@ -102,14 +102,14 @@ const reducer = (
         return {
           ...state,
           remoteFields: state.remoteFields.filter(
-            (f) => !(f.depth >= changedField.depth)
+            f => !(f.depth >= changedField.depth)
           ),
         };
       }
       return {
         ...state,
         remoteFields: [
-          ...state.remoteFields.filter((f) => !(f.depth >= changedField.depth)),
+          ...state.remoteFields.filter(f => !(f.depth >= changedField.depth)),
           { ...changedField, arguments: [] },
         ],
       };
@@ -120,7 +120,7 @@ const reducer = (
       const changedArg = action.data;
       return {
         ...state,
-        remoteFields: state.remoteFields.map((rf) => {
+        remoteFields: state.remoteFields.map(rf => {
           if (
             rf.name === changedArg.parentField &&
             rf.depth === changedArg.parentFieldDepth
@@ -133,7 +133,7 @@ const reducer = (
               return {
                 ...rf,
                 arguments: rf.arguments.filter(
-                  (a) => !compareRFArguments(a, changedArg)
+                  a => !compareRFArguments(a, changedArg)
                 ),
               };
             }
@@ -156,7 +156,7 @@ const reducer = (
       if (parentField) {
         const newParentField = {
           ...parentField,
-          arguments: parentField.arguments.map((a) => {
+          arguments: parentField.arguments.map(a => {
             if (compareRFArguments(a, changedArg)) {
               return {
                 ...a,
@@ -173,7 +173,7 @@ const reducer = (
         };
         return {
           ...state,
-          remoteFields: state.remoteFields.map((f) => {
+          remoteFields: state.remoteFields.map(f => {
             if (compareRemoteFields(f, parentField)) {
               return newParentField;
             }
@@ -189,7 +189,7 @@ const reducer = (
       if (parentField) {
         const newParentField = {
           ...parentField,
-          arguments: parentField.arguments.map((a) => {
+          arguments: parentField.arguments.map(a => {
             if (compareRFArguments(a, changedArg)) {
               return {
                 ...a,
@@ -204,7 +204,7 @@ const reducer = (
         };
         return {
           ...state,
-          remoteFields: state.remoteFields.map((f) => {
+          remoteFields: state.remoteFields.map(f => {
             if (compareRemoteFields(f, parentField)) {
               return newParentField;
             }

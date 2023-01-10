@@ -1,13 +1,14 @@
 import { OrderBy, TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { Dialog } from '@/new-components/Dialog';
-import { UpdatedForm } from '@/new-components/Form';
+import { useConsoleForm } from '@/new-components/Form';
 import React from 'react';
 import { UseFormTrigger } from 'react-hook-form';
 import { z } from 'zod';
+import { RiPlayFill } from 'react-icons/ri';
 import { FilterRows } from '../RunQuery/Filter';
 import { SortRows } from '../RunQuery/Sort';
-import { useTableColumns } from './useTableColumns';
+import { useTableColumns } from '../../hooks/useTableColumns';
 
 interface QueryDialogProps {
   table: Table;
@@ -24,7 +25,7 @@ interface QueryDialogProps {
   filters?: {
     column: string;
     operator: string;
-    value: number | string | boolean;
+    value: number | string | boolean | number[] | string[] | boolean[];
   }[];
   sorts?: OrderBy[];
 }
@@ -80,6 +81,19 @@ export const QueryDialog = ({
 }: QueryDialogProps) => {
   const { data, isLoading } = useTableColumns({ table, dataSourceName });
 
+  const {
+    methods: { trigger, watch },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: {
+      defaultValues: {
+        sorts: existingSorts,
+        filters: existingFilters as any,
+      },
+    },
+  });
+
   if (isLoading) return <>Loading...</>;
 
   if (!data) return <>Data not found!</>;
@@ -88,10 +102,10 @@ export const QueryDialog = ({
 
   const handleSubmitQuery = async (
     filters: Schema['filters'],
-    trigger: UseFormTrigger<Schema>,
+    triggerValidation: UseFormTrigger<Schema>,
     sorts: Schema['sorts']
   ) => {
-    if (await trigger()) {
+    if (await triggerValidation()) {
       onSubmit({
         filters: (filters ?? []).map(f => transformFilterValues(columns, f)),
         sorts: sorts ?? [],
@@ -99,46 +113,43 @@ export const QueryDialog = ({
     }
   };
 
+  const filters = watch('filters');
+  const sorts = watch('sorts');
+
+  const onSubmitHandler = () => handleSubmitQuery(filters, trigger, sorts);
+
   return (
     <div className="m-4">
       <Dialog hasBackdrop title="Query Data" onClose={onClose}>
         <>
-          <UpdatedForm
-            schema={schema}
-            options={{
-              defaultValues: {
-                sorts: existingSorts,
-                filters: existingFilters as any,
-              },
-            }}
-            onSubmit={() => {}}
-          >
-            {({ trigger, watch }) => {
-              const filters = watch('filters');
-              const sorts = watch('sorts');
+          <Form onSubmit={() => {}}>
+            <>
+              <div className="p-4">
+                <FilterRows
+                  name="filters"
+                  columns={columns}
+                  operators={supportedOperators}
+                  onRemove={() => onSubmitHandler()}
+                />
 
-              return (
-                <>
-                  <div className="p-4">
-                    <FilterRows
-                      name="filters"
-                      columns={columns}
-                      operators={supportedOperators}
-                    />
+                <hr className="my-4" />
 
-                    <hr className="my-4" />
-
-                    <SortRows name="sorts" columns={columns} />
-                  </div>
-                  <Dialog.Footer
-                    callToAction="Run Query"
-                    onClose={onClose}
-                    onSubmit={() => handleSubmitQuery(filters, trigger, sorts)}
-                  />
-                </>
-              );
-            }}
-          </UpdatedForm>
+                <SortRows
+                  name="sorts"
+                  columns={columns}
+                  onRemove={() => onSubmitHandler()}
+                />
+              </div>
+              <Dialog.Footer
+                callToAction="Run Query"
+                callToActionIconPosition="start"
+                callToActionIcon={<RiPlayFill />}
+                callToDeny="Cancel"
+                onClose={onClose}
+                onSubmit={() => onSubmitHandler()}
+              />
+            </>
+          </Form>
         </>
       </Dialog>
     </div>

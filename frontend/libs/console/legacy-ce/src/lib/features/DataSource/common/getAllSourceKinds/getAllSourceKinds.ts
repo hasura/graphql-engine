@@ -1,7 +1,7 @@
 import { NetworkArgs, runMetadataQuery } from '../../api';
 
 type SourceKindsResponse = {
-  sources: { builtin: boolean; kind: string }[];
+  sources: { builtin: boolean; kind: string; display_name: string }[];
 };
 export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {
   const result = await runMetadataQuery<SourceKindsResponse>({
@@ -13,5 +13,5 @@ export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {
   });
 
   /** Temp filter to filter of mysql until it gets some resolution from the server */
-  return result.sources.filter((source) => source.kind !== 'mysql');
+  return result.sources.filter(source => source.kind !== 'mysql');
 };

@@ -152,13 +152,13 @@ export const useFilterQuery = (
 
         setLoading(false);
         if (offset !== undefined) {
-          setState((s) => ({ ...s, offset }));
+          setState(s => ({ ...s, offset }));
         }
         if (limit !== undefined) {
-          setState((s) => ({ ...s, limit }));
+          setState(s => ({ ...s, limit }));
         }
         if (newSorts) {
-          setState((s) => ({
+          setState(s => ({
             ...s,
             sorts: newSorts,
           }));
@@ -184,7 +184,7 @@ export const useFilterQuery = (
       if (!sorts.length || sorts[sorts.length - 1].column) {
         newSorts.push(defaultSort);
       }
-      setState((s) => ({
+      setState(s => ({
         ...s,
         sorts: newSorts,
       }));
@@ -198,19 +198,19 @@ export const useFilterQuery = (
       ) {
         newFilters.push(defaultFilter);
       }
-      setState((s) => ({
+      setState(s => ({
         ...s,
         filters: newFilters,
       }));
     },
     offset: (o: number) => {
-      setState((s) => ({
+      setState(s => ({
         ...s,
         offset: o,
       }));
     },
     limit: (l: number) => {
-      setState((s) => ({
+      setState(s => ({
         ...s,
         limit: l,
       }));

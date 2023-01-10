@@ -1,71 +1,33 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import { connect, ConnectedProps } from 'react-redux';
-import { Button } from '@/new-components/Button';
-import { useScheduledTrigger, LocalScheduledTriggerState } from '../state';
-import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
-import {
-  getReactHelmetTitle,
-  mapDispatchToPropsEmpty,
-} from '../../../../Common/utils/reactUtils';
-import { MapStateToProps } from '../../../../../types';
-import { addScheduledTrigger } from '../../ServerIO';
+import { browserHistory } from 'react-router';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { CronTriggers } from '@/features/CronTriggers';
+
+import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
 
-interface Props extends InjectedProps {
-  initState?: LocalScheduledTriggerState;
-}
-
-const Main: React.FC<Props> = props => {
-  const { dispatch, initState, readOnlyMode } = props;
-  const { state, setState } = useScheduledTrigger(initState);
-
-  const callback = () => setState.loading('add', false);
-  const onSave = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setState.loading('add', true);
-    dispatch(addScheduledTrigger(state, callback, callback));
-  };
-
+export const AddConnector: React.FC = () => {
   return (
-    <div className="md-md">
-      <Helmet
-        title={getReactHelmetTitle(
-          `Create ${CRON_TRIGGER}`,
-          EVENTS_SERVICE_HEADING
-        )}
-      />
-      <div className="font-bold mb-xl text-[18px] pb-0">
-        Create a cron trigger
+    <Analytics name="AddScheduledTrigger" {...REDACT_EVERYTHING}>
+      <div className="md-md">
+        <Helmet
+          title={getReactHelmetTitle(
+            `Create ${CRON_TRIGGER}`,
+            EVENTS_SERVICE_HEADING
+          )}
+        />
+        <h2 className="text-subtitle font-bold pt-md pb-md mt-0 mb-0 pl-4">
+          Create a new cron trigger
+        </h2>
+        <CronTriggers.Form
+          onSuccess={(triggerName?: string) => {
+            browserHistory.push(`/events/cron/${triggerName}/modify`);
+          }}
+        />
       </div>
-      <CronTriggerFrom state={state} setState={setState} />
-      {!readOnlyMode && (
-        <div className="mr-xl">
-          <Button
-            isLoading={state.loading.add}
-            loadingText="Creating..."
-            onClick={onSave}
-            mode="primary"
-            disabled={state.loading.add}
-            data-trackid="events-tab-button-create-cron-trigger"
-          >
-            Create
-          </Button>
-        </div>
-      )}
-    </div>
+    </Analytics>
   );
 };
 
-type PropsFromState = {
-  readOnlyMode: boolean;
-};
-const mapStateToProps: MapStateToProps<PropsFromState> = state => ({
-  readOnlyMode: state.main.readOnlyMode,
-});
-
-const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
-type InjectedProps = ConnectedProps<typeof connector>;
-
-const AddConnector = connector(Main);
 export default AddConnector;

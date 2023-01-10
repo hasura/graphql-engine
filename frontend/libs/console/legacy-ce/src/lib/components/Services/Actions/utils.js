@@ -5,18 +5,18 @@ import {
 } from '../../../utils/localStorage';
 
 export const findType = (types, typeName) => {
-  return types.find((t) => t.name === typeName);
+  return types.find(t => t.name === typeName);
 };
 
-export const getActionName = (action) => {
+export const getActionName = action => {
   return action.name;
 };
 
 export const findAction = (actions, actionName) => {
-  return actions.find((a) => getActionName(a) === actionName);
+  return actions.find(a => getActionName(a) === actionName);
 };
 
-export const getActionOutputType = (action) => {
+export const getActionOutputType = action => {
   return action.definition.output_type;
 };
 
@@ -28,25 +28,25 @@ export const getActionOutputFields = (action, types) => {
   return outputType.fields;
 };
 
-export const getActionArguments = (action) => {
+export const getActionArguments = action => {
   return action.definition.arguments || [];
 };
 
-export const getActionType = (action) => {
+export const getActionType = action => {
   return action.definition.type;
 };
 
-export const getActionPermissions = (action) => {
+export const getActionPermissions = action => {
   return action.permissions;
 };
 
 export const findActionPermission = (perms, role) => {
-  return perms.find((p) => p.role === role);
+  return perms.find(p => p.role === role);
 };
 
-export const getActionComment = (action) => action.comment;
+export const getActionComment = action => action.comment;
 
-export const persistAllDerivedActions = (allActions) => {
+export const persistAllDerivedActions = allActions => {
   let stringified;
   try {
     stringified = JSON.stringify(allActions);
@@ -60,7 +60,7 @@ export const getAllPersistedDerivedActions = () => {
   return getParsedLSItem(LS_KEYS.derivedActions, {});
 };
 
-export const getPersistedDerivedAction = (actionName) => {
+export const getPersistedDerivedAction = actionName => {
   return getAllPersistedDerivedActions()[actionName];
 };
 
@@ -70,7 +70,7 @@ export const persistDerivedAction = (actionName, parentOperation) => {
   persistAllDerivedActions(allActions);
 };
 
-export const removePersistedDerivedAction = (actionName) => {
+export const removePersistedDerivedAction = actionName => {
   const allActions = getAllPersistedDerivedActions();
   delete allActions[actionName];
   persistAllDerivedActions(allActions);

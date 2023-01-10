@@ -1,5 +1,5 @@
 import queryString from 'query-string';
 
-export const parseQueryString = (search) => {
+export const parseQueryString = search => {
   return queryString.parse(search);
 };

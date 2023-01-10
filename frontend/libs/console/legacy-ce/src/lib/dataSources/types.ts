@@ -240,6 +240,7 @@ export interface Table extends BaseTable {
   }[];
   citusTableType?: string;
   unique_constraints: UniqueKey[] | null;
+  is_apollo_federation_supported?: boolean;
 }
 
 export type Partition = {

@@ -12,7 +12,6 @@ import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
 import dataHeaders from '../Services/Data/Common/Headers';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { getUserType, getConsoleScope } from './utils';
-import { fetchSampleDBCohortConfig } from '../Services/Data/DataSources/SampleDatabase';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -23,7 +22,7 @@ const SET_LATEST_SERVER_VERSION_SUCCESS =
 const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
 const UPDATE_MIGRATION_STATUS_SUCCESS = 'Main/UPDATE_MIGRATION_STATUS_SUCCESS';
 const UPDATE_MIGRATION_STATUS_ERROR = 'Main/UPDATE_MIGRATION_STATUS_ERROR';
-const HASURACTL_URL_ENV = 'Main/HASURACTL_URL_ENV';
+const HASURA_CLI_SERVER_URL_ENV = 'Main/HASURA_CLI_SERVER_URL_ENV';
 const UPDATE_MIGRATION_MODE = 'Main/UPDATE_MIGRATION_MODE';
 const UPDATE_MIGRATION_MODE_PROGRESS = 'Main/UPDATE_MIGRATION_MODE_PROGRESS';
 const EXPORT_METADATA_SUCCESS = 'Main/EXPORT_METADATA_SUCCESS';
@@ -47,7 +46,7 @@ const SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG =
   'Main/SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG';
 
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
-const registerRunTimeError = (data) => ({
+const registerRunTimeError = data => ({
   type: RUN_TIME_ERROR,
   data,
 });
@@ -61,15 +60,15 @@ const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 // action definitions
 
 const filterScope = (data, consoleScope) => {
-  return data.filter((notif) => {
+  return data.filter(notif => {
     if (notif.scope.indexOf(consoleScope) !== -1) {
       return notif;
     }
   });
 };
 
-const makeUppercaseScopes = (data) => {
-  return data.map((notif) => {
+const makeUppercaseScopes = data => {
+  return data.map(notif => {
     return { ...notif, scope: notif.scope.toUpperCase() };
   });
 };
@@ -88,7 +87,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   const consoleScope = getConsoleScope(serverVersion, consoleId);
   let userType = 'admin';
   const headerHasCollabToken = Object.keys(headers).find(
-    (header) => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
   );
 
   if (headerHasCollabToken) {
@@ -118,7 +117,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   };
 
   return dispatch(requestAction(url, options))
-    .then((data) => {
+    .then(data => {
       const lastSeenNotifications = JSON.parse(
         window.localStorage.getItem('notifications:lastSeen')
       );
@@ -188,19 +187,15 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
                 toShowBadge = true;
               } else if (previousList.length) {
                 const readNotificationsDiff = filteredData.filter(
-                  (newNotif) =>
-                    !previousList.find(
-                      (oldNotif) => oldNotif.id === newNotif.id
-                    )
+                  newNotif =>
+                    !previousList.find(oldNotif => oldNotif.id === newNotif.id)
                 );
                 if (!readNotificationsDiff.length) {
                   // since the data hasn't changed since the last call
                   newReadValue = previousRead;
                   toShowBadge = false;
                 } else {
-                  newReadValue = [
-                    ...previousList.map((notif) => `${notif.id}`),
-                  ];
+                  newReadValue = [...previousList.map(notif => `${notif.id}`)];
                   toShowBadge = true;
                   filteredData = [...readNotificationsDiff, ...previousList];
                 }
@@ -252,7 +247,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         })
       );
     })
-    .catch((err) => {
+    .catch(err => {
       console.error(err);
       dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
       dispatch(
@@ -266,19 +261,19 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
 };
 
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
-const setFeaturesCompatibility = (data) => ({
+const setFeaturesCompatibility = data => ({
   type: SET_FEATURES_COMPATIBILITY,
   data,
 });
 
 const PRO_CLICKED = 'Main/PRO_CLICKED';
-const emitProClickedEvent = (data) => ({
+const emitProClickedEvent = data => ({
   type: PRO_CLICKED,
   data,
 });
 
 const SET_READ_ONLY_MODE = 'Main/SET_READ_ONLY_MODE';
-const setReadOnlyMode = (data) => ({
+const setReadOnlyMode = data => ({
   type: SET_READ_ONLY_MODE,
   data,
 });
@@ -327,8 +322,8 @@ const featureCompatibilityInit = () => {
   };
 };
 
-const loadMigrationStatus = () => (dispatch) => {
-  const url = Endpoints.hasuractlMigrateSettings;
+const loadMigrationStatus = () => dispatch => {
+  const url = Endpoints.hasuraCliServerMigrateSettings;
   const options = {
     method: 'GET',
     credentials: globalCookiePolicy,
@@ -344,7 +339,7 @@ const loadMigrationStatus = () => (dispatch) => {
   );
 };
 
-const loadServerVersion = () => (dispatch) => {
+const loadServerVersion = () => dispatch => {
   const url = Endpoints.version;
   const options = {
     method: 'GET',
@@ -352,7 +347,7 @@ const loadServerVersion = () => (dispatch) => {
     headers: { 'content-type': 'application/json' },
   };
   return dispatch(requestActionPlain(url, options)).then(
-    (data) => {
+    data => {
       let parsedVersion;
       try {
         parsedVersion = JSON.parse(data);
@@ -364,7 +359,7 @@ const loadServerVersion = () => (dispatch) => {
         console.error(e);
       }
     },
-    (error) => {
+    error => {
       console.error(error);
       dispatch({ type: SET_SERVER_VERSION_ERROR, data: null });
     }
@@ -382,7 +377,7 @@ const fetchServerConfig = (dispatch, getState) => {
     type: FETCHING_SERVER_CONFIG,
   });
   return dispatch(requestAction(url, options)).then(
-    (data) => {
+    data => {
       dispatch({
         type: SERVER_CONFIG_FETCH_SUCCESS,
         data: data,
@@ -390,7 +385,7 @@ const fetchServerConfig = (dispatch, getState) => {
       globals.serverConfig = data;
       return Promise.resolve();
     },
-    (error) => {
+    error => {
       dispatch({
         type: SERVER_CONFIG_FETCH_FAIL,
         data: error,
@@ -411,7 +406,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
     headers: { 'content-type': 'application/json' },
   };
   return dispatch(requestActionPlain(url, options)).then(
-    (data) => {
+    data => {
       try {
         dispatch({
           type: SET_LATEST_SERVER_VERSION_SUCCESS,
@@ -421,7 +416,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
         console.error(e);
       }
     },
-    (error) => {
+    error => {
       console.error(error);
       dispatch({ type: SET_LATEST_SERVER_VERSION_ERROR, data: null });
     }
@@ -431,7 +426,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
 const updateMigrationModeStatus = () => (dispatch, getState) => {
   // make req to hasura cli to update migration mode
   dispatch({ type: UPDATE_MIGRATION_MODE_PROGRESS, data: true });
-  const url = Endpoints.hasuractlMigrateSettings;
+  const url = Endpoints.hasuraCliServerMigrateSettings;
   const putBody = {
     name: 'migration_mode',
     value: (!getState().main.migrationMode).toString(),
@@ -453,7 +448,7 @@ const updateMigrationModeStatus = () => (dispatch, getState) => {
           credentials: globalCookiePolicy,
           headers: { 'content-type': 'application/json' },
         };
-        const metadataUrl = `${Endpoints.hasuractlMetadata}?export=true`;
+        const metadataUrl = `${Endpoints.hasuraCliServerMetadata}?export=true`;
         return dispatch(
           requestAction(
             metadataUrl,
@@ -468,13 +463,13 @@ const updateMigrationModeStatus = () => (dispatch, getState) => {
   // refresh console
 };
 
-export const setHerokuSession = (session) => ({
+export const setHerokuSession = session => ({
   type: SET_HEROKU_SESSION,
   data: session,
 });
 
 // TODO to be queried via Apollo client
-export const fetchHerokuSession = () => (dispatch) => {
+export const fetchHerokuSession = () => dispatch => {
   if (globals.consoleType !== 'cloud') {
     return;
   }
@@ -492,8 +487,8 @@ export const fetchHerokuSession = () => (dispatch) => {
         'mutation { getHerokuSession { access_token refresh_token expires_in token_type } }',
     }),
   })
-    .then((r) => r.json())
-    .then((response) => {
+    .then(r => r.json())
+    .then(response => {
       if (response.errors) {
         dispatch({ type: FETCHING_HEROKU_SESSION_FAILED });
         console.error('Failed fetching heroku session');
@@ -507,32 +502,10 @@ export const fetchHerokuSession = () => (dispatch) => {
         }
       }
     })
-    .catch((e) => {
+    .catch(e => {
       console.error('Failed fetching Heroku session');
       console.error(e);
     });
-};
-
-// fetches the cohort config for sample DB and stores in redux
-export const initialiseOnboardingSampleDBConfig = () => {
-  return (dispatch) => {
-    if (globals.consoleType !== 'cloud') {
-      return null;
-    }
-
-    fetchSampleDBCohortConfig()
-      .then((cohortConfig) => {
-        if (cohortConfig) {
-          dispatch({
-            type: SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG,
-            data: cohortConfig,
-          });
-        }
-      })
-      .catch(() => {
-        console.error('unable to fetch sample DB cohort config');
-      });
-  };
 };
 
 const mainReducer = (state = defaultState, action) => {
@@ -600,8 +573,8 @@ const mainReducer = (state = defaultState, action) => {
         readOnlyMode: action.data,
         migrationMode: !action.data, // HACK
       };
-    case HASURACTL_URL_ENV:
-      return { ...state, hasuractlEnv: action.data };
+    case HASURA_CLI_SERVER_URL_ENV:
+      return { ...state, hasuraCliServerEnv: action.data };
     case UPDATE_MIGRATION_MODE:
       const currentMode = state.migrationMode;
       return { ...state, migrationMode: !currentMode };
@@ -703,7 +676,7 @@ const mainReducer = (state = defaultState, action) => {
 
 export default mainReducer;
 export {
-  HASURACTL_URL_ENV,
+  HASURA_CLI_SERVER_URL_ENV,
   UPDATE_MIGRATION_STATUS_SUCCESS,
   UPDATE_MIGRATION_STATUS_ERROR,
   UPDATE_ADMIN_SECRET_INPUT,

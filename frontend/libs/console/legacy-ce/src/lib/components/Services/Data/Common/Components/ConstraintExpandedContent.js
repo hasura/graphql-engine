@@ -45,6 +45,7 @@ export const ConstraintExpandedContent = ({
           fontSize={15}
           width="100%"
           showPrintMargin={false}
+          setOptions={{ useWorker: false }}
         />
       </div>
     </div>

@@ -14,7 +14,9 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scSchema,
     scTemplate,
     scTimeoutMicroseconds,
-    DataConnectorName (..),
+    DataConnectorName,
+    unDataConnectorName,
+    mkDataConnectorName,
     DataConnectorOptions (..),
     DataConnectorInfo (..),
     TableName (..),
@@ -24,18 +26,21 @@ module Hasura.Backends.DataConnector.Adapter.Types
     CountAggregate (..),
     Literal (..),
     OrderDirection (..),
+    API.GraphQLType (..),
     ScalarType (..),
+    mkScalarType,
     fromGQLType,
   )
 where
 
-import Autodocodec
+import Autodocodec (HasCodec (codec), dimapCodec, named)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Data (Typeable)
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
@@ -44,7 +49,6 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
 import Hasura.GraphQL.Parser.Name.TypeSystem (_Boolean, _Float, _Int, _String)
-import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -80,9 +84,6 @@ instance FromJSON ConnSourceConfig where
 -- instances.
 instance HasCodec ConnSourceConfig where
   codec = named "DataConnectorConnConfiguration" $ placeholderCodecViaJSON
-
-instance Cacheable ConnSourceConfig where
-  unchanged _ = (==)
 
 --------------------------------------------------------------------------------
 
@@ -144,15 +145,25 @@ instance Show SourceConfig where
 instance J.ToJSON SourceConfig where
   toJSON _ = J.String "SourceConfig"
 
-instance Cacheable SourceConfig where
-  unchanged _ = (==)
-
 --------------------------------------------------------------------------------
 
+-- | Note: Currently you should not use underscores in this name.
+--         This should be enforced in instances, and the `mkDataConnectorName`
+--         smart constructor is available to assist.
 newtype DataConnectorName = DataConnectorName {unDataConnectorName :: GQL.Name}
   deriving stock (Eq, Ord, Show, Typeable, Generic)
-  deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
-  deriving anyclass (Cacheable, NFData)
+  deriving newtype (ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
+  deriving anyclass (NFData)
+
+instance FromJSON DataConnectorName where
+  parseJSON v = (`onLeft` fail) =<< (mkDataConnectorName <$> J.parseJSON v)
+
+mkDataConnectorName :: GQL.Name -> Either String DataConnectorName
+mkDataConnectorName n =
+  if ('_' `Text.elem` GQL.unName n)
+    then -- Could return other errors in future.
+      Left "DataConnectorName may not contain underscores."
+    else Right (DataConnectorName n)
 
 instance Witch.From DataConnectorName NonEmptyText where
   from = mkNonEmptyTextUnsafe . GQL.unName . unDataConnectorName -- mkNonEmptyTextUnsafe is safe here since GQL.Name is never empty
@@ -161,22 +172,25 @@ instance Witch.From DataConnectorName Text where
   from = GQL.unName . unDataConnectorName
 
 data DataConnectorOptions = DataConnectorOptions
-  {_dcoUri :: BaseUrl}
+  { _dcoUri :: BaseUrl,
+    _dcoDisplayName :: Maybe Text
+  }
   deriving stock (Eq, Ord, Show, Generic)
-  deriving anyclass (Cacheable)
 
 instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON
 
 instance ToJSON DataConnectorOptions where
-  toJSON = genericToJSON hasuraJSON
+  toJSON = genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 --------------------------------------------------------------------------------
 
 data DataConnectorInfo = DataConnectorInfo
   { _dciOptions :: DataConnectorOptions,
     _dciCapabilities :: API.Capabilities,
-    _dciConfigSchemaResponse :: API.ConfigSchemaResponse
+    _dciConfigSchemaResponse :: API.ConfigSchemaResponse,
+    _dciDisplayName :: Maybe Text,
+    _dciReleaseName :: Maybe Text
   }
   deriving stock (Eq, Show, Generic)
 
@@ -184,13 +198,7 @@ instance FromJSON DataConnectorInfo where
   parseJSON = genericParseJSON hasuraJSON
 
 instance ToJSON DataConnectorInfo where
-  toJSON = genericToJSON hasuraJSON
-
-instance Cacheable DataConnectorInfo where
-  unchanged a dci0 dci1 =
-    unchanged a (_dciOptions dci0) (_dciOptions dci1)
-      && _dciCapabilities dci0 == _dciCapabilities dci1
-      && _dciConfigSchemaResponse dci0 == _dciConfigSchemaResponse dci1
+  toJSON = genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 --------------------------------------------------------------------------------
 
@@ -199,7 +207,7 @@ instance Cacheable DataConnectorInfo where
 -- For example, for a database that has schemas, the name would be '[<schema>,<table name>]'
 newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving newtype (Cacheable, Hashable, NFData, ToJSON)
+  deriving newtype (Hashable, NFData, ToJSON)
 
 instance HasCodec TableName where
   codec = dimapCodec TableName unTableName codec
@@ -229,7 +237,7 @@ instance ToErrorValue TableName where
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (NFData, Hashable, Cacheable, FromJSON, ToJSON)
+  deriving newtype (NFData, Hashable, FromJSON, ToJSON)
 
 instance Witch.From API.ConstraintName ConstraintName where
   from (API.ConstraintName n) = ConstraintName n
@@ -247,7 +255,7 @@ instance ToErrorValue ConstraintName where
 
 newtype ColumnName = ColumnName {unColumnName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (NFData, Hashable, Cacheable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
+  deriving newtype (NFData, Hashable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
 
 instance HasCodec ColumnName where
   codec = dimapCodec ColumnName unColumnName codec
@@ -268,7 +276,10 @@ instance ToErrorValue ColumnName where
 
 newtype FunctionName = FunctionName {unFunctionName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving newtype (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+  deriving newtype (FromJSON, Hashable, NFData, ToJSON)
+
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName unFunctionName codec
 
 instance ToJSONKey FunctionName where
   toJSONKey = toJSONKeyText toTxt
@@ -286,7 +297,7 @@ data CountAggregate
   | ColumnCount ColumnName
   | ColumnDistinctCount ColumnName
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 --------------------------------------------------------------------------------
 
@@ -294,7 +305,7 @@ data Literal
   = ValueLiteral ScalarType J.Value
   | ArrayLiteral ScalarType [J.Value]
   deriving stock (Eq, Show, Generic, Ord)
-  deriving anyclass (Cacheable, Hashable, NFData, ToJSON)
+  deriving anyclass (Hashable, NFData, ToJSON)
 
 --------------------------------------------------------------------------------
 
@@ -302,7 +313,7 @@ data OrderDirection
   = Ascending
   | Descending
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance ToJSON OrderDirection where
   toJSON = J.genericToJSON J.defaultOptions
@@ -321,9 +332,9 @@ data ScalarType
   = StringTy
   | NumberTy
   | BoolTy
-  | CustomTy Text
-  deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
+  | CustomTy Text (Maybe API.GraphQLType)
+  deriving stock (Eq, Generic, Ord, Show)
+  deriving anyclass (FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
 
 instance ToTxt ScalarType where
   toTxt = tshow
@@ -331,28 +342,30 @@ instance ToTxt ScalarType where
 instance ToErrorValue ScalarType where
   toErrorValue = ErrorValue.squote . tshow
 
-instance Witch.From API.ScalarType ScalarType where
-  from = \case
-    API.StringTy -> StringTy
-    API.NumberTy -> NumberTy
-    API.BoolTy -> BoolTy
-    API.CustomTy name -> CustomTy name
-
 instance Witch.From ScalarType API.ScalarType where
   from = \case
     StringTy -> API.StringTy
     NumberTy -> API.NumberTy
     BoolTy -> API.BoolTy
-    CustomTy name -> API.CustomTy name
+    CustomTy name _ -> API.CustomTy name
 
-fromGQLType :: GQL.Name -> ScalarType
+mkScalarType :: API.Capabilities -> API.ScalarType -> ScalarType
+mkScalarType API.Capabilities {..} apiType = case apiType of
+  API.StringTy -> StringTy
+  API.NumberTy -> NumberTy
+  API.BoolTy -> BoolTy
+  API.CustomTy name -> CustomTy name graphQLType
+    where
+      graphQLType = HashMap.lookup apiType (API.unScalarTypesCapabilities _cScalarTypes) >>= API._stcGraphQLType
+
+fromGQLType :: GQL.Name -> API.ScalarType
 fromGQLType typeName =
   if
-      | typeName == _String -> StringTy
-      | typeName == _Int -> NumberTy
-      | typeName == _Float -> NumberTy
-      | typeName == _Boolean -> BoolTy
-      | otherwise -> CustomTy $ GQL.unName typeName
+      | typeName == _String -> API.StringTy
+      | typeName == _Int -> API.NumberTy
+      | typeName == _Float -> API.NumberTy
+      | typeName == _Boolean -> API.BoolTy
+      | otherwise -> API.CustomTy $ GQL.unName typeName
 
 --------------------------------------------------------------------------------
 

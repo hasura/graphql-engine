@@ -36,6 +36,7 @@ import Data.Aeson qualified as Aeson
 import Data.Aeson.Extended
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH
+import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -45,6 +46,7 @@ import Data.Text.Extended qualified as Text.E
 import Hasura.Backends.DataConnector.API (errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (getConfigSchemaResponse, transformConnSourceConfig, validateConfiguration)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
 import Hasura.Base.Error
@@ -104,11 +106,15 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) 
 
 runAddSource ::
   forall m b.
-  (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
+  (MonadIO m, MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   AddSource b ->
   m EncJSON
 runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourceCustomization healthCheckConfig) = do
   sources <- scSources <$> askSchemaCache
+  do
+    -- version check
+    result <- liftIO $ versionCheckImplementation @b sourceConfig
+    liftEither result
 
   metadataModifier <-
     MetadataModifier
@@ -148,10 +154,12 @@ runRenameSource RenameSource {..} = do
   sources <- scSources <$> askSchemaCache
 
   unless (HM.member _rmName sources) $
-    throw400 NotExists $ "Could not find source with name " <>> _rmName
+    throw400 NotExists $
+      "Could not find source with name " <>> _rmName
 
   when (HM.member _rmNewName sources) $
-    throw400 AlreadyExists $ "Source with name " <> _rmNewName <<> " already exists"
+    throw400 AlreadyExists $
+      "Source with name " <> _rmNewName <<> " already exists"
 
   let metadataModifier =
         MetadataModifier $
@@ -210,7 +218,8 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
       metadata <- getMetadata
       void $
         onNothing (metadata ^. metaSources . at name) $
-          throw400 NotExists $ "source with name " <> name <<> " does not exist"
+          throw400 NotExists $
+            "source with name " <> name <<> " does not exist"
       if cascade
         then -- Without sourceInfo we can't cascade, so throw an error
           throw400 Unexpected $ "source with name " <> name <<> " is inconsistent"
@@ -274,7 +283,8 @@ runPostDropSourceHook sourceName sourceInfo = do
   where
     logDropSourceHookError logger err =
       let msg =
-            "Error executing cleanup actions after removing source '" <> toTxt sourceName
+            "Error executing cleanup actions after removing source '"
+              <> toTxt sourceName
               <> "'. Consider cleaning up tables in hdb_catalog schema manually."
        in L.unLogger logger $ MetadataLog L.LevelWarn msg (J.toJSON err)
 
@@ -331,16 +341,18 @@ instance FromJSON GetSourceTables where
 -- | Fetch a list of tables for the request data source. Currently
 -- this is only supported for Data Connectors.
 runGetSourceTables ::
-  ( Has (L.Logger L.Hasura) r,
+  ( CacheRM m,
+    Has (L.Logger L.Hasura) r,
     HTTP.Manager.HasHttpManagerM m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m
   ) =>
+  Env.Environment ->
   GetSourceTables ->
   m EncJSON
-runGetSourceTables GetSourceTables {..} = do
+runGetSourceTables env GetSourceTables {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
@@ -356,7 +368,6 @@ runGetSourceTables GetSourceTables {..} = do
         logger :: L.Logger L.Hasura <- asks getter
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
-            apiConfig = DC.Types.value _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- do
           let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
@@ -364,10 +375,14 @@ runGetSourceTables GetSourceTables {..} = do
             (InsOrdHashMap.lookup dcName =<< backendConfig)
             (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
+        transformedConfig <- transformConnSourceConfig _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        configSchemaResponse <- getConfigSchemaResponse dcName
+        validateConfiguration _gstSourceName dcName configSchemaResponse transformedConfig
+
         schemaResponse <-
-          Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
+          Tracing.ignoreTraceT
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
+            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) transformedConfig
 
         let fullyQualifiedTableNames = fmap API._tiName $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue fullyQualifiedTableNames
@@ -389,16 +404,18 @@ instance FromJSON GetTableInfo where
 -- | Fetch a list of tables for the request data source. Currently
 -- this is only supported for Data Connectors.
 runGetTableInfo ::
-  ( Has (L.Logger L.Hasura) r,
+  ( CacheRM m,
+    Has (L.Logger L.Hasura) r,
     HTTP.Manager.HasHttpManagerM m,
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
     MonadIO m
   ) =>
+  Env.Environment ->
   GetTableInfo ->
   m EncJSON
-runGetTableInfo GetTableInfo {..} = do
+runGetTableInfo env GetTableInfo {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
@@ -414,7 +431,6 @@ runGetTableInfo GetTableInfo {..} = do
         logger :: L.Logger L.Hasura <- asks getter
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
-            apiConfig = DC.Types.value _smConfiguration
 
         DC.Types.DataConnectorOptions {..} <- do
           let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
@@ -422,16 +438,20 @@ runGetTableInfo GetTableInfo {..} = do
             (InsOrdHashMap.lookup dcName =<< backendConfig)
             (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
+        transformedConfig <- transformConnSourceConfig _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        configSchemaResponse <- getConfigSchemaResponse dcName
+        validateConfiguration _gtiSourceName dcName configSchemaResponse transformedConfig
+
         schemaResponse <-
-          Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
+          Tracing.ignoreTraceT
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) apiConfig
+            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) transformedConfig
 
         let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue table
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
 
-schemaGuard :: MonadError QErr m => Union '[API.SchemaResponse, API.ErrorResponse] -> m API.SchemaResponse
+schemaGuard :: MonadError QErr m => Union API.SchemaResponses -> m API.SchemaResponse
 schemaGuard = schemaCase defaultAction pure errorAction
   where
     defaultAction = throw400 DataConnectorError "Error resolving source schema"

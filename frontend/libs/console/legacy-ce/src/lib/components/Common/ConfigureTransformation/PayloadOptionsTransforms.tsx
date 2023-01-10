@@ -130,7 +130,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
           <select
             className={`ml-auto ${inputStyles}`}
             value={requestBody.action}
-            onChange={(e) =>
+            onChange={e =>
               requestBodyOnChange({
                 ...requestBody,
                 action: e.target.value as RequestTransformBodyActions,
@@ -138,7 +138,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
             }
           >
             <option disabled>Request Body Type</option>
-            {requestBodyTypeOptions.map((option) => (
+            {requestBodyTypeOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {option.text}
               </option>
@@ -204,6 +204,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
             style={{ background: '#e2e8f0' }}
             setOptions={{
               highlightGutterLine: false,
+              useWorker: false,
             }}
             readOnly
           />

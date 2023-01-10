@@ -320,7 +320,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_TOGGLE_ALLOW_AGGREGATION:
-      return produce(modifyState, (draft) => {
+      return produce(modifyState, draft => {
         const newPermissionsState = updatePermissionsState(
           modifyState.permissionsState,
           'allow_aggregations',
@@ -397,7 +397,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
       };
 
-      Object.keys(action.allFields).forEach((fieldType) => {
+      Object.keys(action.allFields).forEach(fieldType => {
         returnState = {
           ...returnState,
           permissionsState: {
@@ -420,7 +420,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
 
     case PERM_TOGGLE_SELECT_FIELD:
       const tablePrimaryKeys = getPrimaryKeysFromTable(schemas, modifyState);
-      return produce(modifyState, (draft) => {
+      return produce(modifyState, draft => {
         const newPermissionsState = updatePermissionsState(
           modifyState.permissionsState,
           action.fieldType,
@@ -702,11 +702,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         checkConstraintsModify: action.constraints,
       };
     case PERM_UPDATE_QUERY_ROOT_FIELDS:
-      return produce(modifyState, (draft) => {
+      return produce(modifyState, draft => {
         draft.permissionsState.select.query_root_fields = action.value;
       });
     case PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS:
-      return produce(modifyState, (draft) => {
+      return produce(modifyState, draft => {
         draft.permissionsState.select.subscription_root_fields = action.value;
       });
 

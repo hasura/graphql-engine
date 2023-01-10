@@ -1,9 +1,5 @@
 import { ConsoleNotification } from './ConsoleNotification';
 import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Heroku/types';
-import {
-  StateType as OnboardingSampleDBStateType,
-  initState as onboardingSampleDBState,
-} from '../Services/Data/DataSources/SampleDatabase/ReduxState';
 
 export type CloudProjectInfo = {
   name: string;
@@ -33,7 +29,7 @@ export type CloudProjectInfo = {
 
 export interface MainState {
   migrationError: unknown | null;
-  hasuractlEnv: unknown | null;
+  hasuraCliServerEnv: unknown | null;
   migrationMode: boolean;
   readOnlyMode: boolean;
   migrationModeProgress: boolean;
@@ -50,6 +46,7 @@ export interface MainState {
       version: string;
       is_function_permissions_inferred: boolean;
       is_admin_secret_set: boolean;
+      default_naming_convention: string;
       is_auth_hook_set: boolean;
       is_remote_schema_permissions_enabled: boolean;
       is_jwt_set: boolean;
@@ -71,13 +68,12 @@ export interface MainState {
   };
   cloud: {
     project?: CloudProjectInfo;
-    onboardingSampleDB: OnboardingSampleDBStateType;
   };
 }
 
 const defaultState: MainState = {
   migrationError: null,
-  hasuractlEnv: null,
+  hasuraCliServerEnv: null,
   migrationMode: true,
   readOnlyMode: false,
   migrationModeProgress: false,
@@ -97,6 +93,7 @@ const defaultState: MainState = {
       is_auth_hook_set: false,
       is_remote_schema_permissions_enabled: false,
       experimental_features: [],
+      default_naming_convention: '',
       is_jwt_set: false,
       jwt: {
         claims_namespace: '',
@@ -115,7 +112,6 @@ const defaultState: MainState = {
   },
   cloud: {
     project: undefined,
-    onboardingSampleDB: onboardingSampleDBState,
   },
 };
 

@@ -6,7 +6,7 @@ export const serverHeadersToKeyValueArray = (
   serverObject: ServerHeader[] | undefined
 ): Schema['headers'] => {
   if (serverObject) {
-    return serverObject.map((header) => {
+    return serverObject.map(header => {
       if ('value_from_env' in header) {
         return {
           name: header.name,

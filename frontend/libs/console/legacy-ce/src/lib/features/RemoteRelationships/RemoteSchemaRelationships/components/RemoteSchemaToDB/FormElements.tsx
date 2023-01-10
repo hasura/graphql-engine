@@ -106,7 +106,7 @@ export const FormElements = ({
       <div className="grid grid-cols-12">
         <div className="col-span-5">
           <RsSourceTypeSelector
-            types={remoteSchemaTypes.map((t) => t.typeName).sort()}
+            types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey="typeName"
           />
         </div>
@@ -122,13 +122,13 @@ export const FormElements = ({
       <LinkBlockVertical title="Type Mapped To" />
       <MapSelector
         types={
-          remoteSchemaTypes.find((x) => x.typeName === RSTypeName)?.fields ?? []
+          remoteSchemaTypes.find(x => x.typeName === RSTypeName)?.fields ?? []
         }
         columns={columns}
         typeMappings={typeMap}
         placeholder=""
         name="mapping"
-        onChange={(e) => {
+        onChange={e => {
           setTypeMap([...e]);
         }}
       />

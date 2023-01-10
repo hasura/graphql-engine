@@ -10,6 +10,6 @@ export default {
   argTypes: { onSelect: { action: 'clicked' } },
 } as ComponentMeta<typeof GDCTree>;
 
-export const Primary: ComponentStory<typeof GDCTree> = (args) => (
+export const Primary: ComponentStory<typeof GDCTree> = args => (
   <GDCTree onSelect={args.onSelect} />
 );

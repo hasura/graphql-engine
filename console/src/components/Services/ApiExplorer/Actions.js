@@ -1,10 +1,11 @@
+import { getWebsocketProtocol } from '@/helpers/protocol';
+import { getGraphqlSubscriptionsClient } from '@/utils/graphqlSubscriptions';
 import defaultState from './state';
 import requestAction from '../../../utils/requestAction';
 
 import Endpoints from '../../../Endpoints';
 // import fetch from 'isomorphic-fetch';
 
-import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws';
 import { parse } from 'graphql';
 import { execute } from 'apollo-link';
@@ -61,18 +62,6 @@ export const setGraphiQLQuery = data => ({
 });
 
 let websocketSubscriptionClient;
-
-const getSubscriptionInstance = (url, headers) => {
-  return new SubscriptionClient(url, {
-    connectionParams: {
-      headers: {
-        ...headers,
-      },
-      lazy: true,
-    },
-    reconnect: true,
-  });
-};
 
 const SET_LOADING = 'ApiExplorer/SET_LOADING';
 export const setLoading = isLoading => ({
@@ -189,13 +178,12 @@ const changeRequestParams = newParams => {
 };
 
 const createWsClient = (url, headers) => {
-  const gqlUrl = new URL(url);
-  const websocketProtocol = gqlUrl.protocol === 'https:' ? 'wss' : 'ws';
+  const websocketProtocol = getWebsocketProtocol(url);
   const headersFinal = getHeadersAsJSON(headers);
-  const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
+  const graphqlUrl = `${websocketProtocol}//${url.split('//')[1]}`;
 
   if (!websocketSubscriptionClient) {
-    websocketSubscriptionClient = getSubscriptionInstance(
+    websocketSubscriptionClient = getGraphqlSubscriptionsClient(
       graphqlUrl,
       headersFinal
     );

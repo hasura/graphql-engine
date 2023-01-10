@@ -66,7 +66,7 @@ describe('component GraphQLFieldCustomization', () => {
         { textboxName: 'typeNames.suffix', expected: '_a_type_name_suffix' },
       ];
 
-      expectations.forEach((expectation) => {
+      expectations.forEach(expectation => {
         fireEvent.change(
           screen.getByRole('textbox', { name: expectation.textboxName }),
           {

@@ -39,10 +39,10 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = ({
       return options;
     }
 
-    return options.map((option) => ({
+    return options.map(option => ({
       title: option.title,
       suggestions: option.suggestions.filter(
-        (suggestion) =>
+        suggestion =>
           suggestion.value.toLowerCase().slice(0, inputValue.length) ===
           inputValue
       ),
@@ -55,17 +55,16 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = ({
     setSuggestions(getSuggestions(value));
   };
 
-  const getSuggestionValue: GetSuggestionValue<AutoSuggestOption> = (
-    suggestion
-  ) => suggestion.value;
+  const getSuggestionValue: GetSuggestionValue<AutoSuggestOption> =
+    suggestion => suggestion.value;
 
   const onSuggestionsClearRequested = () => {
     setSuggestions([]);
   };
 
-  const renderSuggestion: RenderSuggestion<AutoSuggestOption> = (
-    suggestion
-  ) => <div>{suggestion.value}</div>;
+  const renderSuggestion: RenderSuggestion<AutoSuggestOption> = suggestion => (
+    <div>{suggestion.value}</div>
+  );
 
   /* Don't render the section when there are no suggestions in it */
   const renderSectionTitle: RenderSectionTitle = (
@@ -77,7 +76,7 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = ({
   const getSectionSuggestions: GetSectionSuggestions<
     AutoSuggestOption,
     AutoSuggestSection
-  > = (suggestionSection) => suggestionSection.suggestions;
+  > = suggestionSection => suggestionSection.suggestions;
 
   return (
     <Autosuggest<AutoSuggestOption, AutoSuggestSection>

@@ -44,8 +44,8 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
     }[]
   >({
     sql: getSQL(schema, table),
-    queryKey: ['postgres', 'fk_relationships', database, schema, table],
-    transformFn: (data) => {
+    queryKey: ['cockroach', 'fk_relationships', database, schema, table],
+    transformFn: data => {
       const { result } = data;
 
       if (!result) throw Error(`Invalid SQL response: received ${result}`);
@@ -56,14 +56,14 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
         );
 
       try {
-        const rows = result.slice(1).map((row) => ({
+        const rows = result.slice(1).map(row => ({
           from: {
             table: row[0]?.replace(/"/g, '').replace(`${schema}.`, ''),
-            column: row[1].split(',')?.map((i) => i?.replace(/"/g, '')),
+            column: row[1].split(',')?.map(i => i?.replace(/"/g, '')),
           },
           to: {
             table: row[2]?.replace(/"/g, '').replace(`${schema}.`, ''),
-            column: row[3].split(',')?.map((i) => i?.replace(/"/g, '')),
+            column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
           },
         }));
         return rows;

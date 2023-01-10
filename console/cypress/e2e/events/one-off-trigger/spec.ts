@@ -27,21 +27,23 @@ export const scheduleOneoffEvent = () => {
   // click on the schedule event tab
   cy.visit('/events/one-off-scheduled-events/add');
   cy.url().should('eq', `${baseUrl}/events/one-off-scheduled-events/add`);
-  // webhook url
-  cy.get(getElementFromAlias('one-off-webhook')).type(getWebhookURL());
-  // advanced settings
-  cy.get(getElementFromAlias('event-advanced-configuration')).click();
-  // retry configuration
-  cy.get(getElementFromAlias('no-of-retries')).clear().type(getNoOfRetries());
-  cy.get(getElementFromAlias('interval-seconds'))
+  // type webhook url
+  cy.get('[data-testid=webhook]').type(getWebhookURL());
+  // open retry configuration accordion
+  cy.get('[data-testid=retry-configuration] > div > button').click();
+  // type retry configuration
+  cy.get('[data-testid=num_retries]').clear().type(getNoOfRetries());
+  // type interval seconds
+  cy.get('[data-testid=retry_interval_seconds]')
     .clear()
     .type(getIntervalSeconds());
-  cy.get(getElementFromAlias('timeout-seconds'))
-    .clear()
-    .type(getTimeoutSeconds());
+  // type payload
+  cy.get('textarea').clear({ force: true }).type('{}', { force: true });
+  // type timeout seconds
+  cy.get('[data-testid=timeout_seconds]').clear().type(getTimeoutSeconds());
 
   //  Click on create
-  cy.get(getElementFromAlias('create-schedule-event')).click();
+  cy.get('[data-testid=create-scheduled-event]').click();
   cy.wait(10000);
   //  Check if the trigger got created and navigated to processed events page
   cy.url().should('eq', `${baseUrl}/events/one-off-scheduled-events/pending`);

@@ -1,87 +1,150 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import React, { ReactNode } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { setupServer } from 'msw/node';
 import { Provider as ReduxProvider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { GrowthExperimentsClient } from '../GrowthExperiments';
-import { baseHandlers } from './mocks/handlers.mock';
-import { mockGrowthClient } from './mocks/constants';
+import {
+  mutationBaseHandlers,
+  fetchGithubMigrationHandler,
+  fetchGithubMetadataHandler,
+  metadataSuccessHandler,
+  querySuccessHandler,
+  mockGithubServerDownHandler,
+  onboardingDataEmptyActivity,
+  fetchOnboardingDataFailure,
+  onboardingDataSkippedOnboarding,
+  onboardingDataCompleteOnboarding,
+  onboardingDataHasuraSourceCreationStart,
+  onboardingDataRunQueryClick,
+  fetchAnsweredSurveysHandler,
+} from './mocks/handlers.mock';
+import {
+  mockSampleQueryUrl,
+  mockSchemaImageUrl,
+  MOCK_INITIAL_METADATA,
+} from './mocks/constants';
 import { RootWithoutCloudCheck } from './Root';
 
-const server = setupServer(...baseHandlers());
+const server = setupServer(
+  ...mutationBaseHandlers(),
+  fetchAnsweredSurveysHandler,
+  mockGithubServerDownHandler(mockSampleQueryUrl),
+  mockGithubServerDownHandler(mockSchemaImageUrl),
+  fetchGithubMigrationHandler,
+  fetchGithubMetadataHandler,
+  metadataSuccessHandler,
+  querySuccessHandler
+);
 
-beforeAll(() => server.listen());
-afterAll(() => server.close());
+let reactQueryClient = new QueryClient();
 
-const OnboardingWizardRender = async (
-  mockedGrowthClient: GrowthExperimentsClient
-) => {
-  // redux provider is needed as ConnectDBScreen is using dispatch to push routes
-  const store = configureStore({
-    reducer: {
-      tables: () => ({ currentDataSource: 'postgres' }),
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'warn' });
+});
+beforeEach(() => {
+  // provide a fresh reactQueryClient for each test to prevent state caching among tests
+  reactQueryClient = new QueryClient();
+
+  // don't retry failed queries, overrides the default behaviour. This is done as otherwise we'll
+  // need to add a significant wait time (~10000 ms) to the test to wait for all the 3 retries (react-query default)
+  // to fail, for the error callback to be called. Till then the state is loading.
+  reactQueryClient.setDefaultOptions({
+    queries: {
+      retry: false,
     },
   });
+});
+afterEach(() => {
+  server.resetHandlers();
+});
+afterAll(() => server.close());
 
-  // react query provider is needed as surveys component is using it
-  const reactQueryClient = new QueryClient();
-
-  render(
-    <ReduxProvider store={store} key="provider">
-      <QueryClientProvider client={reactQueryClient}>
-        <RootWithoutCloudCheck growthExperimentsClient={mockedGrowthClient} />
-      </QueryClientProvider>
-    </ReduxProvider>
-  );
+type Props = {
+  children?: ReactNode;
 };
 
-describe('Check different configurations of experiments client', () => {
-  it('should hide wizard as error in experiment name', async () => {
-    await OnboardingWizardRender(mockGrowthClient.nameError);
+const store = configureStore({
+  reducer: {
+    tables: () => ({ currentDataSource: 'postgres', dataHeaders: {} }),
+    metadata: () => ({
+      metadataObject: MOCK_INITIAL_METADATA,
+    }),
+  },
+});
 
-    expect(
-      screen.queryByText('Welcome to your new Hasura project!')
-    ).not.toBeInTheDocument();
+const wrapper = ({ children }: Props) => (
+  <ReduxProvider store={store} key="provider">
+    <QueryClientProvider client={reactQueryClient}>
+      {children}
+    </QueryClientProvider>
+  </ReduxProvider>
+);
+
+describe('Check different configurations of Onboarding wizard depending on onboarding data', () => {
+  it('should hide wizard as onboarding data is not present', async () => {
+    server.use(fetchOnboardingDataFailure);
+    render(<RootWithoutCloudCheck />, { wrapper });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).not.toBeInTheDocument()
+    );
   });
 
-  it('should show wizard as experiment is enabled and user activity is empty', async () => {
-    await OnboardingWizardRender(mockGrowthClient.enabledWithoutActivity);
+  it('should show wizard as user activity is empty', async () => {
+    server.use(onboardingDataEmptyActivity);
+    render(<RootWithoutCloudCheck />, { wrapper });
 
-    expect(
-      screen.queryByText('Welcome to your new Hasura project!')
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).toBeInTheDocument()
+    );
   });
 
-  it('should hide wizard as experiment is disabled', async () => {
-    await OnboardingWizardRender(mockGrowthClient.disabledWithoutActivity);
+  it('should hide wizard as onboarding skipped by user', async () => {
+    server.use(onboardingDataSkippedOnboarding);
+    render(<RootWithoutCloudCheck />, { wrapper });
 
-    expect(
-      screen.queryByText('Welcome to your new Hasura project!')
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).not.toBeInTheDocument()
+    );
   });
 
-  it('should hide wizard as user has completed the onboarding', async () => {
-    await OnboardingWizardRender(mockGrowthClient.enabledWithCorrectActivity);
+  it('should hide wizard as onboarding completed by user', async () => {
+    server.use(onboardingDataCompleteOnboarding);
+    render(<RootWithoutCloudCheck />, { wrapper });
 
-    expect(
-      screen.queryByText('Welcome to your new Hasura project!')
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).not.toBeInTheDocument()
+    );
   });
 
-  it('should hide wizard as experiment is disabled, user activity does not matter in this case', async () => {
-    await OnboardingWizardRender(mockGrowthClient.disabledWithCorrectActivity);
+  it('should hide wizard as hasura data source creation started', async () => {
+    server.use(onboardingDataHasuraSourceCreationStart);
+    render(<RootWithoutCloudCheck />, { wrapper });
 
-    expect(
-      screen.queryByText('Welcome to your new Hasura project!')
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).not.toBeInTheDocument()
+    );
   });
 
-  it('should show wizard as experiment is enabled, and user activity is incorrect. Could mean a error on backend.', async () => {
-    await OnboardingWizardRender(mockGrowthClient.enabledWithWrongActivity);
+  it('should hide wizard as run query button clicked', async () => {
+    server.use(onboardingDataRunQueryClick);
+    render(<RootWithoutCloudCheck />, { wrapper });
 
-    expect(
-      screen.queryByText('Welcome to your new Hasura project!')
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).not.toBeInTheDocument()
+    );
   });
 });

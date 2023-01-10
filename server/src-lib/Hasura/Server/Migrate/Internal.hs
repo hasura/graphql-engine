@@ -15,7 +15,7 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.RQL.Types.Common (InputWebhook)
+import Hasura.RQL.Types.Common (InputWebhook, TriggerOnReplication (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version
@@ -75,8 +75,8 @@ from3To4 = liftTx $
       ) ->
       EventTriggerConf ('Postgres 'Vanilla)
     uncurryEventTrigger (trn, PG.ViaJSON tDef, w, nr, rint, PG.ViaJSON headers) =
-      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers Nothing Nothing Nothing
-    updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _ _ _) =
+      EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers Nothing Nothing Nothing TORDisableTrigger
+    updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _ _ _ _) =
       PG.unitQ
         [PG.sql|
                                             UPDATE hdb_catalog.event_triggers

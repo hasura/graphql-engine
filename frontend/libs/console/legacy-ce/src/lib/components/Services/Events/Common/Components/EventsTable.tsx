@@ -43,7 +43,7 @@ interface Props extends FilterTableProps {
   ) => void;
   triggerType?: SupportedEvents;
 }
-const EventsTable: React.FC<Props> = (props) => {
+const EventsTable: React.FC<Props> = props => {
   const {
     rows,
     filterState,
@@ -59,7 +59,7 @@ const EventsTable: React.FC<Props> = (props) => {
   let shouldSortColumn = true;
   const sortByColumn = (col: string) => {
     // Remove all the existing order_bys
-    const existingColSort = filterState.sorts.find((s) => s.column === col);
+    const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
       runQuery({
         sorts: [makeOrderBy(col, 'desc')],
@@ -117,7 +117,7 @@ const EventsTable: React.FC<Props> = (props) => {
     },
   };
   const gridHeadings = [expanderActions];
-  sortedColumns.forEach((column) => {
+  sortedColumns.forEach(column => {
     if (column !== 'actions') {
       gridHeadings.push({
         Header: column,
@@ -129,7 +129,7 @@ const EventsTable: React.FC<Props> = (props) => {
   const invocationDataTriggerColumns = ['status', 'id', 'created_at'];
   const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
   const addToGridHeadings = (headAccArr: string[]) => {
-    headAccArr.forEach((column) => {
+    headAccArr.forEach(column => {
       invocationGridHeadings.push({
         Header: column,
         accessor: column,
@@ -141,7 +141,7 @@ const EventsTable: React.FC<Props> = (props) => {
   } else {
     addToGridHeadings(invocationDataTriggerColumns);
   }
-  const rowsFormatted = rows.map((row) => {
+  const rowsFormatted = rows.map(row => {
     const formattedRow = Object.keys(row).reduce((fr, col) => {
       return {
         ...fr,
@@ -216,7 +216,7 @@ const EventsTable: React.FC<Props> = (props) => {
           rows={rows}
         />
       )}
-      SubComponent={(row) => {
+      SubComponent={row => {
         const currentRow = rows[row.index];
         if (triggerType) {
           return (
@@ -234,7 +234,7 @@ const EventsTable: React.FC<Props> = (props) => {
         const invocationRows = logs.map((r: any) => {
           const newRow: Record<string, JSX.Element> = {};
           // Insert cells corresponding to all rows
-          invocationDataTriggerColumns.forEach((col) => {
+          invocationDataTriggerColumns.forEach(col => {
             newRow[col] = (
               <div
                 className="text-center overflow-hidden"

@@ -11,7 +11,7 @@ import { isArray, isObject } from '../utils/jsUtils';
 
 const { Option } = components;
 
-const CustomOption: React.FC<OptionProps<OptionTypeBase>> = (props) => {
+const CustomOption: React.FC<OptionProps<OptionTypeBase>> = props => {
   return (
     <div
       title={props.data.description || ''}
@@ -90,7 +90,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   const customStyles: Record<string, any> = {};
   if (styleOverrides) {
-    Object.keys(styleOverrides).forEach((comp) => {
+    Object.keys(styleOverrides).forEach(comp => {
       customStyles[comp] = (provided: Record<string, unknown>) => ({
         ...provided,
         ...styleOverrides[comp],

@@ -1,0 +1,102 @@
+import React from 'react';
+import globals from '@/Globals';
+import { FaGithub } from 'react-icons/fa';
+import { GraphiqlPopup, WorkflowProgress } from './components';
+import { stepperNavSteps } from './constants';
+import { DialogContainer } from '../OnboardingWizard';
+import { useTriggerDeployment } from './hooks';
+import { GitRepoDetails } from './types';
+import { getGitRepoFromUrl, getGitRepoFullLinkFromDetails } from './util';
+
+/**
+ * Parent container for the one click deployment wizard. Takes care of assembling and rendering all steps.
+ */
+export function Root(props: {
+  deployment: {
+    deploymentId: number;
+    gitRepoDetails: GitRepoDetails;
+  };
+  dismissOnboarding: VoidFunction;
+}) {
+  const { deployment, dismissOnboarding } = props;
+  const { deploymentId, gitRepoDetails } = deployment;
+
+  const [state, setState] = React.useState<
+    'deployment-progress' | 'graphiql-popup'
+  >('deployment-progress');
+  const [graphiQlPopupStatus, setGraphiQlPopupStatus] = React.useState<
+    'success' | 'error'
+  >('success');
+
+  const projectId = globals.hasuraCloudProjectId || '';
+  const { triggerDeployment } = useTriggerDeployment(projectId);
+
+  const transitionToQueryPopupSuccessState = () => {
+    setGraphiQlPopupStatus('success');
+    setState('graphiql-popup');
+  };
+  const transitionToQueryPopupWithErrorState = () => {
+    setGraphiQlPopupStatus('error');
+    setState('graphiql-popup');
+  };
+
+  const gitRepoName = React.useMemo(
+    () => getGitRepoFromUrl(gitRepoDetails.url),
+    [gitRepoDetails.url]
+  );
+
+  const gitRepoFullLink = React.useMemo(
+    () => getGitRepoFullLinkFromDetails(gitRepoDetails),
+    [gitRepoDetails]
+  );
+
+  const [stepperIndex, setStepperIndex] = React.useState<number>(1);
+  switch (state) {
+    case 'deployment-progress': {
+      return (
+        <DialogContainer
+          showStepper
+          stepperNavSteps={stepperNavSteps}
+          activeIndex={stepperIndex}
+          header="Loading your project"
+          showSubHeaderAboveHeader
+          subHeader={
+            <>
+              <a
+                href={gitRepoFullLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-800 hover:no-underline cursor-pointer"
+              >
+                <FaGithub className="mb-1" />
+                <span className="ml-xs">{gitRepoName}</span>
+              </a>
+            </>
+          }
+        >
+          <WorkflowProgress
+            setStepperIndex={setStepperIndex}
+            deploymentId={deploymentId}
+            projectId={projectId}
+            onCompleteSuccess={transitionToQueryPopupSuccessState}
+            onCompleteError={transitionToQueryPopupWithErrorState}
+          />
+        </DialogContainer>
+      );
+    }
+    case 'graphiql-popup': {
+      return (
+        <GraphiqlPopup
+          status={graphiQlPopupStatus}
+          gitRepoName={gitRepoName}
+          gitRepoFullLink={gitRepoFullLink}
+          retryCb={triggerDeployment}
+          dismissCb={dismissOnboarding}
+        />
+      );
+    }
+    default: {
+      return null;
+    }
+  }
+}

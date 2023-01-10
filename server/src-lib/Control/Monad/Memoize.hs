@@ -213,7 +213,7 @@ instance GEq MemoizationKey where
         Just Refl <- typeRep @a1 `geq` typeRep @a2,
         arg1 == arg2,
         Just Refl <- typeRep @t1 `geq` typeRep @t2 =
-        Just Refl
+          Just Refl
       | otherwise = Nothing
 
 instance GCompare MemoizationKey where

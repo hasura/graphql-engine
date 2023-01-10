@@ -35,6 +35,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
+import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -149,7 +150,7 @@ For example:
 ------------
 We've a table "user" tracked by hasura and a role "public"
 
-* If the update permission for the table "user" is marked as backend_only then the
+\* If the update permission for the table "user" is marked as backend_only then the
   GQL context for that table will look like:
 
     {"public": (["insert_user","delete_user"], ["update_user"])}
@@ -158,7 +159,7 @@ We've a table "user" tracked by hasura and a role "public"
   by default on the frontend client. And the 'update_user' opertaion is only visible
   when the `x-hasura-use-backend-only-permissions` request header is present.
 
-* If there is no backend_only permissions defined on the role then the GQL context
+\* If there is no backend_only permissions defined on the role then the GQL context
   looks like:
 
     {"public": (["insert_user","delete_user", "update_user"], [])}
@@ -173,7 +174,7 @@ procSetObj ::
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   Maybe (ColumnValues b Value) ->
-  m (PreSetColsPartial b, [Text], [SchemaDependency])
+  m (PreSetColsPartial b, [Text], Seq SchemaDependency)
 procSetObj source tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $
@@ -184,7 +185,7 @@ procSetObj source tn fieldInfoMap mObj = do
         sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
         let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
         return ((pgCol, sqlExp), dep)
-  return (HM.fromList setColTups, depHeaders, deps)
+  return (HM.fromList setColTups, depHeaders, Seq.fromList deps)
   where
     setObj = fromMaybe mempty mObj
     depHeaders =
@@ -318,17 +319,18 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
           ci <- askColInfo fieldInfoMap col ""
           unless (_cmIsInsertable $ ciMutability ci) $
             throw500
-              ( "Column " <> col
-                  <<> " is not insertable and so cannot have insert permissions defined"
+              ( "Column "
+                  <> col
+                    <<> " is not insertable and so cannot have insert permissions defined"
               )
 
     let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `HS.union` (HS.fromList setHdrs)
-        insColDeps = map (mkColDep @b DRUntyped source tn) insCols
-        deps = mkParentDep @b source tn : beDeps ++ setColDeps ++ insColDeps
-        insColsWithoutPresets = insCols \\ HM.keys setColsSQL
+        insColDeps = mkColDep @b DRUntyped source tn <$> insCols
+        deps = mkParentDep @b source tn Seq.:<| beDeps <> setColDeps <> Seq.fromList insColDeps
+        insColsWithoutPresets = HS.fromList insCols `HS.difference` HM.keysSet setColsSQL
 
-    return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
+    return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
   where
     allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
@@ -349,11 +351,15 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
 
   -- validate the query_root_fields and subscription_root_fields values
   let needToValidatePrimaryKeyRootField =
-        QRFTSelectByPk `rootFieldNeedsValidation` spAllowedQueryRootFields
-          || SRFTSelectByPk `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+        QRFTSelectByPk
+          `rootFieldNeedsValidation` spAllowedQueryRootFields
+          || SRFTSelectByPk
+          `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
       needToValidateAggregationRootField =
-        QRFTSelectAggregate `rootFieldNeedsValidation` spAllowedQueryRootFields
-          || SRFTSelectAggregate `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+        QRFTSelectAggregate
+          `rootFieldNeedsValidation` spAllowedQueryRootFields
+          || SRFTSelectAggregate
+          `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
 
   when needToValidatePrimaryKeyRootField $ validatePrimaryKeyRootField tableCoreInfo
   when needToValidateAggregationRootField $ validateAggregationRootField
@@ -369,9 +375,10 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
         "The \"select_by_pk\" field cannot be included in the query_root_fields or subscription_root_fields"
           <> " because the role "
           <> roleName
-          <<> " does not have access to the primary key of the table "
+            <<> " does not have access to the primary key of the table "
           <> tableName
-          <<> " in the source " <>> sourceName
+            <<> " in the source "
+            <>> sourceName
     validatePrimaryKeyRootField TableCoreInfo {..} =
       case _tciPrimaryKey of
         Nothing -> pkValidationError
@@ -403,11 +410,12 @@ buildSelPermInfo ::
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permission" $ do
-  let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
+  let pgCols = interpColSpec (ciColumn <$> getCols fieldInfoMap) $ spColumns sp
 
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
-      procBoolExp source tableName fieldInfoMap $ spFilter sp
+      procBoolExp source tableName fieldInfoMap $
+        spFilter sp
 
   -- check if the columns exist
   void $
@@ -424,16 +432,18 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
           ReturnsScalar _ -> pure fieldName
           ReturnsTable returnTable ->
             throw400 NotSupported $
-              "select permissions on computed field " <> fieldName
-                <<> " are auto-derived from the permissions on its returning table "
+              "select permissions on computed field "
+                <> fieldName
+                  <<> " are auto-derived from the permissions on its returning table "
                 <> returnTable
-                <<> " and cannot be specified manually"
+                  <<> " and cannot be specified manually"
           ReturnsOthers -> pure fieldName
 
   let deps =
-        mkParentDep @b source tableName :
-        boolExpDeps ++ map (mkColDep @b DRUntyped source tableName) pgCols
-          ++ map (mkComputedFieldDep @b DRUntyped source tableName) validComputedFields
+        mkParentDep @b source tableName
+          Seq.:<| boolExpDeps
+            <> (mkColDep @b DRUntyped source tableName <$> Seq.fromList pgCols)
+            <> (mkComputedFieldDep @b DRUntyped source tableName <$> Seq.fromList validComputedFields)
       spiRequiredHeaders = getDependentHeaders $ spFilter sp
       spiLimit = spLimit sp
 
@@ -484,17 +494,18 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
         ci <- askColInfo fieldInfoMap updCol ""
         unless (_cmIsUpdatable $ ciMutability ci) $
           throw500
-            ( "Column " <> updCol
-                <<> " is not updatable and so cannot have update permissions defined"
+            ( "Column "
+                <> updCol
+                  <<> " is not updatable and so cannot have update permissions defined"
             )
 
-  let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
-      deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
+  let updColDeps = mkColDep @b DRUntyped source tn <$> updCols
+      deps = mkParentDep @b source tn Seq.:<| beDeps <> maybe mempty snd checkExpr <> Seq.fromList updColDeps <> setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
-      updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
+      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HM.keysSet setColsSQL
 
-  return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
+  return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
   where
     allUpdCols = map ciColumn $ filter (_cmIsUpdatable . ciMutability) $ getCols fieldInfoMap
     updCols = interpColSpec allUpdCols colSpec
@@ -516,7 +527,7 @@ buildDelPermInfo source tn fieldInfoMap (DelPerm fltr backendOnly) = do
   (be, beDeps) <-
     withPathK "filter" $
       procBoolExp source tn fieldInfoMap fltr
-  let deps = mkParentDep @b source tn : beDeps
+  let deps = mkParentDep @b source tn Seq.:<| beDeps
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be backendOnly depHeaders, deps)
 

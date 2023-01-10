@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
 import { GraphQLSchema } from 'graphql';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
+import { useInconsistentObject } from '@/features/MetadataAPI';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
@@ -14,6 +16,7 @@ import {
 } from './types';
 import BulkSelect from './BulkSelect';
 import { Dispatch } from '../../../../types';
+import { InconsistentBadge } from '../Common/GraphQLCustomization/InconsistentBadge';
 
 export type PermissionsProps = {
   allRoles: string[];
@@ -46,7 +49,7 @@ export type PermissionsProps = {
   permRemoveMultipleRoles: () => void;
 };
 
-const Permissions: React.FC<PermissionsProps> = (props) => {
+const Permissions: React.FC<PermissionsProps> = props => {
   const {
     allRoles,
     currentRemoteSchema,
@@ -71,6 +74,8 @@ const Permissions: React.FC<PermissionsProps> = (props) => {
   const [remoteSchemaFields, setRemoteSchemaFields] = useState<
     RemoteSchemaFields[]
   >([]);
+
+  const inconsistentObjects = useInconsistentObject();
 
   React.useEffect(() => {
     return () => {
@@ -105,22 +110,40 @@ const Permissions: React.FC<PermissionsProps> = (props) => {
       setRemoteSchemaFields(getRemoteSchemaFields(schema, permissionsSchema));
   }, [schema, permissionEdit?.isNewRole, schemaDefinition]);
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'RemoteSchemaPermissions',
+    { redactText: true }
+  );
+
+  const inconsistencyDetails = inconsistentObjects?.find(
+    inconObj =>
+      inconObj.type === 'remote_schema' &&
+      inconObj?.name === `remote_schema ${currentRemoteSchema?.name}`
+  );
+
   if (error || !schema) {
     return (
-      <div>
-        Error introspecting remote schema.{' '}
-        <a onClick={introspect} className="cursor-pointer" role="button">
-          {' '}
-          Try again{' '}
-        </a>
-      </div>
+      <>
+        {inconsistencyDetails && (
+          <InconsistentBadge inconsistencyDetails={inconsistencyDetails} />
+        )}
+        <div>
+          Error introspecting remote schema.{' '}
+          <a onClick={introspect} className="cursor-pointer" role="button">
+            {' '}
+            Try again{' '}
+          </a>
+        </div>
+      </>
     );
   }
 
   return (
     <div>
       <Helmet>
-        <title data-heap-redact-text="true">{`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}</title>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}</title>
       </Helmet>
       <PermissionsTable
         allRoles={allRoles}

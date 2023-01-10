@@ -10,7 +10,7 @@ export function convertToTreeData(
   if (tables.length === 0) return [];
 
   if (tables[0].length === 1) {
-    const leafNodes: DataNode[] = tables.map((table) => {
+    const leafNodes: DataNode[] = tables.map(table => {
       return {
         icon: <FaTable />,
         key: JSON.stringify({
@@ -24,17 +24,15 @@ export function convertToTreeData(
     return leafNodes;
   }
 
-  const uniqueLevelValues = Array.from(
-    new Set(tables.map((table) => table[0]))
-  );
+  const uniqueLevelValues = Array.from(new Set(tables.map(table => table[0])));
 
   const acc: DataNode[] = [];
 
   const values = uniqueLevelValues.reduce<DataNode[]>((_acc, levelValue) => {
     // eslint-disable-next-line no-underscore-dangle
     const _childTables = tables
-      .filter((table) => table[0] === levelValue)
-      .map<string[]>((table) => table.slice(1));
+      .filter(table => table[0] === levelValue)
+      .map<string[]>(table => table.slice(1));
 
     return [
       ..._acc,

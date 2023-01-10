@@ -11,12 +11,13 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec)
+import Autodocodec.Extended (caseInsensitiveTextCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
 import Data.Text qualified as T
 import Data.Validation
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( TemplatingEngine,
@@ -34,7 +35,10 @@ import Hasura.RQL.DDL.Webhook.Transform.Request (RequestTransformCtx)
 newtype Method = Method (CI.CI T.Text)
   deriving stock (Generic)
   deriving newtype (Show, Eq)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
+
+instance HasCodec Method where
+  codec = dimapCodec Method coerce caseInsensitiveTextCodec
 
 instance J.ToJSON Method where
   toJSON = J.String . CI.original . coerce
@@ -48,7 +52,7 @@ instance Transform Method where
   -- wrapper.
   newtype TransformFn Method = MethodTransformFn_ MethodTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
 
   newtype TransformCtx Method = TransformCtx RequestTransformCtx
 
@@ -67,7 +71,10 @@ newtype MethodTransformFn
   = -- | Replace the HTTP existing 'Method' with a new one.
     Replace Method
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+  deriving newtype (NFData, FromJSON, ToJSON)
+
+instance HasCodec MethodTransformFn where
+  codec = dimapCodec Replace coerce codec
 
 -- | Provide an implementation for the transformations defined by
 -- 'MethodTransformFn'.

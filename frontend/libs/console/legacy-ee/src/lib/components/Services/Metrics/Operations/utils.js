@@ -17,16 +17,16 @@ import {
 
 import { getValuesForEmptyMap } from '../utils';
 
-const transformTimeType = (d) => {
+const transformTimeType = d => {
   return moment(d).fromNow();
 };
 
-const transformExecutionTime = (d) => {
+const transformExecutionTime = d => {
   return Math.round(d * 1000 * 100) / 100;
 };
 
-const transformRequestResponseTime = (d) => {
-  return Math.round(d / 10) / 100;
+const transformRequestResponseTime = d => {
+  return Math.round((d / 10)) / 100;
 };
 
 const transformedVals = {
@@ -36,10 +36,10 @@ const transformedVals = {
   request_size: transformRequestResponseTime,
 };
 
-const transformExecutionTimeHeader = (val) => {
+const transformExecutionTimeHeader = val => {
   return `${val} ms`;
 };
-const transformRequestResponseSizeHeader = (val) => {
+const transformRequestResponseSizeHeader = val => {
   return `${val} kB`;
 };
 
@@ -49,7 +49,7 @@ const transformedHeaderVal = {
   request_size: transformRequestResponseSizeHeader,
 };
 
-const filterByType = (filters, type) => filters.filter((f) => f.type === type);
+const filterByType = (filters, type) => filters.filter(f => f.type === type);
 const indexOf = (list, predicateFn) => {
   let elementIndex = -1;
   list.forEach((l, index) => {
@@ -62,23 +62,23 @@ const indexOf = (list, predicateFn) => {
 
 const getJson = (list, key) => {
   const r = {};
-  list.forEach((l) => (r[l[key]] = true));
+  list.forEach(l => (r[l[key]] = true));
   return r;
 };
 
-const stripUnderScore = (val) => {
+const stripUnderScore = val => {
   return val.split('_').join(' ');
 };
 
-const capitalize = (val) => {
+const capitalize = val => {
   return `${val.charAt(0).toUpperCase()}${val.slice(1)}`;
 };
 
-const curried = (sourceFn) => (type) => (value) => {
+const curried = sourceFn => type => value => {
   sourceFn(type, value);
 };
 
-const curriedInputElement = (sourceFn) => (type) => (e) => {
+const curriedInputElement = sourceFn => type => e => {
   if (e.keyCode === 13) {
     if (e.target.value.length > 0) {
       sourceFn(type, e.target.value);
@@ -86,18 +86,18 @@ const curriedInputElement = (sourceFn) => (type) => (e) => {
   }
 };
 
-const curriedCheckboxElement = (sourceFn) => (type) => (e) => {
+const curriedCheckboxElement = sourceFn => type => e => {
   const getId = e.target.getAttribute('data-field-id');
   sourceFn(type, getId);
 };
 
 /* Doing this to fix refreshing state on every miliseconds change */
-const removeSecondsMiliseconds = (d) => {
+const removeSecondsMiliseconds = d => {
   d.setSeconds(0, 0);
   return d;
 };
 
-const getTimeRangeValue = (symbol) => {
+const getTimeRangeValue = symbol => {
   const now = new Date();
   switch (symbol) {
     case TIME_RANGE_BY_HOUR:
@@ -124,12 +124,12 @@ const getTimeRangeValue = (symbol) => {
 export const getWhereClause = (filterMap, filters) => {
   const fFilter = [];
   const emptyValues = getValuesForEmptyMap();
-  Object.keys(filterMap).forEach((f) => {
+  Object.keys(filterMap).forEach(f => {
     const appliedFilters = filterByType(filters, f);
     const fil = [];
     // TODO: The below logic can be improved by using _in operator to search for something like
     // ["", null] for nullable string column. Currently it uses _or and adds each condition inplace
-    appliedFilters.forEach((e) => {
+    appliedFilters.forEach(e => {
       if (emptyValues.indexOf(e.value) !== -1) {
         if (e.value === EMPTY_CLIENT_NAME_SYMBOL) {
           fil.push(

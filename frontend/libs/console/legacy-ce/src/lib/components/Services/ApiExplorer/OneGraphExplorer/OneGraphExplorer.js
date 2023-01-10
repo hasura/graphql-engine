@@ -80,7 +80,7 @@ class OneGraphExplorer extends React.Component {
     if (queryFile) {
       getRemoteQueries(
         queryFile,
-        (remoteQuery) => this.setState({ query: remoteQuery }),
+        remoteQuery => this.setState({ query: remoteQuery }),
         dispatch
       );
     } else if (numberOfTables === 0 && !localStorageQuery) {
@@ -129,7 +129,7 @@ class OneGraphExplorer extends React.Component {
         }),
       })
     )
-      .then((result) => {
+      .then(result => {
         if (result.errors && result.errors.length > 0) {
           const errorMessage = result.errors[0].message;
           dispatch(
@@ -174,7 +174,7 @@ class OneGraphExplorer extends React.Component {
           previousIntrospectionHeaders: headers,
         });
       })
-      .catch((err) => {
+      .catch(err => {
         dispatch(
           showErrorNotification(
             'Schema introspection query failed',
@@ -192,7 +192,7 @@ class OneGraphExplorer extends React.Component {
       });
   }
 
-  onExplorerResize = (e) => {
+  onExplorerResize = e => {
     const { explorerClientX, explorerWidth } = this.state;
 
     if (explorerClientX === null) {
@@ -209,7 +209,7 @@ class OneGraphExplorer extends React.Component {
     }
   };
 
-  editQuery = (query) => {
+  editQuery = query => {
     this.setState({ query });
   };
 
@@ -221,7 +221,7 @@ class OneGraphExplorer extends React.Component {
     this.setState({ explorerOpen: newIsOpen });
   };
 
-  handleExplorerResize = (e) => {
+  handleExplorerResize = e => {
     e.preventDefault();
     document.addEventListener('mousemove', this.onExplorerResize);
     this.setState({
@@ -229,7 +229,7 @@ class OneGraphExplorer extends React.Component {
     });
   };
 
-  handleExplorerResizeStop = (e) => {
+  handleExplorerResizeStop = e => {
     e.preventDefault();
     document.removeEventListener('mousemove', this.onExplorerResize);
     this.setState({

@@ -33,18 +33,22 @@ spec = do
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])],
-                    utbUpdate = UpdateTable [(P.nameColumnBuilder, UpdateSet P.textNew)]
+                    utbUpdate =
+                      SingleBatchUpdate $
+                        UpdateBatchBuilder
+                          { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textNew)],
+                            ubbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])]
+                          }
                   },
               utsField =
                 [GQL.field|
-update_artist(
-  where: { name: { _eq: "old name"}},
-  _set: { name: "new name" }
-) {
-  affected_rows
-}
-|]
+                  update_artist(
+                    where: { name: { _eq: "old name"}},
+                    _set: { name: "new name" }
+                  ) {
+                    affected_rows
+                  }
+                |]
             }
 
       it "two columns" do
@@ -55,22 +59,25 @@ update_artist(
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])],
                     utbUpdate =
-                      UpdateTable
-                        [ (P.nameColumnBuilder, UpdateSet P.textNew),
-                          (P.descColumnBuilder, UpdateSet P.textOther)
-                        ]
+                      SingleBatchUpdate $
+                        UpdateBatchBuilder
+                          { ubbOperations =
+                              [ (P.nameColumnBuilder, UpdateSet P.textNew),
+                                (P.descColumnBuilder, UpdateSet P.textOther)
+                              ],
+                            ubbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])]
+                          }
                   },
               utsField =
                 [GQL.field|
-update_artist(
-  where: { name: { _eq: "old name"}},
-  _set: { name: "new name", description: "other" }
-) {
-  affected_rows
-}
-|]
+                  update_artist(
+                    where: { name: { _eq: "old name"}},
+                    _set: { name: "new name", description: "other" }
+                  ) {
+                    affected_rows
+                  }
+                |]
             }
     describe "update many" do
       it "one update" do
@@ -81,30 +88,29 @@ update_artist(
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [],
                     utbUpdate =
-                      UpdateMany
-                        [ MultiRowUpdateBuilder
-                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
-                              mrubUpdate =
+                      MultipleBatchesUpdate
+                        [ UpdateBatchBuilder
+                            { ubbOperations =
                                 [ (P.nameColumnBuilder, UpdateSet P.textNew),
                                   (P.descColumnBuilder, UpdateSet P.textOther)
-                                ]
+                                ],
+                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
                             }
                         ]
                   },
               utsField =
                 [GQL.field|
-update_artist_many(
-  updates: [
-    { where: { id: { _eq: 1 } },
-      _set: { name: "new name", description: "other" }
-    }
-    ]
-) {
-  affected_rows
-}
-|]
+                  update_artist_many(
+                    updates: [
+                      { where: { id: { _eq: 1 } },
+                        _set: { name: "new name", description: "other" }
+                      }
+                      ]
+                  ) {
+                    affected_rows
+                  }
+                |]
             }
 
       it "two updates, complex where clause" do
@@ -115,37 +121,36 @@ update_artist_many(
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [],
                     utbUpdate =
-                      UpdateMany
-                        [ MultiRowUpdateBuilder
-                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
-                              mrubUpdate =
+                      MultipleBatchesUpdate
+                        [ UpdateBatchBuilder
+                            { ubbOperations =
                                 [ (P.nameColumnBuilder, UpdateSet P.textNew),
                                   (P.descColumnBuilder, UpdateSet P.textOther)
-                                ]
+                                ],
+                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
                             },
-                          MultiRowUpdateBuilder
-                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])],
-                              mrubUpdate = [(P.descColumnBuilder, UpdateSet P.textOther)]
+                          UpdateBatchBuilder
+                            { ubbOperations = [(P.descColumnBuilder, UpdateSet P.textOther)],
+                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])]
                             }
                         ]
                   },
               utsField =
                 [GQL.field|
-update_artist_many(
-  updates: [
-    { where: { id: { _eq: 1 } }
-      _set: { name: "new name", description: "other" }
-    }
-    { where: { id: { _eq: 2 } }
-      _set: { description: "other" }
-    }
-    ]
-) {
-  affected_rows
-}
-|]
+                  update_artist_many(
+                    updates: [
+                      { where: { id: { _eq: 1 } }
+                        _set: { name: "new name", description: "other" }
+                      }
+                      { where: { id: { _eq: 2 } }
+                        _set: { description: "other" }
+                      }
+                      ]
+                  ) {
+                    affected_rows
+                  }
+                |]
             }
 
       it "three updates, ordering" do
@@ -156,39 +161,38 @@ update_artist_many(
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                    utbWhere = [],
                     utbUpdate =
-                      UpdateMany
-                        [ MultiRowUpdateBuilder
-                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
-                              mrubUpdate = [(P.nameColumnBuilder, UpdateSet P.textNew)]
+                      MultipleBatchesUpdate
+                        [ UpdateBatchBuilder
+                            { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textNew)],
+                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
                             },
-                          MultiRowUpdateBuilder
-                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])],
-                              mrubUpdate = [(P.nameColumnBuilder, UpdateSet P.textOld)]
+                          UpdateBatchBuilder
+                            { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textOld)],
+                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
                             },
-                          MultiRowUpdateBuilder
-                            { mrubWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])],
-                              mrubUpdate = [(P.nameColumnBuilder, UpdateSet P.textOther)]
+                          UpdateBatchBuilder
+                            { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textOther)],
+                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])]
                             }
                         ]
                   },
               utsField =
                 [GQL.field|
-update_artist_many(
-  updates: [
-    { where: { id: { _eq: 1 } }
-      _set: { name: "new name" }
-    }
-    { where: { id: { _eq: 1 } }
-      _set: { name: "old name" }
-    }
-    { where: { id: { _eq: 2 } }
-      _set: { name: "other" }
-    }
-    ]
-) {
-  affected_rows
-}
-|]
+                  update_artist_many(
+                    updates: [
+                      { where: { id: { _eq: 1 } }
+                        _set: { name: "new name" }
+                      }
+                      { where: { id: { _eq: 1 } }
+                        _set: { name: "old name" }
+                      }
+                      { where: { id: { _eq: 2 } }
+                        _set: { name: "other" }
+                      }
+                      ]
+                  ) {
+                    affected_rows
+                  }
+                |]
             }

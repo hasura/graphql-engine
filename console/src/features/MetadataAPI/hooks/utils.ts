@@ -25,8 +25,8 @@ export const returnMigrateUrl = (
 ) => {
   if (globals.consoleMode === CLI_CONSOLE_MODE && !overrideCliMode) {
     return migrationMode
-      ? Endpoints.hasuractlMigrate
-      : Endpoints.hasuractlMetadata;
+      ? Endpoints.hasuraCliServerMigrate
+      : Endpoints.hasuraCliServerMetadata;
   }
   if (!upQueries) {
     return Endpoints.query;
@@ -35,7 +35,7 @@ export const returnMigrateUrl = (
   let endpoint = Endpoints.metadata;
   upQueries.forEach(query => {
     let type = '';
-    if (query.type === 'bulk') {
+    if (query.type === 'bulk' || query.type === 'concurrent_bulk') {
       type = query?.args?.[0]?.type;
     } else {
       type = query.type;

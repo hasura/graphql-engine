@@ -11,7 +11,7 @@ type Props = {
   table: BaseTable;
 };
 
-const Sorts: React.FC<Props> = (props) => {
+const Sorts: React.FC<Props> = props => {
   const { sorts, setSorts, table } = props;
 
   return (
@@ -56,7 +56,7 @@ const Sorts: React.FC<Props> = (props) => {
                     -- column --
                   </option>
                 ) : null}
-                {table.columns.map((c) => (
+                {table.columns.map(c => (
                   <option key={c.column_name} value={c.column_name}>
                     {c.column_name}
                   </option>

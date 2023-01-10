@@ -73,29 +73,28 @@ export const getTableNameWithSchema = (
   return fullTableName;
 };
 
-export const findTable = (allTables: Table[], tableDef: QualifiedTable) => {
-  return allTables.find((t) => isEqual(getTableDef(t), tableDef));
-};
+export const findTable = (allTables: Table[], tableDef: QualifiedTable) =>
+  allTables.find(t => isEqual(getTableDef(t), tableDef));
 
 export const getTrackedTables = (tables: Table[]) => {
-  return tables.filter((t) => t.is_table_tracked);
+  return tables.filter(t => t.is_table_tracked);
 };
 
 export const getUntrackedTables = (tables: Table[]) => {
   return tables
-    .filter((t) => !t.is_table_tracked)
+    .filter(t => !t.is_table_tracked)
     .sort((a, b) => (a.table_name > b.table_name ? 1 : -1));
 };
 
 export const getTableColumnNames = (table: Table) => {
-  return table.columns.map((c) => c.column_name);
+  return table.columns.map(c => c.column_name);
 };
 
 export function escapeTableColumns(table: Table) {
   if (!table) return {};
   const pattern = /\W+|^\d/;
   return getTableColumnNames(table)
-    .filter((col) => pattern.test(col))
+    .filter(col => pattern.test(col))
     .reduce((acc: Record<string, string>, col) => {
       let newColName = col.replace(/\W+/g, '_');
       if (/^\d/.test(newColName)) newColName = `column_${newColName}`;
@@ -113,17 +112,17 @@ export function escapeTableName(tableName: string): Nullable<string> {
 
 export const getTableColumn = (table: Table, columnName: string) => {
   return (table.columns || []).find(
-    (column) => column.column_name === columnName
+    column => column.column_name === columnName
   );
 };
 
 export const getTableRelationshipNames = (table: Table) => {
-  return table?.relationships?.map((r) => r.rel_name);
+  return table?.relationships?.map(r => r.rel_name);
 };
 
 export function getTableRelationship(table: Table, relationshipName: string) {
   return table?.relationships?.find(
-    (relationship) => relationship.rel_name === relationshipName
+    relationship => relationship.rel_name === relationshipName
   );
 }
 
@@ -185,7 +184,7 @@ export function getTableFromRelationshipChain(
 ): Table {
   const rels = chains
     .split(/\./g)
-    .filter((it) => !it.startsWith('_') && Number.isNaN(parseInt(it, 10)))
+    .filter(it => !it.startsWith('_') && Number.isNaN(parseInt(it, 10)))
     .slice(0, -1);
   return rels.reduce((acc, name) => {
     const rship = getTableRelationship(acc, name)!;
@@ -244,7 +243,7 @@ export const getTablePermissions = (
   const tablePermissions = table.permissions;
 
   if (role) {
-    const rolePermissions = tablePermissions.find((p) => p.role_name === role);
+    const rolePermissions = tablePermissions.find(p => p.role_name === role);
 
     if (rolePermissions && action) {
       return rolePermissions.permissions[action];
@@ -259,18 +258,18 @@ export const findTableCheckConstraint = (
   checkConstraints: CheckConstraint[],
   constraintName: string
 ) => {
-  return checkConstraints.find((c) => c.constraint_name === constraintName);
+  return checkConstraints.find(c => c.constraint_name === constraintName);
 };
 
 export const getSchemaTables = (allTables: Table[], tableSchema: string) => {
-  return allTables.filter((t) => t.table_schema === tableSchema);
+  return allTables.filter(t => t.table_schema === tableSchema);
 };
 
 export const getSchemaTableNames = (
   allTables: Table[],
   tableSchema: string
 ) => {
-  return getSchemaTables(allTables, tableSchema).map((t) => t.table_name);
+  return getSchemaTables(allTables, tableSchema).map(t => t.table_name);
 };
 
 export const getTableCustomName = (table: Table) => {
@@ -357,7 +356,7 @@ export const setCustomColumnNamesOnColumnConfig = (
   const newColumnConfig = { ...columnConfig };
 
   // Clone all ColumnConfigValues and clear the custom names
-  Object.keys(newColumnConfig).forEach((columnName) => {
+  Object.keys(newColumnConfig).forEach(columnName => {
     newColumnConfig[columnName] = { ...newColumnConfig[columnName] };
     delete newColumnConfig[columnName].custom_name;
   });
@@ -392,7 +391,7 @@ export const getComputedFieldComment = (
 export const findFKConstraint = (curTable: Table, column: string[]) => {
   const fkConstraints = curTable.foreign_key_constraints;
   return fkConstraints.find(
-    (fk) =>
+    fk =>
       Object.keys(fk.column_mapping).length === column.length &&
       Object.keys(fk.column_mapping).join(',') === column.join(',')
   );
@@ -401,7 +400,7 @@ export const findFKConstraint = (curTable: Table, column: string[]) => {
 export const findOppFKConstraint = (curTable: Table, column: string[]) => {
   const fkConstraints = curTable.opp_foreign_key_constraints;
   return fkConstraints.find(
-    (fk) =>
+    fk =>
       Object.keys(fk.column_mapping).length === column.length &&
       Object.keys(fk.column_mapping).join(',') === column.join(',')
   );
@@ -449,7 +448,7 @@ export const findTableFromRel = (
     }
   }
   return schemas.find(
-    (x) => x.table_name === rTable && x.table_schema === rSchema
+    x => x.table_name === rTable && x.table_schema === rSchema
   );
 };
 
@@ -475,7 +474,7 @@ export const findAllFromRel = (curTable: Table, rel: Relationship) => {
     }
     const columnMapping = rel.rel_def.manual_configuration.column_mapping;
     lcol = Object.keys(columnMapping);
-    rcol = lcol.map((column) => columnMapping[column]);
+    rcol = lcol.map(column => columnMapping[column]);
   }
 
   // for table

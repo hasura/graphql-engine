@@ -45,7 +45,7 @@ const OperationsHeader = ({
     }
   }, [metadata]);
 
-  const toggleConfig = (config) => () => {
+  const toggleConfig = config => () => {
     const variables = {
       analyze_response_body:
         config === CONFIGS.RESP ? !responseBody : responseBody,
@@ -57,7 +57,7 @@ const OperationsHeader = ({
       .then(
         () => {
           refetchMetadata()
-            .then((metaData) => {
+            .then(metaData => {
               setLoading(false);
               if (metaData?.metrics_config) {
                 dispatch({
@@ -66,18 +66,18 @@ const OperationsHeader = ({
                 });
               }
             })
-            .catch((err) => {
+            .catch(err => {
               setLoading(false);
               setConfigError(err.error);
               updateConfigError(true);
             });
         },
-        (err) => {
+        err => {
           setLoading(false);
           alert(err.toString());
         }
       )
-      .catch((err) => {
+      .catch(err => {
         setLoading(false);
         alert(err.toString());
       });
@@ -125,12 +125,12 @@ const OperationsHeader = ({
     </div>
   );
 };
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     privileges: state?.main?.project?.privileges ?? [],
   };
 };
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = dispatch => ({
   setMetricConfig: ({ analyze_query_variables, analyze_response_body }) =>
     dispatch(
       setMetricConfigAction(analyze_query_variables, analyze_response_body)

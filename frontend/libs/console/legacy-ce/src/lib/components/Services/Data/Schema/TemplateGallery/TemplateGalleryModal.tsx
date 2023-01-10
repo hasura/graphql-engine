@@ -97,7 +97,7 @@ export const TemplateGalleryModalBody: React.VFC<{
         width="100%"
         showGutter={false}
         showPrintMargin={false}
-        setOptions={{ showLineNumbers: false }}
+        setOptions={{ showLineNumbers: false, useWorker: false }}
         maxLines={150}
       />
     </div>

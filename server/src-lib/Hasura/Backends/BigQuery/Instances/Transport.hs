@@ -60,7 +60,7 @@ runQueryExplain ::
   ) =>
   DBStepInfo 'BigQuery ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action) = run $ runTraceTWithReporter noReporter "explain" action
+runQueryExplain (DBStepInfo _ _ _ action) = run $ ignoreTraceT action
 
 runMutation ::
   ( MonadError QErr m

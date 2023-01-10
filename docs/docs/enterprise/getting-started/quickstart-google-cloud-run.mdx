@@ -1,7 +1,7 @@
 ---
 sidebar_label: Quickstart with Google Cloud Run
 description: Quickstart with Google Cloud Run for Hasura Enterprise Edition
-title: 'Quickstart with Google Cloud Run'
+title: 'EE: Quickstart with Google Cloud Run'
 keywords:
   - hasura
   - docs
@@ -27,12 +27,14 @@ This tutorial will help you run Hasura Enterprise Edition as a Google Cloud Run 
 
 This tutorial assumes that the following prerequisites have been met:
 
+- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not already
+  have one.
 - The latest version of the `gcloud` CLI is installed and configured. For more information about installing or upgrading
   your gcloud CLI, see [Installing the gcloud CLI](https://cloud.google.com/sdk/docs/install).
 - Your `gcloud` user has the
   [required permissions](https://cloud.google.com/run/docs/reference/iam/roles#additional-configuration) to deploy a
   cloud run service.
-- You have a Postgres database for storing metadata and Redis for caching / rate limiting, preferably a managed service,
+- You have a Postgres database for storing Metadata and Redis for caching / rate limiting, preferably a managed service,
   see [Creating a Cloud SQL PostgresSQL instance](https://cloud.google.com/sql/docs/postgres/create-instance) and
   [Creating a Memorystore for Redis](https://cloud.google.com/memorystore/docs/redis/create-instance-console).
 - You have a Serverless VPC Access Connector to make the Postgres and Redis datastores accessible from Cloud Run, see
@@ -47,12 +49,12 @@ installation manifests required to deploy Hasura anywhere. Get the Cloud Run env
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/google-cloud-run/env.yaml
 ```
 
-### Step 2: Set the license key, metadata database URL, Redis database URL and the admin secret
+### Step 2: Set the license key, Metadata database URL, Redis database URL and the admin secret
 
 Edit `env.yaml` and set the right values:
 
 ```yaml
-HASURA_GRAPHQL_EE_LICENSE_KEY: ''
+HASURA_GRAPHQL_EE_LICENSE_KEY: '<license key>'
 HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
 HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
 HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
@@ -74,10 +76,10 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
   `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var (e.g. %40 for @).
 
-- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+- The Hasura GraphQL Engine needs access permissions on your Postgres database as described in
   [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
 
-- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
   the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
   information on setting up authentication.
 

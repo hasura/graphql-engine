@@ -140,9 +140,3 @@ From the HGE repo.
 * [x] ORDER clause in aggregates breaks SQLite parser for some reason
 * [x] Check that looped exist check doesn't cause name conflicts
 * [ ] `NOT EXISTS IS NULL` != `EXISTS IS NOT NULL`, Example:
-
-# Known Bugs
-
-## Tricky Aggregates may have logic bug
-
-Replicate by running the agent test-suite.

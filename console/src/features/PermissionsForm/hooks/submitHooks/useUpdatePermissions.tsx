@@ -2,32 +2,38 @@ import { useSubmitForm } from './useSubmitForm';
 import { useDeletePermission } from './useDeletePermission';
 
 import { AccessType, QueryType } from '../../types';
-import { NewDataTarget } from '../../../PermissionsTab/types/types';
 
 export interface UseUpdatePermissionsArgs {
-  dataTarget: NewDataTarget;
+  dataSourceName: string;
+  table: unknown;
   roleName: string;
   queryType: QueryType;
   accessType: AccessType;
 }
 
 export const useUpdatePermissions = ({
-  dataTarget,
+  dataSourceName,
+  table,
   roleName,
   queryType,
   accessType,
 }: UseUpdatePermissionsArgs) => {
   const updatePermissions = useSubmitForm({
-    dataTarget,
+    dataSourceName,
+    table,
     roleName,
     queryType,
     accessType,
   });
 
   const deletePermissions = useDeletePermission({
-    dataTarget,
+    dataSourceName,
+    table,
     roleName,
   });
 
-  return { updatePermissions, deletePermissions };
+  return {
+    updatePermissions,
+    deletePermissions,
+  };
 };

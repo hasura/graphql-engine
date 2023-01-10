@@ -56,6 +56,7 @@ const ForeignKeyEditor = ({
     // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabel = () => {
       const collapsedLabelText = getFkConfigLabel(fkConfig);
+      if (!collapsedLabelText) return null;
       return <div className="text-gray-600">{collapsedLabelText}</div>;
     };
 
@@ -123,6 +124,8 @@ const ForeignKeyEditor = ({
       };
     }
 
+    // Remove rows that have potentially been removed but has a residual state after race conditions
+    if (!collapsedLabel() && !isLast) return null;
     // Wrap the collapsed and expanded content in the reusable editor
     return (
       <div key={`fk_${fk.constraintName || i}`}>

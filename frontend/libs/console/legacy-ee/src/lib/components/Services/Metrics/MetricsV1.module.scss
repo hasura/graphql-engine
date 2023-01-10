@@ -1,4 +1,4 @@
-@import 'src/components/Common/Common.module';
+@import '../../Common/Common.module';
 
 .negativeMT_xl {
   margin-top: -16px;
@@ -513,9 +513,9 @@
   min-width: 300px;
 }
 
-.lineHeight_sm {
+ .lineHeight_sm{
   line-height: 1rem;
-}
-.lineHeight_md {
+ }
+ .lineHeight_md{
   line-height: 3rem;
-}
+ }

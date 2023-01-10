@@ -1,4 +1,5 @@
 import { Driver, getSupportedDrivers } from '@/dataSources';
+import { isPostgres } from '@/metadata/dataSource.utils';
 import { addSource } from './../../../../metadata/sourcesUtils';
 import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
@@ -11,7 +12,10 @@ import { connectionTypes } from './state';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 
 export const isPostgresFlavour = (driver: Driver) =>
-  driver === 'postgres' || driver === 'citus' || driver === 'cockroach';
+  driver === 'postgres' ||
+  driver === 'citus' ||
+  driver === 'cockroach' ||
+  driver === 'alloy';
 
 export const getErrorMessageFromMissingFields = (
   host: string,
@@ -125,7 +129,7 @@ export const canReUseTableTypes = (
     return false;
 
   // make sure all table names and schema names are same in metadata and table_type cache (allSourcesSchemas)
-  return sources.every((sourceFromMetada) =>
+  return sources.every(sourceFromMetada =>
     sourceFromMetada?.tables?.every(
       ({ table: { name, schema } = {} }) =>
         name &&
@@ -187,7 +191,7 @@ export const getReadReplicaDBUrlInfo = (
   };
 
   if (!replica?.database_url && !replica?.connection_string) return null;
-  if (dbType === 'postgres') {
+  if (isPostgres(dbType)) {
     if (typeof replica?.database_url === 'string') {
       return {
         connectionType: connectionTypes.DATABASE_URL,

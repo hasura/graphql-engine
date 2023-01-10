@@ -119,6 +119,7 @@ buildSourceJoinCall userInfo jaFieldName joinArguments remoteSourceJoin = do
         rowSchema
         (FieldName "__argument_id__")
         (FieldName "f", _rsjRelationship remoteSourceJoin)
+        (_rsjStringifyNum remoteSourceJoin)
     -- This should never fail, as field names in remote relationships are
     -- validated when building the schema cache.
     fieldName <-
@@ -143,7 +144,7 @@ buildSourceJoinCall userInfo jaFieldName joinArguments remoteSourceJoin = do
 buildJoinIndex :: (MonadError QErr m) => BL.ByteString -> m (IntMap.IntMap JO.Value)
 buildJoinIndex response = do
   json <-
-    JO.eitherDecode response {-( response)-} `onLeft` \err ->
+    JO.eitherDecode response `onLeft` \err ->
       throwInvalidJsonErr $ T.pack err
   case json of
     JO.Array arr -> fmap IntMap.fromList $ for (toList arr) \case

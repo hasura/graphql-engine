@@ -39,7 +39,7 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
             </label>
             <select
               className="form-control"
-              onChange={(e) =>
+              onChange={e =>
                 connectionDBStateDispatch({
                   type: 'UPDATE_SSL_MODE',
                   data: (e.target.value as SSLModeOptions) || undefined,
@@ -62,7 +62,7 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
               connectionDBState.sslConfiguration?.sslrootcert?.from_env ??
               undefined
             }
-            onChange={(e) =>
+            onChange={e =>
               connectionDBStateDispatch({
                 type: 'UPDATE_SSL_ROOT_CERT',
                 data: e.target.value,
@@ -77,7 +77,7 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
             value={
               connectionDBState.sslConfiguration?.sslcert?.from_env ?? undefined
             }
-            onChange={(e) =>
+            onChange={e =>
               connectionDBStateDispatch({
                 type: 'UPDATE_SSL_CERT',
                 data: e.target.value,
@@ -92,7 +92,7 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
             value={
               connectionDBState.sslConfiguration?.sslkey?.from_env ?? undefined
             }
-            onChange={(e) =>
+            onChange={e =>
               connectionDBStateDispatch({
                 type: 'UPDATE_SSL_KEY',
                 data: e.target.value,
@@ -109,7 +109,7 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
               connectionDBState.sslConfiguration?.sslpassword?.from_env ??
               undefined
             }
-            onChange={(e) =>
+            onChange={e =>
               connectionDBStateDispatch({
                 type: 'UPDATE_SSL_PASSWORD',
                 data: e.target.value,

@@ -40,7 +40,7 @@ import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Function qualified as Postgres
-import Hasura.Backends.Postgres.Types.Update qualified as BackendUpdate
+import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
@@ -50,7 +50,9 @@ import Hasura.GraphQL.Execute.Backend
     convertRemoteSourceRelationship,
   )
 import Hasura.GraphQL.Execute.Subscription.Plan
-  ( ParameterizedSubscriptionQueryPlan (..),
+  ( CohortId,
+    CohortVariables,
+    ParameterizedSubscriptionQueryPlan (..),
     SubscriptionQueryPlan (..),
     SubscriptionQueryPlanExplanation (..),
     mkCohortVariables,
@@ -95,6 +97,7 @@ data PreparedSql = PreparedSql
   { _psQuery :: PG.Query,
     _psPrepArgs :: PrepArgMap
   }
+  deriving (Show)
 
 instance
   ( Backend ('Postgres pgKind),
@@ -218,7 +221,7 @@ convertUpdate ::
 convertUpdate userInfo updateOperation stringifyNum = do
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
-  if BackendUpdate.isEmpty $ IR._auBackend updateOperation
+  if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate
     else
       pure $
@@ -266,9 +269,9 @@ convertFunction userInfo jsonAggSelect unpreparedQuery = do
           JASMultipleRows -> QDBMultipleRows
           JASSingleObject -> QDBSingleRow
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals $ queryResultFn preparedQuery) queryTags
-  pure
-    $! fst
-    $ mkCurPlanTx userInfo preparedSQLWithQueryTags -- forget (Maybe PreparedSql)
+  pure $!
+    fst $
+      mkCurPlanTx userInfo preparedSQLWithQueryTags -- forget (Maybe PreparedSql)
 
 pgDBMutationPlan ::
   forall pgKind m.
@@ -311,7 +314,8 @@ pgDBLiveQuerySubscriptionPlan ::
 pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
-      for unpreparedAST $ traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
+      for unpreparedAST $
+        traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   subscriptionQueryTagsComment <- ask
   let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
@@ -319,21 +323,30 @@ pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unprep
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
-  -- We need to ensure that the values provided for variables are correct according to Postgres.
-  -- Without this check an invalid value for a variable for one instance of the subscription will
-  -- take down the entire multiplexed query.
-  validatedQueryVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
-  validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
+  -- Cohort Id: Used for validating the multiplexed query. See @'testMultiplexedQueryTx'.
+  -- It is disposed when the subscriber is added to existing cohort.
+  cohortId <- newCohortId
 
-  -- TODO validatedQueryVars validatedSyntheticVars
-  let cohortVariables =
-        mkCohortVariables
-          _qpiReferencedSessionVariables
-          (_uiSession userInfo)
-          validatedQueryVars
-          validatedSyntheticVars
-          mempty -- live query subscriptions don't use the streaming cursor variables
-  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+  cohortVariables <- liftEitherM $ liftIO $ runExceptT $ runTx (_pscExecCtx sourceConfig) PG.ReadOnly do
+    -- We need to ensure that the values provided for variables are correct according to Postgres.
+    -- Without this check an invalid value for a variable for one instance of the subscription will
+    -- take down the entire multiplexed query.
+    validatedQueryVars <- PGL.validateVariablesTx _qpiReusableVariableValues
+    validatedSyntheticVars <- PGL.validateVariablesTx $ toList _qpiSyntheticVariableValues
+    let cohortVariables =
+          mkCohortVariables
+            _qpiReferencedSessionVariables
+            (_uiSession userInfo)
+            validatedQueryVars
+            validatedSyntheticVars
+            mempty -- live query subscriptions don't use the streaming cursor variables
+
+    -- Test the multiplexed query. Without this test if the query fails, the subscription will
+    -- take down the entier multiplexed query affecting all subscribers.
+    testMultiplexedQueryTx multiplexedQueryWithQueryTags cohortId cohortVariables
+    pure cohortVariables
+
+  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId cohortVariables namespace
 
 pgDBStreamingSubscriptionPlan ::
   forall pgKind m.
@@ -359,22 +372,31 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
-  -- We need to ensure that the values provided for variables are correct according to Postgres.
-  -- Without this check an invalid value for a variable for one instance of the subscription will
-  -- take down the entire multiplexed query.
-  validatedQueryVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
-  validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
-  validatedCursorVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ getCursorVars unpreparedAST
+  -- Cohort Id: Used for validating the multiplexed query. See @'testMultiplexedQueryTx'.
+  -- It is disposed when the subscriber is added to existing cohort.
+  cohortId <- newCohortId
 
-  let cohortVariables =
-        mkCohortVariables
-          _qpiReferencedSessionVariables
-          (_uiSession userInfo)
-          validatedQueryVars
-          validatedSyntheticVars
-          validatedCursorVars
+  cohortVariables <- liftEitherM $ liftIO $ runExceptT $ runTx (_pscExecCtx sourceConfig) PG.ReadOnly do
+    -- We need to ensure that the values provided for variables are correct according to Postgres.
+    -- Without this check an invalid value for a variable for one instance of the subscription will
+    -- take down the entire multiplexed query.
+    validatedQueryVars <- PGL.validateVariablesTx _qpiReusableVariableValues
+    validatedSyntheticVars <- PGL.validateVariablesTx $ toList _qpiSyntheticVariableValues
+    validatedCursorVars <- PGL.validateVariablesTx $ getCursorVars unpreparedAST
+    let cohortVariables =
+          mkCohortVariables
+            _qpiReferencedSessionVariables
+            (_uiSession userInfo)
+            validatedQueryVars
+            validatedSyntheticVars
+            validatedCursorVars
 
-  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables $ _rfaNamespace rootFieldAlias
+    -- Test the multiplexed query. Without this test if the query fails, the subscription will
+    -- take down the entier multiplexed query affecting all subscribers.
+    testMultiplexedQueryTx multiplexedQueryWithQueryTags cohortId cohortVariables
+    pure cohortVariables
+
+  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId cohortVariables $ _rfaNamespace rootFieldAlias
   where
     getCursorVars qdb =
       case qdb of
@@ -383,6 +405,29 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
               colInfo = IR._sciColInfo cursorArg
            in Map.singleton (ciName colInfo) (IR._sciInitialValue cursorArg)
         _ -> mempty
+
+-- | Test a multiplexed query in a transaction.
+testMultiplexedQueryTx ::
+  (MonadTx m) =>
+  PGL.MultiplexedQuery ->
+  CohortId ->
+  CohortVariables ->
+  m ()
+testMultiplexedQueryTx (PGL.MultiplexedQuery query) cohortId cohortVariables = do
+  -- Run the query and discard the results
+  -- NOTE: Adding `LIMIT 1` to the root selection of the query would make
+  -- executing the query faster. However, it is not preferred due to the following
+  -- reasons:
+  -- Multiplex query validation is required for queries involving any SQL functions,
+  -- computed fields and SQL functions as root fields, as the functions are bound to
+  -- raise run-time SQL exception resulting in error response for all subscribers in a cohort.
+  -- a. In case of computed fields, applying `LIMIT 1` to the base table selection will
+  --    enforce SQL function to evaluate only on one row. There's a possibility of SQL exception
+  --    on evaluating function on other rows.
+  -- b. In case of SQL functions as root fields, applying `LIMIT 1` to the base SQL function selection
+  --    don't have any performance impact as the limit is applied on the function result.
+  PG.Discard () <- PGL.executeQuery query [(cohortId, cohortVariables)]
+  pure ()
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::
@@ -395,7 +440,9 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
    in (,Just ps) $
-        Tracing.trace "Postgres" $ liftTx $ asSingleRowJsonResp q prepArgs
+        Tracing.trace "Postgres" $
+          liftTx $
+            asSingleRowJsonResp q prepArgs
 
 -- | This function is generally used on the result of 'selectQuerySQL',
 -- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
@@ -464,8 +511,9 @@ pgDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   FieldName ->
   (FieldName, IR.SourceRelationshipSelection ('Postgres pgKind) Void UnpreparedValue) ->
+  Options.StringifyNumbers ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship stringifyNumbers = do
   -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
   --
   -- In the future if we want to add support we'll need to add a new type of
@@ -480,7 +528,9 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     rowsArgument =
       UVParameter Nothing $
         ColumnValue (ColumnScalar Postgres.PGJSONB) $
-          Postgres.PGValJSONB $ PG.JSONB $ J.toJSON lhs
+          Postgres.PGValJSONB $
+            PG.JSONB $
+              J.toJSON lhs
     jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 
     recordSetDefinitionList =
@@ -498,3 +548,4 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
         (Postgres.unsafePGCol $ getFieldNameTxt argumentId)
         (ColumnScalar Postgres.PGBigInt)
         relationship
+        stringifyNumbers

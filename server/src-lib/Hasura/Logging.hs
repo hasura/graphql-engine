@@ -77,6 +77,7 @@ data instance EngineLogType Hasura
   | ELTLivequeryPollerLog
   | ELTActionHandler
   | ELTDataConnectorLog
+  | ELTJwkRefreshLog
   | -- internal log types
     ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -93,6 +94,7 @@ instance Witch.From (EngineLogType Hasura) Text where
     ELTLivequeryPollerLog -> "livequery-poller-log"
     ELTActionHandler -> "action-handler-log"
     ELTDataConnectorLog -> "data-connector-log"
+    ELTJwkRefreshLog -> "jwk-refresh-log"
     ELTInternal t -> Witch.from t
 
 instance J.ToJSON (EngineLogType Hasura) where
@@ -122,9 +124,8 @@ data InternalLogTypes
   | ILTPgClient
   | -- | log type for logging metadata related actions; currently used in logging inconsistent metadata
     ILTMetadata
-  | ILTJwkRefreshLog
   | ILTTelemetry
-  | ILTSchemaSyncThread
+  | ILTSchemaSync
   | ILTSourceCatalogMigration
   deriving (Show, Eq, Generic)
 
@@ -138,9 +139,8 @@ instance Witch.From InternalLogTypes Text where
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
-    ILTJwkRefreshLog -> "jwk-refresh-log"
     ILTTelemetry -> "telemetry-log"
-    ILTSchemaSyncThread -> "schema-sync-thread"
+    ILTSchemaSync -> "schema-sync"
     ILTSourceCatalogMigration -> "source-catalog-migration"
 
 instance J.ToJSON InternalLogTypes where
@@ -149,7 +149,7 @@ instance J.ToJSON InternalLogTypes where
 -- the default enabled log-types
 defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType Hasura)
 defaultEnabledEngineLogTypes =
-  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog, ELTJwkRefreshLog]
 
 isEngineLogTypeEnabled :: Set.HashSet (EngineLogType Hasura) -> EngineLogType Hasura -> Bool
 isEngineLogTypeEnabled enabledTypes logTy = case logTy of
@@ -176,7 +176,8 @@ userAllowedLogTypes =
     ELTQueryLog,
     ELTLivequeryPollerLog,
     ELTActionHandler,
-    ELTDataConnectorLog
+    ELTDataConnectorLog,
+    ELTJwkRefreshLog
   ]
 
 data LogLevel
@@ -298,7 +299,9 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
-    liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
+    liftIO $
+      FL.pushLogStrLn loggerSet $
+        FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
 
 nullLogger :: Logger Hasura
 nullLogger = Logger \_ -> pure ()

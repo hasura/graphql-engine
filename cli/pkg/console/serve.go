@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 
 	"github.com/fatih/color"
-	"github.com/pkg/errors"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -29,11 +29,12 @@ type ServeOpts struct {
 
 // Server console and API Server
 func Serve(opts *ServeOpts) error {
+	var op errors.Op = "console.Serve"
 	// get HTTP servers
 	apiHTTPServer := opts.APIServer.GetHTTPServer()
 	consoleHTTPServer, err := opts.ConsoleServer.GetHTTPServer()
 	if err != nil {
-		return errors.Wrap(err, "cannot create console server")
+		return errors.E(op, fmt.Errorf("cannot create console server: %w", err))
 	}
 
 	go func() {

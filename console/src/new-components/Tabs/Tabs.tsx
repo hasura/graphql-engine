@@ -15,7 +15,10 @@ interface TabsProps extends React.ComponentProps<typeof RadixTabs.Root> {
 export const Tabs: React.FC<TabsProps> = props => {
   const { items, ...rest } = props;
   return (
-    <RadixTabs.Root defaultValue={items[0]?.value} {...rest}>
+    <RadixTabs.Root
+      defaultValue={rest?.defaultValue ?? items[0]?.value}
+      {...rest}
+    >
       <RadixTabs.List aria-label="Tabs">
         <div className="border-b border-gray-200 bg-legacybg flex space-x-4">
           {items.map(({ value: itemValue, label }) => (

@@ -42,7 +42,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
     // add roleName to enabledRoles, remove duplicates
     if (enabledRoles.includes(roleName)) {
       newEnabledRoles = Array.from(
-        new Set(enabledRoles.filter((role) => role !== roleName))
+        new Set(enabledRoles.filter(role => role !== roleName))
       );
     } else {
       newEnabledRoles = Array.from(new Set([...enabledRoles, roleName]));
@@ -55,15 +55,15 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
           message: 'Allow list permissions updated',
           title: 'Success',
         });
-        setUpdatingRoles(updatingRoles.filter((role) => role !== roleName));
+        setUpdatingRoles(updatingRoles.filter(role => role !== roleName));
       },
-      onError: (e) => {
+      onError: e => {
         fireNotification({
           type: 'error',
           message: `Error updating allow list permissions: ${e.message}`,
           title: 'Error',
         });
-        setUpdatingRoles(updatingRoles.filter((role) => role !== roleName));
+        setUpdatingRoles(updatingRoles.filter(role => role !== roleName));
       },
     });
   };
@@ -106,7 +106,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                   message: `Collection ${collectionName} has been added to the allowlist`,
                 });
               },
-              onError: (e) => {
+              onError: e => {
                 fireNotification({
                   type: 'error',
                   title: 'Collection not added to allowlist',
@@ -148,7 +148,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                 <FaCheck className="text-green-600" />
               </td>
             </tr>
-            {allAvailableRoles.map((roleName) => (
+            {allAvailableRoles.map(roleName => (
               <tr className="divide-x divide-gray-300">
                 <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
                   <div className="flex items-center">
@@ -176,7 +176,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                     className="block w-full h-input min-w-max shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
                     placeholder="Create New Role..."
                     value={newRole}
-                    onChange={(e) => handleNewRole(e.target.value, index)}
+                    onChange={e => handleNewRole(e.target.value, index)}
                   />
                 </td>
                 <td className="group relative text-center p-sm whitespace-nowrap cursor-pointer flex items-center justify-center">

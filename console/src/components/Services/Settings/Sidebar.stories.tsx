@@ -3,8 +3,6 @@ import { RouteComponentProps } from 'react-router';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import globals from '../../../Globals';
-
 import Sidebar, { Metadata } from './Sidebar';
 
 const queryClient = new QueryClient({
@@ -98,7 +96,8 @@ export default {
 } as ComponentMeta<typeof Sidebar>;
 
 export const MetadataOk: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'pro';
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'pro';
   return <Sidebar {...args} />;
 };
 MetadataOk.storyName = '💠 Demo Metadata Ok';
@@ -108,7 +107,8 @@ MetadataOk.parameters = {
 };
 
 export const MetadataKo: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'pro';
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'pro';
   return <Sidebar {...args} />;
 };
 MetadataKo.storyName = '💠 Demo Metadata Ko';
@@ -118,7 +118,8 @@ MetadataKo.parameters = {
 };
 
 export const CloudLoading: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'cloud';
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'cloud';
   return <Sidebar {...args} />;
 };
 CloudLoading.storyName = '💠 Demo Cloud Loading';
@@ -128,7 +129,8 @@ CloudLoading.parameters = {
 };
 
 export const CloudMetadataOk: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'cloud';
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'cloud';
   return <Sidebar {...args} />;
 };
 CloudMetadataOk.storyName = '💠 Demo Cloud Metadata Ok';
@@ -138,7 +140,8 @@ CloudMetadataOk.parameters = {
 };
 
 export const CloudMetadataKo: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'cloud';
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'cloud';
   return <Sidebar {...args} />;
 };
 CloudMetadataKo.storyName = '💠 Demo Cloud Metadata Ko';
@@ -147,28 +150,33 @@ CloudMetadataKo.parameters = {
   msw: mockHandlers({}),
 };
 
-export const CloudPrometheusEnabled: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'cloud';
-  return <Sidebar {...args} />;
-};
-CloudPrometheusEnabled.storyName = '💠 Demo Cloud Prometheus Enabled';
-CloudPrometheusEnabled.args = generateArgs();
-CloudPrometheusEnabled.parameters = {
+export const ProLitePrometheusEnabled: ComponentStory<typeof Sidebar> =
+  args => {
+    // eslint-disable-next-line no-underscore-dangle
+    window.__env.consoleType = 'pro-lite';
+    return <Sidebar {...args} />;
+  };
+ProLitePrometheusEnabled.storyName = '💠 Demo Pro Lite Prometheus Enabled';
+ProLitePrometheusEnabled.args = generateArgs();
+ProLitePrometheusEnabled.parameters = {
   msw: mockHandlers({ prometheusEnabled: true }),
 };
 
-export const CloudPrometheusDisabled: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'cloud';
-  return <Sidebar {...args} />;
-};
-CloudPrometheusDisabled.storyName = '💠 Demo Cloud Prometheus Disabled';
-CloudPrometheusDisabled.args = generateArgs();
-CloudPrometheusDisabled.parameters = {
+export const ProLitePrometheusDisabled: ComponentStory<typeof Sidebar> =
+  args => {
+    // eslint-disable-next-line no-underscore-dangle
+    window.__env.consoleType = 'pro-lite';
+    return <Sidebar {...args} />;
+  };
+ProLitePrometheusDisabled.storyName = '💠 Demo Pro Lite Prometheus Disabled';
+ProLitePrometheusDisabled.args = generateArgs();
+ProLitePrometheusDisabled.parameters = {
   msw: mockHandlers({ prometheusEnabled: false }),
 };
 
 export const CloudError: ComponentStory<typeof Sidebar> = args => {
-  globals.consoleType = 'cloud';
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'cloud';
   return <Sidebar {...args} />;
 };
 CloudError.storyName = '💠 Demo Cloud Error';

@@ -8,9 +8,10 @@ import Hasura.Prelude
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
+import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (SCMSNotSupported))
 
 instance BackendMetadata 'BigQuery where
-  prepareCatalog _ = pure RETDoNothing
+  prepareCatalog _ = pure (RETDoNothing, SCMSNotSupported)
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig = BigQuery.resolveSourceConfig

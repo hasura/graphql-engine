@@ -7,28 +7,35 @@ import { handlers } from '../PermissionsForm/mocks/handlers.mock';
 import { useTableMachine } from './hooks';
 
 export default {
-  title: 'Features/Permissions Table/Table',
+  title: 'Features/Permissions Tab/Permissions Table/Table',
   component: PermissionsTable,
   decorators: [ReactQueryDecorator()],
+  parameters: {
+    msw: handlers(),
+  },
 } as Meta;
 
-export const Default: Story<PermissionsTableProps> = (args) => {
+export const Default: Story<PermissionsTableProps> = args => {
   const machine = useTableMachine();
 
   return <PermissionsTable {...args} machine={machine} />;
 };
 
 Default.args = {
-  dataLeaf: {
-    type: 'schema',
-    name: 'public',
-    leaf: {
-      type: 'table',
-      name: 'users',
-    },
+  dataSourceName: 'default',
+  table: {
+    schema: 'public',
+    name: 'user',
   },
 };
 
-Default.parameters = {
-  msw: handlers(),
+export const GDCTable: Story<PermissionsTableProps> = args => {
+  const machine = useTableMachine();
+
+  return <PermissionsTable {...args} machine={machine} />;
+};
+
+GDCTable.args = {
+  dataSourceName: 'sqlite',
+  table: ['Artist'],
 };

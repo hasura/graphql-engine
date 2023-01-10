@@ -1,6 +1,16 @@
 {
   "extends": ["plugin:@nrwl/nx/react", "../../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
+  "globals": {
+    "__DEVELOPMENT__": true,
+    "__CLIENT__": true,
+    "__SERVER__": true,
+    "__DISABLE_SSR__": true,
+    "__DEVTOOLS__": true,
+    "socket": true,
+    "webpackIsomorphicTools": true,
+    "CONSOLE_ASSET_VERSION": true
+  },
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -10,7 +20,54 @@
           {
             "allowCircularSelfDependency": true
           }
-        ]
+        ],
+        "react/forbid-dom-props": [
+          "error",
+          {
+            "forbid": [
+              {
+                "propName": "data-analytics-name",
+                "message": "Analytics attributes (data-analytics-name) should be added through the Analytics component/utilities"
+              },
+              {
+                "propName": "data-trackid",
+                "message": "Analytics attributes (data-trackid) should be added through the Analytics component/utilities"
+              },
+              {
+                "propName": "data-heap-redact-text",
+                "message": "Analytics attributes (data-heap-redact-text) should be added through the Analytics component/utilities"
+              },
+              {
+                "propName": "data-heap-redact-attributes",
+                "message": "Analytics attributes (data-heap-redact-attributes) should be added through the Analytics component/utilities"
+              }
+            ]
+          }
+        ],
+        "react/forbid-component-props": [
+          "error",
+          {
+            "forbid": [
+              {
+                "propName": "data-analytics-name",
+                "message": "Analytics attributes (data-analytics-name) should be added through the Analytics component/utilities"
+              },
+              {
+                "propName": "data-trackid",
+                "message": "Analytics attributes (data-trackid) should be added through the Analytics component/utilities"
+              },
+              {
+                "propName": "data-heap-redact-text",
+                "message": "Analytics attributes (data-heap-redact-text) should be added through the Analytics component/utilities"
+              },
+              {
+                "propName": "data-heap-redact-attributes",
+                "message": "Analytics attributes (data-heap-redact-attributes) should be added through the Analytics component/utilities"
+              }
+            ]
+          }
+        ],
+        "no-useless-escape": "warn"
       }
     },
     {
@@ -33,12 +90,24 @@
         "@typescript-eslint/no-empty-interface": "warn",
         "no-case-declarations": "warn",
         "import/first": "warn",
-        "no-undef": "warn",
         "no-restricted-globals": "warn",
         "no-prototype-builtins": "warn",
         "@typescript-eslint/no-this-alias": "warn",
         "no-unsafe-optional-chaining": "warn",
         "no-useless-catch": "warn"
+      }
+    },
+    {
+      "files": [
+        "**/__tests__/**/*.[jt]s?(x)",
+        "**/?(*.)+(spec|test).[jt]s?(x)"
+      ],
+      "extends": ["plugin:testing-library/react", "plugin:jest-dom/recommended"],
+      "rules": {
+        "testing-library/no-unnecessary-act": "warn",
+        "testing-library/prefer-query-by-disappearance": "warn",
+        "testing-library/prefer-find-by": "warn",
+        "testing-library/prefer-presence-queries": "warn"
       }
     }
   ]

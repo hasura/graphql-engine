@@ -5,6 +5,7 @@ import GraphiQL from 'graphiql';
 import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
 import { getGraphQLQueryPayload } from '../../../Common/utils/graphqlUtils';
+import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 
 export default class AnalyzeButton extends React.Component {
   constructor(props) {
@@ -30,7 +31,7 @@ export default class AnalyzeButton extends React.Component {
       const validOperations = operations.filter(isValidGraphQLOperation);
       if (validOperations.length) {
         options = (
-          <ul>
+          <ul className="execute-options">
             {validOperations.map(operation => {
               return (
                 <li
@@ -99,6 +100,7 @@ export default class AnalyzeButton extends React.Component {
           ''
       );
     }
+    trackGraphiQlToolbarButtonClick('Analyze');
   };
   clearAnalyse = () => {
     this.setState({ isAnalysing: false, analyseQuery: '' });

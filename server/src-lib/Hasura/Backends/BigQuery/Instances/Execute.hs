@@ -199,8 +199,9 @@ bqDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   FieldName ->
   (FieldName, SourceRelationshipSelection 'BigQuery Void UnpreparedValue) ->
+  Options.StringifyNumbers ->
   m (DBStepInfo 'BigQuery)
-bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship stringifyNumbers = do
   flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
@@ -210,7 +211,8 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     rowsArgument =
       UVParameter Nothing $
         ColumnValue (ColumnScalar BigQuery.StringScalarType) $
-          BigQuery.StringValue . LT.toStrict $ Aeson.encodeToLazyText lhs
+          BigQuery.StringValue . LT.toStrict $
+            Aeson.encodeToLazyText lhs
 
     recordSetDefinitionList =
       (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)
@@ -232,3 +234,4 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
         (BigQuery.ColumnName $ getFieldNameTxt argumentId)
         (ColumnScalar BigQuery.IntegerScalarType)
         relationship
+        stringifyNumbers

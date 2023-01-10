@@ -19,7 +19,7 @@ const ManualRelationshipSelector = ({
   dispatch,
 }) => {
   const relTypeSelect = () => {
-    const dispatchSetRelType = (event) => {
+    const dispatchSetRelType = event => {
       dispatch(manualRelTypeChanged(event.target.value));
     };
 
@@ -51,7 +51,7 @@ const ManualRelationshipSelector = ({
   };
 
   const relName = () => {
-    const dispatchSetRelName = (event) => {
+    const dispatchSetRelName = event => {
       dispatch(manualRelNameChanged(event.target.value));
     };
 
@@ -72,7 +72,7 @@ const ManualRelationshipSelector = ({
   };
 
   const refSchemaSelect = () => {
-    const dispatchSetRefSchema = (event) => {
+    const dispatchSetRefSchema = event => {
       dispatch(manualRelRSchemaChanged(event.target.value));
       if (tableSchema.table_schema !== event.target.value) {
         dispatch(updateSchemaInfo({ schemas: [event.target.value] }));
@@ -113,7 +113,7 @@ const ManualRelationshipSelector = ({
   };
 
   const refTableSelect = () => {
-    const dispatchSetRefTable = (event) => {
+    const dispatchSetRefTable = event => {
       dispatch(manualRelRTableChanged(event.target.value));
     };
 
@@ -181,11 +181,11 @@ const ManualRelationshipSelector = ({
             dispatch(setManualRelAdd(newRelAdd));
           };
 
-          const dispatchSetLcol = (event) => {
+          const dispatchSetLcol = event => {
             dispatchSetCols('column', event.target.value);
           };
 
-          const dispatchSetRcol = (event) => {
+          const dispatchSetRcol = event => {
             dispatchSetCols('refColumn', event.target.value);
           };
 
@@ -232,7 +232,7 @@ const ManualRelationshipSelector = ({
                       {'-- column --'}
                     </option>
                   )}
-                  {orderedColumns.map((oc) => {
+                  {orderedColumns.map(oc => {
                     return (
                       <option key={oc.name} value={oc.name}>
                         {oc.name}
@@ -256,7 +256,7 @@ const ManualRelationshipSelector = ({
                     </option>
                   )}
                   {refTables[relAdd.rTable] &&
-                    refTables[relAdd.rTable].map((rcOpt) => {
+                    refTables[relAdd.rTable].map(rcOpt => {
                       return (
                         <option key={rcOpt} value={rcOpt}>
                           {rcOpt}

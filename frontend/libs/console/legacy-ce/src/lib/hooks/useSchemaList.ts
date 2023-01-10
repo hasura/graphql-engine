@@ -15,7 +15,7 @@ export function useSchemaList(
   return useRunSQL({
     sql: () => dataSource.schemaListQuery,
     queryKey: ['schemaList', source, driver],
-    transformFn: (data) => data.result?.slice(1).map((d) => d[0]) ?? [],
+    transformFn: data => data.result?.slice(1).map(d => d[0]) ?? [],
     queryOptions,
     dataSource: args,
   });

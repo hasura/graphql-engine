@@ -17,7 +17,7 @@ import overviewConnector from './Overview';
 
 import { moduleName } from './constants';
 
-const metricsRouter = (connect) => {
+const metricsRouter = connect => {
   return (
     <Route path={moduleName} component={metricsConnector(connect)}>
       <IndexRoute component={overviewConnector(connect)} />

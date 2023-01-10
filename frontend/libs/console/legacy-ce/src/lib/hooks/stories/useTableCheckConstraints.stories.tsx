@@ -12,7 +12,7 @@ export default {
   ],
 } as ComponentMeta<typeof CheckConstaints>;
 
-export const Playground: ComponentStory<typeof CheckConstaints> = (args) => {
+export const Playground: ComponentStory<typeof CheckConstaints> = args => {
   return <CheckConstaints {...args} />;
 };
 

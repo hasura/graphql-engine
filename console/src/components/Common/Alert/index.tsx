@@ -7,7 +7,7 @@ interface AlertProps {
   text: string;
 }
 
-const Alert: React.FC<AlertProps> = ({ type, text }) => (
+const Alert: React.VFC<AlertProps> = ({ type, text }) => (
   <div className={`hidden alert alert-${type}`} role="alert">
     {text}
   </div>

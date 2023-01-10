@@ -17,6 +17,8 @@ module Hasura.EncJSON
     encJFromAssocList,
     encJFromInsOrdHashMap,
     encJFromOrderedValue,
+    encJFromBsWithoutSoh,
+    encJFromLbsWithoutSoh,
   )
 where
 
@@ -25,31 +27,52 @@ import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.ByteString qualified as B
 import Data.ByteString.Builder qualified as BB
+import Data.ByteString.Builder.Extra qualified as BB
+import Data.ByteString.Builder.Internal qualified as BB
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Encoding qualified as TE
 import Data.Text.NonEmpty (NonEmptyText)
 import Data.Text.NonEmpty qualified as NET
 import Data.Vector qualified as V
+import Data.Word (Word8)
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
 
 newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
 
--- | JSONB bytestrings start with a `SOH` header `/x1` and then
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
 -- follow with a valid JSON string, therefore we should check for this
 -- and remove if necessary before decoding as normal
 instance PG.FromCol EncJSON where
-  fromCol (Just bs) =
-    Right $
-      encJFromBS $ case B.uncons bs of
-        Just (bsHead, bsTail) ->
-          if bsHead == 1
-            then bsTail
-            else bs
-        Nothing -> bs
-  fromCol Nothing =
-    Right (encJFromJValue J.Null) -- null values return a JSON null value
+  fromCol = \case
+    Just bs -> Right $ encJFromBsWithoutSoh bs
+    -- null values return a JSON null value
+    Nothing -> Right $ encJFromJValue J.Null
+
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+encJFromBsWithoutSoh :: B.ByteString -> EncJSON
+encJFromBsWithoutSoh = encJFromBS . removeSOH B.uncons
+
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+encJFromLbsWithoutSoh :: BL.ByteString -> EncJSON
+encJFromLbsWithoutSoh = encJFromLBS . removeSOH BL.uncons
+
+-- | JSONB bytestrings start with a @SOH@ header @\x01@ and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+removeSOH :: (bs -> Maybe (Word8, bs)) -> bs -> bs
+removeSOH uncons bs =
+  case uncons bs of
+    Just (bsHead, bsTail) ->
+      if bsHead == 1
+        then bsTail
+        else bs
+    Nothing -> bs
 
 -- No other instances for `EncJSON`. In particular, because:
 --
@@ -68,8 +91,30 @@ instance PG.FromCol EncJSON where
 -- - `Show`: unused.
 
 encJToLBS :: EncJSON -> BL.ByteString
-encJToLBS = BB.toLazyByteString . unEncJSON
 {-# INLINE encJToLBS #-}
+encJToLBS = BB.toLazyByteStringWith outputAllocationStrategy mempty . unEncJSON
+  where
+    -- this is a modification of 'untrimmedStrategy' tuned for typical request sizes.
+    -- There's no point to trimming; that's just going to create more garbage
+    -- that will be collected immediately.
+    outputAllocationStrategy =
+      BB.customStrategy nextBuffer bufSize0 (\_ _ -> False)
+      where
+        -- NOTE: on cloud we see uncompressed response body sizes like:
+        --   P50:   150 bytes
+        --   P75:  1200
+        --   P90: 17000
+        --   P99: 95000
+        bufSize0 = 200 -- bytes
+        bufGrowthFactor = 5
+
+        {-# INLINE nextBuffer #-}
+        nextBuffer Nothing = BB.newBuffer bufSize0
+        -- FYI: minSize == bufSize0, except e.g. where `ensureFree` is used (and maybe other situations)
+        nextBuffer (Just (prevBuf, minSize)) =
+          -- nextBufSize grows exponentially, up to defaultChunkSize; but always at least minSize
+          let nextBufSize = max minSize (min BB.defaultChunkSize (BB.bufferSize prevBuf * bufGrowthFactor))
+           in BB.newBuffer nextBufSize
 
 encJToBS :: EncJSON -> B.ByteString
 encJToBS = BL.toStrict . encJToLBS

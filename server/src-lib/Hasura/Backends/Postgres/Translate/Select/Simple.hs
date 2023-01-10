@@ -67,7 +67,8 @@ mkSQLSelect jsonAggSelect annSel =
           orderByForJsonAgg selectSource
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
    in renameIdentifiers $
-        generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+        generateSQLSelectFromArrayNode selectSource arrayNode $
+          S.BELit True
   where
     strfyNum = _asnStrfyNum annSel
     rootFldIdentifier = toIdentifier rootFldName

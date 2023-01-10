@@ -50,7 +50,9 @@ toSQLConflict tableName = \case
     S.Update
       (toSQLCT cp1udConflictTarget)
       (S.buildUpsertSetExp cp1udAffectedColumns cp1udValues)
-      $ Just $ S.WhereFrag $ toSQLBoolExp (S.QualTable tableName) cp1udFilter
+      $ Just
+      $ S.WhereFrag
+      $ toSQLBoolExp (S.QualTable tableName) cp1udFilter
   where
     toSQLCT ct = case ct of
       CTColumn pgCols -> S.SQLColumn pgCols

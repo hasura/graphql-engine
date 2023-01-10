@@ -5,7 +5,7 @@ import ReactJson from 'react-json-view';
 import { Button } from '@/new-components/Button';
 import { Meta, Story } from '@storybook/react';
 
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '@/mocks/metadata.mock';
 import { useMoveOperationsToQueryCollection } from '.';
 
 const UseMoveOperationsToQueryCollection: React.FC = () => {
@@ -49,6 +49,6 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(1000),
+    msw: handlers({ delay: 500 }),
   },
 } as Meta;

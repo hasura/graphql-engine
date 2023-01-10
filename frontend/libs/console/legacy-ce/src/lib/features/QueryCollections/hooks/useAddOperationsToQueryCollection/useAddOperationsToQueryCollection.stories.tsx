@@ -1,11 +1,11 @@
 import React from 'react';
+import { handlers } from '@/mocks/metadata.mock';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Button } from '@/new-components/Button';
 import { Meta, Story } from '@storybook/react';
 
-import { handlers } from './mocks/handlers.mock';
 import { useAddOperationsToQueryCollection } from '.';
 
 const UseAddOperationsToQueryCollection: React.FC = () => {
@@ -26,8 +26,8 @@ const UseAddOperationsToQueryCollection: React.FC = () => {
         onClick={() =>
           addOperationToQueryCollection('allowed-queries', [
             {
-              query: `query MyQuery { user { email name}}`,
-              name: 'MyQuery',
+              query: `query MyQuery { user { email name } }`,
+              name: 'MyQuery7',
             },
           ])
         }
@@ -49,6 +49,6 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(1000),
+    msw: handlers({ delay: 500 }),
   },
 } as Meta;

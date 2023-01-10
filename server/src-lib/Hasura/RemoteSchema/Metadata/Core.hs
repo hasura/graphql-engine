@@ -16,14 +16,18 @@ module Hasura.RemoteSchema.Metadata.Core
   )
 where
 
+import Autodocodec (object, optionalField', optionalFieldWithDefault', optionalFieldWithDefaultWith', requiredField', (.=))
+import Autodocodec.Class (HasCodec (codec))
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
+import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text qualified as T
+import Data.Typeable (Typeable)
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
@@ -54,7 +58,16 @@ data RemoteSchemaDef = RemoteSchemaDef
 
 instance NFData RemoteSchemaDef
 
-instance Cacheable RemoteSchemaDef
+instance HasCodec RemoteSchemaDef where
+  codec =
+    object "RemoteSchemaDef" $
+      RemoteSchemaDef
+        <$> optionalField' "url" .= _rsdUrl
+        <*> optionalField' "url_from_env" .= _rsdUrlFromEnv
+        <*> optionalField' "headers" .= _rsdHeaders
+        <*> optionalFieldWithDefault' "forward_client_headers" False .= _rsdForwardClientHeaders
+        <*> optionalField' "timeout_seconds" .= _rsdTimeoutSeconds
+        <*> optionalField' "customization" .= _rsdCustomization
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaDef)
 
@@ -88,7 +101,19 @@ data RemoteSchemaMetadataG r = RemoteSchemaMetadata
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable r => Cacheable (RemoteSchemaMetadataG r)
+instance (HasCodec (RemoteRelationshipG r), Typeable r) => HasCodec (RemoteSchemaMetadataG r) where
+  codec =
+    object ("RemoteSchemaMetadata_" <> typeableName @r) $
+      RemoteSchemaMetadata
+        <$> requiredField' "name" .= _rsmName
+        <*> requiredField' "definition" .= _rsmDefinition
+        <*> optionalField' "comment" .= _rsmComment
+        <*> optionalFieldWithDefault' "permissions" mempty .= _rsmPermissions
+        <*> optionalFieldWithDefaultWith'
+          "remote_relationships"
+          (insertionOrderedElemsCodec _rstrsName)
+          mempty
+          .= _rsmRemoteRelationships
 
 instance J.FromJSON (RemoteRelationshipG r) => J.FromJSON (RemoteSchemaMetadataG r) where
   parseJSON = J.withObject "RemoteSchemaMetadata" \obj ->

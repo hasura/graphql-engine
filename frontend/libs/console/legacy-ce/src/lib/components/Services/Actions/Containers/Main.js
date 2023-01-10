@@ -57,7 +57,7 @@ Container.propTypes = {
   appPrefix: PropTypes.string.isRequired,
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     ...state.actions,
     actions: actionsSelector(state),
@@ -65,4 +65,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default (connect) => connect(mapStateToProps)(Container);
+export default connect => connect(mapStateToProps)(Container);

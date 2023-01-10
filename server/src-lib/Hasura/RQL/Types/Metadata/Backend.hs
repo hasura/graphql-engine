@@ -21,6 +21,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -29,6 +30,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
+import Hasura.Server.Migrate.Version
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Manager (HasHttpManagerM)
 
@@ -38,7 +40,6 @@ class
     Eq (BooleanOperators b (PartialSQLExp b)),
     Eq (FunctionArgumentExp b (PartialSQLExp b)),
     Ord (BackendInvalidationKeys b),
-    Inc.Cacheable (BackendInvalidationKeys b),
     Hashable (AggregationPredicates b (PartialSQLExp b)),
     Hashable (BooleanOperators b (PartialSQLExp b)),
     Hashable (FunctionArgumentExp b (PartialSQLExp b)),
@@ -72,18 +73,18 @@ class
     ( ArrowChoice arr,
       Inc.ArrowCache m arr,
       Inc.ArrowDistribute arr,
-      ArrowWriter (Seq CollectedInfo) arr,
+      ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
       MonadIO m,
       HasHttpManagerM m
     ) =>
     Logger Hasura ->
-    (Inc.Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
+    (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
   default resolveBackendInfo ::
     ( Arrow arr,
       BackendInfo b ~ ()
     ) =>
     Logger Hasura ->
-    (Inc.Dependency (BackendInvalidationKeys b), BackendConfig b) `arr` BackendInfo b
+    (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
   resolveBackendInfo = const $ arr $ const ()
 
   -- | Function that resolves the connection related source configuration, and
@@ -184,4 +185,4 @@ class
   prepareCatalog ::
     (MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
-    ExceptT QErr m RecreateEventTriggers
+    ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)

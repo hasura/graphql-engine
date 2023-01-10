@@ -2,14 +2,16 @@
 module Hasura.RQL.DDL.Webhook.Transform.WithOptional
   ( WithOptional (..),
     withOptional,
+    withOptionalField',
+    withOptionalFieldWith',
   )
 where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), ObjectCodec, ValueCodec, dimapCodec, optionalFieldWith')
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Coerce (Coercible)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 
 -------------------------------------------------------------------------------
@@ -24,10 +26,6 @@ newtype WithOptional f result = WithOptional
   }
   deriving stock (Eq, Functor, Foldable, Generic, Show)
   deriving newtype (FromJSON, ToJSON)
-
-deriving newtype instance
-  (Cacheable (f result)) =>
-  Cacheable (WithOptional f result)
 
 deriving newtype instance
   (NFData (f result)) =>
@@ -49,3 +47,26 @@ withOptional ::
   Maybe a ->
   WithOptional f b
 withOptional = coerce
+
+-- | Define a field in an object codec that applies 'withOptional' when
+-- decoding, and applies 'getOptional' when encoding.
+withOptionalField' ::
+  forall a b f.
+  (Coercible a (f b), HasCodec a) =>
+  Text ->
+  ObjectCodec (WithOptional f b) (WithOptional f b)
+withOptionalField' name = withOptionalFieldWith' name (codec @a)
+
+-- | Define a field in an object codec that applies 'withOptional' when
+-- decoding, and applies 'getOptional' when encoding.
+--
+-- This version takes a codec for the underlying value type as an argument.
+withOptionalFieldWith' ::
+  forall a b f.
+  Coercible a (f b) =>
+  Text ->
+  ValueCodec a a ->
+  ObjectCodec (WithOptional f b) (WithOptional f b)
+withOptionalFieldWith' name aCodec =
+  dimapCodec withOptional (fmap coerce . getOptional) $
+    optionalFieldWith' name aCodec

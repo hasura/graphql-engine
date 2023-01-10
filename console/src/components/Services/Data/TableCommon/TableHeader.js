@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import { changeTableName } from '../TableModify/ModifyActions';
 import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
@@ -31,8 +32,15 @@ const TableHeader = ({
   table,
   tabName,
 }) => {
-  const tableName = table.table_name;
-  const tableSchema = table.table_schema;
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Table', {
+    redactText: true,
+  });
+
+  const tableName = table?.table_name;
+  if (!tableName) {
+    return null;
+  }
+  const tableSchema = table?.table_schema;
   const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
@@ -88,7 +96,7 @@ const TableHeader = ({
   return (
     <div>
       <Helmet>
-        <title data-heap-redact-text="true">
+        <title {...titleAnalyticsAttributes}>
           {capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
         </title>
       </Helmet>

@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec (spec) where
 
 import Data.Aeson.QQ (aesonQQ)
+import Data.Has (Has (..))
 import Data.HashMap.Strict qualified as HM
 import Data.Text.NonEmpty (nonEmptyTextQQ)
 import Hasura.Backends.Postgres.Instances.Schema ()
@@ -21,6 +22,7 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
@@ -82,16 +84,15 @@ spec = do
     describe "When no aggregation functions are given" do
       it "Yields no parsers" do
         let maybeParser =
-              runSchemaTest $
+              runSchemaTest sourceInfo $
                 defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                   []
-                  sourceInfo
                   albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
 
     describe "When some aggregation functions are given" do
       let maybeParser =
-            runSchemaTest $
+            runSchemaTest sourceInfo $
               defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                 [ FunctionSignature
                     { fnName = "count",
@@ -100,7 +101,6 @@ spec = do
                       fnReturnType = PGInteger
                     }
                 ]
-                sourceInfo
                 albumTableInfo
 
       it "Positively yields a parser" do
@@ -224,6 +224,29 @@ spec = do
 
           -- Permissions aren't in scope for this test.
           actual {aggRowPermission = BoolAnd []} `shouldBe` expected
+
+    describe "When SchemaOptions dictate exclusion of aggregation predicates" do
+      it "Yields no parsers" do
+        let maybeParser =
+              runSchemaTest sourceInfo
+                $ local
+                  ( modifier
+                      ( \so ->
+                          so
+                            { Options.soIncludeAggregationPredicates = Options.Don'tIncludeAggregationPredicates
+                            }
+                      )
+                  )
+                $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+                  [ FunctionSignature
+                      { fnName = "count",
+                        fnGQLName = [G.name|count|],
+                        fnArguments = ArgumentsStar,
+                        fnReturnType = PGInteger
+                      }
+                  ]
+                  albumTableInfo
+        (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
   where
     albumTableInfo :: TableInfo ('Postgres 'Vanilla)
     albumTableInfo =

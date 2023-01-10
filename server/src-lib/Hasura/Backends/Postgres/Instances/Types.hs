@@ -15,6 +15,8 @@ import Data.Aeson qualified as J
 import Data.Kind (Type)
 import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
+import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
+import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
@@ -28,6 +30,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (SourceName, TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.SQL.Backend
@@ -52,6 +55,12 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
+  versionCheckImpl :: SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl = const (pure $ Right ())
+
+  runPingSourceImpl :: (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
+  runPingSourceImpl _ _ _ = pure ()
+
 instance PostgresBackend 'Vanilla where
   type PgExtraTableMetadata 'Vanilla = ()
 
@@ -60,6 +69,8 @@ instance PostgresBackend 'Citus where
 
 instance PostgresBackend 'Cockroach where
   type PgExtraTableMetadata 'Cockroach = ()
+  versionCheckImpl = runCockroachVersionCheck
+  runPingSourceImpl = runCockroachDBPing
 
 ----------------------------------------------------------------
 -- Backend instance
@@ -97,7 +108,7 @@ instance
   type ComputedFieldImplicitArguments ('Postgres pgKind) = Postgres.ComputedFieldImplicitArguments
   type ComputedFieldReturn ('Postgres pgKind) = Postgres.ComputedFieldReturn
 
-  type BackendUpdate ('Postgres pgKind) = Postgres.BackendUpdate pgKind
+  type UpdateVariant ('Postgres pgKind) = Postgres.PgUpdateVariant pgKind
 
   type AggregationPredicates ('Postgres pgKind) = Agg.AggregationPredicatesImplementation ('Postgres pgKind)
 
@@ -107,6 +118,7 @@ instance
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable
   type XNodesAgg ('Postgres pgKind) = XEnable
+  type XEventTriggers ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
@@ -118,6 +130,8 @@ instance
           _hciTestCodec = codec
         }
 
+  versionCheckImplementation = versionCheckImpl @pgKind
+  runPingSource = runPingSourceImpl @pgKind
   isComparableType = Postgres.isComparableType
   isNumType = Postgres.isNumType
   textToScalarValue = Postgres.textToScalarValue
@@ -139,3 +153,5 @@ instance
   namingConventionSupport = Postgres.namingConventionSupport
 
   resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)
+
+  defaultTriggerOnReplication = Just ((), TORDisableTrigger)

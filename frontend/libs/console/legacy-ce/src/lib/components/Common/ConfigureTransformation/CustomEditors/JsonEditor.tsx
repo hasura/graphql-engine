@@ -67,6 +67,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
         height={height || '200px'}
         width={width || '100%'}
         showPrintMargin={false}
+        setOptions={{ useWorker: false }}
       />
     </>
   );

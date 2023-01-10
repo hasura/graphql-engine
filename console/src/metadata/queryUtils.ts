@@ -16,13 +16,13 @@ import {
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
 import { LocalScheduledTriggerState } from '../components/Services/Events/CronTriggers/state';
-import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/Add/state';
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
 import { Driver, currentDriver } from '../dataSources';
 import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { isEmpty } from '../components/Common/utils/jsUtils';
 import { Nullable } from '../components/Common/utils/tsUtils';
+import { getDataSourcePrefix } from './dataSource.utils';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -91,7 +91,7 @@ export const metadataQueryTypes = [
   'get_catalog_state',
   'set_catalog_state',
   'set_table_customization',
-  'get_event_invocations',
+  'get_scheduled_event_invocations',
   'get_scheduled_events',
   'delete_scheduled_event',
   'create_function_permission',
@@ -128,60 +128,11 @@ export const getMetadataQuery = (
   args: MetadataQueryArgs;
   version?: number;
 } => {
-  let prefix = '';
-  switch (driver) {
-    case 'mysql':
-      prefix = 'mysql_';
-      break;
-    case 'mssql':
-      prefix = 'mssql_';
-      break;
-    case 'bigquery':
-      prefix = 'bigquery_';
-      break;
-    case 'citus':
-      prefix = 'citus_';
-      break;
-    case 'cockroach':
-      prefix = 'cockroach_';
-      break;
-    case 'postgres':
-    default:
-      prefix = 'pg_';
-  }
+  const prefix = getDataSourcePrefix(driver);
   return {
     type: `${prefix}${type}`,
     args: { ...args, source },
   };
-};
-
-export type DataSourceDriver =
-  | 'postgres'
-  | 'mysql'
-  | 'mssql'
-  | 'bigquery'
-  | 'citus';
-
-export const getDataSourcePrefix = (driver: DataSourceDriver) => {
-  let prefix = '';
-  switch (driver) {
-    case 'mysql':
-      prefix = 'mysql_';
-      break;
-    case 'mssql':
-      prefix = 'mssql_';
-      break;
-    case 'bigquery':
-      prefix = 'bigquery_';
-      break;
-    case 'citus':
-      prefix = 'citus_';
-      break;
-    case 'postgres':
-    default:
-      prefix = 'pg_';
-  }
-  return prefix;
 };
 
 export const getCreatePermissionQuery = (
@@ -586,28 +537,6 @@ export const getDropScheduledTriggerQuery = (name: string, source: string) => ({
   },
 });
 
-export const getCreateScheduledEventQuery = (
-  state: LocalAdhocEventState,
-  source: string
-) => {
-  return {
-    type: 'create_scheduled_event',
-    args: {
-      source,
-      webhook: state.webhook,
-      schedule_at: state.time.toISOString(),
-      headers: transformHeaders(state.headers),
-      retry_conf: {
-        num_retries: state.retryConf.num_retries,
-        retry_interval_seconds: state.retryConf.interval_sec,
-        timeout_seconds: state.retryConf.timeout_sec,
-      },
-      payload: state.payload,
-      comment: state.comment,
-    },
-  };
-};
-
 export const getRedeliverDataEventQuery = (
   eventId: string,
   tableDef: QualifiedTable,
@@ -842,7 +771,7 @@ export const getEventInvocationsLogByID = (
   type: SupportedEvents,
   event_id: string
 ) => ({
-  type: 'get_event_invocations',
+  type: 'get_scheduled_event_invocations',
   args: {
     type,
     event_id,
@@ -857,7 +786,7 @@ export const getEventInvocations = (
   triggerName?: string // is required for cron
 ) => {
   const query = {
-    type: 'get_event_invocations',
+    type: 'get_scheduled_event_invocations',
     args: {},
   };
 

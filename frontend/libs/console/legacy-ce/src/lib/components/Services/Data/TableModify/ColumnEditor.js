@@ -47,26 +47,26 @@ const ColumnEditor = ({
     alterOptions = convertToArrayOptions(alterOptions);
   }
 
-  const updateColumnName = (e) => {
+  const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
   };
-  const updateColumnType = (selected) => {
+  const updateColumnType = selected => {
     dispatch(editColumn(colName, 'type', selected.value));
   };
-  const toggleColumnNullable = (e) => {
+  const toggleColumnNullable = e => {
     dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
   };
-  const toggleColumnUnique = (e) => {
+  const toggleColumnUnique = e => {
     dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
   };
   const updateColumnDefault = (e, data) => {
     const { newValue } = data;
     dispatch(editColumn(colName, 'default', newValue));
   };
-  const updateColumnComment = (e) => {
+  const updateColumnComment = e => {
     dispatch(editColumn(colName, 'comment', e.target.value));
   };
-  const updateColumnCustomField = (e) => {
+  const updateColumnCustomField = e => {
     dispatch(editColumn(colName, 'customFieldName', e.target.value));
   };
 
@@ -145,7 +145,7 @@ const ColumnEditor = ({
                 value={
                   alterOptionsValueMap?.[columnTypePG]?.value ?? columnTypePG
                 }
-                onChange={(e) => {
+                onChange={e => {
                   e.persist();
                   updateColumnType({ value: e.target.value });
                 }}

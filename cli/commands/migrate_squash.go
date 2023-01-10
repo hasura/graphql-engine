@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"text/tabwriter"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -27,7 +27,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateSquashCmd := &cobra.Command{
 		Use:   "squash",
 		Short: "(PREVIEW) Squash multiple migrations into a single one",
-		Long:  "(PREVIEW) Squash multiple migrations leading up to the latest one into a single migration file",
+		Long:  "As you're developing your Hasura GraphQL API, you may find yourself in a situation where you have a lot of migrations that you want to squash into a single one. This command helps you do that. By running this command, you can squash all the iterative migrations you've created into a single file.",
 		Example: `  # NOTE: This command is in PREVIEW. Correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:
@@ -37,15 +37,23 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate squash --name "<name>" --from 123`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return validateConfigV3Flags(cmd, ec)
+			op := genOpName(cmd, "PreRunE")
+			if err := validateConfigV3Flags(cmd, ec); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			opts.newVersion = getTime()
 			opts.Source = ec.Source
 			if opts.EC.HasMetadataV3 && opts.EC.Config.Version < cli.V2 {
-				return fmt.Errorf("squashing when using metadata V3 is supported from Config V2 only")
+				return errors.E(op, fmt.Errorf("squashing when using metadata V3 is supported from Config V2 only"))
 			}
-			return opts.run()
+			if err := opts.run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
@@ -77,48 +85,49 @@ type migrateSquashOptions struct {
 }
 
 func (o *migrateSquashOptions) run() error {
+	var op errors.Op = "commands.migrateSquashOptions.run"
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
 	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
-		return errors.Wrap(err, "unable to initialize migrations driver")
+		return errors.E(op, fmt.Errorf("unable to initialize migrations driver: %w", err))
 	}
 	status, err := migrateDrv.GetStatus()
 	if err != nil {
-		return fmt.Errorf("finding status: %w", err)
+		return errors.E(op, fmt.Errorf("finding status: %w", err))
 	}
 	var toMigration, fromMigration *migrate.MigrationStatus
 	fromMigration, ok := status.Read(o.from)
 	if !ok {
-		return fmt.Errorf("validating 'from' migration failed. Make sure migration with version %v exists", o.from)
+		return errors.E(op, fmt.Errorf("validating 'from' migration failed. Make sure migration with version %v exists", o.from))
 	}
 	if o.to == -1 {
 		toMigration = status.Migrations[status.Index[status.Index.Len()-1]]
 	} else {
 		var ok bool
 		if int64(o.from) > o.to {
-			return fmt.Errorf("cannot squash from %v to %v: %v (from) should be less than %v (to)", o.from, o.to, o.from, o.to)
+			return errors.E(op, fmt.Errorf("cannot squash from %v to %v: %v (from) should be less than %v (to)", o.from, o.to, o.from, o.to))
 		}
 		toMigration, ok = status.Read(uint64(o.to))
 		if !ok {
-			return fmt.Errorf("validating 'to' migration failed. Make sure migration with version %v exists", o.to)
+			return errors.E(op, fmt.Errorf("validating 'to' migration failed. Make sure migration with version %v exists", o.to))
 		}
 	}
 	if err := validateMigrations(status, fromMigration.Version, toMigration.Version); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	versions, err := mig.SquashCmd(migrateDrv, o.from, o.to, o.newVersion, o.name, filepath.Join(o.EC.MigrationDir, o.Source.Name))
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return errors.Wrap(err, "unable to squash migrations")
+		return errors.E(op, fmt.Errorf("unable to squash migrations: %w", err))
 	}
 
 	var uversions []uint64
 	for _, version := range versions {
 		if version < 0 {
-			return fmt.Errorf("operation failed found version value should >= 0, which is not expected")
+			return errors.E(op, fmt.Errorf("operation failed found version value should >= 0, which is not expected"))
 		}
 		uversions = append(uversions, uint64(version))
 	}
@@ -126,18 +135,18 @@ func (o *migrateSquashOptions) run() error {
 	newSquashedMigrationsDestination := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("squashed_%d_to_%d", uversions[0], uversions[len(uversions)-1]))
 	err = os.MkdirAll(newSquashedMigrationsDestination, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("creating directory to move squashed migrations: %w", err)
+		return errors.E(op, fmt.Errorf("creating directory to move squashed migrations: %w", err))
 	}
 
 	err = moveMigrations(o.EC, uversions, o.EC.Source, newSquashedMigrationsDestination)
 	if err != nil {
-		return fmt.Errorf("moving squashed migrations: %w", err)
+		return errors.E(op, fmt.Errorf("moving squashed migrations: %w", err))
 	}
 	oldPath := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("%d_%s", o.newVersion, o.name))
 	newPath := filepath.Join(o.EC.MigrationDir, o.Source.Name, fmt.Sprintf("%d_%s", toMigration.Version, o.name))
 	err = os.Rename(oldPath, newPath)
 	if err != nil {
-		return fmt.Errorf("renaming squashed migrations: %w", err)
+		return errors.E(op, fmt.Errorf("renaming squashed migrations: %w", err))
 	}
 
 	o.EC.Logger.Infof("Created '%d_%s' after squashing '%d' till '%d'", toMigration.Version, o.name, versions[0], versions[len(versions)-1])
@@ -163,6 +172,7 @@ func (o *migrateSquashOptions) run() error {
 }
 
 func validateMigrations(status *migrate.Status, from uint64, to uint64) error {
+	var op errors.Op = "commands.validateMigrations"
 	// do not allow squashing a set of migrations when they are out of sync
 	// ie if I want to squash the following set of migrations
 	// 1
@@ -186,7 +196,7 @@ func validateMigrations(status *migrate.Status, from uint64, to uint64) error {
 	for idx := fromIndex + 1; idx <= toIndex; idx++ {
 		migration := status.Migrations[status.Index[idx]]
 		if !(migration.IsApplied == prevApplied && migration.IsPresent) {
-			return fmt.Errorf("migrations are out of sync. all migrations selected to squash should be applied or all should be be unapplied. found first mismatch at %v. use 'hasura migrate status' to inspect", migration.Version)
+			return errors.E(op, fmt.Errorf("migrations are out of sync. all migrations selected to squash should be applied or all should be be unapplied. found first mismatch at %v. use 'hasura migrate status' to inspect", migration.Version))
 		}
 	}
 
@@ -194,6 +204,7 @@ func validateMigrations(status *migrate.Status, from uint64, to uint64) error {
 }
 
 func moveMigrations(ec *cli.ExecutionContext, versions []uint64, source cli.Source, destination string) error {
+	var op errors.Op = "commands.moveMigrations"
 	for _, v := range versions {
 		moveOpts := mig.CreateOptions{
 			Version:   strconv.FormatUint(v, 10),
@@ -201,7 +212,7 @@ func moveMigrations(ec *cli.ExecutionContext, versions []uint64, source cli.Sour
 		}
 		err := moveOpts.MoveToDir(destination)
 		if err != nil {
-			return fmt.Errorf("unable to move migrations from project for: %v : %w", v, err)
+			return errors.E(op, fmt.Errorf("unable to move migrations from project for: %v : %w", v, err))
 		}
 	}
 	return nil

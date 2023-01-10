@@ -96,7 +96,8 @@ saveMetadataToHdbTables
 
         -- Event triggers
         withPathK "event_triggers" $
-          indexedForM_ _tmEventTriggers $ \etc -> addEventTriggerToCatalog _tmTable etc
+          indexedForM_ _tmEventTriggers $
+            \etc -> addEventTriggerToCatalog _tmTable etc
 
     -- sql functions
     withPathK "functions" $
@@ -106,7 +107,8 @@ saveMetadataToHdbTables
     -- query collections
     systemDefined <- ask
     withPathK "query_collections" $
-      indexedForM_ collections $ \c -> liftTx $ addCollectionToCatalog c systemDefined
+      indexedForM_ collections $
+        \c -> liftTx $ addCollectionToCatalog c systemDefined
 
     -- allow list
     withPathK "allowlist" $ do
@@ -202,7 +204,7 @@ addEventTriggerToCatalog qt etc = liftTx do
     False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _ _ _ _) = etc
 
 addComputedFieldToCatalog ::
   MonadTx m =>

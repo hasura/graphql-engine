@@ -45,18 +45,18 @@ const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 const SET_CHECK_CONSTRAINTS = 'AddTable/SET_CHECK_CONSTRAINTS';
 const REMOVE_CHECK_CONSTRAINT = 'AddTable/REMOVE_CHECK_CONSTRAINT';
 
-const setCheckConstraints = (constraints) => ({
+const setCheckConstraints = constraints => ({
   type: SET_CHECK_CONSTRAINTS,
   constraints,
 });
-const removeCheckConstraint = (index) => ({
+const removeCheckConstraint = index => ({
   type: REMOVE_CHECK_CONSTRAINT,
   index,
 });
 const setDefaults = () => ({ type: SET_DEFAULTS });
-const setTableName = (value) => ({ type: SET_TABLENAME, value });
-const setTableComment = (value) => ({ type: SET_TABLECOMMENT, value });
-const removeColumn = (i) => ({ type: REMOVE_COLUMN, index: i });
+const setTableName = value => ({ type: SET_TABLENAME, value });
+const setTableComment = value => ({ type: SET_TABLECOMMENT, value });
+const removeColumn = i => ({ type: REMOVE_COLUMN, index: i });
 const setColName = (name, index, isNull) => ({
   type: SET_COLNAME,
   name,
@@ -74,14 +74,14 @@ const setColType = (coltype, index) => ({
   coltype,
   index,
 });
-const removeColDefault = (index) => ({ type: REMOVE_COLDEFAULT, index });
+const removeColDefault = index => ({ type: REMOVE_COLDEFAULT, index });
 const setColNullable = (isNull, index) => ({
   type: SET_COLNULLABLE,
   isNull,
   index,
 });
 
-const setFreqUsedColumn = (column) => (dispatch, getState) => {
+const setFreqUsedColumn = column => (dispatch, getState) => {
   const tableState = getState().addTable.table;
   const columns = [...tableState.columns];
 
@@ -128,22 +128,22 @@ const setColUnique = (isUnique, index) => ({
   index,
 });
 
-const setUniqueKeys = (keys) => ({
+const setUniqueKeys = keys => ({
   type: SET_UNIQUE_KEYS,
   data: keys,
 });
 
 const addCol = () => ({ type: ADD_COL });
-const setPk = (pks) => ({ type: SET_PK, pks });
-const setForeignKeys = (fks) => ({
+const setPk = pks => ({ type: SET_PK, pks });
+const setForeignKeys = fks => ({
   type: SET_FKS,
   fks,
 });
-const toggleFk = (i) => ({ type: TOGGLE_FK, data: i });
+const toggleFk = i => ({ type: TOGGLE_FK, data: i });
 const clearFkToggle = () => ({ type: CLEAR_FK_TOGGLE });
 
 // General error during validation.
-const validationError = (error) => {
+const validationError = error => {
   alert(error);
   return { type: VALIDATION_ERROR, error };
 };
@@ -153,7 +153,7 @@ const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
  *
  * @param {{name: string, schema: string}} payload
  */
-export const trackTable = (payload) => (dispatch, getState) => {
+export const trackTable = payload => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   const { currentDataSource, allSchemas } = getState().tables;
   const table = findTable(allSchemas, payload);
@@ -190,7 +190,7 @@ export const trackTable = (payload) => (dispatch, getState) => {
     return;
   };
 
-  const customOnError = (err) => {
+  const customOnError = err => {
     dispatch({ type: REQUEST_ERROR, data: err });
     dispatch(setSidebarLoading(false));
   };
@@ -255,7 +255,7 @@ const createTableSql = () => {
     const migrationName = 'create_table_' + currentSchema + '_' + tableName;
 
     // up migration
-    const upChanges = createTableQueries.map((sql) =>
+    const upChanges = createTableQueries.map(sql =>
       getRunSqlQuery(sql, currentDataSource)
     );
 
@@ -272,7 +272,7 @@ const createTableSql = () => {
         dispatch(trackTable({ schema: currentSchema, name: tableName }));
       });
     };
-    const customOnError = (err) => {
+    const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
       dispatch(setSidebarLoading(false));
@@ -331,7 +331,7 @@ const addTableReducerCore = (state = defaultState, action) => {
     case REMOVE_COLUMN:
       // Removes the index of the removed column from the array of primaryKeys.
       const primaryKeys = state.primaryKeys
-        .map((primaryKeyIndex) => {
+        .map(primaryKeyIndex => {
           const pkiValue = parseInt(primaryKeyIndex, 10);
           if (pkiValue < action.index) {
             return primaryKeyIndex;
@@ -340,19 +340,19 @@ const addTableReducerCore = (state = defaultState, action) => {
             return (pkiValue - 1).toString();
           }
         })
-        .filter((pki) => pki !== undefined);
+        .filter(pki => pki !== undefined);
 
       const uniqueKeys = state.uniqueKeys
-        .map((uk) => {
+        .map(uk => {
           const newUniqueKey = uk
-            .map((c) => {
+            .map(c => {
               if (c > action.index) return c - 1;
               if (c < action.index) return c;
             })
-            .filter((c) => c !== undefined);
+            .filter(c => c !== undefined);
           return [...newUniqueKey];
         })
-        .filter((uk) => uk.length !== 0);
+        .filter(uk => uk.length !== 0);
 
       return {
         ...state,
@@ -476,17 +476,17 @@ const addTableReducerCore = (state = defaultState, action) => {
   }
 };
 
-const isValidColumn = (col) => {
+const isValidColumn = col => {
   return (
     col.name !== null && col.name !== '' && col.type !== null && col.type !== ''
   );
 };
 
-const needsNewColumn = (columns) => {
+const needsNewColumn = columns => {
   return columns.length === 0 || isValidColumn(columns[columns.length - 1]);
 };
 
-const addACol = (columns) => {
+const addACol = columns => {
   return [...columns, { name: '', type: '' }];
 };
 

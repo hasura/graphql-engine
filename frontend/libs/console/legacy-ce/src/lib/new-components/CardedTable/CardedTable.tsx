@@ -54,8 +54,8 @@ const Header = ({ columns }: HeaderProps) => {
   return (
     <TableHead>
       <TableHeadRow>
-        {columns.map((column) => (
-          <TableHeadCell>{column}</TableHeadCell>
+        {columns.map((column, i) => (
+          <TableHeadCell key={i}>{column}</TableHeadCell>
         ))}
       </TableHeadRow>
     </TableHead>
@@ -77,9 +77,14 @@ const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
   );
 };
 
-const TableBodyCell = ({ children }: ChildrenProps) => {
+const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
-    <td className="px-sm py-xs whitespace-nowrap text-muted">{children}</td>
+    <td
+      className="px-sm py-xs whitespace-nowrap text-muted"
+      {...cellAttributes}
+    >
+      {children}
+    </td>
   );
 };
 
@@ -99,7 +104,7 @@ interface BodyProps {
 const Body = ({ data, showActionCell = false }: BodyProps) => {
   return (
     <TableBody>
-      {data.map((row) => {
+      {data.map(row => {
         return (
           <TableBodyRow>
             {row.map((cell, index) => {

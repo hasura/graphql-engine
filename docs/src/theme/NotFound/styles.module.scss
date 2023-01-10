@@ -1,0 +1,69 @@
+.content {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  padding: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+  }
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  text-align: start;
+  padding-left: 0;
+
+  // loop to delay animation for each list item
+  @for $i from 1 through 10 {
+    li:nth-child(#{$i}) {
+      animation-delay: 0.15s * $i;
+    }
+  }
+
+  li {
+    list-style: none;
+    margin-bottom: 1rem;
+    animation-delay: 0.5s;
+    animation: fadeInAndShift 0.5s ease-in-out;
+    animation-fill-mode: both;
+
+    &:hover {
+      a::after {
+        transform: translateX(5px);
+      }
+    }
+
+    a::after {
+      display: inline-block;
+      content: '>';
+      margin-left: 0.5rem;
+      text-decoration: none;
+      transition: all 0.3s ease-in-out;
+    }
+  }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInAndShift {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px);
+    }
+  }
+}

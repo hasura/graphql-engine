@@ -13,7 +13,7 @@ export default {
     chromatic: { disableSnapshot: true },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <div className="p-4 flex gap-5 items-center max-w-screen">{Story()}</div>
     ),
   ],
@@ -40,7 +40,7 @@ export const Default: ComponentStory<typeof Button> = ({ onClick }) => (
   </DropdownButton>
 );
 
-export const ApiPlayground: ComponentStory<typeof Button> = (args) => (
+export const ApiPlayground: ComponentStory<typeof Button> = args => (
   <DropdownButton
     items={[
       ['Action', <span className="text-red-600">Destructive Action</span>],

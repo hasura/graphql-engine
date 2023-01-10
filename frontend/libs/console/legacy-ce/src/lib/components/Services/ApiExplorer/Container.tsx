@@ -12,7 +12,7 @@ type ContainerProps = {
 
 const ApiExplorer: React.FC = generatedApiExplorer(connect);
 
-const Container: React.FC<ContainerProps> = (props) => {
+const Container: React.FC<ContainerProps> = props => {
   const { location, children } = props;
   return (
     <>

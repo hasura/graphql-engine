@@ -1,13 +1,17 @@
+export type FilterFormValues = {
+  column: string;
+  operator: string;
+  value: string;
+};
+
+export type SortFormValues = {
+  column: string;
+  type: 'asc' | 'desc' | '--';
+};
+
 export type FiltersAndSortFormValues = {
-  filter: {
-    column: string;
-    operator: string;
-    value: string;
-  }[];
-  sort: {
-    column: string;
-    type: 'asc' | 'desc' | '--';
-  }[];
+  filters: FilterFormValues[];
+  sorts: SortFormValues[];
 };
 
 export const defaultColumn = '-- column --';
@@ -19,7 +23,7 @@ type ColumnName = string;
 type OperatorType = string; // TODO: find the list of possible operators
 type OperatorCondition = Record<
   OperatorType,
-  string | number | number[] | string[] | boolean
+  string | number | number[] | string[] | boolean | null
 >;
 
 export type WhereCondition = Record<ColumnName, OperatorCondition>;

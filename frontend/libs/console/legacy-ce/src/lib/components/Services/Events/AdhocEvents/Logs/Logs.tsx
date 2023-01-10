@@ -10,7 +10,7 @@ type Props = {
   dispatch: Dispatch;
 };
 
-const InvocationLogs: React.FC<Props> = (props) => {
+const InvocationLogs: React.FC<Props> = props => {
   const { dispatch } = props;
 
   const renderRows: FilterRenderProp = (

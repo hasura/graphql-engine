@@ -29,7 +29,7 @@ const ReadReplicasGroup = ({
   selectedSource,
 }) => {
   const replicas = source?.configuration?.read_replicas || [];
-  const setSelected = (i, ix) => (e) => {
+  const setSelected = (i, ix) => e => {
     e.stopPropagation();
     if (ix === 0) {
       setSelectedSource({

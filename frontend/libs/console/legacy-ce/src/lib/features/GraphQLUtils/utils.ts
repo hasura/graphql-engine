@@ -1,4 +1,4 @@
-import { MetadataTable } from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
 import { OrderBy, WhereClause } from './types';
 
 export const getFields = ({
@@ -8,7 +8,7 @@ export const getFields = ({
   columns: string[];
   configuration?: Record<string, any>;
 }): string[] => {
-  return columns.map((column) => {
+  return columns.map(column => {
     const customColumnName = configuration?.custom_column_names?.[column];
 
     /**
@@ -45,7 +45,7 @@ export const getWhereClauses = ({
 }): string => {
   if (!whereClause) return '';
 
-  const expressions = whereClause.map((expression) => {
+  const expressions = whereClause.map(expression => {
     const [columnName, columnExp] = Object.entries(expression)[0];
     const [operator, value] = Object.entries(columnExp)[0];
 
@@ -71,7 +71,7 @@ export const getOrderByClauses = ({
 }): string => {
   if (!orderByClauses || !orderByClauses.length) return '';
 
-  const expressions = orderByClauses.map((expression) => {
+  const expressions = orderByClauses.map(expression => {
     const graphQLCompatibleColumnName = getGraphQLColumnName(
       expression.column,
       tableCustomization

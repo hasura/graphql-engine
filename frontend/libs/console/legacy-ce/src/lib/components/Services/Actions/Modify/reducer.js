@@ -1,31 +1,31 @@
 import defaultState from './state';
 
 const SET_MODIFY_STATE = 'Actions/Modify/SET_MODIFY_STATE';
-export const setModifyState = (state) => ({
+export const setModifyState = state => ({
   type: SET_MODIFY_STATE,
   state,
 });
 
 const SET_ACTION_TIMEOUT = 'Actions/Add/SET_ACTION_TIMEOUT';
-export const setActionTimeout = (timeout) => ({
+export const setActionTimeout = timeout => ({
   type: SET_ACTION_TIMEOUT,
   timeout,
 });
 
 const SET_ACTION_HANDLER = 'Actions/Modify/SET_ACTION_HANDLER';
-export const setActionHandler = (handler) => ({
+export const setActionHandler = handler => ({
   type: SET_ACTION_HANDLER,
   handler,
 });
 
 const SET_ACTION_KIND = 'Actions/Modify/SET_ACTION_KIND';
-export const setActionKind = (kind) => ({
+export const setActionKind = kind => ({
   type: SET_ACTION_KIND,
   kind,
 });
 
 const SET_ACTION_COMMENT = 'Actions/Modify/SET_ACTION_COMMENT';
-export const setActionComment = (comment) => ({
+export const setActionComment = comment => ({
   type: SET_ACTION_COMMENT,
   comment,
 });
@@ -48,7 +48,7 @@ const UNSET_FETCHING = 'Actions/Modify/UNSET_FETCHING';
 export const unsetFetching = () => ({ type: UNSET_FETCHING });
 
 const SET_HEADERS = 'Actions/Modify/SET_HEADERS';
-export const setHeaders = (headers) => ({
+export const setHeaders = headers => ({
   type: SET_HEADERS,
   headers,
 });

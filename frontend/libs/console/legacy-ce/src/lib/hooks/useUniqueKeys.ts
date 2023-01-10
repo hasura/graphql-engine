@@ -28,8 +28,7 @@ const transformFilterUniqueKeys =
   (table: QualifiedTable, driver: Driver) =>
   (data: RunSQLResponse): UniqueKey[] => {
     return transformUniqueKeys(driver)(data).filter(
-      (key) =>
-        key.table_name === table.name && key.table_schema === table.schema
+      key => key.table_name === table.name && key.table_schema === table.schema
     );
   };
 

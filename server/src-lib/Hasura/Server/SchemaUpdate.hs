@@ -4,8 +4,7 @@
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread,
     startSchemaSyncProcessorThread,
-    ThreadType (..),
-    ThreadError (..),
+    SchemaSyncThreadType (..),
   )
 where
 
@@ -44,33 +43,6 @@ import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
 import Refined (NonNegative, Refined, unrefine)
 
-data ThreadType
-  = TTListener
-  | TTProcessor
-  deriving (Eq)
-
-instance Show ThreadType where
-  show TTListener = "listener"
-  show TTProcessor = "processor"
-
-data SchemaSyncThreadLog = SchemaSyncThreadLog
-  { suelLogLevel :: !LogLevel,
-    suelThreadType :: !ThreadType,
-    suelInfo :: !Value
-  }
-  deriving (Show, Eq)
-
-instance ToJSON SchemaSyncThreadLog where
-  toJSON (SchemaSyncThreadLog _ t info) =
-    object
-      [ "thread_type" .= show t,
-        "info" .= info
-      ]
-
-instance ToEngineLog SchemaSyncThreadLog Hasura where
-  toEngineLog threadLog =
-    (suelLogLevel threadLog, ELTInternal ILTSchemaSyncThread, toJSON threadLog)
-
 data ThreadError
   = TEPayloadParse !Text
   | TEQueryError !QErr
@@ -87,7 +59,7 @@ logThreadStarted ::
   (MonadIO m) =>
   Logger Hasura ->
   InstanceId ->
-  ThreadType ->
+  SchemaSyncThreadType ->
   Immortal.Thread ->
   m ()
 logThreadStarted logger instanceId threadType thread =
@@ -268,7 +240,8 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
               pure errorState
         Right _ -> do
           when (isInErrorState errorState) $
-            logInfo logger TTListener $ object ["message" .= ("SchemaSync Restored..." :: Text)]
+            logInfo logger TTListener $
+              object ["message" .= ("SchemaSync Restored..." :: Text)]
           pure defaultErrorState
       liftIO $ C.sleep $ milliseconds interval
       pure nextErr
@@ -313,7 +286,7 @@ refreshSchemaCache ::
   Logger Hasura ->
   HTTP.Manager ->
   SchemaCacheRef ->
-  ThreadType ->
+  SchemaSyncThreadType ->
   ServerConfigCtx ->
   STM.TVar Bool ->
   m ()
@@ -336,18 +309,41 @@ refreshSchemaCache
               -- While starting up, the metadata resource version is set to nothing, so we want to set the version
               -- without fetching the database metadata (as we have already fetched it during the startup, so, we
               -- skip fetching it twice)
-              Nothing -> setMetadataResourceVersionInSchemaCache resourceVersion
+              Nothing -> do
+                setMetadataResourceVersionInSchemaCache resourceVersion
+                logInfo logger threadType $
+                  String $
+                    "Received metadata resource version "
+                      <> tshow resourceVersion
+                      <> " as an initial version. Not updating the schema cache."
               Just engineResourceVersion ->
                 unless (engineResourceVersion == resourceVersion) $ do
+                  logInfo logger threadType $
+                    String $
+                      "Received metadata resource version "
+                        <> tshow resourceVersion
+                        <> ", different from the current engine resource version"
+                        <> tshow engineResourceVersion
+                        <> "."
+
                   (metadata, latestResourceVersion) <- fetchMetadata
+                  logInfo logger threadType $
+                    String $
+                      "Fetched metadata with resource version "
+                        <> tshow latestResourceVersion
+
                   notifications <- fetchMetadataNotifications engineResourceVersion instanceId
 
-                  logDebug logger threadType $ "DEBUG: refreshSchemaCache Called: engineResourceVersion: " <> show engineResourceVersion <> ", fresh resource version: " <> show latestResourceVersion
                   case notifications of
                     [] -> do
-                      logInfo logger threadType $ object ["message" .= ("Schema Version changed with no notifications" :: Text)]
+                      logInfo logger threadType $
+                        String $
+                          "Fetched metadata notifications and received no notifications. Not updating the schema cache."
                       setMetadataResourceVersionInSchemaCache latestResourceVersion
                     _ -> do
+                      logInfo logger threadType $
+                        String $
+                          "Fetched metadata notifications and received some notifications. Updating the schema cache."
                       let cacheInvalidations =
                             if any ((== (engineResourceVersion + 1)) . fst) notifications
                               then -- If (engineResourceVersion + 1) is in the list of notifications then
@@ -362,7 +358,8 @@ refreshSchemaCache
                                     ciSources = HS.fromList $ HM.keys $ scSources schemaCache,
                                     ciDataConnectors =
                                       maybe mempty (HS.fromList . HM.keys . unBackendInfoWrapper) $
-                                        BackendMap.lookup @'DataConnector $ scBackendCache schemaCache
+                                        BackendMap.lookup @'DataConnector $
+                                          scBackendCache schemaCache
                                   }
                       logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
                       buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
@@ -373,18 +370,20 @@ refreshSchemaCache
     where
       runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
 
-logInfo :: (MonadIO m) => Logger Hasura -> ThreadType -> Value -> m ()
+logInfo :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
 logInfo logger threadType val =
   unLogger logger $
-    SchemaSyncThreadLog LevelInfo threadType val
+    SchemaSyncLog LevelInfo threadType val
 
-logError :: (MonadIO m, ToJSON a) => Logger Hasura -> ThreadType -> a -> m ()
+logError :: (MonadIO m, ToJSON a) => Logger Hasura -> SchemaSyncThreadType -> a -> m ()
 logError logger threadType err =
   unLogger logger $
-    SchemaSyncThreadLog LevelError threadType $
+    SchemaSyncLog LevelError threadType $
       object ["error" .= toJSON err]
 
-logDebug :: (MonadIO m) => Logger Hasura -> ThreadType -> String -> m ()
-logDebug logger threadType msg =
+-- Currently unused
+_logDebug :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> String -> m ()
+_logDebug logger threadType msg =
   unLogger logger $
-    SchemaSyncThreadLog LevelDebug threadType $ object ["message" .= msg]
+    SchemaSyncLog LevelDebug threadType $
+      object ["message" .= msg]

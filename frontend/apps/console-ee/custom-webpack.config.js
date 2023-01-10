@@ -2,7 +2,10 @@ const { merge } = require('webpack-merge');
 const util = require('util');
 const webpack = require('webpack');
 
-const log = (value) =>
+// un comment this to test out the circular deps
+//const CircularDependencyPlugin = require('circular-dependency-plugin');
+
+const log = value =>
   console.log(
     util.inspect(value, { showHidden: false, depth: null, colors: true })
   );
@@ -10,7 +13,7 @@ const log = (value) =>
 module.exports = (config, context) => {
   const output = merge(config, {
     output: {
-      publicPath: '',
+      publicPath: 'auto',
     },
     plugins: [
       new webpack.DefinePlugin({
@@ -20,6 +23,24 @@ module.exports = (config, context) => {
         __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
         CONSOLE_ASSET_VERSION: Date.now().toString(),
       }),
+      // un comment this to test out the circular deps. Left here since it can be tricky to configure
+      /*
+      new CircularDependencyPlugin({
+        exclude: /node_modules/,
+        failOnError: false,
+        onDetected({
+          // `paths` will be an Array of the relative module paths that make up the cycle
+          paths: cyclePaths,
+          compilation,
+        }) {
+          const err = new Error(
+            `Circular dependency detected!\n * ${cyclePaths.join('\n → ')}`
+          );
+          compilation.warnings.push(err);
+        },
+          cwd: process.cwd(),
+      }),
+       */
     ],
     module: {
       rules: [
@@ -41,6 +62,23 @@ module.exports = (config, context) => {
     },
     resolve: {
       fallback: {
+        /*
+        Used by :
+        openapi-to-graphql and it's deps (graphql-upload > fs-capacitor)
+        no real polyfill exists, so this turns it into an empty implementation
+         */
+        fs: false,
+        /*
+        Used by :
+        openapi-to-graphql and it's deps (graphql-upload > fs-capacitor)
+         */
+        os: require.resolve('os-browserify/browser'),
+
+        /*
+        Used by :
+        openapi-to-graphql and it's deps (swagger2openapi)
+         */
+        http: require.resolve('stream-http'),
         /*
         Used by :
         @graphql-codegen/typescript and it's deps (@graphql-codegen/visitor-plugin-common && parse-filepath)

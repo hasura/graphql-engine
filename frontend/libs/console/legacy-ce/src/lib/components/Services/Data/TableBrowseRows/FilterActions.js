@@ -31,24 +31,24 @@ const SET_PREVPAGE = 'ViewTable/FilterQuery/SET_PREVPAGE';
 
 const setLoading = () => ({ type: LOADING, data: true });
 const unsetLoading = () => ({ type: LOADING, data: false });
-const setDefaultQuery = (curQuery) => ({ type: SET_DEFQUERY, curQuery });
+const setDefaultQuery = curQuery => ({ type: SET_DEFQUERY, curQuery });
 const setFilterCol = (name, index) => ({ type: SET_FILTERCOL, name, index });
 const setFilterOp = (opName, index) => ({ type: SET_FILTEROP, opName, index });
 const setFilterVal = (val, index) => ({ type: SET_FILTERVAL, val, index });
 const addFilter = () => ({ type: ADD_FILTER });
-const removeFilter = (index) => ({ type: REMOVE_FILTER, index });
+const removeFilter = index => ({ type: REMOVE_FILTER, index });
 
 const setOrderCol = (name, index) => ({ type: SET_ORDERCOL, name, index });
 const setOrderType = (order, index) => ({ type: SET_ORDERTYPE, order, index });
 const addOrder = () => ({ type: ADD_ORDER });
-const removeOrder = (index) => ({ type: REMOVE_ORDER, index });
+const removeOrder = index => ({ type: REMOVE_ORDER, index });
 
-const setLimit = (limit) => ({ type: SET_LIMIT, limit });
-const setOffset = (offset) => ({ type: SET_OFFSET, offset });
+const setLimit = limit => ({ type: SET_LIMIT, limit });
+const setOffset = offset => ({ type: SET_OFFSET, offset });
 const setNextPage = () => ({ type: SET_NEXTPAGE });
 const setPrevPage = () => ({ type: SET_PREVPAGE });
 
-const parseArray = (val) => {
+const parseArray = val => {
   if (Array.isArray(val)) return val;
   try {
     return JSON.parse(val);
@@ -57,10 +57,10 @@ const parseArray = (val) => {
   }
 };
 
-const runQuery = (tableSchema) => {
+const runQuery = tableSchema => {
   return (dispatch, getState) => {
     const state = getState().tables.view.curFilter;
-    let finalWhereClauses = state.where.$and.filter((w) => {
+    let finalWhereClauses = state.where.$and.filter(w => {
       const colName = Object.keys(w)[0].trim();
       if (colName === '') {
         return false;
@@ -71,7 +71,7 @@ const runQuery = (tableSchema) => {
       }
       return true;
     });
-    finalWhereClauses = finalWhereClauses.map((w) => {
+    finalWhereClauses = finalWhereClauses.map(w => {
       const colName = Object.keys(w)[0];
       const opName = Object.keys(w[colName])[0];
       const val = w[colName][opName];
@@ -82,7 +82,7 @@ const runQuery = (tableSchema) => {
       }
 
       const colType = tableSchema.columns.find(
-        (c) => c.column_name === colName
+        c => c.column_name === colName
       ).data_type;
       if (Integers.indexOf(colType) > 0) {
         w[colName][opName] = parseInt(val, 10);
@@ -105,7 +105,7 @@ const runQuery = (tableSchema) => {
       where: { $and: finalWhereClauses },
       limit: state.limit,
       offset: state.offset,
-      order_by: state.order_by.filter((w) => w.column.trim() !== ''),
+      order_by: state.order_by.filter(w => w.column.trim() !== ''),
     };
     if (newQuery.where.$and.length === 0) {
       delete newQuery.where;
@@ -121,7 +121,7 @@ const runQuery = (tableSchema) => {
 const exportDataQuery = (tableSchema, type) => {
   return (dispatch, getState) => {
     const state = getState().tables.view.curFilter;
-    const filteredWhereClauses = state.where.$and.filter((whereClause) => {
+    const filteredWhereClauses = state.where.$and.filter(whereClause => {
       const colName = Object.keys(whereClause)[0].trim();
       if (colName === '') {
         return false;
@@ -133,7 +133,7 @@ const exportDataQuery = (tableSchema, type) => {
       return true;
     });
 
-    const finalWhereClauses = filteredWhereClauses.map((whereClause) => {
+    const finalWhereClauses = filteredWhereClauses.map(whereClause => {
       const colName = Object.keys(whereClause)[0];
       const opName = Object.keys(whereClause[colName])[0];
       const val = whereClause[colName][opName];
@@ -144,7 +144,7 @@ const exportDataQuery = (tableSchema, type) => {
       }
 
       const colType = tableSchema.columns.find(
-        (c) => c.column_name === colName
+        c => c.column_name === colName
       ).data_type;
       if (Integers.indexOf(colType) > 0) {
         whereClause[colName][opName] = parseInt(val, 10);
@@ -165,7 +165,7 @@ const exportDataQuery = (tableSchema, type) => {
     });
     const newQuery = {
       where: { $and: finalWhereClauses },
-      order_by: state.order_by.filter((w) => w.column.trim() !== ''),
+      order_by: state.order_by.filter(w => w.column.trim() !== ''),
     };
     if (newQuery.where.$and.length === 0) {
       delete newQuery.where;
@@ -178,7 +178,7 @@ const exportDataQuery = (tableSchema, type) => {
     const fileName = `export_${table_schema}_${table_name}_${getCurrTimeForFileName()}`;
 
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeExportRequest()).then((rows) => {
+    dispatch(vMakeExportRequest()).then(rows => {
       if (!rows) {
         return;
       }

@@ -26,7 +26,7 @@ import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
-export const setSidebarLoading = (isLoading) => ({
+export const setSidebarLoading = isLoading => ({
   type: DATA_SIDEBAR_SET_LOADING,
   data: isLoading,
 });
@@ -58,7 +58,7 @@ const groupByKey = (list, key) =>
     {}
   );
 
-const DataSubSidebar = (props) => {
+const DataSubSidebar = props => {
   const {
     migrationMode,
     dispatch,
@@ -75,6 +75,7 @@ const DataSubSidebar = (props) => {
     dataSources,
     sidebarLoadingState,
     currentTable,
+    metadataSources,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -83,7 +84,7 @@ const DataSubSidebar = (props) => {
   const [isFetching, setIsFetching] = useState(false);
   const [preLoadState, setPreLoadState] = useState(true);
 
-  const onDatabaseChange = (newSourceName) => {
+  const onDatabaseChange = newSourceName => {
     if (newSourceName === currentDataSource) {
       dispatch(_push(`/data/${newSourceName}/`));
       return;
@@ -101,7 +102,7 @@ const DataSubSidebar = (props) => {
     });
   };
 
-  const onSchemaChange = (value) => {
+  const onSchemaChange = value => {
     if (value === currentSchema) {
       dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
       return;
@@ -121,13 +122,13 @@ const DataSubSidebar = (props) => {
 
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
-    sources.forEach((source) => {
+    sources.forEach(source => {
       if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
       const sourceItem = { name: source.name, type: 'database' };
       const sourceTables = !source.tables
         ? []
-        : source.tables.map((data) => {
+        : source.tables.map(data => {
             const is_enum = data.is_enum ? true : false;
             return {
               name: data.table.name,
@@ -138,7 +139,7 @@ const DataSubSidebar = (props) => {
           });
       const sourceFunctions = !source.functions
         ? []
-        : source.functions.map((data) => ({
+        : source.functions.map(data => ({
             name: data.function.name,
             schema: data.function.schema,
             type: 'function',
@@ -152,19 +153,19 @@ const DataSubSidebar = (props) => {
       // Find out the difference between schemas from metadata and SchemaList from state
       const schemasFromMetadata = Array.from(
         new Set([
-          ...sourceTables.map((i) => i.schema),
-          ...sourceFunctions.map((i) => i.schema),
+          ...sourceTables.map(i => i.schema),
+          ...sourceFunctions.map(i => i.schema),
         ])
       );
       const missingSchemas = schemaList.filter(
-        (x) => !schemasFromMetadata.includes(x)
+        x => !schemasFromMetadata.includes(x)
       );
 
       let schemaItems = [];
-      Object.keys(schemaGroups).forEach((schema) => {
+      Object.keys(schemaGroups).forEach(schema => {
         const schemaItem = { name: schema, type: 'schema' };
         const tableItems = [];
-        schemaGroups[schema].forEach((table) => {
+        schemaGroups[schema].forEach(table => {
           const is_view =
             schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
               'view' ||
@@ -186,7 +187,7 @@ const DataSubSidebar = (props) => {
 
       if (source.name === currentDataSource) {
         sourceItem.children = [
-          ...missingSchemas.map((schemaName) => ({
+          ...missingSchemas.map(schemaName => ({
             name: schemaName,
             type: 'schema',
             children: [],
@@ -214,10 +215,10 @@ const DataSubSidebar = (props) => {
     }
 
     const schemaRequests = [];
-    sources.forEach((source) => {
+    sources.forEach(source => {
       const currentSourceTables = sources
-        .filter((i) => i.name === source.name)[0]
-        .tables.map((t) => t.table);
+        .filter(i => i.name === source.name)[0]
+        .tables.map(t => t.table);
       schemaRequests.push({
         sourceType: source.kind,
         sourceName: source.name,
@@ -233,7 +234,7 @@ const DataSubSidebar = (props) => {
     }
 
     dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
-      (schemaInfo) => {
+      schemaInfo => {
         setIsFetching(false);
         setPreLoadState(false);
         const newItems = getItems(schemaInfo);
@@ -242,7 +243,7 @@ const DataSubSidebar = (props) => {
     );
   }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
-  const databasesCount = treeViewItems?.length || 0;
+  const databasesCount = metadataSources.length;
 
   return (
     <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
@@ -301,18 +302,18 @@ const DataSubSidebar = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
     sources: getSourcesFromMetadata(state),
     inconsistentObjects: state.metadata.inconsistentObjects,
     tables: getTablesFromAllSources(state).flat().length,
     enums: getSourcesFromMetadata(state)
-      .map((s) => s.tables)
+      .map(s => s.tables)
       .flat()
-      .filter((item) => item.hasOwnProperty('is_enum')).length,
+      .filter(item => item.hasOwnProperty('is_enum')).length,
     functions: getSourcesFromMetadata(state)
-      .map((s) => s.functions || [])
+      .map(s => s.functions || [])
       .flat().length,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
@@ -321,7 +322,8 @@ const mapStateToProps = (state) => {
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
     dataSources: getDataSources(state),
-    sidebarLoadingState: state.dataSidebar.loading,
+    sidebarLoadingState: !!state.dataSidebar?.loading,
+    metadataSources: state.metadata.metadataObject.sources,
   };
 };
 

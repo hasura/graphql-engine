@@ -16,7 +16,7 @@ const CustomDatePickerMenuItem = ({ onApply, title, value }) => {
   const onClose = () => {
     modalToggle({ isDatePicker: false });
   };
-  const onApplyClick = (data) => {
+  const onApplyClick = data => {
     onClose();
     onApply(data);
   };

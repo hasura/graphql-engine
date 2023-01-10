@@ -57,7 +57,7 @@ const parseBigQueryMssqlTableResponse = (
   driver: Driver
 ) => {
   const tables: Omit<NormalizedTable, 'is_table_tracked'>[] = [];
-  data.result?.slice(1).forEach((row) => {
+  data.result?.slice(1).forEach(row => {
     try {
       tables.push({
         table_schema: row[0],
@@ -104,10 +104,10 @@ const transformTables =
     } else {
       tables = JSON.parse(data.result?.[1]?.[0] ?? '[]');
     }
-    return tables.map((table) => ({
+    return tables.map(table => ({
       ...table,
       is_table_tracked: metadataTables?.some(
-        (t) =>
+        t =>
           t.table.name === table.table_name &&
           t.table.schema === table.table_schema
       ),
@@ -121,7 +121,7 @@ const transformFindTables =
   (data: RunSQLResponse): NormalizedTable | null => {
     return (
       transformTables(driver)(metadataTables)(data).find(
-        (t) => t.table_name === table.name && t.table_schema === table.schema
+        t => t.table_name === table.name && t.table_schema === table.schema
       ) ?? null
     );
   };

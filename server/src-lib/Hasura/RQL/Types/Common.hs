@@ -42,18 +42,23 @@ module Hasura.RQL.Types.Common
     ApolloFederationVersion (..),
     isApolloFedV1enabled,
     RemoteRelationshipG (..),
+    remoteRelationshipCodec,
     rrDefinition,
     rrName,
+    TriggerOnReplication (..),
   )
 where
 
 import Autodocodec
   ( HasCodec (codec),
+    JSONCodec,
     bimapCodec,
     dimapCodec,
     disjointEitherCodec,
     optionalFieldOrNull',
+    requiredField,
     requiredField',
+    requiredFieldWith',
     stringConstCodec,
   )
 import Autodocodec qualified as AC
@@ -69,6 +74,7 @@ import Data.Scientific (toBoundedInteger)
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.Typeable (Typeable)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
@@ -76,8 +82,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Incremental (Cacheable (..))
-import Hasura.Metadata.DTO.Utils (fromEnvCodec)
+import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -98,8 +103,7 @@ newtype RelName = RelName {getRelTxt :: NonEmptyText}
       PG.ToPrepArg,
       PG.FromCol,
       Generic,
-      NFData,
-      Cacheable
+      NFData
     )
 
 instance ToTxt RelName where
@@ -123,7 +127,12 @@ instance NFData RelType
 
 instance Hashable RelType
 
-instance Cacheable RelType
+instance HasCodec RelType where
+  codec =
+    stringConstCodec
+      [ (ObjRel, relTypeToTxt ObjRel),
+        (ArrRel, relTypeToTxt ArrRel)
+      ]
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -163,8 +172,6 @@ instance NFData InsertOrder
 
 instance Hashable InsertOrder
 
-instance Cacheable InsertOrder
-
 instance HasCodec InsertOrder where
   codec =
     stringConstCodec
@@ -186,7 +193,7 @@ instance ToJSON InsertOrder where
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID {unOID :: Int}
-  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, PG.FromCol, Cacheable)
+  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, PG.FromCol)
 
 newtype FieldName = FieldName {getFieldNameTxt :: Text}
   deriving
@@ -202,12 +209,14 @@ newtype FieldName = FieldName {getFieldNameTxt :: Text}
       Generic,
       IsString,
       NFData,
-      Cacheable,
       Semigroup
     )
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
+
+instance HasCodec FieldName where
+  codec = dimapCodec FieldName getFieldNameTxt codec
 
 -- The field name here is the GraphQL alias, i.e, the name with which the field
 -- should appear in the response
@@ -258,8 +267,6 @@ instance Hashable SourceName
 
 instance NFData SourceName
 
-instance Cacheable SourceName
-
 defaultSource :: SourceName
 defaultSource = SNDefault
 
@@ -274,10 +281,8 @@ data InpValInfo = InpValInfo
   }
   deriving (Show, Eq, TH.Lift, Generic)
 
-instance Cacheable InpValInfo
-
 newtype SystemDefined = SystemDefined {unSystemDefined :: Bool}
-  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData, Cacheable)
+  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData)
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
@@ -298,14 +303,10 @@ newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
 
 instance NFData ResolvedWebhook
 
-instance Cacheable ResolvedWebhook
-
 newtype InputWebhook = InputWebhook {unInputWebhook :: URLTemplate}
   deriving (Show, Eq, Generic)
 
 instance NFData InputWebhook
-
-instance Cacheable InputWebhook
 
 instance Hashable InputWebhook
 
@@ -341,7 +342,7 @@ resolveWebhook env (InputWebhook urlTemplate) = do
     eitherRenderedTemplate
 
 newtype Timeout = Timeout {unTimeout :: Int}
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable)
+  deriving (Show, Eq, ToJSON, Generic, NFData)
 
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
@@ -366,8 +367,6 @@ data PGConnectionParams = PGConnectionParams
 
 instance NFData PGConnectionParams
 
-instance Cacheable PGConnectionParams
-
 instance Hashable PGConnectionParams
 
 instance HasCodec PGConnectionParams where
@@ -375,15 +374,15 @@ instance HasCodec PGConnectionParams where
     AC.object "PGConnectionParams" $
       PGConnectionParams
         <$> requiredField' "host"
-        AC..= _pgcpHost
+          AC..= _pgcpHost
         <*> requiredField' "username"
-        AC..= _pgcpUsername
+          AC..= _pgcpUsername
         <*> optionalFieldOrNull' "password"
-        AC..= _pgcpPassword
+          AC..= _pgcpPassword
         <*> requiredField' "port"
-        AC..= _pgcpPort
+          AC..= _pgcpPort
         <*> requiredField' "database"
-        AC..= _pgcpDatabase
+          AC..= _pgcpDatabase
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
 
@@ -391,15 +390,15 @@ instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
     PGConnectionParams
       <$> o
-      .: "host"
+        .: "host"
       <*> o
-      .: "username"
+        .: "username"
       <*> o
-      .:? "password"
+        .:? "password"
       <*> o
-      .: "port"
+        .: "port"
       <*> o
-      .: "database"
+        .: "database"
 
 data UrlConf
   = -- | the database connection string
@@ -411,8 +410,6 @@ data UrlConf
   deriving (Show, Eq, Generic)
 
 instance NFData UrlConf
-
-instance Cacheable UrlConf
 
 instance Hashable UrlConf
 
@@ -552,8 +549,6 @@ data Comment
 
 instance NFData Comment
 
-instance Cacheable Comment
-
 instance Hashable Comment
 
 instance HasCodec Comment where
@@ -596,8 +591,6 @@ data EnvRecord a = EnvRecord
 
 instance NFData a => NFData (EnvRecord a)
 
-instance Cacheable a => Cacheable (EnvRecord a)
-
 instance Hashable a => Hashable (EnvRecord a)
 
 instance (ToJSON a) => ToJSON (EnvRecord a) where
@@ -607,7 +600,8 @@ instance (FromJSON a) => FromJSON (EnvRecord a)
 
 data ApolloFederationVersion = V1 deriving (Show, Eq, Generic)
 
-instance Cacheable ApolloFederationVersion
+instance HasCodec ApolloFederationVersion where
+  codec = stringConstCodec [(V1, "v1")]
 
 instance ToJSON ApolloFederationVersion where
   toJSON V1 = J.String "v1"
@@ -625,7 +619,13 @@ data ApolloFederationConfig = ApolloFederationConfig
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable ApolloFederationConfig
+instance HasCodec ApolloFederationConfig where
+  codec =
+    AC.object "ApolloFederationConfig" $
+      ApolloFederationConfig
+        <$> requiredField "enable" enableDoc AC..= enable
+    where
+      enableDoc = "enable takes the version of apollo federation. Supported value is v1 only."
 
 instance ToJSON ApolloFederationConfig
 
@@ -635,6 +635,28 @@ instance NFData ApolloFederationConfig
 
 isApolloFedV1enabled :: Maybe ApolloFederationConfig -> Bool
 isApolloFedV1enabled = isJust
+
+-- | Type to indicate if the SQL trigger should be enabled
+--   when data is inserted into a table through replication.
+data TriggerOnReplication
+  = TOREnableTrigger
+  | TORDisableTrigger
+  deriving (Show, Eq, Generic)
+
+instance NFData TriggerOnReplication
+
+instance HasCodec TriggerOnReplication where
+  codec = boolConstCodec TOREnableTrigger TORDisableTrigger
+
+instance FromJSON TriggerOnReplication where
+  parseJSON = withBool "TriggerOnReplication" $ \case
+    True -> pure TOREnableTrigger
+    False -> pure TORDisableTrigger
+
+instance ToJSON TriggerOnReplication where
+  toJSON = \case
+    TOREnableTrigger -> Bool True
+    TORDisableTrigger -> Bool False
 
 --------------------------------------------------------------------------------
 -- metadata
@@ -651,7 +673,16 @@ data RemoteRelationshipG definition = RemoteRelationship
   }
   deriving (Show, Eq, Generic)
 
-instance Cacheable definition => Cacheable (RemoteRelationshipG definition)
+remoteRelationshipCodec ::
+  forall definition.
+  (Typeable definition) =>
+  JSONCodec definition ->
+  JSONCodec (RemoteRelationshipG definition)
+remoteRelationshipCodec definitionCodec =
+  AC.object ("RemoteRelationship_" <> typeableName @definition) $
+    RemoteRelationship
+      <$> requiredField' "name" AC..= _rrName
+      <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
 
 $(makeLenses ''RemoteRelationshipG)
 $(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)

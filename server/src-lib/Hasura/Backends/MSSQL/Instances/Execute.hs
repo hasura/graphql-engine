@@ -151,9 +151,9 @@ msDBSubscriptionExplain ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
   m SubscriptionQueryPlanExplanation
-msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig variables _) = do
+msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig cohortId variables _) = do
   let (MultiplexedQuery' reselect _queryTags) = _plqpQuery plan
-      query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
+      query = toQueryPretty $ fromSelect $ multiplexRootReselect [(cohortId, variables)] reselect
       mssqlExecCtx = (_mscExecCtx sourceConfig)
   explainInfo <- liftEitherM $ runExceptT $ (mssqlRunReadOnly mssqlExecCtx) (runShowplan query)
   pure $ SubscriptionQueryPlanExplanation (T.toTxt query) explainInfo variables
@@ -275,7 +275,7 @@ msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceC
   queryTags <- ask
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ (MultiplexedQuery' reselect queryTags)
   pure $
-    SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+    SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId cohortVariables namespace
 
 prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do
@@ -329,7 +329,8 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         map
           ( \(n, v) -> Aliased (ValueExpression (RQLColumn.cvValue v)) (G.unName n)
           )
-          $ Map.toList $ namedArguments
+          $ Map.toList
+          $ namedArguments
 
       -- For positional args we need to be a bit careful not to capture names
       -- from expNamed and expSes (however unlikely)
@@ -426,8 +427,10 @@ msDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   RQLTypes.FieldName ->
   (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
+  Options.StringifyNumbers ->
   m (DBStepInfo 'MSSQL)
-msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _stringifyNumbers = do
+  -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 
   let printer = fromSelect statement

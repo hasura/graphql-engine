@@ -4,7 +4,7 @@ import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '@/mocks/metadata.mock';
 import { useQueryCollections } from './useQueryCollections';
 
 const UseQueryCollections: React.FC = () => {
@@ -32,6 +32,6 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
 } as Meta;

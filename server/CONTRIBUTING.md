@@ -4,7 +4,7 @@ This guide explains how to set up the graphql-engine server for development on y
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 9.2.4 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 9.2.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the [Dockerfile](../packaging/graphql-engine-base/ubuntu.dockerfile)
 - Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
@@ -54,6 +54,7 @@ After making your changes
 ...console assets:
 
     $ cd console
+    $ nvm use
     $ npm ci
     $ npm run server-build
     $ cd ..
@@ -85,6 +86,16 @@ If you have to customise any of the options for ghcide/hls, you should instead c
 ```
 cp sample.hie.yaml hie.yaml
 ```
+
+### Run and test via `run-new.sh`
+
+The `run-new.sh` scripts are an active work in progress, and will eventually replace the `dev.sh` option below.
+
+Run the Python integration tests with `./server/tests-py/run-new.sh`.
+
+Filter on specific test files with `./server/tests-py/run-new.sh -- create_async_action_with_nested_output_and_relation.py`
+
+If you have any issues with `run-new.sh`, please create a [GitHub issue](https://github.com/hasura/graphql-engine/issues/new/choose) and run and test via `dev.sh` instead.
 
 ### Run and test via `dev.sh`
 
@@ -128,9 +139,9 @@ If you want, you can also run the server and test suite manually against an inst
 The following command can be used to build and launch a local `graphql-engine` instance:
 
 ```
-cabal new-run -- exe:graphql-engine \
-  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=console/static/dist
+$ cabal new-run -- exe:graphql-engine \
+    --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
@@ -156,7 +167,7 @@ All sets of tests require running databases:
 The easiest way to run the Python integration test suite is by running:
 
 ```sh
-scripts/dev.sh test --integration
+$ scripts/dev.sh test --integration
 ```
 
 For more details please check out the [README](./tests-py/README.md).
@@ -165,46 +176,39 @@ For more details please check out the [README](./tests-py/README.md).
 
 There are three categories of unit tests:
 
-- true unit tests
-- Postgres unit tests (require a postgres instance)
-- MSSQL unit tests (require a MSSQL instance)
+- unit tests
+- PostgreSQL integration tests (requires a PostgreSQL instance)
+- MS SQL Server integration tests (requires a MS SQL Server instance)
 
-The easiest way to run these tests is through `dev.sh`:
-
-```
-./scripts/dev.sh test --unit
-```
-
-If you want to limit to a specific set of tests:
+The easiest way to run these tests is through `make`, which will automatically spin up and shut down Docker containers for the databases:
 
 ```
-./scripts/dev.sh test --unit --match "some pattern" mssql
+$ make test-unit
+$ make test-integration-postgres
+$ make test-integration-mssql
 ```
 
-Note that you have to use one of 'unit', 'postgres' or 'mssql' when
-using '--match'. There is no way to match without specifying the subset
-of tests to run.
-
-Alternatively, you can run unit tests directly through cabal:
+If you want to limit to a specific set of tests, use `HSPEC_MATCH`:
 
 ```
-cabal new-run -- test:graphql-engine-tests unit
-HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-    cabal new-run -- test:graphql-engine-tests postgres
+$ make test-unit HSPEC_MATCH='Memoize'
+```
+
+Alternatively, you can use Cabal directly (though you'll have to start the databases yourself):
+
+```
+$ cabal run -- graphql-engine:test:graphql-engine-tests
+$ HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    cabal run -- graphql-engine:test:graphql-engine-test-postgres
 ```
 
 ##### Running the Haskell integration test suite
 
-1. To run the Haskell integration test suite, you'll first need to bring up the database containers:
+Run `make test-backends`. This effectively runs the following two commands:
 
-```sh
-docker compose up
 ```
-
-2. Once the containers are up, you can run the test suite via
-
-```sh
-cabal run api-tests
+$ docker compose up --detach --wait
+$ cabal run api-tests:exe:api-tests
 ```
 
 For more details please check out the [README](./lib/api-tests/README.md).
@@ -217,7 +221,7 @@ workaround to allow loading both the `graphql-engine` library and the unit
 testing library in `ghcid` at the same time:
 
 ```sh
-ghcid -a -c "cabal repl graphql-engine-tests -f -O0 -fghci-load-test-with-lib" --test Main.main
+$ ghcid -a -c "cabal repl graphql-engine-tests -f -O0 -fghci-load-test-with-lib" --test Main.main
 ```
 
 This assumes you already have `HASURA_GRAPHQL_DATABASE_URL` and `HASURA_MSSQL_CONN_STR`
@@ -233,7 +237,7 @@ To build with profiling support, you need to both enable profiling via `cabal`
 and set the `profiling` flag. E.g.
 
 ```
-cabal build exe:graphql-engine -f profiling --enable-profiling
+$ cabal build exe:graphql-engine -f profiling --enable-profiling
 ```
 
 ### Create Pull Request
@@ -278,7 +282,7 @@ instructions help in setting up a local hoogle server that enables searching thr
 Installing `hoogle` is fairly simple with `cabal`.
 
 ```bash
-cabal install hoogle
+$ cabal install hoogle
 ```
 
 ### Step 2: Generating hoogle database

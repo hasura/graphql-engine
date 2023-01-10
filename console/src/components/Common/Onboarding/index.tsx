@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { FaExternalLinkAlt, FaDatabase } from 'react-icons/fa';
 import { Button } from '@/new-components/Button';
-import { isCloudConsole, hasLuxFeatureAccess } from '@/utils/cloudConsole';
+import { isCloudConsole } from '@/utils/cloudConsole';
 
 import YouTube from 'react-youtube';
 
@@ -146,14 +146,14 @@ const Onboarding: React.FC<OnboardingProps> = ({
 
   React.useEffect(() => {
     const show = getLSItem(LS_KEYS.showConsoleOnboarding) || 'true';
-    const hasNeonAccess =
-      isCloudConsole(globals) &&
-      hasLuxFeatureAccess(globals, 'NeonDatabaseIntegration') &&
-      globals.neonOAuthClientId &&
-      globals.neonRootDomain;
 
-    setVisible(show === 'true' && hasNeonAccess === 'false');
+    setVisible(show === 'true');
   }, []);
+
+  // Only show onboarding popup on bottom right if environment is not cloud console
+  if (isCloudConsole(globals)) {
+    return null;
+  }
 
   const togglePopup = () => {
     setVisible(pre => {

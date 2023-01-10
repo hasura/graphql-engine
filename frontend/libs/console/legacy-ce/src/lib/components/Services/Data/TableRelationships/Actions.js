@@ -204,7 +204,7 @@ export const dropRemoteRelationship = (
   };
 };
 
-export const setRemoteRelationships = (remoteRelationships) => ({
+export const setRemoteRelationships = remoteRelationships => ({
   type: SET_REMOTE_RELATIONSHIPS,
   remoteRelationships,
 });
@@ -212,23 +212,23 @@ export const setRemoteRelationships = (remoteRelationships) => ({
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const resetManualRelationshipForm = () => ({ type: MANUAL_REL_RESET });
 const addNewRelClicked = () => ({ type: REL_ADD_NEW_CLICKED });
-const relSelectionChanged = (selectedRelationship) => ({
+const relSelectionChanged = selectedRelationship => ({
   type: REL_SELECTION_CHANGED,
   rel: selectedRelationship,
 });
-const relNameChanged = (relName) => ({
+const relNameChanged = relName => ({
   type: REL_NAME_CHANGED,
   relName,
 });
-const manualRelNameChanged = (relName) => ({
+const manualRelNameChanged = relName => ({
   type: MANUAL_REL_NAME_CHANGED,
   relName,
 });
-const manualRelTypeChanged = (relType) => ({
+const manualRelTypeChanged = relType => ({
   type: MANUAL_REL_SET_TYPE,
   relType,
 });
-const manualRelRSchemaChanged = (rSchema) => ({
+const manualRelRSchemaChanged = rSchema => ({
   type: MANUAL_REL_SET_RSCHEMA,
   rSchema,
 });
@@ -394,7 +394,7 @@ const generateRelationshipsQuery = (relMeta, currentDataSource) => {
   return { upQuery: _upQuery, downQuery: _downQuery };
 };
 
-const deleteRelMigrate = (relMeta) => (dispatch, getState) => {
+const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const source = getState().tables.currentDataSource;
   const { upQuery, downQuery } = generateRelationshipsQuery(relMeta, source);
 
@@ -481,12 +481,12 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   );
 };
 
-const setManualRelAdd = (manualRelAdd) => ({
+const setManualRelAdd = manualRelAdd => ({
   type: SET_MANUAL_REL_ADD,
   manualRelAdd,
 });
 
-const manualRelRTableChanged = (tableName) => (dispatch) => {
+const manualRelRTableChanged = tableName => dispatch => {
   dispatch({ type: MANUAL_REL_SET_RTABLE, rTable: tableName });
 };
 
@@ -500,7 +500,7 @@ const addRelViewMigrate =
     const columnMapping = {};
     const { currentDataSource } = getState().tables;
 
-    colMappings.forEach((colMap) => {
+    colMappings.forEach(colMap => {
       if (colMap.column === '') {
         return;
       }
@@ -749,7 +749,7 @@ export const dropDbToDbRelationship =
     );
   };
 
-const sanitizeRelName = (arg) => arg.trim();
+const sanitizeRelName = arg => arg.trim();
 
 const fallBackRelName = (relMeta, existingFields, iterNumber = 0) => {
   let relName;
@@ -795,14 +795,14 @@ const formRelName = (relMeta, existingFields) => {
   }
 };
 
-const getExistingFieldsMap = (tableSchema) => {
+const getExistingFieldsMap = tableSchema => {
   const fieldMap = {};
 
-  tableSchema.relationships.forEach((tr) => {
+  tableSchema.relationships.forEach(tr => {
     fieldMap[tr.rel_name] = true;
   });
 
-  tableSchema.columns.forEach((tc) => {
+  tableSchema.columns.forEach(tc => {
     fieldMap[tc.column_name] = true;
   });
 
@@ -811,9 +811,9 @@ const getExistingFieldsMap = (tableSchema) => {
 
 const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
   const trackedTables = allSchemas.filter(
-    (table) => table.is_table_tracked && table.table_schema === currentSchema
+    table => table.is_table_tracked && table.table_schema === currentSchema
   );
-  const tableRelMapping = trackedTables.map((table) => ({
+  const tableRelMapping = trackedTables.map(table => ({
     table_name: table.table_name,
     existingFields: getExistingFieldsMap(table),
     relations: suggestedRelationshipsRaw(
@@ -826,10 +826,10 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
   const bulkRelTrack = [];
   const bulkRelTrackDown = [];
 
-  tableRelMapping.forEach((table) => {
+  tableRelMapping.forEach(table => {
     // check relations.obj and relations.arr length and form queries
     if (table.relations.objectRel.length) {
-      table.relations.objectRel.forEach((indivObjectRel) => {
+      table.relations.objectRel.forEach(indivObjectRel => {
         indivObjectRel.relName = formRelName(
           indivObjectRel,
           table.existingFields
@@ -852,7 +852,7 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
     }
 
     if (table.relations.arrayRel.length) {
-      table.relations.arrayRel.forEach((indivArrayRel) => {
+      table.relations.arrayRel.forEach(indivArrayRel => {
         indivArrayRel.relName = formRelName(
           indivArrayRel,
           table.existingFields
@@ -878,7 +878,7 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
   return { bulkRelTrack: bulkRelTrack, bulkRelTrackDown: bulkRelTrackDown };
 };
 
-const autoTrackRelations = (autoTrackData) => (dispatch, getState) => {
+const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   const migration = new Migration();
   autoTrackData.forEach(({ upQuery, downQuery }) =>
     migration.add(upQuery, downQuery)

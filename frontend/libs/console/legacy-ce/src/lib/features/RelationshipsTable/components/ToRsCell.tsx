@@ -30,7 +30,7 @@ const ToRsCell = ({
       />
       {rsName}
       <span className="px-2">/</span>
-      {leafs.map((i) => (
+      {leafs.map(i => (
         <RsLeafCell leafName={i} />
       ))}
     </div>

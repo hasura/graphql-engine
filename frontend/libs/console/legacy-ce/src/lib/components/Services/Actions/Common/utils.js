@@ -22,7 +22,7 @@ import {
 } from '../../../Common/utils/jsUtils';
 import { transformHeaders } from '../../../Common/Headers/utils';
 
-export const isInbuiltType = (typename) => {
+export const isInbuiltType = typename => {
   return !!inbuiltTypes[typename];
 };
 
@@ -70,7 +70,7 @@ export const deriveExistingType = (
   existingTypemap,
   prefix
 ) => {
-  const prefixTypename = (name) => {
+  const prefixTypename = name => {
     if (prefix === '_') {
       return `_${name}`;
     }
@@ -79,7 +79,7 @@ export const deriveExistingType = (
 
   const types = {};
 
-  const getEntityDescription = (type) => {
+  const getEntityDescription = type => {
     return type.description
       ? type.description.replace('"', '"')
       : type.description;
@@ -97,7 +97,7 @@ export const deriveExistingType = (
     types[typename] = {
       name: typename,
       kind: 'enum',
-      values: type._values.map((v) => ({
+      values: type._values.map(v => ({
         value: v.value,
         description: getEntityDescription(v),
       })),
@@ -115,7 +115,7 @@ export const deriveExistingType = (
 
     const parentTypes = [];
 
-    Object.values(type._fields).forEach((f) => {
+    Object.values(type._fields).forEach(f => {
       const _f = {
         name: f.name,
         description: getEntityDescription(f),
@@ -134,7 +134,7 @@ export const deriveExistingType = (
 
       _f.type = wrapTypename(prefixdTypename, fieldTypeMetadata.stack);
       _f.arguments = f.arguments
-        ? f.arguments.map((a) => {
+        ? f.arguments.map(a => {
             const _a = {
               name: a.name,
               description: getEntityDescription(a),
@@ -154,7 +154,7 @@ export const deriveExistingType = (
       types[typename].fields.push(_f);
     });
 
-    parentTypes.forEach((t) => {
+    parentTypes.forEach(t => {
       handleType(existingTypemap[t], prefixTypename(t));
     });
   };
@@ -169,7 +169,7 @@ export const deriveExistingType = (
 
     const parentTypes = [];
 
-    Object.values(type._fields).forEach((f) => {
+    Object.values(type._fields).forEach(f => {
       const _f = {
         name: f.name,
         description: getEntityDescription(f),
@@ -188,7 +188,7 @@ export const deriveExistingType = (
 
     types[typename] = _type;
 
-    parentTypes.forEach((t) => {
+    parentTypes.forEach(t => {
       handleType(existingTypemap[t], prefixTypename(t));
     });
   };
@@ -231,7 +231,7 @@ export const getActionTypes = (currentAction, allTypes) => {
   const actionArgs = getActionArguments(currentAction);
   const actionOutputType = getActionOutputType(currentAction);
 
-  const getDependentTypes = (maybeWrappedTypename) => {
+  const getDependentTypes = maybeWrappedTypename => {
     const { typename } = unwrapType(maybeWrappedTypename);
     if (isInbuiltType(typename)) return;
     if (actionTypes[typename]) return;
@@ -240,10 +240,10 @@ export const getActionTypes = (currentAction, allTypes) => {
     actionTypes[typename] = type;
 
     if (type && type.fields) {
-      type.fields.forEach((f) => {
+      type.fields.forEach(f => {
         getDependentTypes(f.type);
         if (f.arguments) {
-          f.arguments.forEach((a) => {
+          f.arguments.forEach(a => {
             getDependentTypes(a.type);
           });
         }
@@ -252,7 +252,7 @@ export const getActionTypes = (currentAction, allTypes) => {
   };
 
   if (actionArgs.length) {
-    actionArgs.forEach((a) => {
+    actionArgs.forEach(a => {
       getDependentTypes(a.type);
     });
   }
@@ -268,16 +268,16 @@ export const getOverlappingTypeConfirmation = (
   allTypes,
   overlappingTypenames
 ) => {
-  const otherActions = allActions.filter((a) => a.name !== currentActionName);
+  const otherActions = allActions.filter(a => a.name !== currentActionName);
 
   const typeCollisionMap = {};
 
   for (let i = otherActions.length - 1; i >= 0; i--) {
     const action = otherActions[i];
     const actionTypes = getActionTypes(action, allTypes);
-    actionTypes.forEach((t) => {
+    actionTypes.forEach(t => {
       if (!t || typeCollisionMap[t.name]) return;
-      overlappingTypenames.forEach((ot) => {
+      overlappingTypenames.forEach(ot => {
         if (ot === t.name) {
           typeCollisionMap[ot] = true;
         }

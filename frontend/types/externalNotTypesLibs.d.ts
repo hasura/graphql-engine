@@ -11,3 +11,5 @@ declare module '@walmartlabs/json-to-simple-graphql-schema/lib' {
     baseType: string;
   }): { value: string };
 }
+
+declare module 'microfiber';

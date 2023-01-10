@@ -22,7 +22,7 @@ export const Driver = (props: DriverProps) => {
 
   if (!availableDrivers) return null;
 
-  const options = availableDrivers.map((d) => ({
+  const options = availableDrivers.map(d => ({
     value: d.name,
     label: `${d.displayName} ${d.release === 'GA' ? '' : `(${d.release})`}`,
   }));

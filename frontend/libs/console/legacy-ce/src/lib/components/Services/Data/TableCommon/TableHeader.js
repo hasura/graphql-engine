@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import { changeTableName } from '../TableModify/ModifyActions';
 import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
@@ -22,17 +23,24 @@ import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';
 import styles from '../../../Common/TableCommon/Table.module.scss';
 
 const TableHeader = ({
-  tabName,
   count,
+  dispatch,
   isCountEstimated,
-  table,
   migrationMode,
   readOnlyMode,
   source,
-  dispatch,
+  table,
+  tabName,
 }) => {
-  const tableName = table.table_name;
-  const tableSchema = table.table_schema;
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Table', {
+    redactText: true,
+  });
+
+  const tableName = table?.table_name;
+  if (!tableName) {
+    return null;
+  }
+  const tableSchema = table?.table_schema;
   const isTableType = dataSource.isTable(table);
 
   let countDisplay = '';
@@ -41,7 +49,7 @@ const TableHeader = ({
   }
   const activeTab = tabNameMap[tabName];
 
-  const saveTableNameChange = (newName) => {
+  const saveTableNameChange = newName => {
     dispatch(
       changeTableName(tableName, newName, isTableType, table.table_type)
     );
@@ -88,7 +96,7 @@ const TableHeader = ({
   return (
     <div>
       <Helmet>
-        <title data-heap-redact-text="true">
+        <title {...titleAnalyticsAttributes}>
           {capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
         </title>
       </Helmet>

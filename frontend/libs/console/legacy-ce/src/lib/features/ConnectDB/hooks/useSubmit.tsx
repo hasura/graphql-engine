@@ -1,8 +1,8 @@
 import { useQueryClient } from 'react-query';
 import { push } from 'react-router-redux';
+import { SupportedDrivers } from '@/features/hasura-metadata-types';
 import {
   allowedMetadataTypes,
-  SupportedDrivers,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 import { APIError } from '@/hooks/error';
@@ -17,7 +17,11 @@ const useRedirect = () => {
   const dispatch = useAppDispatch();
   const redirect = async () => {
     await dispatch(exportMetadata());
-    dispatch(push('/data/manage'));
+    dispatch(
+      push({
+        pathname: '/data/manage',
+      })
+    );
   };
 
   return redirect;
@@ -52,7 +56,7 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries('treeview');
+      queryClient.invalidateQueries(['export_metadata']);
 
       fireNotification({
         type: 'success',
@@ -73,7 +77,7 @@ export const useSubmit = () => {
 
     if (
       !drivers.data
-        ?.map((driver) => driver.name)
+        ?.map(driver => driver.name)
         .includes(values.driver as 'mysql' | SupportedDrivers)
     )
       throw new Error(`Unmanaged ${values.driver} driver`);

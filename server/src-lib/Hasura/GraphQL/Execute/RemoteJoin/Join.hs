@@ -288,7 +288,8 @@ collectJoinArguments joinTree lhs = do
           phantomFields =
             HS.fromList $
               map getFieldNameTxt $
-                concatMap (getPhantomFields . snd) $ toList joinTree_
+                concatMap (getPhantomFields . snd) $
+                  toList joinTree_
 
       -- If we need the typename to disambiguate branches in the join tree, it
       -- will be present in the answer as a placeholder internal field.
@@ -318,7 +319,8 @@ collectJoinArguments joinTree lhs = do
             joinArgument <- forM (getJoinColumnMapping remoteJoin) $ \alias -> do
               let aliasTxt = getFieldNameTxt $ getAliasFieldName alias
               onNothing (JO.lookup aliasTxt object) $
-                throw500 $ "a join column is missing from the response: " <> aliasTxt
+                throw500 $
+                  "a join column is missing from the response: " <> aliasTxt
             if Map.null (Map.filter (== JO.Null) joinArgument)
               then
                 Just . CVFromRemote

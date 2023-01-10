@@ -5,18 +5,17 @@ import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../../Common/CustomInputTypes/TextInput';
 import styles from '../../../../Common/TableCommon/Table.module.scss';
 import { dataSource } from '../../../../../dataSources';
+import { onClick } from './typedInputUtils/onClick';
 
 export const TypedInput = ({
   enumOptions,
   col,
   index,
-  clone,
-  inputRef,
   onChange,
-  onFocus,
   prevValue = null,
   hasDefault = false,
   disabled,
+  values,
 }) => {
   const {
     column_name: colName,
@@ -26,29 +25,20 @@ export const TypedInput = ({
 
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
   const getDefaultValue = () => {
-    if (clone && colName in clone) return clone[colName];
-    if (prevValue !== undefined) {
-      return prevValue === null ? '' : prevValue;
+    if (
+      values?.[colName] !== null &&
+      values?.[colName] !== undefined &&
+      !disabled
+    ) {
+      return values?.[colName];
     }
     return '';
   };
 
-  const onClick = (e) => {
-    const closestRadio = e.target.closest('.radio-inline');
-
-    if (closestRadio) {
-      closestRadio.querySelector('input[type="radio"]').checked = true;
-    }
-
-    e.target.focus();
-  };
-
   const standardInputProps = {
     onChange,
-    onFocus,
     onClick,
     disabled,
-    ref: inputRef,
     'data-test': `typed-input-${index}`,
     className: `form-control ${styles.insertBox}`,
     defaultValue: getDefaultValue(),
@@ -65,12 +55,12 @@ export const TypedInput = ({
       <select
         {...standardInputProps}
         className={`form-control ${styles.insertBox}`}
-        defaultValue={prevValue || ''}
+        defaultValue={getDefaultValue()}
       >
         <option disabled value="">
           -- enum value --
         </option>
-        {enumOptions[colName].map((option) => (
+        {enumOptions[colName].map(option => (
           <option key={option} value={option}>
             {option}
           </option>

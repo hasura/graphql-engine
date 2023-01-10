@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '../../Metrics.module.scss';
 import cross from '../../images/x-circle.svg';
 
-const FilterBadge = (props) => {
+const FilterBadge = props => {
   const { onClick, text } = props;
   return (
     <div className={styles.filterBadge}>

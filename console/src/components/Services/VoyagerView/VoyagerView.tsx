@@ -3,6 +3,8 @@ import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 import 'graphql-voyager/dist/voyager.css';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
 import Endpoints from '../../../Endpoints';
 import './voyagerView.css';
 import requestAction from '../../../utils/requestAction';
@@ -38,10 +40,14 @@ class VoyagerView extends Component<Props, ReduxState> {
 
   override render() {
     return (
-      <GraphQLVoyager
-        introspection={this.introspectionProvider}
-        workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
-      />
+      <Analytics name="VoyagerView" {...REDACT_EVERYTHING}>
+        <div>
+          <GraphQLVoyager
+            introspection={this.introspectionProvider}
+            workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
+          />
+        </div>
+      </Analytics>
     );
   }
 }

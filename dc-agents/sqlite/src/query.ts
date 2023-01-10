@@ -1,6 +1,6 @@
 import { Config }  from "./config";
 import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable, logDeep, envToString, envToNum } from "./util";
+import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -21,8 +21,12 @@ import {
     ExplainResponse,
     ExistsExpression,
     ErrorResponse,
+    OrderByRelation,
+    OrderByElement,
+    OrderByTarget,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
+import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
 
 const SqlString = require('sqlstring-sqlite');
 
@@ -70,8 +74,8 @@ function escapeTableName(tableName: TableName): string {
   return validateTableName(tableName).map(escapeIdentifier).join(".");
 }
 
-function json_object(relationships: Array<TableRelationships>, fields: Fields, table: TableName, tableAlias: string): string {
-  const result = omap(fields, (fieldName, field) => {
+function json_object(relationships: TableRelationships[], fields: Fields, table: TableName, tableAlias: string): string {
+  const result = Object.entries(fields).map(([fieldName, field]) => {
     switch(field.type) {
       case "column":
         return `${escapeString(fieldName)}, ${escapeIdentifier(field.column)}`;
@@ -93,7 +97,7 @@ function json_object(relationships: Array<TableRelationships>, fields: Fields, t
   return tag('json_object', `JSON_OBJECT(${result})`);
 }
 
-function where_clause(relationships: Array<TableRelationships>, expression: Expression, queryTableName: TableName, queryTableAlias: string): string {
+function where_clause(relationships: TableRelationships[], expression: Expression, queryTableName: TableName, queryTableAlias: string): string {
   const generateWhere = (expression: Expression, currentTableName: TableName, currentTableAlias: string): string => {
     switch(expression.type) {
       case "not":
@@ -127,7 +131,19 @@ function where_clause(relationships: Array<TableRelationships>, expression: Expr
         const bopLhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
         const bop = bop_op(expression.operator);
         const bopRhs = generateComparisonValueFragment(expression.value, queryTableAlias, currentTableAlias);
-        return `${bopLhs} ${bop} ${bopRhs}`;
+        if(expression.operator == '_in_year') {
+          return `cast(strftime('%Y', ${bopLhs}) as integer) = ${bopRhs}`;
+        } else if(expression.operator == '_modulus_is_zero') {
+          return `cast(${bopLhs} as integer) % ${bopRhs} = 0`;
+        } else if(expression.operator == '_nand') {
+          return `NOT (${bopLhs} AND ${bopRhs})`;
+        } else if(expression.operator == '_nor') {
+          return `NOT (${bopLhs} OR ${bopRhs})`;
+        } else if(expression.operator == '_xor') {
+          return `(${bopLhs} AND (NOT ${bopRhs})) OR ((NOT${bopRhs}) AND ${bopRhs})`;
+        } else {
+          return `${bopLhs} ${bop} ${bopRhs}`;
+        }
 
       case "binary_arr_op":
         const bopALhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
@@ -149,18 +165,14 @@ type ExistsJoinInfo = {
   joinComparisonFragments: string[]
 }
 
-function calculateExistsJoinInfo(allTableRelationships: Array<TableRelationships>, exists: ExistsExpression, sourceTableName: TableName, sourceTableAlias: string): ExistsJoinInfo {
+function calculateExistsJoinInfo(allTableRelationships: TableRelationships[], exists: ExistsExpression, sourceTableName: TableName, sourceTableAlias: string): ExistsJoinInfo {
   switch (exists.in_table.type) {
     case "related":
       const tableRelationships = find_table_relationship(allTableRelationships, sourceTableName);
       const relationship = tableRelationships.relationships[exists.in_table.relationship];
       const joinTableAlias = generateTableAlias(relationship.target_table);
 
-      const joinComparisonFragments = omap(
-        relationship.column_mapping,
-        (sourceColumnName, targetColumnName) =>
-          `${sourceTableAlias}.${escapeIdentifier(sourceColumnName)} = ${joinTableAlias}.${escapeIdentifier(targetColumnName)}`
-        );
+      const joinComparisonFragments = generateRelationshipJoinComparisonFragments(relationship, sourceTableAlias, joinTableAlias);
 
       return {
         joinTableName: relationship.target_table,
@@ -178,6 +190,13 @@ function calculateExistsJoinInfo(allTableRelationships: Array<TableRelationships
     default:
       return unreachable(exists.in_table["type"]);
   }
+}
+
+function generateRelationshipJoinComparisonFragments(relationship: Relationship, sourceTableAlias: string, targetTableAlias: string): string[] {
+  return Object
+    .entries(relationship.column_mapping)
+    .map(([sourceColumnName, targetColumnName]) =>
+      `${sourceTableAlias}.${escapeIdentifier(sourceColumnName)} = ${targetTableAlias}.${escapeIdentifier(targetColumnName)}`);
 }
 
 function generateComparisonColumnFragment(comparisonColumn: ComparisonColumn, queryTableAlias: string, currentTableAlias: string): string {
@@ -217,7 +236,7 @@ function generateIdentifierAlias(identifier: string): string {
  * @param t Table Name
  * @returns Relationships matching table-name
  */
-function find_table_relationship(ts: Array<TableRelationships>, t: TableName): TableRelationships {
+function find_table_relationship(ts: TableRelationships[], t: TableName): TableRelationships {
   for(var i = 0; i < ts.length; i++) {
     const r = ts[i];
     if(tableNameEquals(r.source_table)(t)) {
@@ -242,11 +261,9 @@ function cast_aggregate_function(f: string): string {
 
 /**
  * Builds an Aggregate query expression.
- *
- * NOTE: ORDER Clauses are currently broken due to SQLite parser issue.
  */
 function aggregates_query(
-    ts: Array<TableRelationships>,
+    ts: TableRelationships[],
     tableName: TableName,
     joinInfo: RelationshipJoinInfo | null,
     aggregates: Aggregates,
@@ -254,28 +271,35 @@ function aggregates_query(
     wLimit: number | null,
     wOffset: number | null,
     wOrder: OrderBy | null,
-  ): Array<string> {
-    if (isEmptyObject(aggregates))
-      return [];
+  ): string[] {
+  if (isEmptyObject(aggregates))
+    return [];
 
-    const tableAlias = generateTableAlias(tableName);
-    const innerFromClauses = `${where(ts, wWhere, joinInfo, tableName, tableAlias)} ${order(wOrder, tableAlias)} ${limit(wLimit)} ${offset(wOffset)}`;
-    const aggregate_pairs = omap(aggregates, (k,v) => {
-      switch(v.type) {
-        case 'star_count':
-          return `${escapeString(k)}, COUNT(*)`;
-        case 'column_count':
-          if(v.distinct) {
-            return `${escapeString(k)}, COUNT(DISTINCT ${escapeIdentifier(v.column)})`;
-          } else {
-            return `${escapeString(k)}, COUNT(${escapeIdentifier(v.column)})`;
-          }
-        case 'single_column':
-          return `${escapeString(k)}, ${cast_aggregate_function(v.function)}(${escapeIdentifier(v.column)})`;
-      }
-    }).join(', ');
+  const tableAlias = generateTableAlias(tableName);
 
-    return [`'aggregates', (SELECT JSON_OBJECT(${aggregate_pairs}) FROM (SELECT * FROM ${escapeTableName(tableName)} AS ${tableAlias} ${innerFromClauses}))`];
+  const orderByInfo = orderBy(ts, wOrder, tableName, tableAlias);
+  const orderByJoinClauses = orderByInfo?.joinClauses.join(" ") ?? "";
+  const orderByClause = orderByInfo?.orderByClause ?? "";
+
+  const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
+  const sourceSubquery = `SELECT ${tableAlias}.* FROM ${escapeTableName(tableName)} AS ${tableAlias} ${orderByJoinClauses} ${whereClause} ${orderByClause} ${limit(wLimit)} ${offset(wOffset)}`
+
+  const aggregate_pairs = Object.entries(aggregates).map(([k,v]) => {
+    switch(v.type) {
+      case 'star_count':
+        return `${escapeString(k)}, COUNT(*)`;
+      case 'column_count':
+        if(v.distinct) {
+          return `${escapeString(k)}, COUNT(DISTINCT ${escapeIdentifier(v.column)})`;
+        } else {
+          return `${escapeString(k)}, COUNT(${escapeIdentifier(v.column)})`;
+        }
+      case 'single_column':
+        return `${escapeString(k)}, ${cast_aggregate_function(v.function)}(${escapeIdentifier(v.column)})`;
+    }
+  }).join(', ');
+
+  return [`'aggregates', (SELECT JSON_OBJECT(${aggregate_pairs}) FROM (${sourceSubquery}))`];
 }
 
 type RelationshipJoinInfo = {
@@ -283,8 +307,8 @@ type RelationshipJoinInfo = {
   columnMapping: Record<string, string> // Mapping from source table column name to target table column name
 }
 
-function array_relationship(
-    ts: Array<TableRelationships>,
+function table_query(
+    ts: TableRelationships[],
     tableName: TableName,
     joinInfo: RelationshipJoinInfo | null,
     fields: Fields,
@@ -294,66 +318,54 @@ function array_relationship(
     wOffset: number | null,
     wOrder: OrderBy | null,
   ): string {
-    const tableAlias      = generateTableAlias(tableName);
-    const aggregateSelect = aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder);
-    const fieldSelect     = isEmptyObject(fields) ? [] : [`'rows', JSON_GROUP_ARRAY(j)`];
-    const fieldFrom       = isEmptyObject(fields) ? '' : (() => {
-      // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
-      const innerFromClauses = `${where(ts, wWhere, joinInfo, tableName, tableAlias)} ${order(wOrder, tableAlias)} ${limit(wLimit)} ${offset(wOffset)}`;
-      if(wOrder === null || wOrder.elements.length < 1) {
-        return `FROM ( SELECT ${json_object(ts, fields, tableName, tableAlias)} AS j FROM ${escapeTableName(tableName)} AS ${tableAlias} ${innerFromClauses})`;
-      } else {
-        const wrappedQueryTableAlias  = generateTableAlias(tableName);
-        const innerSelect = `SELECT * FROM ${escapeTableName(tableName)} AS ${tableAlias} ${innerFromClauses}`;
-        return `FROM (SELECT ${json_object(ts, fields, tableName, wrappedQueryTableAlias)} AS j FROM (${innerSelect}) AS ${wrappedQueryTableAlias})`;
-      }
-    })()
+  const tableAlias      = generateTableAlias(tableName);
+  const aggregateSelect = aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder);
+  const fieldSelect     = isEmptyObject(fields) ? [] : [`'rows', JSON_GROUP_ARRAY(j)`];
+  const fieldFrom       = isEmptyObject(fields) ? '' : (() => {
+    const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
+    // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
+    if(wOrder === null || wOrder.elements.length < 1) {
+      return `FROM ( SELECT ${json_object(ts, fields, tableName, tableAlias)} AS j FROM ${escapeTableName(tableName)} AS ${tableAlias} ${whereClause} ${limit(wLimit)} ${offset(wOffset)})`;
+    } else {
+      const orderByInfo = orderBy(ts, wOrder, tableName, tableAlias);
+      const orderByJoinClauses = orderByInfo?.joinClauses.join(" ") ?? "";
+      const orderByClause = orderByInfo?.orderByClause ?? "";
 
-    return tag('array_relationship',`(SELECT JSON_OBJECT(${[...fieldSelect, ...aggregateSelect].join(', ')}) ${fieldFrom})`);
+      const innerSelect = `SELECT ${tableAlias}.* FROM ${escapeTableName(tableName)} AS ${tableAlias} ${orderByJoinClauses} ${whereClause} ${orderByClause} ${limit(wLimit)} ${offset(wOffset)}`;
+
+      const wrappedQueryTableAlias = generateTableAlias(tableName);
+      return `FROM (SELECT ${json_object(ts, fields, tableName, wrappedQueryTableAlias)} AS j FROM (${innerSelect}) AS ${wrappedQueryTableAlias})`;
+    }
+  })()
+
+  return tag('table_query',`(SELECT JSON_OBJECT(${[...fieldSelect, ...aggregateSelect].join(', ')}) ${fieldFrom})`);
 }
 
-function object_relationship(
-    ts: Array<TableRelationships>,
-    targetTable: TableName,
-    joinInfo: RelationshipJoinInfo,
-    fields: Fields,
-  ): string {
-    const targetTableAlias = generateTableAlias(targetTable);
-    const innerFrom = `${escapeTableName(targetTable)} AS ${targetTableAlias}`;
-    const whereClause = where(ts, null, joinInfo, targetTable, targetTableAlias);
-    return tag('object_relationship',
-      `(SELECT JSON_OBJECT('rows', JSON_ARRAY(${json_object(ts, fields, targetTable, targetTableAlias)})) AS j FROM ${innerFrom} ${whereClause})`);
-}
-
-function relationship(ts: Array<TableRelationships>, r: Relationship, field: RelationshipField, sourceTableAlias: string): string {
+function relationship(ts: TableRelationships[], r: Relationship, field: RelationshipField, sourceTableAlias: string): string {
   const relationshipJoinInfo = {
     sourceTableAlias,
     targetTable: r.target_table,
     columnMapping: r.column_mapping,
   };
 
-  switch(r.relationship_type) {
-    case 'object':
-      return tag('relationship', object_relationship(
-        ts,
-        r.target_table,
-        relationshipJoinInfo,
-        coerceUndefinedOrNullToEmptyRecord(field.query.fields),
-      ));
+  // We force a limit of 1 for object relationships in case the user has configured a manual
+  // "object" relationship that accidentally actually is an array relationship
+  const limit =
+    r.relationship_type === "object"
+      ? 1
+      : coerceUndefinedToNull(field.query.limit);
 
-    case 'array':
-      return tag('relationship', array_relationship(
-        ts,
-        r.target_table,
-        relationshipJoinInfo,
-        coerceUndefinedOrNullToEmptyRecord(field.query.fields),
-        coerceUndefinedOrNullToEmptyRecord(field.query.aggregates),
-        coerceUndefinedToNull(field.query.where),
-        coerceUndefinedToNull(field.query.limit),
-        coerceUndefinedToNull(field.query.offset),
-        coerceUndefinedToNull(field.query.order_by),
-      ));
-  }
+  return tag("relationship", table_query(
+    ts,
+    r.target_table,
+    relationshipJoinInfo,
+    coerceUndefinedOrNullToEmptyRecord(field.query.fields),
+    coerceUndefinedOrNullToEmptyRecord(field.query.aggregates),
+    coerceUndefinedToNull(field.query.where),
+    limit,
+    coerceUndefinedToNull(field.query.offset),
+    coerceUndefinedToNull(field.query.order_by),
+  ));
 }
 
 function bop_array(o: BinaryArrayComparisonOperator): string {
@@ -366,49 +378,222 @@ function bop_array(o: BinaryArrayComparisonOperator): string {
 function bop_op(o: BinaryComparisonOperator): string {
   let result = o;
   switch(o) {
-    case 'equal':                 result = "="; break;
-    case 'greater_than':          result = ">"; break;
-    case 'greater_than_or_equal': result = ">="; break;
-    case 'less_than':             result = "<"; break;
-    case 'less_than_or_equal':    result = "<="; break;
+    // TODO: Check for coverage of these operators
+    case 'equal':                 result = '='; break;
+    case 'greater_than':          result = '>'; break;
+    case 'greater_than_or_equal': result = '>='; break;
+    case 'less_than':             result = '<'; break;
+    case 'less_than_or_equal':    result = '<='; break;
+    case '_eq':                   result = '='; break; // Why is this required?
+    case '_gt':                   result = '>'; break; // Why is this required?
+    case '_gte':                  result = '>='; break; // Why is this required?
+    case '_lt':                   result = '<'; break; // Why is this required?
+    case '_lte':                  result = '<='; break; // Why is this required?
+    case '_like':                 result = 'LIKE'; break;
+    case '_glob':                 result = 'GLOB'; break;
+    case '_regexp':               result = 'REGEXP'; break; // TODO: Have capabilities detect if REGEXP support is enabled
+    case '_neq':                  result = '<>'; break;
+    case '_nlt':                  result = '!<'; break;
+    case '_ngt':                  result = '!>'; break;
+    case '_and':                  result = 'AND'; break;
+    case '_or':                   result = 'OR'; break;
   }
+  // TODO: We can't always assume that we can include the operator here verbatim.
   return tag('bop_op',result);
 }
 
 function uop_op(o: UnaryComparisonOperator): string {
   let result = o;
   switch(o) {
-    case 'is_null':               result = "IS NULL"; break;
+    case 'is_null': result = "IS NULL"; break;
   }
   return tag('uop_op',result);
 }
 
 function orderDirection(orderDirection: OrderDirection): string {
   switch (orderDirection) {
-    case "asc":
-    case "desc":
-      return orderDirection.toUpperCase();
+    case "asc": return "ASC NULLS LAST";
+    case "desc": return "DESC NULLS FIRST";
     default:
       return unreachable(orderDirection);
   }
 }
 
-function order(orderBy: OrderBy | null, queryTableAlias: string): string {
+type OrderByInfo = {
+  joinClauses: string[],
+  orderByClause: string,
+}
+
+function orderBy(allTableRelationships: TableRelationships[], orderBy: OrderBy | null, queryTableName: TableName, queryTableAlias: string): OrderByInfo | null {
   if (orderBy === null || orderBy.elements.length < 1) {
-    return "";
+    return null;
   }
 
-  const result =
+  const joinInfos = Object
+    .entries(orderBy.relations)
+    .flatMap(([subrelationshipName, subrelation]) =>
+      generateOrderByJoinClause(allTableRelationships, orderBy.elements, [], subrelationshipName, subrelation, queryTableName, queryTableAlias)
+    );
+
+  const orderByFragments =
     orderBy.elements
       .map(orderByElement => {
-        if (orderByElement.target_path.length > 0 || orderByElement.target.type !== "column") {
-          throw new Error("Unsupported OrderByElement. Relations and aggregates and not supported.");
-        }
-        return `${queryTableAlias}.${escapeIdentifier(orderByElement.target.column)} ${orderDirection(orderByElement.order_direction)}`;
-      })
-      .join(', ');
+        const targetTableAlias = orderByElement.target_path.length === 0
+          ? queryTableAlias
+          : (() => {
+              const joinInfo = joinInfos.find(joinInfo => joinInfo.joinTableType === getJoinTableTypeForTarget(orderByElement.target) && stringArrayEquals(joinInfo.relationshipPath)(orderByElement.target_path));
+              if (joinInfo === undefined) throw new Error("Can't find a join table for order by target."); // Should not happen 😉
+              return joinInfo.tableAlias;
+            })();
 
-  return tag('order',`ORDER BY ${result}`);
+        const targetColumn = `${targetTableAlias}.${getOrderByTargetAlias(orderByElement.target)}`
+
+        const targetExpression = orderByElement.target.type === "star_count_aggregate"
+          ? `COALESCE(${targetColumn}, 0)`
+          : targetColumn
+
+        return `${targetExpression} ${orderDirection(orderByElement.order_direction)}`;
+      });
+
+  return {
+    joinClauses: joinInfos.map(joinInfo => joinInfo.joinClause),
+    orderByClause: tag('orderBy',`ORDER BY ${orderByFragments.join(",")}`),
+  };
+}
+
+type OrderByJoinTableType = "column" | "aggregate";
+
+function getJoinTableTypeForTarget(orderByTarget: OrderByTarget): OrderByJoinTableType {
+  switch (orderByTarget.type) {
+    case "column": return "column";
+    case "star_count_aggregate": return "aggregate";
+    case "single_column_aggregate": return "aggregate";
+    default:
+      return unreachable(orderByTarget["type"]);
+  }
+}
+
+type OrderByJoinInfo = {
+  joinTableType: OrderByJoinTableType,
+  relationshipPath: string[],
+  tableAlias: string,
+  joinClause: string,
+}
+
+function generateOrderByJoinClause(
+    allTableRelationships: TableRelationships[],
+    allOrderByElements: OrderByElement[],
+    parentRelationshipNames: string[],
+    relationshipName: string,
+    orderByRelation: OrderByRelation,
+    sourceTableName: TableName,
+    sourceTableAlias: string
+  ): OrderByJoinInfo[] {
+  const relationshipPath = [...parentRelationshipNames, relationshipName];
+  const tableRelationships = find_table_relationship(allTableRelationships, sourceTableName);
+  const relationship = tableRelationships.relationships[relationshipName];
+
+  const orderByElements = allOrderByElements.filter(byTargetPath(relationshipPath));
+  const columnTargetsExist = orderByElements.some(element => getJoinTableTypeForTarget(element.target) === "column");
+  const aggregateElements = orderByElements.filter(element => getJoinTableTypeForTarget(element.target) === "aggregate");
+
+  const [columnTargetJoin, subrelationJoinInfo] = (() => {
+    const subrelationsExist = Object.keys(orderByRelation.subrelations).length > 0;
+    if (columnTargetsExist || subrelationsExist) {
+      const columnTargetJoin = generateOrderByColumnTargetJoinInfo(allTableRelationships, relationshipPath, relationship, sourceTableAlias, orderByRelation.where);
+
+      const subrelationJoinInfo = Object
+        .entries(orderByRelation.subrelations)
+        .flatMap(([subrelationshipName, subrelation]) =>
+          generateOrderByJoinClause(allTableRelationships, allOrderByElements, relationshipPath, subrelationshipName, subrelation, relationship.target_table, columnTargetJoin.tableAlias)
+        );
+
+      return [[columnTargetJoin], subrelationJoinInfo]
+
+    } else {
+      return [[], []];
+    }
+  })();
+
+  const aggregateTargetJoin = aggregateElements.length > 0
+    ? [generateOrderByAggregateTargetJoinInfo(allTableRelationships, relationshipPath, relationship, sourceTableAlias, orderByRelation.where, aggregateElements)]
+    : [];
+
+
+  return [
+    ...columnTargetJoin,
+    ...aggregateTargetJoin,
+    ...subrelationJoinInfo
+  ];
+}
+
+const byTargetPath = (relationshipPath: string[]) => (orderByElement: OrderByElement): boolean => stringArrayEquals(orderByElement.target_path)(relationshipPath);
+
+function generateOrderByColumnTargetJoinInfo(
+    allTableRelationships: TableRelationships[],
+    relationshipPath: string[],
+    relationship: Relationship,
+    sourceTableAlias: string,
+    whereExpression: Expression | undefined
+  ): OrderByJoinInfo {
+  const targetTableAlias = generateTableAlias(relationship.target_table);
+
+  const joinComparisonFragments = generateRelationshipJoinComparisonFragments(relationship, sourceTableAlias, targetTableAlias);
+  const whereComparisons = whereExpression ? [where_clause(allTableRelationships, whereExpression, relationship.target_table, targetTableAlias)] : [];
+  const joinOnFragment = [...joinComparisonFragments, ...whereComparisons].join(" AND ");
+
+  const joinClause = tag("columnTargetJoin", `LEFT JOIN ${escapeTableName(relationship.target_table)} AS ${targetTableAlias} ON ${joinOnFragment}`);
+  return {
+    joinTableType: "column",
+    relationshipPath: relationshipPath,
+    tableAlias: targetTableAlias,
+    joinClause: joinClause
+  };
+}
+
+function generateOrderByAggregateTargetJoinInfo(
+  allTableRelationships: TableRelationships[],
+  relationshipPath: string[],
+  relationship: Relationship,
+  sourceTableAlias: string,
+  whereExpression: Expression | undefined,
+  aggregateElements: OrderByElement[],
+): OrderByJoinInfo {
+  const targetTableAlias = generateTableAlias(relationship.target_table);
+  const subqueryTableAlias = generateTableAlias(relationship.target_table);
+
+  const aggregateColumnsFragments = aggregateElements.flatMap(element => {
+    switch (element.target.type) {
+      case "column": return [];
+      case "star_count_aggregate": return `COUNT(*) AS ${getOrderByTargetAlias(element.target)}`;
+      case "single_column_aggregate": return `${cast_aggregate_function(element.target.function)}(${escapeIdentifier(element.target.column)}) AS ${getOrderByTargetAlias(element.target)}`;
+      default: unreachable(element.target["type"]);
+    }
+  });
+  const joinColumns = Object.values(relationship.column_mapping).map(escapeIdentifier);
+  const selectColumns = [...joinColumns, aggregateColumnsFragments];
+  const whereClause = whereExpression ? `WHERE ${where_clause(allTableRelationships, whereExpression, relationship.target_table, subqueryTableAlias)}` : "";
+  const aggregateSubquery = `SELECT ${selectColumns.join(", ")} FROM ${escapeTableName(relationship.target_table)} AS ${subqueryTableAlias} ${whereClause} GROUP BY ${joinColumns.join(", ")}`
+
+  const joinComparisonFragments = generateRelationshipJoinComparisonFragments(relationship, sourceTableAlias, targetTableAlias);
+  const joinOnFragment = [ ...joinComparisonFragments ].join(" AND ");
+  const joinClause = tag("aggregateTargetJoin", `LEFT JOIN (${aggregateSubquery}) AS ${targetTableAlias} ON ${joinOnFragment}`)
+  return {
+    joinTableType: "aggregate",
+    relationshipPath: relationshipPath,
+    tableAlias: targetTableAlias,
+    joinClause: joinClause
+  };
+}
+
+function getOrderByTargetAlias(orderByTarget: OrderByTarget): string {
+  switch (orderByTarget.type) {
+    case "column": return escapeIdentifier(orderByTarget.column);
+    case "star_count_aggregate": return escapeIdentifier("__star_count__");
+    case "single_column_aggregate": return escapeIdentifier(`__${orderByTarget.function}_${orderByTarget.column}__`);
+    default:
+      return unreachable(orderByTarget["type"]);
+  }
 }
 
 /**
@@ -416,13 +601,14 @@ function order(orderBy: OrderBy | null, queryTableAlias: string): string {
  * @param joinInfo Information about a possible join from a source table to the query table that needs to be generated into the where clause
  * @returns string representing the combined where clause
  */
-function where(ts: Array<TableRelationships>, whereExpression: Expression | null, joinInfo: RelationshipJoinInfo | null, queryTableName: TableName, queryTableAlias: string): string {
+function where(ts: TableRelationships[], whereExpression: Expression | null, joinInfo: RelationshipJoinInfo | null, queryTableName: TableName, queryTableAlias: string): string {
   const whereClause = whereExpression !== null ? [where_clause(ts, whereExpression, queryTableName, queryTableAlias)] : [];
   const joinArray = joinInfo
-    ? omap(
-      joinInfo.columnMapping,
-      (k,v) => `${joinInfo.sourceTableAlias}.${escapeIdentifier(k)} = ${queryTableAlias}.${escapeIdentifier(v)}`
-    )
+    ? Object
+      .entries(joinInfo.columnMapping)
+      .map(([sourceColumn, targetColumn]) =>
+        `${joinInfo.sourceTableAlias}.${escapeIdentifier(sourceColumn)} = ${queryTableAlias}.${escapeIdentifier(targetColumn)}`
+      )
     : []
 
   const clauses = [...whereClause, ...joinArray];
@@ -450,7 +636,7 @@ function offset(o: number | null): string {
 /** Top-Level Query Function.
  */
 function query(request: QueryRequest): string {
-  const result = array_relationship(
+  const result = table_query(
     request.table_relationships,
     request.table,
     null,
@@ -472,7 +658,6 @@ function output(rows: any): QueryResponse {
   return JSON.parse(rows[0].data);
 }
 
-const DEBUGGING_TAGS = envToBool('DEBUGGING_TAGS');
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
  *
  * comment('a','b') => '/*\<a>\*\/ b /*\</a>*\/'
@@ -535,14 +720,13 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
   const db = connect(config, sqlLogger); // TODO: Should this be cached?
   const q = query(queryRequest);
 
-  const query_length_limit = envToNum('QUERY_LENGTH_LIMIT', Infinity);
-  if(q.length > query_length_limit) {
+  if(q.length > QUERY_LENGTH_LIMIT) {
     const result: ErrorResponse =
       {
-        message: `Generated SQL Query was too long (${q.length} > ${query_length_limit})`,
+        message: `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
         details: {
           "query.length": q.length,
-          "limit": query_length_limit
+          "limit": QUERY_LENGTH_LIMIT
         }
       };
     return result;
@@ -571,11 +755,11 @@ export async function explain(config: Config, sqlLogger: SqlLogger, queryRequest
   const [result, metadata] = await db.query(`EXPLAIN QUERY PLAN ${q}`);
   return {
     query: q,
-    lines: [ "", ...formatExplainLines(result as Array<AnalysisEntry>)]
+    lines: [ "", ...formatExplainLines(result as AnalysisEntry[])]
   }
 }
 
-function formatExplainLines(items: Array<AnalysisEntry>): Array<string> {
+function formatExplainLines(items: AnalysisEntry[]): string[] {
   const lines = Object.fromEntries(items.map(x => [x.id, x]));
   function depth(x: number): number {
     if(x < 1) {

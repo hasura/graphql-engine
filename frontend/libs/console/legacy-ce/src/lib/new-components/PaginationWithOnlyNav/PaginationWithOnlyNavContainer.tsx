@@ -1,9 +1,9 @@
 import React from 'react';
-import { persistPageSizeChange } from '@/components/Services/Data/TableBrowseRows/tableUtils';
 import { runFilterQuery } from '@/features/BrowseRows';
 import type { UserQuery } from '@/features/BrowseRows';
 import { useAppDispatch } from '@/store';
 import { NormalizedTable } from '@/dataSources/types';
+import { defaultUserQuery } from '@/components/Services/Data/TableBrowseRows/Hooks/useFiltersAndSortFormValues';
 import {
   setLimit,
   setOffset,
@@ -21,7 +21,7 @@ type PaginationWithOnlyNavContainerProps = {
   pageSize: number;
   rows: PaginationWithOnlyNavProps['rows'];
   tableSchema: NormalizedTable;
-  userQuery: UserQuery;
+  userQuery?: UserQuery;
 };
 
 export const PaginationWithOnlyNavContainer = ({
@@ -32,19 +32,20 @@ export const PaginationWithOnlyNavContainer = ({
   pageSize,
   rows,
   tableSchema,
-  userQuery,
+  userQuery = defaultUserQuery,
 }: PaginationWithOnlyNavContainerProps) => {
   const dispatch = useAppDispatch();
 
   const changePageHandler = (newPage: number) => {
     if (offset !== newPage * limit) {
       const newOffset = newPage * limit;
+
       dispatch(setOffset(newPage * limit));
       dispatch(
         runFilterQuery({
           tableSchema,
-          whereAnd: userQuery.where.$and,
-          orderBy: userQuery.order_by,
+          whereAnd: userQuery?.where?.$and || [],
+          orderBy: userQuery?.order_by || [],
           limit,
           offset: newOffset,
         })
@@ -66,7 +67,6 @@ export const PaginationWithOnlyNavContainer = ({
           offset: 0,
         })
       );
-      persistPageSizeChange(newPageSize);
       onChangePageSize(newPageSize);
     }
   };

@@ -63,7 +63,7 @@ const useClient = ({ tokenType, token, metricsFQDN }) => {
   return c;
 };
 
-const Metrics = (props) => {
+const Metrics = props => {
   const {
     projectId,
     privileges,
@@ -266,10 +266,10 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => ({
+const mapDispatchToProps = dispatch => ({
   refetchMetadata: () => dispatch(refetchMetadataAction()),
   dispatch,
 });
-const metricsConnector = (connect) =>
+const metricsConnector = connect =>
   connect(mapStateToProps, mapDispatchToProps)(Metrics);
 export default metricsConnector;

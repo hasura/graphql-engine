@@ -5,7 +5,7 @@ import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 import { Button } from '@/new-components/Button';
 
-import { handlers } from './mocks/handlers.mock';
+import { handlers } from '@/mocks/metadata.mock';
 import { useAddToAllowList } from './useAddToAllowList';
 
 const UseQueryCollections: React.FC<{ name: string }> = ({ name }) => {
@@ -37,11 +37,11 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
   argTypes: {
     collectionName: {
-      defaultValue: 'allowed-queries',
+      defaultValue: 'new-queries',
       description: 'The name of the query collection to add to the allow list',
       control: {
         type: 'text',

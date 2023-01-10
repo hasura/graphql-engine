@@ -37,7 +37,7 @@ export const AggregationSection: React.FC<AggregationProps> = ({
       status={enabled ? 'Enabled' : 'Disabled'}
       data-test="toggle-agg-permission"
       disabled={disabled}
-      defaultOpen={defaultOpen}
+      defaultOpen={defaultOpen || enabled}
     >
       <Collapse.Content>
         <div title={disabled ? 'Set row permissions first' : ''}>
@@ -46,11 +46,12 @@ export const AggregationSection: React.FC<AggregationProps> = ({
               type="checkbox"
               title={disabled ? 'Set row permissions first' : ''}
               disabled={disabled}
+              className="m-0 mt-0 rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
               {...register('aggregationEnabled')}
             />
-            <p>
+            <span>
               Allow role <strong>{roleName}</strong> to make aggregation queries
-            </p>
+            </span>
           </label>
         </div>
       </Collapse.Content>

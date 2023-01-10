@@ -7,6 +7,8 @@ module Hasura.GraphQL.Schema.Options
     InferFunctionPermissions (..),
     RemoteSchemaPermissions (..),
     OptimizePermissionFilters (..),
+    IncludeAggregationPredicates (..),
+    IncludeStreamFields (..),
     IncludeUpdateManyFields (..),
     BigQueryStringNumericInput (..),
   )
@@ -23,6 +25,8 @@ data SchemaOptions = SchemaOptions
     soInferFunctionPermissions :: InferFunctionPermissions,
     soOptimizePermissionFilters :: OptimizePermissionFilters,
     soIncludeUpdateManyFields :: IncludeUpdateManyFields,
+    soIncludeAggregationPredicates :: IncludeAggregationPredicates,
+    soIncludeStreamFields :: IncludeStreamFields,
     soBigQueryStringNumericInput :: BigQueryStringNumericInput
   }
 
@@ -40,8 +44,24 @@ data StringifyNumbers
 -- any tables that this may conflict with if needed
 data IncludeUpdateManyFields
   = IncludeUpdateManyFields
-  | DontIncludeUpdateManyFields
+  | Don'tIncludeUpdateManyFields
   deriving (Eq, Show)
+
+-- | Should we include `TABLE_stream` fields in schemas
+-- This is a toggle so that users can opt-in, and so that we can rename
+-- any tables that this may conflict with if needed
+data IncludeStreamFields
+  = IncludeStreamFields
+  | Don'tIncludeStreamFields
+  deriving (Eq, Show)
+
+-- | Should we include aggregation functions in where clauses?
+-- Because this has the potential to cause naming conflicts in graphql schema
+-- types, this flag allows users to toggle the feature off if it an upgrade breaks
+-- their setup.
+data IncludeAggregationPredicates
+  = IncludeAggregationPredicates
+  | Don'tIncludeAggregationPredicates
 
 -- | Should Boolean fields be collapsed to 'True' when a null value is
 -- given? This was the behaviour of Hasura V1, and is now discouraged.

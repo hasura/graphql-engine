@@ -1,11 +1,12 @@
 import React from 'react';
 import * as z from 'zod';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { Form } from '@/new-components/Form';
+import { action } from '@storybook/addon-actions';
+import { SimpleForm } from '@/new-components/Form';
 import {
-  handlers,
   customer_columns,
+  handlers,
   remote_rel_definition,
 } from '../../__mocks__';
 
@@ -29,10 +30,15 @@ export default {
   component: RemoteSchemaWidget,
   decorators: [
     ReactQueryDecorator(),
-    (StoryComponent) => (
-      <Form schema={z.any()} onSubmit={() => {}} options={{ defaultValues }}>
-        {() => <StoryComponent />}
-      </Form>
+    StoryComponent => (
+      <SimpleForm
+        schema={z.any()}
+        onSubmit={action('onSubmit')}
+        options={{ defaultValues }}
+        className="p-4"
+      >
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
   parameters: {
@@ -40,7 +46,7 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story<RemoteSchemaWidgetProps> = (args) => (
+export const Primary: Story<RemoteSchemaWidgetProps> = args => (
   <RemoteSchemaWidget {...args} />
 );
 Primary.args = {
@@ -54,9 +60,8 @@ Primary.parameters = {
   chromatic: { disableSnapshot: true },
 };
 
-export const RemoteSchemaWidgetWithExistingRelationship: Story<
-  RemoteSchemaWidgetProps
-> = (args) => <RemoteSchemaWidget {...args} />;
+export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidgetProps> =
+  args => <RemoteSchemaWidget {...args} />;
 RemoteSchemaWidgetWithExistingRelationship.args = {
   schemaName: 'remoteSchema1',
   fields: customer_columns,

@@ -1,0 +1,10 @@
+.*\.(?:aux|h[ip]|o|orig|out|pdf|prof|ps|rej)$
+^(?:dist|\.DS_Store)$
+^tests/(?:qc)
+
+syntax: glob
+cabal-dev
+*~
+.*.swp
+.\#*
+\#*

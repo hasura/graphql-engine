@@ -205,7 +205,8 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
           pure
             ( [annFieldExtr],
               withJsonAggExtr permLimitSubQuery (orderByForJsonAgg selectSource) $
-                S.toColumnAlias $ toIdentifier fieldName
+                S.toColumnAlias $
+                  toIdentifier fieldName
             )
         TAFExp e ->
           pure
@@ -367,7 +368,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
       pure $
         toJSONableExp strfyNum (ColumnScalar ty) False Nothing $
           withColumnOp colOpM $
-            S.SEFunction $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
+            S.SEFunction $
+              S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
 
@@ -380,7 +382,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
     mkNodeId _sourceName (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
             toJSONableExp Options.Don'tStringifyNumbers (ciType pgColumnInfo) False Nothing $
-              S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $ ciColumn pgColumnInfo
+              S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $
+                ciColumn pgColumnInfo
        in -- See Note [Relay Node id].
           encodeBase64 $
             flip S.SETyAnn S.textTypeAnn $
@@ -611,7 +614,8 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           \pgColumnInfo ->
             [ S.SELit $ getPGColTxt $ ciColumn pgColumnInfo,
               toJSONableExp Options.Don'tStringifyNumbers (ciType pgColumnInfo) False tCase $
-                S.mkQIdenExp (mkBaseTableIdentifier thisPrefix) $ ciColumn pgColumnInfo
+                S.mkQIdenExp (mkBaseTableIdentifier thisPrefix) $
+                  ciColumn pgColumnInfo
             ]
 
     primaryKeyColumnExtractors =
@@ -707,10 +711,12 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
                 mkSingleFieldSelect (S.SEIdentifier hasPreviousPageIdentifier) pageInfoSelectAliasIdentifier
             PageInfoStartCursor ->
               withForceAggregation S.textTypeAnn $
-                encodeBase64 $ mkSingleFieldSelect (S.SEIdentifier startCursorIdentifier) cursorsSelectAliasIdentifier
+                encodeBase64 $
+                  mkSingleFieldSelect (S.SEIdentifier startCursorIdentifier) cursorsSelectAliasIdentifier
             PageInfoEndCursor ->
               withForceAggregation S.textTypeAnn $
-                encodeBase64 $ mkSingleFieldSelect (S.SEIdentifier endCursorIdentifier) cursorsSelectAliasIdentifier
+                encodeBase64 $
+                  mkSingleFieldSelect (S.SEIdentifier endCursorIdentifier) cursorsSelectAliasIdentifier
       where
         mkSingleFieldSelect field fromIdentifier =
           S.SESelect

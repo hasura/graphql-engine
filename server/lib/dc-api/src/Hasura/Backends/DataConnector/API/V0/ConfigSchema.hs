@@ -11,7 +11,7 @@ import Autodocodec qualified
 import Control.DeepSeq (NFData)
 import Control.Lens ((%~), (&), (.~), (^?))
 import Data.Aeson (FromJSON (..), Object, ToJSON (..), Value (..), eitherDecode, encode, object, withObject, (.:), (.=), (<?>))
-import Data.Aeson.Lens (AsPrimitive (..), key, members, values)
+import Data.Aeson.Lens (AsValue (..), key, members, values)
 import Data.Aeson.Types (JSONPathElement (..))
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BSL

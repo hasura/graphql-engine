@@ -4,7 +4,7 @@
 -- more advanced tests, they might require implementations.
 module Test.Parser.Monad
   ( ParserTest (..),
-    SchemaEnvironment,
+    SchemaEnvironment (..),
     SchemaTest,
     runSchemaTest,
     notImplementedYet,
@@ -26,8 +26,10 @@ import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
+import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.RemoteSchema.SchemaCache (CustomizeRemoteFieldName)
+import Hasura.SQL.Backend
 import Hasura.Session (adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
 import Test.HUnit.Lang (assertFailure)
@@ -53,6 +55,22 @@ notImplementedYet thing =
 -- SchemaEnvironment: currently void. This is subject to change if we require
 -- more complex setup.
 data SchemaEnvironment = SchemaEnvironment
+  { seSchemaOptions :: SchemaOptions,
+    seSourceInfo :: SourceInfo ('Postgres 'Vanilla)
+  }
+
+defaultSchemaOptions :: SchemaOptions
+defaultSchemaOptions =
+  SchemaOptions
+    { soStringifyNumbers = Options.Don'tStringifyNumbers,
+      soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+      soInferFunctionPermissions = Options.InferFunctionPermissions,
+      soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
+      soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,
+      soIncludeAggregationPredicates = Options.IncludeAggregationPredicates,
+      soIncludeStreamFields = Options.IncludeStreamFields,
+      soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput
+    }
 
 instance Has NamingCase SchemaEnvironment where
   getter :: SchemaEnvironment -> NamingCase
@@ -63,19 +81,17 @@ instance Has NamingCase SchemaEnvironment where
 
 instance Has SchemaOptions SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaOptions
-  getter =
-    const
-      SchemaOptions
-        { soStringifyNumbers = Options.Don'tStringifyNumbers,
-          soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
-          soInferFunctionPermissions = Options.InferFunctionPermissions,
-          soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
-          soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,
-          soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput
-        }
+  getter = seSchemaOptions
 
   modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplementedYet "modifier<Has SchemaOptions SchemaEnvironment>"
+  modifier f env = env {seSchemaOptions = f (seSchemaOptions env)}
+
+instance Has (SourceInfo ('Postgres 'Vanilla)) SchemaEnvironment where
+  getter :: SchemaEnvironment -> SourceInfo ('Postgres 'Vanilla)
+  getter = seSourceInfo
+
+  modifier :: (SourceInfo ('Postgres 'Vanilla) -> SourceInfo ('Postgres 'Vanilla)) -> SchemaEnvironment -> SchemaEnvironment
+  modifier = notImplementedYet "modifier<Has (SourceInfo ('Postgres 'Vanilla)) SchemaEnvironment>"
 
 instance Has SchemaContext SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaContext
@@ -116,8 +132,8 @@ instance Has CustomizeRemoteFieldName SchemaEnvironment where
 -- | SchemaTest
 type SchemaTest = SchemaT SchemaEnvironment SchemaTestInternal
 
-runSchemaTest :: SchemaTest a -> a
-runSchemaTest = runSchemaTestInternal . flip runReaderT SchemaEnvironment . runSchemaT
+runSchemaTest :: SourceInfo ('Postgres 'Vanilla) -> SchemaTest a -> a
+runSchemaTest sourceInfo = runSchemaTestInternal . flip runReaderT (SchemaEnvironment defaultSchemaOptions sourceInfo) . runSchemaT
 
 newtype SchemaTestInternal a = SchemaTestInternal {runSchemaTestInternal :: a}
   deriving stock (Functor)

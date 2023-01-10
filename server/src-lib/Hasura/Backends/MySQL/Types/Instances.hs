@@ -28,7 +28,6 @@ import Database.MySQL.Base.Types qualified as MySQLTypes (Type (..))
 import Hasura.Backends.MySQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
-import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
@@ -41,8 +40,6 @@ import Language.Haskell.TH.Syntax
 deriving instance Generic (Countable n)
 
 instance Hashable n => Hashable (Countable n)
-
-instance Cacheable n => Cacheable (Countable n)
 
 deriving instance Eq n => Eq (Countable n)
 
@@ -68,8 +65,6 @@ $( concat <$> for
 
          instance Hashable $(conT name)
 
-         instance Cacheable $(conT name)
-
          deriving instance Data $(conT name)
 
          instance NFData $(conT name)
@@ -83,8 +78,6 @@ $( fmap concat $ for
          deriving instance Generic ($(conT name) a)
 
          instance Hashable a => Hashable ($(conT name) a)
-
-         instance Cacheable a => Cacheable ($(conT name) a)
 
          deriving instance Eq a => Eq ($(conT name) a)
 
@@ -124,8 +117,6 @@ $( concat <$> for
          deriving instance Generic $(conT name)
 
          instance Hashable $(conT name)
-
-         instance Cacheable $(conT name)
 
          deriving instance Eq $(conT name)
 
@@ -172,9 +163,9 @@ instance HasCodec TableName where
         AC.object "MySQLTableName" $
           TableName
             <$> requiredField' "name"
-            AC..= name
+              AC..= name
             <*> optionalFieldOrIncludedNull' "schema"
-            AC..= schema
+              AC..= schema
       strCodec = flip TableName Nothing <$> codec
 
 instance FromJSON TableName where
@@ -183,9 +174,9 @@ instance FromJSON TableName where
   parseJSON (Object o) =
     TableName
       <$> o
-      .: "name"
+        .: "name"
       <*> o
-      .:? "schema"
+        .:? "schema"
   parseJSON _ =
     fail "expecting a string/object for TableName"
 
@@ -226,9 +217,9 @@ instance HasCodec ConnPoolSettings where
     AC.object "MySQLConnPoolSettings" $
       ConnPoolSettings
         <$> optionalFieldWithDefault' "idle_timeout" (_cscIdleTimeout defaultConnPoolSettings)
-        AC..= _cscIdleTimeout
+          AC..= _cscIdleTimeout
         <*> optionalFieldWithDefault' "max_connections" (_cscMaxConnections defaultConnPoolSettings)
-        AC..= _cscMaxConnections
+          AC..= _cscMaxConnections
 
 instance J.FromJSON ConnPoolSettings where
   parseJSON = J.withObject "MySQL pool settings" $ \o ->
@@ -250,17 +241,17 @@ instance HasCodec ConnSourceConfig where
     AC.object "MySQLConnSourceConfig" $
       ConnSourceConfig
         <$> requiredField "host" hostDoc
-        AC..= _cscHost
+          AC..= _cscHost
         <*> requiredField' "port"
-        AC..= _cscPort
+          AC..= _cscPort
         <*> requiredField' "user"
-        AC..= _cscUser
+          AC..= _cscUser
         <*> requiredField' "password"
-        AC..= _cscPassword
+          AC..= _cscPassword
         <*> requiredField' "database"
-        AC..= _cscDatabase
+          AC..= _cscDatabase
         <*> requiredField' "pool_settings"
-        AC..= _cscPoolSettings
+          AC..= _cscPoolSettings
     where
       hostDoc = "Works with `127.0.0.1` but not with `localhost`: https://mariadb.com/kb/en/troubleshooting-connection-issues/#localhost-and"
 
@@ -272,15 +263,8 @@ instance J.ToJSON (Pool Connection) where
 instance Eq (Pool Connection) where
   _ == _ = True
 
-instance Cacheable SourceConfig where
-  unchanged _ = (==)
-
 deriving instance Eq SourceConfig
 
 deriving instance Generic SourceConfig
 
 deriving instance J.ToJSON SourceConfig
-
-deriving instance Cacheable ConnPoolSettings
-
-deriving instance Cacheable ConnSourceConfig

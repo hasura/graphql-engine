@@ -1,5 +1,5 @@
 import z from 'zod';
-import { Form, InputField } from '@/new-components/Form';
+import { SimpleForm, InputField } from '@/new-components/Form';
 import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaSearch } from 'react-icons/fa';
@@ -33,12 +33,12 @@ const SearchInput: React.FC<QueryCollectionsOperationsSearchFormProps> = ({
 export const QueryCollectionsOperationsSearchForm: React.FC<QueryCollectionsOperationsSearchFormProps> =
   ({ setSearch }) => {
     return (
-      <Form
+      <SimpleForm
         schema={schema}
         onSubmit={() => {}}
         className="pr-0 pt-0 pb-0 relative top-2"
       >
-        {() => <SearchInput setSearch={setSearch} />}
-      </Form>
+        <SearchInput setSearch={setSearch} />
+      </SimpleForm>
     );
   };

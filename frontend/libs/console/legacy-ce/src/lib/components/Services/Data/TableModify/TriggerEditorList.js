@@ -13,7 +13,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
   }
 
   // HACK
-  const isEventTriggerPGTrigger = (trigger) =>
+  const isEventTriggerPGTrigger = trigger =>
     trigger.action_statement.includes('hdb_views');
 
   // NOTE: regarding object properties of the values within the `triggers` list
@@ -57,7 +57,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     groupedTriggers.AFTER.DELETE,
   ];
   const sortedAndOrderedTriggers = groupedList
-    .map((triggersList) =>
+    .map(triggersList =>
       triggersList.sort((a, b) => (a.trigger_name > b.trigger_name ? 1 : -1))
     )
     .reduce((acc, triggerList) => [...acc, ...triggerList], []);
@@ -111,6 +111,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
               width="100%"
               showPrintMargin={false}
               className="mt-xs"
+              setOptions={{ useWorker: false }}
             />
             {commentText && (
               <div className="text-gray-500 mt-sm">{commentText}</div>

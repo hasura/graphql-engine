@@ -70,7 +70,9 @@ listen pool channel handler = catchConnErr $
     eRes <-
       liftIO $
         runExceptT $
-          execMulti pgConn (mkTemplate listenCmd) $ const $ return ()
+          execMulti pgConn (mkTemplate listenCmd) $
+            const $
+              return ()
     either throwTxErr return eRes
     -- Emit onStart event
     liftIO $ handler PNEOnStart

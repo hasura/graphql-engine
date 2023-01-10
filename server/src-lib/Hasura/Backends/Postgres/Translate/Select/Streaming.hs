@@ -132,7 +132,8 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.toColumnAlias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
    in renameIdentifiers $
-        generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+        generateSQLSelectFromArrayNode selectSource arrayNode $
+          S.BELit True
   where
     rootFldIdentifier = TableIdentifier $ getFieldNameTxt rootFldName
     sourcePrefixes = SourcePrefixes (tableIdentifierToIdentifier rootFldIdentifier) (tableIdentifierToIdentifier rootFldIdentifier)

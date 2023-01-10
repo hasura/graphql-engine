@@ -8,8 +8,9 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/update"
-	"github.com/pkg/errors"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -35,12 +36,21 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 	updateCmd := &cobra.Command{
 		Use:          updateCLICmdUse,
 		Short:        "Update the CLI to latest or a specific version",
+		Long:         "You can use this command to update the CLI to the latest version or a specific version. Each time you run a CLI command, if a new version is available, you will be prompted to update the CLI.",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return ec.Prepare()
+			op := genOpName(cmd, "PreRunE")
+			if err := ec.Prepare(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run(false)
+			op := genOpName(cmd, "RunE")
+			if err := opts.run(false); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		Example: updateCLICmdExample,
 	}
@@ -58,9 +68,10 @@ type updateOptions struct {
 }
 
 func (o *updateOptions) run(showPrompt bool) (err error) {
+	var op errors.Op = "commands.updateOptions.run"
 	currentVersion := o.EC.Version.CLISemver
 	if currentVersion == nil {
-		return errors.Errorf("cannot update from a non-semver version: %s", o.EC.Version.GetCLIVersion())
+		return errors.E(op, fmt.Errorf("cannot update from a non-semver version: %s", o.EC.Version.GetCLIVersion()))
 	}
 
 	var versionToBeInstalled *semver.Version
@@ -68,14 +79,14 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 		// parse the version
 		versionToBeInstalled, err = semver.NewVersion(o.version)
 		if err != nil {
-			return errors.Wrap(err, "unable to parse version")
+			return errors.E(op, fmt.Errorf("unable to parse version: %w", err))
 		}
 	} else {
 		o.EC.Spin("Checking for update... ")
 		hasUpdate, latestVersion, hasPreReleaseUpdate, preReleaseVersion, err := update.HasUpdate(currentVersion, o.EC.LastUpdateCheckFile)
 		o.EC.Spinner.Stop()
 		if err != nil {
-			return errors.Wrap(err, "command: check update")
+			return errors.E(op, fmt.Errorf("command: check update: %w", err))
 		}
 
 		ec.Logger.Debugln("hasUpdate: ", hasUpdate, "latestVersion: ", latestVersion, "hasPreReleaseUpdate: ", hasPreReleaseUpdate, "preReleaseVersion: ", preReleaseVersion, "currentVersion:", currentVersion)
@@ -120,9 +131,9 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 	o.EC.Spinner.Stop()
 	if err != nil {
 		if os.IsPermission(err) {
-			return errors.New("permission denied, try again as admin or with sudo")
+			return errors.E(op, "permission denied, try again as admin or with sudo")
 		}
-		return errors.Wrap(err, "apply update")
+		return errors.E(op, fmt.Errorf("apply update: %w", err))
 	}
 
 	o.EC.Logger.WithField("version", "v"+versionToBeInstalled.String()).Info("Updated to latest version")

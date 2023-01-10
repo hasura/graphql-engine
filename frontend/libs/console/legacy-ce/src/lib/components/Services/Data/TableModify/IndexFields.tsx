@@ -6,7 +6,7 @@ type Props = {
   tableSchema: Table;
 };
 
-const IndexFields: React.FC<Props> = (props) => (
+const IndexFields: React.FC<Props> = props => (
   <>
     <IndexFieldsEditor currentTableInfo={props.tableSchema} />
   </>

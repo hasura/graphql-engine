@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
-import { Form, InputField, InputFieldProps } from '..';
+import { SimpleForm, InputField, InputFieldProps } from '..';
 import { Button } from '../../Button';
 
 const renderInputField = (
@@ -10,20 +10,18 @@ const renderInputField = (
 ) => {
   const onSubmit = jest.fn();
   render(
-    <Form
+    <SimpleForm
       onSubmit={args => {
         console.log('AAAA', args);
         onSubmit(args);
       }}
       schema={schema}
     >
-      {() => (
-        <>
-          <InputField name="title" {...props} />
-          <Button type="submit">Submit</Button>
-        </>
-      )}
-    </Form>
+      <>
+        <InputField name="title" {...props} />
+        <Button type="submit">Submit</Button>
+      </>
+    </SimpleForm>
   );
   return {
     onSubmit,

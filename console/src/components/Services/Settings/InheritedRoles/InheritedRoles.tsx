@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { redirectToMetadataStatus } from '@/components/Common/utils/routesUtils';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { connect, ConnectedProps } from 'react-redux';
 import {
   getInheritedRoles,
@@ -94,27 +95,29 @@ const InheritedRoles: React.FC<Props> = props => {
   }, [inconsistentInheritedRoles, dispatch]);
 
   return (
-    <div className="clear-both pl-md pt-md mb-md">
-      <div className="flex items-center">
-        <Heading fontSize="24px">Inherited Roles</Heading>
+    <Analytics name="InheritedRoles" {...REDACT_EVERYTHING}>
+      <div className="clear-both pl-md pt-md mb-md">
+        <div className="flex items-center">
+          <Heading fontSize="24px">Inherited Roles</Heading>
+        </div>
+        <div className="mt-md">
+          Inherited roles will combine the permissions of 2 or more roles.
+        </div>
+        <ActionContext.Provider
+          value={{ onEdit, onAdd, onDelete, onRoleNameChange }}
+        >
+          <InheritedRolesTable inheritedRoles={inheritedRoles} />
+        </ActionContext.Provider>
+        <InheritedRolesEditor
+          allRoles={allRoles}
+          cancelCb={resetState}
+          isCollapsed={isCollapsed}
+          onSave={onSave}
+          inheritedRoleName={inheritedRoleName}
+          inheritedRole={inheritedRole}
+        />
       </div>
-      <div className="mt-md">
-        Inherited roles will combine the permissions of 2 or more roles.
-      </div>
-      <ActionContext.Provider
-        value={{ onEdit, onAdd, onDelete, onRoleNameChange }}
-      >
-        <InheritedRolesTable inheritedRoles={inheritedRoles} />
-      </ActionContext.Provider>
-      <InheritedRolesEditor
-        allRoles={allRoles}
-        cancelCb={resetState}
-        isCollapsed={isCollapsed}
-        onSave={onSave}
-        inheritedRoleName={inheritedRoleName}
-        inheritedRole={inheritedRole}
-      />
-    </div>
+    </Analytics>
   );
 };
 

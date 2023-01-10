@@ -19,9 +19,9 @@ import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Prelude
 
-duplicates :: (Eq a, Hashable a) => [a] -> Set.HashSet a
+duplicates :: Hashable a => [a] -> Set.HashSet a
 duplicates =
-  Set.fromList . Map.keys . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
+  Map.keysSet . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
 
 -- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log(n))@
 --   time and requires 'Ord' instances.
@@ -30,13 +30,13 @@ duplicates =
 uniques :: (Ord a) => [a] -> [a]
 uniques = nubOrd
 
-getDifference :: (Eq a, Hashable a) => [a] -> [a] -> Set.HashSet a
+getDifference :: Hashable a => [a] -> [a] -> Set.HashSet a
 getDifference = Set.difference `on` Set.fromList
 
-getDifferenceOn :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [v]
+getDifferenceOn :: Hashable k => (v -> k) -> [v] -> [v] -> [v]
 getDifferenceOn f l = Map.elems . Map.differenceOn f l
 
-getOverlapWith :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
+getOverlapWith :: Hashable k => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlapWith getKey left right =
   Map.elems $ Map.intersectionWith (,) (mkMap left) (mkMap right)
   where

@@ -2,7 +2,7 @@ import { getDataTypeInfo } from '../Common/utils';
 
 const convertArrayToJson = (arr, keyIndex = 0) => {
   const converted = {};
-  arr.forEach((a) => {
+  arr.forEach(a => {
     converted[a[keyIndex]] = a;
   });
   return converted;
@@ -40,16 +40,16 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
   };
 };
 
-export const convertToArrayOptions = (options) => {
-  return options.map((opt) => ({
+export const convertToArrayOptions = options => {
+  return options.map(opt => ({
     value: opt.value + '[]',
     label: opt.label + '[]',
   }));
 };
 
-export const sanitiseRootFields = (rootFields) => {
+export const sanitiseRootFields = rootFields => {
   const santisedRootFields = {};
-  Object.keys(rootFields).forEach((rootFieldType) => {
+  Object.keys(rootFields).forEach(rootFieldType => {
     let rootField = rootFields[rootFieldType];
     if (typeof rootField === 'string') {
       rootField = rootField.trim() || null;
@@ -63,9 +63,9 @@ export const sanitiseRootFields = (rootFields) => {
   return santisedRootFields;
 };
 
-export const sanitiseColumnNames = (columnNames) => {
+export const sanitiseColumnNames = columnNames => {
   const sanitised = {};
-  Object.keys(columnNames).forEach((c) => {
+  Object.keys(columnNames).forEach(c => {
     const trimmedCustomName = columnNames[c] ? columnNames[c].trim() : null;
     if (trimmedCustomName) {
       sanitised[c] = trimmedCustomName;

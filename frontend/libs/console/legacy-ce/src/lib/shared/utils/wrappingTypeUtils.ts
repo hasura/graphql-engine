@@ -81,7 +81,7 @@ export const getSchemaTypeMetadata = (
 
 export const wrapTypename = (name: string, wrapperStack: string[]) => {
   let wrappedTypename = name;
-  wrapperStack.reverse().forEach((w) => {
+  wrapperStack.reverse().forEach(w => {
     if (w === 'l') {
       wrappedTypename = `[${wrappedTypename}]`;
     }

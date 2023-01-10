@@ -1,4 +1,4 @@
-import { ConsoleNotification } from '../components/Main/ConsoleNotification';
+import { ConsoleNotification } from '@/components/Main/ConsoleNotification';
 import { NotificationsState } from './state';
 
 export const isUpdateIDsEqual = (

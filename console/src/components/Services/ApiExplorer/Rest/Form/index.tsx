@@ -1,6 +1,7 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
 import { useIsUnmounted } from '@/components/Services/Data';
 import { Dispatch, ReduxState } from '@/types';
@@ -148,7 +149,11 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
     setLoading(true);
     const state: RestEndpointFormData = {
       name: (data.name as string).trim(),
-      comment: (data.comment as string).trim(),
+      // null is respected considering the old Hasura versions <2.10
+      comment:
+        (data.comment as string) === null
+          ? ''
+          : (data.comment as string).trim(),
       url: (data.url as string).trim(),
       methods: data.methods as AllowedRESTMethods[],
       request: (data.request as string).trim(),
@@ -163,13 +168,18 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
   const onCancelHandler = resetPageState;
 
   return (
-    <RestEndpointForm
-      mode={mode}
-      formState={formState}
-      loading={loading}
-      onSubmit={onSubmit}
-      onCancel={onCancelHandler}
-    />
+    <Analytics
+      name={mode === 'create' ? 'FormRestCreate' : 'FormRestEdit'}
+      {...REDACT_EVERYTHING}
+    >
+      <RestEndpointForm
+        mode={mode}
+        formState={formState}
+        loading={loading}
+        onSubmit={onSubmit}
+        onCancel={onCancelHandler}
+      />
+    </Analytics>
   );
 };
 

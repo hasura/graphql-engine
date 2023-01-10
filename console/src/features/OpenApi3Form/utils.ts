@@ -1,6 +1,5 @@
 /* eslint-disable no-underscore-dangle */
 import get from 'lodash.get';
-// import pickBy from 'lodash.pickby';
 import { OpenApiSchema, OpenApiReference } from '@hasura/dc-api-types';
 import { z, ZodSchema } from 'zod';
 import pickBy from 'lodash.pickby';
@@ -23,6 +22,26 @@ export const getStringZodSchema = (schema: OpenApiSchema): ZodSchema => {
   if (schema.nullable === true) return z.string().optional();
 
   return z.string().min(1, `${schema.title ?? 'value'} cannot be empty`);
+};
+
+export const getEnumZodSchema = (schema: OpenApiSchema): ZodSchema => {
+  const enumOptions = schema.enum ?? [];
+
+  const literals = enumOptions.map(enumValue => z.literal(enumValue));
+
+  return z
+    .union([z.literal('null'), ...literals] as any)
+    .transform((value, ctx) => {
+      if (value === 'null') return null;
+      if (value) return value;
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'value not part of the enum list',
+      });
+
+      return z.never;
+    });
 };
 
 export const getBooleanZodSchema = (schema: OpenApiSchema): ZodSchema => {
@@ -51,6 +70,17 @@ export const getArrayZodSchema = (
   const itemSchema = isReferenceObject(items)
     ? getReferenceObject(items.$ref, references)
     : items;
+
+  /**
+   * Enum
+   */
+  if (itemSchema.type === 'string' && itemSchema.enum) {
+    /**
+     * No nullable case in enum, as mentioned in doc -
+     * Note that null must be explicitly included in the list of enum values. Using nullable: true alone is not enough here.
+     */
+    return getEnumZodSchema(schema);
+  }
 
   /**
    * String Array
@@ -102,6 +132,8 @@ export const transformSchemaToZodObject = (
 
   const type = schema.type;
 
+  if (type === 'string' && schema.enum) return getEnumZodSchema(schema);
+
   if (type === 'string') return getStringZodSchema(schema);
 
   if (type === 'number' || type === 'integer')
@@ -136,7 +168,9 @@ export const transformSchemaToZodObject = (
 
     if (itemSchema.type === 'object') {
       if (schema.nullable === true)
-        return z.array(transformSchemaToZodObject(itemSchema, references));
+        return z
+          .array(transformSchemaToZodObject(itemSchema, references))
+          .optional();
 
       return z
         .array(transformSchemaToZodObject(itemSchema, references))

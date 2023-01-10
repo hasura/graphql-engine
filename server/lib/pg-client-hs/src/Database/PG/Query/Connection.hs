@@ -58,8 +58,6 @@ import Data.Aeson.Casing (aesonDrop, snakeCase)
 import Data.Aeson.TH (mkToJSON)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
-import Data.ByteString.Builder qualified as BSB
-import Data.ByteString.Lazy qualified as LBS
 import Data.Foldable (for_)
 import Data.HashTable.IO qualified as HIO
 import Data.Hashable (Hashable (hashWithSalt))
@@ -192,15 +190,16 @@ initPQConn ci logger =
 
     whenSerVerNotOk v =
       throwIO $
-        PGConnErr $ "Unsupported postgres version: " <> fromString (show v)
+        PGConnErr $
+          "Unsupported postgres version: " <> fromString (show v)
 
     whenSerVerOk conn = do
       -- Set some parameters and check the response
       mRes <-
         PQ.exec conn $
-          LBS.toStrict . BSB.toLazyByteString . mconcat $
-            [ BSB.string7 "SET client_encoding = 'UTF8';",
-              BSB.string7 "SET client_min_messages TO WARNING;"
+          mconcat $
+            [ "SET client_encoding = 'UTF8';",
+              "SET client_min_messages TO WARNING;"
             ]
       case mRes of
         Just res -> do
@@ -318,7 +317,8 @@ checkResult conn mRes =
       msg <- liftIO $ readConnErr conn
       let whenConnOk =
             throwPGIntErr $
-              PGIUnexpected $ "Fatal error (perhaps an OOM): " <> msg
+              PGIUnexpected $
+                "Fatal error (perhaps an OOM): " <> msg
       isConnOk >>= bool (whenConnNotOk msg) whenConnOk
     Just res -> do
       st <- lift $ PQ.resultStatus res
@@ -537,7 +537,8 @@ execQuery ::
 execQuery pgConn pgQuery = do
   resOk <-
     retryOnConnErr pgConn $
-      bool withoutPrepare withPrepare $ allowPrepare && preparable
+      bool withoutPrepare withPrepare $
+        allowPrepare && preparable
   withExceptT PGIUnexpected $ convF resOk
   where
     PGConn conn allowPrepare cancelable _ _ _ _ _ _ = pgConn

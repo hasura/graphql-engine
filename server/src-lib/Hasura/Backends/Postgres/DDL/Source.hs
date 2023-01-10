@@ -55,7 +55,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Internal
-import Hasura.Server.Migrate.Version (MetadataCatalogVersion (..))
+import Hasura.Server.Migrate.Version qualified as Version
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
@@ -164,10 +164,11 @@ resolveDatabaseMetadata ::
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) PG.ReadOnly $ do
-    tablesMeta <- fetchTableMetadata $ OMap.keys $ _smTables sourceMetadata
+    tablesMeta <- fetchTableMetadata $ HM.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
     let allFunctions =
-          OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
-            <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
+          Set.fromList $
+            OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
+              <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
     functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
     let scalarsMap = Map.fromList do
@@ -186,7 +187,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
 prepareCatalog ::
   (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
-  ExceptT QErr m RecreateEventTriggers
+  ExceptT QErr m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
@@ -194,25 +195,25 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
   if
       -- Fresh database
       | not hdbCatalogExist -> liftTx do
-        PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-        enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
-        initPgSourceCatalog
-        return RETDoNothing
+          PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+          enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
+          initPgSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Only 'hdb_catalog' schema defined
       | not (sourceVersionTableExist || eventLogTableExist) -> do
-        liftTx initPgSourceCatalog
-        return RETDoNothing
+          liftTx initPgSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Source is initialised by pre multisource support servers
       | not sourceVersionTableExist && eventLogTableExist -> do
-        -- Update the Source Catalog to v43 to include the new migration
-        -- changes. Skipping this step will result in errors.
-        currMetadataCatalogVersion <- liftTx getCatalogVersion
-        -- we migrate to the 43 version, which is the migration where
-        -- metadata separation is introduced
-        migrateTo43MetadataCatalog currMetadataCatalogVersion
-        liftTx createVersionTable
-        -- Migrate the catalog from initial version i.e '0'
-        migrateSourceCatalogFrom initialSourceCatalogVersion
+          -- Update the Source Catalog to v43 to include the new migration
+          -- changes. Skipping this step will result in errors.
+          currMetadataCatalogVersion <- liftTx getCatalogVersion
+          -- we migrate to the 43 version, which is the migration where
+          -- metadata separation is introduced
+          migrateTo43MetadataCatalog currMetadataCatalogVersion
+          liftTx createVersionTable
+          -- Migrate the catalog from initial version i.e '0'
+          migrateSourceCatalogFrom initialSourceCatalogVersion
       | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
@@ -262,7 +263,7 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
 --  downgrade pg sources themselves. Improve error message by referring the URL
 --  to the documentation.
 
-migrateSourceCatalog :: MonadTx m => m RecreateEventTriggers
+migrateSourceCatalog :: MonadTx m => m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
@@ -272,19 +273,27 @@ migrateSourceCatalog =
 --    changes introduced in the newly added source catalog migrations. When the source is already
 --    in the latest catalog version, we do nothing because nothing has changed w.r.t the source catalog
 --    so recreating the event triggers will only be extraneous.
-migrateSourceCatalogFrom :: (MonadTx m) => SourceCatalogVersion pgKind -> m RecreateEventTriggers
+migrateSourceCatalogFrom ::
+  (MonadTx m) =>
+  SourceCatalogVersion pgKind ->
+  m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 migrateSourceCatalogFrom prevVersion
-  | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
+  | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, Version.SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =
-    throw400 NotSupported $
-      "Expected source catalog version <= "
-        <> tshow latestSourceCatalogVersion
-        <> ", but the current version is "
-        <> tshow prevVersion
+      throw400 NotSupported $
+        "Expected source catalog version <= "
+          <> tshow latestSourceCatalogVersion
+          <> ", but the current version is "
+          <> tshow prevVersion
   | otherwise = do
-    liftTx $ traverse_ snd neededMigrations
-    setSourceCatalogVersion
-    pure RETRecreate
+      liftTx $ traverse_ snd neededMigrations
+      setSourceCatalogVersion
+      pure
+        ( RETRecreate,
+          Version.SCMSMigratedTo
+            (Version.unSourceCatalogVersion prevVersion)
+            (Version.unSourceCatalogVersion latestSourceCatalogVersion)
+        )
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
@@ -302,7 +311,7 @@ sourceMigrations =
    )
 
 -- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
-upMigrationsUntil43 :: [(MetadataCatalogVersion, PG.TxE QErr ())]
+upMigrationsUntil43 :: [(Version.MetadataCatalogVersion, PG.TxE QErr ())]
 upMigrationsUntil43 =
   $( let migrationFromFile from to =
            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
@@ -311,7 +320,7 @@ upMigrationsUntil43 =
          migrationsFromFile = map $ \(to :: Int) ->
            let from = pred to
             in [|
-                 ( $(TH.lift (MetadataCatalogVersion from)),
+                 ( $(TH.lift (Version.MetadataCatalogVersion from)),
                    $(migrationFromFile (show from) (show to))
                  )
                  |]
@@ -323,10 +332,11 @@ upMigrationsUntil43 =
          -- moved to source catalog migrations and the 41st up migration is removed
          -- entirely.
          $
-           [|(MetadataCatalogVersion08, $(migrationFromFile "08" "1"))|] :
-           migrationsFromFile [2 .. 3]
-             ++ [|(MetadataCatalogVersion 3, from3To4)|] :
-           (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
+           [|(Version.MetadataCatalogVersion08, $(migrationFromFile "08" "1"))|]
+             : migrationsFromFile [2 .. 3]
+             ++ [|(Version.MetadataCatalogVersion 3, from3To4)|]
+             : migrationsFromFile [5 .. 40]
+             ++ migrationsFromFile [42 .. 43]
    )
 
 -- | We differentiate for CockroachDB and other PG implementations
@@ -341,7 +351,7 @@ class FetchTableMetadata (pgKind :: PostgresKind) where
       ToMetadataFetchQuery pgKind,
       MonadTx m
     ) =>
-    [QualifiedTable] ->
+    Set.HashSet QualifiedTable ->
     m (DBTablesMetadata ('Postgres pgKind))
 
 instance FetchTableMetadata 'Vanilla where
@@ -357,7 +367,7 @@ instance FetchTableMetadata 'Cockroach where
 pgFetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
-  [QualifiedTable] ->
+  Set.HashSet QualifiedTable ->
   m (DBTablesMetadata ('Postgres pgKind))
 pgFetchTableMetadata tables = do
   results <-
@@ -365,7 +375,7 @@ pgFetchTableMetadata tables = do
       PG.withQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
-        [PG.ViaJSON $ LE.uniques tables]
+        [PG.ViaJSON $ LE.uniques $ Set.toList tables]
         True
   pure $
     Map.fromList $
@@ -376,7 +386,7 @@ pgFetchTableMetadata tables = do
 cockroachFetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
-  [QualifiedTable] ->
+  Set.HashSet QualifiedTable ->
   m (DBTablesMetadata ('Postgres pgKind))
 cockroachFetchTableMetadata _tables = do
   results <-
@@ -394,7 +404,7 @@ cockroachFetchTableMetadata _tables = do
 class FetchFunctionMetadata (pgKind :: PostgresKind) where
   fetchFunctionMetadata ::
     (MonadTx m) =>
-    [QualifiedFunction] ->
+    Set.HashSet QualifiedFunction ->
     m (DBFunctionsMetadata ('Postgres pgKind))
 
 instance FetchFunctionMetadata 'Vanilla where
@@ -407,14 +417,14 @@ instance FetchFunctionMetadata 'Cockroach where
   fetchFunctionMetadata _ = pure mempty
 
 -- | Fetch Postgres metadata for all user functions
-pgFetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
+pgFetchFunctionMetadata :: (MonadTx m) => Set.HashSet QualifiedFunction -> m (DBFunctionsMetadata ('Postgres pgKind))
 pgFetchFunctionMetadata functions = do
   results <-
     liftTx $
       PG.withQE
         defaultTxErrorHandler
         $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= PG.sqlFromFile)
-        [PG.ViaJSON $ LE.uniques functions]
+        [PG.ViaJSON functions]
         True
   pure $
     Map.fromList $
@@ -476,17 +486,17 @@ postDropSourceHook sourceConfig tableTriggersMap = do
           -- database, and for default databases, we drop only source-related
           -- tables from the database's "hdb_catalog" schema.
           | hdbMetadataTableExist -> do
-            -- drop the event trigger functions from the table for default sources
-            for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
-              for_ triggers $ \triggerName ->
-                liftTx $ dropTriggerQ triggerName
-            PG.multiQE
-              defaultTxErrorHandler
-              $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= PG.sqlFromFile)
+              -- drop the event trigger functions from the table for default sources
+              for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
+                for_ triggers $ \triggerName ->
+                  liftTx $ dropTriggerQ triggerName
+              PG.multiQE
+                defaultTxErrorHandler
+                $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= PG.sqlFromFile)
           -- Otherwise, we have a non-default postgres source, which has no metadata tables.
           -- We drop the entire "hdb_catalog" schema as discussed above.
           | otherwise ->
-            dropHdbCatalogSchema
+              dropHdbCatalogSchema
 
   -- Destory postgres source connection
   liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig

@@ -35,7 +35,7 @@ export const useMoveOperationsToQueryCollection = () => {
               resource_version: metadata.resource_version,
             }),
             args: queries
-              .map((query) => [
+              .map(query => [
                 ...createAllowedQueriesIfNeeded(toCollection, metadata),
                 {
                   type: 'drop_query_from_collection',

@@ -79,7 +79,7 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
         <div className="grid gap-3 grid-cols-3 mb-sm">
           <KeyValueInput
             pairs={localEnvVars}
-            setPairs={(ev) => {
+            setPairs={ev => {
               setLocalEnvVars(ev);
             }}
             testId="env-vars"
@@ -114,7 +114,7 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
         <div className="grid gap-3 grid-cols-3 mb-sm">
           <KeyValueInput
             pairs={localSessionVars}
-            setPairs={(sv) => {
+            setPairs={sv => {
               setLocalSessionVars(sv);
             }}
             testId="session-vars"

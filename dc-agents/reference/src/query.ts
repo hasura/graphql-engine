@@ -479,6 +479,10 @@ const isComparableArray = (values: ScalarValue[]): values is (number | string)[]
   return values.every(v => typeof v === "number" || typeof v === "string");
 };
 
+const isStringArray = (values: ScalarValue[]): values is string[] => {
+  return values.every(v => typeof v === "string");
+};
+
 const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (rows: Record<string, ScalarValue>[]): ScalarValue => {
   const values = rows.map(row => row[aggregate.column]).filter((v): v is Exclude<ScalarValue, null> => v !== null);
   if (values.length === 0)
@@ -492,6 +496,13 @@ const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (row
     case "min": return values.reduce((prev, curr) => prev < curr ? prev : curr);
   }
 
+  if (isStringArray(values)) {
+    switch (aggregate.function) {
+      case "longest": return values.reduce((prev, curr) => prev.length > curr.length ? prev : curr);
+      case "shortest": return values.reduce((prev, curr) => prev.length < curr.length ? prev : curr);
+    }
+  }
+
   if (!isNumberArray(values)) {
     throw new Error(`Found non-numeric scalar values when computing ${aggregate.function}`);
   }
@@ -500,11 +511,13 @@ const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (row
       return math.mean(values);
     case "stddev_pop": return math.std(values, "uncorrected");
     case "stddev_samp": return math.std(values, "unbiased");
+    case "stddev": return math.std(values, "unbiased");
     case "sum": return math.sum(values);
     case "var_pop": return math.variance(values, "uncorrected");
     case "var_samp": return math.variance(values, "unbiased");
+    case "variance": return math.variance(values, "unbiased");
     default:
-      return unreachable(aggregate.function);
+      return unknownAggregateFunction(aggregate.function);
   }
 };
 
@@ -560,6 +573,8 @@ export const queryData = (getTable: (tableName: TableName) => Record<string, Sca
 };
 
 const unknownOperator = (x: string): never => { throw new Error(`Unknown operator: ${x}`) };
+
+const unknownAggregateFunction = (x: string): never => { throw new Error(`Unknown aggregate function: ${x}`) };
 
 const expectedString = (x: string): never => { throw new Error(`Expected string value but got ${x}`) };
 

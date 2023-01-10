@@ -4,7 +4,7 @@ import { FeatureFlagType, FeatureFlagState } from './types';
 export const extractStateFromFeatureFlags = (
   flags: FeatureFlagType[]
 ): FeatureFlagState[] => {
-  return flags.map((item) => ({ ...item.state, id: item.id }));
+  return flags.map(item => ({ ...item.state, id: item.id }));
 };
 
 export const saveFeatureFlagsStateToLocalStorage = async (

@@ -8,7 +8,7 @@ export const schema = z.object({
     type: z.literal('from_url').or(z.literal('from_env')),
   }),
   headers: requestHeadersSelectorSchema,
-  forward_client_headers: z.preprocess((val) => {
+  forward_client_headers: z.preprocess(val => {
     if (val === 'true') return true;
     return false;
   }, z.boolean()),
@@ -24,7 +24,7 @@ export const schema = z.object({
         suffix: z.string(),
       })
       .refine(
-        (data) => {
+        data => {
           if ((data.prefix || data.suffix) && !data.parent_type) return false;
           return true;
         },
@@ -39,7 +39,7 @@ export const schema = z.object({
         suffix: z.string(),
       })
       .refine(
-        (data) => {
+        data => {
           if ((data.prefix || data.suffix) && !data.parent_type) return false;
           return true;
         },

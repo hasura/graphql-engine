@@ -23,7 +23,7 @@ const positionsMap = {
 };
 
 const modifyMethodsList = (methods: AllowedRESTMethods[]) =>
-  methods.map((method) => ({ name: method, position: positionsMap[method] }));
+  methods.map(method => ({ name: method, position: positionsMap[method] }));
 
 // badgeSort is applied when displaying badges
 // so that they come in the same order GET, POST, PUT, PATCH, DELETE
@@ -31,7 +31,7 @@ export const badgeSort = (methods: AllowedRESTMethods[]) => {
   const modifiedMethods = modifyMethodsList(methods);
   return modifiedMethods
     .sort((a, b) => a.position - b.position)
-    .map((method) => method.name);
+    .map(method => method.name);
 };
 
 // checkIfSubscription is a method being added to prevent endpoints
@@ -208,7 +208,7 @@ const requestErrorsMap: Record<number, string> = {
 // when the user clicks on `Run Request` button
 export const makeAPICall = ({ headers, url, method, body }: MakeApiCallArgs) =>
   fetch(url, { method, credentials: 'include', headers, body })
-    .then((response) => {
+    .then(response => {
       if (!response.ok) {
         const errorMessage = requestErrorsMap[response.status];
         if (!errorMessage) {
@@ -218,12 +218,12 @@ export const makeAPICall = ({ headers, url, method, body }: MakeApiCallArgs) =>
       }
       return response.json();
     })
-    .catch((err) => Promise.reject(err));
+    .catch(err => Promise.reject(err));
 
 export const getStatusFromMessage = (errString: string) =>
   Object.keys(requestErrorsMap)
-    .map((status) => Number(status))
-    .find((status) => requestErrorsMap[status] === errString);
+    .map(status => Number(status))
+    .find(status => requestErrorsMap[status] === errString);
 
 export const composeEndpoint = (
   endpointData: EndpointData[] | null,
@@ -240,7 +240,7 @@ export const composeEndpoint = (
         return [...acc, val.value];
       }
       const endpointInfo = variableValues.find(
-        (varVal) => varVal.name === val.value
+        varVal => varVal.name === val.value
       );
       if (!endpointInfo) {
         // FIXME?: may cause some issues if the feature is used incorrectly
@@ -302,9 +302,9 @@ export const getRequestBody = ({
   urlQueryVariables: EndpointData[];
   variableState: VariableState[];
 }) => {
-  const variablesUsedInURL = urlQueryVariables.map((x) => x.value);
+  const variablesUsedInURL = urlQueryVariables.map(x => x.value);
   const requestBody = variableState
-    .filter((variable) => !variablesUsedInURL.includes(variable.name))
+    .filter(variable => !variablesUsedInURL.includes(variable.name))
     .reduce(
       (acc, variableData) => ({
         ...acc,

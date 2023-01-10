@@ -304,7 +304,8 @@ validateInsert insCols objRels addCols = do
   -- validate insertCols
   unless (null insConflictCols) $
     throw400 ValidationFailed $
-      "cannot insert " <> showPGCols insConflictCols
+      "cannot insert "
+        <> showPGCols insConflictCols
         <> " columns as their values are already being determined by parent insert"
 
   forM_ objRels $ \relInfo -> do
@@ -315,8 +316,9 @@ validateInsert insCols objRels addCols = do
     withPathK relNameTxt $
       unless (null lColConflicts) $
         throw400 ValidationFailed $
-          "cannot insert object relationship " <> relName
-            <<> " as "
+          "cannot insert object relationship "
+            <> relName
+              <<> " as "
             <> showPGCols lColConflicts
             <> " column values are already determined"
   where

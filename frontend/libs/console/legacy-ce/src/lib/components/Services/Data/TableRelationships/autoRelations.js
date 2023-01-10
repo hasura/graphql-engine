@@ -80,10 +80,10 @@ const isExistingArrRel = (currentArrRels, relCols, relTable) => {
 
 const isRelationshipValid = (rel, allSchemas) => {
   const lTable = allSchemas.find(
-    (t) => t.table_name === rel.lTable && t.table_schema === rel.lSchema
+    t => t.table_name === rel.lTable && t.table_schema === rel.lSchema
   );
   const rTable = allSchemas.find(
-    (t) => t.table_name === rel.rTable && t.table_schema === rel.rSchema
+    t => t.table_name === rel.rTable && t.table_schema === rel.rSchema
   );
 
   /* valid relationship rules for citus */
@@ -99,19 +99,19 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
   const arrRels = [];
 
   const currentTableSchema = allSchemas.find(
-    (t) => t.table_name === tableName && t.table_schema === currentSchema
+    t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
   const currentTableRelationships = currentTableSchema.relationships;
 
   const currentObjRels = currentTableRelationships.filter(
-    (r) => r.rel_type === 'object'
+    r => r.rel_type === 'object'
   );
   const currentArrRels = currentTableRelationships.filter(
-    (r) => r.rel_type === 'array'
+    r => r.rel_type === 'array'
   );
 
-  currentTableSchema.foreign_key_constraints.forEach((fk_obj) => {
+  currentTableSchema.foreign_key_constraints.forEach(fk_obj => {
     if (!fk_obj.is_ref_table_tracked) {
       return;
     }
@@ -124,7 +124,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
         lSchema: fk_obj.table_schema,
         name: null,
         lcol: lcol,
-        rcol: lcol.map((column) => fk_obj.column_mapping[column]),
+        rcol: lcol.map(column => fk_obj.column_mapping[column]),
         rTable: fk_obj.ref_table,
         rSchema: fk_obj.ref_table_table_schema,
         isObjRel: true,
@@ -134,7 +134,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
     }
   });
 
-  currentTableSchema.opp_foreign_key_constraints.forEach((o_fk_obj) => {
+  currentTableSchema.opp_foreign_key_constraints.forEach(o_fk_obj => {
     if (!o_fk_obj.is_table_tracked) {
       return;
     }
@@ -144,14 +144,14 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
     const rTable = o_fk_obj.table_name;
     const rTableSchema = o_fk_obj.table_schema;
     const rTableObj = allSchemas.find(
-      (t) => t.table_name === rTable && t.table_schema === rTableSchema
+      t => t.table_name === rTable && t.table_schema === rTableSchema
     );
     const pk = rTableObj?.primary_key?.columns;
     const is_primary_key = checkEqual(pk, rcol);
     let is_unique_key = false;
 
     if (
-      rTableObj?.unique_constraints?.some((uk) => checkEqual(uk.columns, rcol))
+      rTableObj?.unique_constraints?.some(uk => checkEqual(uk.columns, rcol))
     ) {
       is_unique_key = true;
     }
@@ -164,7 +164,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
           lSchema: o_fk_obj.ref_table_table_schema,
           name: null,
           rcol: rcol,
-          lcol: rcol.map((column) => o_fk_obj.column_mapping[column]),
+          lcol: rcol.map(column => o_fk_obj.column_mapping[column]),
           rTable: rTable,
           rSchema: o_fk_obj.table_schema,
           isObjRel: true,
@@ -179,7 +179,7 @@ const suggestedRelationshipsRaw = (tableName, allSchemas, currentSchema) => {
           lSchema: o_fk_obj.ref_table_table_schema,
           name: null,
           rcol: rcol,
-          lcol: rcol.map((column) => o_fk_obj.column_mapping[column]),
+          lcol: rcol.map(column => o_fk_obj.column_mapping[column]),
           rTable: rTable,
           rSchema: o_fk_obj.table_schema,
           isObjRel: false,

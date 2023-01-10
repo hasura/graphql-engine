@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 const (
@@ -43,15 +45,16 @@ func GetPreferredEditorFromEnvironment() ([]string, bool) {
 
 // OpenFileInEditor opens filename in a text editor.
 func OpenFileInEditor(filename string, resolveEditor PreferredEditorResolver) error {
+	var op errors.Op = "editor.OpenFileInEditor"
 	// Get the full executable path for the editor.
 	args, shell := resolveEditor()
 	if len(args) == 0 {
-		return fmt.Errorf("no editor defined, can't open %s", filename)
+		return errors.E(op, fmt.Errorf("no editor defined, can't open %s", filename))
 	}
 
 	abs, err := filepath.Abs(filename)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	cmdArgs := make([]string, len(args))
@@ -67,16 +70,20 @@ func OpenFileInEditor(filename string, resolveEditor PreferredEditorResolver) er
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 // CaptureInputFromEditor opens a temporary file in a text editor and returns
 // the written bytes on success or an error on failure. It handles deletion
 // of the temporary file behind the scenes.
 func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text, extension string) ([]byte, error) {
+	var op errors.Op = "editor.CaptureInputFromEditor"
 	file, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("*.%s", extension))
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, errors.E(op, err)
 	}
 
 	filename := file.Name()
@@ -86,20 +93,20 @@ func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text, extensi
 
 	_, err = file.Write([]byte(text))
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, errors.E(op, err)
 	}
 
 	if err = file.Close(); err != nil {
-		return []byte{}, err
+		return []byte{}, errors.E(op, err)
 	}
 
 	if err = OpenFileInEditor(filename, resolveEditor); err != nil {
-		return []byte{}, err
+		return []byte{}, errors.E(op, err)
 	}
 
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, errors.E(op, err)
 	}
 
 	return bytes, nil

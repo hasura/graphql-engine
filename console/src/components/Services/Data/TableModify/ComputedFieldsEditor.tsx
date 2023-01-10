@@ -204,6 +204,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               maxLines={100}
               width="100%"
               showPrintMargin={false}
+              setOptions={{ useWorker: false }}
             />
           </div>
         );

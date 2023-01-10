@@ -181,7 +181,7 @@ describe('requestAction', () => {
     });
   });
   describe('error cases', () => {
-    [400, 401, 403, 404, 408, 500].forEach((errorCode) => {
+    [400, 401, 403, 404, 408, 500].forEach(errorCode => {
       describe(`when an error ${errorCode} occurs`, () => {
         describe('and the response is json', () => {
           it('should dispatch the ERROR_REQUEST with the payload of the request when no dispatch name is provided', async () => {

@@ -34,7 +34,7 @@ const state: DefaultState = {
   },
   headers: [defaultHeader],
   forwardClientHeaders: false,
-  execution: 'synchronous',
+  kind: 'synchronous',
   isFetching: false,
   derive: {
     operation: '',

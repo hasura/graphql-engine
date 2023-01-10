@@ -86,7 +86,7 @@ const getColQuery = (
   relationships: Relationship[],
   tableConfiguration: TableConfig
 ): string[] => {
-  return cols.map((c) => {
+  return cols.map(c => {
     const columnConfig = tableConfiguration?.column_config ?? {};
     if (typeof c === 'string') return columnConfig[c]?.custom_name ?? c;
     const rel = relationships.find((r: any) => r.rel_name === c.name);

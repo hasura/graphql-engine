@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE StandaloneKindSignatures #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | The 'Transform' typeclass with various types and helper functions
@@ -25,23 +25,22 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec, stringConstCodec)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
-import Data.ByteString.Builder (toLazyByteString)
+import Data.ByteString.Builder.Extra (toLazyByteStringWith, untrimmedStrategy)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
-import Data.Kind (Constraint, Type)
+import Data.Kind (Type)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Validation (Validation)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 
 -------------------------------------------------------------------------------
 
 -- | 'Transform' describes how to reify a defunctionalized transformation for
 -- a particular request field.
-type Transform :: Type -> Constraint
 class Transform a where
   -- | The associated type 'TransformFn a' is the defunctionalized version
   -- of some transformation that should be applied to a given request field.
@@ -79,7 +78,7 @@ newtype TransformErrorBundle = TransformErrorBundle
   }
   deriving stock (Eq, Generic, Show)
   deriving newtype (Monoid, Semigroup, FromJSON, ToJSON)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
 
 -- | A helper function for serializing transformation errors to JSON.
 throwErrorBundle ::
@@ -104,7 +103,10 @@ throwErrorBundle msg val = do
 data TemplatingEngine
   = Kriti
   deriving stock (Bounded, Enum, Eq, Generic, Show)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
+
+instance HasCodec TemplatingEngine where
+  codec = stringConstCodec [(Kriti, "Kriti")]
 
 -- XXX(jkachmar): We need roundtrip tests for these instances.
 instance FromJSON TemplatingEngine where
@@ -134,7 +136,10 @@ newtype Template = Template
   }
   deriving stock (Eq, Generic, Ord, Show)
   deriving newtype (Hashable, FromJSONKey, ToJSONKey)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
+
+instance HasCodec Template where
+  codec = dimapCodec Template unTemplate codec
 
 instance J.FromJSON Template where
   parseJSON = J.withText "Template" (pure . Template)
@@ -154,7 +159,10 @@ newtype UnescapedTemplate = UnescapedTemplate
   }
   deriving stock (Eq, Generic, Ord, Show)
   deriving newtype (Hashable, FromJSONKey, ToJSONKey)
-  deriving anyclass (Cacheable, NFData)
+  deriving anyclass (NFData)
+
+instance HasCodec UnescapedTemplate where
+  codec = dimapCodec UnescapedTemplate getUnescapedTemplate codec
 
 instance J.FromJSON UnescapedTemplate where
   parseJSON = J.withText "Template" (pure . UnescapedTemplate)
@@ -178,7 +186,8 @@ encodeScalar ::
 encodeScalar = \case
   J.String str -> pure $ encodeUtf8 str
   J.Number num ->
-    pure . LBS.toStrict . toLazyByteString $ scientificBuilder num
+    -- like toLazyByteString, but tuned for output and for common small size:
+    pure . LBS.toStrict . toLazyByteStringWith (untrimmedStrategy 24 1024) "" $ scientificBuilder num
   J.Bool True -> pure "true"
   J.Bool False -> pure "false"
   val ->

@@ -1,20 +1,36 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TableColumn } from '@/features/DataSource';
 import { Button } from '@/new-components/Button';
 import { RiAddBoxLine } from 'react-icons/ri';
 import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
 import { useFieldArray } from 'react-hook-form';
 import { SortRow } from './SortRow';
+import { FiltersAndSortFormValues } from '../types';
 
 export type SortRowsProps = {
   columns: TableColumn[];
   name: string;
+  initialSorts?: FiltersAndSortFormValues['sorts'];
+  onRemove: () => void;
 };
 
-export const SortRows = ({ columns, name }: SortRowsProps) => {
-  const { fields, append, remove } = useFieldArray({
+export const SortRows = ({
+  columns,
+  name,
+  initialSorts = [],
+  onRemove,
+}: SortRowsProps) => {
+  const { fields, append, remove, update } = useFieldArray({
     name,
   });
+
+  useEffect(() => {
+    if (initialSorts.length > 0) {
+      initialSorts.forEach((sort, index) => {
+        update(index, { column: sort.column, type: sort.type });
+      });
+    }
+  }, [initialSorts?.length]);
 
   const columnOptions: SelectItem[] = columns.map(column => {
     const value = column.graphQLProperties?.name ?? column.name;
@@ -37,6 +53,7 @@ export const SortRows = ({ columns, name }: SortRowsProps) => {
 
   const removeEntry = (index: number) => {
     remove(index);
+    setTimeout(() => onRemove(), 100);
   };
 
   return (

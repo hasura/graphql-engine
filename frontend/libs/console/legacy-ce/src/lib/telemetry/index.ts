@@ -42,7 +42,7 @@ const createClient = () => {
   if (globals.enableTelemetry) {
     try {
       const client = new WebSocket(endpoints.telemetryServer);
-      client.onerror = (e) => {
+      client.onerror = e => {
         console.error(`WebSocket Error for Events${e}`);
       };
       return client;

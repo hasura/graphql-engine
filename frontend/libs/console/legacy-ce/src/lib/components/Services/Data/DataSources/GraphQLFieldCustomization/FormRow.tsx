@@ -26,7 +26,7 @@ export const FormRow = (props: Props) => {
           placeholder={placeholder}
           className="form-control font-normal"
           defaultValue={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
         />
       </span>
     </>

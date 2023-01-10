@@ -33,11 +33,11 @@ export const useDefaultValues = ({
   );
 
   const remote_db_relationships = metadataTable?.remote_relationships?.filter(
-    (rel) => 'to_source' in rel.definition
+    rel => 'to_source' in rel.definition
   );
 
   const relationship = remote_db_relationships?.find(
-    (rel) => rel.name === existingRelationshipName
+    rel => rel.name === existingRelationshipName
   );
 
   const defaultValues: Schema = {

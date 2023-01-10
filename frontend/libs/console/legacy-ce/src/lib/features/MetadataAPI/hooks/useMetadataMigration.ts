@@ -26,10 +26,10 @@ export function useMetadataMigration(
   >
 ) {
   const { mode } = useConsoleConfig();
-  const headers = useAppSelector((state) => state.tables.dataHeaders);
+  const headers = useAppSelector(state => state.tables.dataHeaders);
   const queryClient = useQueryClient();
   return useMutation(
-    async (props) => {
+    async props => {
       try {
         const { query } = props;
         const body = query;
@@ -55,7 +55,7 @@ export function useMetadataMigration(
           queryClient.fetchQuery({
             queryKey: 'cliExport',
             queryFn: () => {
-              const cliMetadataExportUrl = `${Endpoints.hasuractlMetadata}?export=true`;
+              const cliMetadataExportUrl = `${Endpoints.hasuraCliServerMetadata}?export=true`;
               return Api.get<MetadataResponse>({
                 headers,
                 url: cliMetadataExportUrl,

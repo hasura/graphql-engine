@@ -3,6 +3,7 @@
 -- | GDC Mock Agent Fixture and test helpers
 module Harness.Backend.DataConnector.Mock
   ( -- * Mock Fixture
+    backendTypeMetadata,
     setupAction,
     setup,
     teardown,
@@ -28,15 +29,32 @@ import Control.Concurrent.Async qualified as Async
 import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.Mock.Server
+import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (shouldBe)
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendType.BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.DataConnectorReference,
+      backendSourceName = "mock",
+      backendCapabilities = Nothing,
+      backendTypeString = "mock",
+      backendDisplayNameString = "mock",
+      backendServerUrl = Just "http://localhost:65006",
+      backendSchemaKeyword = "schema"
+    }
 
 --------------------------------------------------------------------------------
 
@@ -63,7 +81,7 @@ teardown (testEnvironment, MockAgentEnvironment {..}) = do
 -- | Mock Agent @backend_configs@ field
 agentConfig :: Aeson.Value
 agentConfig =
-  let backendType = Fixture.defaultBackendTypeString $ Fixture.DataConnectorMock
+  let backendType = BackendType.backendTypeString backendTypeMetadata
       agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
    in [yaml|
 dataconnector:
@@ -113,14 +131,18 @@ data MockAgentEnvironment = MockAgentEnvironment
   }
 
 -- | Create the 'I.IORef's and launch the servant mock agent.
-mkLocalTestEnvironment :: TestEnvironment -> IO MockAgentEnvironment
-mkLocalTestEnvironment _ = do
+mkLocalTestEnvironment :: TestEnvironment -> Managed MockAgentEnvironment
+mkLocalTestEnvironment _ = mkTestResource do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
   maeQueryConfig <- I.newIORef Nothing
   maeThread <- Async.async $ runMockServer maeConfig maeQuery maeQueryConfig
-  healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
-  pure $ MockAgentEnvironment {..}
+  pure $
+    AcquiredResource
+      { resourceValue = MockAgentEnvironment {..},
+        waitForResource = healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health",
+        teardownResource = Async.cancel maeThread
+      }
 
 -- | Mock Agent test case input.
 data TestCase = TestCase
@@ -163,7 +185,7 @@ defaultTestCase TestCaseRequired {..} =
 -- | Test runner for the Mock Agent. 'runMockedTest' sets the mocked
 -- value in the agent, fires a GQL request, then asserts on the
 -- expected response and 'API.Query' value.
-runTest :: Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
+runTest :: HasCallStack => Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
 runTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
   -- Set the Agent with the 'MockConfig'
   I.writeIORef maeConfig _given

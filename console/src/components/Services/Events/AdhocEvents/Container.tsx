@@ -1,5 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import {
   getAdhocEventsRoute,
@@ -50,25 +51,27 @@ const STContainer: React.FC<Props> = ({ children, tabName }) => {
   ];
 
   return (
-    <div>
-      <Helmet
-        title={getReactHelmetTitle(
-          `${tabInfo[tabName].display_text} - ${ADHOC_EVENTS_HEADING}`,
-          EVENTS_SERVICE_HEADING
-        )}
-      />
-      <CommonTabLayout
-        appPrefix={appPrefix}
-        currentTab={tabName}
-        heading={ADHOC_EVENTS_HEADING}
-        tabsInfo={tabInfo}
-        breadCrumbs={breadCrumbs}
-        baseUrl={stripTrailingSlash(getAdhocEventsRoute('absolute', ''))}
-        showLoader={false}
-        testPrefix="adhoc-events-container-tabs"
-      />
-      <div className="pt-5">{children}</div>
-    </div>
+    <Analytics name="AdhocEvents" {...REDACT_EVERYTHING}>
+      <div>
+        <Helmet
+          title={getReactHelmetTitle(
+            `${tabInfo[tabName].display_text} - ${ADHOC_EVENTS_HEADING}`,
+            EVENTS_SERVICE_HEADING
+          )}
+        />
+        <CommonTabLayout
+          appPrefix={appPrefix}
+          currentTab={tabName}
+          heading={ADHOC_EVENTS_HEADING}
+          tabsInfo={tabInfo}
+          breadCrumbs={breadCrumbs}
+          baseUrl={stripTrailingSlash(getAdhocEventsRoute('absolute', ''))}
+          showLoader={false}
+          testPrefix="adhoc-events-container-tabs"
+        />
+        <div className="pt-5">{children}</div>
+      </div>
+    </Analytics>
   );
 };
 

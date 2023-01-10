@@ -1,11 +1,12 @@
 import { CustomizationForm } from '@/features/ConnectDB';
-import { Forms } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { expect } from '@storybook/jest';
 import { ComponentStory, Meta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { screen } from '@testing-library/dom';
 import React from 'react';
 import { z } from 'zod';
+import { action } from '@storybook/addon-actions';
 
 const schema = z.object({
   customization: z
@@ -27,22 +28,17 @@ export default {
   title: 'Data/Connect/GraphQL Field Customization',
   component: CustomizationForm,
   decorators: [
-    (s) => {
+    s => {
       return (
-        <Forms.New
-          schema={schema}
-          onSubmit={(d) => {
-            console.log(d);
-          }}
-        >
+        <SimpleForm schema={schema} onSubmit={action('onSubmit')}>
           {s}
-        </Forms.New>
+        </SimpleForm>
       );
     },
   ],
 } as Meta;
 
-export const Primary: ComponentStory<typeof CustomizationForm> = (args) => (
+export const Primary: ComponentStory<typeof CustomizationForm> = args => (
   <CustomizationForm {...args} />
 );
 
@@ -63,7 +59,7 @@ const inputIds = [
 Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  inputIds.forEach(async (id) => {
+  inputIds.forEach(async id => {
     const parts = id.split('.');
     const subHeading = parts[1];
     const fieldName = parts[2];

@@ -15,6 +15,7 @@ from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.compat import ordereddict, StringIO
 import textwrap
 import warnings
+import PortToHaskell
 
 from context import HGECtx, PytestConf
 from fixtures.tls import TLSTrust
@@ -528,30 +529,63 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
     hge_ctx.may_skip_test_teardown = False
     should_write_back = False
 
-    # ruamel will preserve order so that we can test the JSON ordering
-    # property conforms to YAML spec.  It also lets us write back the yaml
-    # nicely when we `--accept.`
-    yml = yaml.YAML()
+    def add_spec(file, conf):
+        spec = None
+        response = conf.get('response')
+
+        status = conf.get('status')
+        if status is None:
+            status = 200
+
+        query = conf["query"]
+        if "query" in query:
+            query = query["query"]
+
+        headers = conf.get("headers")
+
+        spec = PortToHaskell.PostSpec(
+          conf.get("description"),
+          file,
+          conf["url"],
+          headers,
+          query, # TODO: handle variables
+          status,
+          response)
+
+        PortToHaskell.with_test(hge_ctx.request.cls.__qualname__).add_spec(
+            hge_ctx.request._pyfuncitem.originalname,
+            spec)
 
     with open(f, 'r+') as c:
+        # ruamel will preserve order so that we can test the JSON ordering
+        # property conforms to YAML spec.  It also lets us write back the yaml
+        # nicely when we `--accept.`
+        yml = yaml.YAML()
+
         # NOTE: preserve ordering with ruamel
         conf = yml.load(c)
 
         if isinstance(conf, list):
             for ix, sconf in enumerate(conf):
-                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
-                if PytestConf.config.getoption("--accept") and not matched:
-                    conf[ix]['response'] = actual_resp
-                    should_write_back = True
+              if PytestConf.config.getoption("--port-to-haskell"):
+                  add_spec(f + " [" + str(ix) + "]", sconf)
+              else:
+                  actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
+                  if PytestConf.config.getoption("--accept") and not matched:
+                      conf[ix]['response'] = actual_resp
+                      should_write_back = True
         else:
-            if conf['status'] != 200:
-                hge_ctx.may_skip_test_teardown = True
-            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
-            # If using `--accept` write the file back out with the new expected
-            # response set to the actual response we got:
-            if PytestConf.config.getoption("--accept") and not matched:
-                conf['response'] = actual_resp
-                should_write_back = True
+            if PytestConf.config.getoption("--port-to-haskell"):
+                add_spec(f, conf)
+            else:
+                if conf['status'] != 200:
+                    hge_ctx.may_skip_test_teardown = True
+                actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
+                # If using `--accept` write the file back out with the new expected
+                # response set to the actual response we got:
+                if PytestConf.config.getoption("--accept") and not matched:
+                    conf['response'] = actual_resp
+                    should_write_back = True
 
         if should_write_back:
             warnings.warn(

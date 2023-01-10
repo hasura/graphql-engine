@@ -65,8 +65,9 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (MetricsConfig (_mcAnalyzeQueryVariables))
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.SchemaCache (scApiLimits)
+import Hasura.RQL.Types.SchemaCache (scApiLimits, scMetricsConfig)
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Auth
@@ -269,8 +270,8 @@ sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata ex
       (SMData (DataMsg opId _)) -> (Just SMT_GQL_DATA, Just opId)
       _ -> (Nothing, Nothing)
     wsInfo =
-      Just
-        $! WS.WSEventInfo
+      Just $!
+        WS.WSEventInfo
           { WS._wseiEventType = msgType,
             WS._wseiOperationId = operationId,
             WS._wseiOperationName = opName,
@@ -392,6 +393,11 @@ onConn wsId requestHead ipAddress onConnHActions = do
         <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
         <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
+-- Helper for avoiding boolean blindness
+data ShouldCaptureQueryVariables
+  = CaptureQueryVariables
+  | DoNotCaptureQueryVariables
+
 onStart ::
   forall m.
   ( MonadIO m,
@@ -408,10 +414,11 @@ onStart ::
   HashSet (L.EngineLogType L.Hasura) ->
   WSServerEnv ->
   WSConn ->
+  ShouldCaptureQueryVariables ->
   StartMsg ->
   WS.WSActions WSConnData ->
   m ()
-onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions = catchAndIgnore $ do
+onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
   timerTot <- startTimer
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   let opName = _grOperationName q
@@ -436,11 +443,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
   (sc, scVer) <- liftIO getSchemaCache
 
-  operationLimit <- askGraphqlOperationLimit requestId
+  operationLimit <- askGraphqlOperationLimit requestId userInfo (scApiLimits sc)
   let runLimits ::
         ExceptT (Either GQExecError QErr) (ExceptT () m) a ->
         ExceptT (Either GQExecError QErr) (ExceptT () m) a
-      runLimits = withErr Right $ runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      runLimits = withErr Right $ runResourceLimits operationLimit
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
@@ -453,6 +460,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       E.getResolvedExecPlan
         env
         logger
+        prometheusMetrics
         userInfo
         sqlGenCtx
         readOnlyMode
@@ -545,7 +553,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               --       the WS client will respond correctly to multiple messages.
               void $
                 Tracing.interpTraceT (withExceptT mempty) $
-                  cacheStore cacheKey cachedDirective $ encodeAnnotatedResponseParts results
+                  cacheStore cacheKey cachedDirective $
+                    encodeAnnotatedResponseParts results
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -736,7 +745,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         totalTime <- timerTot
         let telemTimeTot = Seconds totalTime
         sendSuccResp (encodeAnnotatedResponseParts results) opName pqh $
-          ES.SubscriptionMetadata $ sum $ fmap arpTimeIO results
+          ES.SubscriptionMetadata $
+            sum $
+              fmap arpTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
         liftIO $ recordGQLQuerySuccess totalTime gqlOpType
@@ -784,15 +795,21 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       enableAL
       _keepAliveDelay
       _serverMetrics
-      prometheusMetrics = serverEnv
+      prometheusMetrics
+      _ = serverEnv
 
     gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
+    logOpEv :: MonadIO n => OpDetail -> Maybe RequestId -> Maybe ParameterizedQueryHash -> n ()
     logOpEv opTy reqId parameterizedQueryHash =
       -- See Note [Disable query printing when query-log is disabled]
-      let queryToLog = bool Nothing (Just q) (Set.member L.ELTQueryLog enabledLogTypes)
+      let censoredReq =
+            case shouldCaptureVariables of
+              CaptureQueryVariables -> q
+              DoNotCaptureQueryVariables -> q {_grVariables = Nothing}
+          queryToLog = censoredReq <$ guard (Set.member L.ELTQueryLog enabledLogTypes)
        in logWSEvent logger wsConn $
             EOperation $
               OperationDetails opId reqId (_grOperationName q) opTy queryToLog parameterizedQueryHash
@@ -803,7 +820,10 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
-        SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
+        SMErr $
+          ErrorMsg opId $
+            errFn False $
+              err400 StartFailed e
       liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
       liftIO $ reportGQLQueryError Nothing
       liftIO $ closeConnAction wsConn opId (T.unpack e)
@@ -812,7 +832,11 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       sendMsg wsConn (SMComplete . CompletionMsg $ opId)
       logOpEv ODCompleted reqId paramQueryHash
 
-    postExecErr :: RequestId -> G.OperationType -> QErr -> ExceptT () m ()
+    postExecErr ::
+      RequestId ->
+      G.OperationType ->
+      QErr ->
+      ExceptT () m ()
     postExecErr reqId gqlOpType qErr = do
       let errFn = getErrFn errRespTy False
       liftIO $ logOpEv (ODQueryErr qErr) (Just reqId) Nothing
@@ -850,7 +874,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         opName
         (Just queryHash)
 
-    withComplete :: ExceptT () m () -> ExceptT () m a
+    withComplete ::
+      ExceptT () m () ->
+      ExceptT () m a
     withComplete action = do
       action
       liftIO $ sendCompleted Nothing Nothing
@@ -927,7 +953,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           (ES.SubscriptionMetadata dTime)
       resp ->
         sendMsg wsConn $
-          sendDataMsg $ DataMsg opId $ LBS.fromStrict . ES._lqrPayload <$> resp
+          sendDataMsg $
+            DataMsg opId $
+              LBS.fromStrict . ES._lqrPayload <$> resp
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.
@@ -984,7 +1012,7 @@ onMessage ::
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   m ()
-onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT "websocket" do
+onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT (_wseTraceSamplingPolicy serverEnv) "websocket" do
   case J.eitherDecode msgRaw of
     Left e -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -1001,7 +1029,13 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
           params
           onErrAction
           keepAliveMessageAction
-      CMStart startMsg -> onStart env enabledLogTypes serverEnv wsConn startMsg onMessageActions
+      CMStart startMsg -> do
+        schemaCache <- liftIO $ fst <$> _wseGCtxMap serverEnv
+        let shouldCaptureVariables =
+              if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
+                then CaptureQueryVariables
+                else DoNotCaptureQueryVariables
+        onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
       CMStop stopMsg -> onStop serverEnv wsConn stopMsg
       -- specfic to graphql-ws
       CMPing mPayload -> onPing wsConn mPayload
@@ -1093,7 +1127,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
           logWSEvent logger wsConn $ EConnErr connErr
           liftIO $ onConnInitErrAction wsConn connErr WS.ConnInitFailed
         -- we're ignoring the auth headers as headers are irrelevant in websockets
-        Right (userInfo, expTimeM, _authHeaders) -> do
+        Right (userInfo, expTimeM, _authHeaders, _) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
             $assertNFHere csInit -- so we don't write thunks to mutable vars

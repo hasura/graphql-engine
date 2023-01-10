@@ -3,9 +3,9 @@ import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Meta, Story } from '@storybook/react';
 import React from 'react';
+import { handlers } from '@/mocks/metadata.mock';
 
 import { useOperationsFromQueryCollection } from './useOperationsFromQueryCollection';
-import { handlers } from './mocks/handlers.mock';
 
 function UseOperationsFromQueryCollection() {
   const operations = useOperationsFromQueryCollection('allowed-queries');
@@ -36,6 +36,6 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ delay: 500 }),
   },
 } as Meta;

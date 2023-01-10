@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/spf13/afero"
@@ -29,8 +30,9 @@ type CreateSeedOpts struct {
 // CreateSeedFile creates a .sql file according to the arguments
 // it'll return full filepath and an error if any
 func CreateSeedFile(fs afero.Fs, opts CreateSeedOpts) (*string, error) {
+	var op internalerrors.Op = "seed.CreateSeedFile"
 	if opts.Data == nil {
-		return nil, errors.New("no data provided")
+		return nil, internalerrors.E(op, errors.New("no data provided"))
 	}
 	const fileExtension = "sql"
 
@@ -42,20 +44,21 @@ func CreateSeedFile(fs afero.Fs, opts CreateSeedOpts) (*string, error) {
 	// Write contents to file
 	file, err := fs.OpenFile(fullFilePath, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-		return nil, err
+		return nil, internalerrors.E(op, err)
 	}
 	defer file.Close()
 
 	r := bufio.NewReader(opts.Data)
 	_, err = io.Copy(file, r)
 	if err != nil {
-		return nil, err
+		return nil, internalerrors.E(op, err)
 	}
 
 	return &fullFilePath, nil
 }
 
 func (d *Driver) ExportDatadump(tableNames []string, sourceName string) (io.Reader, error) {
+	var op internalerrors.Op = "seed.Driver.ExportDatadump"
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
 
@@ -64,7 +67,7 @@ func (d *Driver) ExportDatadump(tableNames []string, sourceName string) (io.Read
 		splitLen := len(split)
 
 		if splitLen != 1 && splitLen != 2 {
-			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
+			return nil, internalerrors.E(op, fmt.Errorf(`invalid schema/table provided "%s"`, val))
 		}
 
 		if splitLen == 2 {
@@ -85,7 +88,7 @@ func (d *Driver) ExportDatadump(tableNames []string, sourceName string) (io.Read
 	}
 	response, err := d.PGDumpClient.Send(request)
 	if err != nil {
-		return nil, err
+		return nil, internalerrors.E(op, err)
 	}
 	return response, nil
 }

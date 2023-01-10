@@ -1,6 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
 import {
@@ -48,71 +53,79 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
     ];
   };
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'EventsTableHeader',
+    { redactText: true }
+  );
+
   return (
     <div>
       <Helmet>
-        <title data-heap-redact-text="true">
+        <title {...titleAnalyticsAttributes}>
           {getReactHelmetTitle(
             `${activeTab} - ${triggerName}`,
             EVENTS_SERVICE_HEADING
           )}
         </title>
       </Helmet>
-      <div className={styles.subHeader}>
-        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
-        <h2 className={styles.heading_text}>{triggerName}</h2>
-        <div className={styles.nav}>
-          <ul className="nav nav-pills">
-            {!readOnlyMode && (
+
+      <Analytics name="EventsTableHeader" {...REDACT_EVERYTHING}>
+        <div className={styles.subHeader}>
+          <BreadCrumb breadCrumbs={getBreadCrumbs()} />
+          <h2 className={styles.heading_text}>{triggerName}</h2>
+          <div className={styles.nav}>
+            <ul className="nav nav-pills">
+              {!readOnlyMode && (
+                <li
+                  role="presentation"
+                  className={tabName === 'modify' ? styles.active : ''}
+                >
+                  <Link
+                    to={getETModifyRoute({ name: triggerName })}
+                    data-test="trigger-modify"
+                  >
+                    Modify
+                  </Link>
+                </li>
+              )}
               <li
                 role="presentation"
-                className={tabName === 'modify' ? styles.active : ''}
+                className={tabName === 'pending' ? styles.active : ''}
               >
                 <Link
-                  to={getETModifyRoute({ name: triggerName })}
-                  data-test="trigger-modify"
+                  to={`/events/data/${triggerName}/pending`}
+                  data-test="trigger-pending-events"
                 >
-                  Modify
+                  Pending Events {tabName === 'pending' ? showCount : null}
                 </Link>
               </li>
-            )}
-            <li
-              role="presentation"
-              className={tabName === 'pending' ? styles.active : ''}
-            >
-              <Link
-                to={`/events/data/${triggerName}/pending`}
-                data-test="trigger-pending-events"
+              <li
+                role="presentation"
+                className={tabName === 'processed' ? styles.active : ''}
               >
-                Pending Events {tabName === 'pending' ? showCount : null}
-              </Link>
-            </li>
-            <li
-              role="presentation"
-              className={tabName === 'processed' ? styles.active : ''}
-            >
-              <Link
-                to={`/events/data/${triggerName}/processed`}
-                data-test="trigger-processed-events"
+                <Link
+                  to={`/events/data/${triggerName}/processed`}
+                  data-test="trigger-processed-events"
+                >
+                  Processed Events {tabName === 'processed' ? showCount : null}
+                </Link>
+              </li>
+              <li
+                role="presentation"
+                className={tabName === 'logs' ? styles.active : ''}
               >
-                Processed Events {tabName === 'processed' ? showCount : null}
-              </Link>
-            </li>
-            <li
-              role="presentation"
-              className={tabName === 'logs' ? styles.active : ''}
-            >
-              <Link
-                to={`/events/data/${triggerName}/logs`}
-                data-test="trigger-invocation-logs"
-              >
-                Invocation Logs
-              </Link>
-            </li>
-          </ul>
+                <Link
+                  to={`/events/data/${triggerName}/logs`}
+                  data-test="trigger-invocation-logs"
+                >
+                  Invocation Logs
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div className="clearfix" />
         </div>
-        <div className="clearfix" />
-      </div>
+      </Analytics>
     </div>
   );
 };

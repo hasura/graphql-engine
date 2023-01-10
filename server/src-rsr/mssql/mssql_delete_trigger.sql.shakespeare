@@ -1,11 +1,12 @@
 CREATE OR ALTER TRIGGER #{qualifiedTriggerName}
 ON #{qualifiedTableName}
 AFTER DELETE
+#{replicationClause}
 AS
 BEGIN
 DECLARE @json NVARCHAR(MAX)
 SET @json =  (
-  SELECT 
+  SELECT
     #{deliveryColsSQLExpression}, NULL as [payload.data.new],
     '#{operation}' as [payload.op],
     '#{schemaName}' as [schema_name],

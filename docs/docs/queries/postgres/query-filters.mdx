@@ -13,7 +13,7 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Filter query results / search queries
+# Postgres: Filter Query Results / Search Queries
 
 ## The **where** argument
 
@@ -1442,6 +1442,14 @@ array of objects related via an array relationship.
     single nested object satisfies the defined condition.
 -   In case of an **array relationship**, a row will be returned if
     **any of the nested objects** satisfy the defined condition.
+
+:::caution Limitations
+
+**This is only supported for local relationships**, such as relationships between two local database tables. 
+	
+**This is not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
+
+:::
 
 Let's look at a few use cases based on the above:
 

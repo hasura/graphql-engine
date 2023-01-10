@@ -5,11 +5,14 @@ module Harness.Test.Schema
   ( Table (..),
     table,
     Reference (..),
+    reference,
     Column (..),
     ScalarType (..),
     defaultSerialType,
     ScalarValue (..),
     WKT (..),
+    formatTableQualifier,
+    TableQualifier (..),
     Constraint (..),
     UniqueIndex (..),
     BackendScalarType (..),
@@ -17,6 +20,8 @@ module Harness.Test.Schema
     BackendScalarValueType (..),
     ManualRelationship (..),
     SchemaName (..),
+    resolveTableSchema,
+    resolveReferenceSchema,
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -41,10 +46,11 @@ module Harness.Test.Schema
     trackComputedField,
     untrackComputedField,
     runSQL,
+    addSource,
   )
 where
 
-import Data.Aeson ((.=))
+import Data.Aeson (Value, (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as K
 import Data.Time (UTCTime, defaultTimeLocale)
@@ -52,11 +58,13 @@ import Data.Time.Format (parseTimeOrError)
 import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SchemaName
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig)
 import Hasura.Prelude
+import Safe (lastMay)
 
 -- | Generic type to use to specify schema tables for all backends.
 -- Usually a list of these make up a "schema" to pass to the respective
@@ -76,9 +84,18 @@ data Table = Table
     tableManualRelationships :: [Reference],
     tableData :: [[ScalarValue]],
     tableConstraints :: [Constraint],
-    tableUniqueIndexes :: [UniqueIndex]
+    tableUniqueIndexes :: [UniqueIndex],
+    tableQualifiers :: [TableQualifier]
   }
   deriving (Show, Eq)
+
+-- | Used to qualify a tracked table by schema (and additionally by GCP projectId, in the case
+-- of BigQuery)
+newtype TableQualifier = TableQualifier Text
+  deriving (Show, Eq)
+
+formatTableQualifier :: TableQualifier -> Text
+formatTableQualifier (TableQualifier t) = t
 
 data Constraint = UniqueConstraintColumns [Text] | CheckConstraintExpression Text
   deriving (Show, Eq)
@@ -98,16 +115,27 @@ table tableName =
       tableManualRelationships = [],
       tableData = [],
       tableConstraints = [],
-      tableUniqueIndexes = []
+      tableUniqueIndexes = [],
+      tableQualifiers = []
     }
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference
   { referenceLocalColumn :: Text,
     referenceTargetTable :: Text,
-    referenceTargetColumn :: Text
+    referenceTargetColumn :: Text,
+    referenceTargetQualifiers :: [Text]
   }
   deriving (Show, Eq)
+
+reference :: Text -> Text -> Text -> Reference
+reference localColumn targetTable targetColumn =
+  Reference
+    { referenceLocalColumn = localColumn,
+      referenceTargetTable = targetTable,
+      referenceTargetColumn = targetColumn,
+      referenceTargetQualifiers = mempty
+    }
 
 -- | Type representing manual relationship between tables. This is
 -- only used for BigQuery backend currently where additional
@@ -296,33 +324,53 @@ columnNull name typ = Column name typ True Nothing
 parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 
+-- | we assume we are using the default schema unless a table tells us
+-- otherwise
+-- when multiple qualifiers are passed, we assume the last one is the schema
+resolveTableSchema :: TestEnvironment -> Table -> SchemaName
+resolveTableSchema testEnv tbl =
+  case resolveReferenceSchema (coerce $ tableQualifiers tbl) of
+    Nothing -> getSchemaName testEnv
+    Just schemaName -> schemaName
+
+-- | when given a list of qualifiers, we assume that the schema is the last one
+-- io Postgres, it'll be the only item
+-- in BigQuery, it could be ['project','schema']
+resolveReferenceSchema :: [Text] -> Maybe SchemaName
+resolveReferenceSchema qualifiers =
+  case lastMay qualifiers of
+    Nothing -> Nothing
+    Just schemaName -> Just (SchemaName schemaName)
+
 -- | Native Backend track table
 --
 -- Data Connector backends expect an @[String]@ for the table name.
-trackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
-trackTable backend source Table {tableName} testEnvironment = do
-  let backendType = defaultBackendTypeString backend
-      schema = getSchemaName testEnvironment
+trackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()
+trackTable source tbl@(Table {tableName}) testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      schema = resolveTableSchema testEnvironment tbl
       requestType = backendType <> "_track_table"
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    schema: *schema
-    name: *tableName
-|]
+      type: *requestType
+      args:
+        source: *source
+        table:
+          schema: *schema
+          name: *tableName
+    |]
 
 -- | Native Backend track table
 --
 -- Data Connector backends expect an @[String]@ for the table name.
-untrackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
-untrackTable backend source Table {tableName} testEnvironment = do
-  let backendType = defaultBackendTypeString backend
+untrackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()
+untrackTable source Table {tableName} testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
-  let requestType = backendType <> "_untrack_table"
+      requestType = backendType <> "_untrack_table"
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -334,9 +382,10 @@ args:
     name: *tableName
 |]
 
-trackFunction :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
-trackFunction backend source functionName testEnvironment = do
-  let backendType = defaultBackendTypeString backend
+trackFunction :: HasCallStack => String -> String -> TestEnvironment -> IO ()
+trackFunction source functionName testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
       requestType = backendType <> "_track_function"
   GraphqlEngine.postMetadata_
@@ -351,9 +400,10 @@ args:
 |]
 
 -- | Unified untrack function
-untrackFunction :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
-untrackFunction backend source functionName testEnvironment = do
-  let backendType = defaultBackendTypeString backend
+untrackFunction :: HasCallStack => String -> String -> TestEnvironment -> IO ()
+untrackFunction source functionName testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
   let requestType = backendType <> "_untrack_function"
   GraphqlEngine.postMetadata_
@@ -369,16 +419,19 @@ args:
 
 trackComputedField ::
   HasCallStack =>
-  BackendType ->
   String ->
   Table ->
   String ->
   String ->
+  Aeson.Value ->
+  Aeson.Value ->
   TestEnvironment ->
   IO ()
-trackComputedField backend source Table {tableName} functionName asFieldName testEnvironment = do
-  let backendType = defaultBackendTypeString backend
+trackComputedField source Table {tableName} functionName asFieldName argumentMapping returnTable testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
+      schemaKey = BackendType.backendSchemaKeyword backendTypeMetadata
       requestType = backendType <> "_add_computed_field"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -388,63 +441,69 @@ args:
   source: *source
   comment: null
   table:
-    schema: *schema
+    *schemaKey: *schema
     name: *tableName
   name: *asFieldName
   definition:
     function:
-      schema: *schema
+      *schemaKey: *schema
       name: *functionName
     table_argument: null
     session_argument: null
+    argument_mapping: *argumentMapping
+    return_table: *returnTable
 |]
 
 -- | Unified untrack computed field
-untrackComputedField :: HasCallStack => BackendType -> String -> Table -> String -> TestEnvironment -> IO ()
-untrackComputedField backend source Table {tableName} fieldName testEnvironment = do
-  let backendType = defaultBackendTypeString backend
+untrackComputedField :: HasCallStack => String -> Table -> String -> TestEnvironment -> IO ()
+untrackComputedField source Table {tableName} fieldName testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
       schema = getSchemaName testEnvironment
+      schemaKey = BackendType.backendSchemaKeyword backendTypeMetadata
   let requestType = backendType <> "_drop_computed_field"
+
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    schema: *schema
-    name: *tableName
-  name: *fieldName
-|]
+      type: *requestType
+      args:
+        source: *source
+        table:
+          *schemaKey: *schema
+          name: *tableName
+        name: *fieldName
+      |]
 
 -- | Helper to create the object relationship name
 mkObjectRelationshipName :: Reference -> Text
-mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
+mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
+  let columnName = case resolveReferenceSchema referenceTargetQualifiers of
+        Just (SchemaName targetSchema) -> targetSchema <> "_" <> referenceTargetColumn
+        Nothing -> referenceTargetColumn
+   in referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> columnName
 
 -- | Build an 'Aeson.Value' representing a 'BackendType' specific @TableName@.
-mkTableField :: BackendType -> SchemaName -> Text -> Aeson.Value
-mkTableField backend schemaName tableName =
+mkTableField :: BackendTypeConfig -> SchemaName -> Text -> Aeson.Value
+mkTableField backendTypeMetadata schemaName tableName =
   let dcFieldName = Aeson.Array $ V.fromList [Aeson.String (unSchemaName schemaName), Aeson.String tableName]
-      nativeFieldName = Aeson.object [schemaKeyword backend .= Aeson.String (unSchemaName schemaName), "name" .= Aeson.String tableName]
-   in case backend of
-        Postgres -> nativeFieldName
-        MySQL -> nativeFieldName
-        SQLServer -> nativeFieldName
-        BigQuery -> nativeFieldName
-        Citus -> nativeFieldName
-        Cockroach -> nativeFieldName
-        DataConnectorMock -> dcFieldName
-        DataConnectorReference -> dcFieldName
-        DataConnectorSqlite -> dcFieldName
+      nativeFieldName = Aeson.object [BackendType.backendSchemaKeyword backendTypeMetadata .= Aeson.String (unSchemaName schemaName), "name" .= Aeson.String tableName]
+   in case BackendType.backendType backendTypeMetadata of
+        BackendType.Postgres -> nativeFieldName
+        BackendType.SQLServer -> nativeFieldName
+        BackendType.BigQuery -> nativeFieldName
+        BackendType.Citus -> nativeFieldName
+        BackendType.Cockroach -> nativeFieldName
+        BackendType.DataConnector _ -> dcFieldName
 
 -- | Unified track object relationships
-trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
-trackObjectRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
-  let schema = getSchemaName testEnvironment
-      backendType = defaultBackendTypeString backend
-      source = defaultSource backend
-      tableField = mkTableField backend schema tableName
+trackObjectRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
+trackObjectRelationships tbl@(Table {tableName, tableReferences, tableManualRelationships}) testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      localSchema = resolveTableSchema testEnvironment tbl
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      source = BackendType.backendSourceName backendTypeMetadata
+      tableField = mkTableField backendTypeMetadata localSchema tableName
       requestType = backendType <> "_create_object_relationship"
 
   for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
@@ -452,18 +511,21 @@ trackObjectRelationships backend Table {tableName, tableReferences, tableManualR
     GraphqlEngine.postMetadata_
       testEnvironment
       [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *tableField
-  name: *relationshipName
-  using:
-    foreign_key_constraint_on: *referenceLocalColumn
-|]
+        type: *requestType
+        args:
+          source: *source
+          table: *tableField
+          name: *relationshipName
+          using:
+            foreign_key_constraint_on: *referenceLocalColumn
+      |]
 
-  for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let relationshipName = mkObjectRelationshipName ref
-        targetTableField = mkTableField backend schema referenceTargetTable
+  for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkObjectRelationshipName ref
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
         manualConfiguration :: Aeson.Value
         manualConfiguration =
           Aeson.object
@@ -473,51 +535,61 @@ args:
             ]
         payload =
           [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *tableField
-  name: *relationshipName
-  using:
-    manual_configuration: *manualConfiguration
-|]
+            type: *requestType
+            args:
+              source: *source
+              table: *tableField
+              name: *relationshipName
+              using:
+                manual_configuration: *manualConfiguration
+          |]
 
     GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Helper to create the array relationship name
-mkArrayRelationshipName :: Text -> Text -> Text -> Text
-mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn =
-  tableName <> "s_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
+mkArrayRelationshipName :: Text -> Text -> Text -> [Text] -> Text
+mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn referenceTargetQualifiers =
+  let columnName = case resolveReferenceSchema referenceTargetQualifiers of
+        Just (SchemaName targetSchema) -> targetSchema <> "_" <> referenceTargetColumn
+        Nothing -> referenceTargetColumn
+   in tableName <> "s_by_" <> referenceLocalColumn <> "_to_" <> columnName
 
 -- | Unified track array relationships
-trackArrayRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
-trackArrayRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
-  let schema = getSchemaName testEnvironment
-      backendType = defaultBackendTypeString backend
-      source = defaultSource backend
-      tableField = mkTableField backend schema tableName
+trackArrayRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
+trackArrayRelationships tbl@(Table {tableName, tableReferences, tableManualRelationships}) testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      localSchema = resolveTableSchema testEnvironment tbl
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      source = BackendType.backendSourceName backendTypeMetadata
+      tableField = mkTableField backendTypeMetadata localSchema tableName
       requestType = backendType <> "_create_array_relationship"
 
-  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
-        targetTableField = mkTableField backend schema referenceTargetTable
+  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
     GraphqlEngine.postMetadata_
       testEnvironment
       [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *targetTableField
-  name: *relationshipName
-  using:
-    foreign_key_constraint_on:
-      table: *tableField
-      column: *referenceLocalColumn
-|]
+        type: *requestType
+        args:
+          source: *source
+          table: *targetTableField
+          name: *relationshipName
+          using:
+            foreign_key_constraint_on:
+              table: *tableField
+              column: *referenceLocalColumn
+      |]
 
-  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
-        targetTableField = mkTableField backend schema referenceTargetTable
+  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
         manualConfiguration :: Aeson.Value
         manualConfiguration =
           Aeson.object
@@ -540,17 +612,19 @@ args:
     GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Unified untrack relationships
-untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
-untrackRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
-  let schema = getSchemaName testEnvironment
-      source = defaultSource backend
-      tableField = mkTableField backend schema tableName
-      requestType = source <> "_drop_relationship"
+untrackRelationships :: HasCallStack => Table -> TestEnvironment -> IO ()
+untrackRelationships Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      schema = getSchemaName testEnvironment
+      source = BackendType.backendSourceName backendTypeMetadata
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      tableField = mkTableField backendTypeMetadata schema tableName
+      requestType = backendType <> "_drop_relationship"
 
-  forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
-    let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
+  forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
         objectRelationshipName = mkObjectRelationshipName ref
-        targetTableField = mkTableField backend schema referenceTargetTable
+        targetTableField = mkTableField backendTypeMetadata schema referenceTargetTable
     finally
       ( -- drop array relationship
         GraphqlEngine.postMetadata_
@@ -576,11 +650,12 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
       )
 
 -- | Unified RunSQL
-runSQL :: HasCallStack => BackendType -> String -> String -> TestEnvironment -> IO ()
-runSQL backend source sql testEnvironment = do
-  let prefix = case backend of
-        Postgres -> ""
-        _ -> defaultBackendTypeString backend <> "_"
+runSQL :: HasCallStack => String -> String -> TestEnvironment -> IO ()
+runSQL source sql testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      prefix = case BackendType.backendType backendTypeMetadata of
+        BackendType.Postgres -> ""
+        _ -> BackendType.backendTypeString backendTypeMetadata <> "_"
       requestType = prefix <> "run_sql"
   GraphqlEngine.postV2Query_
     testEnvironment
@@ -592,3 +667,16 @@ args:
   cascade: false
   read_only: false
 |]
+
+addSource :: HasCallStack => Text -> Value -> TestEnvironment -> IO ()
+addSource sourceName sourceConfig testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [interpolateYaml|
+      type: #{ backendType }_add_source
+      args:
+        name: #{ sourceName }
+        configuration: #{ sourceConfig }
+      |]

@@ -4,9 +4,9 @@ import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta } from '@storybook/react';
 
 import { action } from '@storybook/addon-actions';
+import { handlers } from '@/mocks/metadata.mock';
 
 import { AllowListSidebar } from './AllowListSidebar';
-import { handlers } from '../../../QueryCollections/hooks/useQueryCollections/mocks/handlers.mock';
 
 export default {
   title: 'Features/Allow List/Allow List Sidebar',
@@ -16,7 +16,7 @@ export default {
     ReactQueryDecorator(),
   ],
   parameters: {
-    msw: handlers(1500),
+    msw: handlers({ delay: 500 }),
   },
 } as ComponentMeta<typeof AllowListSidebar>;
 

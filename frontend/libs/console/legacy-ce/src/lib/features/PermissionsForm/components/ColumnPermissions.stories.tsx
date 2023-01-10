@@ -1,7 +1,7 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import {
   ColumnPermissionsSection,
@@ -11,11 +11,11 @@ import {
 const schema = z.object({ columns: z.record(z.optional(z.boolean())) });
 
 export default {
-  title: 'Features/Permissions Form/Components/Column Section',
+  title: 'Features/Permissions Tab/Permissions Form/Components/Column Section',
   component: ColumnPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form
+      <SimpleForm
         schema={schema}
         onSubmit={() => {}}
         options={{
@@ -23,9 +23,10 @@ export default {
             columns: { id: false, name: false, description: false },
           },
         }}
+        className="p-4"
       >
-        {() => <StoryComponent />}
-      </Form>
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
   parameters: {
@@ -36,7 +37,7 @@ export default {
 
 const columns = ['id', 'name', 'description'];
 
-export const Insert: Story<ColumnPermissionsSectionProps> = (args) => (
+export const Insert: Story<ColumnPermissionsSectionProps> = args => (
   <ColumnPermissionsSection {...args} />
 );
 Insert.args = {
@@ -45,7 +46,7 @@ Insert.args = {
   columns,
 };
 
-export const Select: Story<ColumnPermissionsSectionProps> = (args) => (
+export const Select: Story<ColumnPermissionsSectionProps> = args => (
   <ColumnPermissionsSection {...args} />
 );
 Select.args = {
@@ -53,7 +54,7 @@ Select.args = {
   queryType: 'select',
 };
 
-export const Update: Story<ColumnPermissionsSectionProps> = (args) => (
+export const Update: Story<ColumnPermissionsSectionProps> = args => (
   <ColumnPermissionsSection {...args} />
 );
 Update.args = {
@@ -61,7 +62,7 @@ Update.args = {
   queryType: 'update',
 };
 
-export const Delete: Story<ColumnPermissionsSectionProps> = (args) => (
+export const Delete: Story<ColumnPermissionsSectionProps> = args => (
   <ColumnPermissionsSection {...args} />
 );
 Delete.args = {
@@ -69,16 +70,16 @@ Delete.args = {
   queryType: 'delete',
 };
 
-export const PartiallySelected: Story<ColumnPermissionsSectionProps> = (
-  args
-) => <ColumnPermissionsSection {...args} />;
+export const PartiallySelected: Story<ColumnPermissionsSectionProps> = args => (
+  <ColumnPermissionsSection {...args} />
+);
 PartiallySelected.args = {
   ...Insert.args,
   queryType: 'insert',
 };
 PartiallySelected.decorators = [
   (S: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       options={{
@@ -86,13 +87,14 @@ PartiallySelected.decorators = [
           columns: { id: true, name: false, description: true },
         },
       }}
+      className="p-4"
     >
-      {() => <S />}
-    </Form>
+      <S />
+    </SimpleForm>
   ),
 ];
 
-export const AllSelected: Story<ColumnPermissionsSectionProps> = (args) => (
+export const AllSelected: Story<ColumnPermissionsSectionProps> = args => (
   <ColumnPermissionsSection {...args} />
 );
 AllSelected.args = {
@@ -100,7 +102,7 @@ AllSelected.args = {
 };
 AllSelected.decorators = [
   (S: React.FC) => (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={() => {}}
       options={{
@@ -108,13 +110,14 @@ AllSelected.decorators = [
           columns: { id: true, name: true, description: true },
         },
       }}
+      className="p-4"
     >
-      {() => <S />}
-    </Form>
+      <S />
+    </SimpleForm>
   ),
 ];
 
-export const Showcase: Story<ColumnPermissionsSectionProps> = (args) => (
+export const Showcase: Story<ColumnPermissionsSectionProps> = args => (
   <ColumnPermissionsSection {...args} />
 );
 Showcase.args = {

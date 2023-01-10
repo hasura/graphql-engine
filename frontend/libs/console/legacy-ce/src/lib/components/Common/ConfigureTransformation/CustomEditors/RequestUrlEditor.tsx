@@ -84,7 +84,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
               className={`w-full ${inputStyles}`}
               placeholder="URL Template (Optional)..."
               value={localUrl}
-              onChange={(e) => urlOnChangeHandler(e.target.value)}
+              onChange={e => urlOnChangeHandler(e.target.value)}
               data-test="transform-requestUrl"
             />
           </div>

@@ -8,43 +8,40 @@ module Harness.Constants
     postgresDb,
     postgresHost,
     postgresPort,
-    postgresqlConnectionString,
+    postgresqlMetadataConnectionString,
+    postgresMetadataDb,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
-    mysqlLivenessCheckAttempts,
-    mysqlLivenessCheckIntervalSeconds,
-    mysqlPassword,
-    mysqlUser,
-    mysqlDb,
-    mysqlHost,
-    mysqlPort,
-    mysqlConnectInfo,
+    defaultPostgresPort,
     sqlserverLivenessCheckAttempts,
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverConnectInfo,
+    sqlserverAdminConnectInfo,
     sqlserverDb,
     bigqueryServiceKeyVar,
     bigqueryProjectIdVar,
     bigqueryDataset,
-    httpHealthCheckAttempts,
-    httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
+    defaultCitusConnectionString,
     cockroachConnectionString,
+    defaultCockroachConnectionString,
     cockroachDb,
     serveOptions,
     dataConnectorDb,
     sqliteSchemaName,
     maxRetriesRateLimitExceeded,
+    uniqueDbName,
   )
 where
 
 -------------------------------------------------------------------------------
 
 import Data.HashSet qualified as Set
+import Data.Text qualified as T
 import Data.Word (Word16)
-import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as PG
+import Harness.TestEnvironment (UniqueTestId)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -71,6 +68,40 @@ import Refined (refineTH)
 
 -------------------------------------------------------------------------------
 
+-- * Postgres metadata DB
+
+-- To allow us to test different Postgres flavours,
+-- we have separate connection details for the metadata DB
+-- (which should always be Postgres) and other Postgres (which
+-- might actually be Yugabyte, etc)
+postgresMetadataPassword :: String
+postgresMetadataPassword = "hasura"
+
+postgresMetadataUser :: String
+postgresMetadataUser = "hasura"
+
+postgresMetadataDb :: String
+postgresMetadataDb = "hasura_metadata"
+
+postgresMetadataHost :: String
+postgresMetadataHost = "127.0.0.1"
+
+postgresMetadataPort :: Word16
+postgresMetadataPort = 65002
+
+postgresqlMetadataConnectionString :: String
+postgresqlMetadataConnectionString =
+  "postgres://"
+    ++ postgresMetadataUser
+    ++ ":"
+    ++ postgresMetadataPassword
+    ++ "@"
+    ++ postgresMetadataHost
+    ++ ":"
+    ++ show postgresMetadataPort
+    ++ "/"
+    ++ postgresMetadataDb
+
 -- * Postgres
 
 postgresPassword :: String
@@ -88,18 +119,12 @@ postgresHost = "127.0.0.1"
 postgresPort :: Word16
 postgresPort = 65002
 
-postgresqlConnectionString :: String
-postgresqlConnectionString =
-  "postgres://"
-    ++ postgresUser
-    ++ ":"
-    ++ postgresPassword
-    ++ "@"
-    ++ postgresHost
-    ++ ":"
-    ++ show postgresPort
-    ++ "/"
-    ++ postgresDb
+defaultPostgresPort :: Word16
+defaultPostgresPort = 5432
+
+-- | return a unique database name from our TestEnvironment's uniqueTestId
+uniqueDbName :: UniqueTestId -> String
+uniqueDbName uniqueTestId = "test" <> show uniqueTestId
 
 -- * Citus
 
@@ -118,8 +143,21 @@ citusHost = "127.0.0.1"
 citusPort :: Word16
 citusPort = 65004
 
-citusConnectionString :: String
-citusConnectionString =
+citusConnectionString :: UniqueTestId -> String
+citusConnectionString uniqueTestId =
+  "postgres://"
+    ++ citusUser
+    ++ ":"
+    ++ citusPassword
+    ++ "@"
+    ++ citusHost
+    ++ ":"
+    ++ show citusPort
+    ++ "/"
+    ++ uniqueDbName uniqueTestId
+
+defaultCitusConnectionString :: String
+defaultCitusConnectionString =
   "postgres://"
     ++ citusUser
     ++ ":"
@@ -145,8 +183,20 @@ cockroachHost = "127.0.0.1"
 cockroachPort :: Word16
 cockroachPort = 65008
 
-cockroachConnectionString :: String
-cockroachConnectionString =
+cockroachConnectionString :: UniqueTestId -> String
+cockroachConnectionString uniqueTestId =
+  "postgresql://"
+    ++ cockroachUser
+    ++ "@"
+    ++ cockroachHost
+    ++ ":"
+    ++ show cockroachPort
+    ++ "/"
+    ++ uniqueDbName uniqueTestId
+    ++ "?sslmode=disable"
+
+defaultCockroachConnectionString :: String
+defaultCockroachConnectionString =
   "postgresql://"
     ++ cockroachUser
     ++ "@"
@@ -181,44 +231,21 @@ sqlserverLivenessCheckIntervalSeconds = 1
 
 -- | SQL Server has strict password requirements, that's why it's not
 -- simply @hasura@ like the others.
-sqlserverConnectInfo :: Text
-sqlserverConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=optional"
+-- connection info for admin (with CREATE DATABASE permissions)
+sqlserverAdminConnectInfo :: Text
+sqlserverAdminConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Encrypt=optional"
+
+-- | SQL Server has strict password requirements, that's why it's not
+-- simply @hasura@ like the others.
+sqlserverConnectInfo :: UniqueTestId -> Text
+sqlserverConnectInfo uniqueTestId =
+  let dbName = T.pack (uniqueDbName uniqueTestId)
+   in "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Database="
+        <> dbName
+        <> ";Encrypt=optional"
 
 sqlserverDb :: String
 sqlserverDb = "hasura"
-
-mysqlLivenessCheckAttempts :: Int
-mysqlLivenessCheckAttempts = 5
-
-mysqlLivenessCheckIntervalSeconds :: DiffTime
-mysqlLivenessCheckIntervalSeconds = 1
-
--- * MySQL
-
-mysqlPassword :: String
-mysqlPassword = "hasura"
-
-mysqlUser :: String
-mysqlUser = "hasura"
-
-mysqlDb :: String
-mysqlDb = "hasura"
-
-mysqlHost :: String
-mysqlHost = "127.0.0.1"
-
-mysqlPort :: Word16
-mysqlPort = 65001
-
-mysqlConnectInfo :: Mysql.ConnectInfo
-mysqlConnectInfo =
-  Mysql.defaultConnectInfo
-    { Mysql.connectUser = mysqlUser,
-      Mysql.connectPassword = mysqlPassword,
-      Mysql.connectDatabase = mysqlDb,
-      Mysql.connectHost = mysqlHost,
-      Mysql.connectPort = mysqlPort
-    }
 
 bigqueryServiceKeyVar :: String
 bigqueryServiceKeyVar = "HASURA_BIGQUERY_SERVICE_KEY"
@@ -229,14 +256,6 @@ bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
 bigqueryDataset :: String
 bigqueryDataset = "hasura"
 
--- * HTTP health checks
-
-httpHealthCheckAttempts :: Int
-httpHealthCheckAttempts = 5
-
-httpHealthCheckIntervalSeconds :: DiffTime
-httpHealthCheckIntervalSeconds = 1
-
 -- * Server configuration
 
 serveOptions :: ServeOptions L.Hasura
@@ -246,7 +265,12 @@ serveOptions =
     -- a random port, so this isn't particularly
     -- important.
       soHost = "0.0.0.0",
-      soConnParams = PG.defaultConnParams,
+      soConnParams =
+        PG.defaultConnParams
+          { PG.cpConns = 3, -- only use three simultaneous connection
+            PG.cpTimeout = Just 30, -- pool should only wait 30 seconds for a connection to stop tests hanging
+            PG.cpStripes = 2 -- two thread pls
+          },
       soTxIso = PG.Serializable,
       soAdminSecret = mempty,
       soAuthHook = Nothing,
@@ -254,7 +278,7 @@ serveOptions =
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
-      soConsoleAssetsDir = Just "../console/static/dist",
+      soConsoleAssetsDir = Just "../../../console/static/dist",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = False,
       soStringifyNum = Options.Don'tStringifyNumbers,

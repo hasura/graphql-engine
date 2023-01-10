@@ -74,15 +74,15 @@ export const headerStateReducer = (
 ): HeaderState[] => {
   switch (action.type) {
     case 'RequestHeaders/SET_HEADER_KEY_TEXT':
-      return state.map((header) =>
+      return state.map(header =>
         updatePropertyOnHeaderState(header, 'key', action.data, action.index)
       );
     case 'RequestHeaders/SET_HEADER_VALUE_TEXT':
-      return state.map((header) =>
+      return state.map(header =>
         updatePropertyOnHeaderState(header, 'value', action.data, action.index)
       );
     case 'RequestHeaders/TOGGLE_ACTIVE_STATE_OF_HEADER':
-      return state.map((header) =>
+      return state.map(header =>
         updatePropertyOnHeaderState(
           header,
           'isActive',
@@ -91,7 +91,7 @@ export const headerStateReducer = (
         )
       );
     case 'RequestHeaders/REMOVE_HEADER_FROM_LIST':
-      return state.filter((header) => header.index !== action.index);
+      return state.filter(header => header.index !== action.index);
     case 'RequestHeaders/ADD_NEW_EMPTY_HEADER':
       return [...state, getEmptyHeader(state)];
     case 'RequestHeaders/SET_HEADERS_TO_DEFAULT_STATE':
@@ -132,7 +132,7 @@ export const variableStateReducer = (
 ): VariableState[] => {
   switch (action.type) {
     case 'RequestVariables/SET_HEADER_VALUE_TEXT':
-      return state.map((variable) =>
+      return state.map(variable =>
         updateVariableValue(variable, action.name, action.data)
       );
     case 'RequestVariables/SET_VARIABLES_TO_DEFAULT_STATE':
