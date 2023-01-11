@@ -1,7 +1,7 @@
 ---
 sidebar_label: hasura deploy
 sidebar_position: 8
-description: (PREVIEW) Utility command to apply metadata & database migrations to graphql-engine using the Hasura CLI
+description: (PREVIEW) Utility command to apply Hasura Metadata & database migrations to graphql-engine using the Hasura CLI
 keywords:
   - hasura
   - docs
@@ -11,11 +11,17 @@ keywords:
 
 # Hasura CLI: hasura deploy
 
-(PREVIEW) Utility command to apply metadata & database migrations to graphql-engine.
+(PREVIEW) Utility command to apply Hasura Metadata & database migrations to graphql-engine.
 
 ## Synopsis
 
-(PREVIEW) Utility command to apply metadata & database migrations to graphql-engine.
+When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks ( ``hasura metadata apply`` and ``hasura migrate apply``) in one command.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/index/#migrations-in-graphql-engine
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
+
 
 ```bash
 hasura deploy [flags]
@@ -27,6 +33,9 @@ hasura deploy [flags]
 
 # Apply metadata and migrations on Hasura GraphQL Engine
 hasura deploy
+
+# Apply metadata, migrations and seeds on Hasura GraphQL Engine
+hasura deploy --with-seeds
 
 # Use with admin secret:
 hasura deploy --admin-secret "<admin-secret>"
@@ -44,6 +53,7 @@ hasura deploy --endpoint "<endpoint>"
     --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
 -h, --help                           help for deploy
     --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+    --with-seeds                     apply available seeds data to databases
 ```
 
 ## Options inherited from parent commands

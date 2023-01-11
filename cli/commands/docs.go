@@ -309,7 +309,7 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 		buf.WriteString(fmt.Sprintf("%s\n\n", long))
 		buf.WriteString("```\n\n")
 	} else {
-		buf.WriteString(fmt.Sprintf("%s\n\n", long+"."))
+		buf.WriteString(fmt.Sprintf("%s\n\n", long))
 	}
 
 	if cmd.Runnable() {

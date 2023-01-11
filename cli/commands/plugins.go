@@ -40,7 +40,7 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:          "plugins",
 		Aliases:      []string{"plugin"},
 		Short:        "Manage plugins for the CLI",
-		Long:         "The functionality of the CLI can be extended by using plugins. For a list of all available plugins, run 'hasura plugins list', or visit this repository: https://github.com/hasura/cli-plugins-index.\n\nIf you're interested in contributing, please open a PR against this repo to add new plugin.`",
+		Long:         "The functionality of the CLI can be extended by using plugins. For a list of all available plugins, run ``hasura plugins list``, or visit this repository: https://github.com/hasura/cli-plugins-index.\n\nIf you're interested in contributing, please open a PR against this repo to add new plugin.",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")
