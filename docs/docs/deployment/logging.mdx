@@ -37,11 +37,13 @@ the `type` field in a log line, which indicates which sub-system the log comes f
 For example, the HTTP webserver logs incoming requests as an access log and is called `http-log`. Similarly logs from
 the websocket layer are called `websocket-log`, logs from the Event Trigger system are called `event-trigger` etc.
 
-You can configure the GraphQL Engine to enable/disable certain log-types using the the `--enabled-log-types` flag or the
+You can configure the GraphQL Engine to enable/disable certain log-types using the `--enabled-log-types` flag or the
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See
 [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx)
 
 Default enabled log-types are: `startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
+
+### Configurable log-types
 
 All the log-types that can be enabled/disabled are:
 
@@ -54,7 +56,8 @@ All the log-types that can be enabled/disabled are:
 | `webhook-log`     | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
 | `jwk-refresh-log` | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
 
-Configurable log-types
+
+### Internal log-types
 
 Apart from the above, there are other internal log-types which cannot be configured:
 
@@ -68,7 +71,6 @@ Apart from the above, there are other internal log-types which cannot be configu
 | `schema-sync-thread` | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
 | `health-check-log`   | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
 
-Internal log-types
 
 ## Logging levels
 
