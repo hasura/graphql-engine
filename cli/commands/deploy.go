@@ -28,10 +28,10 @@ Further reading:
 - https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
 `,
 		Example: `  
-  # Apply metadata and migrations on Hasura GraphQL engine
+  # Apply metadata and migrations on Hasura GraphQL Engine
   hasura deploy
 
-  # Apply metadata, migrations and seeds on Hasura GraphQL engine
+  # Apply metadata, migrations and seeds on Hasura GraphQL Engine
   hasura deploy --with-seeds
 
   # Use with admin secret:
@@ -66,9 +66,9 @@ Further reading:
 
 	f.BoolVar(&opts.WithSeeds, "with-seeds", false, "apply available seeds data to databases")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

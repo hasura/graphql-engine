@@ -31,7 +31,7 @@ var ec *cli.ExecutionContext
 // rootCmd is the main "hasura" command
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
-	Short:         "Hasura GraphQL engine command line tool",
+	Short:         "Hasura GraphQL Engine command line tool",
 	Long:          hasuraASCIIText,
 	SilenceUsage:  true,
 	SilenceErrors: true,
