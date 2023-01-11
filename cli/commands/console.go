@@ -40,7 +40,10 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura console --admin-secret "<admin-secret>"
 
   # Connect to an instance specified by the flag, overrides the one mentioned in config.yaml:
-  hasura console --endpoint "<endpoint>"`,
+  hasura console --endpoint "<endpoint>"
+  
+  # Connect to HGE instance running in a container when running CLI inside another container:
+  hasura console --endpoint <container network endpoint, like: http://host.docker.internal:8080> --no-browser --address 0.0.0.0 --console-hge-endpoint http://0.0.0.0:8080`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
@@ -87,6 +90,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "when rendering console, use assets provided by HGE server")
+	f.StringVar(&opts.DataApiUrl, "console-hge-endpoint", "", "endpoint on which the CLI console should reach the HGE server")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -120,6 +124,7 @@ type ConsoleOptions struct {
 	StaticDir       string
 	Browser         string
 	UseServerAssets bool
+	DataApiUrl      string
 
 	APIServerInterruptSignal     chan os.Signal
 	ConsoleServerInterruptSignal chan os.Signal
@@ -149,12 +154,17 @@ func (o *ConsoleOptions) Run() error {
 		o.UseServerAssets = true
 	}
 
+	dataApiUrl := o.EC.Config.ServerConfig.ParsedEndpoint.String()
+	if o.DataApiUrl != "" {
+		// change to dataApiUrl value user entered in flag --console-hge-endpoint
+		dataApiUrl = o.DataApiUrl
+	}
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":              o.APIHost.String(),
 		"apiPort":              o.APIPort,
 		"cliVersion":           o.EC.Version.GetCLIVersion(),
 		"serverVersion":        o.EC.Version.GetServerVersion(),
-		"dataApiUrl":           o.EC.Config.ServerConfig.ParsedEndpoint.String(),
+		"dataApiUrl":           dataApiUrl,
 		"dataApiVersion":       "",
 		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
 		"adminSecret":          o.EC.Config.ServerConfig.AdminSecret,
