@@ -209,7 +209,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy),
+                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
                                         ( API.FieldName "Genre",
                                           API.RelField
                                             ( API.RelationshipField
@@ -218,7 +218,7 @@ tests opts = do
                                                   { _qFields =
                                                       Just $
                                                         HashMap.fromList
-                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy)
+                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
@@ -236,7 +236,7 @@ tests opts = do
                                                   { _qFields =
                                                       Just $
                                                         HashMap.fromList
-                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy)
+                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
@@ -339,7 +339,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy),
+                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
                                         ( API.FieldName "Album",
                                           API.RelField
                                             ( API.RelationshipField
@@ -356,7 +356,7 @@ tests opts = do
                                                                       { _qFields =
                                                                           Just $
                                                                             HashMap.fromList
-                                                                              [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy)
+                                                                              [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
                                                                               ],
                                                                         _qAggregates = Nothing,
                                                                         _qLimit = Nothing,
@@ -472,7 +472,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") API.NumberTy)
+                                      [ (API.FieldName "EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") $ API.ScalarType "number")
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -482,8 +482,8 @@ tests opts = do
                                     API.Exists (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers") $
                                       API.ApplyBinaryComparisonOperator
                                         API.Equal
-                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") API.StringTy)
-                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") API.StringTy)),
+                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
+                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string")),
                                 _qOrderBy =
                                   Just $
                                     API.OrderBy
@@ -494,8 +494,8 @@ tests opts = do
                                                     API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep") $
                                                       API.ApplyBinaryComparisonOperator
                                                         API.Equal
-                                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") API.StringTy)
-                                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") API.StringTy))
+                                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
+                                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
                                                 )
                                                 mempty
                                             )

@@ -76,7 +76,13 @@ instance BackendSchema 'DataConnector where
   comparisonExps = comparisonExps'
 
   countTypeInput = countTypeInput'
-  aggregateOrderByCountType = DC.NumberTy
+
+  -- aggregateOrderByCountType is only used when generating Relay schemas, and Data Connector backends do not yet support Relay
+  -- If/when we want to support this we would need to add something to Capabilities to tell HGE what (integer-like) scalar
+  -- type should be used to represent the result of a count aggregate in relay order-by queries.
+  aggregateOrderByCountType =
+    error "aggregateOrderByCountType: not implemented for Data Connector backend"
+
   computedField =
     error "computedField: not implemented for the Data Connector backend."
 
@@ -173,24 +179,20 @@ columnParser' ::
   GQL.Nullability ->
   GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
 columnParser' columnType nullability = case columnType of
-  RQL.ColumnScalar scalarType ->
+  RQL.ColumnScalar scalarType@(DC.ScalarType name graphQLType) ->
     P.memoizeOn 'columnParser' (scalarType, nullability) $
       GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable' scalarType nullability
-        <$> case scalarType of
-          DC.StringTy -> pure $ J.String <$> P.string
-          DC.NumberTy -> pure $ J.Number <$> P.scientific
-          DC.BoolTy -> pure $ J.Bool <$> P.boolean
-          DC.CustomTy name graphQLType -> do
-            gqlName <-
-              GQL.mkName name
-                `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
-            pure $ case graphQLType of
-              Nothing -> P.jsonScalar gqlName (Just "A custom scalar type")
-              Just DC.GraphQLInt -> (J.Number . fromIntegral) <$> P.namedInt gqlName
-              Just DC.GraphQLFloat -> (J.Number . fromFloatDigits) <$> P.namedFloat gqlName
-              Just DC.GraphQLString -> J.String <$> P.namedString gqlName
-              Just DC.GraphQLBoolean -> J.Bool <$> P.namedBoolean gqlName
-              Just DC.GraphQLID -> J.String <$> P.namedIdentifier gqlName
+        <$> do
+          gqlName <-
+            GQL.mkName name
+              `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
+          pure $ case graphQLType of
+            Nothing -> P.jsonScalar gqlName (Just "A custom scalar type")
+            Just DC.GraphQLInt -> (J.Number . fromIntegral) <$> P.namedInt gqlName
+            Just DC.GraphQLFloat -> (J.Number . fromFloatDigits) <$> P.namedFloat gqlName
+            Just DC.GraphQLString -> J.String <$> P.namedString gqlName
+            Just DC.GraphQLBoolean -> J.Bool <$> P.namedBoolean gqlName
+            Just DC.GraphQLID -> J.String <$> P.namedIdentifier gqlName
   RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
     case nonEmpty (Map.toList enumValues) of
       Just enumValuesList ->

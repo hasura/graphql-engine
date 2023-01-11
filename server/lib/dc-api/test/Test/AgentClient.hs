@@ -15,6 +15,7 @@ module Test.AgentClient
     guardCapabilitiesResponse,
     getHealth,
     getSchemaGuarded,
+    guardSchemaResponse,
     queryGuarded,
     queryExpectError,
     explain,

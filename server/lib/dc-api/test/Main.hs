@@ -10,7 +10,7 @@ import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.Client ((//))
 import System.Environment (withArgs)
-import Test.AgentClient (AgentIOClient (..), guardCapabilitiesResponse, introduceAgentClient, mkAgentClientConfig, mkAgentIOClient)
+import Test.AgentClient (AgentIOClient (..), guardCapabilitiesResponse, guardSchemaResponse, introduceAgentClient, mkAgentClientConfig, mkAgentIOClient)
 import Test.Data (TestData, mkTestData)
 import Test.DataExport (exportData)
 import Test.Sandwich (runSandwichWithCommandLineArgs)
@@ -49,9 +49,10 @@ main = do
     Test TestOptions {..} (SandwichArguments arguments) -> withArgs arguments $ do
       (AgentIOClient agentClient) <- mkAgentIOClient _toSensitiveOutputHandling _toAgentOptions
       agentCapabilities <- (agentClient // API._capabilities) >>= guardCapabilitiesResponse
+      schemaResponse <- (agentClient // API._schema) testSourceName (_aoAgentConfig _toAgentOptions) >>= guardSchemaResponse
 
       agentClientConfig <- mkAgentClientConfig _toSensitiveOutputHandling _toAgentOptions
-      let testData = mkTestData _toTestConfig
+      let testData = mkTestData schemaResponse _toTestConfig
       runSandwichWithCommandLineArgs Sandwich.defaultOptions $
         introduceAgentClient agentClientConfig $
           tests testData testSourceName (_aoAgentConfig _toAgentOptions) agentCapabilities

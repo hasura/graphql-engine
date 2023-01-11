@@ -24,7 +24,7 @@ spec TestData {..} sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
     it "can query for a list of albums with a subset of columns" $ do
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Title", _tdColumnField "Title" _tdStringType)]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
       let query = albumsQueryRequest & qrQuery . qFields ?~ fields
       receivedAlbums <- Data.sortResponseRowsBy "Title" <$> queryGuarded sourceName config query
 
@@ -36,7 +36,7 @@ spec TestData {..} sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can project columns into fields with different names" $ do
-      let fields = Data.mkFieldsMap [("Artist_Id", _tdColumnField "ArtistId" _tdIntType), ("Artist_Name", _tdColumnField "Name" _tdStringType)]
+      let fields = Data.mkFieldsMap [("Artist_Id", _tdColumnField _tdArtistsTableName "ArtistId"), ("Artist_Name", _tdColumnField _tdArtistsTableName "Name")]
       let query = artistsQueryRequest & qrQuery . qFields ?~ fields
       receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
 
@@ -67,12 +67,12 @@ spec TestData {..} sourceName config = describe "Basic Queries" $ do
   where
     artistsQueryRequest :: QueryRequest
     artistsQueryRequest =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdArtistsTableName [] query
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
-      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId" _tdIntType), ("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Title", _tdColumnField "Title" _tdStringType)]
+      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdAlbumsTableName [] query

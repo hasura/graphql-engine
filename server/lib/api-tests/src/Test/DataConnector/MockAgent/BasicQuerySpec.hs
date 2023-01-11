@@ -145,8 +145,8 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -207,8 +207,8 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 3,
@@ -266,7 +266,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") API.NumberTy)
+                                      [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") $ API.ScalarType "number")
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Nothing,
@@ -276,8 +276,8 @@ tests opts = do
                                     API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
                                       API.ApplyBinaryComparisonOperator
                                         API.Equal
-                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") API.NumberTy)
-                                        (API.ScalarValue (Aeson.Number 1) API.NumberTy),
+                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
+                                        (API.ScalarValue (Aeson.Number 1) $ API.ScalarType "number"),
                                 _qOrderBy = Nothing
                               }
                         }

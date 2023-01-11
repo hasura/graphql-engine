@@ -19,6 +19,7 @@ library
     , ekg-core
     , fast-logger
     , graphql-engine
+    , graphql-parser
     , haskell-src-meta
     , hasura-prelude
     , hedgehog

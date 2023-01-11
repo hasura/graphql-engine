@@ -162,8 +162,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                             { _qFields =
                                 Just $
                                   HashMap.fromList
-                                    [ (API.FieldName "ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId") API.NumberTy),
-                                      (API.FieldName "ArtistNames_Name", API.ColumnField (API.ColumnName "Name") API.StringTy),
+                                    [ (API.FieldName "ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number")),
+                                      (API.FieldName "ArtistNames_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
                                       ( API.FieldName "nodes_Albums",
                                         API.RelField
                                           ( API.RelationshipField
@@ -172,7 +172,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                                 { _qFields =
                                                     Just $
                                                       HashMap.fromList
-                                                        [ (API.FieldName "nodes_Title", API.ColumnField (API.ColumnName "Title") API.StringTy)
+                                                        [ (API.FieldName "nodes_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
                                                         ],
                                                   _qAggregates = Nothing,
                                                   _qLimit = Nothing,

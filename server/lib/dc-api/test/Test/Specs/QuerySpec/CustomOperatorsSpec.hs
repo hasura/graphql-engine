@@ -34,7 +34,7 @@ spec TestData {..} sourceName config (ScalarTypesCapabilities scalarTypesCapabil
     forM_ (HashMap.toList items) \((operatorName, columnType), (columnName, tableName, argColumnName, argType)) -> do
       -- Perform a select using the operator in a where clause
       let queryRequest =
-            let fields = Data.mkFieldsMap [(unColumnName columnName, _tdColumnField (unColumnName columnName) columnType)]
+            let fields = Data.mkFieldsMap [(unColumnName columnName, _tdColumnField tableName (unColumnName columnName))]
                 query' = Data.emptyQuery & qFields ?~ fields
              in QueryRequest tableName [] query'
           where' =
@@ -46,7 +46,7 @@ spec TestData {..} sourceName config (ScalarTypesCapabilities scalarTypesCapabil
             queryRequest
               & qrQuery . qWhere ?~ where'
               & qrQuery . qLimit ?~ 1 -- No need to test actual results
-      it (Text.unpack $ "ComparisonOperator " <> unName operatorName <> ": " <> scalarTypeToText columnType <> " executes without an error") do
+      it (Text.unpack $ "ComparisonOperator " <> unName operatorName <> ": " <> getScalarType columnType <> " executes without an error") do
         result <- queryGuarded sourceName config query
         -- Check that you get a success response
         Data.responseRows result `shouldBe` take 1 (Data.responseRows result)

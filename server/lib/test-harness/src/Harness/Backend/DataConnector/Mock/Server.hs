@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Mock Agent Warp server backend
 module Harness.Backend.DataConnector.Mock.Server
   ( MockConfig (..),
@@ -15,6 +17,7 @@ import Data.Proxy
 import Data.SOP.BasicFunctors qualified as SOP
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Network.Wai.Handler.Warp qualified as Warp
 import Servant
 
@@ -79,15 +82,27 @@ capabilities =
     scalarTypesCapabilities =
       API.ScalarTypesCapabilities $
         HashMap.fromList
-          [ mkScalarTypeCapability "MyInt" $ Just API.GraphQLInt,
-            mkScalarTypeCapability "MyFloat" $ Just API.GraphQLFloat,
-            mkScalarTypeCapability "MyString" $ Just API.GraphQLString,
-            mkScalarTypeCapability "MyBoolean" $ Just API.GraphQLBoolean,
-            mkScalarTypeCapability "MyID" $ Just API.GraphQLID,
-            mkScalarTypeCapability "MyAnything" $ Nothing
+          [ mkScalarTypeCapability "number" minMaxFunctions $ Just API.GraphQLFloat,
+            mkScalarTypeCapability "string" minMaxFunctions $ Just API.GraphQLString,
+            mkScalarTypeCapability "MyInt" mempty $ Just API.GraphQLInt,
+            mkScalarTypeCapability "MyFloat" mempty $ Just API.GraphQLFloat,
+            mkScalarTypeCapability "MyString" mempty $ Just API.GraphQLString,
+            mkScalarTypeCapability "MyBoolean" mempty $ Just API.GraphQLBoolean,
+            mkScalarTypeCapability "MyID" mempty $ Just API.GraphQLID,
+            mkScalarTypeCapability "MyAnything" mempty Nothing
           ]
-    mkScalarTypeCapability :: Text -> Maybe API.GraphQLType -> (API.ScalarType, API.ScalarTypeCapabilities)
-    mkScalarTypeCapability name gqlType = (API.CustomTy name, mempty {API._stcGraphQLType = gqlType})
+    mkScalarTypeCapability :: Text -> (API.ScalarType -> API.AggregateFunctions) -> Maybe API.GraphQLType -> (API.ScalarType, API.ScalarTypeCapabilities)
+    mkScalarTypeCapability name aggregateFunctions gqlType =
+      (scalarType, API.ScalarTypeCapabilities mempty (aggregateFunctions scalarType) gqlType)
+      where
+        scalarType = API.ScalarType name
+
+    minMaxFunctions :: API.ScalarType -> API.AggregateFunctions
+    minMaxFunctions resultType =
+      API.AggregateFunctions $
+        HashMap.fromList $
+          (,resultType)
+            <$> [[G.name|min|], [G.name|max|]]
 
 -- | Stock Schema for a Chinook Agent
 schema :: API.SchemaResponse
@@ -100,7 +115,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "ArtistId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Artist primary key identifier",
                       API._ciInsertable = True,
@@ -108,7 +123,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the artist",
                       API._ciInsertable = True,
@@ -128,7 +143,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "AlbumId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Album primary key identifier",
                       API._ciInsertable = True,
@@ -136,7 +151,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Title",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The title of the album",
                       API._ciInsertable = True,
@@ -144,7 +159,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "ArtistId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "The ID of the artist that created the album",
                       API._ciInsertable = True,
@@ -166,7 +181,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "CustomerId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Customer primary key identifier",
                       API._ciInsertable = True,
@@ -174,7 +189,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "FirstName",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The customer's first name",
                       API._ciInsertable = True,
@@ -182,7 +197,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "LastName",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The customer's last name",
                       API._ciInsertable = True,
@@ -190,7 +205,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Company",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's company name",
                       API._ciInsertable = True,
@@ -198,7 +213,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Address",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address line (street number, street)",
                       API._ciInsertable = True,
@@ -206,7 +221,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "City",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address city",
                       API._ciInsertable = True,
@@ -214,7 +229,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "State",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address state",
                       API._ciInsertable = True,
@@ -222,7 +237,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Country",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address country",
                       API._ciInsertable = True,
@@ -230,7 +245,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "PostalCode",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's address postal code",
                       API._ciInsertable = True,
@@ -238,7 +253,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Phone",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's phone number",
                       API._ciInsertable = True,
@@ -246,7 +261,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Fax",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The customer's fax number",
                       API._ciInsertable = True,
@@ -254,7 +269,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Email",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The customer's email address",
                       API._ciInsertable = True,
@@ -262,7 +277,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "SupportRepId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = True,
                       API._ciDescription = Just "The ID of the Employee who is this customer's support representative",
                       API._ciInsertable = True,
@@ -284,7 +299,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "EmployeeId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Employee primary key identifier",
                       API._ciInsertable = True,
@@ -292,7 +307,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "LastName",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The employee's last name",
                       API._ciInsertable = True,
@@ -300,7 +315,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "FirstName",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The employee's first name",
                       API._ciInsertable = True,
@@ -308,7 +323,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Title",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's job title",
                       API._ciInsertable = True,
@@ -316,7 +331,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "ReportsTo",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's report",
                       API._ciInsertable = True,
@@ -324,7 +339,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BirthDate",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's birth date",
                       API._ciInsertable = True,
@@ -332,7 +347,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "HireDate",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's hire date",
                       API._ciInsertable = True,
@@ -340,7 +355,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Address",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address line (street number, street)",
                       API._ciInsertable = True,
@@ -348,7 +363,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "City",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address city",
                       API._ciInsertable = True,
@@ -356,7 +371,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "State",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address state",
                       API._ciInsertable = True,
@@ -364,7 +379,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Country",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address country",
                       API._ciInsertable = True,
@@ -372,7 +387,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "PostalCode",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's address postal code",
                       API._ciInsertable = True,
@@ -380,7 +395,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Phone",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's phone number",
                       API._ciInsertable = True,
@@ -388,7 +403,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Fax",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's fax number",
                       API._ciInsertable = True,
@@ -396,7 +411,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Email",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The employee's email address",
                       API._ciInsertable = True,
@@ -418,7 +433,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "GenreId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Genre primary key identifier",
                       API._ciInsertable = True,
@@ -426,7 +441,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the genre",
                       API._ciInsertable = True,
@@ -446,7 +461,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "InvoiceId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Invoice primary key identifier",
                       API._ciInsertable = True,
@@ -454,7 +469,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "CustomerId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "ID of the customer who bought the music",
                       API._ciInsertable = True,
@@ -462,7 +477,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "InvoiceDate",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "Date of the invoice",
                       API._ciInsertable = True,
@@ -470,7 +485,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingAddress",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address line (street number, street)",
                       API._ciInsertable = True,
@@ -478,7 +493,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingCity",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address city",
                       API._ciInsertable = True,
@@ -486,7 +501,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingState",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address state",
                       API._ciInsertable = True,
@@ -494,7 +509,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingCountry",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address country",
                       API._ciInsertable = True,
@@ -502,7 +517,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "BillingPostalCode",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The invoice's billing address postal code",
                       API._ciInsertable = True,
@@ -510,7 +525,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Total",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "The total amount due on the invoice",
                       API._ciInsertable = True,
@@ -533,7 +548,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "InvoiceLineId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Invoice Line primary key identifier",
                       API._ciInsertable = True,
@@ -541,7 +556,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "InvoiceId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "ID of the invoice the line belongs to",
                       API._ciInsertable = True,
@@ -549,7 +564,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "TrackId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "ID of the music track being purchased",
                       API._ciInsertable = True,
@@ -557,7 +572,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "UnitPrice",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Price of each individual track unit",
                       API._ciInsertable = True,
@@ -565,7 +580,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Quantity",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Quantity of the track purchased",
                       API._ciInsertable = True,
@@ -590,7 +605,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "MediaTypeId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "Media Type primary key identifier",
                       API._ciInsertable = True,
@@ -598,7 +613,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the media type format",
                       API._ciInsertable = True,
@@ -618,7 +633,7 @@ schema =
               API._tiColumns =
                 [ API.ColumnInfo
                     { API._ciName = API.ColumnName "TrackId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "The ID of the track",
                       API._ciInsertable = True,
@@ -626,7 +641,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Name",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = False,
                       API._ciDescription = Just "The name of the track",
                       API._ciInsertable = True,
@@ -634,7 +649,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "AlbumId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = True,
                       API._ciDescription = Just "The ID of the album the track belongs to",
                       API._ciInsertable = True,
@@ -642,7 +657,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "MediaTypeId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "The ID of the media type the track is encoded with",
                       API._ciInsertable = True,
@@ -650,7 +665,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "GenreId",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = True,
                       API._ciDescription = Just "The ID of the genre of the track",
                       API._ciInsertable = True,
@@ -658,7 +673,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Composer",
-                      API._ciType = API.StringTy,
+                      API._ciType = API.ScalarType "string",
                       API._ciNullable = True,
                       API._ciDescription = Just "The name of the composer of the track",
                       API._ciInsertable = True,
@@ -666,7 +681,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Milliseconds",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "The length of the track in milliseconds",
                       API._ciInsertable = True,
@@ -674,7 +689,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "Bytes",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = True,
                       API._ciDescription = Just "The size of the track in bytes",
                       API._ciInsertable = True,
@@ -682,7 +697,7 @@ schema =
                     },
                   API.ColumnInfo
                     { API._ciName = API.ColumnName "UnitPrice",
-                      API._ciType = API.NumberTy,
+                      API._ciType = API.ScalarType "number",
                       API._ciNullable = False,
                       API._ciDescription = Just "The price of the track",
                       API._ciInsertable = True,
@@ -706,12 +721,12 @@ schema =
             { API._tiName = mkTableName "MyCustomScalarsTable",
               API._tiType = API.Table,
               API._tiColumns =
-                [ API.ColumnInfo (API.ColumnName "MyIntColumn") (API.CustomTy "MyInt") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyFloatColumn") (API.CustomTy "MyFloat") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyStringColumn") (API.CustomTy "MyString") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyBooleanColumn") (API.CustomTy "MyBoolean") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyIDColumn") (API.CustomTy "MyID") False Nothing True True,
-                  API.ColumnInfo (API.ColumnName "MyAnythingColumn") (API.CustomTy "MyAnything") False Nothing True True
+                [ API.ColumnInfo (API.ColumnName "MyIntColumn") (API.ScalarType "MyInt") False Nothing True True,
+                  API.ColumnInfo (API.ColumnName "MyFloatColumn") (API.ScalarType "MyFloat") False Nothing True True,
+                  API.ColumnInfo (API.ColumnName "MyStringColumn") (API.ScalarType "MyString") False Nothing True True,
+                  API.ColumnInfo (API.ColumnName "MyBooleanColumn") (API.ScalarType "MyBoolean") False Nothing True True,
+                  API.ColumnInfo (API.ColumnName "MyIDColumn") (API.ScalarType "MyID") False Nothing True True,
+                  API.ColumnInfo (API.ColumnName "MyAnythingColumn") (API.ScalarType "MyAnything") False Nothing True True
                 ],
               API._tiPrimaryKey = [],
               API._tiDescription = Nothing,

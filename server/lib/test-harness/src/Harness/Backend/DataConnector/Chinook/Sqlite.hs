@@ -51,15 +51,22 @@ backendTypeMetadata =
                   _lt: string
                   _lte: string
                   _neq: string
+                aggregate_functions:
+                  min: string
+                  max: string
               decimal:
                 comparison_operators:
-                  _modulus_is_zero: number
-                  _eq: number
-                  _gt: number
-                  _gte: number
-                  _lt: number
-                  _lte: number
-                  _neq: number
+                  _modulus_is_zero: decimal
+                  _eq: decimal
+                  _gt: decimal
+                  _gte: decimal
+                  _lt: decimal
+                  _lte: decimal
+                  _neq: decimal
+                aggregate_functions:
+                  min: decimal
+                  max: decimal
+                  sum: decimal
               number:
                 comparison_operators:
                   _modulus_is_zero: number
@@ -69,6 +76,10 @@ backendTypeMetadata =
                   _lt: number
                   _lte: number
                   _neq: number
+                aggregate_functions:
+                  min: number
+                  max: number
+                  sum: number
               bool:
                 comparison_operators:
                   _and: bool

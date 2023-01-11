@@ -64,7 +64,11 @@ instance BackendMetadata 'DataConnector where
   parseBoolExpOperations = parseBoolExpOperations'
   parseCollectableType = parseCollectableType'
   buildComputedFieldInfo = error "buildComputedFieldInfo: not implemented for the Data Connector backend."
+
+  -- If/when we implement enums for Data Connector backend, we will also need to fix columnTypeToScalarType function
+  -- in Hasura.Backends.DataConnector.Adapter.Backend. See note there for more information.
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
+
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()

@@ -94,12 +94,12 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") $ API.CustomTy "MyInt"),
-                                        (API.FieldName "MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") $ API.CustomTy "MyFloat"),
-                                        (API.FieldName "MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") $ API.CustomTy "MyString"),
-                                        (API.FieldName "MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") $ API.CustomTy "MyBoolean"),
-                                        (API.FieldName "MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") $ API.CustomTy "MyID"),
-                                        (API.FieldName "MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") $ API.CustomTy "MyAnything")
+                                      [ (API.FieldName "MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") $ API.ScalarType "MyInt"),
+                                        (API.FieldName "MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") $ API.ScalarType "MyFloat"),
+                                        (API.FieldName "MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") $ API.ScalarType "MyString"),
+                                        (API.FieldName "MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") $ API.ScalarType "MyBoolean"),
+                                        (API.FieldName "MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") $ API.ScalarType "MyID"),
+                                        (API.FieldName "MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") $ API.ScalarType "MyAnything")
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -159,12 +159,12 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") $ API.CustomTy "MyInt"),
-                                        (API.FieldName "MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") $ API.CustomTy "MyFloat"),
-                                        (API.FieldName "MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") $ API.CustomTy "MyString"),
-                                        (API.FieldName "MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") $ API.CustomTy "MyBoolean"),
-                                        (API.FieldName "MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") $ API.CustomTy "MyID"),
-                                        (API.FieldName "MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") $ API.CustomTy "MyAnything")
+                                      [ (API.FieldName "MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") $ API.ScalarType "MyInt"),
+                                        (API.FieldName "MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") $ API.ScalarType "MyFloat"),
+                                        (API.FieldName "MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") $ API.ScalarType "MyString"),
+                                        (API.FieldName "MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") $ API.ScalarType "MyBoolean"),
+                                        (API.FieldName "MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") $ API.ScalarType "MyID"),
+                                        (API.FieldName "MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") $ API.ScalarType "MyAnything")
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -174,28 +174,28 @@ tests opts = do
                                     And
                                       [ ApplyBinaryComparisonOperator
                                           Equal
-                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyBooleanColumn"}, _ccColumnType = CustomTy {getCustomTy = "MyBoolean"}})
-                                          (ScalarValue (Aeson.Bool True) (CustomTy {getCustomTy = "MyBoolean"})),
+                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyBooleanColumn"}, _ccColumnType = ScalarType "MyBoolean"})
+                                          (ScalarValue (Aeson.Bool True) (ScalarType "MyBoolean")),
                                         ApplyBinaryComparisonOperator
                                           Equal
-                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyFloatColumn"}, _ccColumnType = CustomTy {getCustomTy = "MyFloat"}})
-                                          (ScalarValue (Aeson.Number 3.14) (CustomTy {getCustomTy = "MyFloat"})),
+                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyFloatColumn"}, _ccColumnType = ScalarType "MyFloat"})
+                                          (ScalarValue (Aeson.Number 3.14) (ScalarType "MyFloat")),
                                         ApplyBinaryComparisonOperator
                                           Equal
-                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyStringColumn"}, _ccColumnType = CustomTy {getCustomTy = "MyString"}})
-                                          (ScalarValue (Aeson.String "foo") (CustomTy {getCustomTy = "MyString"})),
+                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyStringColumn"}, _ccColumnType = ScalarType "MyString"})
+                                          (ScalarValue (Aeson.String "foo") (ScalarType "MyString")),
                                         ApplyBinaryComparisonOperator
                                           Equal
-                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyIDColumn"}, _ccColumnType = CustomTy {getCustomTy = "MyID"}})
-                                          (ScalarValue (Aeson.String "x") (CustomTy {getCustomTy = "MyID"})),
+                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyIDColumn"}, _ccColumnType = ScalarType "MyID"})
+                                          (ScalarValue (Aeson.String "x") (ScalarType "MyID")),
                                         ApplyBinaryComparisonOperator
                                           Equal
-                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyIntColumn"}, _ccColumnType = CustomTy {getCustomTy = "MyInt"}})
-                                          (ScalarValue (Aeson.Number 42.0) (CustomTy {getCustomTy = "MyInt"})),
+                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyIntColumn"}, _ccColumnType = ScalarType "MyInt"})
+                                          (ScalarValue (Aeson.Number 42.0) (ScalarType "MyInt")),
                                         ApplyBinaryComparisonOperator
                                           Equal
-                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyAnythingColumn"}, _ccColumnType = CustomTy {getCustomTy = "MyAnything"}})
-                                          (ScalarValue (Aeson.Object mempty) (CustomTy {getCustomTy = "MyAnything"}))
+                                          (ComparisonColumn {_ccPath = CurrentTable, _ccName = ColumnName {unColumnName = "MyAnythingColumn"}, _ccColumnType = ScalarType "MyAnything"})
+                                          (ScalarValue (Aeson.Object mempty) (ScalarType "MyAnything"))
                                       ],
                                 _qOrderBy = Nothing
                               }

@@ -46,7 +46,7 @@ spec = do
   describe "InsertFieldSchema" $ do
     describe "ColumnInsert" $ do
       testToFromJSONToSchema
-        (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") NumberTy))
+        (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number")))
         [aesonQQ|
           { "type": "column",
             "column": "my_column",
@@ -70,7 +70,7 @@ spec = do
     jsonOpenApiProperties genInsertFieldSchema
 
   describe "MutationOperation" $ do
-    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") StringTy)]
+    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string"))]
     describe "InsertOperation" $ do
       testToFromJSONToSchema
         (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] returningFields))
@@ -172,7 +172,7 @@ spec = do
   describe "RowUpdate" $ do
     describe "IncrementColumnRowUpdate" $
       testToFromJSONToSchema
-        (IncrementColumn $ RowColumnValue (ColumnName "my_column") (Number 10) NumberTy)
+        (IncrementColumn $ RowColumnValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
         [aesonQQ|
             { "type": "increment",
               "column": "my_column",
@@ -181,7 +181,7 @@ spec = do
           |]
     describe "SetColumnRowUpdate" $
       testToFromJSONToSchema
-        (SetColumn $ RowColumnValue (ColumnName "my_column") (Number 10) NumberTy)
+        (SetColumn $ RowColumnValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
         [aesonQQ|
             { "type": "set",
               "column": "my_column",
@@ -192,7 +192,7 @@ spec = do
 
   describe "RowColumnValue" $ do
     testToFromJSONToSchema
-      (RowColumnValue (ColumnName "my_column") (String "a value") StringTy)
+      (RowColumnValue (ColumnName "my_column") (String "a value") (ScalarType "string"))
       [aesonQQ|
         { "column": "my_column",
           "value": "a value",

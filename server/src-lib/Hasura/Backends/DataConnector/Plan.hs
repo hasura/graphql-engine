@@ -436,28 +436,15 @@ mkPlan session (SourceConfig {}) ir = do
     parseSessionVariable :: SessionVariable -> SessionVarType 'DataConnector -> Text -> m Literal
     parseSessionVariable varName varType varValue = do
       case varType of
-        CollectableTypeScalar scalarType ->
-          case scalarType of
-            -- Special case for string: uses literal session variable value rather than trying to parse a JSON string
-            StringTy -> pure . ValueLiteral scalarType $ J.String varValue
-            NumberTy -> parseBuiltinValue (ValueLiteral scalarType . J.Number) "number value"
-            BoolTy -> parseBuiltinValue (ValueLiteral scalarType . J.Bool) "boolean value"
-            CustomTy customTypeName _ -> parseCustomValue scalarType (customTypeName <> " JSON value")
-        CollectableTypeArray scalarType ->
-          case scalarType of
-            StringTy -> parseBuiltinValue (ArrayLiteral scalarType . fmap J.String) "JSON array of strings"
-            NumberTy -> parseBuiltinValue (ArrayLiteral scalarType . fmap J.Number) "JSON array of numbers"
-            BoolTy -> parseBuiltinValue (ArrayLiteral scalarType . fmap J.Bool) "JSON array of booleans"
-            CustomTy customTypeName _ -> parseCustomArray scalarType ("JSON array of " <> customTypeName <> " JSON values")
+        CollectableTypeScalar scalarType@(ScalarType customTypeName _) ->
+          parseCustomValue scalarType (customTypeName <> " JSON value")
+        CollectableTypeArray scalarType@(ScalarType customTypeName _) ->
+          parseCustomArray scalarType ("JSON array of " <> customTypeName <> " JSON values")
       where
-        parseBuiltinValue :: J.FromJSON a => (a -> Literal) -> Text -> m Literal
-        parseBuiltinValue =
-          parseValue' J.parseJSON
-
         parseCustomValue :: ScalarType -> Text -> m Literal
         parseCustomValue scalarType description =
           case scalarType of
-            CustomTy _ (Just GraphQLString) ->
+            ScalarType _ (Just GraphQLString) ->
               -- Special case for string: uses literal session variable value rather than trying to parse a JSON string
               pure . ValueLiteral scalarType $ J.String varValue
             _ ->

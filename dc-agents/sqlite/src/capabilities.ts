@@ -55,19 +55,33 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
       _glob: 'string',
       // _regexp: 'string', // TODO: Detect if REGEXP is supported
       ...standardOperators('string')
+    },
+    aggregate_functions: {
+      max: 'string',
+      min: 'string'
     }
   },
   // TODO: Why do we need a seperate 'decimal' type?
   decimal: {
     comparison_operators: {
-      _modulus_is_zero: 'number',
-      ...standardOperators('number')
+      _modulus_is_zero: 'decimal',
+      ...standardOperators('decimal')
+    },
+    aggregate_functions: {
+      max: 'decimal',
+      min: 'decimal',
+      sum: 'decimal'
     }
   },
   number: {
     comparison_operators: {
       _modulus_is_zero: 'number',
       ...standardOperators('number')
+    },
+    aggregate_functions: {
+      max: 'number',
+      min: 'number',
+      sum: 'number'
     }
   },
   bool: {

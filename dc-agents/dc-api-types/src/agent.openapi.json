@@ -502,20 +502,7 @@
       },
       "SubscriptionCapabilities": {},
       "ScalarType": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "string",
-              "number",
-              "bool"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
+        "type": "string"
       },
       "ComparisonOperators": {
         "additionalProperties": {

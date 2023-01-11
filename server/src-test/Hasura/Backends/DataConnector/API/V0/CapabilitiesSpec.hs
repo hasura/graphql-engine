@@ -27,11 +27,11 @@ spec = do
       (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse Nothing Nothing)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
   describe "ScalarTypesCapabilities" $ do
-    testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton StringTy (ScalarTypeCapabilities mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
+    testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton (ScalarType "string") (ScalarTypeCapabilities mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
     jsonOpenApiProperties genScalarTypesCapabilities
   describe "ScalarTypeCapabilities" $ do
-    let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], CustomTy "DateTime")]
-    let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], CustomTy "DateTime")]
+    let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], ScalarType "DateTime")]
+    let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], ScalarType "DateTime")]
     let graphQLType = Just GraphQLString
     let json =
           [aesonQQ|{

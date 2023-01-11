@@ -165,7 +165,7 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 The `capabilities` section describes the _capabilities_ of the service. This includes
 - `data_schema`: What sorts of features the agent supports when describing its data schema
 - `relationships`: whether or not the agent supports relationships
-- `scalar_types`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
+- `scalar_types`: scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
 
 The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
 
@@ -178,23 +178,23 @@ If the agent only supports table columns that are always nullable, then it shoul
 
 #### Scalar type capabilities
 
-The agent is expected to support a default set of scalar types (`Number`, `String`, `Bool`) and a default set of [comparison operators](#filters) on these types.
-Agents may optionally declare support for their own custom scalar types, along with custom comparison operators and aggregate functions on those types.
-The agent may optionally specify how to parse values of custom scalar types by associating them with one of the built-in GraphQL types (`Int`, `Float`, `String`, `Boolean` or `ID`)
+Agents should declare the scalar types they support, along with the comparison operators and aggregate functions on those types.
+The agent may optionally specify how to parse values of scalar type by associating it with one of the built-in GraphQL types (`Int`, `Float`, `String`, `Boolean` or `ID`)
 
-Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema).
+Scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema).
 
-Custom comparison types can be defined by adding a `comparison_operators` property to the scalar type capabilities object.
+Comparison operators can be defined by adding a `comparison_operators` property to the scalar type capabilities object.
 The `comparison_operators` property is an object where each key specifies a comparison operator name.
 The operator name must be a valid GraphQL name.
 The value associated with each key should be a string specifying the argument type, which must be a valid scalar type.
+All scalar types must also support the built-in comparison operators `eq`, `gt`, `gte`, `lt` and `lte`.
 
-Custom aggregate functions can be defined by adding an `aggregate_functions` property to the scalar type capabilities object.
+Aggregate functions can be defined by adding an `aggregate_functions` property to the scalar type capabilities object.
 The `aggregate_functions` property must be an object mapping aggregate function names to their result types.
 Aggregate function names must be must be valid GraphQL names.
 Result types must be valid scalar types.
 
-The `graphql_type` property can be used to tell Hasura GraphQL Engine to parse values of the custom scalar type as though they were one of the built-in GraphQL scalar types `Int`, `Float`, `String`, `Boolean`, or `ID`.
+The `graphql_type` property can be used to tell Hasura GraphQL Engine to parse values of the scalar type as though they were one of the built-in GraphQL scalar types `Int`, `Float`, `String`, `Boolean`, or `ID`.
 
 Example:
 
@@ -210,10 +210,10 @@ capabilities:
       graphql_type: String
 ```
 
-This example declares a custom scalar type `DateTime` which should be parsed as though it were a GraphQL `String`.
+This example declares a scalar type `DateTime` which should be parsed as though it were a GraphQL `String`.
 The type supports a comparison operator `in_year`, which takes an argument of type `Number`.
 
-An example GraphQL query using the custom comparison operator might look like below:
+An example GraphQL query using the comparison operator might look like below:
 ```graphql
 query MyQuery {
   Employee(where: {BirthDate: {in_year: 1962}}) {
@@ -223,7 +223,7 @@ query MyQuery {
 }
 ```
 In this query we have an `Employee` field with a `BirthDate` property of type `DateTime`.
-The `in_year` custom comparison operator is being used to request all employees with a birth date in the year 1962.
+The `in_year` comparison operator is being used to request all employees with a birth date in the year 1962.
 
 The example also defines two aggregate functions `min` and `max`, both of which have a result type of `DateTime`.
 

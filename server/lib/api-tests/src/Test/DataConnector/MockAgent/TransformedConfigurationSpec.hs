@@ -140,8 +140,8 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,

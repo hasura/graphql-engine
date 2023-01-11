@@ -16,14 +16,32 @@ const dateTimeCapabilities: ScalarTypeCapabilities = {
 const stringCapabilities: ScalarTypeCapabilities = {
   aggregate_functions: {
     longest: 'string',
-    shortest: 'string'
+    shortest: 'string',
+    min: 'string',
+    max: 'string'
   },
   graphql_type: 'String'
 }
 
+const numberCapabilities: ScalarTypeCapabilities = {
+  aggregate_functions: {
+    max: 'number',
+    min: 'number',
+    stddev: 'number',
+    stddev_pop: 'number',
+    stddev_samp: 'number',
+    sum: 'number',
+    var_pop: 'number',
+    var_samp: 'number',
+    variance: 'number'
+  },
+  graphql_type: 'Float'
+}
+
 const scalarTypes: ScalarTypesCapabilities = {
   DateTime: dateTimeCapabilities,
-  string: stringCapabilities
+  string: stringCapabilities,
+  number: numberCapabilities
 }
 
 const capabilities: Capabilities = {
