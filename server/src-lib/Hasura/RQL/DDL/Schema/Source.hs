@@ -46,7 +46,7 @@ import Data.Text.Extended qualified as Text.E
 import Hasura.Backends.DataConnector.API (errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (getConfigSchemaResponse, transformConnSourceConfig, validateConfiguration)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (getConfigSchemaResponse, transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
 import Hasura.Base.Error
@@ -70,6 +70,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
 import Hasura.SQL.Backend
@@ -79,7 +80,7 @@ import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager qualified as HTTP.Manager
 import Servant.API (Union)
-import Servant.Client ((//))
+import Servant.Client (BaseUrl, (//))
 import Servant.Client.Generic qualified as Servant.Client
 
 --------------------------------------------------------------------------------
@@ -97,12 +98,19 @@ data AddSource b = AddSource
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) where
   parseJSONWithContext backendKind = withObject "AddSource" $ \o ->
     AddSource
-      <$> o .: "name"
+      <$> o
+        .: "name"
       <*> pure backendKind
-      <*> o .: "configuration"
-      <*> o .:? "replace_configuration" .!= False
-      <*> o .:? "customization" .!= emptySourceCustomization
-      <*> o .:? "health_check"
+      <*> o
+        .: "configuration"
+      <*> o
+        .:? "replace_configuration"
+        .!= False
+      <*> o
+        .:? "customization"
+        .!= emptySourceCustomization
+      <*> o
+        .:? "health_check"
 
 runAddSource ::
   forall m b.
@@ -301,10 +309,14 @@ data UpdateSource b = UpdateSource
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource b) where
   parseJSONWithContext _ = withObject "UpdateSource" $ \o ->
     UpdateSource
-      <$> o .: "name"
-      <*> o .:? "configuration"
-      <*> o .:? "customization"
-      <*> o .:? "health_check"
+      <$> o
+        .: "name"
+      <*> o
+        .:? "configuration"
+      <*> o
+        .:? "customization"
+      <*> o
+        .:? "health_check"
 
 runUpdateSource ::
   forall m b.
@@ -358,9 +370,7 @@ runGetSourceTables env GetSourceTables {..} = do
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
       bmap = Metadata._metaBackendConfigs metadata
 
-  abSourceMetadata <-
-    InsOrdHashMap.lookup _gstSourceName sources
-      `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt _gstSourceName <> "' not found")
+  abSourceMetadata <- lookupSourceMetadata _gstSourceName sources
 
   AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
     case _smKind of
@@ -369,20 +379,10 @@ runGetSourceTables env GetSourceTables {..} = do
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
 
-        DC.Types.DataConnectorOptions {..} <- do
-          let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
-          onNothing
-            (InsOrdHashMap.lookup dcName =<< backendConfig)
-            (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
-
-        transformedConfig <- transformConnSourceConfig _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
         configSchemaResponse <- getConfigSchemaResponse dcName
-        validateConfiguration _gstSourceName dcName configSchemaResponse transformedConfig
-
-        schemaResponse <-
-          Tracing.ignoreTraceT
-            . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) transformedConfig
+        transformedConfig <- transformConnSourceConfig dcName _gstSourceName configSchemaResponse _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        schemaResponse <- querySourceSchema logger manager timeout _dcoUri _gstSourceName transformedConfig
 
         let fullyQualifiedTableNames = fmap API._tiName $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue fullyQualifiedTableNames
@@ -421,9 +421,7 @@ runGetTableInfo env GetTableInfo {..} = do
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
       bmap = Metadata._metaBackendConfigs metadata
 
-  abSourceMetadata <-
-    InsOrdHashMap.lookup _gtiSourceName sources
-      `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt _gtiSourceName <> "' not found")
+  abSourceMetadata <- lookupSourceMetadata _gtiSourceName sources
 
   AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
     case _smKind of
@@ -432,24 +430,34 @@ runGetTableInfo env GetTableInfo {..} = do
         manager <- HTTP.Manager.askHttpManager
         let timeout = DC.Types.timeout _smConfiguration
 
-        DC.Types.DataConnectorOptions {..} <- do
-          let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
-          onNothing
-            (InsOrdHashMap.lookup dcName =<< backendConfig)
-            (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
-
-        transformedConfig <- transformConnSourceConfig _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        DC.Types.DataConnectorOptions {..} <- lookupDataConnectorOptions dcName bmap
         configSchemaResponse <- getConfigSchemaResponse dcName
-        validateConfiguration _gtiSourceName dcName configSchemaResponse transformedConfig
-
-        schemaResponse <-
-          Tracing.ignoreTraceT
-            . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) transformedConfig
+        transformedConfig <- transformConnSourceConfig dcName _gtiSourceName configSchemaResponse _smConfiguration [("$session", J.object []), ("$env", J.toJSON env)] env
+        schemaResponse <- querySourceSchema logger manager timeout _dcoUri _gtiSourceName transformedConfig
 
         let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue table
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+
+--------------------------------------------------------------------------------
+-- Internal helper functions
+
+lookupSourceMetadata :: (MonadError QErr m) => SourceName -> InsOrdHashMap SourceName (AnyBackend SourceMetadata) -> m (AnyBackend SourceMetadata)
+lookupSourceMetadata sourceName sources =
+  InsOrdHashMap.lookup sourceName sources
+    `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt sourceName <> "' not found")
+
+lookupDataConnectorOptions :: (MonadError QErr m) => DC.Types.DataConnectorName -> BackendMap.BackendMap BackendConfigWrapper -> m DC.Types.DataConnectorOptions
+lookupDataConnectorOptions dcName bmap =
+  let backendConfig = Metadata.unBackendConfigWrapper <$> BackendMap.lookup @'Backend.DataConnector bmap
+   in (InsOrdHashMap.lookup dcName =<< backendConfig)
+        `onNothing` (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
+
+querySourceSchema :: (MonadIO m, MonadError QErr m) => L.Logger L.Hasura -> HTTP.Manager.Manager -> Maybe DC.Types.SourceTimeout -> BaseUrl -> SourceName -> API.Config -> m API.SchemaResponse
+querySourceSchema logger manager timeout uri sourceName transformedConfig =
+  Tracing.ignoreTraceT
+    . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger uri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
+    $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt sourceName) transformedConfig
 
 schemaGuard :: MonadError QErr m => Union API.SchemaResponses -> m API.SchemaResponse
 schemaGuard = schemaCase defaultAction pure errorAction

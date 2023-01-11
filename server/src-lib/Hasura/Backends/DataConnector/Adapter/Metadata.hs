@@ -20,7 +20,7 @@ import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig, validateConfiguration)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
@@ -151,8 +151,7 @@ resolveSourceConfig'
     DC.DataConnectorInfo {..} <- getDataConnectorInfo dataConnectorName backendInfo
     let DC.DataConnectorOptions {_dcoUri} = _dciOptions
 
-    transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
-    validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
+    transformedConfig <- transformConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
     schemaResponseU <-
       ignoreTraceT
