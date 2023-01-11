@@ -46,9 +46,12 @@
   font-size: 0.9rem;
 }
 
-// Table body fix for longer types and args
-tbody {
-  word-break: break-word;
+.db-tables {
+  table {
+    td:first-child {
+      width: 40%;
+    }
+  }
 }
 
 /* Dark Mode Styles */
