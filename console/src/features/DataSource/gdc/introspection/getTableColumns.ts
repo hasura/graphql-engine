@@ -9,6 +9,7 @@ import {
   runMetadataQuery,
 } from '../../api';
 import { GetTableColumnsProps, TableColumn } from '../../types';
+import { adaptAgentDataType } from './utils';
 import { GetTableInfoResponse } from './types';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
@@ -17,6 +18,8 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
   try {
     const introspectionResult = await runIntrospectionQuery({ httpClient });
     const { metadata } = await exportMetadata({ httpClient });
+
+    if (!metadata) throw Error('Metadata could not be retrieved');
 
     const metadataSource = metadata.sources.find(
       s => s.name === dataSourceName
@@ -75,7 +78,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
 
       return {
         name: column.name,
-        dataType: column.type,
+        dataType: adaptAgentDataType(column.type),
         nullable: column.nullable,
         isPrimaryKey: primaryKeys.includes(column.name),
         graphQLProperties: {

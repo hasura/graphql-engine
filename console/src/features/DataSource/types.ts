@@ -56,7 +56,14 @@ export type IntrospectedTable = {
 
 export type TableColumn = {
   name: string;
-  dataType: string;
+  dataType:
+    | 'string'
+    | 'number'
+    | 'bool'
+    | 'json'
+    | 'datetime'
+    | 'timestamp'
+    | 'xml';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {

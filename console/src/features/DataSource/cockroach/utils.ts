@@ -1,13 +1,5 @@
 import { TableColumn } from '../types';
 
-function containsUppercase(str: string) {
-  return /[A-Z]/.test(str);
-}
-
-export function adaptStringForPostgres(str: string) {
-  return containsUppercase(str) ? `"${str}"` : str;
-}
-
 export function adaptSQLDataType(sqlDataType: string): TableColumn['dataType'] {
   const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
     bool: ['boolean', 'bool'],

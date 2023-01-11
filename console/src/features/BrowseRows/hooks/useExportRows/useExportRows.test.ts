@@ -76,6 +76,73 @@ describe('useExportRows', () => {
     }),
     rest.post('http://localhost/v2/query', (req, res, ctx) => {
       return res(ctx.status(200), ctx.json(expectedResult));
+    }),
+    rest.post('/v1/graphql', (req, res, ctx) => {
+      return res(
+        ctx.status(200),
+        ctx.json({
+          data: {
+            __schema: {
+              queryType: { name: 'query_root' },
+              mutationType: { name: 'mutation_root' },
+              subscriptionType: { name: 'subscription_root' },
+              types: [
+                {
+                  kind: 'OBJECT',
+                  name: 'Album',
+                  description: 'asdasdads',
+                  fields: [
+                    {
+                      name: 'AlbumId',
+                      description: null,
+                      args: [],
+                      type: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: { kind: 'SCALAR', name: 'Int', ofType: null },
+                      },
+                      isDeprecated: false,
+                      deprecationReason: null,
+                    },
+                    {
+                      name: 'ArtistId',
+                      description: null,
+                      args: [],
+                      type: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: { kind: 'SCALAR', name: 'Int', ofType: null },
+                      },
+                      isDeprecated: false,
+                      deprecationReason: null,
+                    },
+                    {
+                      name: 'Title',
+                      description: null,
+                      args: [],
+                      type: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'SCALAR',
+                          name: 'String',
+                          ofType: null,
+                        },
+                      },
+                      isDeprecated: false,
+                      deprecationReason: null,
+                    },
+                  ],
+                  inputFields: null,
+                  interfaces: [],
+                  enumValues: null,
+                  possibleTypes: null,
+                },
+              ],
+            },
+          },
+        })
+      );
     })
   );
 
