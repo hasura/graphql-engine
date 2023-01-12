@@ -11,7 +11,7 @@ services:
 
   ## Hasura is compatible with CockroachDB 22.2 onwards
   cockroach:
-    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
+    image: cockroachdb/cockroach:v22.2.1
     # starts an _insecure_, single-node CockroachDB intended for non-production uses only
     # follow the CockroachDB Cloud Guide to connect to a production CockroachDB cluster
     command:
@@ -27,7 +27,7 @@ services:
       - '${PWD}/cockroach-data:/cockroach/cockroach-data'
 
   graphql-engine:
-    image: hasura/graphql-engine:v2.15.0-beta.1-ce
+    image: hasura/graphql-engine:v2.16.1
     ports:
       - '8080:8080'
     depends_on:
