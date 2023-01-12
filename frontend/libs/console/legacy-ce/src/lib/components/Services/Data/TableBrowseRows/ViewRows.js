@@ -1037,6 +1037,8 @@ const ViewRows = props => {
         }
         defaultReorders={columnsOrder}
         showPagination={!shouldHidePagination || useCustomPagination}
+        showPaginationTop
+        showPaginationBottom={false}
         {...paginationProps}
       />
     );
@@ -1070,7 +1072,7 @@ const ViewRows = props => {
           />
         </div>
       )}
-      <div className="w-fit ml-0 mt-md">
+      <div className="w-fit ml-0 pt-sm">
         {getSelectedRowsSection()}
         <div>
           <div>{renderTableBody()}</div>

@@ -40,6 +40,8 @@ import {
   NetworkArgs,
   runIntrospectionQuery,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
@@ -419,11 +421,14 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 export { GDCTable } from './gdc';
 export * from './guards';
 export * from './types';
+export * from './common/utils';
 export {
   PostgresTable,
   exportMetadata,
   getTableName,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
   getDriverPrefix,
   runIntrospectionQuery,
   AlloyDbTable,

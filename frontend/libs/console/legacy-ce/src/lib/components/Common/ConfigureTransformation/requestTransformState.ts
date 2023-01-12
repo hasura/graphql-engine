@@ -56,6 +56,8 @@ import {
   SET_RESPONSE_TRANSFORM_STATE,
   defaultActionResponseBody,
   SetResponseTransformState,
+  defaultCronTriggerRequestBody,
+  defaultCronTriggerSampleInput,
 } from './stateDefaults';
 import { getSessionVarsFromLS, getEnvVarsFromLS } from './utils';
 
@@ -271,6 +273,23 @@ export const getEventRequestTransformDefaultState =
         form_template: [{ name: 'name', value: '{{$body.table.name}}' }],
       },
       requestSampleInput: defaultEventRequestSampleInput,
+    };
+  };
+
+export const getCronTriggerRequestTransformDefaultState =
+  (): RequestTransformState => {
+    return {
+      ...requestTransformState,
+      envVars: getEnvVarsFromLS(),
+      sessionVars: getSessionVarsFromLS(),
+      requestQueryParams: [{ name: '', value: '' }],
+      requestAddHeaders: [{ name: '', value: '' }],
+      requestBody: {
+        action: requestBodyActionState.transformApplicationJson,
+        template: defaultCronTriggerRequestBody,
+        form_template: [{ name: 'payload', value: '{{$body.payload}}' }],
+      },
+      requestSampleInput: defaultCronTriggerSampleInput,
     };
   };
 

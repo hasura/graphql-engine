@@ -12,14 +12,20 @@ import { useAppDispatch } from '@/store';
 import { exportMetadata } from '@/metadata/actions';
 import { useAvailableDrivers } from './useAvailableDrivers';
 
+type UseRedirectArgs = {
+  redirectWithLatencyCheck: boolean;
+};
+
 // TODO this is temporary while we are still using the redux based manage page
-const useRedirect = () => {
+const useRedirect = ({ redirectWithLatencyCheck = false }: UseRedirectArgs) => {
   const dispatch = useAppDispatch();
   const redirect = async () => {
     await dispatch(exportMetadata());
     dispatch(
       push({
-        pathname: '/data/manage',
+        pathname: redirectWithLatencyCheck
+          ? '/data/manage?trigger_db_latency_check=true'
+          : '/data/manage',
       })
     );
   };
@@ -44,7 +50,7 @@ export const getEditSourceQueryType = (
 export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const { fireNotification } = useFireNotification();
-  const redirect = useRedirect();
+  const redirect = useRedirect({ redirectWithLatencyCheck: true });
   const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({
@@ -102,7 +108,7 @@ export const useSubmit = () => {
 
 export const useEditDataSourceConnection = () => {
   const { fireNotification } = useFireNotification();
-  const redirect = useRedirect();
+  const redirect = useRedirect({ redirectWithLatencyCheck: false });
   const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({

@@ -149,7 +149,11 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
     setLoading(true);
     const state: RestEndpointFormData = {
       name: (data.name as string).trim(),
-      comment: (data.comment as string).trim(),
+      // null is respected considering the old Hasura versions <2.10
+      comment:
+        (data.comment as string) === null
+          ? ''
+          : (data.comment as string).trim(),
       url: (data.url as string).trim(),
       methods: data.methods as AllowedRESTMethods[],
       request: (data.request as string).trim(),

@@ -72,7 +72,7 @@ interface AddActionProps extends InjectedProps {}
 const AddAction: React.FC<AddActionProps> = ({
   handler,
   dispatch,
-  execution,
+  kind,
   actionDefinition,
   typeDefinition,
   isFetching,
@@ -393,7 +393,7 @@ const AddAction: React.FC<AddActionProps> = ({
     transformDispatch(setRequestSampleInput(sampleInput));
     requestMethodOnChange(method);
     requestUrlTransformOnChange(true);
-    requestUrlOnChange(path.replace(/\{([^}]+)\}/g, '{{$body.input.$1}}'));
+    requestUrlOnChange(path);
     requestQueryParamsOnChange(
       queryParams.map(name => ({
         name,
@@ -431,7 +431,7 @@ const AddAction: React.FC<AddActionProps> = ({
 
           <ActionEditor
             handler={handler}
-            execution={execution}
+            execution={kind}
             actionDefinition={actionDefinition}
             typeDefinition={typeDefinition}
             headers={headers}

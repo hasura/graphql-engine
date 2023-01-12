@@ -17,9 +17,9 @@ export type Scalars = {
   timestamptz: any;
   uuid: any;
   project_activity_status_enum: any;
+  citext: any;
   numeric: any;
   float8: any;
-  citext: any;
   invoice_item_type: any;
   bigint: any;
   timetz: any;
@@ -3220,6 +3220,18 @@ export type CreateJobResponse = {
   job_id: Scalars['uuid'];
 };
 
+export type CreateOneClickDeploymentInputPayload = {
+  branch?: Maybe<Scalars['String']>;
+  github_url: Scalars['String'];
+  hasura_dir: Scalars['String'];
+};
+
+export type CreateOneClickDeploymentOutput = {
+  __typename?: 'CreateOneClickDeploymentOutput';
+  project?: Maybe<Projects>;
+  project_id: Scalars['uuid'];
+};
+
 export type CreateTenantResponse = {
   __typename?: 'CreateTenantResponse';
   id: Scalars['uuid'];
@@ -4342,11 +4354,6 @@ export type Customer_Usage_Variance_Order_By = {
   amount?: Maybe<Order_By>;
 };
 
-export enum DatabaseDriver {
-  Postgres = 'postgres',
-  Sqlserver = 'sqlserver',
-}
-
 /** Datadog exporter configuration by project */
 export type Datadog_Config = {
   __typename?: 'datadog_config';
@@ -4706,8 +4713,11 @@ export type Db_Latency = {
   console_check_duration: Scalars['Int'];
   created_at: Scalars['timestamptz'];
   id: Scalars['uuid'];
+  is_change_region_clicked: Scalars['Boolean'];
   is_latency_displayed: Scalars['Boolean'];
   job_id: Scalars['uuid'];
+  /** An object relationship */
+  project?: Maybe<Projects>;
   project_id: Scalars['uuid'];
 };
 
@@ -4755,8 +4765,10 @@ export type Db_Latency_Bool_Exp = {
   console_check_duration?: Maybe<Int_Comparison_Exp>;
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
+  is_change_region_clicked?: Maybe<Boolean_Comparison_Exp>;
   is_latency_displayed?: Maybe<Boolean_Comparison_Exp>;
   job_id?: Maybe<Uuid_Comparison_Exp>;
+  project?: Maybe<Projects_Bool_Exp>;
   project_id?: Maybe<Uuid_Comparison_Exp>;
 };
 
@@ -4778,8 +4790,10 @@ export type Db_Latency_Insert_Input = {
   console_check_duration?: Maybe<Scalars['Int']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
+  is_change_region_clicked?: Maybe<Scalars['Boolean']>;
   is_latency_displayed?: Maybe<Scalars['Boolean']>;
   job_id?: Maybe<Scalars['uuid']>;
+  project?: Maybe<Projects_Obj_Rel_Insert_Input>;
   project_id?: Maybe<Scalars['uuid']>;
 };
 
@@ -4826,8 +4840,10 @@ export type Db_Latency_Order_By = {
   console_check_duration?: Maybe<Order_By>;
   created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
+  is_change_region_clicked?: Maybe<Order_By>;
   is_latency_displayed?: Maybe<Order_By>;
   job_id?: Maybe<Order_By>;
+  project?: Maybe<Projects_Order_By>;
   project_id?: Maybe<Order_By>;
 };
 
@@ -4845,6 +4861,8 @@ export enum Db_Latency_Select_Column {
   /** column name */
   Id = 'id',
   /** column name */
+  IsChangeRegionClicked = 'is_change_region_clicked',
+  /** column name */
   IsLatencyDisplayed = 'is_latency_displayed',
   /** column name */
   JobId = 'job_id',
@@ -4858,6 +4876,7 @@ export type Db_Latency_Set_Input = {
   console_check_duration?: Maybe<Scalars['Int']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
+  is_change_region_clicked?: Maybe<Scalars['Boolean']>;
   is_latency_displayed?: Maybe<Scalars['Boolean']>;
   job_id?: Maybe<Scalars['uuid']>;
   project_id?: Maybe<Scalars['uuid']>;
@@ -4899,6 +4918,8 @@ export enum Db_Latency_Update_Column {
   CreatedAt = 'created_at',
   /** column name */
   Id = 'id',
+  /** column name */
+  IsChangeRegionClicked = 'is_change_region_clicked',
   /** column name */
   IsLatencyDisplayed = 'is_latency_displayed',
   /** column name */
@@ -6259,6 +6280,239 @@ export enum Email_Log_Update_Column {
 export type EnableCloudflareProxyResponse = {
   __typename?: 'EnableCloudflareProxyResponse';
   tenant_id: Scalars['uuid'];
+};
+
+/** list of users on Hasura enterprise edition */
+export type Enterprise_Users = {
+  __typename?: 'enterprise_users';
+  created_at: Scalars['timestamptz'];
+  customer_email?: Maybe<Scalars['citext']>;
+  id: Scalars['Int'];
+  is_active: Scalars['Boolean'];
+  is_exempt_from_billing: Scalars['Boolean'];
+  updated_at: Scalars['timestamptz'];
+  user_id: Scalars['uuid'];
+};
+
+/** aggregated selection of "enterprise_users" */
+export type Enterprise_Users_Aggregate = {
+  __typename?: 'enterprise_users_aggregate';
+  aggregate?: Maybe<Enterprise_Users_Aggregate_Fields>;
+  nodes: Array<Enterprise_Users>;
+};
+
+/** aggregate fields of "enterprise_users" */
+export type Enterprise_Users_Aggregate_Fields = {
+  __typename?: 'enterprise_users_aggregate_fields';
+  avg?: Maybe<Enterprise_Users_Avg_Fields>;
+  count: Scalars['Int'];
+  max?: Maybe<Enterprise_Users_Max_Fields>;
+  min?: Maybe<Enterprise_Users_Min_Fields>;
+  stddev?: Maybe<Enterprise_Users_Stddev_Fields>;
+  stddev_pop?: Maybe<Enterprise_Users_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Enterprise_Users_Stddev_Samp_Fields>;
+  sum?: Maybe<Enterprise_Users_Sum_Fields>;
+  var_pop?: Maybe<Enterprise_Users_Var_Pop_Fields>;
+  var_samp?: Maybe<Enterprise_Users_Var_Samp_Fields>;
+  variance?: Maybe<Enterprise_Users_Variance_Fields>;
+};
+
+/** aggregate fields of "enterprise_users" */
+export type Enterprise_Users_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Enterprise_Users_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** aggregate avg on columns */
+export type Enterprise_Users_Avg_Fields = {
+  __typename?: 'enterprise_users_avg_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "enterprise_users". All fields are combined with a logical 'AND'. */
+export type Enterprise_Users_Bool_Exp = {
+  _and?: Maybe<Array<Enterprise_Users_Bool_Exp>>;
+  _not?: Maybe<Enterprise_Users_Bool_Exp>;
+  _or?: Maybe<Array<Enterprise_Users_Bool_Exp>>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  customer_email?: Maybe<Citext_Comparison_Exp>;
+  id?: Maybe<Int_Comparison_Exp>;
+  is_active?: Maybe<Boolean_Comparison_Exp>;
+  is_exempt_from_billing?: Maybe<Boolean_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+  user_id?: Maybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "enterprise_users" */
+export enum Enterprise_Users_Constraint {
+  /** unique or primary key constraint */
+  EnterpriseUsersCustomerEmailKey = 'enterprise_users_customer_email_key',
+  /** unique or primary key constraint */
+  EnterpriseUsersPkey = 'enterprise_users_pkey',
+}
+
+/** input type for incrementing numeric columns in table "enterprise_users" */
+export type Enterprise_Users_Inc_Input = {
+  id?: Maybe<Scalars['Int']>;
+};
+
+/** input type for inserting data into table "enterprise_users" */
+export type Enterprise_Users_Insert_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  customer_email?: Maybe<Scalars['citext']>;
+  id?: Maybe<Scalars['Int']>;
+  is_active?: Maybe<Scalars['Boolean']>;
+  is_exempt_from_billing?: Maybe<Scalars['Boolean']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** aggregate max on columns */
+export type Enterprise_Users_Max_Fields = {
+  __typename?: 'enterprise_users_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  customer_email?: Maybe<Scalars['citext']>;
+  id?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** aggregate min on columns */
+export type Enterprise_Users_Min_Fields = {
+  __typename?: 'enterprise_users_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  customer_email?: Maybe<Scalars['citext']>;
+  id?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** response of any mutation on the table "enterprise_users" */
+export type Enterprise_Users_Mutation_Response = {
+  __typename?: 'enterprise_users_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Enterprise_Users>;
+};
+
+/** input type for inserting object relation for remote table "enterprise_users" */
+export type Enterprise_Users_Obj_Rel_Insert_Input = {
+  data: Enterprise_Users_Insert_Input;
+  /** upsert condition */
+  on_conflict?: Maybe<Enterprise_Users_On_Conflict>;
+};
+
+/** on_conflict condition type for table "enterprise_users" */
+export type Enterprise_Users_On_Conflict = {
+  constraint: Enterprise_Users_Constraint;
+  update_columns?: Array<Enterprise_Users_Update_Column>;
+  where?: Maybe<Enterprise_Users_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "enterprise_users". */
+export type Enterprise_Users_Order_By = {
+  created_at?: Maybe<Order_By>;
+  customer_email?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  is_active?: Maybe<Order_By>;
+  is_exempt_from_billing?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  user_id?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: enterprise_users */
+export type Enterprise_Users_Pk_Columns_Input = {
+  id: Scalars['Int'];
+};
+
+/** select columns of table "enterprise_users" */
+export enum Enterprise_Users_Select_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CustomerEmail = 'customer_email',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  IsActive = 'is_active',
+  /** column name */
+  IsExemptFromBilling = 'is_exempt_from_billing',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  UserId = 'user_id',
+}
+
+/** input type for updating data in table "enterprise_users" */
+export type Enterprise_Users_Set_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  customer_email?: Maybe<Scalars['citext']>;
+  id?: Maybe<Scalars['Int']>;
+  is_active?: Maybe<Scalars['Boolean']>;
+  is_exempt_from_billing?: Maybe<Scalars['Boolean']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** aggregate stddev on columns */
+export type Enterprise_Users_Stddev_Fields = {
+  __typename?: 'enterprise_users_stddev_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Enterprise_Users_Stddev_Pop_Fields = {
+  __typename?: 'enterprise_users_stddev_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Enterprise_Users_Stddev_Samp_Fields = {
+  __typename?: 'enterprise_users_stddev_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate sum on columns */
+export type Enterprise_Users_Sum_Fields = {
+  __typename?: 'enterprise_users_sum_fields';
+  id?: Maybe<Scalars['Int']>;
+};
+
+/** update columns of table "enterprise_users" */
+export enum Enterprise_Users_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CustomerEmail = 'customer_email',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  IsActive = 'is_active',
+  /** column name */
+  IsExemptFromBilling = 'is_exempt_from_billing',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  UserId = 'user_id',
+}
+
+/** aggregate var_pop on columns */
+export type Enterprise_Users_Var_Pop_Fields = {
+  __typename?: 'enterprise_users_var_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type Enterprise_Users_Var_Samp_Fields = {
+  __typename?: 'enterprise_users_var_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type Enterprise_Users_Variance_Fields = {
+  __typename?: 'enterprise_users_variance_fields';
+  id?: Maybe<Scalars['Float']>;
 };
 
 /** This enum represents the growth experiments for Hasura. */
@@ -8247,6 +8501,10 @@ export enum Gateway_Worker_Update_Column {
   Zone = 'zone',
 }
 
+export type Get_Onboarding_Activity_From_Experiments_Cohort_Args = {
+  userid?: Maybe<Scalars['uuid']>;
+};
+
 export type GetReportUrlResponse = {
   __typename?: 'GetReportURLResponse';
   url: Scalars['String'];
@@ -9301,12 +9559,18 @@ export type Hasura_Ami = {
   __typename?: 'hasura_ami';
   ami_id: Scalars['String'];
   cloud: Scalars['String'];
-  cloud_version?: Maybe<Scalars['String']>;
+  cloud_version: Scalars['String'];
   commit_hash: Scalars['String'];
   created_at: Scalars['timestamptz'];
-  major_version?: Maybe<Scalars['smallint']>;
+  major_version: Scalars['smallint'];
   region: Scalars['String'];
   remarks: Scalars['String'];
+  super_connector_metadata_defaults?: Maybe<Scalars['jsonb']>;
+};
+
+/** columns and relationships of "hasura_ami" */
+export type Hasura_AmiSuper_Connector_Metadata_DefaultsArgs = {
+  path?: Maybe<Scalars['String']>;
 };
 
 /** aggregated selection of "hasura_ami" */
@@ -9338,6 +9602,11 @@ export type Hasura_Ami_Aggregate_FieldsCountArgs = {
   distinct?: Maybe<Scalars['Boolean']>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Hasura_Ami_Append_Input = {
+  super_connector_metadata_defaults?: Maybe<Scalars['jsonb']>;
+};
+
 /** aggregate avg on columns */
 export type Hasura_Ami_Avg_Fields = {
   __typename?: 'hasura_ami_avg_fields';
@@ -9357,15 +9626,36 @@ export type Hasura_Ami_Bool_Exp = {
   major_version?: Maybe<Smallint_Comparison_Exp>;
   region?: Maybe<String_Comparison_Exp>;
   remarks?: Maybe<String_Comparison_Exp>;
+  super_connector_metadata_defaults?: Maybe<Jsonb_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "hasura_ami" */
 export enum Hasura_Ami_Constraint {
   /** unique or primary key constraint */
+  HasuraAmiAmiIdCloudRegionCloudVersionKey = 'hasura_ami_ami_id_cloud_region_cloud_version_key',
+  /** unique or primary key constraint */
   HasuraAmiAmiIdKey = 'hasura_ami_ami_id_key',
   /** unique or primary key constraint */
   HasuraAmiPkey = 'hasura_ami_pkey',
 }
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Hasura_Ami_Delete_At_Path_Input = {
+  super_connector_metadata_defaults?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type Hasura_Ami_Delete_Elem_Input = {
+  super_connector_metadata_defaults?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Hasura_Ami_Delete_Key_Input = {
+  super_connector_metadata_defaults?: Maybe<Scalars['String']>;
+};
 
 /** input type for incrementing numeric columns in table "hasura_ami" */
 export type Hasura_Ami_Inc_Input = {
@@ -9382,6 +9672,7 @@ export type Hasura_Ami_Insert_Input = {
   major_version?: Maybe<Scalars['smallint']>;
   region?: Maybe<Scalars['String']>;
   remarks?: Maybe<Scalars['String']>;
+  super_connector_metadata_defaults?: Maybe<Scalars['jsonb']>;
 };
 
 /** aggregate max on columns */
@@ -9436,6 +9727,7 @@ export type Hasura_Ami_Order_By = {
   major_version?: Maybe<Order_By>;
   region?: Maybe<Order_By>;
   remarks?: Maybe<Order_By>;
+  super_connector_metadata_defaults?: Maybe<Order_By>;
 };
 
 /** primary key columns input for table: hasura_ami */
@@ -9443,6 +9735,11 @@ export type Hasura_Ami_Pk_Columns_Input = {
   ami_id: Scalars['String'];
   cloud: Scalars['String'];
   region: Scalars['String'];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Hasura_Ami_Prepend_Input = {
+  super_connector_metadata_defaults?: Maybe<Scalars['jsonb']>;
 };
 
 /** select columns of table "hasura_ami" */
@@ -9463,6 +9760,8 @@ export enum Hasura_Ami_Select_Column {
   Region = 'region',
   /** column name */
   Remarks = 'remarks',
+  /** column name */
+  SuperConnectorMetadataDefaults = 'super_connector_metadata_defaults',
 }
 
 /** input type for updating data in table "hasura_ami" */
@@ -9475,6 +9774,7 @@ export type Hasura_Ami_Set_Input = {
   major_version?: Maybe<Scalars['smallint']>;
   region?: Maybe<Scalars['String']>;
   remarks?: Maybe<Scalars['String']>;
+  super_connector_metadata_defaults?: Maybe<Scalars['jsonb']>;
 };
 
 /** aggregate stddev on columns */
@@ -9519,6 +9819,8 @@ export enum Hasura_Ami_Update_Column {
   Region = 'region',
   /** column name */
   Remarks = 'remarks',
+  /** column name */
+  SuperConnectorMetadataDefaults = 'super_connector_metadata_defaults',
 }
 
 /** aggregate var_pop on columns */
@@ -9545,17 +9847,21 @@ export type Hasura_Cluster = {
   ami_id?: Maybe<Scalars['String']>;
   cloud: Scalars['String'];
   comments?: Maybe<Scalars['String']>;
+  configured_super_connector?: Maybe<Super_Connector_Types_Enum>;
   created_at: Scalars['timestamptz'];
   id: Scalars['uuid'];
   infra_status?: Maybe<Infra_Status_Enum>;
   input_variables?: Maybe<Scalars['jsonb']>;
   node_pool_id?: Maybe<Scalars['uuid']>;
   output_variables?: Maybe<Scalars['jsonb']>;
+  pinned_version?: Maybe<Scalars['String']>;
   region: Scalars['String'];
   /** An object relationship */
   region_info?: Maybe<Region>;
   slug: Scalars['String'];
   status: Scalars['String'];
+  /** metadata defaults that will be used by the hasura cluster */
+  super_connector_metadata_defaults?: Maybe<Scalars['jsonb']>;
   /** An object relationship */
   tenant_group?: Maybe<Tenant_Group>;
   tenant_group_id?: Maybe<Scalars['uuid']>;
@@ -9572,6 +9878,11 @@ export type Hasura_ClusterInput_VariablesArgs = {
 
 /** Set of Hasura workers in a specific region */
 export type Hasura_ClusterOutput_VariablesArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** Set of Hasura workers in a specific region */
+export type Hasura_ClusterSuper_Connector_Metadata_DefaultsArgs = {
   path?: Maybe<Scalars['String']>;
 };
 
@@ -9628,16 +9939,19 @@ export type Hasura_Cluster_Bool_Exp = {
   ami_id?: Maybe<String_Comparison_Exp>;
   cloud?: Maybe<String_Comparison_Exp>;
   comments?: Maybe<String_Comparison_Exp>;
+  configured_super_connector?: Maybe<Super_Connector_Types_Enum_Comparison_Exp>;
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   infra_status?: Maybe<Infra_Status_Enum_Comparison_Exp>;
   input_variables?: Maybe<Jsonb_Comparison_Exp>;
   node_pool_id?: Maybe<Uuid_Comparison_Exp>;
   output_variables?: Maybe<Jsonb_Comparison_Exp>;
+  pinned_version?: Maybe<String_Comparison_Exp>;
   region?: Maybe<String_Comparison_Exp>;
   region_info?: Maybe<Region_Bool_Exp>;
   slug?: Maybe<String_Comparison_Exp>;
   status?: Maybe<String_Comparison_Exp>;
+  super_connector_metadata_defaults?: Maybe<Jsonb_Comparison_Exp>;
   tenant_group?: Maybe<Tenant_Group_Bool_Exp>;
   tenant_group_id?: Maybe<Uuid_Comparison_Exp>;
   workers?: Maybe<Hasura_Worker_Bool_Exp>;
@@ -9679,12 +9993,14 @@ export type Hasura_Cluster_Insert_Input = {
   ami_id?: Maybe<Scalars['String']>;
   cloud?: Maybe<Scalars['String']>;
   comments?: Maybe<Scalars['String']>;
+  configured_super_connector?: Maybe<Super_Connector_Types_Enum>;
   created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   infra_status?: Maybe<Infra_Status_Enum>;
   input_variables?: Maybe<Scalars['jsonb']>;
   node_pool_id?: Maybe<Scalars['uuid']>;
   output_variables?: Maybe<Scalars['jsonb']>;
+  pinned_version?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
   region_info?: Maybe<Region_Obj_Rel_Insert_Input>;
   slug?: Maybe<Scalars['String']>;
@@ -9703,6 +10019,7 @@ export type Hasura_Cluster_Max_Fields = {
   created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   node_pool_id?: Maybe<Scalars['uuid']>;
+  pinned_version?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
   slug?: Maybe<Scalars['String']>;
   status?: Maybe<Scalars['String']>;
@@ -9718,6 +10035,7 @@ export type Hasura_Cluster_Min_Fields = {
   created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   node_pool_id?: Maybe<Scalars['uuid']>;
+  pinned_version?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
   slug?: Maybe<Scalars['String']>;
   status?: Maybe<Scalars['String']>;
@@ -9752,16 +10070,19 @@ export type Hasura_Cluster_Order_By = {
   ami_id?: Maybe<Order_By>;
   cloud?: Maybe<Order_By>;
   comments?: Maybe<Order_By>;
+  configured_super_connector?: Maybe<Order_By>;
   created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   infra_status?: Maybe<Order_By>;
   input_variables?: Maybe<Order_By>;
   node_pool_id?: Maybe<Order_By>;
   output_variables?: Maybe<Order_By>;
+  pinned_version?: Maybe<Order_By>;
   region?: Maybe<Order_By>;
   region_info?: Maybe<Region_Order_By>;
   slug?: Maybe<Order_By>;
   status?: Maybe<Order_By>;
+  super_connector_metadata_defaults?: Maybe<Order_By>;
   tenant_group?: Maybe<Tenant_Group_Order_By>;
   tenant_group_id?: Maybe<Order_By>;
   workers_aggregate?: Maybe<Hasura_Worker_Aggregate_Order_By>;
@@ -9787,6 +10108,8 @@ export enum Hasura_Cluster_Select_Column {
   /** column name */
   Comments = 'comments',
   /** column name */
+  ConfiguredSuperConnector = 'configured_super_connector',
+  /** column name */
   CreatedAt = 'created_at',
   /** column name */
   Id = 'id',
@@ -9798,6 +10121,8 @@ export enum Hasura_Cluster_Select_Column {
   NodePoolId = 'node_pool_id',
   /** column name */
   OutputVariables = 'output_variables',
+  /** column name */
+  PinnedVersion = 'pinned_version',
   /** column name */
   Region = 'region',
   /** column name */
@@ -9813,12 +10138,14 @@ export type Hasura_Cluster_Set_Input = {
   ami_id?: Maybe<Scalars['String']>;
   cloud?: Maybe<Scalars['String']>;
   comments?: Maybe<Scalars['String']>;
+  configured_super_connector?: Maybe<Super_Connector_Types_Enum>;
   created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   infra_status?: Maybe<Infra_Status_Enum>;
   input_variables?: Maybe<Scalars['jsonb']>;
   node_pool_id?: Maybe<Scalars['uuid']>;
   output_variables?: Maybe<Scalars['jsonb']>;
+  pinned_version?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
   slug?: Maybe<Scalars['String']>;
   status?: Maybe<Scalars['String']>;
@@ -9834,6 +10161,8 @@ export enum Hasura_Cluster_Update_Column {
   /** column name */
   Comments = 'comments',
   /** column name */
+  ConfiguredSuperConnector = 'configured_super_connector',
+  /** column name */
   CreatedAt = 'created_at',
   /** column name */
   Id = 'id',
@@ -9845,6 +10174,8 @@ export enum Hasura_Cluster_Update_Column {
   NodePoolId = 'node_pool_id',
   /** column name */
   OutputVariables = 'output_variables',
+  /** column name */
+  PinnedVersion = 'pinned_version',
   /** column name */
   Region = 'region',
   /** column name */
@@ -12899,6 +13230,12 @@ export type Invoice_Variance_Order_By = {
   year?: Maybe<Order_By>;
 };
 
+export type InvoiceAndReceiptUrLsResponse = {
+  __typename?: 'invoiceAndReceiptURLsResponse';
+  invoice_url?: Maybe<Scalars['String']>;
+  receipt_url?: Maybe<Scalars['String']>;
+};
+
 export enum InvoiceCreateStatus {
   Failed = 'failed',
   Success = 'success',
@@ -14114,6 +14451,7 @@ export type Mutation_Root = {
   createGitHubPreviewApp?: Maybe<PreviewAppResponse>;
   createInvoice: CreateInvoiceResponse;
   createJob: CreateJobResponse;
+  createOneClickDeployment: CreateOneClickDeploymentOutput;
   createPersonalAccessToken: PersonalAccessToken;
   createTenant?: Maybe<CreateTenantResponse>;
   createZendeskSupportTicket: SuccessOrError;
@@ -14208,6 +14546,10 @@ export type Mutation_Root = {
   delete_email_log?: Maybe<Email_Log_Mutation_Response>;
   /** delete single row from the table: "email_log" */
   delete_email_log_by_pk?: Maybe<Email_Log>;
+  /** delete data from the table: "enterprise_users" */
+  delete_enterprise_users?: Maybe<Enterprise_Users_Mutation_Response>;
+  /** delete single row from the table: "enterprise_users" */
+  delete_enterprise_users_by_pk?: Maybe<Enterprise_Users>;
   /** delete data from the table: "experiments" */
   delete_experiments?: Maybe<Experiments_Mutation_Response>;
   /** delete single row from the table: "experiments" */
@@ -14358,6 +14700,18 @@ export type Mutation_Root = {
   delete_onboarding_sample_db_config?: Maybe<Onboarding_Sample_Db_Config_Mutation_Response>;
   /** delete single row from the table: "onboarding_sample_db_config" */
   delete_onboarding_sample_db_config_by_pk?: Maybe<Onboarding_Sample_Db_Config>;
+  /** delete data from the table: "one_click_deployment" */
+  delete_one_click_deployment?: Maybe<One_Click_Deployment_Mutation_Response>;
+  /** delete single row from the table: "one_click_deployment" */
+  delete_one_click_deployment_by_pk?: Maybe<One_Click_Deployment>;
+  /** delete data from the table: "one_click_deployment_state_log" */
+  delete_one_click_deployment_state_log?: Maybe<One_Click_Deployment_State_Log_Mutation_Response>;
+  /** delete single row from the table: "one_click_deployment_state_log" */
+  delete_one_click_deployment_state_log_by_pk?: Maybe<One_Click_Deployment_State_Log>;
+  /** delete data from the table: "one_click_deployment_states" */
+  delete_one_click_deployment_states?: Maybe<One_Click_Deployment_States_Mutation_Response>;
+  /** delete single row from the table: "one_click_deployment_states" */
+  delete_one_click_deployment_states_by_pk?: Maybe<One_Click_Deployment_States>;
   /** delete data from the table: "opentelemetry_config" */
   delete_opentelemetry_config?: Maybe<Opentelemetry_Config_Mutation_Response>;
   /** delete single row from the table: "opentelemetry_config" */
@@ -14492,6 +14846,10 @@ export type Mutation_Root = {
   delete_stripe_subscription?: Maybe<Stripe_Subscription_Mutation_Response>;
   /** delete single row from the table: "stripe_subscription" */
   delete_stripe_subscription_by_pk?: Maybe<Stripe_Subscription>;
+  /** delete data from the table: "super_connector_types" */
+  delete_super_connector_types?: Maybe<Super_Connector_Types_Mutation_Response>;
+  /** delete single row from the table: "super_connector_types" */
+  delete_super_connector_types_by_pk?: Maybe<Super_Connector_Types>;
   /** delete data from the table: "survey" */
   delete_survey?: Maybe<Survey_Mutation_Response>;
   /** delete single row from the table: "survey" */
@@ -14715,6 +15073,10 @@ export type Mutation_Root = {
   insert_email_log?: Maybe<Email_Log_Mutation_Response>;
   /** insert a single row into the table: "email_log" */
   insert_email_log_one?: Maybe<Email_Log>;
+  /** insert data into the table: "enterprise_users" */
+  insert_enterprise_users?: Maybe<Enterprise_Users_Mutation_Response>;
+  /** insert a single row into the table: "enterprise_users" */
+  insert_enterprise_users_one?: Maybe<Enterprise_Users>;
   /** insert data into the table: "experiments" */
   insert_experiments?: Maybe<Experiments_Mutation_Response>;
   /** insert data into the table: "experiments_cohort" */
@@ -14867,6 +15229,18 @@ export type Mutation_Root = {
   insert_onboarding_sample_db_config?: Maybe<Onboarding_Sample_Db_Config_Mutation_Response>;
   /** insert a single row into the table: "onboarding_sample_db_config" */
   insert_onboarding_sample_db_config_one?: Maybe<Onboarding_Sample_Db_Config>;
+  /** insert data into the table: "one_click_deployment" */
+  insert_one_click_deployment?: Maybe<One_Click_Deployment_Mutation_Response>;
+  /** insert a single row into the table: "one_click_deployment" */
+  insert_one_click_deployment_one?: Maybe<One_Click_Deployment>;
+  /** insert data into the table: "one_click_deployment_state_log" */
+  insert_one_click_deployment_state_log?: Maybe<One_Click_Deployment_State_Log_Mutation_Response>;
+  /** insert a single row into the table: "one_click_deployment_state_log" */
+  insert_one_click_deployment_state_log_one?: Maybe<One_Click_Deployment_State_Log>;
+  /** insert data into the table: "one_click_deployment_states" */
+  insert_one_click_deployment_states?: Maybe<One_Click_Deployment_States_Mutation_Response>;
+  /** insert a single row into the table: "one_click_deployment_states" */
+  insert_one_click_deployment_states_one?: Maybe<One_Click_Deployment_States>;
   /** insert data into the table: "opentelemetry_config" */
   insert_opentelemetry_config?: Maybe<Opentelemetry_Config_Mutation_Response>;
   /** insert a single row into the table: "opentelemetry_config" */
@@ -15011,6 +15385,10 @@ export type Mutation_Root = {
   insert_stripe_subscription?: Maybe<Stripe_Subscription_Mutation_Response>;
   /** insert a single row into the table: "stripe_subscription" */
   insert_stripe_subscription_one?: Maybe<Stripe_Subscription>;
+  /** insert data into the table: "super_connector_types" */
+  insert_super_connector_types?: Maybe<Super_Connector_Types_Mutation_Response>;
+  /** insert a single row into the table: "super_connector_types" */
+  insert_super_connector_types_one?: Maybe<Super_Connector_Types>;
   /** insert data into the table: "survey" */
   insert_survey?: Maybe<Survey_Mutation_Response>;
   /** insert a single row into the table: "survey" */
@@ -15158,6 +15536,8 @@ export type Mutation_Root = {
   setDefaultPaymentMethod?: Maybe<DefaultPaymentResponse>;
   /** Action to track activity of experiments cohort users */
   trackExperimentsCohortActivity?: Maybe<SuccessOrError>;
+  /** Action to track the onboarding activity */
+  trackOnboardingActivity?: Maybe<SuccessOrError>;
   trackOnboardingSampleDbCohortActivity?: Maybe<TrackOnboardingSampleDbCohortActivityResponse>;
   transferOwnershipInvite: ProjectOwnershipTransferInvitation;
   triggerAnalyticsInfraModule?: Maybe<BuildKiteBuild>;
@@ -15174,7 +15554,10 @@ export type Mutation_Root = {
   triggerLuxProxyModule?: Maybe<BuildKiteBuild>;
   triggerMetricsModule?: Maybe<BuildKiteBuild>;
   triggerNodePoolModule?: Maybe<BuildKiteBuild>;
+  /** execute one-click-deploy workflow configured for a project idempotently */
+  triggerOneClickDeployment?: Maybe<OneClickDeployResponse>;
   triggerOperatorModule?: Maybe<BuildKiteBuild>;
+  triggerRegionMetadataAnalyticsModule?: Maybe<BuildKiteBuild>;
   triggerRegionModule?: Maybe<BuildKiteBuild>;
   triggerRegionMonitoringModule?: Maybe<BuildKiteBuild>;
   triggerTaskqModule?: Maybe<BuildKiteBuild>;
@@ -15266,6 +15649,10 @@ export type Mutation_Root = {
   update_email_log?: Maybe<Email_Log_Mutation_Response>;
   /** update single row of the table: "email_log" */
   update_email_log_by_pk?: Maybe<Email_Log>;
+  /** update data of the table: "enterprise_users" */
+  update_enterprise_users?: Maybe<Enterprise_Users_Mutation_Response>;
+  /** update single row of the table: "enterprise_users" */
+  update_enterprise_users_by_pk?: Maybe<Enterprise_Users>;
   /** update data of the table: "experiments" */
   update_experiments?: Maybe<Experiments_Mutation_Response>;
   /** update single row of the table: "experiments" */
@@ -15416,6 +15803,18 @@ export type Mutation_Root = {
   update_onboarding_sample_db_config?: Maybe<Onboarding_Sample_Db_Config_Mutation_Response>;
   /** update single row of the table: "onboarding_sample_db_config" */
   update_onboarding_sample_db_config_by_pk?: Maybe<Onboarding_Sample_Db_Config>;
+  /** update data of the table: "one_click_deployment" */
+  update_one_click_deployment?: Maybe<One_Click_Deployment_Mutation_Response>;
+  /** update single row of the table: "one_click_deployment" */
+  update_one_click_deployment_by_pk?: Maybe<One_Click_Deployment>;
+  /** update data of the table: "one_click_deployment_state_log" */
+  update_one_click_deployment_state_log?: Maybe<One_Click_Deployment_State_Log_Mutation_Response>;
+  /** update single row of the table: "one_click_deployment_state_log" */
+  update_one_click_deployment_state_log_by_pk?: Maybe<One_Click_Deployment_State_Log>;
+  /** update data of the table: "one_click_deployment_states" */
+  update_one_click_deployment_states?: Maybe<One_Click_Deployment_States_Mutation_Response>;
+  /** update single row of the table: "one_click_deployment_states" */
+  update_one_click_deployment_states_by_pk?: Maybe<One_Click_Deployment_States>;
   /** update data of the table: "opentelemetry_config" */
   update_opentelemetry_config?: Maybe<Opentelemetry_Config_Mutation_Response>;
   /** update single row of the table: "opentelemetry_config" */
@@ -15550,6 +15949,10 @@ export type Mutation_Root = {
   update_stripe_subscription?: Maybe<Stripe_Subscription_Mutation_Response>;
   /** update single row of the table: "stripe_subscription" */
   update_stripe_subscription_by_pk?: Maybe<Stripe_Subscription>;
+  /** update data of the table: "super_connector_types" */
+  update_super_connector_types?: Maybe<Super_Connector_Types_Mutation_Response>;
+  /** update single row of the table: "super_connector_types" */
+  update_super_connector_types_by_pk?: Maybe<Super_Connector_Types>;
   /** update data of the table: "survey" */
   update_survey?: Maybe<Survey_Mutation_Response>;
   /** update single row of the table: "survey" */
@@ -15790,9 +16193,6 @@ export type Mutation_RootChangeUserEmailArgs = {
 
 /** mutation root */
 export type Mutation_RootCheckDbLatencyArgs = {
-  db_connection_env?: Maybe<Scalars['String']>;
-  db_connection_string?: Maybe<Scalars['String']>;
-  db_driver: DatabaseDriver;
   project_id: Scalars['uuid'];
 };
 
@@ -15827,6 +16227,11 @@ export type Mutation_RootCreateInvoiceArgs = {
 /** mutation root */
 export type Mutation_RootCreateJobArgs = {
   input: CreateJobInput;
+};
+
+/** mutation root */
+export type Mutation_RootCreateOneClickDeploymentArgs = {
+  payload: CreateOneClickDeploymentInputPayload;
 };
 
 /** mutation root */
@@ -16090,6 +16495,16 @@ export type Mutation_RootDelete_Email_LogArgs = {
 /** mutation root */
 export type Mutation_RootDelete_Email_Log_By_PkArgs = {
   id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Enterprise_UsersArgs = {
+  where: Enterprise_Users_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Enterprise_Users_By_PkArgs = {
+  id: Scalars['Int'];
 };
 
 /** mutation root */
@@ -16478,6 +16893,36 @@ export type Mutation_RootDelete_Onboarding_Sample_Db_Config_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootDelete_One_Click_DeploymentArgs = {
+  where: One_Click_Deployment_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_One_Click_Deployment_By_PkArgs = {
+  id: Scalars['bigint'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_One_Click_Deployment_State_LogArgs = {
+  where: One_Click_Deployment_State_Log_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_One_Click_Deployment_State_Log_By_PkArgs = {
+  id: Scalars['bigint'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_One_Click_Deployment_StatesArgs = {
+  where: One_Click_Deployment_States_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_One_Click_Deployment_States_By_PkArgs = {
+  name: Scalars['String'];
+};
+
+/** mutation root */
 export type Mutation_RootDelete_Opentelemetry_ConfigArgs = {
   where: Opentelemetry_Config_Bool_Exp;
 };
@@ -16831,6 +17276,16 @@ export type Mutation_RootDelete_Stripe_SubscriptionArgs = {
 export type Mutation_RootDelete_Stripe_Subscription_By_PkArgs = {
   customer_id: Scalars['String'];
   subscription_id: Scalars['String'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Super_Connector_TypesArgs = {
+  where: Super_Connector_Types_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Super_Connector_Types_By_PkArgs = {
+  type: Scalars['String'];
 };
 
 /** mutation root */
@@ -17471,6 +17926,18 @@ export type Mutation_RootInsert_Email_Log_OneArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootInsert_Enterprise_UsersArgs = {
+  objects: Array<Enterprise_Users_Insert_Input>;
+  on_conflict?: Maybe<Enterprise_Users_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Enterprise_Users_OneArgs = {
+  object: Enterprise_Users_Insert_Input;
+  on_conflict?: Maybe<Enterprise_Users_On_Conflict>;
+};
+
+/** mutation root */
 export type Mutation_RootInsert_ExperimentsArgs = {
   objects: Array<Experiments_Insert_Input>;
   on_conflict?: Maybe<Experiments_On_Conflict>;
@@ -17925,6 +18392,42 @@ export type Mutation_RootInsert_Onboarding_Sample_Db_Config_OneArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootInsert_One_Click_DeploymentArgs = {
+  objects: Array<One_Click_Deployment_Insert_Input>;
+  on_conflict?: Maybe<One_Click_Deployment_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_One_Click_Deployment_OneArgs = {
+  object: One_Click_Deployment_Insert_Input;
+  on_conflict?: Maybe<One_Click_Deployment_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_One_Click_Deployment_State_LogArgs = {
+  objects: Array<One_Click_Deployment_State_Log_Insert_Input>;
+  on_conflict?: Maybe<One_Click_Deployment_State_Log_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_One_Click_Deployment_State_Log_OneArgs = {
+  object: One_Click_Deployment_State_Log_Insert_Input;
+  on_conflict?: Maybe<One_Click_Deployment_State_Log_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_One_Click_Deployment_StatesArgs = {
+  objects: Array<One_Click_Deployment_States_Insert_Input>;
+  on_conflict?: Maybe<One_Click_Deployment_States_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_One_Click_Deployment_States_OneArgs = {
+  object: One_Click_Deployment_States_Insert_Input;
+  on_conflict?: Maybe<One_Click_Deployment_States_On_Conflict>;
+};
+
+/** mutation root */
 export type Mutation_RootInsert_Opentelemetry_ConfigArgs = {
   objects: Array<Opentelemetry_Config_Insert_Input>;
   on_conflict?: Maybe<Opentelemetry_Config_On_Conflict>;
@@ -18349,6 +18852,18 @@ export type Mutation_RootInsert_Stripe_SubscriptionArgs = {
 export type Mutation_RootInsert_Stripe_Subscription_OneArgs = {
   object: Stripe_Subscription_Insert_Input;
   on_conflict?: Maybe<Stripe_Subscription_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Super_Connector_TypesArgs = {
+  objects: Array<Super_Connector_Types_Insert_Input>;
+  on_conflict?: Maybe<Super_Connector_Types_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Super_Connector_Types_OneArgs = {
+  object: Super_Connector_Types_Insert_Input;
+  on_conflict?: Maybe<Super_Connector_Types_On_Conflict>;
 };
 
 /** mutation root */
@@ -18814,6 +19329,11 @@ export type Mutation_RootTrackExperimentsCohortActivityArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootTrackOnboardingActivityArgs = {
+  payload: OnboardingActivityPayload;
+};
+
+/** mutation root */
 export type Mutation_RootTrackOnboardingSampleDbCohortActivityArgs = {
   error_message?: Maybe<Scalars['String']>;
   event: Scalars['String'];
@@ -18956,7 +19476,22 @@ export type Mutation_RootTriggerNodePoolModuleArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootTriggerOneClickDeploymentArgs = {
+  project_id: Scalars['uuid'];
+};
+
+/** mutation root */
 export type Mutation_RootTriggerOperatorModuleArgs = {
+  branch?: Maybe<Scalars['String']>;
+  cloud: Scalars['String'];
+  commit?: Maybe<Scalars['String']>;
+  mode: PulumiMode;
+  region: Scalars['String'];
+  targets?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+/** mutation root */
+export type Mutation_RootTriggerRegionMetadataAnalyticsModuleArgs = {
   branch?: Maybe<Scalars['String']>;
   cloud: Scalars['String'];
   commit?: Maybe<Scalars['String']>;
@@ -19354,6 +19889,20 @@ export type Mutation_RootUpdate_Email_Log_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_Enterprise_UsersArgs = {
+  _inc?: Maybe<Enterprise_Users_Inc_Input>;
+  _set?: Maybe<Enterprise_Users_Set_Input>;
+  where: Enterprise_Users_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Enterprise_Users_By_PkArgs = {
+  _inc?: Maybe<Enterprise_Users_Inc_Input>;
+  _set?: Maybe<Enterprise_Users_Set_Input>;
+  pk_columns: Enterprise_Users_Pk_Columns_Input;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_ExperimentsArgs = {
   _set?: Maybe<Experiments_Set_Input>;
   where: Experiments_Bool_Exp;
@@ -19579,14 +20128,24 @@ export type Mutation_RootUpdate_Github_Push_Event_Job_By_PkArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_Hasura_AmiArgs = {
+  _append?: Maybe<Hasura_Ami_Append_Input>;
+  _delete_at_path?: Maybe<Hasura_Ami_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Hasura_Ami_Delete_Elem_Input>;
+  _delete_key?: Maybe<Hasura_Ami_Delete_Key_Input>;
   _inc?: Maybe<Hasura_Ami_Inc_Input>;
+  _prepend?: Maybe<Hasura_Ami_Prepend_Input>;
   _set?: Maybe<Hasura_Ami_Set_Input>;
   where: Hasura_Ami_Bool_Exp;
 };
 
 /** mutation root */
 export type Mutation_RootUpdate_Hasura_Ami_By_PkArgs = {
+  _append?: Maybe<Hasura_Ami_Append_Input>;
+  _delete_at_path?: Maybe<Hasura_Ami_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Hasura_Ami_Delete_Elem_Input>;
+  _delete_key?: Maybe<Hasura_Ami_Delete_Key_Input>;
   _inc?: Maybe<Hasura_Ami_Inc_Input>;
+  _prepend?: Maybe<Hasura_Ami_Prepend_Input>;
   _set?: Maybe<Hasura_Ami_Set_Input>;
   pk_columns: Hasura_Ami_Pk_Columns_Input;
 };
@@ -19942,6 +20501,66 @@ export type Mutation_RootUpdate_Onboarding_Sample_Db_Config_By_PkArgs = {
   _prepend?: Maybe<Onboarding_Sample_Db_Config_Prepend_Input>;
   _set?: Maybe<Onboarding_Sample_Db_Config_Set_Input>;
   pk_columns: Onboarding_Sample_Db_Config_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_One_Click_DeploymentArgs = {
+  _append?: Maybe<One_Click_Deployment_Append_Input>;
+  _delete_at_path?: Maybe<One_Click_Deployment_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<One_Click_Deployment_Delete_Elem_Input>;
+  _delete_key?: Maybe<One_Click_Deployment_Delete_Key_Input>;
+  _inc?: Maybe<One_Click_Deployment_Inc_Input>;
+  _prepend?: Maybe<One_Click_Deployment_Prepend_Input>;
+  _set?: Maybe<One_Click_Deployment_Set_Input>;
+  where: One_Click_Deployment_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_One_Click_Deployment_By_PkArgs = {
+  _append?: Maybe<One_Click_Deployment_Append_Input>;
+  _delete_at_path?: Maybe<One_Click_Deployment_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<One_Click_Deployment_Delete_Elem_Input>;
+  _delete_key?: Maybe<One_Click_Deployment_Delete_Key_Input>;
+  _inc?: Maybe<One_Click_Deployment_Inc_Input>;
+  _prepend?: Maybe<One_Click_Deployment_Prepend_Input>;
+  _set?: Maybe<One_Click_Deployment_Set_Input>;
+  pk_columns: One_Click_Deployment_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_One_Click_Deployment_State_LogArgs = {
+  _append?: Maybe<One_Click_Deployment_State_Log_Append_Input>;
+  _delete_at_path?: Maybe<One_Click_Deployment_State_Log_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<One_Click_Deployment_State_Log_Delete_Elem_Input>;
+  _delete_key?: Maybe<One_Click_Deployment_State_Log_Delete_Key_Input>;
+  _inc?: Maybe<One_Click_Deployment_State_Log_Inc_Input>;
+  _prepend?: Maybe<One_Click_Deployment_State_Log_Prepend_Input>;
+  _set?: Maybe<One_Click_Deployment_State_Log_Set_Input>;
+  where: One_Click_Deployment_State_Log_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_One_Click_Deployment_State_Log_By_PkArgs = {
+  _append?: Maybe<One_Click_Deployment_State_Log_Append_Input>;
+  _delete_at_path?: Maybe<One_Click_Deployment_State_Log_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<One_Click_Deployment_State_Log_Delete_Elem_Input>;
+  _delete_key?: Maybe<One_Click_Deployment_State_Log_Delete_Key_Input>;
+  _inc?: Maybe<One_Click_Deployment_State_Log_Inc_Input>;
+  _prepend?: Maybe<One_Click_Deployment_State_Log_Prepend_Input>;
+  _set?: Maybe<One_Click_Deployment_State_Log_Set_Input>;
+  pk_columns: One_Click_Deployment_State_Log_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_One_Click_Deployment_StatesArgs = {
+  _set?: Maybe<One_Click_Deployment_States_Set_Input>;
+  where: One_Click_Deployment_States_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_One_Click_Deployment_States_By_PkArgs = {
+  _set?: Maybe<One_Click_Deployment_States_Set_Input>;
+  pk_columns: One_Click_Deployment_States_Pk_Columns_Input;
 };
 
 /** mutation root */
@@ -20467,6 +21086,18 @@ export type Mutation_RootUpdate_Stripe_Subscription_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_Super_Connector_TypesArgs = {
+  _set?: Maybe<Super_Connector_Types_Set_Input>;
+  where: Super_Connector_Types_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Super_Connector_Types_By_PkArgs = {
+  _set?: Maybe<Super_Connector_Types_Set_Input>;
+  pk_columns: Super_Connector_Types_Pk_Columns_Input;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_SurveyArgs = {
   _set?: Maybe<Survey_Set_Input>;
   where: Survey_Bool_Exp;
@@ -20700,12 +21331,22 @@ export type Mutation_RootUpdate_User_Coupon_By_PkArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_User_OnboardingArgs = {
+  _append?: Maybe<User_Onboarding_Append_Input>;
+  _delete_at_path?: Maybe<User_Onboarding_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<User_Onboarding_Delete_Elem_Input>;
+  _delete_key?: Maybe<User_Onboarding_Delete_Key_Input>;
+  _prepend?: Maybe<User_Onboarding_Prepend_Input>;
   _set?: Maybe<User_Onboarding_Set_Input>;
   where: User_Onboarding_Bool_Exp;
 };
 
 /** mutation root */
 export type Mutation_RootUpdate_User_Onboarding_By_PkArgs = {
+  _append?: Maybe<User_Onboarding_Append_Input>;
+  _delete_at_path?: Maybe<User_Onboarding_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<User_Onboarding_Delete_Elem_Input>;
+  _delete_key?: Maybe<User_Onboarding_Delete_Key_Input>;
+  _prepend?: Maybe<User_Onboarding_Prepend_Input>;
   _set?: Maybe<User_Onboarding_Set_Input>;
   pk_columns: User_Onboarding_Pk_Columns_Input;
 };
@@ -22606,6 +23247,823 @@ export type Onboarding_Sample_Db_Config_Var_Samp_Fields = {
 export type Onboarding_Sample_Db_Config_Variance_Fields = {
   __typename?: 'onboarding_sample_db_config_variance_fields';
   rollout_percentage?: Maybe<Scalars['Float']>;
+};
+
+export type OnboardingActivityPayload = {
+  error_code?: Maybe<Scalars['String']>;
+  kind: Scalars['String'];
+  project_id: Scalars['uuid'];
+};
+
+/** columns and relationships of "one_click_deployment" */
+export type One_Click_Deployment = {
+  __typename?: 'one_click_deployment';
+  additional_info: Scalars['jsonb'];
+  created_at: Scalars['timestamptz'];
+  git_repository_branch?: Maybe<Scalars['String']>;
+  git_repository_url: Scalars['String'];
+  hasura_directory?: Maybe<Scalars['String']>;
+  id: Scalars['bigint'];
+  /** An array relationship */
+  one_click_deployment_state_logs: Array<One_Click_Deployment_State_Log>;
+  /** An aggregate relationship */
+  one_click_deployment_state_logs_aggregate: One_Click_Deployment_State_Log_Aggregate;
+  /** An object relationship */
+  project: Projects;
+  project_id: Scalars['uuid'];
+  /** A computed field, executes function "one_click_deployment_state" */
+  state?: Maybe<Scalars['String']>;
+  updated_at: Scalars['timestamptz'];
+};
+
+/** columns and relationships of "one_click_deployment" */
+export type One_Click_DeploymentAdditional_InfoArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** columns and relationships of "one_click_deployment" */
+export type One_Click_DeploymentOne_Click_Deployment_State_LogsArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_State_Log_Order_By>>;
+  where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+};
+
+/** columns and relationships of "one_click_deployment" */
+export type One_Click_DeploymentOne_Click_Deployment_State_Logs_AggregateArgs =
+  {
+    distinct_on?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+    limit?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    order_by?: Maybe<Array<One_Click_Deployment_State_Log_Order_By>>;
+    where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+  };
+
+/** aggregated selection of "one_click_deployment" */
+export type One_Click_Deployment_Aggregate = {
+  __typename?: 'one_click_deployment_aggregate';
+  aggregate?: Maybe<One_Click_Deployment_Aggregate_Fields>;
+  nodes: Array<One_Click_Deployment>;
+};
+
+/** aggregate fields of "one_click_deployment" */
+export type One_Click_Deployment_Aggregate_Fields = {
+  __typename?: 'one_click_deployment_aggregate_fields';
+  avg?: Maybe<One_Click_Deployment_Avg_Fields>;
+  count: Scalars['Int'];
+  max?: Maybe<One_Click_Deployment_Max_Fields>;
+  min?: Maybe<One_Click_Deployment_Min_Fields>;
+  stddev?: Maybe<One_Click_Deployment_Stddev_Fields>;
+  stddev_pop?: Maybe<One_Click_Deployment_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<One_Click_Deployment_Stddev_Samp_Fields>;
+  sum?: Maybe<One_Click_Deployment_Sum_Fields>;
+  var_pop?: Maybe<One_Click_Deployment_Var_Pop_Fields>;
+  var_samp?: Maybe<One_Click_Deployment_Var_Samp_Fields>;
+  variance?: Maybe<One_Click_Deployment_Variance_Fields>;
+};
+
+/** aggregate fields of "one_click_deployment" */
+export type One_Click_Deployment_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<One_Click_Deployment_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type One_Click_Deployment_Append_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+};
+
+/** aggregate avg on columns */
+export type One_Click_Deployment_Avg_Fields = {
+  __typename?: 'one_click_deployment_avg_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** Boolean expression to filter rows from the table "one_click_deployment". All fields are combined with a logical 'AND'. */
+export type One_Click_Deployment_Bool_Exp = {
+  _and?: Maybe<Array<One_Click_Deployment_Bool_Exp>>;
+  _not?: Maybe<One_Click_Deployment_Bool_Exp>;
+  _or?: Maybe<Array<One_Click_Deployment_Bool_Exp>>;
+  additional_info?: Maybe<Jsonb_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  git_repository_branch?: Maybe<String_Comparison_Exp>;
+  git_repository_url?: Maybe<String_Comparison_Exp>;
+  hasura_directory?: Maybe<String_Comparison_Exp>;
+  id?: Maybe<Bigint_Comparison_Exp>;
+  one_click_deployment_state_logs?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+  project?: Maybe<Projects_Bool_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  state?: Maybe<String_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "one_click_deployment" */
+export enum One_Click_Deployment_Constraint {
+  /** unique or primary key constraint */
+  OneClickDeploymentPkey = 'one_click_deployment_pkey',
+  /** unique or primary key constraint */
+  OneClickDeploymentProjectIdKey = 'one_click_deployment_project_id_key',
+}
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type One_Click_Deployment_Delete_At_Path_Input = {
+  additional_info?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type One_Click_Deployment_Delete_Elem_Input = {
+  additional_info?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type One_Click_Deployment_Delete_Key_Input = {
+  additional_info?: Maybe<Scalars['String']>;
+};
+
+/** input type for incrementing numeric columns in table "one_click_deployment" */
+export type One_Click_Deployment_Inc_Input = {
+  id?: Maybe<Scalars['bigint']>;
+};
+
+/** input type for inserting data into table "one_click_deployment" */
+export type One_Click_Deployment_Insert_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  git_repository_branch?: Maybe<Scalars['String']>;
+  git_repository_url?: Maybe<Scalars['String']>;
+  hasura_directory?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment_state_logs?: Maybe<One_Click_Deployment_State_Log_Arr_Rel_Insert_Input>;
+  project?: Maybe<Projects_Obj_Rel_Insert_Input>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate max on columns */
+export type One_Click_Deployment_Max_Fields = {
+  __typename?: 'one_click_deployment_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  git_repository_branch?: Maybe<Scalars['String']>;
+  git_repository_url?: Maybe<Scalars['String']>;
+  hasura_directory?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['bigint']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate min on columns */
+export type One_Click_Deployment_Min_Fields = {
+  __typename?: 'one_click_deployment_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  git_repository_branch?: Maybe<Scalars['String']>;
+  git_repository_url?: Maybe<Scalars['String']>;
+  hasura_directory?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['bigint']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** response of any mutation on the table "one_click_deployment" */
+export type One_Click_Deployment_Mutation_Response = {
+  __typename?: 'one_click_deployment_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<One_Click_Deployment>;
+};
+
+/** input type for inserting object relation for remote table "one_click_deployment" */
+export type One_Click_Deployment_Obj_Rel_Insert_Input = {
+  data: One_Click_Deployment_Insert_Input;
+  /** upsert condition */
+  on_conflict?: Maybe<One_Click_Deployment_On_Conflict>;
+};
+
+/** on_conflict condition type for table "one_click_deployment" */
+export type One_Click_Deployment_On_Conflict = {
+  constraint: One_Click_Deployment_Constraint;
+  update_columns?: Array<One_Click_Deployment_Update_Column>;
+  where?: Maybe<One_Click_Deployment_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "one_click_deployment". */
+export type One_Click_Deployment_Order_By = {
+  additional_info?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  git_repository_branch?: Maybe<Order_By>;
+  git_repository_url?: Maybe<Order_By>;
+  hasura_directory?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  one_click_deployment_state_logs_aggregate?: Maybe<One_Click_Deployment_State_Log_Aggregate_Order_By>;
+  project?: Maybe<Projects_Order_By>;
+  project_id?: Maybe<Order_By>;
+  state?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: one_click_deployment */
+export type One_Click_Deployment_Pk_Columns_Input = {
+  id: Scalars['bigint'];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type One_Click_Deployment_Prepend_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+};
+
+/** select columns of table "one_click_deployment" */
+export enum One_Click_Deployment_Select_Column {
+  /** column name */
+  AdditionalInfo = 'additional_info',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  GitRepositoryBranch = 'git_repository_branch',
+  /** column name */
+  GitRepositoryUrl = 'git_repository_url',
+  /** column name */
+  HasuraDirectory = 'hasura_directory',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** input type for updating data in table "one_click_deployment" */
+export type One_Click_Deployment_Set_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  git_repository_branch?: Maybe<Scalars['String']>;
+  git_repository_url?: Maybe<Scalars['String']>;
+  hasura_directory?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['bigint']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** columns and relationships of "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log = {
+  __typename?: 'one_click_deployment_state_log';
+  additional_info: Scalars['jsonb'];
+  created_at: Scalars['timestamptz'];
+  from_state: One_Click_Deployment_States_Enum;
+  id: Scalars['bigint'];
+  /** An object relationship */
+  one_click_deployment: One_Click_Deployment;
+  one_click_deployment_id: Scalars['Int'];
+  to_state: One_Click_Deployment_States_Enum;
+};
+
+/** columns and relationships of "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_LogAdditional_InfoArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Aggregate = {
+  __typename?: 'one_click_deployment_state_log_aggregate';
+  aggregate?: Maybe<One_Click_Deployment_State_Log_Aggregate_Fields>;
+  nodes: Array<One_Click_Deployment_State_Log>;
+};
+
+/** aggregate fields of "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Aggregate_Fields = {
+  __typename?: 'one_click_deployment_state_log_aggregate_fields';
+  avg?: Maybe<One_Click_Deployment_State_Log_Avg_Fields>;
+  count: Scalars['Int'];
+  max?: Maybe<One_Click_Deployment_State_Log_Max_Fields>;
+  min?: Maybe<One_Click_Deployment_State_Log_Min_Fields>;
+  stddev?: Maybe<One_Click_Deployment_State_Log_Stddev_Fields>;
+  stddev_pop?: Maybe<One_Click_Deployment_State_Log_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<One_Click_Deployment_State_Log_Stddev_Samp_Fields>;
+  sum?: Maybe<One_Click_Deployment_State_Log_Sum_Fields>;
+  var_pop?: Maybe<One_Click_Deployment_State_Log_Var_Pop_Fields>;
+  var_samp?: Maybe<One_Click_Deployment_State_Log_Var_Samp_Fields>;
+  variance?: Maybe<One_Click_Deployment_State_Log_Variance_Fields>;
+};
+
+/** aggregate fields of "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Aggregate_Order_By = {
+  avg?: Maybe<One_Click_Deployment_State_Log_Avg_Order_By>;
+  count?: Maybe<Order_By>;
+  max?: Maybe<One_Click_Deployment_State_Log_Max_Order_By>;
+  min?: Maybe<One_Click_Deployment_State_Log_Min_Order_By>;
+  stddev?: Maybe<One_Click_Deployment_State_Log_Stddev_Order_By>;
+  stddev_pop?: Maybe<One_Click_Deployment_State_Log_Stddev_Pop_Order_By>;
+  stddev_samp?: Maybe<One_Click_Deployment_State_Log_Stddev_Samp_Order_By>;
+  sum?: Maybe<One_Click_Deployment_State_Log_Sum_Order_By>;
+  var_pop?: Maybe<One_Click_Deployment_State_Log_Var_Pop_Order_By>;
+  var_samp?: Maybe<One_Click_Deployment_State_Log_Var_Samp_Order_By>;
+  variance?: Maybe<One_Click_Deployment_State_Log_Variance_Order_By>;
+};
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type One_Click_Deployment_State_Log_Append_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+};
+
+/** input type for inserting array relation for remote table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Arr_Rel_Insert_Input = {
+  data: Array<One_Click_Deployment_State_Log_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<One_Click_Deployment_State_Log_On_Conflict>;
+};
+
+/** aggregate avg on columns */
+export type One_Click_Deployment_State_Log_Avg_Fields = {
+  __typename?: 'one_click_deployment_state_log_avg_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by avg() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Avg_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/**
+ * Boolean expression to filter rows from the table
+ * "one_click_deployment_state_log". All fields are combined with a logical 'AND'.
+ */
+export type One_Click_Deployment_State_Log_Bool_Exp = {
+  _and?: Maybe<Array<One_Click_Deployment_State_Log_Bool_Exp>>;
+  _not?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+  _or?: Maybe<Array<One_Click_Deployment_State_Log_Bool_Exp>>;
+  additional_info?: Maybe<Jsonb_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  from_state?: Maybe<One_Click_Deployment_States_Enum_Comparison_Exp>;
+  id?: Maybe<Bigint_Comparison_Exp>;
+  one_click_deployment?: Maybe<One_Click_Deployment_Bool_Exp>;
+  one_click_deployment_id?: Maybe<Int_Comparison_Exp>;
+  to_state?: Maybe<One_Click_Deployment_States_Enum_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "one_click_deployment_state_log" */
+export enum One_Click_Deployment_State_Log_Constraint {
+  /** unique or primary key constraint */
+  OneClickDeploymentStateLogPkey = 'one_click_deployment_state_log_pkey',
+}
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type One_Click_Deployment_State_Log_Delete_At_Path_Input = {
+  additional_info?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type One_Click_Deployment_State_Log_Delete_Elem_Input = {
+  additional_info?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type One_Click_Deployment_State_Log_Delete_Key_Input = {
+  additional_info?: Maybe<Scalars['String']>;
+};
+
+/** input type for incrementing numeric columns in table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Inc_Input = {
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment_id?: Maybe<Scalars['Int']>;
+};
+
+/** input type for inserting data into table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Insert_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  from_state?: Maybe<One_Click_Deployment_States_Enum>;
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment?: Maybe<One_Click_Deployment_Obj_Rel_Insert_Input>;
+  one_click_deployment_id?: Maybe<Scalars['Int']>;
+  to_state?: Maybe<One_Click_Deployment_States_Enum>;
+};
+
+/** aggregate max on columns */
+export type One_Click_Deployment_State_Log_Max_Fields = {
+  __typename?: 'one_click_deployment_state_log_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment_id?: Maybe<Scalars['Int']>;
+};
+
+/** order by max() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type One_Click_Deployment_State_Log_Min_Fields = {
+  __typename?: 'one_click_deployment_state_log_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment_id?: Maybe<Scalars['Int']>;
+};
+
+/** order by min() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** response of any mutation on the table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Mutation_Response = {
+  __typename?: 'one_click_deployment_state_log_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<One_Click_Deployment_State_Log>;
+};
+
+/** on_conflict condition type for table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_On_Conflict = {
+  constraint: One_Click_Deployment_State_Log_Constraint;
+  update_columns?: Array<One_Click_Deployment_State_Log_Update_Column>;
+  where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "one_click_deployment_state_log". */
+export type One_Click_Deployment_State_Log_Order_By = {
+  additional_info?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  from_state?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  one_click_deployment?: Maybe<One_Click_Deployment_Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+  to_state?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: one_click_deployment_state_log */
+export type One_Click_Deployment_State_Log_Pk_Columns_Input = {
+  id: Scalars['bigint'];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type One_Click_Deployment_State_Log_Prepend_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+};
+
+/** select columns of table "one_click_deployment_state_log" */
+export enum One_Click_Deployment_State_Log_Select_Column {
+  /** column name */
+  AdditionalInfo = 'additional_info',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  FromState = 'from_state',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  OneClickDeploymentId = 'one_click_deployment_id',
+  /** column name */
+  ToState = 'to_state',
+}
+
+/** input type for updating data in table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Set_Input = {
+  additional_info?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  from_state?: Maybe<One_Click_Deployment_States_Enum>;
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment_id?: Maybe<Scalars['Int']>;
+  to_state?: Maybe<One_Click_Deployment_States_Enum>;
+};
+
+/** aggregate stddev on columns */
+export type One_Click_Deployment_State_Log_Stddev_Fields = {
+  __typename?: 'one_click_deployment_state_log_stddev_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Stddev_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** aggregate stddev_pop on columns */
+export type One_Click_Deployment_State_Log_Stddev_Pop_Fields = {
+  __typename?: 'one_click_deployment_state_log_stddev_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_pop() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Stddev_Pop_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** aggregate stddev_samp on columns */
+export type One_Click_Deployment_State_Log_Stddev_Samp_Fields = {
+  __typename?: 'one_click_deployment_state_log_stddev_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_samp() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Stddev_Samp_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** aggregate sum on columns */
+export type One_Click_Deployment_State_Log_Sum_Fields = {
+  __typename?: 'one_click_deployment_state_log_sum_fields';
+  id?: Maybe<Scalars['bigint']>;
+  one_click_deployment_id?: Maybe<Scalars['Int']>;
+};
+
+/** order by sum() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Sum_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** update columns of table "one_click_deployment_state_log" */
+export enum One_Click_Deployment_State_Log_Update_Column {
+  /** column name */
+  AdditionalInfo = 'additional_info',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  FromState = 'from_state',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  OneClickDeploymentId = 'one_click_deployment_id',
+  /** column name */
+  ToState = 'to_state',
+}
+
+/** aggregate var_pop on columns */
+export type One_Click_Deployment_State_Log_Var_Pop_Fields = {
+  __typename?: 'one_click_deployment_state_log_var_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_pop() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Var_Pop_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** aggregate var_samp on columns */
+export type One_Click_Deployment_State_Log_Var_Samp_Fields = {
+  __typename?: 'one_click_deployment_state_log_var_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_samp() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Var_Samp_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** aggregate variance on columns */
+export type One_Click_Deployment_State_Log_Variance_Fields = {
+  __typename?: 'one_click_deployment_state_log_variance_fields';
+  id?: Maybe<Scalars['Float']>;
+  one_click_deployment_id?: Maybe<Scalars['Float']>;
+};
+
+/** order by variance() on columns of table "one_click_deployment_state_log" */
+export type One_Click_Deployment_State_Log_Variance_Order_By = {
+  id?: Maybe<Order_By>;
+  one_click_deployment_id?: Maybe<Order_By>;
+};
+
+/** This enum represents the different states one_click_deployment feature can be in. */
+export type One_Click_Deployment_States = {
+  __typename?: 'one_click_deployment_states';
+  description: Scalars['String'];
+  name: Scalars['String'];
+};
+
+/** aggregated selection of "one_click_deployment_states" */
+export type One_Click_Deployment_States_Aggregate = {
+  __typename?: 'one_click_deployment_states_aggregate';
+  aggregate?: Maybe<One_Click_Deployment_States_Aggregate_Fields>;
+  nodes: Array<One_Click_Deployment_States>;
+};
+
+/** aggregate fields of "one_click_deployment_states" */
+export type One_Click_Deployment_States_Aggregate_Fields = {
+  __typename?: 'one_click_deployment_states_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<One_Click_Deployment_States_Max_Fields>;
+  min?: Maybe<One_Click_Deployment_States_Min_Fields>;
+};
+
+/** aggregate fields of "one_click_deployment_states" */
+export type One_Click_Deployment_States_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<One_Click_Deployment_States_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/**
+ * Boolean expression to filter rows from the table "one_click_deployment_states".
+ * All fields are combined with a logical 'AND'.
+ */
+export type One_Click_Deployment_States_Bool_Exp = {
+  _and?: Maybe<Array<One_Click_Deployment_States_Bool_Exp>>;
+  _not?: Maybe<One_Click_Deployment_States_Bool_Exp>;
+  _or?: Maybe<Array<One_Click_Deployment_States_Bool_Exp>>;
+  description?: Maybe<String_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "one_click_deployment_states" */
+export enum One_Click_Deployment_States_Constraint {
+  /** unique or primary key constraint */
+  OneClickDeploymentStatesPkey = 'one_click_deployment_states_pkey',
+}
+
+export enum One_Click_Deployment_States_Enum {
+  /** Applying metadata, migration and seed data to the project */
+  ApplyingMetadataMigrationsSeeds = 'APPLYING_METADATA_MIGRATIONS_SEEDS',
+  /** Waiting for environment variables from user to be available */
+  AwaitingEnvironmentVariables = 'AWAITING_ENVIRONMENT_VARIABLES',
+  /** Cloning git repository */
+  CloningGitRepository = 'CLONING_GIT_REPOSITORY',
+  /** One click deployment executed successfully */
+  Completed = 'COMPLETED',
+  /** Some error occurred while deploying the git repository to hasura cloud project */
+  Error = 'ERROR',
+  /** One click deployment initiated */
+  Initialized = 'INITIALIZED',
+  /** Checking if the required environment variables are present in the project */
+  ReadingEnvironmentVariables = 'READING_ENVIRONMENT_VARIABLES',
+  /** No environment variables required from the user */
+  SufficientEnvironmentVariables = 'SUFFICIENT_ENVIRONMENT_VARIABLES',
+}
+
+/**
+ * Boolean expression to compare columns of type
+ * "one_click_deployment_states_enum". All fields are combined with logical 'AND'.
+ */
+export type One_Click_Deployment_States_Enum_Comparison_Exp = {
+  _eq?: Maybe<One_Click_Deployment_States_Enum>;
+  _in?: Maybe<Array<One_Click_Deployment_States_Enum>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _neq?: Maybe<One_Click_Deployment_States_Enum>;
+  _nin?: Maybe<Array<One_Click_Deployment_States_Enum>>;
+};
+
+/** input type for inserting data into table "one_click_deployment_states" */
+export type One_Click_Deployment_States_Insert_Input = {
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type One_Click_Deployment_States_Max_Fields = {
+  __typename?: 'one_click_deployment_states_max_fields';
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** aggregate min on columns */
+export type One_Click_Deployment_States_Min_Fields = {
+  __typename?: 'one_click_deployment_states_min_fields';
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** response of any mutation on the table "one_click_deployment_states" */
+export type One_Click_Deployment_States_Mutation_Response = {
+  __typename?: 'one_click_deployment_states_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<One_Click_Deployment_States>;
+};
+
+/** on_conflict condition type for table "one_click_deployment_states" */
+export type One_Click_Deployment_States_On_Conflict = {
+  constraint: One_Click_Deployment_States_Constraint;
+  update_columns?: Array<One_Click_Deployment_States_Update_Column>;
+  where?: Maybe<One_Click_Deployment_States_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "one_click_deployment_states". */
+export type One_Click_Deployment_States_Order_By = {
+  description?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: one_click_deployment_states */
+export type One_Click_Deployment_States_Pk_Columns_Input = {
+  name: Scalars['String'];
+};
+
+/** select columns of table "one_click_deployment_states" */
+export enum One_Click_Deployment_States_Select_Column {
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Name = 'name',
+}
+
+/** input type for updating data in table "one_click_deployment_states" */
+export type One_Click_Deployment_States_Set_Input = {
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "one_click_deployment_states" */
+export enum One_Click_Deployment_States_Update_Column {
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Name = 'name',
+}
+
+/** aggregate stddev on columns */
+export type One_Click_Deployment_Stddev_Fields = {
+  __typename?: 'one_click_deployment_stddev_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type One_Click_Deployment_Stddev_Pop_Fields = {
+  __typename?: 'one_click_deployment_stddev_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type One_Click_Deployment_Stddev_Samp_Fields = {
+  __typename?: 'one_click_deployment_stddev_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate sum on columns */
+export type One_Click_Deployment_Sum_Fields = {
+  __typename?: 'one_click_deployment_sum_fields';
+  id?: Maybe<Scalars['bigint']>;
+};
+
+/** update columns of table "one_click_deployment" */
+export enum One_Click_Deployment_Update_Column {
+  /** column name */
+  AdditionalInfo = 'additional_info',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  GitRepositoryBranch = 'git_repository_branch',
+  /** column name */
+  GitRepositoryUrl = 'git_repository_url',
+  /** column name */
+  HasuraDirectory = 'hasura_directory',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** aggregate var_pop on columns */
+export type One_Click_Deployment_Var_Pop_Fields = {
+  __typename?: 'one_click_deployment_var_pop_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type One_Click_Deployment_Var_Samp_Fields = {
+  __typename?: 'one_click_deployment_var_samp_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type One_Click_Deployment_Variance_Fields = {
+  __typename?: 'one_click_deployment_variance_fields';
+  id?: Maybe<Scalars['Float']>;
+};
+
+export type OneClickDeployResponse = {
+  __typename?: 'OneClickDeployResponse';
+  message?: Maybe<Scalars['String']>;
+  status: Scalars['String'];
 };
 
 /** OpenTelemetry Exporter Config */
@@ -26761,7 +28219,7 @@ export enum Project_Collaborator_Allowed_Schemas_Update_Column {
 export type Project_Collaborator_Invitations = {
   __typename?: 'project_collaborator_invitations';
   accepted_at?: Maybe<Scalars['timestamptz']>;
-  collaborator_email: Scalars['String'];
+  collaborator_email: Scalars['citext'];
   declined_at?: Maybe<Scalars['timestamptz']>;
   id: Scalars['uuid'];
   invited_at: Scalars['timestamptz'];
@@ -26860,7 +28318,7 @@ export type Project_Collaborator_Invitations_Bool_Exp = {
   _not?: Maybe<Project_Collaborator_Invitations_Bool_Exp>;
   _or?: Maybe<Array<Project_Collaborator_Invitations_Bool_Exp>>;
   accepted_at?: Maybe<Timestamptz_Comparison_Exp>;
-  collaborator_email?: Maybe<String_Comparison_Exp>;
+  collaborator_email?: Maybe<Citext_Comparison_Exp>;
   declined_at?: Maybe<Timestamptz_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   invited_at?: Maybe<Timestamptz_Comparison_Exp>;
@@ -26909,7 +28367,7 @@ export type Project_Collaborator_Invitations_Inc_Input = {
 /** input type for inserting data into table "project_collaborator_invitations" */
 export type Project_Collaborator_Invitations_Insert_Input = {
   accepted_at?: Maybe<Scalars['timestamptz']>;
-  collaborator_email?: Maybe<Scalars['String']>;
+  collaborator_email?: Maybe<Scalars['citext']>;
   declined_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   invited_at?: Maybe<Scalars['timestamptz']>;
@@ -26928,7 +28386,7 @@ export type Project_Collaborator_Invitations_Insert_Input = {
 export type Project_Collaborator_Invitations_Max_Fields = {
   __typename?: 'project_collaborator_invitations_max_fields';
   accepted_at?: Maybe<Scalars['timestamptz']>;
-  collaborator_email?: Maybe<Scalars['String']>;
+  collaborator_email?: Maybe<Scalars['citext']>;
   declined_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   invited_at?: Maybe<Scalars['timestamptz']>;
@@ -26957,7 +28415,7 @@ export type Project_Collaborator_Invitations_Max_Order_By = {
 export type Project_Collaborator_Invitations_Min_Fields = {
   __typename?: 'project_collaborator_invitations_min_fields';
   accepted_at?: Maybe<Scalars['timestamptz']>;
-  collaborator_email?: Maybe<Scalars['String']>;
+  collaborator_email?: Maybe<Scalars['citext']>;
   declined_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   invited_at?: Maybe<Scalars['timestamptz']>;
@@ -27055,7 +28513,7 @@ export enum Project_Collaborator_Invitations_Select_Column {
 /** input type for updating data in table "project_collaborator_invitations" */
 export type Project_Collaborator_Invitations_Set_Input = {
   accepted_at?: Maybe<Scalars['timestamptz']>;
-  collaborator_email?: Maybe<Scalars['String']>;
+  collaborator_email?: Maybe<Scalars['citext']>;
   declined_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   invited_at?: Maybe<Scalars['timestamptz']>;
@@ -30146,6 +31604,8 @@ export type Projects = {
   /** An object relationship */
   datadog_config?: Maybe<Datadog_Config>;
   endpoint: Scalars['String'];
+  /** An object relationship */
+  enterprise_users?: Maybe<Enterprise_Users>;
   /** An array relationship */
   heroku_integrations: Array<Heroku_Integrations>;
   /** An aggregate relationship */
@@ -30503,6 +31963,7 @@ export type Projects_Bool_Exp = {
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   datadog_config?: Maybe<Datadog_Config_Bool_Exp>;
   endpoint?: Maybe<String_Comparison_Exp>;
+  enterprise_users?: Maybe<Enterprise_Users_Bool_Exp>;
   heroku_integrations?: Maybe<Heroku_Integrations_Bool_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   invitations?: Maybe<Project_Collaborator_Invitations_Bool_Exp>;
@@ -30552,6 +32013,7 @@ export type Projects_Insert_Input = {
   created_at?: Maybe<Scalars['timestamptz']>;
   datadog_config?: Maybe<Datadog_Config_Obj_Rel_Insert_Input>;
   endpoint?: Maybe<Scalars['String']>;
+  enterprise_users?: Maybe<Enterprise_Users_Obj_Rel_Insert_Input>;
   heroku_integrations?: Maybe<Heroku_Integrations_Arr_Rel_Insert_Input>;
   id?: Maybe<Scalars['uuid']>;
   invitations?: Maybe<Project_Collaborator_Invitations_Arr_Rel_Insert_Input>;
@@ -30675,6 +32137,7 @@ export type Projects_Order_By = {
   created_at?: Maybe<Order_By>;
   datadog_config?: Maybe<Datadog_Config_Order_By>;
   endpoint?: Maybe<Order_By>;
+  enterprise_users?: Maybe<Enterprise_Users_Order_By>;
   heroku_integrations_aggregate?: Maybe<Heroku_Integrations_Aggregate_Order_By>;
   id?: Maybe<Order_By>;
   invitations_aggregate?: Maybe<Project_Collaborator_Invitations_Aggregate_Order_By>;
@@ -32222,6 +33685,12 @@ export type Query_Root = {
   email_log_aggregate: Email_Log_Aggregate;
   /** fetch data from the table: "email_log" using primary key columns */
   email_log_by_pk?: Maybe<Email_Log>;
+  /** fetch data from the table: "enterprise_users" */
+  enterprise_users: Array<Enterprise_Users>;
+  /** fetch aggregated fields from the table: "enterprise_users" */
+  enterprise_users_aggregate: Enterprise_Users_Aggregate;
+  /** fetch data from the table: "enterprise_users" using primary key columns */
+  enterprise_users_by_pk?: Maybe<Enterprise_Users>;
   /** fetch data from the table: "experiments" */
   experiments: Array<Experiments>;
   /** fetch aggregated fields from the table: "experiments" */
@@ -32283,8 +33752,17 @@ export type Query_Root = {
   gateway_worker_aggregate: Gateway_Worker_Aggregate;
   /** fetch data from the table: "gateway_worker" using primary key columns */
   gateway_worker_by_pk?: Maybe<Gateway_Worker>;
+  /** execute function "get_onboarding_activity_from_experiments_cohort" which returns "user_onboarding" */
+  get_onboarding_activity_from_experiments_cohort?: Maybe<User_Onboarding>;
+  /**
+   * execute function "get_onboarding_activity_from_experiments_cohort" and query
+   * aggregates on result of table type "user_onboarding"
+   */
+  get_onboarding_activity_from_experiments_cohort_aggregate: User_Onboarding_Aggregate;
   getBuildVersion: BuildVersion;
   getIntercomHash?: Maybe<IntercomHashResponse>;
+  /** gets invoice and receipt URLs from Stripe */
+  getInvoiceAndReceiptURLs?: Maybe<InvoiceAndReceiptUrLsResponse>;
   getLetsEncryptStatus?: Maybe<LetsEncryptStatus>;
   getProjectMigrationStatus?: Maybe<Array<Maybe<ProjectMigrationStatus>>>;
   getReportURL?: Maybe<GetReportUrlResponse>;
@@ -32472,6 +33950,24 @@ export type Query_Root = {
   onboarding_sample_db_config_aggregate: Onboarding_Sample_Db_Config_Aggregate;
   /** fetch data from the table: "onboarding_sample_db_config" using primary key columns */
   onboarding_sample_db_config_by_pk?: Maybe<Onboarding_Sample_Db_Config>;
+  /** fetch data from the table: "one_click_deployment" */
+  one_click_deployment: Array<One_Click_Deployment>;
+  /** fetch aggregated fields from the table: "one_click_deployment" */
+  one_click_deployment_aggregate: One_Click_Deployment_Aggregate;
+  /** fetch data from the table: "one_click_deployment" using primary key columns */
+  one_click_deployment_by_pk?: Maybe<One_Click_Deployment>;
+  /** fetch data from the table: "one_click_deployment_state_log" */
+  one_click_deployment_state_log: Array<One_Click_Deployment_State_Log>;
+  /** fetch aggregated fields from the table: "one_click_deployment_state_log" */
+  one_click_deployment_state_log_aggregate: One_Click_Deployment_State_Log_Aggregate;
+  /** fetch data from the table: "one_click_deployment_state_log" using primary key columns */
+  one_click_deployment_state_log_by_pk?: Maybe<One_Click_Deployment_State_Log>;
+  /** fetch data from the table: "one_click_deployment_states" */
+  one_click_deployment_states: Array<One_Click_Deployment_States>;
+  /** fetch aggregated fields from the table: "one_click_deployment_states" */
+  one_click_deployment_states_aggregate: One_Click_Deployment_States_Aggregate;
+  /** fetch data from the table: "one_click_deployment_states" using primary key columns */
+  one_click_deployment_states_by_pk?: Maybe<One_Click_Deployment_States>;
   /** fetch data from the table: "opentelemetry_config" */
   opentelemetry_config: Array<Opentelemetry_Config>;
   /** fetch aggregated fields from the table: "opentelemetry_config" */
@@ -32710,6 +34206,12 @@ export type Query_Root = {
   stripe_subscription_aggregate: Stripe_Subscription_Aggregate;
   /** fetch data from the table: "stripe_subscription" using primary key columns */
   stripe_subscription_by_pk?: Maybe<Stripe_Subscription>;
+  /** fetch data from the table: "super_connector_types" */
+  super_connector_types: Array<Super_Connector_Types>;
+  /** fetch aggregated fields from the table: "super_connector_types" */
+  super_connector_types_aggregate: Super_Connector_Types_Aggregate;
+  /** fetch data from the table: "super_connector_types" using primary key columns */
+  super_connector_types_by_pk?: Maybe<Super_Connector_Types>;
   /** fetch data from the table: "survey" */
   survey: Array<Survey>;
   /** fetch aggregated fields from the table: "survey" */
@@ -33375,6 +34877,26 @@ export type Query_RootEmail_Log_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
+export type Query_RootEnterprise_UsersArgs = {
+  distinct_on?: Maybe<Array<Enterprise_Users_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Enterprise_Users_Order_By>>;
+  where?: Maybe<Enterprise_Users_Bool_Exp>;
+};
+
+export type Query_RootEnterprise_Users_AggregateArgs = {
+  distinct_on?: Maybe<Array<Enterprise_Users_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Enterprise_Users_Order_By>>;
+  where?: Maybe<Enterprise_Users_Bool_Exp>;
+};
+
+export type Query_RootEnterprise_Users_By_PkArgs = {
+  id: Scalars['Int'];
+};
+
 export type Query_RootExperimentsArgs = {
   distinct_on?: Maybe<Array<Experiments_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -33578,6 +35100,29 @@ export type Query_RootGateway_Worker_AggregateArgs = {
 
 export type Query_RootGateway_Worker_By_PkArgs = {
   id: Scalars['uuid'];
+};
+
+export type Query_RootGet_Onboarding_Activity_From_Experiments_CohortArgs = {
+  args: Get_Onboarding_Activity_From_Experiments_Cohort_Args;
+  distinct_on?: Maybe<Array<User_Onboarding_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<User_Onboarding_Order_By>>;
+  where?: Maybe<User_Onboarding_Bool_Exp>;
+};
+
+export type Query_RootGet_Onboarding_Activity_From_Experiments_Cohort_AggregateArgs =
+  {
+    args: Get_Onboarding_Activity_From_Experiments_Cohort_Args;
+    distinct_on?: Maybe<Array<User_Onboarding_Select_Column>>;
+    limit?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    order_by?: Maybe<Array<User_Onboarding_Order_By>>;
+    where?: Maybe<User_Onboarding_Bool_Exp>;
+  };
+
+export type Query_RootGetInvoiceAndReceiptUrLsArgs = {
+  invoice_id: Scalars['String'];
 };
 
 export type Query_RootGetLetsEncryptStatusArgs = {
@@ -34212,6 +35757,66 @@ export type Query_RootOnboarding_Sample_Db_Config_AggregateArgs = {
 
 export type Query_RootOnboarding_Sample_Db_Config_By_PkArgs = {
   created_at: Scalars['timestamptz'];
+};
+
+export type Query_RootOne_Click_DeploymentArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_Order_By>>;
+  where?: Maybe<One_Click_Deployment_Bool_Exp>;
+};
+
+export type Query_RootOne_Click_Deployment_AggregateArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_Order_By>>;
+  where?: Maybe<One_Click_Deployment_Bool_Exp>;
+};
+
+export type Query_RootOne_Click_Deployment_By_PkArgs = {
+  id: Scalars['bigint'];
+};
+
+export type Query_RootOne_Click_Deployment_State_LogArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_State_Log_Order_By>>;
+  where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+};
+
+export type Query_RootOne_Click_Deployment_State_Log_AggregateArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_State_Log_Order_By>>;
+  where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+};
+
+export type Query_RootOne_Click_Deployment_State_Log_By_PkArgs = {
+  id: Scalars['bigint'];
+};
+
+export type Query_RootOne_Click_Deployment_StatesArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_States_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_States_Order_By>>;
+  where?: Maybe<One_Click_Deployment_States_Bool_Exp>;
+};
+
+export type Query_RootOne_Click_Deployment_States_AggregateArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_States_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_States_Order_By>>;
+  where?: Maybe<One_Click_Deployment_States_Bool_Exp>;
+};
+
+export type Query_RootOne_Click_Deployment_States_By_PkArgs = {
+  name: Scalars['String'];
 };
 
 export type Query_RootOpentelemetry_ConfigArgs = {
@@ -35066,6 +36671,26 @@ export type Query_RootStripe_Subscription_AggregateArgs = {
 export type Query_RootStripe_Subscription_By_PkArgs = {
   customer_id: Scalars['String'];
   subscription_id: Scalars['String'];
+};
+
+export type Query_RootSuper_Connector_TypesArgs = {
+  distinct_on?: Maybe<Array<Super_Connector_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Super_Connector_Types_Order_By>>;
+  where?: Maybe<Super_Connector_Types_Bool_Exp>;
+};
+
+export type Query_RootSuper_Connector_Types_AggregateArgs = {
+  distinct_on?: Maybe<Array<Super_Connector_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Super_Connector_Types_Order_By>>;
+  where?: Maybe<Super_Connector_Types_Bool_Exp>;
+};
+
+export type Query_RootSuper_Connector_Types_By_PkArgs = {
+  type: Scalars['String'];
 };
 
 export type Query_RootSurveyArgs = {
@@ -37294,6 +38919,12 @@ export type Subscription_Root = {
   email_log_aggregate: Email_Log_Aggregate;
   /** fetch data from the table: "email_log" using primary key columns */
   email_log_by_pk?: Maybe<Email_Log>;
+  /** fetch data from the table: "enterprise_users" */
+  enterprise_users: Array<Enterprise_Users>;
+  /** fetch aggregated fields from the table: "enterprise_users" */
+  enterprise_users_aggregate: Enterprise_Users_Aggregate;
+  /** fetch data from the table: "enterprise_users" using primary key columns */
+  enterprise_users_by_pk?: Maybe<Enterprise_Users>;
   /** fetch data from the table: "experiments" */
   experiments: Array<Experiments>;
   /** fetch aggregated fields from the table: "experiments" */
@@ -37352,6 +38983,13 @@ export type Subscription_Root = {
   gateway_worker_aggregate: Gateway_Worker_Aggregate;
   /** fetch data from the table: "gateway_worker" using primary key columns */
   gateway_worker_by_pk?: Maybe<Gateway_Worker>;
+  /** execute function "get_onboarding_activity_from_experiments_cohort" which returns "user_onboarding" */
+  get_onboarding_activity_from_experiments_cohort?: Maybe<User_Onboarding>;
+  /**
+   * execute function "get_onboarding_activity_from_experiments_cohort" and query
+   * aggregates on result of table type "user_onboarding"
+   */
+  get_onboarding_activity_from_experiments_cohort_aggregate: User_Onboarding_Aggregate;
   /** fetch data from the table: "github_email_type" */
   github_email_type: Array<Github_Email_Type>;
   /** fetch aggregated fields from the table: "github_email_type" */
@@ -37532,6 +39170,24 @@ export type Subscription_Root = {
   onboarding_sample_db_config_aggregate: Onboarding_Sample_Db_Config_Aggregate;
   /** fetch data from the table: "onboarding_sample_db_config" using primary key columns */
   onboarding_sample_db_config_by_pk?: Maybe<Onboarding_Sample_Db_Config>;
+  /** fetch data from the table: "one_click_deployment" */
+  one_click_deployment: Array<One_Click_Deployment>;
+  /** fetch aggregated fields from the table: "one_click_deployment" */
+  one_click_deployment_aggregate: One_Click_Deployment_Aggregate;
+  /** fetch data from the table: "one_click_deployment" using primary key columns */
+  one_click_deployment_by_pk?: Maybe<One_Click_Deployment>;
+  /** fetch data from the table: "one_click_deployment_state_log" */
+  one_click_deployment_state_log: Array<One_Click_Deployment_State_Log>;
+  /** fetch aggregated fields from the table: "one_click_deployment_state_log" */
+  one_click_deployment_state_log_aggregate: One_Click_Deployment_State_Log_Aggregate;
+  /** fetch data from the table: "one_click_deployment_state_log" using primary key columns */
+  one_click_deployment_state_log_by_pk?: Maybe<One_Click_Deployment_State_Log>;
+  /** fetch data from the table: "one_click_deployment_states" */
+  one_click_deployment_states: Array<One_Click_Deployment_States>;
+  /** fetch aggregated fields from the table: "one_click_deployment_states" */
+  one_click_deployment_states_aggregate: One_Click_Deployment_States_Aggregate;
+  /** fetch data from the table: "one_click_deployment_states" using primary key columns */
+  one_click_deployment_states_by_pk?: Maybe<One_Click_Deployment_States>;
   /** fetch data from the table: "opentelemetry_config" */
   opentelemetry_config: Array<Opentelemetry_Config>;
   /** fetch aggregated fields from the table: "opentelemetry_config" */
@@ -37768,6 +39424,12 @@ export type Subscription_Root = {
   stripe_subscription_aggregate: Stripe_Subscription_Aggregate;
   /** fetch data from the table: "stripe_subscription" using primary key columns */
   stripe_subscription_by_pk?: Maybe<Stripe_Subscription>;
+  /** fetch data from the table: "super_connector_types" */
+  super_connector_types: Array<Super_Connector_Types>;
+  /** fetch aggregated fields from the table: "super_connector_types" */
+  super_connector_types_aggregate: Super_Connector_Types_Aggregate;
+  /** fetch data from the table: "super_connector_types" using primary key columns */
+  super_connector_types_by_pk?: Maybe<Super_Connector_Types>;
   /** fetch data from the table: "survey" */
   survey: Array<Survey>;
   /** fetch aggregated fields from the table: "survey" */
@@ -38431,6 +40093,26 @@ export type Subscription_RootEmail_Log_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
+export type Subscription_RootEnterprise_UsersArgs = {
+  distinct_on?: Maybe<Array<Enterprise_Users_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Enterprise_Users_Order_By>>;
+  where?: Maybe<Enterprise_Users_Bool_Exp>;
+};
+
+export type Subscription_RootEnterprise_Users_AggregateArgs = {
+  distinct_on?: Maybe<Array<Enterprise_Users_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Enterprise_Users_Order_By>>;
+  where?: Maybe<Enterprise_Users_Bool_Exp>;
+};
+
+export type Subscription_RootEnterprise_Users_By_PkArgs = {
+  id: Scalars['Int'];
+};
+
 export type Subscription_RootExperimentsArgs = {
   distinct_on?: Maybe<Array<Experiments_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -38630,6 +40312,26 @@ export type Subscription_RootGateway_Worker_AggregateArgs = {
 export type Subscription_RootGateway_Worker_By_PkArgs = {
   id: Scalars['uuid'];
 };
+
+export type Subscription_RootGet_Onboarding_Activity_From_Experiments_CohortArgs =
+  {
+    args: Get_Onboarding_Activity_From_Experiments_Cohort_Args;
+    distinct_on?: Maybe<Array<User_Onboarding_Select_Column>>;
+    limit?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    order_by?: Maybe<Array<User_Onboarding_Order_By>>;
+    where?: Maybe<User_Onboarding_Bool_Exp>;
+  };
+
+export type Subscription_RootGet_Onboarding_Activity_From_Experiments_Cohort_AggregateArgs =
+  {
+    args: Get_Onboarding_Activity_From_Experiments_Cohort_Args;
+    distinct_on?: Maybe<Array<User_Onboarding_Select_Column>>;
+    limit?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    order_by?: Maybe<Array<User_Onboarding_Order_By>>;
+    where?: Maybe<User_Onboarding_Bool_Exp>;
+  };
 
 export type Subscription_RootGithub_Email_TypeArgs = {
   distinct_on?: Maybe<Array<Github_Email_Type_Select_Column>>;
@@ -39246,6 +40948,66 @@ export type Subscription_RootOnboarding_Sample_Db_Config_AggregateArgs = {
 
 export type Subscription_RootOnboarding_Sample_Db_Config_By_PkArgs = {
   created_at: Scalars['timestamptz'];
+};
+
+export type Subscription_RootOne_Click_DeploymentArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_Order_By>>;
+  where?: Maybe<One_Click_Deployment_Bool_Exp>;
+};
+
+export type Subscription_RootOne_Click_Deployment_AggregateArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_Order_By>>;
+  where?: Maybe<One_Click_Deployment_Bool_Exp>;
+};
+
+export type Subscription_RootOne_Click_Deployment_By_PkArgs = {
+  id: Scalars['bigint'];
+};
+
+export type Subscription_RootOne_Click_Deployment_State_LogArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_State_Log_Order_By>>;
+  where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+};
+
+export type Subscription_RootOne_Click_Deployment_State_Log_AggregateArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_State_Log_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_State_Log_Order_By>>;
+  where?: Maybe<One_Click_Deployment_State_Log_Bool_Exp>;
+};
+
+export type Subscription_RootOne_Click_Deployment_State_Log_By_PkArgs = {
+  id: Scalars['bigint'];
+};
+
+export type Subscription_RootOne_Click_Deployment_StatesArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_States_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_States_Order_By>>;
+  where?: Maybe<One_Click_Deployment_States_Bool_Exp>;
+};
+
+export type Subscription_RootOne_Click_Deployment_States_AggregateArgs = {
+  distinct_on?: Maybe<Array<One_Click_Deployment_States_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<One_Click_Deployment_States_Order_By>>;
+  where?: Maybe<One_Click_Deployment_States_Bool_Exp>;
+};
+
+export type Subscription_RootOne_Click_Deployment_States_By_PkArgs = {
+  name: Scalars['String'];
 };
 
 export type Subscription_RootOpentelemetry_ConfigArgs = {
@@ -40112,6 +41874,26 @@ export type Subscription_RootStripe_Subscription_By_PkArgs = {
   subscription_id: Scalars['String'];
 };
 
+export type Subscription_RootSuper_Connector_TypesArgs = {
+  distinct_on?: Maybe<Array<Super_Connector_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Super_Connector_Types_Order_By>>;
+  where?: Maybe<Super_Connector_Types_Bool_Exp>;
+};
+
+export type Subscription_RootSuper_Connector_Types_AggregateArgs = {
+  distinct_on?: Maybe<Array<Super_Connector_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Super_Connector_Types_Order_By>>;
+  where?: Maybe<Super_Connector_Types_Bool_Exp>;
+};
+
+export type Subscription_RootSuper_Connector_Types_By_PkArgs = {
+  type: Scalars['String'];
+};
+
 export type Subscription_RootSurveyArgs = {
   distinct_on?: Maybe<Array<Survey_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -40732,6 +42514,132 @@ export type SuccessOrError = {
   status: Scalars['String'];
 };
 
+/** Hasua enum to capture different super connector types  in infra */
+export type Super_Connector_Types = {
+  __typename?: 'super_connector_types';
+  description: Scalars['String'];
+  type: Scalars['String'];
+};
+
+/** aggregated selection of "super_connector_types" */
+export type Super_Connector_Types_Aggregate = {
+  __typename?: 'super_connector_types_aggregate';
+  aggregate?: Maybe<Super_Connector_Types_Aggregate_Fields>;
+  nodes: Array<Super_Connector_Types>;
+};
+
+/** aggregate fields of "super_connector_types" */
+export type Super_Connector_Types_Aggregate_Fields = {
+  __typename?: 'super_connector_types_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Super_Connector_Types_Max_Fields>;
+  min?: Maybe<Super_Connector_Types_Min_Fields>;
+};
+
+/** aggregate fields of "super_connector_types" */
+export type Super_Connector_Types_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Super_Connector_Types_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "super_connector_types". All fields are combined with a logical 'AND'. */
+export type Super_Connector_Types_Bool_Exp = {
+  _and?: Maybe<Array<Super_Connector_Types_Bool_Exp>>;
+  _not?: Maybe<Super_Connector_Types_Bool_Exp>;
+  _or?: Maybe<Array<Super_Connector_Types_Bool_Exp>>;
+  description?: Maybe<String_Comparison_Exp>;
+  type?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "super_connector_types" */
+export enum Super_Connector_Types_Constraint {
+  /** unique or primary key constraint */
+  SuperConnectorTypesPkey = 'super_connector_types_pkey',
+}
+
+export enum Super_Connector_Types_Enum {
+  /** Connect to super connector which is run along side graphql-engine-multitenant */
+  Local = 'local',
+}
+
+/** Boolean expression to compare columns of type "super_connector_types_enum". All fields are combined with logical 'AND'. */
+export type Super_Connector_Types_Enum_Comparison_Exp = {
+  _eq?: Maybe<Super_Connector_Types_Enum>;
+  _in?: Maybe<Array<Super_Connector_Types_Enum>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _neq?: Maybe<Super_Connector_Types_Enum>;
+  _nin?: Maybe<Array<Super_Connector_Types_Enum>>;
+};
+
+/** input type for inserting data into table "super_connector_types" */
+export type Super_Connector_Types_Insert_Input = {
+  description?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Super_Connector_Types_Max_Fields = {
+  __typename?: 'super_connector_types_max_fields';
+  description?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** aggregate min on columns */
+export type Super_Connector_Types_Min_Fields = {
+  __typename?: 'super_connector_types_min_fields';
+  description?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** response of any mutation on the table "super_connector_types" */
+export type Super_Connector_Types_Mutation_Response = {
+  __typename?: 'super_connector_types_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Super_Connector_Types>;
+};
+
+/** on_conflict condition type for table "super_connector_types" */
+export type Super_Connector_Types_On_Conflict = {
+  constraint: Super_Connector_Types_Constraint;
+  update_columns?: Array<Super_Connector_Types_Update_Column>;
+  where?: Maybe<Super_Connector_Types_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "super_connector_types". */
+export type Super_Connector_Types_Order_By = {
+  description?: Maybe<Order_By>;
+  type?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: super_connector_types */
+export type Super_Connector_Types_Pk_Columns_Input = {
+  type: Scalars['String'];
+};
+
+/** select columns of table "super_connector_types" */
+export enum Super_Connector_Types_Select_Column {
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Type = 'type',
+}
+
+/** input type for updating data in table "super_connector_types" */
+export type Super_Connector_Types_Set_Input = {
+  description?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "super_connector_types" */
+export enum Super_Connector_Types_Update_Column {
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Type = 'type',
+}
+
 export type SupportTicketDetails = {
   __typename?: 'SupportTicketDetails';
   body: Scalars['String'];
@@ -40766,6 +42674,8 @@ export type Survey = {
   ended_at?: Maybe<Scalars['timestamptz']>;
   requested_by: Scalars['String'];
   started_at: Scalars['timestamptz'];
+  survey_description?: Maybe<Scalars['String']>;
+  survey_header?: Maybe<Scalars['String']>;
   survey_name: Scalars['String'];
   /** An array relationship */
   survey_questions: Array<Survey_Question>;
@@ -40823,6 +42733,8 @@ export type Survey_Bool_Exp = {
   ended_at?: Maybe<Timestamptz_Comparison_Exp>;
   requested_by?: Maybe<String_Comparison_Exp>;
   started_at?: Maybe<Timestamptz_Comparison_Exp>;
+  survey_description?: Maybe<String_Comparison_Exp>;
+  survey_header?: Maybe<String_Comparison_Exp>;
   survey_name?: Maybe<String_Comparison_Exp>;
   survey_questions?: Maybe<Survey_Question_Bool_Exp>;
   updated_at?: Maybe<Timestamptz_Comparison_Exp>;
@@ -40841,6 +42753,8 @@ export type Survey_Insert_Input = {
   ended_at?: Maybe<Scalars['timestamptz']>;
   requested_by?: Maybe<Scalars['String']>;
   started_at?: Maybe<Scalars['timestamptz']>;
+  survey_description?: Maybe<Scalars['String']>;
+  survey_header?: Maybe<Scalars['String']>;
   survey_name?: Maybe<Scalars['String']>;
   survey_questions?: Maybe<Survey_Question_Arr_Rel_Insert_Input>;
   updated_at?: Maybe<Scalars['timestamptz']>;
@@ -40854,6 +42768,8 @@ export type Survey_Max_Fields = {
   ended_at?: Maybe<Scalars['timestamptz']>;
   requested_by?: Maybe<Scalars['String']>;
   started_at?: Maybe<Scalars['timestamptz']>;
+  survey_description?: Maybe<Scalars['String']>;
+  survey_header?: Maybe<Scalars['String']>;
   survey_name?: Maybe<Scalars['String']>;
   updated_at?: Maybe<Scalars['timestamptz']>;
   updated_by?: Maybe<Scalars['String']>;
@@ -40866,6 +42782,8 @@ export type Survey_Min_Fields = {
   ended_at?: Maybe<Scalars['timestamptz']>;
   requested_by?: Maybe<Scalars['String']>;
   started_at?: Maybe<Scalars['timestamptz']>;
+  survey_description?: Maybe<Scalars['String']>;
+  survey_header?: Maybe<Scalars['String']>;
   survey_name?: Maybe<Scalars['String']>;
   updated_at?: Maybe<Scalars['timestamptz']>;
   updated_by?: Maybe<Scalars['String']>;
@@ -40900,6 +42818,8 @@ export type Survey_Order_By = {
   ended_at?: Maybe<Order_By>;
   requested_by?: Maybe<Order_By>;
   started_at?: Maybe<Order_By>;
+  survey_description?: Maybe<Order_By>;
+  survey_header?: Maybe<Order_By>;
   survey_name?: Maybe<Order_By>;
   survey_questions_aggregate?: Maybe<Survey_Question_Aggregate_Order_By>;
   updated_at?: Maybe<Order_By>;
@@ -41837,6 +43757,10 @@ export enum Survey_Select_Column {
   /** column name */
   StartedAt = 'started_at',
   /** column name */
+  SurveyDescription = 'survey_description',
+  /** column name */
+  SurveyHeader = 'survey_header',
+  /** column name */
   SurveyName = 'survey_name',
   /** column name */
   UpdatedAt = 'updated_at',
@@ -41850,6 +43774,8 @@ export type Survey_Set_Input = {
   ended_at?: Maybe<Scalars['timestamptz']>;
   requested_by?: Maybe<Scalars['String']>;
   started_at?: Maybe<Scalars['timestamptz']>;
+  survey_description?: Maybe<Scalars['String']>;
+  survey_header?: Maybe<Scalars['String']>;
   survey_name?: Maybe<Scalars['String']>;
   updated_at?: Maybe<Scalars['timestamptz']>;
   updated_by?: Maybe<Scalars['String']>;
@@ -41865,6 +43791,10 @@ export enum Survey_Update_Column {
   RequestedBy = 'requested_by',
   /** column name */
   StartedAt = 'started_at',
+  /** column name */
+  SurveyDescription = 'survey_description',
+  /** column name */
+  SurveyHeader = 'survey_header',
   /** column name */
   SurveyName = 'survey_name',
   /** column name */
@@ -45163,12 +47093,20 @@ export type User_Coupon_Variance_Order_By = {
 /** Captures user onboarding details and progress */
 export type User_Onboarding = {
   __typename?: 'user_onboarding';
+  activity?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   details?: Maybe<Scalars['String']>;
   is_onboarded: Scalars['Boolean'];
   target: Scalars['String'];
+  updated_at?: Maybe<Scalars['timestamptz']>;
   /** An object relationship */
   user: Users;
   user_id: Scalars['uuid'];
+};
+
+/** Captures user onboarding details and progress */
+export type User_OnboardingActivityArgs = {
+  path?: Maybe<Scalars['String']>;
 };
 
 /** aggregated selection of "user_onboarding" */
@@ -45199,6 +47137,11 @@ export type User_Onboarding_Aggregate_Order_By = {
   min?: Maybe<User_Onboarding_Min_Order_By>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type User_Onboarding_Append_Input = {
+  activity?: Maybe<Scalars['jsonb']>;
+};
+
 /** input type for inserting array relation for remote table "user_onboarding" */
 export type User_Onboarding_Arr_Rel_Insert_Input = {
   data: Array<User_Onboarding_Insert_Input>;
@@ -45211,9 +47154,12 @@ export type User_Onboarding_Bool_Exp = {
   _and?: Maybe<Array<User_Onboarding_Bool_Exp>>;
   _not?: Maybe<User_Onboarding_Bool_Exp>;
   _or?: Maybe<Array<User_Onboarding_Bool_Exp>>;
+  activity?: Maybe<Jsonb_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
   details?: Maybe<String_Comparison_Exp>;
   is_onboarded?: Maybe<Boolean_Comparison_Exp>;
   target?: Maybe<String_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   user?: Maybe<Users_Bool_Exp>;
   user_id?: Maybe<Uuid_Comparison_Exp>;
 };
@@ -45224,11 +47170,32 @@ export enum User_Onboarding_Constraint {
   UserOnboardingPkey = 'user_onboarding_pkey',
 }
 
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type User_Onboarding_Delete_At_Path_Input = {
+  activity?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type User_Onboarding_Delete_Elem_Input = {
+  activity?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type User_Onboarding_Delete_Key_Input = {
+  activity?: Maybe<Scalars['String']>;
+};
+
 /** input type for inserting data into table "user_onboarding" */
 export type User_Onboarding_Insert_Input = {
+  activity?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   details?: Maybe<Scalars['String']>;
   is_onboarded?: Maybe<Scalars['Boolean']>;
   target?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   user?: Maybe<Users_Obj_Rel_Insert_Input>;
   user_id?: Maybe<Scalars['uuid']>;
 };
@@ -45236,30 +47203,38 @@ export type User_Onboarding_Insert_Input = {
 /** aggregate max on columns */
 export type User_Onboarding_Max_Fields = {
   __typename?: 'user_onboarding_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
   details?: Maybe<Scalars['String']>;
   target?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   user_id?: Maybe<Scalars['uuid']>;
 };
 
 /** order by max() on columns of table "user_onboarding" */
 export type User_Onboarding_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
   details?: Maybe<Order_By>;
   target?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
   user_id?: Maybe<Order_By>;
 };
 
 /** aggregate min on columns */
 export type User_Onboarding_Min_Fields = {
   __typename?: 'user_onboarding_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
   details?: Maybe<Scalars['String']>;
   target?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   user_id?: Maybe<Scalars['uuid']>;
 };
 
 /** order by min() on columns of table "user_onboarding" */
 export type User_Onboarding_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
   details?: Maybe<Order_By>;
   target?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
   user_id?: Maybe<Order_By>;
 };
 
@@ -45281,9 +47256,12 @@ export type User_Onboarding_On_Conflict = {
 
 /** Ordering options when selecting data from "user_onboarding". */
 export type User_Onboarding_Order_By = {
+  activity?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
   details?: Maybe<Order_By>;
   is_onboarded?: Maybe<Order_By>;
   target?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
   user?: Maybe<Users_Order_By>;
   user_id?: Maybe<Order_By>;
 };
@@ -45294,34 +47272,54 @@ export type User_Onboarding_Pk_Columns_Input = {
   user_id: Scalars['uuid'];
 };
 
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type User_Onboarding_Prepend_Input = {
+  activity?: Maybe<Scalars['jsonb']>;
+};
+
 /** select columns of table "user_onboarding" */
 export enum User_Onboarding_Select_Column {
+  /** column name */
+  Activity = 'activity',
+  /** column name */
+  CreatedAt = 'created_at',
   /** column name */
   Details = 'details',
   /** column name */
   IsOnboarded = 'is_onboarded',
   /** column name */
   Target = 'target',
+  /** column name */
+  UpdatedAt = 'updated_at',
   /** column name */
   UserId = 'user_id',
 }
 
 /** input type for updating data in table "user_onboarding" */
 export type User_Onboarding_Set_Input = {
+  activity?: Maybe<Scalars['jsonb']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   details?: Maybe<Scalars['String']>;
   is_onboarded?: Maybe<Scalars['Boolean']>;
   target?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   user_id?: Maybe<Scalars['uuid']>;
 };
 
 /** update columns of table "user_onboarding" */
 export enum User_Onboarding_Update_Column {
   /** column name */
+  Activity = 'activity',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   Details = 'details',
   /** column name */
   IsOnboarded = 'is_onboarded',
   /** column name */
   Target = 'target',
+  /** column name */
+  UpdatedAt = 'updated_at',
   /** column name */
   UserId = 'user_id',
 }
@@ -46236,6 +48234,8 @@ export type Users = {
   created_at: Scalars['timestamptz'];
   customer_id?: Maybe<Scalars['String']>;
   email: Scalars['String'];
+  /** An object relationship */
+  enterprise_users?: Maybe<Enterprise_Users>;
   /** An array relationship */
   feature_accesses: Array<Feature_Access>;
   /** An aggregate relationship */
@@ -46250,6 +48250,7 @@ export type Users = {
   last_attempt?: Maybe<Scalars['timestamptz']>;
   locked?: Maybe<Scalars['timestamptz']>;
   max_project_limit: Scalars['Int'];
+  name?: Maybe<Scalars['String']>;
   /** An array relationship */
   onboarding: Array<User_Onboarding>;
   /** An aggregate relationship */
@@ -46564,6 +48565,7 @@ export type Users_Bool_Exp = {
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   customer_id?: Maybe<String_Comparison_Exp>;
   email?: Maybe<String_Comparison_Exp>;
+  enterprise_users?: Maybe<Enterprise_Users_Bool_Exp>;
   feature_accesses?: Maybe<Feature_Access_Bool_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   invoice_receipt_email?: Maybe<String_Comparison_Exp>;
@@ -46572,6 +48574,7 @@ export type Users_Bool_Exp = {
   last_attempt?: Maybe<Timestamptz_Comparison_Exp>;
   locked?: Maybe<Timestamptz_Comparison_Exp>;
   max_project_limit?: Maybe<Int_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
   onboarding?: Maybe<User_Onboarding_Bool_Exp>;
   password?: Maybe<String_Comparison_Exp>;
   payment_methods?: Maybe<Payment_Method_Bool_Exp>;
@@ -46622,6 +48625,7 @@ export type Users_Insert_Input = {
   created_at?: Maybe<Scalars['timestamptz']>;
   customer_id?: Maybe<Scalars['String']>;
   email?: Maybe<Scalars['String']>;
+  enterprise_users?: Maybe<Enterprise_Users_Obj_Rel_Insert_Input>;
   feature_accesses?: Maybe<Feature_Access_Arr_Rel_Insert_Input>;
   id?: Maybe<Scalars['uuid']>;
   invoice_receipt_email?: Maybe<Scalars['String']>;
@@ -46630,6 +48634,7 @@ export type Users_Insert_Input = {
   last_attempt?: Maybe<Scalars['timestamptz']>;
   locked?: Maybe<Scalars['timestamptz']>;
   max_project_limit?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
   onboarding?: Maybe<User_Onboarding_Arr_Rel_Insert_Input>;
   password?: Maybe<Scalars['String']>;
   payment_methods?: Maybe<Payment_Method_Arr_Rel_Insert_Input>;
@@ -46664,6 +48669,7 @@ export type Users_Max_Fields = {
   last_attempt?: Maybe<Scalars['timestamptz']>;
   locked?: Maybe<Scalars['timestamptz']>;
   max_project_limit?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
   password?: Maybe<Scalars['String']>;
   recover_selector?: Maybe<Scalars['String']>;
   recover_token_expiry?: Maybe<Scalars['timestamptz']>;
@@ -46689,6 +48695,7 @@ export type Users_Min_Fields = {
   last_attempt?: Maybe<Scalars['timestamptz']>;
   locked?: Maybe<Scalars['timestamptz']>;
   max_project_limit?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
   password?: Maybe<Scalars['String']>;
   recover_selector?: Maybe<Scalars['String']>;
   recover_token_expiry?: Maybe<Scalars['timestamptz']>;
@@ -46735,6 +48742,7 @@ export type Users_Order_By = {
   created_at?: Maybe<Order_By>;
   customer_id?: Maybe<Order_By>;
   email?: Maybe<Order_By>;
+  enterprise_users?: Maybe<Enterprise_Users_Order_By>;
   feature_accesses_aggregate?: Maybe<Feature_Access_Aggregate_Order_By>;
   id?: Maybe<Order_By>;
   invoice_receipt_email?: Maybe<Order_By>;
@@ -46743,6 +48751,7 @@ export type Users_Order_By = {
   last_attempt?: Maybe<Order_By>;
   locked?: Maybe<Order_By>;
   max_project_limit?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
   onboarding_aggregate?: Maybe<User_Onboarding_Aggregate_Order_By>;
   password?: Maybe<Order_By>;
   payment_methods_aggregate?: Maybe<Payment_Method_Aggregate_Order_By>;
@@ -46964,6 +48973,8 @@ export enum Users_Select_Column {
   /** column name */
   MaxProjectLimit = 'max_project_limit',
   /** column name */
+  Name = 'name',
+  /** column name */
   Password = 'password',
   /** column name */
   RecoverSelector = 'recover_selector',
@@ -46997,6 +49008,7 @@ export type Users_Set_Input = {
   last_attempt?: Maybe<Scalars['timestamptz']>;
   locked?: Maybe<Scalars['timestamptz']>;
   max_project_limit?: Maybe<Scalars['Int']>;
+  name?: Maybe<Scalars['String']>;
   password?: Maybe<Scalars['String']>;
   recover_selector?: Maybe<Scalars['String']>;
   recover_token_expiry?: Maybe<Scalars['timestamptz']>;
@@ -47073,6 +49085,8 @@ export enum Users_Update_Column {
   Locked = 'locked',
   /** column name */
   MaxProjectLimit = 'max_project_limit',
+  /** column name */
+  Name = 'name',
   /** column name */
   Password = 'password',
   /** column name */
@@ -48720,4 +50734,190 @@ export type FetchAllExperimentsDataQuery = {
     experiment: Experiments_Enum;
     activity?: any | null;
   }>;
+};
+
+export type GetTenantEnvQueryVariables = Exact<{
+  tenantId: Scalars['uuid'];
+}>;
+
+export type GetTenantEnvQuery = {
+  __typename?: 'query_root';
+  getTenantEnv?: {
+    __typename?: 'TenantEnv';
+    hash: string;
+    envVars: any;
+  } | null;
+};
+
+export type Unnamed_1_MutationVariables = Exact<{ [key: string]: never }>;
+
+export type Unnamed_1_Mutation = {
+  __typename?: 'mutation_root';
+  getHerokuSession?: {
+    __typename?: 'HerokuSession';
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    token_type: string;
+  } | null;
+};
+
+export type TrackExperimentsCohortActivityMutationVariables = Exact<{
+  projectId: Scalars['uuid'];
+  experimentId: Scalars['String'];
+  kind: Scalars['String'];
+  error_code?: Maybe<Scalars['String']>;
+}>;
+
+export type TrackExperimentsCohortActivityMutation = {
+  __typename?: 'mutation_root';
+  trackExperimentsCohortActivity?: {
+    __typename?: 'SuccessOrError';
+    status: string;
+  } | null;
+};
+
+export type UpdateTenantMutationVariables = Exact<{
+  tenantId: Scalars['uuid'];
+  currentHash: Scalars['String'];
+  envs: Array<UpdateEnvObject> | UpdateEnvObject;
+}>;
+
+export type UpdateTenantMutation = {
+  __typename?: 'mutation_root';
+  updateTenantEnv?: {
+    __typename?: 'TenantEnv';
+    hash: string;
+    envVars: any;
+  } | null;
+};
+
+export type NeonCreateDatabaseMutationVariables = Exact<{
+  projectId: Scalars['uuid'];
+}>;
+
+export type NeonCreateDatabaseMutation = {
+  __typename?: 'mutation_root';
+  neonCreateDatabase?: {
+    __typename?: 'NeonCreateDatabaseResponse';
+    databaseUrl?: string | null;
+    email?: string | null;
+    envVar?: string | null;
+    isAuthenticated: boolean;
+  } | null;
+};
+
+export type NeonTokenExchangeMutationVariables = Exact<{
+  code: Scalars['String'];
+  state: Scalars['String'];
+  projectId: Scalars['uuid'];
+}>;
+
+export type NeonTokenExchangeMutation = {
+  __typename?: 'mutation_root';
+  neonExchangeOAuthToken: {
+    __typename?: 'NeonExchangeTokenResponse';
+    accessToken: string;
+    email: string;
+  };
+};
+
+export type CheckDbLatencyMutationVariables = Exact<{
+  project_id: Scalars['uuid'];
+}>;
+
+export type CheckDbLatencyMutation = {
+  __typename?: 'mutation_root';
+  checkDBLatency?: {
+    __typename?: 'CheckDBLatencyOutput';
+    db_latency_job_id: any;
+  } | null;
+};
+
+export type Unnamed_2_QueryVariables = Exact<{
+  id: Scalars['uuid'];
+}>;
+
+export type Unnamed_2_Query = {
+  __typename?: 'query_root';
+  jobs_by_pk?: {
+    __typename?: 'jobs';
+    id: any;
+    status: string;
+    tasks: Array<{
+      __typename?: 'tasks';
+      id: any;
+      name: string;
+      task_events: Array<{
+        __typename?: 'task_event';
+        id: any;
+        event_type: string;
+        public_event_data?: any | null;
+        error?: string | null;
+      }>;
+    }>;
+  } | null;
+};
+
+export type Unnamed_3_MutationVariables = Exact<{
+  jobId: Scalars['uuid'];
+  projectId: Scalars['uuid'];
+  isLatencyDisplayed: Scalars['Boolean'];
+  datasDifferenceInMilliseconds: Scalars['Int'];
+}>;
+
+export type Unnamed_3_Mutation = {
+  __typename?: 'mutation_root';
+  insert_db_latency_one?: { __typename?: 'db_latency'; id: any } | null;
+};
+
+export type Unnamed_4_MutationVariables = Exact<{
+  rowId: Scalars['uuid'];
+  isChangeRegionClicked: Scalars['Boolean'];
+}>;
+
+export type Unnamed_4_Mutation = {
+  __typename?: 'mutation_root';
+  update_db_latency?: {
+    __typename?: 'db_latency_mutation_response';
+    affected_rows: number;
+    returning: Array<{
+      __typename?: 'db_latency';
+      id: any;
+      is_change_region_clicked: boolean;
+    }>;
+  } | null;
+};
+
+export type FetchOneClickDeploymentStateLogSubscriptionSubscriptionVariables =
+  Exact<{
+    id: Scalars['bigint'];
+  }>;
+
+export type FetchOneClickDeploymentStateLogSubscriptionSubscription = {
+  __typename?: 'subscription_root';
+  one_click_deployment_by_pk?: {
+    __typename?: 'one_click_deployment';
+    id: any;
+    one_click_deployment_state_logs: Array<{
+      __typename?: 'one_click_deployment_state_log';
+      id: any;
+      additional_info: any;
+      from_state: One_Click_Deployment_States_Enum;
+      to_state: One_Click_Deployment_States_Enum;
+    }>;
+  } | null;
+};
+
+export type TriggerOneClickDeploymentMutationVariables = Exact<{
+  projectId: Scalars['uuid'];
+}>;
+
+export type TriggerOneClickDeploymentMutation = {
+  __typename?: 'mutation_root';
+  triggerOneClickDeployment?: {
+    __typename?: 'OneClickDeployResponse';
+    message?: string | null;
+    status: string;
+  } | null;
 };

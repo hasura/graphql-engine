@@ -220,7 +220,7 @@ export const PrometheusSettingsForm: React.VFC<PrometheusFormProps> = ({
     );
     PrometheusSettings = () => (
       <>
-        <PrometheusAnimation />
+        <PrometheusAnimation enabled />
         <PrometheusFormFields
           prometheusUrl={prometheusUrl}
           prometheusConfig={prometheusConfig}

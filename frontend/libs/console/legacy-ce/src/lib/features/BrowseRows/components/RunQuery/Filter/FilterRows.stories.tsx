@@ -5,6 +5,7 @@ import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
+import { TableColumn } from '@/features/DataSource';
 import { FilterRows } from './FilterRows';
 
 export default {
@@ -12,10 +13,10 @@ export default {
   component: FilterRows,
 } as ComponentMeta<typeof FilterRows>;
 
-const columns = [
+const columns: TableColumn[] = [
   {
     name: 'ID',
-    dataType: 'int',
+    dataType: 'number',
     graphQLProperties: {
       name: 'ID',
       scalarType: 'Int',
@@ -23,7 +24,7 @@ const columns = [
   },
   {
     name: 'FirstName',
-    dataType: 'text',
+    dataType: 'string',
     graphQLProperties: {
       name: 'FirstName',
       scalarType: 'String',
@@ -31,7 +32,7 @@ const columns = [
   },
   {
     name: 'UpdatedAt',
-    dataType: 'datetime',
+    dataType: 'string',
     graphQLProperties: {
       name: 'UpdatedAtCustomName',
       scalarType: 'String',

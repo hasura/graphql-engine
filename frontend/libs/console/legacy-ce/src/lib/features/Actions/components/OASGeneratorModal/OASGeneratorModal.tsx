@@ -30,6 +30,8 @@ export const OasGeneratorModal = (props: OasGeneratorModalProps) => {
           onClose={onClose}
           callToDeny="Cancel"
           callToAction="Generate Action"
+          onSubmitAnalyticsName="action-tab-btn-generate-import-action-from-openapi"
+          onCancelAnalyticsName="action-tab-btn-cancel-import-action-from-openapi"
           disabled={!values}
         />
       }

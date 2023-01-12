@@ -9,7 +9,7 @@ import {
 import {
   downloadObjectAsJsonFile,
   getCurrTimeForFileName,
-} from '../../../Common/utils/jsUtils';
+} from '../../../Common/utils/export.utils';
 import { exportMetadata } from '../../../../metadata/actions';
 
 class ExportMetadata extends Component {

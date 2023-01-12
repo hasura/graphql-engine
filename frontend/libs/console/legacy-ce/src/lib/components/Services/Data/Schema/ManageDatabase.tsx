@@ -10,6 +10,8 @@ import {
   FaRedoAlt,
   FaExternalLinkAlt,
 } from 'react-icons/fa';
+import { browserHistory } from 'react-router';
+import produce from 'immer';
 import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
 import { useMetadataSource } from '@/features/MetadataAPI';
@@ -365,7 +367,9 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   };
 
   const [showCheckLatencyButton, setLatencyButtonVisibility] = useState(
-    isPgMssqlSourceConnected && isCloudConsole(globals)
+    sourcesFromMetadata.length !== 0 &&
+      isPgMssqlSourceConnected &&
+      isCloudConsole(globals)
   );
 
   const [latencyCheckData, setLatencyCheckData] = useState<
@@ -388,7 +392,25 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   const showAccelerateProjectSection =
     isCloudConsole(globals) &&
     !showCheckLatencyButton &&
-    !checkHighLatencySources(latencyCheckData);
+    !checkHighLatencySources(latencyCheckData) &&
+    (!queryResponse.isLoading || !queryResponse.isFetching);
+
+  useEffect(() => {
+    if (!location.search.includes('trigger_db_latency_check')) {
+      return;
+    }
+
+    setFireLatencyRequest(true);
+
+    const newLocation = produce(browserHistory.getCurrentLocation(), draft => {
+      // NOTE: the next few lines will help remove the query param once we trigger
+      // a request to check the db latency to avoid situations where might
+      // end up rendering the page in loops
+      delete draft.query.trigger_db_latency_check;
+    });
+
+    browserHistory.replace(newLocation);
+  }, []);
 
   return (
     <RightContainer>

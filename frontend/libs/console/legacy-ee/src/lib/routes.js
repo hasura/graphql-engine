@@ -242,8 +242,14 @@ const routes = store => {
   };
 
   const generateOnEnterHooks = (...args) => {
-    prefetchSurveysData();
-    prefetchOnboardingData();
+    if (
+      !!globals.hasuraCloudTenantId &&
+      globals.consoleType === 'cloud' &&
+      globals.userRole === 'owner'
+    ) {
+      prefetchSurveysData();
+      prefetchOnboardingData();
+    }
     const onEnterHooks = [validateAccessToRoute];
     const { shouldLoadOpts, shouldLoadServer } = shouldLoadAsyncGlobals(store);
     if (shouldLoadOpts || shouldLoadServer) {

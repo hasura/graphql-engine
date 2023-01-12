@@ -8,8 +8,8 @@ import {
   UserQuery,
 } from '@/features/BrowseRows';
 import useIsFirstRender from '@/hooks/useIsFirstRender';
+import { TableColumn } from '@/features/DataSource';
 import { vSetDefaults } from './ViewActions';
-
 import { setTable } from '../DataActions';
 import ViewRows from './ViewRows';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
@@ -107,7 +107,7 @@ export const TableBrowseRowsContainer = (
         filterAndSortFromQueryParams,
         (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
-          dataType: column.data_type,
+          dataType: column.data_type as TableColumn['dataType'],
         }))
       );
 

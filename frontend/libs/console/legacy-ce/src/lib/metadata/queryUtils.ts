@@ -16,7 +16,6 @@ import {
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
 import { LocalScheduledTriggerState } from '../components/Services/Events/CronTriggers/state';
-import { LocalAdhocEventState } from '../components/Services/Events/AdhocEvents/Add/state';
 import { RemoteRelationshipPayload } from '../components/Services/Data/TableRelationships/RemoteRelationships/utils';
 import { Driver, currentDriver } from '../dataSources';
 import { ConsoleState } from '../telemetry/state';
@@ -537,28 +536,6 @@ export const getDropScheduledTriggerQuery = (name: string, source: string) => ({
     name: name.trim(),
   },
 });
-
-export const getCreateScheduledEventQuery = (
-  state: LocalAdhocEventState,
-  source: string
-) => {
-  return {
-    type: 'create_scheduled_event',
-    args: {
-      source,
-      webhook: state.webhook,
-      schedule_at: state.time.toISOString(),
-      headers: transformHeaders(state.headers),
-      retry_conf: {
-        num_retries: state.retryConf.num_retries,
-        retry_interval_seconds: state.retryConf.interval_sec,
-        timeout_seconds: state.retryConf.timeout_sec,
-      },
-      payload: state.payload,
-      comment: state.comment,
-    },
-  };
-};
 
 export const getRedeliverDataEventQuery = (
   eventId: string,

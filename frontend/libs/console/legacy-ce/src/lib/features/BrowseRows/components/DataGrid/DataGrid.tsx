@@ -28,6 +28,8 @@ import { ReactTableWrapper } from './parts/ReactTableWrapper';
 import { QueryDialog } from './QueryDialog';
 import { useRows, useTableColumns } from '../../hooks';
 import { transformToOrderByClause } from './utils';
+import { useExportRows } from '../../hooks/useExportRows/useExportRows';
+import { adaptSelectedRowIdsToWhereClause } from './DataGrid.utils';
 
 export type DataGridOptions = {
   where?: WhereClause[];
@@ -52,6 +54,7 @@ export interface DataGridProps {
   activeRelationships?: string[];
   disableRunQuery?: boolean;
   updateOptions?: (options: DataGridOptions) => void;
+  primaryKeys: string[];
 }
 
 const getEqualToOperator = (operators: Operator[]) => {
@@ -69,6 +72,7 @@ export const DataGrid = (props: DataGridProps) => {
     activeRelationships,
     onRelationshipClose,
     updateOptions,
+    primaryKeys,
   } = props;
 
   /**
@@ -143,6 +147,33 @@ export const DataGrid = (props: DataGridProps) => {
         where: whereClauses,
       });
   }, [pageIndex, pageSize]);
+
+  const columnNames = (tableColumnQueryResult?.columns || []).map(
+    column => column.name
+  );
+  const { onExportRows } = useExportRows({
+    columns: columnNames,
+    dataSourceName,
+    options: {
+      where: whereClauses,
+      order_by: orderByClauses,
+    },
+    table,
+  });
+
+  const [selectedRowsLength, setSelectedRowsLength] = useState(0);
+  const [selectedRowsWhereClause, setSelectedRowsWhereClause] = useState<
+    WhereClause[]
+  >([]);
+  const { onExportRows: onExportSelectedRows } = useExportRows({
+    columns: columnNames,
+    dataSourceName,
+    options: {
+      where: selectedRowsWhereClause,
+      order_by: orderByClauses,
+    },
+    table,
+  });
 
   const handleOnRelationshipClick = ({
     relationship,
@@ -243,6 +274,16 @@ export const DataGrid = (props: DataGridProps) => {
   if (rows === Feature.NotImplemented)
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
 
+  const onRowsSelect = (rowsId: Record<number, boolean>) => {
+    setSelectedRowsLength(Object.keys(rowsId).length);
+    const whereClause = adaptSelectedRowIdsToWhereClause({
+      rowsId,
+      rows,
+      primaryKeys,
+    });
+    setSelectedRowsWhereClause(whereClause);
+  };
+
   return (
     <div>
       <DataTableOptions
@@ -273,6 +314,9 @@ export const DataGrid = (props: DataGridProps) => {
           removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
+          onExportRows,
+          onExportSelectedRows,
+          disableExportSelectedRows: selectedRowsLength === 0,
         }}
       />
 
@@ -301,6 +345,8 @@ export const DataGrid = (props: DataGridProps) => {
             },
             onClick: handleOnRelationshipClick,
           }}
+          onRowsSelect={onRowsSelect}
+          isRowsSelectionEnabled={primaryKeys.length > 0}
         />
       )}
 

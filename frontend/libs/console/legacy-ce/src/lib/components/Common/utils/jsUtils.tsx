@@ -1,4 +1,7 @@
 import moment from 'moment';
+import { isJsonString } from './export.utils';
+
+export { isJsonString } from './export.utils';
 
 // TODO: make functions from this file available without imports
 /* TYPE utils */
@@ -118,15 +121,6 @@ export const isEqual = (value1: any, value2: any) => {
   return equal;
 };
 
-export function isJsonString(str: string) {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
-  return true;
-}
-
 export const isNumberString = (str: string | number) =>
   !Number.isNaN(Number(str));
 
@@ -144,6 +138,21 @@ export const isArrayString = (str: string) => {
 export function emptyStringToNull(val?: string): string | null {
   return val && val !== '' ? val : null;
 }
+
+// from https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
+export const hashString = async (
+  str: string,
+  algorithm?: AlgorithmIdentifier
+) => {
+  const msgUint8 = new TextEncoder().encode(str); // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest(
+    algorithm || 'SHA-256',
+    msgUint8
+  ); // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
+};
 
 /* ARRAY utils */
 export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
@@ -324,63 +333,8 @@ export const uploadFile = (
   fileInput.click();
 };
 
-export const downloadFile = (fileName: string, dataString: string) => {
-  const downloadLinkElem = document.createElement('a');
-  downloadLinkElem.setAttribute('href', dataString);
-  downloadLinkElem.setAttribute('download', fileName);
-  document.body.appendChild(downloadLinkElem);
-
-  // trigger download
-  downloadLinkElem.click();
-
-  downloadLinkElem.remove();
-};
-
-export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
-  const contentType = 'application/json;charset=utf-8;';
-
-  const jsonSuffix = '.json';
-  const fileNameWithSuffix = fileName.endsWith(jsonSuffix)
-    ? fileName
-    : fileName + jsonSuffix;
-
-  const dataString = `data:${contentType},${encodeURIComponent(
-    JSON.stringify(object, null, 2)
-  )}`;
-
-  downloadFile(fileNameWithSuffix, dataString);
-};
-
 export const encodeFileContent = (data: string) => encodeURIComponent(data);
 
-export const downloadObjectAsCsvFile = (
-  fileName: string,
-  rows: Record<string, unknown>[] = []
-) => {
-  const titleRowString = Object.keys(rows[0]).join(',');
-  const rowsString = rows
-    .map(e =>
-      Object.values(e)
-        .map(
-          i =>
-            `"${
-              typeof i === 'string' && isJsonString(i)
-                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result in bad formatting
-                : JSON.stringify(i, null, 2).replace(/"/g, `'`)
-            }"`
-        )
-        .join(',')
-    )
-    .join('\n');
-
-  const csvContent = `${titleRowString}\n${rowsString}`;
-  const encodedCsvContent = encodeFileContent(csvContent);
-  const csvDataString = `data:text/csv;charset=utf-8,${encodedCsvContent}`;
-
-  const fileNameWithSuffix = `${fileName}.csv`;
-
-  downloadFile(fileNameWithSuffix, csvDataString);
-};
 export const getFileExtensionFromFilename = (filename: string) => {
   const matches = filename.match(/\.[0-9a-z]+$/i);
   return matches ? matches[0] : null;

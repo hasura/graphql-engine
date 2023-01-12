@@ -13,3 +13,5 @@ declare module '@walmartlabs/json-to-simple-graphql-schema/lib' {
 }
 
 declare module 'microfiber';
+
+declare module 'react-progress-bar-plus';

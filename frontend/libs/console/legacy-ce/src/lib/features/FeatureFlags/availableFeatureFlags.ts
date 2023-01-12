@@ -35,9 +35,9 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
   },
   {
     id: gdcId,
-    title: 'Experimental features for GDC',
+    title: 'Turn on experimental features',
     description:
-      'Try out the very experimental features that are available for GDC on the console',
+      'Try out the really experimental release features. This includes the new database connections for Amazon Athena and Snowflake at this time.',
     section: 'data',
     status: 'experimental',
     defaultValue: false,

@@ -20,14 +20,13 @@ const PendingEvents: React.FC<Props> = props => {
 
   const renderRows: FilterRenderProp = (
     rows,
-    count,
+
     filterState,
     setFilterState,
     runQuery
   ) => (
     <EventsTable
       rows={rows}
-      count={count}
       filterState={filterState}
       setFilterState={setFilterState}
       runQuery={runQuery}

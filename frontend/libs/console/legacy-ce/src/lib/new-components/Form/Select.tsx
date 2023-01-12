@@ -41,7 +41,7 @@ export const Select: React.VFC<SelectProps> = ({
   disabled = false,
   value: val,
   ...wrapperProps
-}: SelectProps) => {
+}) => {
   const {
     register,
     formState: { errors },
