@@ -39,7 +39,7 @@
 </span><span id="line-39"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="MultiplexedQuery"><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MultiplexedQuery"><span class="hs-identifier hs-var">MultiplexedQuery</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ExecutionMonad"><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionMonad"><span class="hs-identifier hs-var">ExecutionMonad</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621690469912"><span class="annot"><span class="annottext">mkDBQueryPlan :: forall (m :: * -&gt; *).
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621690472429"><span class="annot"><span class="annottext">mkDBQueryPlan :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadQueryTags m,
  MonadReader QueryTagsComment m) =&gt;
 UserInfo
@@ -48,7 +48,7 @@ UserInfo
 -&gt; SourceConfig 'DataConnector
 -&gt; QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
 -&gt; m (DBStepInfo 'DataConnector)
-</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBQueryPlan"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkDBQueryPlan</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469907"><span id="local-6989586621690469908"><span id="local-6989586621690469909"><span class="annot"><span class="annottext">BackendOnlyFieldAccess
+</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBQueryPlan"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkDBQueryPlan</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690472424"><span id="local-6989586621690472425"><span id="local-6989586621690472426"><span class="annot"><span class="annottext">BackendOnlyFieldAccess
 SessionVariables
 RoleName
 _uiBackendOnlyFieldAccess :: UserInfo -&gt; BackendOnlyFieldAccess
@@ -57,13 +57,13 @@ _uiRole :: UserInfo -&gt; RoleName
 _uiBackendOnlyFieldAccess :: BackendOnlyFieldAccess
 _uiSession :: SessionVariables
 _uiRole :: RoleName
-</span><a href="Hasura.Session.html#_uiBackendOnlyFieldAccess"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621690469903"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621690469903"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621690469902"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469902"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621690469901"><span class="annot"><span class="annottext">SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469901"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621690469900"><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
-</span><a href="#local-6989586621690469900"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621690469899"><span class="annot"><span class="annottext">queryPlan :: QueryPlan
-</span><a href="#local-6989586621690469899"><span class="hs-identifier hs-var">queryPlan</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469896"><span id="local-6989586621690469897"><span class="annot"><span class="annottext">QueryRequest
+</span><a href="Hasura.Session.html#_uiBackendOnlyFieldAccess"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621690472420"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621690472420"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621690472419"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690472419"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621690472418"><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><a href="#local-6989586621690472418"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621690472417"><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
+</span><a href="#local-6989586621690472417"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621690472416"><span class="annot"><span class="annottext">queryPlan :: QueryPlan
+</span><a href="#local-6989586621690472416"><span class="hs-identifier hs-var">queryPlan</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690472413"><span id="local-6989586621690472414"><span class="annot"><span class="annottext">QueryRequest
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 QueryResponse -&gt; m Encoding
@@ -83,46 +83,46 @@ SessionVariables
 -&gt; QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
 -&gt; m QueryPlan
 </span><a href="Hasura.Backends.DataConnector.Plan.html#mkPlan"><span class="hs-identifier hs-var">DC.mkPlan</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621690469908"><span class="hs-identifier hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469901"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
-</span><a href="#local-6989586621690469900"><span class="hs-identifier hs-var">ir</span></a></span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621690469892"><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621690469892"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690472425"><span class="hs-identifier hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><a href="#local-6989586621690472418"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
+</span><a href="#local-6989586621690472417"><span class="hs-identifier hs-var">ir</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621690472409"><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621690472409"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SourceConfig -&gt; [(Text, Value)] -&gt; Environment -&gt; m SourceConfig
 </span><a href="Hasura.Backends.DataConnector.Adapter.ConfigTransform.html#transformSourceConfig"><span class="hs-identifier hs-var">transformSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469901"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690472418"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$session&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621690469908"><span class="hs-identifier hs-var">_uiSession</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690472425"><span class="hs-identifier hs-var">_uiSession</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$env&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621690469903"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621690469903"><span class="hs-identifier hs-var">env</span></a></span><span>
+</span><a href="#local-6989586621690472420"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621690472420"><span class="hs-identifier hs-var">env</span></a></span><span>
 </span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
 </span><span id="line-46"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span>
 </span><span id="line-47"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">dbsiSourceName :: SourceName
-</span><a href="#local-6989586621690469889"><span class="hs-identifier hs-var">dbsiSourceName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469902"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690472406"><span class="hs-identifier hs-var">dbsiSourceName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690472419"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>          </span><span class="annot"><span class="annottext">dbsiSourceConfig :: SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469888"><span class="hs-identifier hs-var">dbsiSourceConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621690469892"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690472405"><span class="hs-identifier hs-var">dbsiSourceConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621690472409"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">dbsiPreparedQuery :: Maybe (PreparedQuery 'DataConnector)
-</span><a href="#local-6989586621690469887"><span class="hs-identifier hs-var">dbsiPreparedQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690472404"><span class="hs-identifier hs-var">dbsiPreparedQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469897"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690472414"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-50"></span><span>          </span><span class="annot"><span class="annottext">dbsiAction :: ExecutionMonad 'DataConnector EncJSON
-</span><a href="#local-6989586621690469886"><span class="hs-identifier hs-var">dbsiAction</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690472403"><span class="hs-identifier hs-var">dbsiAction</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
 SourceName -&gt; SourceConfig -&gt; QueryPlan -&gt; AgentClientT m EncJSON
 </span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildQueryAction"><span class="hs-identifier hs-var">buildQueryAction</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469902"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621690469892"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryPlan
-</span><a href="#local-6989586621690469899"><span class="hs-identifier hs-var">queryPlan</span></a></span><span>
+</span><a href="#local-6989586621690472419"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621690472409"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryPlan
+</span><a href="#local-6989586621690472416"><span class="hs-identifier hs-var">queryPlan</span></a></span><span>
 </span><span id="line-51"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621690469864"><span class="annot"><span class="annottext">mkDBQueryExplain :: forall (m :: * -&gt; *).
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621690472381"><span class="annot"><span class="annottext">mkDBQueryExplain :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 RootFieldAlias
 -&gt; UserInfo
@@ -130,8 +130,8 @@ RootFieldAlias
 -&gt; SourceConfig 'DataConnector
 -&gt; QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
 -&gt; m (AnyBackend DBStepInfo)
-</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBQueryExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkDBQueryExplain</span></a></span></span><span> </span><span id="local-6989586621690469862"><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469862"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469859"><span id="local-6989586621690469860"><span id="local-6989586621690469861"><span class="annot"><span class="annottext">BackendOnlyFieldAccess
+</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBQueryExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkDBQueryExplain</span></a></span></span><span> </span><span id="local-6989586621690472379"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621690472379"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690472376"><span id="local-6989586621690472377"><span id="local-6989586621690472378"><span class="annot"><span class="annottext">BackendOnlyFieldAccess
 SessionVariables
 RoleName
 _uiBackendOnlyFieldAccess :: BackendOnlyFieldAccess
@@ -140,12 +140,12 @@ _uiRole :: RoleName
 _uiBackendOnlyFieldAccess :: UserInfo -&gt; BackendOnlyFieldAccess
 _uiSession :: UserInfo -&gt; SessionVariables
 _uiRole :: UserInfo -&gt; RoleName
-</span><a href="#local-6989586621690469859"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621690469858"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469858"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621690469857"><span class="annot"><span class="annottext">SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469857"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621690469856"><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
-</span><a href="#local-6989586621690469856"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-54"></span><span>    </span><span id="local-6989586621690469855"><span class="annot"><span class="annottext">queryPlan :: QueryPlan
-</span><a href="#local-6989586621690469855"><span class="hs-identifier hs-var">queryPlan</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469853"><span id="local-6989586621690469854"><span class="annot"><span class="annottext">QueryRequest
+</span><a href="#local-6989586621690472376"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621690472375"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690472375"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621690472374"><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><a href="#local-6989586621690472374"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621690472373"><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
+</span><a href="#local-6989586621690472373"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621690472372"><span class="annot"><span class="annottext">queryPlan :: QueryPlan
+</span><a href="#local-6989586621690472372"><span class="hs-identifier hs-var">queryPlan</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690472370"><span id="local-6989586621690472371"><span class="annot"><span class="annottext">QueryRequest
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 QueryResponse -&gt; m Encoding
@@ -158,25 +158,25 @@ _qpResponseReshaper :: QueryPlan
    MonadError QErr m =&gt;
    QueryResponse -&gt; m Encoding
 _qpRequest :: QueryPlan -&gt; QueryRequest
-</span><a href="#local-6989586621690469853"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690472370"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SessionVariables
 -&gt; SourceConfig
 -&gt; QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
 -&gt; m QueryPlan
 </span><a href="Hasura.Backends.DataConnector.Plan.html#mkPlan"><span class="hs-identifier hs-var">DC.mkPlan</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621690469860"><span class="hs-identifier hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469857"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
-</span><a href="#local-6989586621690469856"><span class="hs-identifier hs-var">ir</span></a></span><span>
-</span><span id="line-55"></span><span>    </span><span id="local-6989586621690469852"><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621690469852"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690472377"><span class="hs-identifier hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><a href="#local-6989586621690472374"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector)
+</span><a href="#local-6989586621690472373"><span class="hs-identifier hs-var">ir</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621690472369"><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621690472369"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SourceConfig -&gt; [(Text, Value)] -&gt; Environment -&gt; m SourceConfig
 </span><a href="Hasura.Backends.DataConnector.Adapter.ConfigTransform.html#transformSourceConfig"><span class="hs-identifier hs-var">transformSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469857"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690472374"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$session&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621690469860"><span class="hs-identifier hs-var">_uiSession</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690472377"><span class="hs-identifier hs-var">_uiSession</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$env&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Environment
 </span><a href="Data.Environment.html#emptyEnvironment"><span class="hs-identifier hs-var">Env.emptyEnvironment</span></a></span><span>
@@ -189,17 +189,17 @@ i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
 </span><span id="line-58"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span>
 </span><span id="line-59"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">dbsiSourceName :: SourceName
-</span><a href="#local-6989586621690469889"><span class="hs-identifier hs-var">dbsiSourceName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469858"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690472406"><span class="hs-identifier hs-var">dbsiSourceName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690472375"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-60"></span><span>            </span><span class="annot"><span class="annottext">dbsiSourceConfig :: SourceConfig 'DataConnector
-</span><a href="#local-6989586621690469888"><span class="hs-identifier hs-var">dbsiSourceConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621690469852"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690472405"><span class="hs-identifier hs-var">dbsiSourceConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621690472369"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-61"></span><span>            </span><span class="annot"><span class="annottext">dbsiPreparedQuery :: Maybe (PreparedQuery 'DataConnector)
-</span><a href="#local-6989586621690469887"><span class="hs-identifier hs-var">dbsiPreparedQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690472404"><span class="hs-identifier hs-var">dbsiPreparedQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469854"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690472371"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-62"></span><span>            </span><span class="annot"><span class="annottext">dbsiAction :: ExecutionMonad 'DataConnector EncJSON
-</span><a href="#local-6989586621690469886"><span class="hs-identifier hs-var">dbsiAction</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690472403"><span class="hs-identifier hs-var">dbsiAction</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
 RootFieldAlias
 -&gt; SourceName
@@ -207,12 +207,12 @@ RootFieldAlias
 -&gt; QueryPlan
 -&gt; AgentClientT m EncJSON
 </span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildExplainAction"><span class="hs-identifier hs-var">buildExplainAction</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469862"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469858"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621690469852"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryPlan
-</span><a href="#local-6989586621690469855"><span class="hs-identifier hs-var">queryPlan</span></a></span><span>
+</span><a href="#local-6989586621690472379"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690472375"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621690472369"><span class="hs-identifier hs-var">transformedSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryPlan
+</span><a href="#local-6989586621690472372"><span class="hs-identifier hs-var">queryPlan</span></a></span><span>
 </span><span id="line-63"></span><span>          </span><span class="hs-special">}</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621690469843"><span class="annot"><span class="annottext">mkDBMutationPlan :: forall (m :: * -&gt; *).
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621690472360"><span class="annot"><span class="annottext">mkDBMutationPlan :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadQueryTags m,
  MonadReader QueryTagsComment m) =&gt;
 UserInfo
@@ -231,7 +231,7 @@ UserInfo
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkDBMutationPlan: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621690469834"><span class="annot"><span class="annottext">mkLiveQuerySubscriptionPlan :: forall (m :: * -&gt; *).
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621690472351"><span class="annot"><span class="annottext">mkLiveQuerySubscriptionPlan :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadIO m, MonadBaseControl IO m,
  MonadReader QueryTagsComment m) =&gt;
 UserInfo
@@ -253,7 +253,7 @@ UserInfo
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621690469826"><span class="annot"><span class="annottext">mkDBStreamingSubscriptionPlan :: forall (m :: * -&gt; *).
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621690472343"><span class="annot"><span class="annottext">mkDBStreamingSubscriptionPlan :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadIO m, MonadBaseControl IO m,
  MonadReader QueryTagsComment m) =&gt;
 UserInfo
@@ -273,7 +273,7 @@ UserInfo
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621690469820"><span class="annot"><span class="annottext">mkDBRemoteRelationshipPlan :: forall (m :: * -&gt; *).
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621690472337"><span class="annot"><span class="annottext">mkDBRemoteRelationshipPlan :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadQueryTags m) =&gt;
 UserInfo
 -&gt; SourceName
@@ -300,7 +300,7 @@ UserInfo
 </span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkDBRemoteRelationshipPlan: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-72"></span><span>  </span><span id="local-6989586621690469813"><span class="annot"><span class="annottext">mkSubscriptionExplain :: forall (m :: * -&gt; *).
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621690472330"><span class="annot"><span class="annottext">mkSubscriptionExplain :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =&gt;
 SubscriptionQueryPlan
   'DataConnector (MultiplexedQuery 'DataConnector)
@@ -313,12 +313,12 @@ SubscriptionQueryPlan
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkSubscriptionExplain: not implemented for the Data Connector backend.&quot;</span></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span id="local-6989586621690470179"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildQueryAction"><span class="hs-identifier hs-type">buildQueryAction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470179"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470179"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470179"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470179"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-75"></span><span id="local-6989586621690472696"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildQueryAction"><span class="hs-identifier hs-type">buildQueryAction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472696"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472696"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472696"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472696"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-76"></span><span id="buildQueryAction"><span class="annot"><span class="annottext">buildQueryAction :: forall (m :: * -&gt; *).
 (MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
 SourceName -&gt; SourceConfig -&gt; QueryPlan -&gt; AgentClientT m EncJSON
-</span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildQueryAction"><span class="hs-identifier hs-var hs-var">buildQueryAction</span></a></span></span><span> </span><span id="local-6989586621690469554"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469554"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469545"><span id="local-6989586621690469546"><span id="local-6989586621690469547"><span id="local-6989586621690469548"><span id="local-6989586621690469549"><span id="local-6989586621690469550"><span id="local-6989586621690469551"><span id="local-6989586621690469552"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildQueryAction"><span class="hs-identifier hs-var hs-var">buildQueryAction</span></a></span></span><span> </span><span id="local-6989586621690472071"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690472071"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690472062"><span id="local-6989586621690472063"><span id="local-6989586621690472064"><span id="local-6989586621690472065"><span id="local-6989586621690472066"><span id="local-6989586621690472067"><span id="local-6989586621690472068"><span id="local-6989586621690472069"><span class="annot"><span class="annottext">Maybe Int
 Maybe Text
 SchemaResponse
 Capabilities
@@ -342,7 +342,7 @@ _scCapabilities :: Capabilities
 _scTemplate :: Maybe Text
 _scConfig :: Config
 _scEndpoint :: BaseUrl
-</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_scDataConnectorName"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469535"><span id="local-6989586621690469536"><span class="annot"><span class="annottext">QueryRequest
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_scDataConnectorName"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690472052"><span id="local-6989586621690472053"><span class="annot"><span class="annottext">QueryRequest
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 QueryResponse -&gt; m Encoding
@@ -355,30 +355,30 @@ _qpResponseReshaper :: QueryPlan
    MonadError QErr m =&gt;
    QueryResponse -&gt; m Encoding
 _qpRequest :: QueryPlan -&gt; QueryRequest
-</span><a href="#local-6989586621690469535"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690472052"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-comment">-- NOTE: Should this check occur during query construction in 'mkPlan'?</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryRequest -&gt; Bool
 </span><a href="Hasura.Backends.DataConnector.Plan.html#queryHasRelations"><span class="hs-identifier hs-var">DC.queryHasRelations</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469536"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621690472053"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">isNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Capabilities -&gt; Maybe RelationshipCapabilities
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API._cRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities
-</span><a href="#local-6989586621690469549"><span class="hs-identifier hs-var">_scCapabilities</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690472066"><span class="hs-identifier hs-var">_scCapabilities</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Agents must provide their own dataloader.&quot;</span></span><span>
-</span><span id="line-80"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690469529"><span class="annot"><span class="annottext">apiQueryRequest :: QueryRequest
-</span><a href="#local-6989586621690469529"><span class="hs-identifier hs-var hs-var">apiQueryRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall target source. From source target =&gt; source -&gt; target
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690472046"><span class="annot"><span class="annottext">apiQueryRequest :: QueryRequest
+</span><a href="#local-6989586621690472046"><span class="hs-identifier hs-var hs-var">apiQueryRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall target source. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.into</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.QueryRequest</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469536"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span>
+</span><a href="#local-6989586621690472053"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621690469527"><span class="annot"><span class="annottext">QueryResponse
-</span><a href="#local-6989586621690469527"><span class="hs-identifier hs-var">queryResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Union '[QueryResponse, ErrorResponse, ErrorResponse400]
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621690472044"><span class="annot"><span class="annottext">QueryResponse
+</span><a href="#local-6989586621690472044"><span class="hs-identifier hs-var">queryResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Union '[QueryResponse, ErrorResponse, ErrorResponse400]
 -&gt; AgentClientT m QueryResponse
-</span><a href="#local-6989586621690469526"><span class="hs-identifier hs-var">queryGuard</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><a href="#local-6989586621690472043"><span class="hs-identifier hs-var">queryGuard</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (routes :: * -&gt; *) (m :: * -&gt; *).
 (HasClient m (ToServantApi routes),
  GenericServant routes (AsClientT m),
@@ -396,53 +396,53 @@ Routes mode
                         'POST '[JSON] '[QueryResponse, ErrorResponse, ErrorResponse400]))))
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API._query</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469554"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621690469551"><span class="hs-identifier hs-var">_scConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469529"><span class="hs-identifier hs-var">apiQueryRequest</span></a></span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621690469523"><span class="annot"><span class="annottext">Encoding
-</span><a href="#local-6989586621690469523"><span class="hs-identifier hs-var">reshapedResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690472071"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Config
+</span><a href="#local-6989586621690472068"><span class="hs-identifier hs-var">_scConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
+</span><a href="#local-6989586621690472046"><span class="hs-identifier hs-var">apiQueryRequest</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621690472040"><span class="annot"><span class="annottext">Encoding
+</span><a href="#local-6989586621690472040"><span class="hs-identifier hs-var">reshapedResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 QueryResponse -&gt; m Encoding
-</span><a href="#local-6989586621690469535"><span class="hs-identifier hs-var">_qpResponseReshaper</span></a></span><span> </span><span class="annot"><span class="annottext">QueryResponse
-</span><a href="#local-6989586621690469527"><span class="hs-identifier hs-var">queryResponse</span></a></span><span>
+</span><a href="#local-6989586621690472052"><span class="hs-identifier hs-var">_qpResponseReshaper</span></a></span><span> </span><span class="annot"><span class="annottext">QueryResponse
+</span><a href="#local-6989586621690472044"><span class="hs-identifier hs-var">queryResponse</span></a></span><span>
 </span><span id="line-84"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromBuilder"><span class="hs-identifier hs-var">encJFromBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall tag. Encoding' tag -&gt; Builder
 </span><span class="hs-identifier hs-var">J.fromEncoding</span></span><span> </span><span class="annot"><span class="annottext">Encoding
-</span><a href="#local-6989586621690469523"><span class="hs-identifier hs-var">reshapedResponse</span></a></span><span>
+</span><a href="#local-6989586621690472040"><span class="hs-identifier hs-var">reshapedResponse</span></a></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-86"></span><span>    </span><span id="local-6989586621690469518"><span class="annot"><span class="annottext">errorAction :: ErrorResponse -&gt; m a
-</span><a href="#local-6989586621690469518"><span class="hs-identifier hs-var hs-var">errorAction</span></a></span></span><span> </span><span id="local-6989586621690469517"><span class="annot"><span class="annottext">ErrorResponse
-</span><a href="#local-6989586621690469517"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; Value -&gt; m a
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621690472035"><span class="annot"><span class="annottext">errorAction :: ErrorResponse -&gt; m a
+</span><a href="#local-6989586621690472035"><span class="hs-identifier hs-var hs-var">errorAction</span></a></span></span><span> </span><span id="local-6989586621690472034"><span class="annot"><span class="annottext">ErrorResponse
+</span><a href="#local-6989586621690472034"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; Value -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400WithDetail"><span class="hs-identifier hs-var">throw400WithDetail</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#DataConnectorError"><span class="hs-identifier hs-var">DataConnectorError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorResponse -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">errorResponseSummary</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorResponse
-</span><a href="#local-6989586621690469517"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorResponse -&gt; Value
+</span><a href="#local-6989586621690472034"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorResponse -&gt; Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">_crDetails</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorResponse
-</span><a href="#local-6989586621690469517"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-87"></span><span>    </span><span id="local-6989586621690469512"><span class="annot"><span class="annottext">defaultAction :: AgentClientT m a
-</span><a href="#local-6989586621690469512"><span class="hs-identifier hs-var hs-var">defaultAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="#local-6989586621690472034"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>    </span><span id="local-6989586621690472029"><span class="annot"><span class="annottext">defaultAction :: AgentClientT m a
+</span><a href="#local-6989586621690472029"><span class="hs-identifier hs-var hs-var">defaultAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#DataConnectorError"><span class="hs-identifier hs-var">DataConnectorError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Unexpected data connector capabilities response - Unexpected Type&quot;</span></span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621690469526"><span class="annot"><span class="annottext">queryGuard :: Union '[QueryResponse, ErrorResponse, ErrorResponse400]
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621690472043"><span class="annot"><span class="annottext">queryGuard :: Union '[QueryResponse, ErrorResponse, ErrorResponse400]
 -&gt; AgentClientT m QueryResponse
-</span><a href="#local-6989586621690469526"><span class="hs-identifier hs-var hs-var">queryGuard</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><a href="#local-6989586621690472043"><span class="hs-identifier hs-var hs-var">queryGuard</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 a
 -&gt; (QueryResponse -&gt; a)
 -&gt; (ErrorResponse -&gt; a)
 -&gt; Union '[QueryResponse, ErrorResponse, ErrorResponse400]
 -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">queryCase</span></a></span><span> </span><span class="annot"><span class="annottext">forall {a}. AgentClientT m a
-</span><a href="#local-6989586621690469512"><span class="hs-identifier hs-var">defaultAction</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="#local-6989586621690472029"><span class="hs-identifier hs-var">defaultAction</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *} {a}. MonadError QErr m =&gt; ErrorResponse -&gt; m a
-</span><a href="#local-6989586621690469518"><span class="hs-identifier hs-var">errorAction</span></a></span><span>
+</span><a href="#local-6989586621690472035"><span class="hs-identifier hs-var">errorAction</span></a></span><span>
 </span><span id="line-89"></span><span>
 </span><span id="line-90"></span><span class="hs-comment">-- Delegates the generation to the Agent's /explain endpoint if it has that capability,</span><span>
 </span><span id="line-91"></span><span class="hs-comment">-- otherwise, returns the IR sent to the agent.</span><span>
-</span><span id="line-92"></span><span id="local-6989586621690470170"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildExplainAction"><span class="hs-identifier hs-type">buildExplainAction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">GQL.RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690470170"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-92"></span><span id="local-6989586621690472687"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildExplainAction"><span class="hs-identifier hs-type">buildExplainAction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472687"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472687"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472687"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">GQL.RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690472687"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-93"></span><span id="buildExplainAction"><span class="annot"><span class="annottext">buildExplainAction :: forall (m :: * -&gt; *).
 (MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
 RootFieldAlias
@@ -450,9 +450,9 @@ RootFieldAlias
 -&gt; SourceConfig
 -&gt; QueryPlan
 -&gt; AgentClientT m EncJSON
-</span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildExplainAction"><span class="hs-identifier hs-var hs-var">buildExplainAction</span></a></span></span><span> </span><span id="local-6989586621690469314"><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469314"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621690469313"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469313"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469305"><span id="local-6989586621690469306"><span id="local-6989586621690469307"><span id="local-6989586621690469308"><span id="local-6989586621690469309"><span id="local-6989586621690469310"><span id="local-6989586621690469311"><span id="local-6989586621690469312"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#buildExplainAction"><span class="hs-identifier hs-var hs-var">buildExplainAction</span></a></span></span><span> </span><span id="local-6989586621690471831"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621690471831"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621690471830"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690471830"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690471822"><span id="local-6989586621690471823"><span id="local-6989586621690471824"><span id="local-6989586621690471825"><span id="local-6989586621690471826"><span id="local-6989586621690471827"><span id="local-6989586621690471828"><span id="local-6989586621690471829"><span class="annot"><span class="annottext">Maybe Int
 Maybe Text
 SchemaResponse
 Capabilities
@@ -476,7 +476,7 @@ _scCapabilities :: SourceConfig -&gt; Capabilities
 _scTemplate :: SourceConfig -&gt; Maybe Text
 _scConfig :: SourceConfig -&gt; Config
 _scEndpoint :: SourceConfig -&gt; BaseUrl
-</span><a href="#local-6989586621690469305"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690469303"><span id="local-6989586621690469304"><span class="annot"><span class="annottext">QueryRequest
+</span><a href="#local-6989586621690471822"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#QueryPlan"><span class="hs-identifier hs-type">DC.QueryPlan</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690471820"><span id="local-6989586621690471821"><span class="annot"><span class="annottext">QueryRequest
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 QueryResponse -&gt; m Encoding
@@ -489,10 +489,10 @@ _qpResponseReshaper :: QueryPlan
    MonadError QErr m =&gt;
    QueryResponse -&gt; m Encoding
 _qpRequest :: QueryPlan -&gt; QueryRequest
-</span><a href="#local-6989586621690469303"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690471820"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; Maybe ExplainCapabilities
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API._cExplain</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities
-</span><a href="#local-6989586621690469309"><span class="hs-identifier hs-var">_scCapabilities</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690471826"><span class="hs-identifier hs-var">_scCapabilities</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">Maybe ExplainCapabilities
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -500,17 +500,17 @@ _qpRequest :: QueryPlan -&gt; QueryRequest
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; QueryRequest -&gt; ExplainPlan
 </span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#toExplainPlan"><span class="hs-identifier hs-var">toExplainPlan</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469314"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690471831"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469304"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span>
+</span><a href="#local-6989586621690471821"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span>
 </span><span id="line-96"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">ExplainCapabilities
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API.ExplainCapabilities</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-97"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690469299"><span class="annot"><span class="annottext">apiQueryRequest :: QueryRequest
-</span><a href="#local-6989586621690469299"><span class="hs-identifier hs-var hs-var">apiQueryRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall target source. From source target =&gt; source -&gt; target
+</span><span id="line-97"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690471816"><span class="annot"><span class="annottext">apiQueryRequest :: QueryRequest
+</span><a href="#local-6989586621690471816"><span class="hs-identifier hs-var hs-var">apiQueryRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall target source. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.into</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.QueryRequest</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469304"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span>
-</span><span id="line-98"></span><span>      </span><span id="local-6989586621690469298"><span class="annot"><span class="annottext">ExplainResponse
-</span><a href="#local-6989586621690469298"><span class="hs-identifier hs-var">explainResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (routes :: * -&gt; *) (m :: * -&gt; *).
+</span><a href="#local-6989586621690471821"><span class="hs-identifier hs-var">_qpRequest</span></a></span><span>
+</span><span id="line-98"></span><span>      </span><span id="local-6989586621690471815"><span class="annot"><span class="annottext">ExplainResponse
+</span><a href="#local-6989586621690471815"><span class="hs-identifier hs-var">explainResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (routes :: * -&gt; *) (m :: * -&gt; *).
 (HasClient m (ToServantApi routes),
  GenericServant routes (AsClientT m),
  Client m (ToServantApi routes) ~ ToServant routes (AsClientT m)) =&gt;
@@ -526,9 +526,9 @@ Routes mode
                    :&gt; Post '[JSON] ExplainResponse))))
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API._explain</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690469313"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621690469311"><span class="hs-identifier hs-var">_scConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469299"><span class="hs-identifier hs-var">apiQueryRequest</span></a></span><span>
+</span><a href="#local-6989586621690471830"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Config
+</span><a href="#local-6989586621690471828"><span class="hs-identifier hs-var">_scConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
+</span><a href="#local-6989586621690471816"><span class="hs-identifier hs-var">apiQueryRequest</span></a></span><span>
 </span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
@@ -537,28 +537,28 @@ Routes mode
 </span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Maybe Text -&gt; Maybe [Text] -&gt; ExplainPlan
 </span><a href="Hasura.GraphQL.Execute.Backend.html#ExplainPlan"><span class="hs-identifier hs-var">ExplainPlan</span></a></span><span>
 </span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469314"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621690471831"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-102"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExplainResponse -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API._erQuery</span></a></span><span> </span><span class="annot"><span class="annottext">ExplainResponse
-</span><a href="#local-6989586621690469298"><span class="hs-identifier hs-var">explainResponse</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690471815"><span class="hs-identifier hs-var">explainResponse</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExplainResponse -&gt; [Text]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">API._erLines</span></a></span><span> </span><span class="annot"><span class="annottext">ExplainResponse
-</span><a href="#local-6989586621690469298"><span class="hs-identifier hs-var">explainResponse</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690471815"><span class="hs-identifier hs-var">explainResponse</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#toExplainPlan"><span class="hs-identifier hs-type">toExplainPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">GQL.RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.QueryRequest</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExplainPlan"><span class="hs-identifier hs-type">ExplainPlan</span></a></span><span>
 </span><span id="line-106"></span><span id="toExplainPlan"><span class="annot"><span class="annottext">toExplainPlan :: RootFieldAlias -&gt; QueryRequest -&gt; ExplainPlan
-</span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#toExplainPlan"><span class="hs-identifier hs-var hs-var">toExplainPlan</span></a></span></span><span> </span><span id="local-6989586621690469293"><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469293"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621690469292"><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469292"><span class="hs-identifier hs-var">queryRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.DataConnector.Adapter.Execute.html#toExplainPlan"><span class="hs-identifier hs-var hs-var">toExplainPlan</span></a></span></span><span> </span><span id="local-6989586621690471810"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621690471810"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621690471809"><span class="annot"><span class="annottext">QueryRequest
+</span><a href="#local-6989586621690471809"><span class="hs-identifier hs-var">queryRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Maybe Text -&gt; Maybe [Text] -&gt; ExplainPlan
 </span><a href="Hasura.GraphQL.Execute.Backend.html#ExplainPlan"><span class="hs-identifier hs-var">ExplainPlan</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690469293"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690471810"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">QueryRequest -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Plan.html#renderQuery"><span class="hs-identifier hs-var">DC.renderQuery</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QueryRequest
-</span><a href="#local-6989586621690469292"><span class="hs-identifier hs-var">queryRequest</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690471809"><span class="hs-identifier hs-var">queryRequest</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span></pre></body></html>
