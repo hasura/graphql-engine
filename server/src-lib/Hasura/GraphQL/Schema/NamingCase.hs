@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Hasura.GraphQL.Schema.NamingCase
   ( NamingCase (..),
     isGraphqlCase,
@@ -5,6 +7,7 @@ module Hasura.GraphQL.Schema.NamingCase
   )
 where
 
+import Autodocodec qualified as AC
 import Data.Aeson qualified as Aeson
 import Hasura.Prelude
 
@@ -12,6 +15,11 @@ import Hasura.Prelude
 --   @HasuraCase@ and @GraphqlCase@ (@CamelCase@ fields and @PascalCase@ types).
 data NamingCase = HasuraCase | GraphqlCase
   deriving (Eq, Show, Generic)
+
+instance AC.HasCodec NamingCase where
+  codec =
+    AC.named "NamingCase" $
+      AC.stringConstCodec [(HasuraCase, "hasura-default"), (GraphqlCase, "graphql-default")]
 
 instance Aeson.ToJSON NamingCase where
   toJSON HasuraCase = Aeson.String "hasura-default"
