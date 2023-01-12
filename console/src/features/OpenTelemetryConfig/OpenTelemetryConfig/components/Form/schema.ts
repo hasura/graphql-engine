@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { requestHeadersSelectorSchema } from '@/new-components/RequestHeadersSelector';
 
 export const FormSchema = z.object({
+  status: z.boolean(),
+
   // ENDPOINT
   endpoint: z.string().url({ message: 'Invalid URL' }),
 
@@ -37,6 +39,8 @@ export const FormSchema = z.object({
 export type FormValues = z.infer<typeof FormSchema>;
 
 export const defaultValues: FormValues = {
+  status: false,
+
   // At the time of writing, it's impossible to get a default value that satisfies the use cases.
   // localhost would not work because HGE is running inside Docker, and the OpenTelemetry host is not.
   endpoint: '',

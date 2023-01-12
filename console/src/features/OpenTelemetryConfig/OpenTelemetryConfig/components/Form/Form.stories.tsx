@@ -131,6 +131,9 @@ HappyPath.play = async ({ args, canvasElement }) => {
 
   // act avoids the "When testing, code that causes React state updates should be wrapped into act(...):" error
   await act(async () => {
+    // STEP: Enable OpenTelemetry
+    await userEvent.click(await canvas.findByLabelText('Status'));
+
     // STEP: Type the Endpoint
     await userEvent.type(
       await canvas.findByLabelText('Endpoint', { selector: 'input' }),
@@ -215,6 +218,7 @@ HappyPath.play = async ({ args, canvasElement }) => {
 
   // STEP: Check the callback arguments
   expect(receivedValues).toMatchObject<FormValues>({
+    status: true,
     endpoint: 'http://hasura.io',
     connectionType: 'http',
     dataType: 'traces',

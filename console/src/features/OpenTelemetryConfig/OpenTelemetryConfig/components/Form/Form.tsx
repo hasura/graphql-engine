@@ -5,7 +5,9 @@ import { Checkbox, SimpleForm, InputField, Radio } from '@/new-components/Form';
 import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
+
 import { FormSchema } from './schema';
+import { Toggle } from './components/Toggle';
 import { CollapsibleFieldWrapper } from './components/CollapsibleFieldWrapper';
 
 interface FormProps {
@@ -24,6 +26,12 @@ export function Form(props: FormProps) {
       options={{ defaultValues }}
     >
       <>
+        <Toggle
+          name="status"
+          label="Status"
+          writtenStatus={{ true: 'Enabled', false: 'Disabled' }}
+        />
+
         <InputField
           name="endpoint"
           label="Endpoint"
