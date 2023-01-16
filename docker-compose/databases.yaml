@@ -69,7 +69,6 @@ services:
 
   cockroach:
     image: cockroachdb/cockroach:latest-v22.2
-    platform: linux/amd64
     command:
       - start-single-node
       - --insecure
