@@ -176,6 +176,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
           name <- afold @(Either QErr) $ mkScalarTypeName scalar
           pure (name, scalar)
     pure (tablesMeta, functionsMeta, scalarsMap)
+
   pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta (ScalarMap pgScalars)
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata

@@ -58,6 +58,7 @@ library
   build-depends:
     , aeson                 >=1.5
     , attoparsec            >=0.14
+    , autodocodec
     , base                  >=4.7
     , bytestring            >=0.10
     , deepseq               >=1.4

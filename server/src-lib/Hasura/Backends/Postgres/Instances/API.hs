@@ -23,6 +23,7 @@ instance BackendAPI ('Postgres 'Vanilla) where
         remoteRelationshipCommands @('Postgres 'Vanilla),
         eventTriggerCommands @('Postgres 'Vanilla),
         computedFieldCommands @('Postgres 'Vanilla),
+        nativeAccessCommands @('Postgres 'Vanilla),
         [ commandParser
             "set_table_is_enum"
             ( RMPgSetTableIsEnum

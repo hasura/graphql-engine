@@ -5,6 +5,7 @@ where
 
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.Metadata
@@ -82,6 +83,10 @@ data RQLMetadataV1
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
+  | -- Native access
+    RMGetCustomSQL !(AnyBackend CustomSQL.GetCustomSQL)
+  | RMTrackCustomSQL !(AnyBackend CustomSQL.TrackCustomSQL)
+  | RMUntrackCustomSQL !(AnyBackend CustomSQL.UntrackCustomSQL)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

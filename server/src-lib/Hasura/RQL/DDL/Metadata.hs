@@ -46,6 +46,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.CustomSQL (dropCustomSQLInMetadata)
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
@@ -140,6 +141,7 @@ runClearMetadata _ = do
                         @b
                         defaultSource
                         (_smKind @b s)
+                        mempty
                         mempty
                         mempty
                         (_smConfiguration @b s)
@@ -514,7 +516,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                             <<> "' as it is inconsistent"
                       )
                       J.Null
-                Just sourceInfo@(SourceInfo _ _ _ sourceConfig _ _) -> do
+                Just sourceInfo@(SourceInfo _ _ _ _ sourceConfig _ _) -> do
                   let getEventMapWithCC sourceMeta = Map.fromList $ concatMap (getAllETWithCleanupConfigInTableMetadata . snd) $ OMap.toList $ _smTables sourceMeta
                       oldEventTriggersWithCC = getEventMapWithCC oldSourceMetadata
                       newEventTriggersWithCC = getEventMapWithCC newSourceMetadata
@@ -689,6 +691,7 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
+      SMOCustomSQL qc -> dropCustomSQLInMetadata @b source qc
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

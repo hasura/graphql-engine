@@ -12990,6 +12990,7 @@ sources:
                           _in: X-Hasura-Conference-Ids
                       - subconferenceId:
                           _in: X-Hasura-Subconference-Ids
+    custom_sql: null
     functions:
       - function:
           schema: collection

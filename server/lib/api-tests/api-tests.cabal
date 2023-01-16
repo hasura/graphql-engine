@@ -74,6 +74,7 @@ library
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.NativeAccessSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec

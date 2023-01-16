@@ -14,6 +14,8 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     ComputedFields,
     CronTriggers,
+    CustomSQLFields,
+    CustomSQLMetadata (..),
     Endpoints,
     EventTriggers,
     FunctionMetadata (..),
@@ -46,6 +48,7 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    smCustomSQL,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -61,6 +64,11 @@ module Hasura.RQL.Types.Metadata.Common
     tmSelectPermissions,
     tmTable,
     tmUpdatePermissions,
+    csmParameters,
+    csmReturns,
+    csmRootFieldName,
+    csmSql,
+    csmType,
     toSourceMetadata,
   )
 where
@@ -79,6 +87,7 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import Hasura.CustomSQL (CustomSQLParameter)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -108,6 +117,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag (BackendTag, HasTag (backendTag))
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.
@@ -359,6 +369,59 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"
 
+-- | This is everything we are passed from the metadata call currently,
+-- there is probably some sort of checking/refinement that needs to happen
+-- before we store it, but for now, YOLO.
+data CustomSQLMetadata b = CustomSQLMetadata
+  { _csmType :: Text,
+    _csmRootFieldName :: G.Name,
+    _csmSql :: Text,
+    _csmParameters :: NonEmpty CustomSQLParameter,
+    _csmReturns :: TableName b
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (CustomSQLMetadata b)
+
+deriving instance (Backend b) => Eq (CustomSQLMetadata b)
+
+instance (Backend b) => ToJSON (CustomSQLMetadata b) where
+  toJSON = genericToJSON hasuraJSON
+
+$(makeLenses ''CustomSQLMetadata)
+
+instance (Backend b) => FromJSON (CustomSQLMetadata b) where
+  parseJSON = withObject "CustomSQLMetadata" $ \o ->
+    CustomSQLMetadata
+      <$> o .: "type"
+      <*> o .: "root_field_name"
+      <*> o .: "sql"
+      <*> o .: "parameters"
+      <*> o .: "returns"
+
+instance (Backend b) => HasCodec (CustomSQLMetadata b) where
+  codec =
+    CommentCodec
+      ( T.unlines
+          [ "A custom SQL function to add to the GraphQL schema with configuration.",
+            "",
+            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
+          ]
+      )
+      $ AC.object (codecNamePrefix @b <> "CustomSQLMetadata")
+      $ CustomSQLMetadata
+        <$> requiredField "type" typeDoc AC..= _csmType
+        <*> requiredField "root_field_name" fieldNameDoc AC..= _csmRootFieldName
+        <*> requiredField "sql" sqlDoc AC..= _csmSql
+        <*> requiredField "parameters" paramDoc AC..= _csmParameters
+        <*> requiredField "returns" returnsDoc AC..= _csmReturns
+    where
+      typeDoc = "Type of SQL statement to run"
+      fieldNameDoc = "Field name for custom SQL"
+      sqlDoc = "SQL to run"
+      paramDoc = "Function parameters and their types"
+      returnsDoc = "Return type of function"
+
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
@@ -366,6 +429,8 @@ type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
+
+type CustomSQLFields b = InsOrdHashMap G.Name (CustomSQLMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -381,6 +446,7 @@ data SourceMetadata b = SourceMetadata
     _smKind :: BackendSourceKind b,
     _smTables :: Tables b,
     _smFunctions :: Functions b,
+    _smCustomSQL :: CustomSQLFields b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -399,6 +465,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
+    _smCustomSQL <- oMapFromL _csmRootFieldName <$> o .:? "custom_sql" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -453,6 +520,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <*> requiredField' "kind" .== _smKind
         <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable) .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty .== _smFunctions
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_sql" (sortedElemsCodec _csmRootFieldName) mempty .== _smCustomSQL
         <*> requiredField' "configuration" .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags" .== _smQueryTags
         <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
@@ -483,6 +551,7 @@ mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
         @b
         name
         backendSourceKind
+        mempty
         mempty
         mempty
         config

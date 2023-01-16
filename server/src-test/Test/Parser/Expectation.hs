@@ -99,6 +99,7 @@ runUpdateFieldTest UpdateTestSetup {..} =
         { _siName = SNDefault,
           _siTables = HM.singleton table tableInfo,
           _siFunctions = mempty,
+          _siCustomSQL = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
           _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing

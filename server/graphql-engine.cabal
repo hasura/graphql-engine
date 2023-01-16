@@ -706,6 +706,7 @@ library
                      , Hasura.Server.Telemetry.Types
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
+                     , Hasura.CustomSQL
                      , Hasura.GC
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
@@ -793,6 +794,7 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
+                     , Hasura.RQL.DDL.CustomSQL
                      , Hasura.RQL.DDL.OpenTelemetry
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal

@@ -256,7 +256,7 @@ withMetadataCheck ::
   PG.TxET QErr m a ->
   m a
 withMetadataCheck source cascade txAccess runSQLQuery = do
-  SourceInfo _ tableCache functionCache sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
+  SourceInfo _ tableCache functionCache _customSQL sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
 
   -- Run SQL query and metadata checker in a transaction
   (queryResult, metadataUpdater) <- runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascade runSQLQuery

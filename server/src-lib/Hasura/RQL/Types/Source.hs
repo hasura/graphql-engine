@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Source
     unsafeSourceName,
     unsafeSourceTables,
     siConfiguration,
+    siCustomSQL,
     siFunctions,
     siName,
     siQueryTagsConfig,
@@ -50,6 +51,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Metadata.Common (CustomSQLFields)
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
@@ -66,6 +68,7 @@ data SourceInfo b = SourceInfo
   { _siName :: SourceName,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
+    _siCustomSQL :: CustomSQLFields b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
     _siCustomization :: ResolvedSourceCustomization
@@ -108,7 +111,7 @@ unsafeSourceInfo = AB.unpackAnyBackend
 unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go (SourceInfo name _ _ _ _ _) = name
+    go (SourceInfo name _ _ _ _ _ _) = name
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b

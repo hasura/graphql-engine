@@ -74,6 +74,7 @@ data SourceMetadataObjId b
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
+  | SMOCustomSQL G.Name
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -134,6 +135,7 @@ moiTypeName = \case
     handleSourceObj = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
+      SMOCustomSQL _ -> "custom_sql"
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -185,6 +187,7 @@ moiName objectId =
           <> toTxt functionName
           <> " in source "
           <> toTxt source
+      SMOCustomSQL name -> toTxt name <> " in source " <> toTxt source
       SMOTableObj tableName tableObjectId ->
         let tableObjectName = case tableObjectId of
               MTORel name _ -> toTxt name
