@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/fsm"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
@@ -24,7 +25,6 @@ import (
 	metadataVersion "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/version"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -63,22 +63,27 @@ Further reading:
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			ec.Viper = viper.New()
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			// show deprecation message if initializing a config v1 project
 			if opts.Version <= cli.V1 {
-				return fmt.Errorf("config v1 is deprecated, please consider using config v3")
+				return errors.E(op, fmt.Errorf("config v1 is deprecated, please consider using config v3"))
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			if len(args) == 1 {
 				opts.InitDir = args[0]
 			}
-			return opts.Run()
+			if err := opts.Run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
@@ -120,11 +125,12 @@ type InitOptions struct {
 }
 
 func (o *InitOptions) InitRun() error {
+	var op errors.Op = "commands.InitOptions.InitRun"
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
 		r, err := util.GetInputPromptWithDefault("Name of project directory ?", defaultDirectory)
 		if err != nil {
-			return fmt.Errorf("prompt exited: %w", err)
+			return errors.E(op, fmt.Errorf("prompt exited: %w", err))
 		}
 		if strings.TrimSpace(r) != "" {
 			o.InitDir = r
@@ -135,7 +141,7 @@ func (o *InitOptions) InitRun() error {
 	if o.Endpoint != "" && !o.GetMetadataMigrations && o.EC.IsTerminal {
 		r, err := util.GetYesNoPrompt(fmt.Sprintf("Initialize project with metadata & migrations from %s ?", o.Endpoint))
 		if err != nil {
-			return fmt.Errorf("prompt exited: %w", err)
+			return errors.E(op, fmt.Errorf("prompt exited: %w", err))
 		}
 		o.GetMetadataMigrations = r
 	}
@@ -145,40 +151,41 @@ func (o *InitOptions) InitRun() error {
 
 	cwdir, err := os.Getwd()
 	if err != nil {
-		return errors.Wrap(err, "error getting current working directory")
+		return errors.E(op, fmt.Errorf("error getting current working directory: %w", err))
 	}
 	initPath, err := filepath.Abs(o.InitDir)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	if initPath == cwdir {
 		// check if pwd is filesystem root
 		if err := cli.CheckFilesystemBoundary(cwdir); err != nil {
-			return errors.Wrap(err, "can't initialise hasura project in filesystem root")
+			return errors.E(op, fmt.Errorf("can't initialise hasura project in filesystem root: %w", err))
 		}
 		// check if the current directory is already a hasura project
 		if err := cli.ValidateDirectory(cwdir); err == nil {
-			return errors.Errorf("current working directory is already a hasura project directory")
+			return errors.E(op, "current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir
 	} else {
 		// create execution directory
 		err := o.createExecutionDirectory()
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 	}
 
 	// create other required files, like config.yaml, migrations directory
 	err = o.createFiles()
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
 // create the execution directory
 func (o *InitOptions) createExecutionDirectory() error {
+	var op errors.Op = "commands.InitOptions.createExecutionDirectory"
 	if o.EC.ExecutionDirectory == "" {
 		o.EC.ExecutionDirectory = o.InitDir
 	} else {
@@ -187,11 +194,11 @@ func (o *InitOptions) createExecutionDirectory() error {
 
 	// create the execution directory
 	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exists", o.EC.ExecutionDirectory)
+		return errors.E(op, fmt.Errorf("directory '%s' already exists", o.EC.ExecutionDirectory))
 	}
 	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "error creating setup directories")
+		return errors.E(op, fmt.Errorf("error creating setup directories: %w", err))
 	}
 
 	return nil
@@ -199,10 +206,11 @@ func (o *InitOptions) createExecutionDirectory() error {
 
 // createFiles creates files required by the CLI in the ExecutionDirectory
 func (o *InitOptions) createFiles() error {
+	var op errors.Op = "commands.InitOptions.createFiles"
 	// create the directory
 	err := os.MkdirAll(filepath.Dir(o.EC.ExecutionDirectory), os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "error creating setup directories")
+		return errors.E(op, fmt.Errorf("error creating setup directories: %w", err))
 	}
 	// set config object
 	var config = &cli.Config{
@@ -218,7 +226,7 @@ func (o *InitOptions) createFiles() error {
 	}
 	if o.Endpoint != "" {
 		if _, err := url.ParseRequestURI(o.Endpoint); err != nil {
-			return errors.Wrap(err, "error validating endpoint URL")
+			return errors.E(op, fmt.Errorf("error validating endpoint URL: %w", err))
 		}
 		config.ServerConfig.Endpoint = o.Endpoint
 	}
@@ -231,14 +239,14 @@ func (o *InitOptions) createFiles() error {
 	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
 	err = o.EC.WriteConfig(nil)
 	if err != nil {
-		return errors.Wrap(err, "cannot write config file")
+		return errors.E(op, fmt.Errorf("cannot write config file: %w", err))
 	}
 
 	// create migrations directory
 	o.EC.MigrationDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMigrationsDirectory)
 	err = os.MkdirAll(o.EC.MigrationDir, os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "cannot write migration directory")
+		return errors.E(op, fmt.Errorf("cannot write migration directory: %w", err))
 	}
 
 	if config.Version >= cli.V2 {
@@ -246,7 +254,7 @@ func (o *InitOptions) createFiles() error {
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "cannot write metadata directory")
+			return errors.E(op, fmt.Errorf("cannot write metadata directory: %w", err))
 		}
 		err = o.EC.Version.GetServerFeatureFlags()
 		if err != nil {
@@ -272,7 +280,7 @@ func (o *InitOptions) createFiles() error {
 		for _, plg := range plugins {
 			err := plg.CreateFiles()
 			if err != nil {
-				return errors.Wrap(err, "cannot create metadata files")
+				return errors.E(op, fmt.Errorf("cannot create metadata files: %w", err))
 			}
 		}
 	}
@@ -281,12 +289,13 @@ func (o *InitOptions) createFiles() error {
 	o.EC.SeedsDirectory = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultSeedsDirectory)
 	err = os.MkdirAll(o.EC.SeedsDirectory, os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "cannot write seeds directory")
+		return errors.E(op, fmt.Errorf("cannot write seeds directory: %w", err))
 	}
 	return nil
 }
 
 func (o *InitOptions) Run() error {
+	var op errors.Op = "commands.InitOptions.Run"
 	context := &initCtx{
 		ec:      o.EC,
 		initOps: o,
@@ -296,10 +305,10 @@ func (o *InitOptions) Run() error {
 
 	configInitFSM := newInitFSM()
 	if err := configInitFSM.SendEvent(createProjectDirectory, context); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	if configInitFSM.Current == failedOperation {
-		return fmt.Errorf("operation failed: %w", context.err)
+		return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 	}
 	return nil
 }
