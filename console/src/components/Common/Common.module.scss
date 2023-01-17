@@ -1558,11 +1558,18 @@ code {
 }
 
 .add_button_layout {
-  width: 40%;
+  width: 100%;
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
+  margin-bottom: 2px;
   align-self: flex-end;
+  padding-top: 8px;
+  border-color:rgba(0, 0, 0, 0.1);
+  border-top-width: 1px;
+  position: sticky;
+  bottom: 0;
+  background-color: #f8fafb;
 }
 
 .connection_settings_layout {
