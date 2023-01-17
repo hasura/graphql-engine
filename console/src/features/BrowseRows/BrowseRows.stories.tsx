@@ -3,6 +3,7 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
+import { action } from '@storybook/addon-actions';
 import { BrowseRows } from './BrowseRows';
 import { handlers } from './__mocks__/handlers.mock';
 
@@ -20,6 +21,7 @@ export const Basic: ComponentStory<typeof BrowseRows> = () => {
       table={['Album']}
       dataSourceName="sqlite_test"
       primaryKeys={[]}
+      onUpdateOptions={action('onUpdateOptions')}
     />
   );
 };
@@ -30,6 +32,7 @@ export const BasicDisplayTest: ComponentStory<typeof BrowseRows> = () => {
       table={['Album']}
       dataSourceName="sqlite_test"
       primaryKeys={[]}
+      onUpdateOptions={action('onUpdateOptions')}
     />
   );
 };
