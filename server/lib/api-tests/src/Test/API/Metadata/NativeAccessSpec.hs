@@ -11,7 +11,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, it)
+import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
@@ -45,89 +45,139 @@ tests opts = do
   let query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
 
-  it "Adds a native access function and returns a 200" $ \testEnv -> do
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postMetadata
-          testEnv
-          [yaml|
-            type: pg_track_custom_sql
-            args:
-              type: query
-              source: postgres
-              root_field_name: divided_stuff
-              sql: *query
-              parameters:
-                - name: denominator
-                  type: int
-                - name: target_date
-                  type: date
-              returns: already_tracked_return_type
-          |]
-      )
-      [yaml|
-        message: success
-      |]
+  describe "Permissions" $ do
+    it "Fails to track custom SQL without admin access" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatusAndHeaders
+            400
+            testEnv
+            [ ("X-Hasura-Role", "not-admin")
+            ]
+            [yaml|
+              type: pg_track_custom_sql
+              args:
+                type: query
+                source: postgres
+                root_field_name: divided_stuff
+                sql: *query
+                parameters:
+                  - name: denominator
+                    type: int
+                  - name: target_date
+                    type: date
+                returns: already_tracked_return_type
+            |]
+        )
+        [yaml|
+          code: access-denied
+          error: "restricted access : admin only"
+          path: "$.args"
+        |]
 
-  it "Checks for the native access function" $ \testEnv -> do
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postMetadata
-          testEnv
-          [yaml|
-            type: pg_track_custom_sql
-            args:
-              type: query
-              source: postgres
-              root_field_name: divided_stuff
-              sql: *query
-              parameters:
-                - name: denominator
-                  type: int
-                - name: target_date
-                  type: date
-              returns: already_tracked_return_type
-          |]
-      )
-      [yaml|
+    it "Fails to untrack custom SQL without admin access" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatusAndHeaders
+            400
+            testEnv
+            [ ("X-Hasura-Role", "not-admin")
+            ]
+            [yaml|
+              type: pg_untrack_custom_sql
+              args:
+                root_field_name: divided_stuff
+                source: postgres
+            |]
+        )
+        [yaml|
+          code: access-denied
+          error: "restricted access : admin only"
+          path: "$.args"
+        |]
+
+    it "Fails to list custom SQL without admin access" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatusAndHeaders
+            400
+            testEnv
+            [ ("X-Hasura-Role", "not-admin")
+            ]
+            [yaml|
+              type: pg_get_custom_sql
+              args:
+                source: postgres
+            |]
+        )
+        [yaml|
+          code: access-denied
+          error: "restricted access : admin only"
+          path: "$.args"
+        |]
+
+  describe "Implementation " $ do
+    it "Adds a native access function and returns a 200" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_track_custom_sql
+              args:
+                type: query
+                source: postgres
+                root_field_name: divided_stuff
+                sql: *query
+                parameters:
+                  - name: denominator
+                    type: int
+                  - name: target_date
+                    type: date
+                returns: already_tracked_return_type
+            |]
+        )
+        [yaml|
           message: success
         |]
 
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postMetadata
-          testEnv
-          [yaml|
-            type: pg_get_custom_sql
-            args:
-              source: postgres
-          |]
-      )
-      [yaml|
-        divided_stuff:
-          type: query
-          root_field_name: divided_stuff
-          sql: *query
-          parameters:
-            - name: denominator
-              type: int
-            - name: target_date
-              type: date
-          returns:
-            name: already_tracked_return_type
-            schema: public
-
-      |]
-
-  it "Drops a native access function and returns a 200" $ \testEnv -> do
-    _ <-
-      GraphqlEngine.postMetadata
-        testEnv
+    it "Checks for the native access function" $ \testEnv -> do
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_track_custom_sql
+              args:
+                type: query
+                source: postgres
+                root_field_name: divided_stuff
+                sql: *query
+                parameters:
+                  - name: denominator
+                    type: int
+                  - name: target_date
+                    type: date
+                returns: already_tracked_return_type
+            |]
+        )
         [yaml|
-          type: pg_track_custom_sql
-          args:
+            message: success
+          |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_get_custom_sql
+              args:
+                source: postgres
+            |]
+        )
+        [yaml|
+          divided_stuff:
             type: query
-            source: postgres
             root_field_name: divided_stuff
             sql: *query
             parameters:
@@ -135,63 +185,85 @@ tests opts = do
                 type: int
               - name: target_date
                 type: date
-            returns: already_tracked_return_type
+            returns:
+              name: already_tracked_return_type
+              schema: public
+
         |]
 
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postMetadata
+    it "Drops a native access function and returns a 200" $ \testEnv -> do
+      _ <-
+        GraphqlEngine.postMetadata
+          testEnv
+          [yaml|
+            type: pg_track_custom_sql
+            args:
+              type: query
+              source: postgres
+              root_field_name: divided_stuff
+              sql: *query
+              parameters:
+                - name: denominator
+                  type: int
+                - name: target_date
+                  type: date
+              returns: already_tracked_return_type
+          |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_untrack_custom_sql
+              args:
+                source: postgres
+                root_field_name: divided_stuff
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+    it "Checks the native access function can be deleted" $ \testEnv -> do
+      _ <-
+        GraphqlEngine.postMetadata
+          testEnv
+          [yaml|
+            type: pg_track_custom_sql
+            args:
+              type: query
+              source: postgres
+              root_field_name: divided_stuff
+              sql: *query
+              parameters:
+                - name: denominator
+                  type: int
+                - name: target_date
+                  type: date
+              returns: already_tracked_return_type
+          |]
+
+      _ <-
+        GraphqlEngine.postMetadata
           testEnv
           [yaml|
             type: pg_untrack_custom_sql
             args:
-              source: postgres
               root_field_name: divided_stuff
-          |]
-      )
-      [yaml|
-        message: success
-      |]
-
-  it "Checks the native access function can be deleted" $ \testEnv -> do
-    _ <-
-      GraphqlEngine.postMetadata
-        testEnv
-        [yaml|
-          type: pg_track_custom_sql
-          args:
-            type: query
-            source: postgres
-            root_field_name: divided_stuff
-            sql: *query
-            parameters:
-              - name: denominator
-                type: int
-              - name: target_date
-                type: date
-            returns: already_tracked_return_type
-        |]
-
-    _ <-
-      GraphqlEngine.postMetadata
-        testEnv
-        [yaml|
-          type: pg_untrack_custom_sql
-          args:
-            root_field_name: divided_stuff
-            source: postgres
-        |]
-
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postMetadata
-          testEnv
-          [yaml|
-            type: pg_get_custom_sql
-            args:
               source: postgres
           |]
-      )
-      [yaml|
-        {}
-      |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnv
+            [yaml|
+              type: pg_get_custom_sql
+              args:
+                source: postgres
+            |]
+        )
+        [yaml|
+          {}
+        |]

@@ -29,6 +29,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
+import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ---------------------------------
@@ -58,12 +59,14 @@ runGetCustomSQL ::
     MetadataM m,
     HasServerConfigCtx m,
     MonadIO m,
+    UserInfoM m,
     MonadError QErr m
   ) =>
   GetCustomSQL b ->
   m EncJSON
 runGetCustomSQL q = do
   throwIfFeatureDisabled
+  throwIfNotAdmin
 
   metadata <- getMetadata
 
@@ -115,12 +118,14 @@ runTrackCustomSQL ::
     MetadataM m,
     MonadError QErr m,
     HasServerConfigCtx m,
+    UserInfoM m,
     MonadIO m
   ) =>
   TrackCustomSQL b ->
   m EncJSON
 runTrackCustomSQL q = do
   throwIfFeatureDisabled
+  throwIfNotAdmin
 
   let metadataObj =
         MOSourceObjId source $
@@ -176,12 +181,14 @@ runUntrackCustomSQL ::
     CacheRWM m,
     MetadataM m,
     HasServerConfigCtx m,
+    UserInfoM m,
     MonadIO m
   ) =>
   UntrackCustomSQL b ->
   m EncJSON
 runUntrackCustomSQL q = do
   throwIfFeatureDisabled
+  throwIfNotAdmin
 
   let metadataObj =
         MOSourceObjId source $
@@ -209,3 +216,9 @@ throwIfFeatureDisabled = do
   enableCustomSQL <- liftIO (_sccUsePQNP configCtx)
 
   unless enableCustomSQL (throw500 "CustomSQL is disabled!")
+
+throwIfNotAdmin :: (MonadError QErr m, UserInfoM m) => m ()
+throwIfNotAdmin = do
+  uRole <- _uiRole <$> askUserInfo
+  unless (uRole == adminRoleName) $
+    throw400 AccessDenied "You have to be an admin to access this endpoint"
