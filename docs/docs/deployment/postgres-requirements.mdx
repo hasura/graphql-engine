@@ -88,7 +88,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- Be careful to use these in your production db. Consult the Postgres manual or
 -- your DBA and give appropriate permissions.
 
--- grant all privileges on all tables in the public schema. This can be customised:
+-- grant all privileges on all tables in the public schema. This can be customized:
 -- For example, if you only want to use GraphQL regular queries and not mutations,
 -- then you can set: GRANT SELECT ON ALL TABLES...
 GRANT USAGE ON SCHEMA public TO hasurauser;
@@ -154,7 +154,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
 -- Be careful to use these in your production db. Consult the Postgres manual or
 -- your DBA and give appropriate permissions.
 
--- grant all privileges on all tables in the public schema. This can be customised:
+-- grant all privileges on all tables in the public schema. This can be customized:
 -- For example, if you only want to use GraphQL regular queries and not mutations,
 -- then you can set: GRANT SELECT ON ALL TABLES...
 GRANT USAGE ON SCHEMA public TO hasurauser;
@@ -169,7 +169,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
 
 -- By defaults users won't have access to tables they have not created (and thus do not own).
--- You can change these default prvileges to grant access to any object created in the future.
+-- You can change these default privileges to grant access to any object created in the future.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS;

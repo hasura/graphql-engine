@@ -489,7 +489,7 @@ The `detail` field value is an object contains the following members.
   | ------------------- | ------------------------------------------------------------------------------------ | --------- |
   | `OK`                | Health Check succeeded with no errors.                                               | `info`    |
   | `FAILED`            | Health Check is failed maybe due to bad connection config.                           | `warn`    |
-  | `TIMEOUT`           | Health Check is timed out. The timeout value is specified in the healch check config | `warn`    |
+  | `TIMEOUT`           | Health Check is timed out. The timeout value is specified in the health check config | `warn`    |
   | `ERROR`             | Health Check results in an exception.                                                | `warn`    |
 
 - **HealthCheckError** contains more information about the Health Check exception when the status is `ERROR`.
@@ -501,7 +501,7 @@ The `detail` field value is an object contains the following members.
 - **Internal** is an object contains the following fields.
   - `interval`: _int_. Health Check interval in seconds.
   - `max_retries`: _int_. Maximum # of retries configured.
-  - `retry_interation`: _int_. The iteration on which the Health Check has succeeded. In case of unsuccessful Health Check, the retry iteration is same as `max_retries`.
+  - `retry_iteration`: _int_. The iteration on which the Health Check has succeeded. In case of unsuccessful Health Check, the retry iteration is same as `max_retries`.
   - `retry_interval`: _int_. The retry interval in seconds.
   - `timeout`: _int_. Health Check time out value in seconds.
 

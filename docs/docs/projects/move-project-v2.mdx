@@ -22,7 +22,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 ## Introduction
 
-Hasura Cloud now creates new projects with Hasura `v2.0` by default. Due to some behaviour and underlying architectural
+Hasura Cloud now creates new projects with Hasura `v2.0` by default. Due to some behavior and underlying architectural
 changes in `v2.0`, existing projects have not been auto-updated to `v2.0`. You can update your older `v1.3` projects to
 `v2.0` by following this guide.
 
@@ -43,7 +43,7 @@ You can take a dump of this data before cleaning up if you wish to keep the log 
 ## What has changed?
 
 Check the [core updating to v2.0 guide](/resources/upgrade-hasura-v2.mdx) and the
-[release notes](https://github.com/hasura/graphql-engine/releases) to see what new concepts, features and behaviour
+[release notes](https://github.com/hasura/graphql-engine/releases) to see what new concepts, features and behavior
 changes have been introduced in Hasura `v2.0`.
 
 Note that Hasura v2 Cloud projects' Metadata is now stored in Metadata DBs managed by Hasura Cloud. Hence the new
@@ -79,8 +79,8 @@ function during this period.**
   working as expected post the update and the update did not cause any unexpected changes. Do get in touch with us in
   case you notice anything unexpected.
 - You can choose to unset the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var that was added to your project during
-  the update to preserve a `v1.3` behaviour that was modified in `v2.0`.
-  [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-null-where-change). We recommend moving to the new behaviour
+  the update to preserve a `v1.3` behavior that was modified in `v2.0`.
+  [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-null-where-change). We recommend moving to the new behavior
   by unsetting the env var after verifying your project is not impacted by the change.
 - Check the [Post update steps](/resources/upgrade-hasura-v2.mdx#hasura-v1-to-v2-post-update-steps) section of the core
   updating to v2.0 guide for other changes you should make post your project update.
@@ -134,8 +134,8 @@ assistance.
 ###### Sub-tasks:
 
 - Set `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to enable server maintenance mode
-- Set `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true` to maintain `v1.3` behaviour for `null` values in
-  `where` filters. [(Know more)](/resources/upgrade-hasura-v2.mdx#hasura-v2-behaviour-changes)
+- Set `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true` to maintain `v1.3` behavior for `null` values in
+  `where` filters. [(Know more)](/resources/upgrade-hasura-v2.mdx#hasura-v2-behavior-changes)
 
 ###### On Failure:
 

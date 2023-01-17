@@ -795,7 +795,7 @@ query {
 }
 ```
 
-The behaviour of the comparison operators depends on whether the nested objects are a single object related via an
+The behavior of the comparison operators depends on whether the nested objects are a single object related via an
 object relationship or an array of objects related via an array relationship.
 
 - In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
@@ -805,8 +805,7 @@ object relationship or an array of objects related via an array relationship.
 
 :::caution Limitations
 
-**This is only supported for local relationships**, such as relationships between two local database tables. 
-	
+**This is only supported for local relationships**, such as relationships between two local database tables.
 **This is not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
 
 :::
@@ -1051,7 +1050,7 @@ Fetch all authors which have all of their articles published i.e. have `{is_publ
 
 By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
 the `where` expression as `{_not: {condition}}`. This reads as: fetch if not (any of the nested objects satisfy the
-condition) i.e. none of the nested objects satisy the condition.
+condition) i.e. none of the nested objects satisfy the condition.
 
 For example,
 
@@ -1231,5 +1230,5 @@ to `{}`, the [TRUE expression](#bq-true-expression).
 For example, the expression `{ where: { id: {_eq: null }}}` will be reduced to `{ where: {id: {}} }` which will return
 all objects for which an `id` is set, i.e. all objects will be returned.
 
-This behaviour can be preserved in versions v2.0.0 and above by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`
+This behavior can be preserved in versions v2.0.0 and above by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`
 env var to `true`.
