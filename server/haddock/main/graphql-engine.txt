@@ -21767,7 +21767,7 @@ module Hasura.RQL.DDL.CustomSQL
 data GetCustomSQL (b :: BackendType)
 GetCustomSQL :: SourceName -> GetCustomSQL (b :: BackendType)
 [gcsSource] :: GetCustomSQL (b :: BackendType) -> SourceName
-runGetCustomSQL :: forall b m. (BackendMetadata b, MetadataM m, HasServerConfigCtx m, MonadIO m, MonadError QErr m) => GetCustomSQL b -> m EncJSON
+runGetCustomSQL :: forall b m. (BackendMetadata b, MetadataM m, HasServerConfigCtx m, MonadIO m, UserInfoM m, MonadError QErr m) => GetCustomSQL b -> m EncJSON
 data TrackCustomSQL (b :: BackendType)
 TrackCustomSQL :: SourceName -> Text -> Name -> Text -> NonEmpty CustomSQLParameter -> TableName b -> TrackCustomSQL (b :: BackendType)
 [tcsSource] :: TrackCustomSQL (b :: BackendType) -> SourceName
@@ -21776,12 +21776,12 @@ TrackCustomSQL :: SourceName -> Text -> Name -> Text -> NonEmpty CustomSQLParame
 [tcsSql] :: TrackCustomSQL (b :: BackendType) -> Text
 [tcsParameters] :: TrackCustomSQL (b :: BackendType) -> NonEmpty CustomSQLParameter
 [tcsReturns] :: TrackCustomSQL (b :: BackendType) -> TableName b
-runTrackCustomSQL :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m, MonadIO m) => TrackCustomSQL b -> m EncJSON
+runTrackCustomSQL :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m, UserInfoM m, MonadIO m) => TrackCustomSQL b -> m EncJSON
 data UntrackCustomSQL (b :: BackendType)
 UntrackCustomSQL :: SourceName -> Name -> UntrackCustomSQL (b :: BackendType)
 [utcsSource] :: UntrackCustomSQL (b :: BackendType) -> SourceName
 [utcsRootFieldName] :: UntrackCustomSQL (b :: BackendType) -> Name
-runUntrackCustomSQL :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m, HasServerConfigCtx m, MonadIO m) => UntrackCustomSQL b -> m EncJSON
+runUntrackCustomSQL :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m, HasServerConfigCtx m, UserInfoM m, MonadIO m) => UntrackCustomSQL b -> m EncJSON
 dropCustomSQLInMetadata :: forall b. BackendMetadata b => SourceName -> Name -> MetadataModifier
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.DDL.CustomSQL.GetCustomSQL b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.CustomSQL.GetCustomSQL b)
@@ -22802,22 +22802,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) TriggerOnReplication
-cteqCleanupConfig :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe Text)
-cetqWebhook :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe InputWebhook)
-cetqUpdate :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe (SubscribeOpSpec b_aCyX2))
-cetqTable :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (TableName b_aCyX2)
-cetqSource :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) SourceName
-cetqRetryConf :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe RequestTransform)
-cetqReplace :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) Bool
-cetqName :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) TriggerName
-cetqInsert :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe (SubscribeOpSpec b_aCyX2))
-cetqHeaders :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe Bool)
-cetqDelete :: forall b_aCyX2. Lens' (CreateEventTriggerQuery b_aCyX2) (Maybe (SubscribeOpSpec b_aCyX2))
+cteqTriggerOnReplication :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) TriggerOnReplication
+cteqCleanupConfig :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe Text)
+cetqWebhook :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe InputWebhook)
+cetqUpdate :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe (SubscribeOpSpec b_aCz7X))
+cetqTable :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (TableName b_aCz7X)
+cetqSource :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) SourceName
+cetqRetryConf :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe RequestTransform)
+cetqReplace :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) Bool
+cetqName :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) TriggerName
+cetqInsert :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe (SubscribeOpSpec b_aCz7X))
+cetqHeaders :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe Bool)
+cetqDelete :: forall b_aCz7X. Lens' (CreateEventTriggerQuery b_aCz7X) (Maybe (SubscribeOpSpec b_aCz7X))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
