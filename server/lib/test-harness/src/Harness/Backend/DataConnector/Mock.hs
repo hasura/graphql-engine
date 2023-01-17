@@ -13,11 +13,7 @@ module Harness.Backend.DataConnector.Mock
     -- * Mock Test Construction
     MockConfig (..),
     MockAgentEnvironment (..),
-    TestCase (..),
-    TestCaseRequired (..),
-    runTest,
     mockAgentPort,
-    defaultTestCase,
     chinookMock,
     AgentRequest (..),
     MockRequestResults (..),
@@ -42,10 +38,9 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (TestEnvironment (..))
-import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (Arg, Expectation, SpecWith, it, shouldBe)
+import Test.Hspec (Arg, Expectation, SpecWith, it)
 
 --------------------------------------------------------------------------------
 
@@ -89,10 +84,10 @@ agentConfig =
   let backendType = BackendType.backendTypeString backendTypeMetadata
       agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
    in [yaml|
-dataconnector:
-  *backendType:
-    uri: *agentUri
-|]
+        dataconnector:
+          *backendType:
+            uri: *agentUri
+        |]
 
 --------------------------------------------------------------------------------
 -- Mock Agent
@@ -149,74 +144,6 @@ mkLocalTestEnvironment _ = mkTestResource do
         teardownResource = Async.cancel maeThread
       }
 
--- | Mock Agent test case input.
-data TestCase = TestCase
-  { -- | The Mock configuration for the agent
-    _given :: MockConfig,
-    -- | The Graphql Query to test
-    _whenRequest :: Aeson.Value,
-    -- | The headers to use on the Graphql Query request
-    _whenRequestHeaders :: RequestHeaders,
-    -- | The expected HGE 'API.Query' value to be provided to the
-    -- agent. A @Nothing@ value indicates that the 'API.Query'
-    -- assertion should be skipped.
-    _whenQuery :: Maybe API.QueryRequest,
-    -- | The expected HGE 'API.QueryHeaders' response and outgoing HGE 'API.QueryHeaders'
-    _whenConfig :: Maybe API.Config,
-    -- | The expected GQL response and outgoing HGE 'API.Query'
-    _then :: Aeson.Value
-  }
-
-data TestCaseRequired = TestCaseRequired
-  { -- | The Mock configuration for the agent
-    _givenRequired :: MockConfig,
-    -- | The Graphql Query to test
-    _whenRequestRequired :: Aeson.Value,
-    -- | The expected GQL response and outgoing HGE 'API.Query'
-    _thenRequired :: Aeson.Value
-  }
-
-defaultTestCase :: TestCaseRequired -> TestCase
-defaultTestCase TestCaseRequired {..} =
-  TestCase
-    { _given = _givenRequired,
-      _whenRequest = _whenRequestRequired,
-      _whenRequestHeaders = [],
-      _whenQuery = Nothing,
-      _whenConfig = Nothing,
-      _then = _thenRequired
-    }
-
--- | Test runner for the Mock Agent. 'runMockedTest' sets the mocked
--- value in the agent, fires a GQL request, then asserts on the
--- expected response and 'API.Query' value.
-runTest :: HasCallStack => Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
-runTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
-  -- Set the Agent with the 'MockConfig'
-  I.writeIORef maeConfig _given
-
-  -- Execute the GQL Query and assert on the result
-  shouldReturnYaml
-    opts
-    ( GraphqlEngine.postGraphqlWithHeaders
-        testEnvironment
-        _whenRequestHeaders
-        _whenRequest
-    )
-    _then
-
-  -- Read the logged 'API.QueryRequest' from the Agent
-  query <- (>>= \case Query query -> Just query; _ -> Nothing) <$> I.readIORef maeRecordedRequest
-  I.writeIORef maeRecordedRequest Nothing
-
-  -- Read the logged 'API.Config' from the Agent
-  queryConfig <- I.readIORef maeRecordedRequestConfig
-  I.writeIORef maeRecordedRequestConfig Nothing
-
-  -- Assert that the 'API.QueryRequest' was constructed how we expected.
-  for_ _whenQuery ((query `shouldBe`) . Just)
-  for_ _whenConfig ((queryConfig `shouldBe`) . Just)
-
 data MockRequestResults = MockRequestResults
   { _mrrGraphqlResponse :: Aeson.Value,
     _mrrRecordedRequest :: Maybe AgentRequest,
@@ -231,11 +158,11 @@ mockMutationResponse :: API.MutationResponse -> MockConfig -> MockConfig
 mockMutationResponse mutationResponse mockConfig =
   mockConfig {_mutationResponse = \_ -> Right mutationResponse}
 
-mockAgentTest :: String -> ((MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentTest :: HasCallStack => String -> ((MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentTest name testBody =
   it name $ \env -> testBody (postMockAgentGraphqlWithHeaders env)
 
-postMockAgentGraphqlWithHeaders :: (TestEnvironment, MockAgentEnvironment) -> MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults
+postMockAgentGraphqlWithHeaders :: HasCallStack => (TestEnvironment, MockAgentEnvironment) -> MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults
 postMockAgentGraphqlWithHeaders (testEnvironment, MockAgentEnvironment {..}) mockConfig requestHeaders graphqlRequest = do
   -- Set the Agent with the 'MockConfig'
   I.writeIORef maeConfig mockConfig

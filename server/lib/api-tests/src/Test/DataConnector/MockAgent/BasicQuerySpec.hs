@@ -10,16 +10,17 @@ import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (TestCase (..))
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
 
@@ -104,185 +105,183 @@ sourceMetadata =
 --------------------------------------------------------------------------------
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests opts = do
-  describe "Basic Tests" $ do
-    it "works with simple object query" $
-      Mock.runTest opts $
-        let required =
-              Mock.TestCaseRequired
-                { _givenRequired =
-                    let albums =
-                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
-                            ]
-                          ]
-                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
-                  _whenRequestRequired =
-                    [graphql|
-                      query getAlbum {
-                        albums(limit: 1) {
-                          id
-                          title
-                        }
-                      }
-                    |],
-                  _thenRequired =
-                    [yaml|
-                      data:
-                        albums:
-                          - id: 1
-                            title: For Those About To Rock We Salute You
-                    |]
-                }
-         in (Mock.defaultTestCase required)
-              { _whenQuery =
-                  Just
-                    ( API.QueryRequest
-                        { _qrTable = API.TableName ("Album" :| []),
-                          _qrTableRelationships = [],
-                          _qrQuery =
-                            API.Query
-                              { _qFields =
-                                  Just $
-                                    HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
-                                      ],
-                                _qAggregates = Nothing,
-                                _qLimit = Just 1,
-                                _qOffset = Nothing,
-                                _qWhere = Nothing,
-                                _qOrderBy = Nothing
-                              }
-                        }
-                    )
+tests _opts = describe "Basic Tests" $ do
+  mockAgentTest "works with simple object query" $ \performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            query getAlbum {
+              albums(limit: 1) {
+                id
+                title
               }
+            }
+          |]
+    let queryResponse =
+          rowsResponse
+            [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
+                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+              ]
+            ]
+    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
 
-    it "works with order_by id" $
-      Mock.runTest opts $
-        let required =
-              Mock.TestCaseRequired
-                { _givenRequired =
-                    let albums =
-                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
-                            ],
-                            [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 2),
-                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
-                            ],
-                            [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 3),
-                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
-                            ]
-                          ]
-                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
-                  _whenRequestRequired =
-                    [graphql|
-                      query getAlbum {
-                        albums(limit: 3, order_by: {id: asc}) {
-                          id
-                          title
-                        }
-                      }
-                    |],
-                  _thenRequired =
-                    [yaml|
-                      data:
-                        albums:
-                          - id: 1
-                            title: For Those About To Rock We Salute You
-                          - id: 2
-                            title: Balls to the Wall
-                          - id: 3
-                            title: Restless and Wild
-                    |]
-                }
-         in (Mock.defaultTestCase required)
-              { _whenQuery =
-                  Just
-                    ( API.QueryRequest
-                        { _qrTable = API.TableName ("Album" :| []),
-                          _qrTableRelationships = [],
-                          _qrQuery =
-                            API.Query
-                              { _qFields =
-                                  Just $
-                                    HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                                      ],
-                                _qAggregates = Nothing,
-                                _qLimit = Just 3,
-                                _qOffset = Nothing,
-                                _qWhere = Nothing,
-                                _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
-                              }
-                        }
-                    )
-              }
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    it "works with an exists-based permissions filter" $
-      Mock.runTest opts $
-        let required =
-              Mock.TestCaseRequired
-                { _givenRequired =
-                    let albums =
-                          [ [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
+    _mrrGraphqlResponse
+      `shouldBeYaml` [yaml|
+        data:
+          albums:
+            - id: 1
+              title: For Those About To Rock We Salute You
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query $
+            API.QueryRequest
+              { _qrTable = API.TableName ("Album" :| []),
+                _qrTableRelationships = [],
+                _qrQuery =
+                  API.Query
+                    { _qFields =
+                        Just $
+                          HashMap.fromList
+                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
                             ],
-                            [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
-                            ],
-                            [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
-                            ]
-                          ]
-                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
-                  _whenRequestRequired =
-                    [graphql|
-                      query getCustomers {
-                        Customer {
-                          CustomerId
-                        }
-                      }
-                    |],
-                  _thenRequired =
-                    [yaml|
-                      data:
-                        Customer:
-                          - CustomerId: 1
-                          - CustomerId: 2
-                          - CustomerId: 3
-                    |]
-                }
-         in (Mock.defaultTestCase required)
-              { _whenRequestHeaders =
-                  [ ("X-Hasura-Role", testRoleName),
-                    ("X-Hasura-EmployeeId", "1")
-                  ],
-                _whenQuery =
-                  Just
-                    ( API.QueryRequest
-                        { _qrTable = API.TableName ("Customer" :| []),
-                          _qrTableRelationships = [],
-                          _qrQuery =
-                            API.Query
-                              { _qFields =
-                                  Just $
-                                    HashMap.fromList
-                                      [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") $ API.ScalarType "number")
-                                      ],
-                                _qAggregates = Nothing,
-                                _qLimit = Nothing,
-                                _qOffset = Nothing,
-                                _qWhere =
-                                  Just $
-                                    API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
-                                      API.ApplyBinaryComparisonOperator
-                                        API.Equal
-                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
-                                        (API.ScalarValue (Aeson.Number 1) $ API.ScalarType "number"),
-                                _qOrderBy = Nothing
-                              }
-                        }
-                    )
+                      _qAggregates = Nothing,
+                      _qLimit = Just 1,
+                      _qOffset = Nothing,
+                      _qWhere = Nothing,
+                      _qOrderBy = Nothing
+                    }
               }
+        )
+
+  mockAgentTest "works with order_by id" $ \performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            query getAlbum {
+              albums(limit: 3, order_by: {id: asc}) {
+                id
+                title
+              }
+            }
+          |]
+    let queryResponse =
+          rowsResponse
+            [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
+                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+              ],
+              [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 2),
+                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+              ],
+              [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 3),
+                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+              ]
+            ]
+    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrGraphqlResponse
+      `shouldBeYaml` [yaml|
+        data:
+          albums:
+            - id: 1
+              title: For Those About To Rock We Salute You
+            - id: 2
+              title: Balls to the Wall
+            - id: 3
+              title: Restless and Wild
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query $
+            API.QueryRequest
+              { _qrTable = API.TableName ("Album" :| []),
+                _qrTableRelationships = [],
+                _qrQuery =
+                  API.Query
+                    { _qFields =
+                        Just $
+                          HashMap.fromList
+                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                            ],
+                      _qAggregates = Nothing,
+                      _qLimit = Just 3,
+                      _qOffset = Nothing,
+                      _qWhere = Nothing,
+                      _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
+                    }
+              }
+        )
+
+  mockAgentTest "works with an exists-based permissions filter" $ \performGraphqlRequest -> do
+    let headers =
+          [ ("X-Hasura-Role", testRoleName),
+            ("X-Hasura-EmployeeId", "1")
+          ]
+    let graphqlRequest =
+          [graphql|
+            query getCustomers {
+              Customer {
+                CustomerId
+              }
+            }
+          |]
+    let queryResponse =
+          rowsResponse
+            [ [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
+              ],
+              [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
+              ],
+              [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
+              ]
+            ]
+    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrGraphqlResponse
+      `shouldBeYaml` [yaml|
+        data:
+          Customer:
+            - CustomerId: 1
+            - CustomerId: 2
+            - CustomerId: 3
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query $
+            API.QueryRequest
+              { _qrTable = API.TableName ("Customer" :| []),
+                _qrTableRelationships = [],
+                _qrQuery =
+                  API.Query
+                    { _qFields =
+                        Just $
+                          HashMap.fromList
+                            [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") $ API.ScalarType "number")
+                            ],
+                      _qAggregates = Nothing,
+                      _qLimit = Nothing,
+                      _qOffset = Nothing,
+                      _qWhere =
+                        Just $
+                          API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
+                            API.ApplyBinaryComparisonOperator
+                              API.Equal
+                              (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
+                              (API.ScalarValue (Aeson.Number 1) $ API.ScalarType "number"),
+                      _qOrderBy = Nothing
+                    }
+              }
+        )
 
 rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
 rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing
