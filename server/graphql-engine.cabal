@@ -654,7 +654,9 @@ library
                      , Hasura.Backends.DataConnector.Adapter.Types.Mutations
                      , Hasura.Backends.DataConnector.Agent.Client
                      , Hasura.Backends.DataConnector.Logging
-                     , Hasura.Backends.DataConnector.Plan
+                     , Hasura.Backends.DataConnector.Plan.Common
+                     , Hasura.Backends.DataConnector.Plan.MutationPlan
+                     , Hasura.Backends.DataConnector.Plan.QueryPlan
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded

@@ -2120,6 +2120,9 @@
       },
       "InsertMutationOperation": {
         "properties": {
+          "post_insert_check": {
+            "$ref": "#/components/schemas/Expression"
+          },
           "returning_fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/Field"
@@ -2258,6 +2261,9 @@
       },
       "UpdateMutationOperation": {
         "properties": {
+          "post_update_check": {
+            "$ref": "#/components/schemas/Expression"
+          },
           "returning_fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/Field"

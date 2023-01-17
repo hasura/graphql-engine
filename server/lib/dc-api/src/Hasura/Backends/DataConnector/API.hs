@@ -17,6 +17,7 @@ module Hasura.Backends.DataConnector.API
     capabilitiesCase,
     schemaCase,
     queryCase,
+    mutationCase,
     openApiSchema,
     Routes (..),
     apiClient,
@@ -98,6 +99,19 @@ queryCase defaultAction queryAction errorAction union = do
     (_, _, Just (WithStatus e)) -> errorAction e
 
 type QueryResponses = '[V0.QueryResponse, V0.ErrorResponse, V0.ErrorResponse400]
+
+-- | This function defines a central place to ensure that all cases are covered for mutation and error responses.
+--   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
+mutationCase :: a -> (MutationResponse -> a) -> (ErrorResponse -> a) -> Union MutationResponses -> a
+mutationCase defaultAction mutationAction errorAction union = do
+  let mutationM = matchUnion @MutationResponse union
+  let errorM = matchUnion @ErrorResponse union
+  let errorM400 = matchUnion @ErrorResponse400 union
+  case (mutationM, errorM, errorM400) of
+    (Nothing, Nothing, Nothing) -> defaultAction
+    (Just c, _, _) -> mutationAction c
+    (_, Just e, _) -> errorAction e
+    (_, _, Just (WithStatus e)) -> errorAction e
 
 type MutationResponses = '[V0.MutationResponse, V0.ErrorResponse, V0.ErrorResponse400]
 

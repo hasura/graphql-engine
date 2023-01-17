@@ -7,12 +7,10 @@ module Hasura.Backends.DataConnector.Adapter.Transport () where
 import Control.Exception.Safe (throwIO)
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
-import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Execute ()
+import Hasura.Backends.DataConnector.Adapter.Execute (DataConnectorPreparedQuery (..), encodePreparedQueryToJsonText)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, runAgentClientT)
-import Hasura.Backends.DataConnector.Plan qualified as DC
-import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
+import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON)
 import Hasura.GraphQL.Execute.Backend (DBStepInfo (..))
 import Hasura.GraphQL.Logging qualified as HGL
@@ -31,8 +29,7 @@ import Hasura.Tracing qualified as Tracing
 instance BackendTransport 'DataConnector where
   runDBQuery = runDBQuery'
   runDBQueryExplain = runDBQueryExplain'
-  runDBMutation _ _ _ _ _ _ _ _ =
-    throw400 NotSupported "runDBMutation: not implemented for the Data Connector backend."
+  runDBMutation = runDBMutation'
   runDBStreamingSubscription _ _ _ =
     liftIO . throwIO $ userError "runDBStreamingSubscription: not implemented for the Data Connector backend."
   runDBSubscription _ _ _ =
@@ -51,7 +48,7 @@ runDBQuery' ::
   Logger Hasura ->
   SourceConfig ->
   AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
-  Maybe API.QueryRequest ->
+  Maybe DataConnectorPreparedQuery ->
   m (DiffTime, a)
 runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
@@ -64,13 +61,13 @@ runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action 
 mkQueryLog ::
   GQLReqUnparsed ->
   RootFieldAlias ->
-  Maybe API.QueryRequest ->
+  Maybe DataConnectorPreparedQuery ->
   RequestId ->
   HGL.QueryLog
 mkQueryLog gqlQuery fieldName maybeQuery requestId =
   HGL.QueryLog
     gqlQuery
-    ((\query -> (fieldName, HGL.GeneratedQuery (DC.renderQuery query) J.Null)) <$> maybeQuery)
+    ((\query -> (fieldName, HGL.GeneratedQuery (encodePreparedQueryToJsonText query) J.Null)) <$> maybeQuery)
     requestId
     HGL.QueryLogKindDatabase
 
@@ -84,4 +81,27 @@ runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action) =
     . runExceptT
     . Tracing.ignoreTraceT
     . flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds)
+    $ action
+
+runDBMutation' ::
+  ( MonadIO m,
+    MonadError QErr m,
+    Tracing.MonadTrace m,
+    HGL.MonadQueryLog m
+  ) =>
+  RequestId ->
+  GQLReqUnparsed ->
+  RootFieldAlias ->
+  UserInfo ->
+  Logger Hasura ->
+  SourceConfig ->
+  AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
+  Maybe DataConnectorPreparedQuery ->
+  m (DiffTime, a)
+runDBMutation' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest = do
+  void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
+  withElapsedTime
+    . Tracing.trace ("Data Connector backend mutation for root field " <>> fieldName)
+    . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
+    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
     $ action

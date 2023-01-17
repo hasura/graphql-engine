@@ -214,6 +214,8 @@ instance HasCodec MutationOperation where
             .= _imoTable
           <*> requiredField "rows" "The rows to insert into the table"
             .= _imoRows
+          <*> optionalFieldOrNull "post_insert_check" "An expression that all inserted rows must match after they have been inserted, otherwise the changes must be reverted"
+            .= _imoPostInsertCheck
           <*> optionalFieldOrNullWithOmittedDefault "returning_fields" mempty "The fields to return for the rows affected by this insert operation"
             .= _imoReturningFields
 
@@ -226,6 +228,8 @@ instance HasCodec MutationOperation where
             .= _umoWhere
           <*> requiredField "updates" "The updates to make to the matched rows in the table"
             .= _umoUpdates
+          <*> optionalFieldOrNull "post_update_check" "An expression that all updated rows must match after they have been updated, otherwise the changes must be reverted"
+            .= _umoPostUpdateCheck
           <*> optionalFieldOrNullWithOmittedDefault "returning_fields" mempty "The fields to return for the rows affected by this update operation"
             .= _umoReturningFields
 
@@ -258,6 +262,9 @@ data InsertMutationOperation = InsertMutationOperation
     _imoTable :: API.V0.TableName,
     -- | The rows to insert into the table
     _imoRows :: [RowObject],
+    -- | An expression that all inserted rows must match after they have been inserted,
+    -- otherwise the changes must be reverted
+    _imoPostInsertCheck :: Maybe API.V0.Expression,
     -- | The fields to return that represent a projection over the set of rows inserted
     -- after they are inserted (after insertion they include calculated columns, relations etc)
     _imoReturningFields :: HashMap API.V0.FieldName API.V0.Field
@@ -370,6 +377,9 @@ data UpdateMutationOperation = UpdateMutationOperation
     _umoWhere :: Maybe API.V0.Expression,
     -- | The updates to perform against each row
     _umoUpdates :: [RowUpdate],
+    -- | An expression that all updated rows must match after they have been updated,
+    -- otherwise the changes must be reverted
+    _umoPostUpdateCheck :: Maybe API.V0.Expression,
     -- | The fields to return that represent a projection over the set of rows updated
     -- after they are updated (ie. with their updated values)
     _umoReturningFields :: HashMap API.V0.FieldName API.V0.Field

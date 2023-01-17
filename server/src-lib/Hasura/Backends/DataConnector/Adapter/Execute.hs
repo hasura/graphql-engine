@@ -1,22 +1,26 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.DataConnector.Adapter.Execute
-  (
+  ( DataConnectorPreparedQuery (..),
+    encodePreparedQueryToJsonText,
   )
 where
 
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as J
+import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
+import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt)
-import Hasura.Backends.DataConnector.API (errorResponseSummary, queryCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (ErrorResponse (..))
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientT)
-import Hasura.Backends.DataConnector.Plan qualified as DC
+import Hasura.Backends.DataConnector.Plan.Common qualified as DC
+import Hasura.Backends.DataConnector.Plan.MutationPlan qualified as DC
+import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as DC
 import Hasura.Base.Error (Code (..), QErr, throw400, throw400WithDetail, throw500)
 import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..))
@@ -30,39 +34,59 @@ import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Servant.Client.Core.HasClient ((//))
 import Servant.Client.Generic (genericClient)
-import Witch qualified
+
+data DataConnectorPreparedQuery
+  = QueryRequest API.QueryRequest
+  | MutationRequest API.MutationRequest
+
+encodePreparedQueryToJsonText :: DataConnectorPreparedQuery -> Text
+encodePreparedQueryToJsonText = \case
+  QueryRequest req -> encodeToJsonText req
+  MutationRequest req -> encodeToJsonText req
+
+encodeToJsonText :: J.ToJSON a => a -> Text
+encodeToJsonText =
+  TE.decodeUtf8 . BL.toStrict . J.encode
 
 --------------------------------------------------------------------------------
 
 instance BackendExecute 'DataConnector where
-  type PreparedQuery 'DataConnector = API.QueryRequest
+  type PreparedQuery 'DataConnector = DataConnectorPreparedQuery
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = AgentClientT (Tracing.TraceT (ExceptT QErr IO))
 
   mkDBQueryPlan UserInfo {..} env sourceName sourceConfig ir = do
-    queryPlan@DC.QueryPlan {..} <- DC.mkPlan _uiSession sourceConfig ir
+    queryPlan@DC.Plan {..} <- DC.mkQueryPlan _uiSession sourceConfig ir
     transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
-          dbsiPreparedQuery = Just _qpRequest,
+          dbsiPreparedQuery = Just $ QueryRequest _pRequest,
           dbsiAction = buildQueryAction sourceName transformedSourceConfig queryPlan
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
-    queryPlan@DC.QueryPlan {..} <- DC.mkPlan _uiSession sourceConfig ir
+    queryPlan@DC.Plan {..} <- DC.mkQueryPlan _uiSession sourceConfig ir
     transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.object [])] Env.emptyEnvironment
     pure $
       mkAnyBackend @'DataConnector
         DBStepInfo
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = transformedSourceConfig,
-            dbsiPreparedQuery = Just _qpRequest,
+            dbsiPreparedQuery = Just $ QueryRequest _pRequest,
             dbsiAction = buildExplainAction fieldName sourceName transformedSourceConfig queryPlan
           }
-  mkDBMutationPlan _ _ _ _ _ =
-    throw400 NotSupported "mkDBMutationPlan: not implemented for the Data Connector backend."
+  mkDBMutationPlan UserInfo {..} env _stringifyNum sourceName sourceConfig mutationDB = do
+    mutationPlan@DC.Plan {..} <- DC.mkMutationPlan _uiSession mutationDB
+    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
+    pure
+      DBStepInfo
+        { dbsiSourceName = sourceName,
+          dbsiSourceConfig = transformedSourceConfig,
+          dbsiPreparedQuery = Just $ MutationRequest _pRequest,
+          dbsiAction = buildMutationAction sourceName transformedSourceConfig mutationPlan
+        }
   mkLiveQuerySubscriptionPlan _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
   mkDBStreamingSubscriptionPlan _ _ _ _ =
@@ -72,30 +96,28 @@ instance BackendExecute 'DataConnector where
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."
 
-buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
-buildQueryAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
+buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> DC.Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
+buildQueryAction sourceName SourceConfig {..} DC.Plan {..} = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
-  when (DC.queryHasRelations _qpRequest && isNothing (API._cRelationships _scCapabilities)) $
+  when (DC.queryHasRelations _pRequest && isNothing (API._cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
-  let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest
 
-  queryResponse <- queryGuard =<< (genericClient // API._query) (toTxt sourceName) _scConfig apiQueryRequest
-  reshapedResponse <- _qpResponseReshaper queryResponse
+  queryResponse <- queryGuard =<< (genericClient // API._query) (toTxt sourceName) _scConfig _pRequest
+  reshapedResponse <- _pResponseReshaper queryResponse
   pure . encJFromBuilder $ J.fromEncoding reshapedResponse
   where
-    errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
-    defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
-    queryGuard = queryCase defaultAction pure errorAction
+    errorAction e = throw400WithDetail DataConnectorError (API.errorResponseSummary e) (_crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector query response - Unexpected Type"
+    queryGuard = API.queryCase defaultAction pure errorAction
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
 -- otherwise, returns the IR sent to the agent.
-buildExplainAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => GQL.RootFieldAlias -> RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
-buildExplainAction fieldName sourceName SourceConfig {..} DC.QueryPlan {..} =
+buildExplainAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => GQL.RootFieldAlias -> RQL.SourceName -> SourceConfig -> DC.Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
+buildExplainAction fieldName sourceName SourceConfig {..} DC.Plan {..} =
   case API._cExplain _scCapabilities of
-    Nothing -> pure . encJFromJValue . toExplainPlan fieldName $ _qpRequest
+    Nothing -> pure . encJFromJValue . toExplainPlan fieldName $ _pRequest
     Just API.ExplainCapabilities -> do
-      let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest
-      explainResponse <- (genericClient // API._explain) (toTxt sourceName) _scConfig apiQueryRequest
+      explainResponse <- (genericClient // API._explain) (toTxt sourceName) _scConfig _pRequest
       pure . encJFromJValue $
         ExplainPlan
           fieldName
@@ -104,4 +126,14 @@ buildExplainAction fieldName sourceName SourceConfig {..} DC.QueryPlan {..} =
 
 toExplainPlan :: GQL.RootFieldAlias -> API.QueryRequest -> ExplainPlan
 toExplainPlan fieldName queryRequest =
-  ExplainPlan fieldName (Just "") (Just [DC.renderQuery $ queryRequest])
+  ExplainPlan fieldName (Just "") (Just [encodeToJsonText queryRequest])
+
+buildMutationAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> DC.Plan API.MutationRequest API.MutationResponse -> AgentClientT m EncJSON
+buildMutationAction sourceName SourceConfig {..} DC.Plan {..} = do
+  queryResponse <- mutationGuard =<< (genericClient // API._mutation) (toTxt sourceName) _scConfig _pRequest
+  reshapedResponse <- _pResponseReshaper queryResponse
+  pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+  where
+    errorAction e = throw400WithDetail DataConnectorError (API.errorResponseSummary e) (_crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector mutations response - Unexpected Type"
+    mutationGuard = API.mutationCase defaultAction pure errorAction

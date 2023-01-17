@@ -281,12 +281,13 @@ pgDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
+  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
+pgDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf = do
   go <$> case mrf of
     MDBInsert s -> convertInsert userInfo s stringifyNum
     MDBUpdate s -> convertUpdate userInfo s stringifyNum

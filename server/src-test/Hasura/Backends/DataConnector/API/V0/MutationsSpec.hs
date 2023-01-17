@@ -73,11 +73,12 @@ spec = do
     let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string"))]
     describe "InsertOperation" $ do
       testToFromJSONToSchema
-        (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] returningFields))
+        (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] (Just $ And []) returningFields))
         [aesonQQ|
           { "type": "insert",
             "table": ["my_table"],
             "rows": [],
+            "post_insert_check": { "type": "and", "expressions": [] },
             "returning_fields": {
               "field": {
                 "type": "column",
@@ -89,12 +90,13 @@ spec = do
         |]
     describe "UpdateOperation" $ do
       testToFromJSONToSchema
-        (UpdateOperation (UpdateMutationOperation (TableName ["my_table"]) (Just $ And []) [] returningFields))
+        (UpdateOperation (UpdateMutationOperation (TableName ["my_table"]) (Just $ And []) [] (Just $ And []) returningFields))
         [aesonQQ|
           { "type": "update",
             "table": ["my_table"],
             "where": { "type": "and", "expressions": [] },
             "updates": [],
+            "post_update_check": { "type": "and", "expressions": [] },
             "returning_fields": {
               "field": {
                 "type": "column",
@@ -272,6 +274,7 @@ genInsertMutationOperation =
   InsertMutationOperation
     <$> genTableName
     <*> Gen.list defaultRange genRowObject
+    <*> Gen.maybe genExpression
     <*> genFieldMap genField
 
 genRowObject :: Gen RowObject
@@ -292,6 +295,7 @@ genUpdateMutationOperation =
     <$> genTableName
     <*> Gen.maybe genExpression
     <*> Gen.list defaultRange genRowUpdate
+    <*> Gen.maybe genExpression
     <*> genFieldMap genField
 
 genRowUpdate :: (MonadGen m, GenBase m ~ Identity) => m RowUpdate

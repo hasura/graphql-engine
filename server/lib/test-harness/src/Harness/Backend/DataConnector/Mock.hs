@@ -19,6 +19,11 @@ module Harness.Backend.DataConnector.Mock
     mockAgentPort,
     defaultTestCase,
     chinookMock,
+    AgentRequest (..),
+    MockRequestResults (..),
+    mockQueryResponse,
+    mockMutationResponse,
+    mockAgentTest,
   )
 where
 
@@ -40,14 +45,14 @@ import Harness.TestEnvironment (TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (shouldBe)
+import Test.Hspec (Arg, Expectation, SpecWith, it, shouldBe)
 
 --------------------------------------------------------------------------------
 
 backendTypeMetadata :: BackendType.BackendTypeConfig
 backendTypeMetadata =
   BackendType.BackendTypeConfig
-    { backendType = BackendType.DataConnectorReference,
+    { backendType = BackendType.DataConnectorMock,
       backendSourceName = "mock",
       backendCapabilities = Nothing,
       backendTypeString = "mock",
@@ -125,18 +130,18 @@ dataconnector:
 
 data MockAgentEnvironment = MockAgentEnvironment
   { maeConfig :: I.IORef MockConfig,
-    maeQuery :: I.IORef (Maybe API.QueryRequest),
+    maeRecordedRequest :: I.IORef (Maybe AgentRequest),
     maeThread :: Async (),
-    maeQueryConfig :: I.IORef (Maybe API.Config)
+    maeRecordedRequestConfig :: I.IORef (Maybe API.Config)
   }
 
 -- | Create the 'I.IORef's and launch the servant mock agent.
 mkLocalTestEnvironment :: TestEnvironment -> Managed MockAgentEnvironment
 mkLocalTestEnvironment _ = mkTestResource do
   maeConfig <- I.newIORef chinookMock
-  maeQuery <- I.newIORef Nothing
-  maeQueryConfig <- I.newIORef Nothing
-  maeThread <- Async.async $ runMockServer maeConfig maeQuery maeQueryConfig
+  maeRecordedRequest <- I.newIORef Nothing
+  maeRecordedRequestConfig <- I.newIORef Nothing
+  maeThread <- Async.async $ runMockServer maeConfig maeRecordedRequest maeRecordedRequestConfig
   pure $
     AcquiredResource
       { resourceValue = MockAgentEnvironment {..},
@@ -201,13 +206,49 @@ runTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
     _then
 
   -- Read the logged 'API.QueryRequest' from the Agent
-  query <- I.readIORef maeQuery
-  I.writeIORef maeQuery Nothing
+  query <- (>>= \case Query query -> Just query; _ -> Nothing) <$> I.readIORef maeRecordedRequest
+  I.writeIORef maeRecordedRequest Nothing
 
   -- Read the logged 'API.Config' from the Agent
-  queryConfig <- I.readIORef maeQueryConfig
-  I.writeIORef maeQueryConfig Nothing
+  queryConfig <- I.readIORef maeRecordedRequestConfig
+  I.writeIORef maeRecordedRequestConfig Nothing
 
   -- Assert that the 'API.QueryRequest' was constructed how we expected.
   for_ _whenQuery ((query `shouldBe`) . Just)
   for_ _whenConfig ((queryConfig `shouldBe`) . Just)
+
+data MockRequestResults = MockRequestResults
+  { _mrrGraphqlResponse :: Aeson.Value,
+    _mrrRecordedRequest :: Maybe AgentRequest,
+    _mrrRecordedRequestConfig :: Maybe API.Config
+  }
+
+mockQueryResponse :: API.QueryResponse -> MockConfig -> MockConfig
+mockQueryResponse queryResponse mockConfig =
+  mockConfig {_queryResponse = \_ -> Right queryResponse}
+
+mockMutationResponse :: API.MutationResponse -> MockConfig -> MockConfig
+mockMutationResponse mutationResponse mockConfig =
+  mockConfig {_mutationResponse = \_ -> Right mutationResponse}
+
+mockAgentTest :: String -> ((MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentTest name testBody =
+  it name $ \env -> testBody (postMockAgentGraphqlWithHeaders env)
+
+postMockAgentGraphqlWithHeaders :: (TestEnvironment, MockAgentEnvironment) -> MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults
+postMockAgentGraphqlWithHeaders (testEnvironment, MockAgentEnvironment {..}) mockConfig requestHeaders graphqlRequest = do
+  -- Set the Agent with the 'MockConfig'
+  I.writeIORef maeConfig mockConfig
+
+  -- Reset recording state
+  I.writeIORef maeRecordedRequest Nothing
+  I.writeIORef maeRecordedRequestConfig Nothing
+
+  -- Perform GraphQL request
+  graphqlResponse <- GraphqlEngine.postGraphqlWithHeaders testEnvironment requestHeaders graphqlRequest
+
+  -- Capture recordings
+  recordedRequest <- I.readIORef maeRecordedRequest
+  recordedRequestConfig <- I.readIORef maeRecordedRequestConfig
+
+  pure $ MockRequestResults graphqlResponse recordedRequest recordedRequestConfig
