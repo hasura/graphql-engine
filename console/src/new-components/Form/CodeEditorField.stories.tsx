@@ -1,6 +1,7 @@
 import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import { act } from 'react-dom/test-utils';
 
 import { z } from 'zod';
 import {
@@ -36,6 +37,7 @@ ApiPlayground.storyName = '⚙️ API';
 ApiPlayground.args = {
   name: 'codeEditorFieldName',
   label: 'Play with me!',
+  placeholder: 'CodeEditorField placeholder',
 };
 
 export const Basic: ComponentStory<typeof CodeEditorField> = () => {
@@ -67,6 +69,7 @@ export const VariantWithDescription: ComponentStory<typeof CodeEditorField> =
           name="codeEditorFieldName"
           label="The codeEditor label"
           description="CodeEditorField description"
+          placeholder="CodeEditorField placeholder"
         />
       </SimpleForm>
     );
@@ -88,6 +91,7 @@ export const VariantWithTooltip: ComponentStory<typeof CodeEditorField> =
           name="codeEditorFieldName"
           label="The codeEditor label"
           tooltip="CodeEditorField tooltip"
+          placeholder="CodeEditorField placeholder"
         />
       </SimpleForm>
     );
@@ -107,6 +111,7 @@ export const VariantSizeFull: ComponentStory<typeof CodeEditorField> = () => {
       <CodeEditorField
         name="codeEditorFieldName"
         label="The codeEditor label"
+        placeholder="CodeEditorField placeholder"
         size="full"
       />
     </SimpleForm>
@@ -154,6 +159,7 @@ export const StateWithDefaultValue: ComponentStory<typeof CodeEditorField> =
         <CodeEditorField
           name="codeEditorFieldName"
           label="The codeEditor label"
+          placeholder="CodeEditorField placeholder"
         />
       </SimpleForm>
     );
@@ -182,6 +188,7 @@ export const StateLoading: ComponentStory<typeof CodeEditorField> = () => {
       <CodeEditorField
         name="codeEditorFieldName"
         label="The codeEditor label"
+        placeholder="CodeEditorField placeholder"
         loading
       />
     </SimpleForm>
@@ -208,6 +215,7 @@ export const StateDisabled: ComponentStory<typeof CodeEditorField> = () => {
       <CodeEditorField
         name="codeEditorFieldName"
         label="The codeEditor label"
+        placeholder="CodeEditorField placeholder"
         disabled
       />
     </SimpleForm>
@@ -234,15 +242,18 @@ export const StateWithErrorMessage: ComponentStory<typeof CodeEditorField> =
     });
 
     React.useEffect(() => {
-      // Use useEffect hook to wait for the form to be rendered before triggering validation
-      trigger();
-    });
+      act(() => {
+        // Use useEffect hook to wait for the form to be rendered before triggering validation
+        trigger();
+      });
+    }, [trigger]);
 
     return (
       <Form onSubmit={action('onSubmit')}>
         <CodeEditorField
           name="codeEditorFieldName"
           label="The codeEditor label"
+          placeholder="CodeEditorField placeholder"
         />
       </Form>
     );
@@ -268,6 +279,7 @@ export const TestingScalability: ComponentStory<typeof CodeEditorField> =
           label="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
           description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
           tooltip="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+          placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         />
       </SimpleForm>
     );

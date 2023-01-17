@@ -81,6 +81,29 @@ VariantSide.parameters = {
   },
 };
 
+export const VariantAlign: ComponentStory<typeof Tooltip> = () => (
+  <>
+    <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip align="start" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip align="center" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip align="end" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+  </>
+);
+VariantAlign.storyName = '🎭 Variant - Align';
+VariantAlign.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const TestingHoveredStyle: ComponentStory<typeof Tooltip> = () => (
   <Tooltip tooltipContentChildren={<TooltipChildrenExample />} defaultOpen>
     <ChildrenExample />
