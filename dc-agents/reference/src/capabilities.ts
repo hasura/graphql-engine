@@ -57,7 +57,8 @@ const capabilities: Capabilities = {
       supports_relations: true
     }
   },
-  scalar_types: scalarTypes
+  scalar_types: scalarTypes,
+  datasets: {}
 }
 
 export const capabilitiesResponse: CapabilitiesResponse = {

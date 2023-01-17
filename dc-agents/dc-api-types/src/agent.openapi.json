@@ -370,6 +370,103 @@
           }
         }
       }
+    },
+    "/datasets/templates/{template_name}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetGetResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "`template_name` not found"
+          }
+        }
+      }
+    },
+    "/datasets/clones/{clone_name}": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clone_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetPostRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetPostResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `body`"
+          },
+          "404": {
+            "description": "`clone_name` not found"
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clone_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDeleteResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "`clone_name` not found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -403,6 +500,9 @@
           },
           "data_schema": {
             "$ref": "#/components/schemas/DataSchemaCapabilities"
+          },
+          "datasets": {
+            "$ref": "#/components/schemas/DatasetCapabilities"
           },
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
@@ -573,6 +673,7 @@
       "MetricsCapabilities": {},
       "ExplainCapabilities": {},
       "RawCapabilities": {},
+      "DatasetCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
@@ -2348,6 +2449,61 @@
         },
         "required": [
           "query"
+        ],
+        "type": "object"
+      },
+      "DatasetGetResponse": {
+        "properties": {
+          "exists": {
+            "description": "Message detailing if the dataset exists",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exists"
+        ],
+        "type": "object"
+      },
+      "DatasetPostResponse": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/Config"
+          }
+        },
+        "required": [
+          "config"
+        ],
+        "type": "object"
+      },
+      "Config": {
+        "additionalProperties": {
+          "additionalProperties": true
+        },
+        "type": "object"
+      },
+      "DatasetPostRequest": {
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/DatasetTemplateName"
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "type": "object"
+      },
+      "DatasetTemplateName": {
+        "type": "string"
+      },
+      "DatasetDeleteResponse": {
+        "properties": {
+          "message": {
+            "description": "The named dataset to clone from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       }

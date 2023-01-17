@@ -230,15 +230,15 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
                 <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
+                <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
                 <&> Lens.set (key "options" . key "uri") J.Null
-                <&> Lens.set (_Object . Lens.at "display_name") (Just J.Null)
+                <&> Lens.set (_Object . Lens.at "display_name") Nothing
             )
             [yaml|
             capabilities: *backendCapabilities
             config_schema_response:
               config_schema: null
               other_schemas: null
-            display_name: null
             options:
               uri: null
             |]

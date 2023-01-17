@@ -31,8 +31,8 @@ const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
   };
 }
 
-export const loadStaticData = async (): Promise<StaticData> => {
-  const gzipReadStream = fs.createReadStream(__dirname + "/ChinookData.xml.gz");
+export const loadStaticData = async (name: string): Promise<StaticData> => {
+  const gzipReadStream = fs.createReadStream(__dirname + "/" + name);
   const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => { });
   const xmlStr = (await streamToBuffer(unzipStream)).toString("utf16le");
   const xml = await xml2js.parseStringPromise(xmlStr, { explicitArray: false, emptyTag: () => null, valueProcessors: [parseNumbersInNumericColumns(schema)] });

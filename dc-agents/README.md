@@ -258,6 +258,20 @@ The preference would be to support the highest level of atomicity possible (ie `
 
 The agent can also specify whether or not it supports `returning` data from mutations. This refers to the ability to return the data that was mutated by mutation operations (for example, the updated rows in an update, or the deleted rows in a delete).
 
+### Dataset Capabilities
+
+The agent can declare whether it supports datasets (ie. api for creating/cloning schemas). If it supports datasets, it needs to declare a `datasets` capability:
+
+```json
+{
+  "capabilities": {
+    "datasets": { }
+  }
+}
+```
+
+See [Datasets](#datasets) for information on how this capability is used.
+
 ### Schema
 
 The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `graphql-engine`. It returns the following JSON object:
@@ -2160,3 +2174,42 @@ Breaking down the properties in the `delete`-typed mutation operation:
 * `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the deletion (ie. all deleted rows).
 
 Delete operations return responses that are the same as insert and update operations, except the affected rows in `returning` are the deleted rows instead.
+
+### Datasets
+
+The `/datasets` resource is available to use in order to create new databases/schemas from templates.
+
+Datasets are represented by abstract names referencing database-schema templates that can be cloned from and clones that can be used via config and deleted. This feature is required for testing the mutations feature, but may also have non-test uses - for example - spinning up interactive demo projects.
+
+The `/datasets/:name` resource has the following methods:
+
+* `GET /datasets/:template_name` -> `{"exists": true|false}`
+* `POST /datasets/:clone_name {"from": template_name}` -> `{"config": {...}}`
+* `DELETE /datasets/:clone_name` -> `{"message": "success"}`
+
+The `POST` method is the most significant way to interact with the API. It allows for cloning a dataset template to a new name. The new name can be used to delete the dataset, and the config returned from the POST API call can be used as the config header for non-dataset interactions such as queries.
+
+The following diagram shows the interactions between the various datatypes and resource methods:
+
+```mermaid
+flowchart TD;
+    NAME["Dataset Name"] --> GET["GET /datasets/templates/:template_name"];
+    style NAME stroke:#0f3,stroke-width:2px
+    NAME -- clone_name --> POST;
+    NAME -- from --> POST["POST /datasets/clones/:clone_name { from: TEMPLATE_NAME }"];
+    GET --> EXISTS["{ exists: true }"];
+    GET --> EXISTSF["{ exists: false }"];
+    GET --> FAILUREG["400"];
+    style FAILUREG stroke:#f33,stroke-width:2px
+    POST --> FAILUREP["400"];
+    style FAILUREP stroke:#f33,stroke-width:2px
+    NAME --> DELETE["DELETE /datasets/clones/:clone_name"];
+    POST --> CONFIG["Source Config"];
+    style CONFIG stroke:#0f3,stroke-width:2px
+    DELETE --> SUCCESSD["{ message: 'success' }"];
+    DELETE --> FAILURED["400"];
+    style FAILURED stroke:#f33,stroke-width:2px
+    CONFIG --> SCHEMA["POST /schema"];
+    CONFIG --> QUERY["POST /query"];
+    CONFIG --> MUTATION["POST /mutation"];
+```

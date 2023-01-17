@@ -29,6 +29,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     MetricsCapabilities (..),
     ExplainCapabilities (..),
     RawCapabilities (..),
+    DatasetCapabilities (..),
     CapabilitiesResponse (..),
   )
 where
@@ -81,14 +82,15 @@ data Capabilities = Capabilities
     _cComparisons :: Maybe ComparisonCapabilities,
     _cMetrics :: Maybe MetricsCapabilities,
     _cExplain :: Maybe ExplainCapabilities,
-    _cRaw :: Maybe RawCapabilities
+    _cRaw :: Maybe RawCapabilities,
+    _cDatasets :: Maybe DatasetCapabilities
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -104,6 +106,7 @@ instance HasCodec Capabilities where
         <*> optionalField "metrics" "The agent's metrics capabilities" .= _cMetrics
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
         <*> optionalField "raw" "The agent's raw query capabilities" .= _cRaw
+        <*> optionalField "datasets" "The agent's dataset capabilities" .= _cDatasets
 
 data DataSchemaCapabilities = DataSchemaCapabilities
   { _dscSupportsPrimaryKeys :: Bool,
@@ -418,6 +421,15 @@ data RawCapabilities = RawCapabilities {}
 instance HasCodec RawCapabilities where
   codec =
     object "RawCapabilities" $ pure RawCapabilities
+
+data DatasetCapabilities = DatasetCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetCapabilities
+
+instance HasCodec DatasetCapabilities where
+  codec =
+    object "DatasetCapabilities" $ pure DatasetCapabilities
 
 data CapabilitiesResponse = CapabilitiesResponse
   { _crCapabilities :: Capabilities,

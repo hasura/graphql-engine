@@ -149,6 +149,27 @@ type RawApi =
     :> ReqBody '[JSON] V0.RawRequest
     :> Post '[JSON] V0.RawResponse
 
+type DatasetGetApi =
+  "datasets"
+    :> "templates"
+    :> Capture "template_name" DatasetTemplateName
+    :> Get '[JSON] V0.DatasetGetResponse
+
+type DatasetPostApi =
+  "datasets"
+    :> "clones"
+    :> Capture "clone_name" DatasetCloneName
+    :> ReqBody '[JSON] V0.DatasetPostRequest
+    :> Post '[JSON] V0.DatasetPostResponse
+
+type DatasetDeleteApi =
+  "datasets"
+    :> "clones"
+    :> Capture "clone_name" DatasetCloneName
+    :> Delete '[JSON] V0.DatasetDeleteResponse
+
+type DatasetApi = DatasetGetApi :<|> DatasetPostApi :<|> DatasetDeleteApi
+
 data Prometheus
 
 -- NOTE: This seems like quite a brittle definition and we may want to be
@@ -189,13 +210,17 @@ data Routes mode = Routes
     -- | 'GET /metrics'
     _metrics :: mode :- MetricsApi,
     -- | 'GET /raw'
-    _raw :: mode :- RawApi
+    _raw :: mode :- RawApi,
+    -- | 'GET /datasets/:template_name'
+    --   'POST /datasets/:clone_name'
+    --   'DELETE /datasets/:clone_name'
+    _datasets :: mode :- DatasetApi
   }
   deriving stock (Generic)
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> MutationApi :<|> HealthApi :<|> MetricsApi :<|> RawApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> MutationApi :<|> HealthApi :<|> MetricsApi :<|> RawApi :<|> DatasetApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

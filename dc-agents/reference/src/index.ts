@@ -1,14 +1,15 @@
 ﻿import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
-import { filterAvailableTables, getSchema, getTable, loadStaticData } from './data';
+import { filterAvailableTables, getSchema, getTable, loadStaticData, StaticData } from './data';
 import { queryData } from './query';
 import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse } from '@hasura/dc-api-types';
+import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse, DatasetDeleteResponse, DatasetPostRequest, DatasetGetResponse, DatasetPostResponse } from '@hasura/dc-api-types';
+import { cloneDataset, deleteDataset, getDataset } from './datasets';
 
 const port = Number(process.env.PORT) || 8100;
 const server = Fastify({ logger: { prettyPrint: true } });
-let staticData = {};
+let staticData : Record<string, StaticData> = {};
 
 server.register(FastifyCors, {
   // Accept all origins of requests. This must be modified in
@@ -33,8 +34,38 @@ server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
-  const data = filterAvailableTables(staticData, config);
+  // Prefix '$' to disambiguate from default datasets.
+  const dbName = config.db ? `$${config.db}` : '@default';
+  const data = filterAvailableTables(staticData[dbName], config);
   return queryData(getTable(data, config), request.body);
+});
+
+// Methods on dataset resources.
+// 
+// Examples:
+// 
+// > curl -H 'content-type: application/json' -XGET localhost:8100/datasets/ChinookData
+// {"exists": true}
+// 
+server.get<{ Params: { name: string, }, Reply: DatasetGetResponse }>("/datasets/templates/:name", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "datasets.templates.get");
+  return getDataset(request.params.name);
+});
+
+// > curl -H 'content-type: application/json' -XPOST localhost:8100/datasets/foo -d '{"from": "ChinookData"}'
+// {"config":{"db":"$foo"}}
+// 
+server.post<{ Params: { name: string, }, Body: DatasetPostRequest, Reply: DatasetPostResponse }>("/datasets/clones/:name", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.post");
+  return cloneDataset(staticData, request.params.name, request.body);
+});
+
+// > curl -H 'content-type: application/json' -XDELETE 'localhost:8100/datasets/foo'
+// {"message":"success"}
+// 
+server.delete<{ Params: { name: string, }, Reply: DatasetDeleteResponse }>("/datasets/clones/:name", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.delete");
+  return deleteDataset(staticData, request.params.name);
 });
 
 server.get("/health", async (request, response) => {
@@ -49,7 +80,7 @@ process.on('SIGINT', () => {
 
 const start = async () => {
   try {
-    staticData = await loadStaticData();
+    staticData = {'@default' : await loadStaticData("ChinookData.xml.gz")};
     await server.listen(port, "0.0.0.0");
   }
   catch (err) {

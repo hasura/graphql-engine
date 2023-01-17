@@ -88,6 +88,7 @@ library
     Hasura.Backends.DataConnector.API.V0.Scalar
     Hasura.Backends.DataConnector.API.V0.Schema
     Hasura.Backends.DataConnector.API.V0.Table
+    Hasura.Backends.DataConnector.API.V0.Dataset
   other-modules:
     Hasura.Backends.DataConnector.API.V0.Name
 

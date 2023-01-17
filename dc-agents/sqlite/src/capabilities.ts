@@ -1,5 +1,5 @@
 import { configSchema } from "./config"
-import { METRICS, MUTATIONS } from "./environment"
+import { DATASETS, METRICS, MUTATIONS } from "./environment"
 
 import { CapabilitiesResponse, ScalarTypeCapabilities } from "@hasura/dc-api-types"
 
@@ -129,6 +129,7 @@ export const capabilitiesResponse: CapabilitiesResponse = {
     ),
     explain: {},
     raw: {},
+    ... (DATASETS ? { datasets: {} } : {}),
     ... (METRICS ? { metrics: {} } : {})
   },
 }

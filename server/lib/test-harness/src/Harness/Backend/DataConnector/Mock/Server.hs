@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TypeOperators #-}
 
 -- | Mock Agent Warp server backend
 module Harness.Backend.DataConnector.Mock.Server
@@ -67,7 +68,8 @@ capabilities =
                   },
             API._cMetrics = Just API.MetricsCapabilities {},
             API._cExplain = Just API.ExplainCapabilities {},
-            API._cRaw = Just API.RawCapabilities {}
+            API._cRaw = Just API.RawCapabilities {},
+            API._cDatasets = Just API.DatasetCapabilities {}
           },
       _crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -806,6 +808,13 @@ metricsHandler = pure "# NOTE: Metrics would go here."
 rawHandler :: API.SourceName -> API.Config -> API.RawRequest -> Handler API.RawResponse
 rawHandler _ _ _ = pure $ API.RawResponse [] -- NOTE: Raw query response would go here.
 
+datasetHandler :: (API.DatasetTemplateName -> Handler API.DatasetGetResponse) :<|> ((API.DatasetCloneName -> API.DatasetPostRequest -> Handler API.DatasetPostResponse) :<|> (API.DatasetCloneName -> Handler API.DatasetDeleteResponse))
+datasetHandler = datasetGetHandler :<|> datasetPostHandler :<|> datasetDeleteHandler
+  where
+    datasetGetHandler _ = pure $ API.datasetGetSuccess
+    datasetPostHandler _ _ = pure $ API.DatasetPostResponse API.emptyConfig
+    datasetDeleteHandler _ = pure $ API.datasetDeleteSuccess
+
 dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
 dcMockableServer mcfg mRecordedRequest mRecordedRequestConfig =
   mockCapabilitiesHandler mcfg
@@ -816,6 +825,7 @@ dcMockableServer mcfg mRecordedRequest mRecordedRequestConfig =
     :<|> healthcheckHandler
     :<|> metricsHandler
     :<|> rawHandler
+    :<|> datasetHandler
 
 mockAgentPort :: Warp.Port
 mockAgentPort = 65006
