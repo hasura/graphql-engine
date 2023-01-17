@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { generateGqlQueryFromTable } from './utils';
-import { handlers } from '../../../features/PermissionsForm/mocks/handlers.mock';
+import { handlers } from '../../../features/Permissions/PermissionsForm/mocks/handlers.mock';
 import { Table } from '../../../dataSources/types';
 
 const table: Table = {
