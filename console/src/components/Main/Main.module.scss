@@ -620,7 +620,7 @@
 }
 
 .main {
-  padding: 0;
+  padding: 0 !important;
   // width: 100vw;
   min-width: $minContainerWidth;
   background-color: #f8fafb;
