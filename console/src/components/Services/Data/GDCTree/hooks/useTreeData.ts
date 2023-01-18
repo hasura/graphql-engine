@@ -1,5 +1,9 @@
 import { DEFAULT_STALE_TIME } from '@/features/DatabaseRelationships';
 import { DataSource, nativeDrivers } from '@/features/DataSource';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
 import { useMetadata } from '@/features/hasura-metadata-api';
 import { useHttpClient } from '@/features/Network';
 import { DataNode } from 'antd/lib/tree';
@@ -11,6 +15,8 @@ const isValueDataNode = (value: DataNode | null): value is DataNode =>
 export const useTreeData = () => {
   const httpClient = useHttpClient();
   const { data: metadata, isFetching } = useMetadata();
+  const { enabled: isBigQueryEnabled, isLoading: isFeatureFlagsLoading } =
+    useIsFeatureFlagEnabled(availableFeatureFlagIds.enabledNewUIForBigQuery);
 
   return useQuery({
     queryKey: ['treeview'],
@@ -21,7 +27,11 @@ export const useTreeData = () => {
         /**
          * NOTE: this filter prevents native drivers from being part of the new tree
          */
-        .filter(source => !nativeDrivers.includes(source.kind))
+        .filter(
+          source =>
+            !nativeDrivers.includes(source.kind) ||
+            (isBigQueryEnabled && source.kind === 'bigquery')
+        )
         .map(async source => {
           const tablesAsTree = await DataSource(
             httpClient
@@ -35,7 +45,7 @@ export const useTreeData = () => {
 
       return filteredResult;
     },
-    enabled: !isFetching,
+    enabled: !isFetching && !isFeatureFlagsLoading,
     refetchOnWindowFocus: false,
     staleTime: DEFAULT_STALE_TIME,
   });
