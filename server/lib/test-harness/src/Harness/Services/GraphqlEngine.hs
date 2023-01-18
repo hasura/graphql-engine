@@ -2,8 +2,11 @@
 -- with Graphql Engine.
 module Harness.Services.GraphqlEngine
   ( HgeBinPath (..),
-    HgeServerInstance (getHgeServerInstanceUrl),
+    HgeServerInstance (..),
+    getHgeServerInstanceUrl,
+    HgeConfig (..),
     withHge,
+    spawnServer,
     emptyHgeConfig,
   )
 where
@@ -17,6 +20,7 @@ import Data.Has
 import Data.IORef
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
+import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Vector (fromList)
 import Harness.Exceptions
 import Harness.Http qualified as Http
@@ -38,7 +42,14 @@ data HgeConfig = HgeConfig
   { hgeConfigEnvironmentVars :: [(String, String)]
   }
 
-newtype HgeServerInstance = HgeServerInstance {getHgeServerInstanceUrl :: Text}
+data HgeServerInstance = HgeServerInstance
+  { hgeServerHost :: Text,
+    hgeServerPort :: Int
+  }
+
+getHgeServerInstanceUrl :: HgeServerInstance -> Text
+getHgeServerInstanceUrl (HgeServerInstance {hgeServerHost, hgeServerPort}) =
+  "http://" <> hgeServerHost <> ":" <> tshow hgeServerPort <> "/"
 
 emptyHgeConfig :: HgeConfig
 emptyHgeConfig = HgeConfig []
@@ -58,72 +69,79 @@ withHge ::
   HgeConfig ->
   SpecWith (HgeServerInstance, a) ->
   SpecWith a
-withHge HgeConfig {..} specs = do
+withHge hgeConfig specs = do
   flip aroundWith specs \action a -> runManaged do
     let hgeBin = getter a
         pgUrl = getter a
     let logger = getter @Logger a
-    port <- spawnServer logger pgUrl hgeBin
-    liftIO do
-      let urlPrefix = "http://127.0.0.1"
-      let server = HgeServerInstance (urlPrefix <> ":" <> tshow port <> "/")
-      result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server)
-      case result of
-        Http.Healthy -> action (server, a)
-        Http.Unhealthy failures -> do
-          runLogger logger $ HgeInstanceFailedHealthcheckMessage failures
-          error "Graphql-Engine failed http healthcheck."
-  where
-    spawnServer :: Logger -> PostgresServerUrl -> HgeBinPath -> Managed Warp.Port
-    spawnServer logger pgUrl (HgeBinPath hgeBinPath) = do
-      freshDb <- mkFreshPostgresDb logger pgUrl
-      let metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
-      ((_, Just hgeStdOut, Just hgeStdErr, _), port) <-
-        managed
-          ( bracket
-              ( do
-                  port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-                  runLogger logger $ HgeInstanceStartMessage port
+    server <- spawnServer logger pgUrl hgeBin hgeConfig
+    liftIO $ action (server, a)
 
-                  process <-
-                    createProcess
-                      ( proc
-                          hgeBinPath
-                          [ "serve",
-                            "--enable-console",
-                            "--server-port",
-                            show port,
-                            "--metadata-database-url",
-                            T.unpack (getPostgresServerUrl metadataDbUrl)
-                          ]
-                      )
-                        { env =
-                            Just $
-                              ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
-                                : hgeConfigEnvironmentVars,
-                          std_out = CreatePipe,
-                          std_err = CreatePipe,
-                          create_group = True
-                        }
-                      `catchAny` ( \exn ->
-                                     error $
-                                       unlines
-                                         [ "Failed to spawn Graphql-Engine process:",
-                                           show exn
-                                         ]
-                                 )
-                  return $ (process, port)
-              )
-              ( \(process@(_, _, _, ph), port) -> do
-                  interruptProcessGroupOf ph
-                  exitCode <- waitForProcess ph
-                  cleanupProcess process
-                  runLogger logger $ HgeInstanceShutdownMessage port exitCode
-              )
+-- | spin up a Manager HGE instance and check it is healthy
+spawnServer ::
+  Logger ->
+  PostgresServerUrl ->
+  HgeBinPath ->
+  HgeConfig ->
+  Managed HgeServerInstance
+spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmentVars}) = do
+  freshDb <- mkFreshPostgresDb logger pgUrl
+  let metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
+  ((_, Just hgeStdOut, Just hgeStdErr, _), port) <-
+    managed
+      ( bracket
+          ( do
+              port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
+              runLogger logger $ HgeInstanceStartMessage port
+
+              process <-
+                createProcess
+                  ( proc
+                      hgeBinPath
+                      [ "serve",
+                        "--enable-console",
+                        "--server-port",
+                        show port,
+                        "--metadata-database-url",
+                        T.unpack (getPostgresServerUrl metadataDbUrl)
+                      ]
+                  )
+                    { env =
+                        Just $
+                          ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
+                            : hgeConfigEnvironmentVars,
+                      std_out = CreatePipe,
+                      std_err = CreatePipe,
+                      create_group = True
+                    }
+                  `catchAny` ( \exn ->
+                                 error $
+                                   unlines
+                                     [ "Failed to spawn Graphql-Engine process:",
+                                       show exn
+                                     ]
+                             )
+              return $ (process, port)
           )
-      hgeLogRelayThread logger hgeStdOut
-      hgeStdErrRelayThread logger hgeStdErr
-      return port
+          ( \(process@(_, _, _, ph), port) -> do
+              startTime <- getCurrentTime
+              interruptProcessGroupOf ph
+              exitCode <- waitForProcess ph
+              cleanupProcess process
+              endTime <- getCurrentTime
+              runLogger logger $ HgeInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
+          )
+      )
+  hgeLogRelayThread logger hgeStdOut
+  hgeStdErrRelayThread logger hgeStdErr
+  liftIO do
+    let server = HgeServerInstance "127.0.0.1" port
+    result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server)
+    case result of
+      Http.Healthy -> pure server
+      Http.Unhealthy failures -> do
+        runLogger logger $ HgeInstanceFailedHealthcheckMessage failures
+        error "Graphql-Engine failed http healthcheck."
 
 -- | Log message type used to indicate a HGE server instance has started.
 data HgeInstanceStartMessage = HgeInstanceStartMessage {hiStartPort :: Int}
@@ -150,7 +168,8 @@ instance LoggableMessage HgeInstanceFailedHealthcheckMessage where
 -- | Log message type used to indicate a HGE server instance has shutdown.
 data HgeInstanceShutdownMessage = HgeInstanceShutdownMessage
   { hiShutdownPort :: Int,
-    hiShutdownExitCode :: ExitCode
+    hiShutdownExitCode :: ExitCode,
+    hiShutdownDuration :: NominalDiffTime
   }
 
 instance LoggableMessage HgeInstanceShutdownMessage where
@@ -158,6 +177,7 @@ instance LoggableMessage HgeInstanceShutdownMessage where
     object
       [ ("type", String "HgeInstanceShutdownMessage"),
         ("port", Number (fromIntegral hiShutdownPort)),
+        ("duration", Number (realToFrac hiShutdownDuration)),
         ("exit-code", String (tshow hiShutdownExitCode))
       ]
 
