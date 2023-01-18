@@ -35,34 +35,16 @@ backendTypeMetadata =
               DateTime:
                 comparison_operators:
                   _in_year: int
-                  _eq: DateTime
-                  _gt: DateTime
-                  _gte: DateTime
-                  _lt: DateTime
-                  _lte: DateTime
-                  _neq: DateTime
               string:
                 comparison_operators:
                   _like: string
                   _glob: string
-                  _eq: string
-                  _gt: string
-                  _gte: string
-                  _lt: string
-                  _lte: string
-                  _neq: string
                 aggregate_functions:
                   min: string
                   max: string
               decimal:
                 comparison_operators:
                   _modulus_is_zero: decimal
-                  _eq: decimal
-                  _gt: decimal
-                  _gte: decimal
-                  _lt: decimal
-                  _lte: decimal
-                  _neq: decimal
                 aggregate_functions:
                   min: decimal
                   max: decimal
@@ -70,12 +52,6 @@ backendTypeMetadata =
               number:
                 comparison_operators:
                   _modulus_is_zero: number
-                  _eq: number
-                  _gt: number
-                  _gte: number
-                  _lt: number
-                  _lte: number
-                  _neq: number
                 aggregate_functions:
                   min: number
                   max: number
@@ -86,12 +62,6 @@ backendTypeMetadata =
                   _or: bool
                   _nand: bool
                   _xor: bool
-                  _eq: bool
-                  _gt: bool
-                  _gte: bool
-                  _lt: bool
-                  _lte: bool
-                  _neq: bool
             queries: {}
             relationships: {}
             comparisons:

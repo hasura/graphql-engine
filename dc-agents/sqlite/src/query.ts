@@ -129,7 +129,6 @@ function where_clause(relationships: TableRelationships[], expression: Expressio
 
       case "binary_op":
         const bopLhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
-        const bop = bop_op(expression.operator);
         const bopRhs = generateComparisonValueFragment(expression.value, queryTableAlias, currentTableAlias);
         if(expression.operator == '_in_year') {
           return `cast(strftime('%Y', ${bopLhs}) as integer) = ${bopRhs}`;
@@ -142,6 +141,7 @@ function where_clause(relationships: TableRelationships[], expression: Expressio
         } else if(expression.operator == '_xor') {
           return `(${bopLhs} AND (NOT ${bopRhs})) OR ((NOT${bopRhs}) AND ${bopRhs})`;
         } else {
+          const bop = bop_op(expression.operator);
           return `${bopLhs} ${bop} ${bopRhs}`;
         }
 
@@ -384,17 +384,9 @@ function bop_op(o: BinaryComparisonOperator): string {
     case 'greater_than_or_equal': result = '>='; break;
     case 'less_than':             result = '<'; break;
     case 'less_than_or_equal':    result = '<='; break;
-    case '_eq':                   result = '='; break; // Why is this required?
-    case '_gt':                   result = '>'; break; // Why is this required?
-    case '_gte':                  result = '>='; break; // Why is this required?
-    case '_lt':                   result = '<'; break; // Why is this required?
-    case '_lte':                  result = '<='; break; // Why is this required?
     case '_like':                 result = 'LIKE'; break;
     case '_glob':                 result = 'GLOB'; break;
     case '_regexp':               result = 'REGEXP'; break; // TODO: Have capabilities detect if REGEXP support is enabled
-    case '_neq':                  result = '<>'; break;
-    case '_nlt':                  result = '!<'; break;
-    case '_ngt':                  result = '!>'; break;
     case '_and':                  result = 'AND'; break;
     case '_or':                   result = 'OR'; break;
   }

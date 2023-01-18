@@ -1,18 +1,36 @@
 module Test.Specs.CapabilitiesSpec (spec) where
 
-import Hasura.Backends.DataConnector.API (Capabilities, CapabilitiesResponse (..), Config, validateConfigAgainstConfigSchema)
-import Test.AgentClient (getCapabilitiesGuarded)
+import Control.Monad.Catch (MonadThrow)
+import Control.Monad.IO.Class (MonadIO)
+import Data.Foldable (forM_)
+import Data.HashMap.Strict qualified as HashMap
+import Data.Text qualified as Text
+import Hasura.Backends.DataConnector.API
+import Language.GraphQL.Draft.Syntax qualified as G
+import Test.AgentClient (AgentClientT, HasAgentClient, getCapabilitiesGuarded)
 import Test.Expectations (jsonShouldBe)
-import Test.Sandwich (describe)
+import Test.Sandwich (ExampleT, HasBaseContext, describe, shouldNotContain)
 import Test.TestHelpers (AgentTestSpec, it)
 import Prelude
 
 spec :: Config -> Capabilities -> AgentTestSpec
-spec config expectedCapabilities = describe "capabilities API" $ do
-  it "returns the expected capabilities" $ do
-    CapabilitiesResponse {..} <- getCapabilitiesGuarded
-    _crCapabilities `jsonShouldBe` expectedCapabilities
-
+spec config Capabilities {..} = describe "capabilities API" $ do
   it "returns a schema that can be used to validate the current config" $ do
     CapabilitiesResponse {..} <- getCapabilitiesGuarded
     validateConfigAgainstConfigSchema _crConfigSchemaResponse config `jsonShouldBe` []
+
+  describe "Scalar Types" $ do
+    testPerScalarType "does not use any reserved comparison operator names" $ \_scalarType ScalarTypeCapabilities {..} -> do
+      let names = fmap G.unName . HashMap.keys $ unComparisonOperators _stcComparisonOperators
+      -- The built in types will generate graphql fields with these names
+      let builtInGraphqlFieldNames = ["_eq", "_neq", "_in", "_nin", "_gt", "_lt", "_gte", "_lte", "_is_null"]
+      -- The built in types have these names, so any custom operator that uses these names will overlap with them in the API JSON
+      let builtInTypeNames = ["less_than", "less_than_or_equal", "greater_than", "greater_than_or_equal", "equal", "in", "is_null"]
+      names `shouldNotContain` (builtInGraphqlFieldNames ++ builtInTypeNames)
+  where
+    testPerScalarType :: String -> (forall context m. (MonadThrow m, MonadIO m, HasBaseContext context, HasAgentClient context) => ScalarType -> ScalarTypeCapabilities -> AgentClientT (ExampleT context m) ()) -> AgentTestSpec
+    testPerScalarType description test =
+      describe description $ do
+        forM_ (HashMap.toList $ unScalarTypesCapabilities _cScalarTypes) $ \(scalarType, scalarTypeCapabilities) -> do
+          it (Text.unpack $ getScalarType scalarType) $
+            test scalarType scalarTypeCapabilities
