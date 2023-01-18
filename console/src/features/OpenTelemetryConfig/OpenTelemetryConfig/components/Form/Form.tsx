@@ -1,7 +1,12 @@
 import * as React from 'react';
 
 import { Button } from '@/new-components/Button';
-import { Checkbox, SimpleForm, InputField, Radio } from '@/new-components/Form';
+import {
+  CheckboxesField,
+  SimpleForm,
+  InputField,
+  Radio,
+} from '@/new-components/Form';
 import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
@@ -51,7 +56,7 @@ export function Form(props: FormProps) {
           disabled
         />
 
-        <Checkbox
+        <CheckboxesField
           name="dataType"
           label="Data Type"
           tooltip="The type of observability data points to be exported. At the moment, only Traces is supported."

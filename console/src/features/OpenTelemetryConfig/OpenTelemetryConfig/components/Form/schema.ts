@@ -24,7 +24,7 @@ export const FormSchema = z.object({
   ),
 
   // DATA TYPE
-  dataType: z.enum(['traces']),
+  dataType: z.enum(['traces']).array(),
 
   // HEADERS
   headers: requestHeadersSelectorSchema,
@@ -49,7 +49,8 @@ export const defaultValues: FormValues = {
   batchSize: 512,
 
   connectionType: 'http',
-  dataType: 'traces',
+
+  dataType: ['traces'],
 
   // An empty element allows having the first line to be there when the collapsible opens.
   // TODO: the behavior should be encapsulated in the RequestHeadersSelector because it's hard to

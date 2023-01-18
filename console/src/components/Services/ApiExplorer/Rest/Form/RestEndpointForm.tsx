@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { AllowedRESTMethods } from '@/metadata/types';
 import { isQueryValid } from '@/components/Services/ApiExplorer/Rest/utils';
 import {
-  Checkbox,
+  CheckboxesField,
   CodeEditorField,
   InputField,
   Textarea,
@@ -56,12 +56,9 @@ const validationSchema = z.object({
   comment: z.union([z.string(), z.null()]),
   url: z.string().min(1, { message: 'Please add a location' }),
   methods: z
-    // When nothing is selected, the value is a false boolean
-    .union([z.string().array(), z.boolean()])
-    .refine(
-      value => Array.isArray(value) && value.length > 0,
-      'Choose at least one method'
-    ),
+    .enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])
+    .array()
+    .nonempty({ message: 'Choose at least one method' }),
   request: z
     .string()
     .min(1, { message: 'Please add a GraphQL query' })
@@ -108,7 +105,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
           description="This is the location of your endpoint (must be unique). Any parameterized variables (eg. http://localhost:8080/api/rest/example/:id will be made available to your request."
           prependLabel="http://localhost:8080/api/rest/"
         />
-        <Checkbox
+        <CheckboxesField
           name="methods"
           label="Methods *"
           options={[

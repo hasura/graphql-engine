@@ -221,7 +221,7 @@ HappyPath.play = async ({ args, canvasElement }) => {
     status: true,
     endpoint: 'http://hasura.io',
     connectionType: 'http',
-    dataType: 'traces',
+    dataType: ['traces'],
     batchSize: 100,
     headers: [
       { name: 'x-hasura-name', type: 'from_value', value: 'hasura_user' },
