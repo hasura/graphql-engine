@@ -51,6 +51,17 @@ const editItem = (tableName, colValues) => {
       errorMessage = 'No fields modified';
     }
 
+    const findContentBetweenQuotes = (str) => {
+      const checkForQuotesWrap = str.match(/^\"(.*)\"$/);
+      const checkForSingleQuotesWrap = str.match(/^\'(.*)\'$/);
+      if (checkForQuotesWrap) {
+        return checkForQuotesWrap[1];
+      } else if (checkForSingleQuotesWrap) {
+        return checkForSingleQuotesWrap[1];
+      }
+      return null;
+    }
+
     Object.keys(colValues).map(colName => {
       const colValue = colValues[colName];
 
@@ -61,13 +72,29 @@ const editItem = (tableName, colValues) => {
         _defaultArray.push(colName);
       } else {
         if (Integers.indexOf(colType) > 0) {
-          _setObject[colName] = parseInt(colValue, 10);
+          // For now this solution is suggested way of enforcing the system to send string value to the server.
+          // Better solution would be to check if the server flag(HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES) is turned on through example: "/v1alpha1/config" 
+          const checkForQuotesOrSingleQuotesWrap = findContentBetweenQuotes(colValue);
+          if(checkForQuotesOrSingleQuotesWrap){
+            // The string should be used instead of JS Float if the env flag is used.
+            _setObject[colName] = checkForQuotesOrSingleQuotesWrap;
+          } else {
+            _setObject[colName] = parseInt(colValue, 10) || colValue;;// To not introduce breaking change.
+          }
         } else if (Reals.indexOf(colType) > 0) {
-          _setObject[colName] = parseFloat(colValue);
-        } else if (colType === 'boolean') {
-          if (colValue === 'true' || colValue === true) {
+          // For now this solution is suggested way of enforcing the system to send string value to the server.
+          // Better solution would be to check if the server flag(HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES) is turned on through example: "/v1alpha1/config" 
+          const checkForQuotesOrSingleQuotesWrap = findContentBetweenQuotes(colValue);
+          if(checkForQuotesOrSingleQuotesWrap){
+            // The string should be used instead of JS Float if the env flag is used.
+            _setObject[colName] = checkForQuotesOrSingleQuotesWrap;
+          } else {
+            _setObject[colName] = parseFloat(colValue); // To not introduce breaking change.
+          }
+        } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
+          if (`${colValue}`.toLowerCase() === 'true' || `${colValue}` === '1' || colValue === true) {
             _setObject[colName] = true;
-          } else if (colValue === 'false' || colValue === false) {
+          } else if (`${colValue}`.toLowerCase() === 'false' || `${colValue}` === '0' || colValue === false) {
             _setObject[colName] = false;
           } else {
             _setObject[colName] = null;
