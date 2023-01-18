@@ -4,10 +4,10 @@ import { FaCheckCircle, FaGithub, FaTimesCircle } from 'react-icons/fa';
 import { MdRefresh } from 'react-icons/md';
 
 const defaultSuccessMessage =
-  'Your project from the following GitHub repo has been installed successfully! Get started…';
+  'Your project from the following GitHub repo has been installed successfully! Get started by composing your first query from the Explorer to the left of your code editor';
 
 const defaultErrorMessage =
-  'There was a problem loading your project. Please retry loading your sample.';
+  'There was a problem loading your project. Please retry loading your sample';
 
 type GraphiqlPopupProps = {
   status: 'success' | 'error';
@@ -33,7 +33,7 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
   } = props;
 
   return (
-    <div className="z-20 fixed w-96 bottom-14 right-12 border border-slate-300">
+    <div className="z-[103] fixed w-96 bottom-14 right-12 border border-slate-300">
       <div
         className={`p-sm flex space-x-1.5 ${
           status === 'success' ? 'bg-emerald-50' : 'bg-red-50'

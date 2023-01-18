@@ -29,6 +29,7 @@ export const mockOnboardingData: Record<
     ],
     users: [userMock],
     one_click_deployment: [],
+    one_click_deployment_sample_apps: [],
   },
   /**
    *  config to hide wizard as hasura data source created
@@ -68,6 +69,7 @@ export const mockOnboardingData: Record<
     ],
     users: [userMock],
     one_click_deployment: [],
+    one_click_deployment_sample_apps: [],
   },
   /**
    *  config to hide wizard as run query clicked
@@ -111,6 +113,7 @@ export const mockOnboardingData: Record<
     ],
     users: [userMock],
     one_click_deployment: [],
+    one_click_deployment_sample_apps: [],
   },
   /**
    *  config to hide wizard as user skipped onboarding
@@ -142,6 +145,7 @@ export const mockOnboardingData: Record<
     ],
     users: [userMock],
     one_click_deployment: [],
+    one_click_deployment_sample_apps: [],
   },
   /**
    *  config to hide wizard as user completed onboarding
@@ -173,6 +177,7 @@ export const mockOnboardingData: Record<
     ],
     users: [userMock],
     one_click_deployment: [],
+    one_click_deployment_sample_apps: [],
   },
 };
 

@@ -175,7 +175,7 @@ const tc: {
       },
       {
         id: 2,
-        additional_info: [{ Kind: 'STATIC', Name: 'PG_URL' }],
+        additional_info: [{ Kind: 'ENV_TYPE_STATIC', Name: 'PG_URL' }],
         from_state: OneClickDeploymentState.ReadingEnvironmentVariables,
         to_state: OneClickDeploymentState.AwaitingEnvironmentVariables,
       },
@@ -188,7 +188,7 @@ const tc: {
       },
       [OneClickDeploymentState.AwaitingEnvironmentVariables]: {
         kind: 'awaiting',
-        payload: [{ Kind: 'STATIC', Name: 'PG_URL' }],
+        payload: [{ Kind: 'ENV_TYPE_STATIC', Name: 'PG_URL' }],
       },
       [OneClickDeploymentState.SufficientEnvironmentVariables]: {
         kind: 'idle',
@@ -439,7 +439,7 @@ const testCases: {
       },
       {
         id: 2,
-        additional_info: [{ Kind: 'STATIC', Name: 'PG_URL' }],
+        additional_info: [{ Kind: 'ENV_TYPE_STATIC', Name: 'PG_URL' }],
         from_state: OneClickDeploymentState.ReadingEnvironmentVariables,
         to_state: OneClickDeploymentState.AwaitingEnvironmentVariables,
       },
@@ -462,7 +462,7 @@ const testCases: {
         step: OneClickDeploymentState.AwaitingEnvironmentVariables,
         payload: [
           {
-            Kind: 'STATIC',
+            Kind: 'ENV_TYPE_STATIC',
             Name: 'PG_URL',
           },
         ],

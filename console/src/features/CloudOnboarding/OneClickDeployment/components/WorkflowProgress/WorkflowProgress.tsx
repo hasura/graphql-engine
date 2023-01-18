@@ -17,10 +17,16 @@ import {
   OneClickDeploymentState,
   ProgressState,
   EnvVarsFormState,
+  FallbackApp,
 } from '../../types';
-import { getCliProgressState, shouldTriggerFirstDeployment } from '../../util';
+import {
+  getCliProgressState,
+  isHasuraPath,
+  shouldTriggerFirstDeployment,
+} from '../../util';
 import { CliScreen } from '../CliScreen/CliScreen';
 import { RedirectCountDown } from '../RedirectCountdown/RedirectCountDown';
+import { Disclaimer } from '../Disclaimer/Disclaimer';
 import { EnvVarsForm } from '../EnvVarsForm/EnvVarsForm';
 import { useTriggerDeployment } from '../../hooks';
 import { getTenantEnvVarsQueryKey } from '../../constants';
@@ -29,13 +35,21 @@ type WorkflowProgressProps = {
   setStepperIndex: React.Dispatch<React.SetStateAction<number>>;
   deploymentId: number;
   projectId: string;
+  gitRepoName: string;
   onCompleteSuccess?: VoidFunction;
   onCompleteError?: VoidFunction;
+  fallbackApps: FallbackApp[];
 };
 
 export function WorkflowProgress(props: WorkflowProgressProps) {
-  const { projectId, setStepperIndex, onCompleteSuccess, onCompleteError } =
-    props;
+  const {
+    projectId,
+    setStepperIndex,
+    gitRepoName,
+    onCompleteSuccess,
+    onCompleteError,
+    fallbackApps,
+  } = props;
   const dispatch = useAppDispatch();
 
   const [progressState, setProgressState] = React.useState<ProgressState>(
@@ -59,7 +73,13 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
       // refetch queries every time deployment goes into awaiting state,
       // overriding the stale time
       reactQueryClient.refetchQueries(getTenantEnvVarsQueryKey);
-      setRequiredEnvVars(awaitingStepStatus.payload);
+
+      if ('envs' in awaitingStepStatus.payload) {
+        setRequiredEnvVars(awaitingStepStatus.payload.envs);
+      } else if ('length' in awaitingStepStatus.payload) {
+        setRequiredEnvVars(awaitingStepStatus.payload);
+      }
+
       setEnvVarsFormState('default');
     }
     const sufficientEnvStepStatus =
@@ -156,7 +176,11 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
 
   return (
     <div className="w-full">
-      <CliScreen state={progressState} triggerDeployment={triggerDeployment} />
+      <CliScreen
+        state={progressState}
+        triggerDeployment={triggerDeployment}
+        fallbackApps={fallbackApps}
+      />
       {progressState[OneClickDeploymentState.Completed].kind === 'success' && (
         <RedirectCountDown
           timeSeconds={5}
@@ -177,6 +201,11 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
           }}
         />
       )}
+      {!isHasuraPath(gitRepoName) ? (
+        <div className="mt-sm w-full">
+          <Disclaimer />
+        </div>
+      ) : null}
     </div>
   );
 }

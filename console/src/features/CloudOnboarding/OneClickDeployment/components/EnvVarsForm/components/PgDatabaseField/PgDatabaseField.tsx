@@ -22,8 +22,10 @@ export function PgDatabaseField(props: PgDatabaseFieldProps) {
 
   const neonIntegrationStatus = useNeonIntegrationForOneClickDeployment();
 
-  const neonButtonProps = transformNeonIntegrationStatusToNeonButtonProps(
-    neonIntegrationStatus
+  const neonButtonProps = React.useMemo(
+    () =>
+      transformNeonIntegrationStatusToNeonButtonProps(neonIntegrationStatus),
+    [neonIntegrationStatus]
   );
 
   React.useEffect(() => {
@@ -35,8 +37,22 @@ export function PgDatabaseField(props: PgDatabaseFieldProps) {
   }, [neonButtonProps.status.status]);
 
   return (
-    <div className="mb-xs">
-      <div className="font-bold text-gray-600 text-md">{dbEnvVar.Name} *</div>
+    <>
+      <div className="flex items-center justify-between">
+        <div className="font-bold text-gray-600 text-md">{dbEnvVar.Name} *</div>
+        <div>
+          {neonDBURL ? null : (
+            <InputModeToggle
+              showNeonButton={showNeonButton}
+              toggleShowNeonButton={toggleShowNeonButton}
+              disabled={
+                neonButtonProps.status.status === 'loading' ||
+                neonDBURL.length > 0
+              }
+            />
+          )}
+        </div>
+      </div>
       <div className="mb-xs font-normal text-gray-600 text-sm">
         {dbEnvVar.Description}
       </div>
@@ -46,15 +62,6 @@ export function PgDatabaseField(props: PgDatabaseFieldProps) {
         neonButtonProps={neonButtonProps}
         dbEnvVar={dbEnvVar}
       />
-      {neonDBURL ? null : (
-        <InputModeToggle
-          showNeonButton={showNeonButton}
-          toggleShowNeonButton={toggleShowNeonButton}
-          disabled={
-            neonButtonProps.status.status === 'loading' || neonDBURL.length > 0
-          }
-        />
-      )}
-    </div>
+    </>
   );
 }

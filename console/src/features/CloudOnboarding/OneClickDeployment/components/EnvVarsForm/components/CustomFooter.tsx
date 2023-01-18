@@ -9,10 +9,9 @@ export function CustomFooter(props: Props) {
   const { formState: state } = props;
 
   const buttonText = {
-    default: 'Update Environment Variables',
-    loading: 'Updating...',
-    success: 'Updated! Please wait...',
-    error: 'Retry Updating Environment Variables',
+    default: 'Set Environment Variables',
+    loading: 'Setting...',
+    error: 'Retry Setting Environment Variables',
     hidden: '',
   };
 
@@ -22,7 +21,7 @@ export function CustomFooter(props: Props) {
       callToActionIcon={
         state === 'error' ? <MdRefresh className="text-black" /> : undefined
       }
-      disabled={state === 'loading' || state === 'success'}
+      disabled={state === 'loading'}
       isLoading={state === 'loading'}
       callToActionLoadingText={buttonText.loading}
       onClose={() => {}}

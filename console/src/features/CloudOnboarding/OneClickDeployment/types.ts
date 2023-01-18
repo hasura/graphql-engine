@@ -1,3 +1,4 @@
+import { Driver } from '@/dataSources';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,
   One_Click_Deployment_States_Enum as OneClickDeploymentState,
@@ -15,13 +16,23 @@ export type UserFacingStep = Exclude<
   OneClickDeploymentState.Error
 >;
 
+type RequiredEnvVarKind =
+  | 'ENV_TYPE_STATIC'
+  | 'ENV_TYPE_DYNAMIC'
+  | 'ENV_TYPE_DATABASE';
+
+type RequiredEnvVarValueType = 'STRING_ARRAY' | 'NUMBER' | 'JSON' | 'TEXT';
+
 export type RequiredEnvVar = {
-  Kind: string;
+  Kind: RequiredEnvVarKind;
   Name: string;
   Default?: string;
-  SubKind?: string;
+  SubKind?: Driver;
   Mandatory?: boolean;
   Description?: string;
+  Position?: number;
+  ValueType?: RequiredEnvVarValueType;
+  Placeholder?: string;
 };
 
 export type CliLog =
@@ -54,7 +65,7 @@ export type ProgressStateStatus =
     }
   | {
       kind: 'awaiting';
-      payload: RequiredEnvVar[];
+      payload: RequiredEnvVar[] | { envs: RequiredEnvVar[] };
     }
   | {
       kind: 'success';
@@ -65,15 +76,16 @@ export type ProgressStateStatus =
 
 export type ProgressState = Record<UserFacingStep, ProgressStateStatus>;
 
-export type EnvVarsFormState =
-  | 'default'
-  | 'loading'
-  | 'success'
-  | 'error'
-  | 'hidden';
+export type EnvVarsFormState = 'default' | 'loading' | 'error' | 'hidden';
 
 export type GitRepoDetails = {
   url: string;
   branch?: string;
   hasuraDirectory?: string;
+};
+
+export type FallbackApp = {
+  name: string;
+  react_icons_component_name: string;
+  href: string;
 };

@@ -9,6 +9,7 @@ module.exports = {
   theme: {
     fontFamily: {
       sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
+      mono: ['"Overpass Mono"', 'ui-monospace', 'monospace'],
     },
     extend: {
       colors: {
@@ -36,6 +37,7 @@ module.exports = {
         },
         muted: {
           DEFAULT: '#475569',
+          dark: '#64748B',
         },
       },
       spacing: {

@@ -1,18 +1,16 @@
 export const stepperNavSteps = [
   {
     step: '01',
-    text: 'Environment variables',
+    text: 'Setup',
   },
   {
     step: '02',
-    text: 'Deploy App',
+    text: 'Deployment',
   },
   {
     step: '03',
-    text: 'Get Started',
+    text: 'Explore',
   },
 ];
-
-export const postgresSubKind = 'postgres';
 
 export const getTenantEnvVarsQueryKey = 'getTenantEnvVars';

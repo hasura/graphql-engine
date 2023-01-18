@@ -10,13 +10,31 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof CliLog>;
 
+const fallbackApps = [
+  {
+    name: 'Ecommerce',
+    react_icons_component_name: 'FaShoppingCart',
+    href: '/deploy?github_repo=https://github.com/hasura/data-hub&hasura_dir=data-models/postgres/ecommerce/hasura&branch=main',
+  },
+  {
+    name: 'Chinook',
+    react_icons_component_name: 'FaMusic',
+    href: '/deploy?github_repo=https://github.com/hasura/data-hub&hasura_dir=data-models/postgres/chinook/hasura&branch=main',
+  },
+  {
+    name: 'Sakila',
+    react_icons_component_name: 'FaCompactDisc',
+    href: '/deploy?github_repo=https://github.com/hasura/data-hub&hasura_dir=data-models/postgres/sakila/hasura&branch=main',
+  },
+];
+
 const StoryWrapper: React.FC = ({ children }) => {
   return (
     <div className="p-md w-auto bg-black rounded items-center">{children}</div>
   );
 };
 
-export const Initialising: Story = () => (
+export const Initializing: Story = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}
@@ -24,11 +42,12 @@ export const Initialising: Story = () => (
         kind: 'in-progress',
       }}
       retryAction={() => {}}
+      fallbackApps={fallbackApps}
     />
   </StoryWrapper>
 );
 
-export const Initialised: Story = () => (
+export const Initialized: Story = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}
@@ -36,11 +55,26 @@ export const Initialised: Story = () => (
         kind: 'success',
       }}
       retryAction={() => {}}
+      fallbackApps={fallbackApps}
     />
   </StoryWrapper>
 );
 
-export const InitialisationError: Story = () => (
+export const ErrorLogWithExpectedError: Story = () => (
+  <StoryWrapper>
+    <CliLog
+      step={OneClickDeploymentState.Initialized}
+      status={{
+        kind: 'error',
+        error: { error: { message: 'something went wrong' } },
+      }}
+      retryAction={() => {}}
+      fallbackApps={fallbackApps}
+    />
+  </StoryWrapper>
+);
+
+export const ErrorLogWithUnknownError: Story = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}
@@ -49,6 +83,7 @@ export const InitialisationError: Story = () => (
         error: { message: 'something went wrong' },
       }}
       retryAction={() => {}}
+      fallbackApps={fallbackApps}
     />
   </StoryWrapper>
 );
