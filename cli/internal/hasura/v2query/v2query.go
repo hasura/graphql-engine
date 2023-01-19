@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/citus"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/cockroach"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/mssql"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
@@ -20,16 +21,18 @@ type Client struct {
 	hasura.PGSourceOps
 	hasura.MSSQLSourceOps
 	hasura.CitusSourceOps
+	hasura.CockroachSourceOps
 	path string
 }
 
 func New(c *httpc.Client, path string) *Client {
 	client := &Client{
-		Client:         c,
-		PGSourceOps:    postgres.New(c, path),
-		MSSQLSourceOps: mssql.New(c, path),
-		CitusSourceOps: citus.New(c, path),
-		path:           path,
+		Client:             c,
+		PGSourceOps:        postgres.New(c, path),
+		MSSQLSourceOps:     mssql.New(c, path),
+		CitusSourceOps:     citus.New(c, path),
+		CockroachSourceOps: cockroach.New(c, path),
+		path:               path,
 	}
 	return client
 }

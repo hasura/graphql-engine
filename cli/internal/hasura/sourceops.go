@@ -40,3 +40,11 @@ type CitusSourceOps interface {
 type CitusRunSQLInput PGRunSQLInput
 
 type CitusRunSQLOutput PGRunSQLOutput
+
+type CockroachSourceOps interface {
+	CockroachRunSQL(input CockroachRunSQLInput) (response *CockroachRunSQLOutput, err error)
+}
+
+type CockroachRunSQLInput PGRunSQLInput
+
+type CockroachRunSQLOutput PGRunSQLOutput
