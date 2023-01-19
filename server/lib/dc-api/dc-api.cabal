@@ -11,6 +11,7 @@ flag profiling
   manual: True
 
 common common-all
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
   default-language: Haskell2010
   default-extensions:
     BlockArguments
@@ -143,7 +144,7 @@ test-suite tests-dc-api
   hs-source-dirs: test
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
-  ghc-options: -Wall -O0 -threaded
+  ghc-options: -O0 -threaded
   main-is: Main.hs
   other-modules:
     Command

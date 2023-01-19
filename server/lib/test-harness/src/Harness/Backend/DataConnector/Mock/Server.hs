@@ -97,18 +97,23 @@ capabilities =
     scalarTypesCapabilities =
       API.ScalarTypesCapabilities $
         HashMap.fromList
-          [ mkScalarTypeCapability "number" minMaxFunctions $ Just API.GraphQLFloat,
-            mkScalarTypeCapability "string" minMaxFunctions $ Just API.GraphQLString,
-            mkScalarTypeCapability "MyInt" mempty $ Just API.GraphQLInt,
-            mkScalarTypeCapability "MyFloat" mempty $ Just API.GraphQLFloat,
-            mkScalarTypeCapability "MyString" mempty $ Just API.GraphQLString,
-            mkScalarTypeCapability "MyBoolean" mempty $ Just API.GraphQLBoolean,
-            mkScalarTypeCapability "MyID" mempty $ Just API.GraphQLID,
-            mkScalarTypeCapability "MyAnything" mempty Nothing
+          [ mkScalarTypeCapability "number" minMaxFunctions numericUpdateOperators $ Just API.GraphQLFloat,
+            mkScalarTypeCapability "string" minMaxFunctions mempty $ Just API.GraphQLString,
+            mkScalarTypeCapability "MyInt" mempty numericUpdateOperators $ Just API.GraphQLInt,
+            mkScalarTypeCapability "MyFloat" mempty numericUpdateOperators $ Just API.GraphQLFloat,
+            mkScalarTypeCapability "MyString" mempty mempty $ Just API.GraphQLString,
+            mkScalarTypeCapability "MyBoolean" mempty mempty $ Just API.GraphQLBoolean,
+            mkScalarTypeCapability "MyID" mempty mempty $ Just API.GraphQLID,
+            mkScalarTypeCapability "MyAnything" mempty mempty Nothing
           ]
-    mkScalarTypeCapability :: Text -> (API.ScalarType -> API.AggregateFunctions) -> Maybe API.GraphQLType -> (API.ScalarType, API.ScalarTypeCapabilities)
-    mkScalarTypeCapability name aggregateFunctions gqlType =
-      (scalarType, API.ScalarTypeCapabilities mempty (aggregateFunctions scalarType) gqlType)
+    mkScalarTypeCapability ::
+      Text ->
+      (API.ScalarType -> API.AggregateFunctions) ->
+      (API.ScalarType -> API.UpdateColumnOperators) ->
+      Maybe API.GraphQLType ->
+      (API.ScalarType, API.ScalarTypeCapabilities)
+    mkScalarTypeCapability name aggregateFunctions updateColumnOperators gqlType =
+      (scalarType, API.ScalarTypeCapabilities mempty (aggregateFunctions scalarType) (updateColumnOperators scalarType) gqlType)
       where
         scalarType = API.ScalarType name
 
@@ -118,6 +123,12 @@ capabilities =
         HashMap.fromList $
           (,resultType)
             <$> [[G.name|min|], [G.name|max|]]
+
+    numericUpdateOperators :: API.ScalarType -> API.UpdateColumnOperators
+    numericUpdateOperators scalarType =
+      API.UpdateColumnOperators $
+        HashMap.fromList $
+          [(API.UpdateColumnOperatorName [G.name|inc|], API.UpdateColumnOperatorDefinition scalarType)]
 
 -- | Stock Schema for a Chinook Agent
 schema :: API.SchemaResponse

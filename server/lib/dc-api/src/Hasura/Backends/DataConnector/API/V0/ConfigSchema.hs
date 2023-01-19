@@ -14,7 +14,7 @@ import Control.Lens ((%~), (&), (.~), (^?))
 import Data.Aeson (FromJSON (..), Object, ToJSON (..), Value (..), eitherDecode, encode, object, withObject, (.:), (.=), (<?>))
 import Data.Aeson.KeyMap (empty)
 import Data.Aeson.Lens (AsValue (..), key, members, values)
-import Data.Aeson.Types (JSONPathElement (..), emptyObject)
+import Data.Aeson.Types (JSONPathElement (..))
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BSL
 import Data.Data (Data)

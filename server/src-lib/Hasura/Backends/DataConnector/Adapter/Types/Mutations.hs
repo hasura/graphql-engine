@@ -7,6 +7,7 @@ module Hasura.Backends.DataConnector.Adapter.Types.Mutations
   )
 where
 
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend (Backend)
@@ -40,4 +41,5 @@ deriving stock instance Backend 'DataConnector => Traversable DataConnectorUpdat
 -- | The operators that are used to mutate specific columns on a table
 data UpdateOperator v
   = UpdateSet v
+  | UpdateCustomOperator API.UpdateColumnOperatorName v
   deriving stock (Functor, Foldable, Traversable)

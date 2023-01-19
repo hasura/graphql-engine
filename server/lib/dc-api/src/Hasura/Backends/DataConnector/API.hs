@@ -27,7 +27,6 @@ where
 import Control.Arrow (left)
 import Data.ByteString.Lazy as BL
 import Data.Data (Proxy (..))
-import Data.Foldable (for_)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.OpenApi (OpenApi)
 import Data.Text (Text)
@@ -38,7 +37,7 @@ import Servant.API
 import Servant.API.Generic
 import Servant.Client (Client, ClientM, client, matchUnion)
 import Servant.OpenApi
-import Prelude (Maybe (Just, Nothing), Monad, show)
+import Prelude
 
 --------------------------------------------------------------------------------
 -- Servant Routes

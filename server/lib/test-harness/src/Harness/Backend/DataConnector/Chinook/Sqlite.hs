@@ -35,6 +35,7 @@ backendTypeMetadata =
               DateTime:
                 comparison_operators:
                   _in_year: int
+                graphql_type: String
               string:
                 comparison_operators:
                   _like: string
@@ -42,6 +43,7 @@ backendTypeMetadata =
                 aggregate_functions:
                   min: string
                   max: string
+                graphql_type: String
               decimal:
                 comparison_operators:
                   _modulus_is_zero: decimal
@@ -49,6 +51,12 @@ backendTypeMetadata =
                   min: decimal
                   max: decimal
                   sum: decimal
+                update_column_operators:
+                  inc:
+                    argument_type: decimal
+                  dec:
+                    argument_type: decimal
+                graphql_type: Float
               number:
                 comparison_operators:
                   _modulus_is_zero: number
@@ -56,12 +64,19 @@ backendTypeMetadata =
                   min: number
                   max: number
                   sum: number
+                update_column_operators:
+                  inc:
+                    argument_type: number
+                  dec:
+                    argument_type: number
+                graphql_type: Float
               bool:
                 comparison_operators:
                   _and: bool
                   _or: bool
                   _nand: bool
                   _xor: bool
+                graphql_type: Boolean
             queries: {}
             relationships: {}
             comparisons:

@@ -1,7 +1,11 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (spec) where
+module Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
+  ( spec,
+    genUpdateColumnOperatorName,
+  )
+where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
@@ -27,23 +31,30 @@ spec = do
       (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse Nothing Nothing)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
   describe "ScalarTypesCapabilities" $ do
-    testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton (ScalarType "string") (ScalarTypeCapabilities mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
+    describe "Minimal" $
+      testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton (ScalarType "string") (ScalarTypeCapabilities mempty mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
+    describe "Maximal" $ do
+      let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], ScalarType "DateTime")]
+      let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], ScalarType "DateTime")]
+      let updateColumnOperators = UpdateColumnOperators $ HashMap.fromList [(UpdateColumnOperatorName [G.name|set_year|], UpdateColumnOperatorDefinition (ScalarType "Number"))]
+      let graphQLType = Just GraphQLString
+      let json =
+            [aesonQQ|{
+              "comparison_operators": {
+                "same_day_as": "DateTime"
+              },
+              "aggregate_functions": {
+                "max": "DateTime"
+              },
+              "update_column_operators": {
+                "set_year": {
+                  "argument_type": "Number"
+                }
+              },
+              "graphql_type": "String"
+            }|]
+      testToFromJSONToSchema (ScalarTypeCapabilities comparisonOperators aggregateFunctions updateColumnOperators graphQLType) json
     jsonOpenApiProperties genScalarTypesCapabilities
-  describe "ScalarTypeCapabilities" $ do
-    let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], ScalarType "DateTime")]
-    let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], ScalarType "DateTime")]
-    let graphQLType = Just GraphQLString
-    let json =
-          [aesonQQ|{
-      "comparison_operators": {
-        "same_day_as": "DateTime"
-      },
-      "aggregate_functions": {
-        "max": "DateTime"
-      },
-      "graphql_type": "String"
-    }|]
-    testToFromJSONToSchema (ScalarTypeCapabilities comparisonOperators aggregateFunctions graphQLType) json
 
 genDataSchemaCapabilities :: MonadGen m => m DataSchemaCapabilities
 genDataSchemaCapabilities =
@@ -102,11 +113,22 @@ genScalarTypeCapabilities =
   ScalarTypeCapabilities
     <$> genComparisonOperators
     <*> genAggregateFunctions
+    <*> genUpdateColumnOperators
     <*> Gen.maybe genGraphQLType
 
 genScalarTypesCapabilities :: (MonadGen m, GenBase m ~ Identity) => m ScalarTypesCapabilities
 genScalarTypesCapabilities =
   ScalarTypesCapabilities <$> genHashMap genScalarType genScalarTypeCapabilities defaultRange
+
+genUpdateColumnOperators :: (MonadGen m, GenBase m ~ Identity) => m UpdateColumnOperators
+genUpdateColumnOperators =
+  UpdateColumnOperators <$> genHashMap genUpdateColumnOperatorName genUpdateColumnOperatorDefinition defaultRange
+
+genUpdateColumnOperatorName :: MonadGen m => m UpdateColumnOperatorName
+genUpdateColumnOperatorName = UpdateColumnOperatorName <$> genGName defaultRange
+
+genUpdateColumnOperatorDefinition :: (MonadGen m, GenBase m ~ Identity) => m UpdateColumnOperatorDefinition
+genUpdateColumnOperatorDefinition = UpdateColumnOperatorDefinition <$> genScalarType
 
 genRelationshipCapabilities :: MonadGen m => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}

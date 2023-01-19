@@ -30,7 +30,6 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.State.Class (get, modify')
 import Control.Monad.State.Strict (StateT, evalStateT)
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.CaseInsensitive qualified as CI
 import Data.Foldable (for_)
 import Data.Proxy (Proxy (..))
@@ -87,7 +86,7 @@ mkAgentClientConfig sensitiveOutputHandling AgentOptions {..} = do
   manager <- mkHttpClientManager sensitiveOutputHandling
   pure $ AgentClientConfig _aoAgentBaseUrl manager sensitiveOutputHandling
 
-introduceAgentClient :: forall context m. (MonadIO m, MonadBaseControl IO m) => AgentClientConfig -> SpecFree (LabelValue "agent-client" AgentClientConfig :> context) m () -> SpecFree context m ()
+introduceAgentClient :: forall context m. (MonadIO m) => AgentClientConfig -> SpecFree (LabelValue "agent-client" AgentClientConfig :> context) m () -> SpecFree context m ()
 introduceAgentClient agentConfig = introduce' nodeOptions "Introduce agent client" agentClientLabel (pure agentConfig) (const $ pure ())
   where
     nodeOptions =
@@ -102,7 +101,7 @@ agentClientLabel = Label
 
 type HasAgentClient context = HasLabel context "agent-client" AgentClientConfig
 
-getAgentClientConfig :: (Monad m, HasCallStack, HasAgentClient context, MonadReader context m) => m AgentClientConfig
+getAgentClientConfig :: (HasCallStack, HasAgentClient context, MonadReader context m) => m AgentClientConfig
 getAgentClientConfig = getContext agentClientLabel
 
 data AgentClientState = AgentClientState

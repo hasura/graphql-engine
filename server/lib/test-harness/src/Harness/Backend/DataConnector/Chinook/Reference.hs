@@ -55,6 +55,9 @@ backendTypeMetadata =
                   var_pop: number
                   var_samp: number
                   variance: number
+                update_column_operators:
+                  inc:
+                    argument_type: number
                 graphql_type: Float
               string:
                 aggregate_functions:

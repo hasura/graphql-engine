@@ -608,14 +608,32 @@
         "additionalProperties": {
           "$ref": "#/components/schemas/ScalarType"
         },
-        "description": "A map from comparison operator names to their argument types.\nOperator and argument type names must be valid GraphQL names.\nResult type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities.\n",
+        "description": "A map from comparison operator names to their argument types.\nOperator and argument type names must be valid GraphQL names.\nArgument type names must be defined scalar types declared in ScalarTypesCapabilities.\n",
         "type": "object"
       },
       "AggregateFunctions": {
         "additionalProperties": {
           "$ref": "#/components/schemas/ScalarType"
         },
-        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities.\n",
+        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types declared in ScalarTypesCapabilities.\n",
+        "type": "object"
+      },
+      "UpdateColumnOperatorDefinition": {
+        "properties": {
+          "argument_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "argument_type"
+        ],
+        "type": "object"
+      },
+      "UpdateColumnOperators": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/UpdateColumnOperatorDefinition"
+        },
+        "description": "A map from update column operator names to their definitions.\nOperator names must be valid GraphQL names.\n",
         "type": "object"
       },
       "GraphQLType": {
@@ -629,7 +647,7 @@
         "type": "string"
       },
       "ScalarTypeCapabilities": {
-        "description": "Capabilities of a scalar type.\ncomparison_operators: The comparison operators supported by the scalar type.\naggregate_functions: The aggregate functions supported by the scalar type.\ngraphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted.\n",
+        "description": "Capabilities of a scalar type.\ncomparison_operators: The comparison operators supported by the scalar type.\naggregate_functions: The aggregate functions supported by the scalar type.\nupdate_column_operators: The update column operators supported by the scalar type.\ngraphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted.\n",
         "properties": {
           "aggregate_functions": {
             "$ref": "#/components/schemas/AggregateFunctions"
@@ -639,6 +657,9 @@
           },
           "graphql_type": {
             "$ref": "#/components/schemas/GraphQLType"
+          },
+          "update_column_operators": {
+            "$ref": "#/components/schemas/UpdateColumnOperators"
           }
         },
         "type": "object"
@@ -2287,27 +2308,34 @@
         ],
         "type": "object"
       },
-      "IncrementColumnRowUpdate": {
+      "UpdateColumnOperatorName": {
+        "type": "string"
+      },
+      "CustomUpdateColumnOperatorRowUpdate": {
         "properties": {
           "column": {
             "description": "The name of the column in the row",
             "type": "string"
           },
+          "operator_name": {
+            "$ref": "#/components/schemas/UpdateColumnOperatorName"
+          },
           "type": {
             "enum": [
-              "increment"
+              "custom_operator"
             ],
             "type": "string"
           },
           "value": {
             "additionalProperties": true,
-            "description": "The value to use for the column"
+            "description": "The value to use with the column operator"
           },
           "value_type": {
             "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
+          "operator_name",
           "column",
           "value",
           "value_type",
@@ -2329,7 +2357,7 @@
           },
           "value": {
             "additionalProperties": true,
-            "description": "The value to use for the column"
+            "description": "The value to use with the column operator"
           },
           "value_type": {
             "$ref": "#/components/schemas/ScalarType"
@@ -2346,14 +2374,14 @@
       "RowUpdate": {
         "discriminator": {
           "mapping": {
-            "increment": "IncrementColumnRowUpdate",
+            "custom_operator": "CustomUpdateColumnOperatorRowUpdate",
             "set": "SetColumnRowUpdate"
           },
           "propertyName": "type"
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/IncrementColumnRowUpdate"
+            "$ref": "#/components/schemas/CustomUpdateColumnOperatorRowUpdate"
           },
           {
             "$ref": "#/components/schemas/SetColumnRowUpdate"

@@ -11,9 +11,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, FromJSONKey (..), FromJSONKeyFunction (..), ToJSON, ToJSONKey (..), ToJSONKeyFunction (..))
-import Data.Aeson.Encoding qualified as Encoding
-import Data.Aeson.Key qualified as Key
+import Data.Aeson (FromJSON, FromJSONKey (..), ToJSON, ToJSONKey (..))
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)

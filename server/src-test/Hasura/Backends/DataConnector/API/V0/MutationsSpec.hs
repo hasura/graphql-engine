@@ -9,6 +9,7 @@ where
 import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
+import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (genUpdateColumnOperatorName)
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.QuerySpec (genField, genFieldMap, genFieldValue)
@@ -19,6 +20,7 @@ import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Utils (genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -172,35 +174,36 @@ spec = do
     jsonOpenApiProperties genObjectRelationInsertionOrder
 
   describe "RowUpdate" $ do
-    describe "IncrementColumnRowUpdate" $
-      testToFromJSONToSchema
-        (IncrementColumn $ RowColumnValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
-        [aesonQQ|
-            { "type": "increment",
-              "column": "my_column",
-              "value": 10,
-              "value_type": "number" }
-          |]
     describe "SetColumnRowUpdate" $
       testToFromJSONToSchema
-        (SetColumn $ RowColumnValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
+        (SetColumn $ RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
         [aesonQQ|
             { "type": "set",
               "column": "my_column",
               "value": 10,
               "value_type": "number" }
           |]
+    describe "CustomUpdateColumnOperator" $
+      testToFromJSONToSchema
+        (CustomUpdateColumnOperator (UpdateColumnOperatorName [G.name|increment|]) (RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number")))
+        [aesonQQ|
+            { "type": "custom_operator",
+              "operator_name": "increment",
+              "column": "my_column",
+              "value": 10,
+              "value_type": "number" }
+          |]
     jsonOpenApiProperties genRowUpdate
 
-  describe "RowColumnValue" $ do
+  describe "RowColumnOperatorValue" $ do
     testToFromJSONToSchema
-      (RowColumnValue (ColumnName "my_column") (String "a value") (ScalarType "string"))
+      (RowColumnOperatorValue (ColumnName "my_column") (String "a value") (ScalarType "string"))
       [aesonQQ|
         { "column": "my_column",
           "value": "a value",
           "value_type": "string" }
       |]
-    jsonOpenApiProperties genRowColumnValue
+    jsonOpenApiProperties genRowColumnOperatorValue
 
   describe "MutationResponse" $ do
     testToFromJSONToSchema
@@ -301,13 +304,13 @@ genUpdateMutationOperation =
 genRowUpdate :: (MonadGen m, GenBase m ~ Identity) => m RowUpdate
 genRowUpdate =
   Gen.choice
-    [ IncrementColumn <$> genRowColumnValue,
-      SetColumn <$> genRowColumnValue
+    [ SetColumn <$> genRowColumnOperatorValue,
+      CustomUpdateColumnOperator <$> genUpdateColumnOperatorName <*> genRowColumnOperatorValue
     ]
 
-genRowColumnValue :: (MonadGen m, GenBase m ~ Identity) => m RowColumnValue
-genRowColumnValue =
-  RowColumnValue
+genRowColumnOperatorValue :: (MonadGen m, GenBase m ~ Identity) => m RowColumnOperatorValue
+genRowColumnOperatorValue =
+  RowColumnOperatorValue
     <$> genColumnName
     <*> genValue
     <*> genScalarType

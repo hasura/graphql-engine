@@ -194,6 +194,10 @@ The `aggregate_functions` property must be an object mapping aggregate function 
 Aggregate function names must be must be valid GraphQL names.
 Result types must be valid scalar types.
 
+Update column operators are operators that can defined to allow custom mutation operations to be performed on columns of the particular scalar type.
+These can be defined by adding an `update_column_operators` property, which maps the operator name to an object that defines the operator's `argument_type`. The name specified in capabilities will be prefixed with `_` when it is used in the GraphQL mutation schema.
+The `argument_type` must be a valid scalar type.
+
 The `graphql_type` property can be used to tell Hasura GraphQL Engine to parse values of the scalar type as though they were one of the built-in GraphQL scalar types `Int`, `Float`, `String`, `Boolean`, or `ID`.
 
 Example:
@@ -207,6 +211,9 @@ capabilities:
       aggregate_functions:
         max: DateTime
         min: DateTime
+      update_column_operators:
+        set_year:
+          argument_type: Number
       graphql_type: String
 ```
 
@@ -226,6 +233,19 @@ In this query we have an `Employee` field with a `BirthDate` property of type `D
 The `in_year` comparison operator is being used to request all employees with a birth date in the year 1962.
 
 The example also defines two aggregate functions `min` and `max`, both of which have a result type of `DateTime`.
+
+The example also defined a `set_year` update operator, which could be used in an update mutation:
+
+```graphql
+mutation MyMutation {
+  update_Employee(_set_year: {BirthDate: 1980}) {
+    returning {
+      BirthDate
+    }
+    affected_rows
+  }
+}
+```
 
 ### Mutations capabilities
 The agent can declare whether it supports mutations (ie. changing data) against its data source. If it supports mutations, it needs to declare a `mutations` capability with agent-specific values for the following properties:
@@ -2036,8 +2056,8 @@ Here's an example of a mutation that updates a Track row:
 mutation UpdateTrack {
   update_Track(
     where: { TrackId: { _eq: 1 } },
-    _inc: { Milliseconds: 100 },
-    _set: { UnitPrice: 2.50 }
+    _set: { UnitPrice: 2.50 },
+    _inc: { Milliseconds: 100 }
     ) {
     affected_rows
     returning {
@@ -2070,17 +2090,18 @@ This would get translated into a mutation request like so:
           "value_type": "number"
         }
       },
-      "updates": [
-        {
-          "type": "increment",
-          "column": "Milliseconds",
-          "value": 100,
-          "value_type": "number"
-        },
+      "updates": [,
         {
           "type": "set",
           "column": "UnitPrice",
           "value": 2.50,
+          "value_type": "number"
+        }
+        {
+          "type": "custom_operator",
+          "operator_name": "inc",
+          "column": "Milliseconds",
+          "value": 100,
           "value_type": "number"
         }
       ],
@@ -2109,8 +2130,8 @@ Breaking down the properties in the `update`-typed mutation operation:
 * `table`: specifies the table we're updating rows in
 * `where`: An expression (same as the expression in a Query's `where` property) that is used to select the matching rows to update
 * `updates`: An array of `RowUpdate` objects that describe the individual updates to be applied to each row that matches the expression in `where`. There are two types of `RowUpdate`s:
-  * `increment` - This increments the specified column by the specified amount
   * `set` - This sets the specified column to the specified value
+  * `custom_operator` - This defines a mutation to a column using a custom update column operator defined by the agent in its capabilities. The `operator_name` property specifies which operator was used. In this case, `inc` is the custom operator.
 * `post_update_check`: The post-update check is an expression (in the same format as `Query`'s `where` property) that all updated rows must match otherwise the changes made must be reverted. This expression comes from `graphql-engine`'s permissions system. The reason that it is a "post-update" check is because it operates on the post-update data (such as the results of increment updates), can involve joins via relationships to other tables, and can potentially involve data that is only available post-insert such as computed columns. If the agent knows it can compute the result of such a check without actually performing an update, it is free to do so, but it must produce a result that is indistinguishable from that which was done post-update. If the post-update check fails, the mutation request should fail with an error using the error code `mutation-permission-check-failure`.
 * `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the update (ie. all updated rows).
 

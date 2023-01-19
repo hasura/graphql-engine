@@ -18,7 +18,8 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
   DateTime: {
     comparison_operators: {
       _in_year: 'int'
-    }
+    },
+    graphql_type: "String",
   },
   string: {
     comparison_operators: {
@@ -30,7 +31,8 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
     aggregate_functions: {
       max: 'string',
       min: 'string'
-    }
+    },
+    graphql_type: "String"
   },
   // TODO: Why do we need a seperate 'decimal' type?
   decimal: {
@@ -41,7 +43,16 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
       max: 'decimal',
       min: 'decimal',
       sum: 'decimal'
-    }
+    },
+    update_column_operators: {
+      inc: {
+        argument_type: 'decimal'
+      },
+      dec: {
+        argument_type: 'decimal'
+      }
+    },
+    graphql_type: "Float"
   },
   number: {
     comparison_operators: {
@@ -51,7 +62,16 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
       max: 'number',
       min: 'number',
       sum: 'number'
-    }
+    },
+    update_column_operators: {
+      inc: {
+        argument_type: 'number'
+      },
+      dec: {
+        argument_type: 'number'
+      }
+    },
+    graphql_type: "Float"
   },
   bool: {
     comparison_operators: {
@@ -59,7 +79,8 @@ const scalar_types: Record<ScalarTypeKey, ScalarTypeCapabilities> = {
       _or: 'bool',
       _nand: 'bool',
       _xor: 'bool',
-    }
+    },
+    graphql_type: "Boolean"
   }
 };
 

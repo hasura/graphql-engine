@@ -22,17 +22,14 @@ where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
-import Control.Lens ((&), (?~))
 import Control.Lens.TH (makeLenses)
-import Data.Aeson (FromJSON, ToJSON, Value)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
-import Data.HashMap.Strict qualified as H
-import Data.OpenApi (HasType (type_), OpenApiType (OpenApiString), ToParamSchema, ToSchema)
-import Data.OpenApi.Internal.ParamSchema (ToParamSchema (toParamSchema))
+import Data.OpenApi (ToParamSchema, ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema qualified as Config
-import Servant.API (FromHttpApiData (parseUrlPiece), ToHttpApiData (toUrlPiece))
+import Servant.API (FromHttpApiData, ToHttpApiData)
 import Prelude
 
 newtype DatasetTemplateName = DatasetTemplateName

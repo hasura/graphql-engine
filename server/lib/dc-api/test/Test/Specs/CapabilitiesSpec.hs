@@ -27,6 +27,10 @@ spec config Capabilities {..} = describe "capabilities API" $ do
       -- The built in types have these names, so any custom operator that uses these names will overlap with them in the API JSON
       let builtInTypeNames = ["less_than", "less_than_or_equal", "greater_than", "greater_than_or_equal", "equal", "in", "is_null"]
       names `shouldNotContain` (builtInGraphqlFieldNames ++ builtInTypeNames)
+
+    testPerScalarType "does not use any reserved update column operator names" $ \_scalarType ScalarTypeCapabilities {..} -> do
+      let names = fmap (G.unName . unUpdateColumnOperatorName) . HashMap.keys $ unUpdateColumnOperators _stcUpdateColumnOperators
+      names `shouldNotContain` ["set"]
   where
     testPerScalarType :: String -> (forall context m. (MonadThrow m, MonadIO m, HasBaseContext context, HasAgentClient context) => ScalarType -> ScalarTypeCapabilities -> AgentClientT (ExampleT context m) ()) -> AgentTestSpec
     testPerScalarType description test =

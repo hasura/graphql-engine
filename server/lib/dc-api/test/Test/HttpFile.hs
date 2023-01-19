@@ -78,7 +78,7 @@ writeRequest baseUrl request counter testFolder = do
       HttpClient.RequestBodyIO bodyIO ->
         liftIO bodyIO >>= getBody
 
-writeResponse :: forall m. (MonadIO m, MonadThrow m) => HttpClient.Response LazyBS.ByteString -> Int -> FilePath -> m ()
+writeResponse :: forall m. (MonadIO m) => HttpClient.Response LazyBS.ByteString -> Int -> FilePath -> m ()
 writeResponse response counter testFolder =
   liftIO . LazyText.writeFile filepath . TextBuilder.toLazyText $
     statusLine

@@ -32,7 +32,6 @@ import Data.Coerce (coerce)
 import Data.Hashable (Hashable)
 import Data.Text (Text)
 import Data.Text qualified as T
-import Data.Text.Encoding (encodeUtf8)
 import Instances.TH.Lift ()
 import Language.Haskell.TH.Syntax (Lift)
 import Language.Haskell.TH.Syntax.Compat (SpliceQ, examineSplice, liftSplice)
@@ -47,7 +46,7 @@ newtype Name = Name {unName :: Text}
   deriving newtype (Semigroup, Hashable, NFData, Pretty, J.ToJSONKey, J.ToJSON)
 
 instance HasCodec Name where
-  codec = bimapCodec (J.eitherDecodeStrict . encodeUtf8) unName codec
+  codec = bimapCodec (\text -> maybe (Left $ T.unpack text <> " is not valid GraphQL name") Right $ mkName text) unName codec
 
 -- | @NameSuffix@ is essentially a GQL identifier that can be used as Suffix
 --  It is slightely different from @Name@ as it relaxes the criteria that a
