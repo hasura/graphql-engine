@@ -41,6 +41,7 @@ tests _ = do
             builtin: false
             display_name: "FOOBARDB (foobar)"
             kind: foobar
+            available: true
           |]
         response' `shouldBe` [expected]
 

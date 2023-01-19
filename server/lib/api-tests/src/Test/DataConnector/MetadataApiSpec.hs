@@ -287,27 +287,35 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               - builtin: true
                 kind: pg
                 display_name: pg
+                available: true
               - builtin: true
                 kind: citus
                 display_name: citus
+                available: true
               - builtin: true
                 kind: cockroach
                 display_name: cockroach
+                available: true
               - builtin: true
                 kind: mssql
                 display_name: mssql
+                available: true
               - builtin: true
                 kind: bigquery
                 display_name: bigquery
+                available: true
               - builtin: true
                 kind: mysql
                 display_name: mysql
+                available: true
               - builtin: false
                 kind: *backendString
                 display_name: *backendDisplayName
+                available: true
               - builtin: false
                 display_name: "FOOBARDB (foobar)"
                 kind: foobar
+                available: true
             |]
 
   describe "<kind>_add_source" $ do
