@@ -18,9 +18,11 @@ export function InputWrapper(props: InputWrapperProps) {
   return (
     <>
       {neonDBURL ? (
-        <div className="flex justify-start items-center mt-md mb-lg">
-          <FaCheckCircle className="text-green-500 mr-2" />
-          <span>Neon Database created succesfully!</span>
+        <div className="flex justify-start items-center mb-xs">
+          <FaCheckCircle className="text-emerald-500 mr-2" />
+          <span className="text-gray-600">
+            Neon Database created succesfully!
+          </span>
         </div>
       ) : (
         <>

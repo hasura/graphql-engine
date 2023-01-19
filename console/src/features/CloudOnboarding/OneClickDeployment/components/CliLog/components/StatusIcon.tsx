@@ -18,9 +18,9 @@ export function StatusIcon(props: {
 
   switch (status.kind) {
     case 'error':
-      return <FaTimes color="red" />;
+      return <FaTimes className="text-red-500" />;
     case 'success':
-      return <FaCheck color="green" />;
+      return <FaCheck className="text-emerald-500" />;
     default:
       return <FaSpinner className="animate-spin text-slate-400" />;
   }

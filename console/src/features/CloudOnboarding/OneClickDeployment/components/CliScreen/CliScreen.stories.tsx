@@ -10,6 +10,24 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof CliScreen>;
 
+const fallbackApps = [
+  {
+    name: 'Ecommerce',
+    react_icons_component_name: 'FaShoppingCart',
+    href: '/deploy?github_repo=https://github.com/hasura/data-hub&hasura_dir=data-models/postgres/ecommerce/hasura&branch=main',
+  },
+  {
+    name: 'Chinook',
+    react_icons_component_name: 'FaMusic',
+    href: '/deploy?github_repo=https://github.com/hasura/data-hub&hasura_dir=data-models/postgres/chinook/hasura&branch=main',
+  },
+  {
+    name: 'Sakila',
+    react_icons_component_name: 'FaCompactDisc',
+    href: '/deploy?github_repo=https://github.com/hasura/data-hub&hasura_dir=data-models/postgres/sakila/hasura&branch=main',
+  },
+];
+
 export const Happy: Story = () => (
   <CliScreen
     state={{
@@ -28,6 +46,7 @@ export const Happy: Story = () => (
       [OneClickDeploymentState.Completed]: { kind: 'success' },
     }}
     triggerDeployment={() => {}}
+    fallbackApps={fallbackApps}
   />
 );
 
@@ -53,6 +72,7 @@ export const Error: Story = () => {
         [OneClickDeploymentState.Completed]: { kind: 'idle' },
       }}
       triggerDeployment={() => {}}
+      fallbackApps={fallbackApps}
     />
   );
 };

@@ -32,7 +32,7 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
       fireNotification({
         type: 'error',
         title: 'Error!',
-        message: 'Error fetching environment variables',
+        message: 'Error fetching Environment Variables',
         error: tenantEnvData.errors[0],
       });
     }
@@ -47,7 +47,6 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
   );
 
   const updateTenantEnvSuccessCb = () => {
-    setFormState('success');
     if (successCb) successCb();
   };
 
@@ -56,7 +55,7 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
     fireNotification({
       type: 'error',
       title: 'Error!',
-      message: 'Error updating environment variables',
+      message: 'Error updating Environment Variables',
       error,
     });
   };
@@ -67,8 +66,16 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
   const onSubmit = (formData: Record<string, unknown>) => {
     setFormState('loading');
 
-    Object.keys(formData).forEach(k => {
-      formData[k] = (formData[k] as string).trim();
+    // process form data before setting as environment vars
+    Object.entries(formData).forEach(([k, v]) => {
+      formData[k] = (v as string).trim();
+
+      const envVar = envVars.find(env => k === env.Name);
+      if (envVar?.ValueType === 'STRING_ARRAY') {
+        formData[k] = JSON.stringify(
+          (v as string).split(',').map(d => d.trim())
+        );
+      }
     });
 
     const updateTenantEnvInput: UpdateEnvObj[] = [];
@@ -80,15 +87,15 @@ export function EnvVarsForm(props: EnvVarsFormProps) {
   };
 
   return (
-    <Dialog title="Environment Variables" size="xl" hasBackdrop>
+    <Dialog size="xl" hasBackdrop>
       <SimpleForm
         schema={schema}
         onSubmit={onSubmit}
         options={{ defaultValues }}
       >
-        <div className="px-4">
-          <div className="text-gray-600 mb-6">
-            Environment variables are required to complete loading your project.
+        <div className="max-h-[calc(100vh-20rem)] overflow-y-auto font-sans px-8 pt-10">
+          <div className="text-4xl text-slate-900 font-semibold mb-6">
+            Environment Variables
           </div>
 
           <EnvVarsFormFields envVars={envVars} />

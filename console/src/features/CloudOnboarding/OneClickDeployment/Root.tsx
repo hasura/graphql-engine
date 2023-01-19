@@ -5,7 +5,7 @@ import { GraphiqlPopup, WorkflowProgress } from './components';
 import { stepperNavSteps } from './constants';
 import { DialogContainer } from '../OnboardingWizard';
 import { useTriggerDeployment } from './hooks';
-import { GitRepoDetails } from './types';
+import { GitRepoDetails, FallbackApp } from './types';
 import { getGitRepoFromUrl, getGitRepoFullLinkFromDetails } from './util';
 
 /**
@@ -17,8 +17,9 @@ export function Root(props: {
     gitRepoDetails: GitRepoDetails;
   };
   dismissOnboarding: VoidFunction;
+  fallbackApps: FallbackApp[];
 }) {
-  const { deployment, dismissOnboarding } = props;
+  const { deployment, dismissOnboarding, fallbackApps } = props;
   const { deploymentId, gitRepoDetails } = deployment;
 
   const [state, setState] = React.useState<
@@ -58,7 +59,7 @@ export function Root(props: {
           showStepper
           stepperNavSteps={stepperNavSteps}
           activeIndex={stepperIndex}
-          header="Loading your project"
+          header="Setting up your project"
           showSubHeaderAboveHeader
           subHeader={
             <>
@@ -78,8 +79,10 @@ export function Root(props: {
             setStepperIndex={setStepperIndex}
             deploymentId={deploymentId}
             projectId={projectId}
+            gitRepoName={gitRepoName}
             onCompleteSuccess={transitionToQueryPopupSuccessState}
             onCompleteError={transitionToQueryPopupWithErrorState}
+            fallbackApps={fallbackApps}
           />
         </DialogContainer>
       );
