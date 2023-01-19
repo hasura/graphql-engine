@@ -713,6 +713,10 @@ library
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
+                     , Hasura.NativeQuery.IR
+                     , Hasura.NativeQuery.Metadata
+                     , Hasura.NativeQuery.Schema
+                     , Hasura.NativeQuery.Types
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -848,13 +852,13 @@ library
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.OrderBy
-                     , Hasura.RQL.IR.Returning
-                     , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.RemoteSchema
+                     , Hasura.RQL.IR.Returning
+                     , Hasura.RQL.IR.Root
+                     , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
                      , Hasura.RQL.IR.Update.Batch
                      , Hasura.RQL.IR.Value
-                     , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR
                      , Hasura.GraphQL.Analyse
                      , Hasura.GraphQL.ApolloFederation

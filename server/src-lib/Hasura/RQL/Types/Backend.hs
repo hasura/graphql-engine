@@ -178,7 +178,10 @@ class
     Traversable (BackendInsert b),
     Functor (AggregationPredicates b),
     Foldable (AggregationPredicates b),
-    Traversable (AggregationPredicates b)
+    Traversable (AggregationPredicates b),
+    Functor (NativeQuery b),
+    Foldable (NativeQuery b),
+    Traversable (NativeQuery b)
   ) =>
   Backend (b :: BackendType)
   where
@@ -308,6 +311,21 @@ class
   type BackendInsert b :: Type -> Type
 
   type BackendInsert b = Const Void
+
+  -- | Intermediate representation of Native Queries
+  -- The default implementation makes native queries uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type NativeQuery b :: Type -> Type
+
+  type NativeQuery b = Const Void
+
+  -- | Metadata representation of definitions of native queries.
+  -- The default implementation makes native queries uninstantiable.
+  type NativeQueryInfo b :: Type
+
+  type NativeQueryInfo b = Void
 
   -- extension types
   type XComputedField b :: Type

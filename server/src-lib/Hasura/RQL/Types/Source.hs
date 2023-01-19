@@ -18,6 +18,8 @@ module Hasura.RQL.Types.Source
     siQueryTagsConfig,
     siTables,
     siCustomization,
+    NativeQueryCache,
+    _siNativeQueries,
 
     -- * Schema cache
     ResolvedSource (..),
@@ -42,16 +44,23 @@ where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
+import Data.HashMap.Strict qualified as HM
+import Data.Maybe (fromJust)
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Encoding qualified as BS
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
+import Hasura.CustomSQL (CustomSQLParameter (..), CustomSQLParameterName (..), CustomSQLParameterType (..))
 import Hasura.Logging qualified as L
+import Hasura.NativeQuery.Metadata (NativeQueryArgumentName (..), NativeQueryInfoImpl (..))
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Metadata.Common (CustomSQLFields)
+import Hasura.RQL.Types.Metadata.Common (CustomSQLFields, CustomSQLMetadata (..))
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
@@ -60,6 +69,7 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Unsafe.Coerce (unsafeCoerce)
 
 --------------------------------------------------------------------------------
 -- Metadata (FIXME: this grouping is inaccurate)
@@ -73,6 +83,45 @@ data SourceInfo b = SourceInfo
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
     _siCustomization :: ResolvedSourceCustomization
   }
+
+-- This function is a temporary integration between metadata and schema of the Native Queries MVP.
+-- It is **not** representative of the code quality we strive for, and will be properly dealt with.
+_siNativeQueries :: forall b. Backend b => CustomSQLFields b -> NativeQueryCache b
+_siNativeQueries = foldMap toItem
+  where
+    toItem :: CustomSQLMetadata b -> HashMap NativeQueryName (NativeQueryInfo b)
+    toItem csm = HM.fromList [(toNativeQueryName (_csmRootFieldName csm), toInfo csm)]
+
+    toNativeQueryName :: G.Name -> NativeQueryName
+    toNativeQueryName = NativeQueryName . G.unName
+
+    toInfo :: CustomSQLMetadata b -> NativeQueryInfo b
+    toInfo CustomSQLMetadata {..} =
+      -- '_siNativeQueries' would have to be defined in some type class over
+      -- 'b' in order to avoid this unsafeCoerce.
+      -- But since this is a temporary stop-gap which we won't release it's fine.
+      unsafeCoerce $ (NativeQueryInfoImpl {..} :: NativeQueryInfoImpl b)
+      where
+        nqiiName = toNativeQueryName _csmRootFieldName
+        nqiiCode = _csmSql
+        nqiiReturns = _csmReturns
+        nqiiArgs = toArgs _csmParameters
+        nqiiComment = "TBD"
+
+    toArgs :: NonEmpty CustomSQLParameter -> HashMap NativeQueryArgumentName (ScalarType b)
+    toArgs = foldMap toArg
+
+    toArg :: CustomSQLParameter -> HashMap NativeQueryArgumentName (ScalarType b)
+    toArg CustomSQLParameter {..} = HM.fromList [(toArgName cspName, toScalarType cspType)]
+
+    toArgName :: CustomSQLParameterName -> NativeQueryArgumentName
+    toArgName CustomSQLParameterName {..} = NativeQueryArgumentName cspnName
+
+    -- This mismatch is the worst part.
+    toScalarType :: CustomSQLParameterType -> ScalarType b
+    toScalarType CustomSQLParameterType {..} = fromJust $ decode (BS.encodeUtf8 $ TL.fromStrict cspnType)
+
+type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 
 $(makeLenses ''SourceInfo)
 

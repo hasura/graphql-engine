@@ -3,6 +3,8 @@
 -- | Types concerned with user-specified custom SQL fragments.
 module Hasura.CustomSQL
   ( CustomSQLParameter (..),
+    CustomSQLParameterName (..),
+    CustomSQLParameterType (..),
   )
 where
 

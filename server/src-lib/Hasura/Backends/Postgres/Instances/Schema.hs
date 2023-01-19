@@ -66,6 +66,7 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.GraphQL.Schema.Update.Batch qualified as SUB
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Schema qualified as NativeQueries
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -297,6 +298,7 @@ instance
   buildFunctionQueryFields = buildFunctionQueryFieldsPG
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
   buildFunctionMutationFields = buildFunctionMutationFieldsPG
+  buildNativeQueryRootFields = NativeQueries.defaultBuildNativeQueryRootFields
 
   mkRelationshipParser = GSB.mkDefaultRelationshipParser backendInsertParser ()
 
