@@ -15,7 +15,7 @@
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">newtype</span><span> </span><span id="CustomSQLParameterName"><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterName"><span class="hs-identifier hs-var">CustomSQLParameterName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomSQLParameterName"><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterName"><span class="hs-identifier hs-var">CustomSQLParameterName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="cspnName"><span class="annot"><span class="annottext">CustomSQLParameterName -&gt; Text
 </span><a href="Hasura.CustomSQL.html#cspnName"><span class="hs-identifier hs-var hs-var">cspnName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690204455"><span id="local-6989586621690204459"><span id="local-6989586621690204464"><span class="annot"><span class="annottext">Int -&gt; CustomSQLParameterName -&gt; ShowS
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690210020"><span id="local-6989586621690210024"><span id="local-6989586621690210029"><span class="annot"><span class="annottext">Int -&gt; CustomSQLParameterName -&gt; ShowS
 [CustomSQLParameterName] -&gt; ShowS
 CustomSQLParameterName -&gt; String
 forall a.
@@ -26,13 +26,13 @@ show :: CustomSQLParameterName -&gt; String
 $cshow :: CustomSQLParameterName -&gt; String
 showsPrec :: Int -&gt; CustomSQLParameterName -&gt; ShowS
 $cshowsPrec :: Int -&gt; CustomSQLParameterName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204444"><span id="local-6989586621690204449"><span class="annot"><span class="annottext">CustomSQLParameterName -&gt; CustomSQLParameterName -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690210009"><span id="local-6989586621690210014"><span class="annot"><span class="annottext">CustomSQLParameterName -&gt; CustomSQLParameterName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CustomSQLParameterName -&gt; CustomSQLParameterName -&gt; Bool
 $c/= :: CustomSQLParameterName -&gt; CustomSQLParameterName -&gt; Bool
 == :: CustomSQLParameterName -&gt; CustomSQLParameterName -&gt; Bool
 $c== :: CustomSQLParameterName -&gt; CustomSQLParameterName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204433"><span id="local-6989586621690204438"><span class="annot"><span class="annottext">Value -&gt; Parser [CustomSQLParameterName]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690209998"><span id="local-6989586621690210003"><span class="annot"><span class="annottext">Value -&gt; Parser [CustomSQLParameterName]
 Value -&gt; Parser CustomSQLParameterName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -40,7 +40,7 @@ parseJSONList :: Value -&gt; Parser [CustomSQLParameterName]
 $cparseJSONList :: Value -&gt; Parser [CustomSQLParameterName]
 parseJSON :: Value -&gt; Parser CustomSQLParameterName
 $cparseJSON :: Value -&gt; Parser CustomSQLParameterName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204414"><span id="local-6989586621690204418"><span id="local-6989586621690204422"><span id="local-6989586621690204427"><span class="annot"><span class="annottext">[CustomSQLParameterName] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690209979"><span id="local-6989586621690209983"><span id="local-6989586621690209987"><span id="local-6989586621690209992"><span class="annot"><span class="annottext">[CustomSQLParameterName] -&gt; Value
 [CustomSQLParameterName] -&gt; Encoding
 CustomSQLParameterName -&gt; Value
 CustomSQLParameterName -&gt; Encoding
@@ -60,9 +60,9 @@ toJSON :: CustomSQLParameterName -&gt; Value
 $ctoJSON :: CustomSQLParameterName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690204407"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterName"><span class="hs-identifier hs-type">CustomSQLParameterName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621690204403"><span class="annot"><span class="annottext">codec :: JSONCodec CustomSQLParameterName
-</span><a href="#local-6989586621690204403"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690209972"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterName"><span class="hs-identifier hs-type">CustomSQLParameterName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621690209968"><span class="annot"><span class="annottext">codec :: JSONCodec CustomSQLParameterName
+</span><a href="#local-6989586621690209968"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -74,7 +74,7 @@ $ctoJSON :: CustomSQLParameterName -&gt; Value
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">newtype</span><span> </span><span id="CustomSQLParameterType"><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterType"><span class="hs-identifier hs-var">CustomSQLParameterType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomSQLParameterType"><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterType"><span class="hs-identifier hs-var">CustomSQLParameterType</span></a></span></span><span> </span><span class="hs-special">{</span><span id="cspnType"><span class="annot"><span class="annottext">CustomSQLParameterType -&gt; Text
 </span><a href="Hasura.CustomSQL.html#cspnType"><span class="hs-identifier hs-var hs-var">cspnType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690204390"><span id="local-6989586621690204394"><span id="local-6989586621690204398"><span class="annot"><span class="annottext">Int -&gt; CustomSQLParameterType -&gt; ShowS
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690209955"><span id="local-6989586621690209959"><span id="local-6989586621690209963"><span class="annot"><span class="annottext">Int -&gt; CustomSQLParameterType -&gt; ShowS
 [CustomSQLParameterType] -&gt; ShowS
 CustomSQLParameterType -&gt; String
 forall a.
@@ -85,13 +85,13 @@ show :: CustomSQLParameterType -&gt; String
 $cshow :: CustomSQLParameterType -&gt; String
 showsPrec :: Int -&gt; CustomSQLParameterType -&gt; ShowS
 $cshowsPrec :: Int -&gt; CustomSQLParameterType -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204381"><span id="local-6989586621690204385"><span class="annot"><span class="annottext">CustomSQLParameterType -&gt; CustomSQLParameterType -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690209946"><span id="local-6989586621690209950"><span class="annot"><span class="annottext">CustomSQLParameterType -&gt; CustomSQLParameterType -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CustomSQLParameterType -&gt; CustomSQLParameterType -&gt; Bool
 $c/= :: CustomSQLParameterType -&gt; CustomSQLParameterType -&gt; Bool
 == :: CustomSQLParameterType -&gt; CustomSQLParameterType -&gt; Bool
 $c== :: CustomSQLParameterType -&gt; CustomSQLParameterType -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204372"><span id="local-6989586621690204376"><span class="annot"><span class="annottext">Value -&gt; Parser [CustomSQLParameterType]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690209937"><span id="local-6989586621690209941"><span class="annot"><span class="annottext">Value -&gt; Parser [CustomSQLParameterType]
 Value -&gt; Parser CustomSQLParameterType
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -99,7 +99,7 @@ parseJSONList :: Value -&gt; Parser [CustomSQLParameterType]
 $cparseJSONList :: Value -&gt; Parser [CustomSQLParameterType]
 parseJSON :: Value -&gt; Parser CustomSQLParameterType
 $cparseJSON :: Value -&gt; Parser CustomSQLParameterType
-</span><a href="#local-6989586621690204372"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204355"><span id="local-6989586621690204359"><span id="local-6989586621690204363"><span id="local-6989586621690204367"><span class="annot"><span class="annottext">[CustomSQLParameterType] -&gt; Value
+</span><a href="#local-6989586621690209937"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690209920"><span id="local-6989586621690209924"><span id="local-6989586621690209928"><span id="local-6989586621690209932"><span class="annot"><span class="annottext">[CustomSQLParameterType] -&gt; Value
 [CustomSQLParameterType] -&gt; Encoding
 CustomSQLParameterType -&gt; Value
 CustomSQLParameterType -&gt; Encoding
@@ -117,11 +117,11 @@ toEncoding :: CustomSQLParameterType -&gt; Encoding
 $ctoEncoding :: CustomSQLParameterType -&gt; Encoding
 toJSON :: CustomSQLParameterType -&gt; Value
 $ctoJSON :: CustomSQLParameterType -&gt; Value
-</span><a href="#local-6989586621690204355"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690209920"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690204349"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterType"><span class="hs-identifier hs-type">CustomSQLParameterType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-26"></span><span>  </span><span id="local-6989586621690204347"><span class="annot"><span class="annottext">codec :: JSONCodec CustomSQLParameterType
-</span><a href="#local-6989586621690204347"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690209914"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterType"><span class="hs-identifier hs-type">CustomSQLParameterType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621690209912"><span class="annot"><span class="annottext">codec :: JSONCodec CustomSQLParameterType
+</span><a href="#local-6989586621690209912"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -137,7 +137,7 @@ $ctoJSON :: CustomSQLParameterType -&gt; Value
 </span><span id="line-30"></span><span>    </span><span id="cspType"><span class="annot"><span class="annottext">CustomSQLParameter -&gt; CustomSQLParameterType
 </span><a href="Hasura.CustomSQL.html#cspType"><span class="hs-identifier hs-var hs-var">cspType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameterType"><span class="hs-identifier hs-type">CustomSQLParameterType</span></a></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690204334"><span id="local-6989586621690204336"><span id="local-6989586621690204342"><span class="annot"><span class="annottext">Int -&gt; CustomSQLParameter -&gt; ShowS
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690209899"><span id="local-6989586621690209901"><span id="local-6989586621690209907"><span class="annot"><span class="annottext">Int -&gt; CustomSQLParameter -&gt; ShowS
 [CustomSQLParameter] -&gt; ShowS
 CustomSQLParameter -&gt; String
 forall a.
@@ -148,7 +148,7 @@ show :: CustomSQLParameter -&gt; String
 $cshow :: CustomSQLParameter -&gt; String
 showsPrec :: Int -&gt; CustomSQLParameter -&gt; ShowS
 $cshowsPrec :: Int -&gt; CustomSQLParameter -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204328"><span id="local-6989586621690204332"><span class="annot"><span class="annottext">CustomSQLParameter -&gt; CustomSQLParameter -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690209893"><span id="local-6989586621690209897"><span class="annot"><span class="annottext">CustomSQLParameter -&gt; CustomSQLParameter -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CustomSQLParameter -&gt; CustomSQLParameter -&gt; Bool
 $c/= :: CustomSQLParameter -&gt; CustomSQLParameter -&gt; Bool
@@ -156,21 +156,21 @@ $c/= :: CustomSQLParameter -&gt; CustomSQLParameter -&gt; Bool
 $c== :: CustomSQLParameter -&gt; CustomSQLParameter -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690204325"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>  </span><span id="local-6989586621690204314"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CustomSQLParameter
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690209890"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621690209879"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CustomSQLParameter
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;CustomSQLParameter&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690204311"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690204311"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-36"></span><span>    </span><span id="local-6989586621690204310"><span class="annot"><span class="annottext">CustomSQLParameterName
-</span><a href="#local-6989586621690204310"><span class="hs-identifier hs-var">cspName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690204311"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690209876"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690209876"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621690209875"><span class="annot"><span class="annottext">CustomSQLParameterName
+</span><a href="#local-6989586621690209875"><span class="hs-identifier hs-var">cspName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690209876"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621690204308"><span class="annot"><span class="annottext">CustomSQLParameterType
-</span><a href="#local-6989586621690204308"><span class="hs-identifier hs-var">cspType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690204311"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621690209873"><span class="annot"><span class="annottext">CustomSQLParameterType
+</span><a href="#local-6989586621690209873"><span class="hs-identifier hs-var">cspType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690209876"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span>
 </span><span id="line-38"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -180,32 +180,32 @@ cspType :: CustomSQLParameterType
 cspName :: CustomSQLParameterName
 cspType :: CustomSQLParameterType
 cspName :: CustomSQLParameterName
-</span><a href="#local-6989586621690204308"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690209873"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690204301"><span id="local-6989586621690204303"><span id="local-6989586621690204305"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621690204291"><span class="annot"><span class="annottext">toJSON :: CustomSQLParameter -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690204288"><span id="local-6989586621690204289"><span class="annot"><span class="annottext">CustomSQLParameterType
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690209866"><span id="local-6989586621690209868"><span id="local-6989586621690209870"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621690209856"><span class="annot"><span class="annottext">toJSON :: CustomSQLParameter -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690209853"><span id="local-6989586621690209854"><span class="annot"><span class="annottext">CustomSQLParameterType
 CustomSQLParameterName
 cspType :: CustomSQLParameterType
 cspName :: CustomSQLParameterName
 cspType :: CustomSQLParameter -&gt; CustomSQLParameterType
 cspName :: CustomSQLParameter -&gt; CustomSQLParameterName
-</span><a href="#local-6989586621690204288"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690209853"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-43"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">CustomSQLParameterName
-</span><a href="#local-6989586621690204289"><span class="hs-identifier hs-var">cspName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690209854"><span class="hs-identifier hs-var">cspName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">CustomSQLParameterType
-</span><a href="#local-6989586621690204288"><span class="hs-identifier hs-var">cspType</span></a></span><span>
+</span><a href="#local-6989586621690209853"><span class="hs-identifier hs-var">cspType</span></a></span><span>
 </span><span id="line-45"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690204283"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621690204272"><span class="annot"><span class="annottext">codec :: JSONCodec CustomSQLParameter
-</span><a href="#local-6989586621690204272"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690209848"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.CustomSQL.html#CustomSQLParameter"><span class="hs-identifier hs-type">CustomSQLParameter</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621690209837"><span class="annot"><span class="annottext">codec :: JSONCodec CustomSQLParameter
+</span><a href="#local-6989586621690209837"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
