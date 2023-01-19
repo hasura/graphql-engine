@@ -1,3 +1,5 @@
+import { Table } from '@/features/hasura-metadata-types';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { Database, Feature } from '../index';
 import {
   getTablesListAsTree,
@@ -17,6 +19,7 @@ import { getTableRows } from './query';
 export type GDCTable = string[];
 
 export const gdc: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration,
@@ -34,5 +37,10 @@ export const gdc: Database = {
   },
   query: {
     getTableRows,
+  },
+  config: {
+    getDefaultQueryRoot: async (table: Table) => {
+      return (table as GDCTable).join('_');
+    },
   },
 };

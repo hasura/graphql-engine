@@ -1,5 +1,7 @@
+import { Table } from '@/features/hasura-metadata-types';
 import { Database, Feature } from '..';
 import { NetworkArgs, runSQL } from '../api';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
 import {
   getTableColumns,
@@ -12,6 +14,7 @@ import { getTableRows } from './query';
 export type MssqlTable = { schema: string; name: string };
 
 export const mssql: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => ({
       name: 'mssql',
@@ -54,5 +57,11 @@ export const mssql: Database = {
   },
   query: {
     getTableRows,
+  },
+  config: {
+    getDefaultQueryRoot: async (table: Table) => {
+      const { name, schema } = table as MssqlTable;
+      return schema === 'dbo' ? name : `${schema}_${name};`;
+    },
   },
 };

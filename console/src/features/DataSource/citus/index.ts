@@ -1,5 +1,7 @@
+import { Table } from '@/features/hasura-metadata-types';
 import { Database, Feature } from '..';
 import { runSQL } from '../api';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
 import { GetTrackableTablesProps } from '../types';
 import {
@@ -13,6 +15,7 @@ import { getTableRows } from './query';
 export type CitusTable = { name: string; schema: string };
 
 export const citus: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => ({
       name: 'citus',
@@ -65,5 +68,11 @@ export const citus: Database = {
   },
   query: {
     getTableRows,
+  },
+  config: {
+    getDefaultQueryRoot: async (table: Table) => {
+      const { name, schema } = table as CitusTable;
+      return schema === 'public' ? name : `${schema}_${name};`;
+    },
   },
 };

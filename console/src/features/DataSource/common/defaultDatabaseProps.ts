@@ -1,16 +1,11 @@
 import { Database, Feature } from '..';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 
-export type MySQLTable = { name: string };
-
-export const mysql: Database = {
-  ...defaultDatabaseProps,
+export const defaultDatabaseProps: Database = {
+  config: {
+    getDefaultQueryRoot: async () => Feature.NotImplemented,
+  },
   introspection: {
-    getDriverInfo: async () => ({
-      name: 'mysql',
-      displayName: 'MySQL',
-      release: 'disabled',
-    }),
+    getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration: async () => Feature.NotImplemented,
     getTrackableTables: async () => Feature.NotImplemented,
     getDatabaseHierarchy: async () => Feature.NotImplemented,
