@@ -11,6 +11,7 @@ module Harness.Services.GraphqlEngine
   )
 where
 
+import Control.Concurrent (forkIO)
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed
 import Data.Aeson
@@ -123,7 +124,7 @@ spawnServer logger pgUrl (HgeBinPath hgeBinPath) (HgeConfig {hgeConfigEnvironmen
                              )
               return $ (process, port)
           )
-          ( \(process@(_, _, _, ph), port) -> do
+          ( \(process@(_, _, _, ph), port) -> forkIO $ do
               startTime <- getCurrentTime
               interruptProcessGroupOf ph
               exitCode <- waitForProcess ph

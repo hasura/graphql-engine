@@ -8,7 +8,6 @@ module Harness.Backend.Postgres
     makeFreshDbConnectionString,
     metadataLivenessCheck,
     run_,
-    runWithInitialDb_,
     runSQL,
     defaultSourceMetadata,
     defaultSourceConfiguration,
@@ -39,13 +38,9 @@ import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Aeson qualified as Aeson
-import Data.ByteString qualified as BS
-import Data.ByteString.Char8 qualified as S8
 import Data.Monoid (Last, getLast)
-import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
-import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Extended (commaSeparated)
 import Data.Text.Lazy qualified as TL
 import Data.Time (defaultTimeLocale, formatTime)
@@ -54,8 +49,8 @@ import Database.PostgreSQL.Simple.Options (Options (..))
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Services.Postgres qualified as Postgres
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Permissions qualified as Permissions
@@ -67,7 +62,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), testLogMessage)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..))
 import Hasura.Prelude
 import System.Process.Typed
 import Text.Pretty.Simple (pShow)
@@ -115,47 +110,49 @@ defaultConnectInfo globalTestEnvironment =
             }
     _otherTestingMode ->
       Postgres.ConnectInfo
-        { connectHost = Constants.postgresHost,
-          connectUser = Constants.postgresUser,
+        { connectHost = T.unpack Constants.postgresHost,
+          connectUser = T.unpack Constants.postgresUser,
           connectPort = Constants.postgresPort,
-          connectPassword = Constants.postgresPassword,
-          connectDatabase = Constants.postgresDb
+          connectPassword = T.unpack Constants.postgresPassword,
+          connectDatabase = T.unpack Constants.postgresDb
         }
 
 -- | Create a connection string for whatever unique database has been generated
 -- for this 'TestEnvironment'.
-makeFreshDbConnectionString :: TestEnvironment -> S8.ByteString
+makeFreshDbConnectionString :: TestEnvironment -> Postgres.PostgresServerUrl
 makeFreshDbConnectionString testEnvironment =
-  Postgres.postgreSQLConnectionString
-    (defaultConnectInfo (globalEnvironment testEnvironment))
-      { Postgres.connectDatabase = uniqueDbName (uniqueTestId testEnvironment)
-      }
+  Postgres.PostgresServerUrl $
+    bsToTxt $
+      Postgres.postgreSQLConnectionString
+        (defaultConnectInfo (globalEnvironment testEnvironment))
+          { Postgres.connectDatabase = T.unpack (uniqueDbName (uniqueTestId testEnvironment))
+          }
+
+-- | Default Postgres connection string that we use for our admin purposes
+-- (setting up / deleting per-test databases)
+defaultPostgresConnectionString :: GlobalTestEnvironment -> Postgres.PostgresServerUrl
+defaultPostgresConnectionString =
+  Postgres.PostgresServerUrl
+    . bsToTxt
+    . Postgres.postgreSQLConnectionString
+    . defaultConnectInfo
 
 metadataLivenessCheck :: HasCallStack => IO ()
 metadataLivenessCheck =
-  doLivenessCheck $
-    fromString postgresqlMetadataConnectionString
+  doLivenessCheck (Postgres.PostgresServerUrl $ T.pack postgresqlMetadataConnectionString)
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
 
--- PostgreSQL 15.1 on x86_64-pc-linux-musl, com ....
--- forgive me, padre
-_parsePostgresVersion :: String -> Maybe Int
-_parsePostgresVersion =
-  readMaybe
-    . takeWhile (not . (==) '.')
-    . drop (length @[] "PostgreSQL ")
-
 -- | Check the postgres server is live and ready to accept connections.
-doLivenessCheck :: HasCallStack => BS.ByteString -> IO ()
-doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
+doLivenessCheck :: HasCallStack => Postgres.PostgresServerUrl -> IO ()
+doLivenessCheck (Postgres.PostgresServerUrl connectionString) = loop Constants.postgresLivenessCheckAttempts
   where
     loop 0 = error ("Liveness check failed for PostgreSQL.")
     loop attempts =
       catch
         ( bracket
-            ( Postgres.connectPostgreSQL connectionString
+            ( Postgres.connectPostgreSQL (txtToBs connectionString)
             )
             Postgres.close
             (const (pure ()))
@@ -165,77 +162,16 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
             loop (attempts - 1)
         )
 
--- | when we are creating databases, we want to connect with the 'original' DB
--- we started with
-runWithInitialDb_ :: HasCallStack => GlobalTestEnvironment -> String -> IO ()
-runWithInitialDb_ globalTestEnvironment =
-  runInternal (logger globalTestEnvironment) $
-    Postgres.postgreSQLConnectionString (defaultConnectInfo globalTestEnvironment)
-
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ :: HasCallStack => TestEnvironment -> Text -> IO ()
 run_ testEnvironment =
-  runInternal (logger $ globalEnvironment testEnvironment) (makeFreshDbConnectionString testEnvironment)
-
---- | Run a plain SQL query.
--- On error, print something useful for debugging.
-runInternal :: HasCallStack => Logger -> S8.ByteString -> String -> IO ()
-runInternal logger connectionString query = do
-  runLogger logger $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
-  catch
-    ( bracket
-        ( Postgres.connectPostgreSQL
-            connectionString
-        )
-        Postgres.close
-        (\conn -> void (Postgres.execute_ conn (fromString query)))
-    )
-    ( \(e :: Postgres.SqlError) ->
-        error
-          ( unlines
-              [ "PostgreSQL query error:",
-                S8.unpack (Postgres.sqlErrorMsg e),
-                "SQL was:",
-                query
-              ]
-          )
-    )
+  Postgres.run
+    (logger $ globalEnvironment testEnvironment)
+    (makeFreshDbConnectionString testEnvironment)
 
 runSQL :: String -> TestEnvironment -> IO ()
 runSQL = Schema.runSQL (BackendType.backendSourceName backendTypeMetadata)
-
---- | Run a plain SQL query.
--- On error, print something useful for debugging.
-queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> S8.ByteString -> String -> IO [a]
-queryInternal testEnvironment connectionString query = do
-  testLogMessage testEnvironment $ LogDBQuery (decodeUtf8 connectionString) (T.pack query)
-  catch
-    ( bracket
-        ( Postgres.connectPostgreSQL
-            connectionString
-        )
-        Postgres.close
-        (\conn -> Postgres.query_ conn (fromString query))
-    )
-    ( \(e :: Postgres.SqlError) ->
-        error
-          ( unlines
-              [ "PostgreSQL query error:",
-                S8.unpack (Postgres.sqlErrorMsg e),
-                "SQL was:",
-                query
-              ]
-          )
-    )
-
--- | when we are creating databases, we want to connect with the 'original' DB
--- we started with
-queryWithInitialDb :: (Postgres.FromRow a, HasCallStack) => TestEnvironment -> String -> IO [a]
-queryWithInitialDb testEnvironment =
-  queryInternal
-    testEnvironment
-    (Postgres.postgreSQLConnectionString (defaultConnectInfo $ globalEnvironment testEnvironment))
 
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: TestEnvironment -> Value
@@ -249,8 +185,7 @@ defaultSourceMetadata testEnv =
 
 defaultSourceConfiguration :: TestEnvironment -> Value
 defaultSourceConfiguration testEnv = do
-  let connectionString :: Text
-      connectionString = bsToTxt $ makeFreshDbConnectionString testEnv
+  let (Postgres.PostgresServerUrl connectionString) = makeFreshDbConnectionString testEnv
 
   [interpolateYaml|
     connection_info:
@@ -293,7 +228,7 @@ uniqueConstraintSql = \case
   Schema.CheckConstraintExpression ex ->
     [i| CHECK (#{ ex }) |]
 
-createUniqueIndexSql :: SchemaName -> Text -> Schema.UniqueIndex -> String
+createUniqueIndexSql :: SchemaName -> Text -> Schema.UniqueIndex -> Text
 createUniqueIndexSql (SchemaName schemaName) tableName = \case
   Schema.UniqueIndexColumns cols ->
     [i| CREATE UNIQUE INDEX ON "#{ schemaName }"."#{ tableName }" (#{ commaSeparated cols }) |]
@@ -411,34 +346,17 @@ untrackTable testEnvironment table =
 -- with.
 createDatabase :: TestEnvironment -> IO ()
 createDatabase testEnvironment = do
-  runWithInitialDb_
-    (globalEnvironment testEnvironment)
-    ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
+  Postgres.createDatabase
+    (logger (globalEnvironment testEnvironment))
+    (defaultPostgresConnectionString (globalEnvironment testEnvironment))
+    (uniqueDbName (uniqueTestId testEnvironment))
 
 dropDatabase :: TestEnvironment -> IO ()
 dropDatabase testEnvironment = do
-  let dbName = uniqueDbName (uniqueTestId testEnvironment)
-  dropDatabaseInternal dbName testEnvironment
-
--- | we drop databases at the end of test runs so we don't need to do DB clean
--- up.
-dropDatabaseInternal :: String -> TestEnvironment -> IO ()
-dropDatabaseInternal dbName testEnvironment = do
-  void $
-    queryWithInitialDb @(Postgres.Only Bool)
-      testEnvironment
-      [i|
-      SELECT pg_terminate_backend(pg_stat_activity.pid)
-      FROM pg_stat_activity
-      WHERE pg_stat_activity.datname = '#{dbName}'
-      AND pid <> pg_backend_pid();
-    |]
-
-  -- if this fails, don't make the test fail
-  runWithInitialDb_
-    (globalEnvironment testEnvironment)
-    ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+  Postgres.dropDatabase
+    (logger (globalEnvironment testEnvironment))
+    (defaultPostgresConnectionString (globalEnvironment testEnvironment))
+    (uniqueDbName (uniqueTestId testEnvironment))
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.

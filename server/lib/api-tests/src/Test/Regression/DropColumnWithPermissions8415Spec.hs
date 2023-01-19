@@ -4,7 +4,6 @@
 module Test.Regression.DropColumnWithPermissions8415Spec (spec) where
 
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -78,7 +77,7 @@ tests opts = do
   let shouldBe = shouldReturnYaml opts
 
   it "Drop column which is not referred in update permission" \testEnvironment -> do
-    let runSQL = "alter table " <> Constants.postgresDb <> "." <> T.unpack authorTableName <> " drop column name;"
+    let runSQL = "alter table " <> Constants.postgresDb <> "." <> authorTableName <> " drop column name;"
 
     let actual =
           GraphqlEngine.postV2Query
@@ -100,7 +99,7 @@ tests opts = do
     actual `shouldBe` expected
 
   it "Drop column which is referred in update permission" \testEnvironment -> do
-    let runSQL = "alter table " <> Constants.postgresDb <> "." <> T.unpack authorTableName <> " drop column age;"
+    let runSQL = "alter table " <> Constants.postgresDb <> "." <> authorTableName <> " drop column age;"
 
     let actual =
           GraphqlEngine.postV2Query

@@ -86,10 +86,10 @@ schema =
       }
   ]
 
-setup :: String
+setup :: Text
 setup = "create type \"role\" as enum ('admin', 'editor', 'moderator');"
 
-teardown :: String
+teardown :: Text
 teardown = "drop type \"role\" cascade;"
 
 --------------------------------------------------------------------------------

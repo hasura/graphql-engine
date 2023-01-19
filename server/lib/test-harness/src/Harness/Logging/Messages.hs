@@ -35,6 +35,7 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.Text qualified as T
 import Data.Text.Encoding
 import Data.Text.Lazy qualified as LT
+import Data.Time (NominalDiffTime)
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Prelude hiding (Seconds)
 import System.Log.FastLogger qualified as FL
@@ -223,7 +224,8 @@ instance LoggableMessage LogHGEResponse where
 
 data LogDBQuery = LogDBQuery
   { ldqConnectionString :: Text,
-    ldqQuery :: Text
+    ldqQuery :: Text,
+    ldqDuration :: NominalDiffTime
   }
 
 instance LoggableMessage LogDBQuery where
@@ -231,7 +233,8 @@ instance LoggableMessage LogDBQuery where
     object
       [ ("type", String "LogDBQuery"),
         ("connection_string", String ldqConnectionString),
-        ("query", String ldqQuery)
+        ("query", String ldqQuery),
+        ("duration", Number (realToFrac ldqDuration))
       ]
 
 data LogDropDBFailedWarning = LogDropDBFailedWarning

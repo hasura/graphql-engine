@@ -29,7 +29,7 @@ import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
-import Data.Time (defaultTimeLocale, formatTime)
+import Data.Time (defaultTimeLocale, diffUTCTime, formatTime, getCurrentTime)
 import Database.ODBC.SQLServer qualified as Sqlserver
 import Harness.Constants qualified as Constants
 import Harness.Exceptions
@@ -93,7 +93,7 @@ runWithInitialDb_ testEnvironment =
 -- result. Just checks for errors.
 runInternal :: HasCallStack => TestEnvironment -> Text -> String -> IO ()
 runInternal testEnvironment connectionString query' = do
-  testLogMessage testEnvironment $ LogDBQuery connectionString (T.pack query')
+  startTime <- getCurrentTime
   catch
     ( bracket
         (Sqlserver.connect connectionString)
@@ -110,6 +110,8 @@ runInternal testEnvironment connectionString query' = do
               ]
           )
     )
+  endTime <- getCurrentTime
+  testLogMessage testEnvironment $ LogDBQuery connectionString (T.pack query') (diffUTCTime endTime startTime)
 
 -- | Metadata source information for the default MSSQL instance.
 defaultSourceMetadata :: TestEnvironment -> Value
@@ -291,7 +293,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     [i|DROP DATABASE #{dbName}|]
-    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning dbName ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.

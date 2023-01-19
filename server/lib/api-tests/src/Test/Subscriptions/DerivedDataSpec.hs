@@ -193,7 +193,7 @@ tests opts = withSubscriptions $ do
 --------------------------------------------------------------------------------
 -- SQL
 
-setupViewSQL :: String
+setupViewSQL :: Text
 setupViewSQL =
   [sql|
     CREATE OR REPLACE VIEW hasura.poll_results AS
@@ -215,7 +215,7 @@ setupViewSQL =
         GROUP BY poll.question, o.option_id, poll.id;
   |]
 
-teardownViewSQL :: String
+teardownViewSQL :: Text
 teardownViewSQL =
   [sql|
     DROP VIEW IF EXISTS hasura.poll_results
