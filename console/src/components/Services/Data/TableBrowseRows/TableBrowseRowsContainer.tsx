@@ -108,6 +108,7 @@ export const TableBrowseRowsContainer = (
         (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
           dataType: column.data_type as TableColumn['dataType'],
+          consoleDataType: 'string',
         }))
       );
 

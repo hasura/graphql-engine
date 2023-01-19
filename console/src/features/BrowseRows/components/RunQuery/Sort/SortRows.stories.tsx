@@ -19,6 +19,7 @@ const columns: TableColumn[] = [
   {
     name: 'ID',
     dataType: 'number',
+    consoleDataType: 'number',
     graphQLProperties: {
       name: 'ID',
       scalarType: 'Int',
@@ -27,6 +28,7 @@ const columns: TableColumn[] = [
   {
     name: 'FirstName',
     dataType: 'string',
+    consoleDataType: 'string',
     graphQLProperties: {
       name: 'FirstName',
       scalarType: 'String',
@@ -35,6 +37,7 @@ const columns: TableColumn[] = [
   {
     name: 'UpdatedAt',
     dataType: 'string',
+    consoleDataType: 'string',
     graphQLProperties: {
       name: 'UpdatedAtCustomName',
       scalarType: 'String',

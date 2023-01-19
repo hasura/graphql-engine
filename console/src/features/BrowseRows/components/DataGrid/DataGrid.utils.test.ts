@@ -347,11 +347,13 @@ describe('convertUrlToDataGridOptions', () => {
           name: 'AlbumId',
           dataType: 'number',
           graphQLProperties: { name: 'AlbumId', scalarType: 'decimal' },
+          consoleDataType: 'number',
         },
         {
           name: 'Title',
           dataType: 'string',
           graphQLProperties: { name: 'Title', scalarType: 'String' },
+          consoleDataType: 'string',
         },
       ];
 
@@ -368,6 +370,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'number',
+      consoleDataType: 'number',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'decimal',
@@ -381,6 +384,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'number',
+      consoleDataType: 'number',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'float',
@@ -394,6 +398,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'bool',
+      consoleDataType: 'number',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'boolean',
@@ -407,6 +412,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'string',
+      consoleDataType: 'number',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'string',
@@ -420,6 +426,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'string',
+      consoleDataType: 'string',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'string',
@@ -433,6 +440,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'number',
+      consoleDataType: 'number',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'int',
@@ -446,6 +454,7 @@ describe('convertValueToGraphQL', () => {
     const tableColumn: TableColumn = {
       name: 'AlbumId',
       dataType: 'number',
+      consoleDataType: 'number',
       graphQLProperties: {
         name: 'AlbumId',
         scalarType: 'float',

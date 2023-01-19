@@ -55,15 +55,18 @@ export type IntrospectedTable = {
 };
 
 export type TableColumn = {
+  /**
+   * Name of the column as defined in the DB
+   */
   name: string;
-  dataType:
-    | 'string'
-    | 'number'
-    | 'bool'
-    | 'json'
-    | 'datetime'
-    | 'timestamp'
-    | 'xml';
+  /**
+   * dataType of the column as defined in the DB
+   */
+  dataType: string;
+  /**
+   * console data type: the dataType property is group into one of these types and console uses this internally
+   */
+  consoleDataType: 'string' | 'text' | 'json' | 'number' | 'boolean';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {

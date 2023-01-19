@@ -43,10 +43,12 @@ describe('adaptFormValuesToQuery', () => {
       {
         name: 'id',
         dataType: 'number',
+        consoleDataType: 'number',
       },
       {
         name: 'text',
         dataType: 'string',
+        consoleDataType: 'string',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -74,6 +76,7 @@ describe('adaptFormValuesToQuery', () => {
       {
         name: 'id',
         dataType: 'number',
+        consoleDataType: 'number',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -101,6 +104,7 @@ describe('adaptFormValuesToQuery', () => {
       {
         name: 'idDeleted',
         dataType: 'bool',
+        consoleDataType: 'boolean',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -128,6 +132,7 @@ describe('adaptFormValuesToQuery', () => {
       {
         name: 'idDeleted',
         dataType: 'bool',
+        consoleDataType: 'boolean',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -164,10 +169,12 @@ it('does not try to parse non-integer values on integer field types', () => {
     {
       name: 'id',
       dataType: 'number',
+      consoleDataType: 'number',
     },
     {
       name: 'text',
-      dataType: 'number',
+      dataType: 'string',
+      consoleDataType: 'string',
     },
   ];
   expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);

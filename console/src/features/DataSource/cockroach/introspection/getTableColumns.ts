@@ -8,7 +8,8 @@ const adaptTableColumns = (result: RunSQLResponse['result']): TableColumn[] => {
 
   return result.slice(1).map(row => ({
     name: row[0],
-    dataType: adaptSQLDataType(row[1]),
+    consoleDataType: adaptSQLDataType(row[1]),
+    dataType: row[1],
     nullable: row[2] === 'YES',
   }));
 };

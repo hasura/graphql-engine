@@ -16,6 +16,7 @@ export const Primary: ComponentStory<typeof LegacyRunQuery> = () => (
       {
         name: 'ID',
         dataType: 'number',
+        consoleDataType: 'number',
         graphQLProperties: {
           name: 'ID',
           scalarType: 'Int',
@@ -24,6 +25,7 @@ export const Primary: ComponentStory<typeof LegacyRunQuery> = () => (
       {
         name: 'FirstName',
         dataType: 'string',
+        consoleDataType: 'string',
         graphQLProperties: {
           name: 'FirstName',
           scalarType: 'String',
@@ -32,6 +34,7 @@ export const Primary: ComponentStory<typeof LegacyRunQuery> = () => (
       {
         name: 'UpdatedAt',
         dataType: 'string',
+        consoleDataType: 'string',
         graphQLProperties: {
           name: 'UpdatedAtCustomName',
           scalarType: 'String',

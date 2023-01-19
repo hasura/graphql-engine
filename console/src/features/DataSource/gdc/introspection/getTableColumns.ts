@@ -79,6 +79,10 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
       return {
         name: column.name,
         dataType: adaptAgentDataType(column.type),
+        /**
+          Will be updated once GDC supports mutations 
+        */
+        consoleDataType: 'string',
         nullable: column.nullable,
         isPrimaryKey: primaryKeys.includes(column.name),
         graphQLProperties: {

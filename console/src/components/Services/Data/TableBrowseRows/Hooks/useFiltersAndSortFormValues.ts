@@ -77,6 +77,7 @@ export const useFiltersAndSortFormValues = ({
         (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
           dataType: column.data_type as TableColumn['dataType'],
+          consoleDataType: 'string',
         }))
       ),
     // NOTE: this processing is needed only when the component is loaded for the first time — do not change the dependency array

@@ -75,6 +75,7 @@ export const formDataInput: Input = {
         name: 'ArtistId',
         scalarType: 'decimal',
       },
+      consoleDataType: 'number',
     },
     {
       name: 'Name',
@@ -85,6 +86,7 @@ export const formDataInput: Input = {
         name: 'Name',
         scalarType: 'String',
       },
+      consoleDataType: 'string',
     },
   ],
 };
@@ -105,6 +107,7 @@ export const defaultValuesInput: Parameters<typeof createDefaultValues>[0] = {
         name: 'ArtistId',
         scalarType: 'decimal',
       },
+      consoleDataType: 'number',
     },
     {
       name: 'Name',
@@ -115,6 +118,7 @@ export const defaultValuesInput: Parameters<typeof createDefaultValues>[0] = {
         name: 'Name',
         scalarType: 'String',
       },
+      consoleDataType: 'string',
     },
   ],
   schema,
