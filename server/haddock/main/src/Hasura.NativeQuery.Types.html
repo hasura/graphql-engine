@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module houses the types that are necessary to even talk about native</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- queries abstractly of a concrete implementation.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Types</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier">NativeQueryName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryName"><span class="annot"><span class="annottext">NativeQueryName -&gt; Text
+</span><a href="Hasura.NativeQuery.Types.html#getNativeQueryName"><span class="hs-identifier hs-var hs-var">getNativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690264475"><span id="local-6989586621690264480"><span class="annot"><span class="annottext">NativeQueryName -&gt; NativeQueryName -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+$c/= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+== :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+$c== :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690264442"><span id="local-6989586621690264446"><span id="local-6989586621690264450"><span id="local-6989586621690264454"><span id="local-6989586621690264458"><span id="local-6989586621690264462"><span id="local-6989586621690264467"><span class="annot"><span class="annottext">Eq NativeQueryName
+NativeQueryName -&gt; NativeQueryName -&gt; Bool
+NativeQueryName -&gt; NativeQueryName -&gt; Ordering
+NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
+$cmin :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
+max :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
+$cmax :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
+&gt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+$c&gt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+&gt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+$c&gt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+&lt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+$c&lt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+&lt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+$c&lt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
+compare :: NativeQueryName -&gt; NativeQueryName -&gt; Ordering
+$ccompare :: NativeQueryName -&gt; NativeQueryName -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690264428"><span id="local-6989586621690264430"><span id="local-6989586621690264436"><span class="annot"><span class="annottext">Int -&gt; NativeQueryName -&gt; ShowS
+[NativeQueryName] -&gt; ShowS
+NativeQueryName -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [NativeQueryName] -&gt; ShowS
+$cshowList :: [NativeQueryName] -&gt; ShowS
+show :: NativeQueryName -&gt; String
+$cshow :: NativeQueryName -&gt; String
+showsPrec :: Int -&gt; NativeQueryName -&gt; ShowS
+$cshowsPrec :: Int -&gt; NativeQueryName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690264418"><span id="local-6989586621690264423"><span class="annot"><span class="annottext">Eq NativeQueryName
+Int -&gt; NativeQueryName -&gt; Int
+NativeQueryName -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: NativeQueryName -&gt; Int
+$chash :: NativeQueryName -&gt; Int
+hashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
+$chashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span></pre></body></html>
