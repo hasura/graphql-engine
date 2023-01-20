@@ -107,9 +107,7 @@ Create.play = async ({ canvasElement }) => {
 
   // --------------------------------------------------
   // Step 5: Add request transform options
-  await userEvent.click(
-    canvas.getByText('Header, URL, and Advanced Request Options')
-  );
+  await userEvent.click(canvas.getByText('Advanced Settings'));
 
   // Add request headers
   await userEvent.click(canvas.getByText('Add request headers'));
@@ -144,35 +142,6 @@ Create.play = async ({ canvasElement }) => {
       name: 'headers[1].value',
     }),
     'HASURA_ENV_ID'
-  );
-
-  // Add request method and url template
-  await userEvent.click(
-    canvas.getByRole('radio', {
-      name: 'GET',
-    })
-  );
-
-  await userEvent.type(
-    canvas.getByRole('textbox', {
-      name: 'Request URL Template',
-    }),
-    '/users'
-  );
-
-  // Add request query params
-  await userEvent.click(canvas.getByText('Add query params'));
-  await userEvent.type(
-    canvas.getByRole('textbox', {
-      name: 'query_params[0].name',
-    }),
-    'userId'
-  );
-  await userEvent.type(
-    canvas.getByRole('textbox', {
-      name: 'query_params[0].value',
-    }),
-    '12'
   );
 
   // --------------------------------------------------

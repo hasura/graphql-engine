@@ -24,6 +24,7 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), bimapCodec)
 import Control.DeepSeq (NFData)
 import Data.Aeson qualified as J
 import Data.Char qualified as C
@@ -43,6 +44,9 @@ import Prelude
 newtype Name = Name {unName :: Text}
   deriving stock (Eq, Lift, Ord, Show)
   deriving newtype (Semigroup, Hashable, NFData, Pretty, J.ToJSONKey, J.ToJSON)
+
+instance HasCodec Name where
+  codec = bimapCodec (\text -> maybe (Left $ T.unpack text <> " is not valid GraphQL name") Right $ mkName text) unName codec
 
 -- | @NameSuffix@ is essentially a GQL identifier that can be used as Suffix
 --  It is slightely different from @Name@ as it relaxes the criteria that a

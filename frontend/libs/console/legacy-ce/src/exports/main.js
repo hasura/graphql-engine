@@ -17,9 +17,9 @@ export {
   addUserProperties,
   programmaticallyTraceError,
 } from '../lib/features/Analytics';
-export { OnboardingWizard } from '../lib/features/OnboardingWizard';
+export { CloudOnboarding } from '../lib/features/CloudOnboarding';
 export { prefetchSurveysData } from '../lib/features/Surveys';
-export { prefetchOnboardingData } from '../lib/features/OnboardingWizard';
+export { prefetchOnboardingData } from '../lib/features/CloudOnboarding/OnboardingWizard';
 export { default as PageNotFound } from '../lib/components/Error/PageNotFound';
 export * from '../lib/new-components/Button/';
 export * from '../lib/new-components/Tooltip/';

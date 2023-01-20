@@ -33,7 +33,7 @@ import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
-import Data.Time (defaultTimeLocale, formatTime)
+import Data.Time (defaultTimeLocale, diffUTCTime, formatTime, getCurrentTime)
 import Database.PostgreSQL.Simple qualified as Postgres
 import Harness.Backend.Postgres qualified as Postgres
   ( createUniqueIndexSql,
@@ -82,7 +82,7 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
       catch
         ( bracket
             ( Postgres.connectPostgreSQL
-                (fromString Constants.defaultCitusConnectionString)
+                (txtToBs Constants.defaultCitusConnectionString)
             )
             Postgres.close
             (const (pure ()))
@@ -94,27 +94,27 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
-runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
+runWithInitialDb_ :: HasCallStack => TestEnvironment -> Text -> IO ()
 runWithInitialDb_ testEnvironment =
   runInternal testEnvironment Constants.defaultCitusConnectionString
 
 -- | Run a plain SQL query.
-run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ :: HasCallStack => TestEnvironment -> Text -> IO ()
 run_ testEnvironment =
   runInternal testEnvironment (Constants.citusConnectionString (uniqueTestId testEnvironment))
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
+runInternal :: HasCallStack => TestEnvironment -> Text -> Text -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLogMessage testEnvironment $ LogDBQuery (T.pack connectionString) (T.pack query)
+  startTime <- getCurrentTime
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString connectionString)
+            (txtToBs connectionString)
         )
         Postgres.close
-        (\conn -> void (Postgres.execute_ conn (fromString query)))
+        (\conn -> void (Postgres.execute_ conn (fromString (T.unpack query))))
     )
     ( \(e :: Postgres.SqlError) ->
         error
@@ -122,10 +122,12 @@ runInternal testEnvironment connectionString query = do
               [ "Citus query error:",
                 S8.unpack (Postgres.sqlErrorMsg e),
                 "SQL was:",
-                query
+                T.unpack query
               ]
           )
     )
+  endTime <- getCurrentTime
+  testLogMessage testEnvironment $ LogDBQuery connectionString query (diffUTCTime endTime startTime)
 
 -- | Metadata source information for the default Citus instance.
 defaultSourceMetadata :: TestEnvironment -> Value
@@ -274,7 +276,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     ("DROP DATABASE " <> dbName <> " WITH (FORCE);")
-    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning dbName ex)
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.

@@ -13,6 +13,7 @@ interface BrowseRowsProps {
   dataSourceName: string;
   table: Table;
   options?: DataGridOptions;
+  primaryKeys: string[];
 }
 
 type TabState = { name: string; details: DataGridProps; parentValue: string };
@@ -94,11 +95,11 @@ const onTabClose = (
 };
 
 export const BrowseRows = (props: BrowseRowsProps) => {
-  const { dataSourceName, table, options } = props;
+  const { dataSourceName, table, options, primaryKeys } = props;
 
   const defaultTabState = {
     name: getTableDisplayName(table),
-    details: { dataSourceName, table, options },
+    details: { dataSourceName, table, options, primaryKeys: [] as string[] },
     parentValue: '',
   };
   const [originalTableOptions, setOriginalTableOptions] =
@@ -139,7 +140,10 @@ export const BrowseRows = (props: BrowseRowsProps) => {
       }),
       {
         name: `${openTab.name}.${relationshipName}`,
-        details,
+        details: {
+          ...details,
+          primaryKeys: [],
+        },
         parentValue: openTab.name,
       },
     ]);
@@ -179,6 +183,7 @@ export const BrowseRows = (props: BrowseRowsProps) => {
                   })
                 );
               }}
+              primaryKeys={primaryKeys}
             />
           ),
         }))}

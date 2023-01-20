@@ -18,3 +18,7 @@ export function hasLuxFeatureAccess(g: typeof globals, feature: LuxFeature) {
 export function getProjectId(g: typeof globals) {
   return isCloudConsole(g) ? g.hasuraCloudProjectId : undefined;
 }
+
+export function getTenantId(g: typeof globals) {
+  return isCloudConsole(g) ? g.hasuraCloudTenantId : undefined;
+}

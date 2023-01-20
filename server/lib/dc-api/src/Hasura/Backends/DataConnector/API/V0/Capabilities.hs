@@ -20,6 +20,9 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     SubscriptionCapabilities (..),
     ComparisonOperators (..),
     AggregateFunctions (..),
+    UpdateColumnOperatorName (..),
+    UpdateColumnOperatorDefinition (..),
+    UpdateColumnOperators (..),
     GraphQLType (..),
     ScalarTypeCapabilities (..),
     ScalarTypesCapabilities (..),
@@ -29,6 +32,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     MetricsCapabilities (..),
     ExplainCapabilities (..),
     RawCapabilities (..),
+    DatasetCapabilities (..),
     CapabilitiesResponse (..),
   )
 where
@@ -37,34 +41,18 @@ import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.Applicative ((<|>))
 import Control.DeepSeq (NFData)
-import Control.Monad ((<=<))
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as J
-import Data.Aeson.Text (encodeToLazyText)
-import Data.Bifunctor (first)
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data, Proxy (..))
-import Data.Foldable (toList)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable)
-import Data.List.NonEmpty (NonEmpty, nonEmpty)
-import Data.Maybe (mapMaybe)
-import Data.Monoid (Last (..))
 import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject, OpenApiString), Referenced (..), Schema (..), ToSchema (..), declareSchemaRef)
 import Data.Text (Text)
-import Data.Text qualified as Text
-import Data.Text.Lazy (toStrict)
-import Data.Text.Lazy.Builder qualified as Builder
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema (ConfigSchemaResponse)
-import Hasura.Backends.DataConnector.API.V0.Name (nameCodec)
 import Hasura.Backends.DataConnector.API.V0.Scalar (ScalarType (..))
-import Language.GraphQL.Draft.Parser qualified as GQL.Parser
-import Language.GraphQL.Draft.Printer qualified as GQL.Printer
 import Language.GraphQL.Draft.Syntax qualified as GQL.Syntax
-import Servant.API (HasStatus)
 import Servant.API.UVerb qualified as Servant
 import Prelude
 
@@ -81,14 +69,15 @@ data Capabilities = Capabilities
     _cComparisons :: Maybe ComparisonCapabilities,
     _cMetrics :: Maybe MetricsCapabilities,
     _cExplain :: Maybe ExplainCapabilities,
-    _cRaw :: Maybe RawCapabilities
+    _cRaw :: Maybe RawCapabilities,
+    _cDatasets :: Maybe DatasetCapabilities
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -104,6 +93,7 @@ instance HasCodec Capabilities where
         <*> optionalField "metrics" "The agent's metrics capabilities" .= _cMetrics
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
         <*> optionalField "raw" "The agent's raw query capabilities" .= _cRaw
+        <*> optionalField "datasets" "The agent's dataset capabilities" .= _cDatasets
 
 data DataSchemaCapabilities = DataSchemaCapabilities
   { _dscSupportsPrimaryKeys :: Bool,
@@ -266,7 +256,7 @@ instance HasCodec ComparisonOperators where
       dimapCodec ComparisonOperators unComparisonOperators (hashMapCodec codec)
         <??> [ "A map from comparison operator names to their argument types.",
                "Operator and argument type names must be valid GraphQL names.",
-               "Result type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities."
+               "Argument type names must be defined scalar types declared in ScalarTypesCapabilities."
              ]
 
 newtype AggregateFunctions = AggregateFunctions
@@ -283,7 +273,47 @@ instance HasCodec AggregateFunctions where
       dimapCodec AggregateFunctions unAggregateFunctions (hashMapCodec codec)
         <??> [ "A map from aggregate function names to their result types.",
                "Function and result type names must be valid GraphQL names.",
-               "Result type names must be defined scalar types - either built-in or declared in ScalarTypesCapabilities."
+               "Result type names must be defined scalar types declared in ScalarTypesCapabilities."
+             ]
+
+newtype UpdateColumnOperatorName = UpdateColumnOperatorName {unUpdateColumnOperatorName :: GQL.Syntax.Name}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving newtype (FromJSONKey, ToJSONKey)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UpdateColumnOperatorName
+
+instance HasCodec UpdateColumnOperatorName where
+  codec =
+    named "UpdateColumnOperatorName" $
+      dimapCodec UpdateColumnOperatorName unUpdateColumnOperatorName codec
+
+data UpdateColumnOperatorDefinition = UpdateColumnOperatorDefinition
+  { _ucodArgumentType :: ScalarType
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UpdateColumnOperatorDefinition
+
+instance HasCodec UpdateColumnOperatorDefinition where
+  codec =
+    object "UpdateColumnOperatorDefinition" $
+      UpdateColumnOperatorDefinition
+        <$> requiredField "argument_type" "The scalar type of the argument received by the operator" .= _ucodArgumentType
+
+newtype UpdateColumnOperators = UpdateColumnOperators
+  { unUpdateColumnOperators :: HashMap UpdateColumnOperatorName UpdateColumnOperatorDefinition
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving newtype (Semigroup, Monoid)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UpdateColumnOperators
+
+instance HasCodec UpdateColumnOperators where
+  codec =
+    named "UpdateColumnOperators" $
+      dimapCodec UpdateColumnOperators unUpdateColumnOperators (hashMapCodec codec)
+        <??> [ "A map from update column operator names to their definitions.",
+               "Operator names must be valid GraphQL names."
              ]
 
 data GraphQLType
@@ -310,6 +340,7 @@ instance HasCodec GraphQLType where
 data ScalarTypeCapabilities = ScalarTypeCapabilities
   { _stcComparisonOperators :: ComparisonOperators,
     _stcAggregateFunctions :: AggregateFunctions,
+    _stcUpdateColumnOperators :: UpdateColumnOperators,
     _stcGraphQLType :: Maybe GraphQLType
   }
   deriving stock (Eq, Ord, Show, Generic)
@@ -321,11 +352,12 @@ instance Semigroup ScalarTypeCapabilities where
     ScalarTypeCapabilities
       { _stcComparisonOperators = _stcComparisonOperators a <> _stcComparisonOperators b,
         _stcAggregateFunctions = _stcAggregateFunctions a <> _stcAggregateFunctions b,
+        _stcUpdateColumnOperators = _stcUpdateColumnOperators a <> _stcUpdateColumnOperators b,
         _stcGraphQLType = _stcGraphQLType b <|> _stcGraphQLType a
       }
 
 instance Monoid ScalarTypeCapabilities where
-  mempty = ScalarTypeCapabilities mempty mempty Nothing
+  mempty = ScalarTypeCapabilities mempty mempty mempty Nothing
 
 instance HasCodec ScalarTypeCapabilities where
   codec =
@@ -336,12 +368,15 @@ instance HasCodec ScalarTypeCapabilities where
             .= _stcComparisonOperators
           <*> optionalFieldWithOmittedDefault' "aggregate_functions" mempty
             .= _stcAggregateFunctions
+          <*> optionalFieldWithOmittedDefault' "update_column_operators" mempty
+            .= _stcUpdateColumnOperators
           <*> optionalField' "graphql_type"
             .= _stcGraphQLType
       )
       <??> [ "Capabilities of a scalar type.",
              "comparison_operators: The comparison operators supported by the scalar type.",
              "aggregate_functions: The aggregate functions supported by the scalar type.",
+             "update_column_operators: The update column operators supported by the scalar type.",
              "graphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted."
            ]
 
@@ -418,6 +453,15 @@ data RawCapabilities = RawCapabilities {}
 instance HasCodec RawCapabilities where
   codec =
     object "RawCapabilities" $ pure RawCapabilities
+
+data DatasetCapabilities = DatasetCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetCapabilities
+
+instance HasCodec DatasetCapabilities where
+  codec =
+    object "DatasetCapabilities" $ pure DatasetCapabilities
 
 data CapabilitiesResponse = CapabilitiesResponse
   { _crCapabilities :: Capabilities,

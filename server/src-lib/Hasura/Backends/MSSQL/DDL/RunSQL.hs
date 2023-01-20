@@ -74,7 +74,7 @@ runSQL ::
   MSSQLRunSQL ->
   m EncJSON
 runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
-  SourceInfo _ tableCache _ sourceConfig _ _ <- askSourceInfo @'MSSQL _mrsSource
+  SourceInfo _ tableCache _ _ sourceConfig _ _ <- askSourceInfo @'MSSQL _mrsSource
   results <-
     -- If the SQL modifies the schema of the database then check for any metadata changes
     if isSchemaCacheBuildRequiredRunSQL mssqlRunSQL

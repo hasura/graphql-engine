@@ -15,11 +15,15 @@ export default {
 } as ComponentMeta<typeof DataGrid>;
 
 export const Primary: ComponentStory<typeof DataGrid> = () => {
-  return <DataGrid table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <DataGrid table={['Album']} dataSourceName="sqlite_test" primaryKeys={[]} />
+  );
 };
 
 export const Testing: ComponentStory<typeof DataGrid> = () => {
-  return <DataGrid table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <DataGrid table={['Album']} dataSourceName="sqlite_test" primaryKeys={[]} />
+  );
 };
 
 Testing.storyName = '🧪 Test - Pagination';
@@ -29,7 +33,7 @@ Testing.play = async ({ canvasElement }) => {
 
   await waitFor(
     async () => {
-      userEvent.click(await canvas.findByTestId('@nextPageBtn'));
+      await userEvent.click(await canvas.findByTestId('@nextPageBtn'));
       const firstRow = await canvas.findAllByTestId(/^@table-cell-0-.*$/);
       expect(firstRow.length).toBe(5);
       expect(firstRow[0]).toHaveTextContent('11'); // AlbumId

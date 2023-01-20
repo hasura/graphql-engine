@@ -3,7 +3,10 @@ import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/Header
 import { makeRequest } from '../Actions';
 import { appPrefix } from '../constants';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
-import { exportMetadata } from '../../../../metadata/actions';
+import {
+  exportMetadata,
+  loadInconsistentObjects,
+} from '../../../../metadata/actions';
 import { getRemoteSchemaSelector } from '../../../../metadata/selector';
 import Migration from '../../../../utils/migration/Migration';
 import { showErrorNotification } from '../../Common/Notification';
@@ -315,6 +318,13 @@ const modifyRemoteSchema = () => (dispatch, getState) => {
       dispatch(fetchRemoteSchema(remoteSchemaName));
     });
     clearIntrospectionSchemaCache();
+    dispatch(
+      loadInconsistentObjects({
+        shouldReloadRemoteSchemas: false,
+        shouldReloadMetadata: false,
+        shouldReloadAllSources: false,
+      })
+    );
   };
   const customOnError = error => {
     Promise.all([dispatch({ type: MODIFY_REMOTE_SCHEMA_FAIL, data: error })]);

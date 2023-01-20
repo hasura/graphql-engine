@@ -42,7 +42,7 @@ const getStepSuccess = (
         return;
       }
 
-      // if it transitions to initialised state
+      // if it transitions to initialized state
       // and the step is not awaiting-env, then it was an error (possibly a timeout)
       if (transition.to_state === OneClickDeploymentState.Initialized) {
         successStatus = null;
@@ -94,11 +94,11 @@ const getStepPendingState = (
     }
   }
 
-  // a step is `idle` if the step has never occured after the last initialised
-  const lastInitialisedIndex = allStateTransitionsOrdered
+  // a step is `idle` if the step has never occured after the last initialized
+  const lastInitializedIndex = allStateTransitionsOrdered
     .map(t => t.from_state)
     .lastIndexOf(OneClickDeploymentState.Initialized);
-  if (lastInitialisedIndex === -1) {
+  if (lastInitializedIndex === -1) {
     return { kind: 'idle' };
   }
 
@@ -121,7 +121,7 @@ const getStepProgressState = (
   allStateTransitionsOrdered: OneClickDeploymentStateTransition[],
   step: UserFacingStep
 ): ProgressStateStatus => {
-  // if there are no steps, only return in-progress for the initialised step
+  // if there are no steps, only return in-progress for the initialized step
   if (allStateTransitionsOrdered.length === 0) {
     if (step === OneClickDeploymentState.Initialized) {
       return { kind: 'in-progress' };
@@ -265,4 +265,10 @@ export function getGitRepoFullLinkFromDetails(gitRepoDetails: GitRepoDetails) {
   const branch = gitRepoDetails.branch ?? 'main';
   const hasuraDirectory = gitRepoDetails.hasuraDirectory ?? 'hasura';
   return `${url}/tree/${branch}/${hasuraDirectory}`;
+}
+
+export function isHasuraPath(path: string) {
+  const pathArray = path.split('/');
+
+  return pathArray[0].trim() === 'hasura';
 }

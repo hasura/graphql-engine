@@ -44,7 +44,7 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Show changes between server metadata and the exported metadata file:
   hasura metadata diff
   
-# Apply admin secret for Hasura GraphQL engine:
+# Apply admin secret for Hasura GraphQL Engine:
   hasura metadata diff --admin-secret "<admin-secret>"
 
   # Specify a diff type

@@ -39,3 +39,8 @@ export const DEBUGGING_TAGS = envToBool('DEBUGGING_TAGS');
 export const QUERY_LENGTH_LIMIT = envToNum('QUERY_LENGTH_LIMIT', Infinity);
 
 export const MUTATIONS = envToBool('MUTATIONS');
+
+export const DATASETS = envToBool('DATASETS');
+export const DATASET_DELETE = envToBool('DATASET_DELETE');
+export const DATASET_TEMPLATES = envToString('DATASET_TEMPLATES', "./dataset_templates");
+export const DATASET_CLONES = envToString('DATASET_CLONES', "./dataset_clones");

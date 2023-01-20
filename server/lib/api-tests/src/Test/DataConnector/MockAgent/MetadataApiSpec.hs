@@ -59,7 +59,7 @@ sourceMetadata =
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests opts = do
   describe "MetadataAPI Mock Tests" $ do
-    it "Should peform a template transform when calling _get_source_tables" $ \(testEnvironment, Mock.MockAgentEnvironment {maeQueryConfig}) -> do
+    it "Should peform a template transform when calling _get_source_tables" $ \(testEnvironment, Mock.MockAgentEnvironment {maeRecordedRequestConfig}) -> do
       let sortYamlArray :: Aeson.Value -> IO Aeson.Value
           sortYamlArray (Aeson.Array a) = pure $ Aeson.Array (Vector.fromList (sort (Vector.toList a)))
           sortYamlArray _ = fail "Should return Array"
@@ -67,8 +67,8 @@ tests opts = do
       case BackendType.backendSourceName <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
-          queryConfig <- IORef.readIORef maeQueryConfig
-          IORef.writeIORef maeQueryConfig Nothing
+          queryConfig <- IORef.readIORef maeRecordedRequestConfig
+          IORef.writeIORef maeRecordedRequestConfig Nothing
 
           queryConfig `shouldBe` Just (Config $ KM.fromList [("DEBUG", Aeson.Object (KM.fromList [("test", Aeson.String "data")]))])
 

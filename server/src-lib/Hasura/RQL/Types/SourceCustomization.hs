@@ -65,7 +65,9 @@ module Hasura.RQL.Types.SourceCustomization
   )
 where
 
-import Autodocodec (HasCodec (codec), named)
+import Autodocodec (HasCodec (codec), optionalField', optionalFieldWith')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens
 import Data.Aeson.Extended
 import Data.Has
@@ -77,7 +79,6 @@ import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
@@ -91,6 +92,14 @@ data RootFieldsCustomization = RootFieldsCustomization
     _rootfcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
+
+instance HasCodec RootFieldsCustomization where
+  codec =
+    AC.object "RootFieldsCustomization" $
+      RootFieldsCustomization
+        <$> optionalFieldWith' "namespace" graphQLFieldNameCodec AC..= _rootfcNamespace
+        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec AC..= _rootfcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec AC..= _rootfcSuffix
 
 instance ToJSON RootFieldsCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -106,6 +115,13 @@ data SourceTypeCustomization = SourceTypeCustomization
     _stcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
+
+instance HasCodec SourceTypeCustomization where
+  codec =
+    AC.object "SourceTypeCustomization" $
+      SourceTypeCustomization
+        <$> optionalFieldWith' "prefix" graphQLFieldNameCodec AC..= _stcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec AC..= _stcSuffix
 
 instance ToJSON SourceTypeCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -216,15 +232,19 @@ data SourceCustomization = SourceCustomization
   }
   deriving (Eq, Show, Generic)
 
+instance HasCodec SourceCustomization where
+  codec =
+    AC.object "SourceCustomization" $
+      SourceCustomization
+        <$> optionalField' "root_fields" AC..= _scRootFields
+        <*> optionalField' "type_names" AC..= _scTypeNames
+        <*> optionalField' "naming_convention" AC..= _scNamingConvention
+
 instance ToJSON SourceCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 instance FromJSON SourceCustomization where
   parseJSON = genericParseJSON hasuraJSON
-
--- TODO: Write proper codec
-instance HasCodec SourceCustomization where
-  codec = named "SourceCustomization" placeholderCodecViaJSON
 
 emptySourceCustomization :: SourceCustomization
 emptySourceCustomization = SourceCustomization Nothing Nothing Nothing

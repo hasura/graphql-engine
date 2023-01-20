@@ -42,6 +42,7 @@ library
     , directory
     , fast-logger
     , filepath
+    , graphql-engine
     , graphql-parser
     , hasura-prelude
     , hspec
@@ -74,6 +75,7 @@ library
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.NativeAccessSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
@@ -99,13 +101,16 @@ library
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.CustomScalarsSpec
     Test.DataConnector.MockAgent.ErrorSpec
+    Test.DataConnector.MockAgent.InsertMutationsSpec
     Test.DataConnector.MockAgent.MetadataApiSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
+    Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
     Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTriggers.MSSQL.EventTriggerNextRetryAtTimezoneSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec

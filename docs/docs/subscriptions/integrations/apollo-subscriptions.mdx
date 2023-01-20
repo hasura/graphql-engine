@@ -25,7 +25,7 @@ you want to enable subscriptions.
 npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory subscriptions-transport-ws
 ```
 
-Once these packages are installed, import them as follows in the file where you have currently initialised your client
+Once these packages are installed, import them as follows in the file where you have currently initialized your client
 (usually your `App.js` file).
 
 ```javascript
@@ -39,7 +39,7 @@ import { getMainDefinition } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 ```
 
-Below these imports initialise your client to fetch subscriptions along with query and mutation.
+Below these imports initialize your client to fetch subscriptions along with query and mutation.
 
 ```javascript
 const httpLink = new HttpLink({

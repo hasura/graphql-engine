@@ -1,5 +1,5 @@
 UPDATE hdb_catalog.event_log
-        SET locked = SYSDATETIMEOFFSET()
+        SET locked = SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'
         OUTPUT CONVERT(varchar(MAX), inserted.id), inserted.schema_name, inserted.table_name, inserted.trigger_name,  inserted.payload, inserted.tries, CONVERT(varchar(MAX), inserted.created_at), CONVERT(varchar(MAX), inserted.next_retry_at)
         WHERE id in 
           (SELECT TOP(#{fetchBatchSize}) l.id 

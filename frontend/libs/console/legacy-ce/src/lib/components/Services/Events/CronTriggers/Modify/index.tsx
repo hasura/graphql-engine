@@ -28,11 +28,7 @@ const ModifyContainer: React.FC<Props> = props => {
       allTriggers={cronTriggers}
       eventsLoading={eventsLoading}
     >
-      {readOnlyMode ? (
-        'Cannot modify in read-only mode'
-      ) : (
-        <Modify dispatch={dispatch} />
-      )}
+      {readOnlyMode ? 'Cannot modify in read-only mode' : <Modify />}
     </STContainer>
   );
 };

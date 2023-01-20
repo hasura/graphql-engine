@@ -41,8 +41,7 @@
           }
         ],
         "styles": [
-          "apps/console-ee/src/css/tailwind.css",
-          "apps/console-ee/src/css/legacy-boostrap.css"
+          "apps/console-ee/src/css/tailwind.css"
         ],
         "scripts": [],
         "webpackConfig": "apps/console-ee/custom-webpack.config.js",
@@ -55,7 +54,7 @@
           "extractLicenses": false,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": false
+          "vendorChunk": true
         },
         "production": {
           "fileReplacements": [
@@ -68,10 +67,10 @@
           "outputHashing": "none",
           "extractCss": false,
           "sourceMap": true,
-          "namedChunks": false,
+          "namedChunks": true,
           "generateIndexHtml": false,
           "extractLicenses": true,
-          "vendorChunk": false
+          "vendorChunk": true
         }
       }
     },

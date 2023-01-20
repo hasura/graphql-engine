@@ -107,6 +107,12 @@ export const DataGrid = (props: DataGridProps) => {
     setSorting(DEFAULT_SORT_CLAUSES);
     setWhereClauses(DEFAULT_WHERE_CLAUSES);
     setOrderClauses(DEFAULT_ORDER_BY_CLAUSES);
+    updateOptions?.({
+      limit: pageSize,
+      offset: pageIndex * pageSize,
+      where: DEFAULT_WHERE_CLAUSES,
+      order_by: DEFAULT_ORDER_BY_CLAUSES,
+    });
   };
 
   /**
@@ -309,10 +315,24 @@ export const DataGrid = (props: DataGridProps) => {
           whereClauses,
           supportedOperators: tableColumnQueryResult?.supportedOperators ?? [],
           removeWhereClause: id => {
+            const newWhereClauses = whereClauses.filter((_, i) => i !== id);
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
+            updateOptions?.({
+              limit: pageSize,
+              offset: pageIndex * pageSize,
+              where: newWhereClauses,
+              order_by: orderByClauses,
+            });
           },
           removeOrderByClause: id => {
-            setOrderClauses(orderByClauses.filter((_, i) => i !== id));
+            const newOrderByClauses = orderByClauses.filter((_, i) => i !== id);
+            setOrderClauses(newOrderByClauses);
+            updateOptions?.({
+              limit: pageSize,
+              offset: pageIndex * pageSize,
+              where: whereClauses,
+              order_by: newOrderByClauses,
+            });
           },
           onExportRows,
           onExportSelectedRows,

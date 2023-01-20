@@ -1,18 +1,19 @@
 import { MetadataTable, Source } from '@/features/hasura-metadata-types';
+import { formatSdl } from 'format-graphql';
 import { getMutationRoot } from './getMutationRoot';
 
-export const generateGraphQLMutation = async ({
+export const generateGraphQLInsertMutation = ({
   defaultQueryRoot,
   tableCustomization,
   sourceCustomization,
   objects,
-  operationName,
+  mutationName,
 }: {
-  operationName?: string;
+  mutationName: string;
   defaultQueryRoot: string;
-  tableCustomization: MetadataTable['configuration'];
-  sourceCustomization: Source['customization'];
-  objects: Record<string, string | number | boolean>;
+  tableCustomization?: MetadataTable['configuration'];
+  sourceCustomization?: Source['customization'];
+  objects: Record<string, string | number | boolean>[];
 }) => {
   const queryRoot = getMutationRoot({
     defaultQueryRoot,
@@ -29,34 +30,38 @@ export const generateGraphQLMutation = async ({
     sourceCustomization,
   });
 
-  const objectToInsert = Object.entries(objects).reduce<string>((acc, x) => {
-    const [column, value] = x;
-    return `${column}: ${typeof value === 'string' ? `"${value}"` : value}`;
-  }, '');
+  const objectToInsert = objects
+    .map(object => {
+      return `{${Object.entries(object)
+        .map(
+          ([column, value]) =>
+            `${column}: ${typeof value === 'string' ? `"${value}"` : value}`
+        )
+        .join()}}`;
+    })
+    .join();
 
   /**
    * If the source has a GQL namespace set for it, then we query for our `queryRoot` under that namespace
    */
   if (sourceCustomization?.root_fields?.namespace)
     return {
-      query: `mutation ${operationName ?? 'MyMutation'}  {
-    ${
-      sourceCustomization.root_fields.namespace
-    } (objects: { ${objectToInsert} }) {
-      ${queryRoot} {
+      query: formatSdl(`mutation ${mutationName}  {
+    ${sourceCustomization.root_fields.namespace}  {
+      ${queryRoot} (objects: [ ${objectToInsert} ]){
         affected_rows
       }
     }
-  }`,
+  }`),
       resultPath: `${sourceCustomization.root_fields?.namespace}.${queryRoot}`,
     };
 
   return {
-    query: `query ${operationName ?? 'MyQuery'} {
-    ${queryRoot} (objects: { ${objectToInsert} }) {
+    query: formatSdl(`mutation ${mutationName} {
+    ${queryRoot} (objects: [ ${objectToInsert} ]) {
       affected_rows
     }
-  }`,
+  }`),
     resultPath: queryRoot,
   };
 };

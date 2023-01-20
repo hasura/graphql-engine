@@ -19,6 +19,7 @@ export const Base: Story = () => {
         },
       }}
       dismissOnboarding={() => null}
+      fallbackApps={[]}
     />
   );
 };

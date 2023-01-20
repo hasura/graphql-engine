@@ -64,6 +64,7 @@ import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Subscription (SubscriptionType)
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import ListT qualified
@@ -319,15 +320,17 @@ data CohortExecutionDetails = CohortExecutionDetails
 
 -- | Execution information related to a single batched execution
 data BatchExecutionDetails = BatchExecutionDetails
-  { -- | postgres execution time of each batch
-    _bedPgExecutionTime :: !Clock.DiffTime,
+  { -- | postgres execution time of each batch ('Nothing' in case of non-PG dbs)
+    _bedPgExecutionTime :: Maybe Clock.DiffTime,
+    -- | database execution time of each batch
+    _bedDbExecutionTime :: Clock.DiffTime,
     -- | time to taken to push to all cohorts belonging to this batch
-    _bedPushTime :: !Clock.DiffTime,
+    _bedPushTime :: Clock.DiffTime,
     -- | id of the batch
-    _bedBatchId :: !BatchId,
+    _bedBatchId :: BatchId,
     -- | execution details of the cohorts belonging to this batch
-    _bedCohorts :: ![CohortExecutionDetails],
-    _bedBatchResponseSizeBytes :: !(Maybe Int)
+    _bedCohorts :: [CohortExecutionDetails],
+    _bedBatchResponseSizeBytes :: Maybe Int
   }
   deriving (Show, Eq)
 
@@ -339,10 +342,18 @@ batchExecutionDetailMinimal BatchExecutionDetails {..} =
           mempty
           (\respSize -> ["batch_response_size_bytes" J..= respSize])
           _bedBatchResponseSizeBytes
+      pgExecTime =
+        maybe
+          mempty
+          (\execTime -> ["pg_execution_time" J..= execTime])
+          _bedPgExecutionTime
    in J.object
-        ( [ "pg_execution_time" J..= _bedPgExecutionTime,
-            "push_time" J..= _bedPushTime
+        ( [ "db_execution_time" J..= _bedDbExecutionTime,
+            "push_time" J..= _bedPushTime,
+            "batch_id" J..= _bedBatchId
           ]
+            -- log pg exec time only when its not 'Nothing'
+            <> pgExecTime
             -- log batch resp size only when there are no errors
             <> batchRespSize
         )
@@ -351,21 +362,24 @@ batchExecutionDetailMinimal BatchExecutionDetails {..} =
 data PollDetails = PollDetails
   { -- | the unique ID (basically a thread that run as a 'Poller') for the
     -- 'Poller'
-    _pdPollerId :: !PollerId,
+    _pdPollerId :: PollerId,
+    -- | distinguish between the subscription type (i.e. live-query or streaming
+    -- subscription)
+    _pdKind :: SubscriptionType,
     -- | the multiplexed SQL query to be run against the database with all the
     -- variables together
-    _pdGeneratedSql :: !Text,
+    _pdGeneratedSql :: Text,
     -- | the time taken to get a snapshot of cohorts from our 'SubscriptionsState'
     -- data structure
-    _pdSnapshotTime :: !Clock.DiffTime,
+    _pdSnapshotTime :: Clock.DiffTime,
     -- | list of execution batches and their details
-    _pdBatches :: ![BatchExecutionDetails],
+    _pdBatches :: [BatchExecutionDetails],
     -- | total time spent on a poll cycle
-    _pdTotalTime :: !Clock.DiffTime,
-    _pdLiveQueryOptions :: !SubscriptionsOptions,
-    _pdSource :: !SourceName,
-    _pdRole :: !RoleName,
-    _pdParameterizedQueryHash :: !ParameterizedQueryHash
+    _pdTotalTime :: Clock.DiffTime,
+    _pdLiveQueryOptions :: SubscriptionsOptions,
+    _pdSource :: SourceName,
+    _pdRole :: RoleName,
+    _pdParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show, Eq)
 
@@ -384,11 +398,15 @@ pollDetailMinimal :: PollDetails -> J.Value
 pollDetailMinimal PollDetails {..} =
   J.object
     [ "poller_id" J..= _pdPollerId,
+      "kind" J..= _pdKind,
       "snapshot_time" J..= _pdSnapshotTime,
       "batches" J..= map batchExecutionDetailMinimal _pdBatches,
+      "subscriber_count" J..= sum (map (length . _bedCohorts) _pdBatches),
       "total_time" J..= _pdTotalTime,
       "source" J..= _pdSource,
-      "role" J..= _pdRole
+      "generated_sql" J..= _pdGeneratedSql,
+      "role" J..= _pdRole,
+      "subcription_options" J..= _pdLiveQueryOptions
     ]
 
 instance L.ToEngineLog PollDetails L.Hasura where

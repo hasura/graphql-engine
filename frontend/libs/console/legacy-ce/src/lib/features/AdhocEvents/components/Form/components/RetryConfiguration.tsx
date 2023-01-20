@@ -12,6 +12,7 @@ export const RetryConfiguration = () => {
   return (
     <>
       <Collapse
+        data-testid="retry-configuration"
         title="Retry Configuration"
         tooltip="Retry configuration if the call to the webhook fails"
       >
@@ -26,6 +27,7 @@ export const RetryConfiguration = () => {
                 {/* TODO: This is a horizontal/inline input field, currently we do not have it in common so this component implements its own,
                  we should replace this in future with the common component */}
                 <input
+                  data-testid="num_retries"
                   type="number"
                   className={inputStyes}
                   aria-label="num_retries"
@@ -40,6 +42,7 @@ export const RetryConfiguration = () => {
               </div>
               <div className="col-span-6">
                 <input
+                  data-testid="retry_interval_seconds"
                   type="number"
                   className={inputStyes}
                   aria-label="retry_interval_seconds"
@@ -54,6 +57,7 @@ export const RetryConfiguration = () => {
               </div>
               <div className="col-span-6">
                 <input
+                  data-testid="timeout_seconds"
                   type="number"
                   className={inputStyes}
                   aria-label="timeout_seconds"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
+import { RiPlayFill } from 'react-icons/ri';
 import { Dialog, DialogProps, FooterProps } from './Dialog';
 
 export default {
@@ -29,6 +30,8 @@ export const Complete: Story<DialogProps & FooterProps> = args => (
       <Dialog.Footer
         callToDeny={args.callToDeny}
         callToAction={args.callToAction}
+        callToActionIconPosition="start"
+        callToActionIcon={<RiPlayFill />}
         onClose={args.onClose}
         onSubmit={args.onSubmit}
         isLoading={args.isLoading}

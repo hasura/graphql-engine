@@ -104,9 +104,9 @@ subscription {
 
 <pre>
   <code>
-    <a href='#simpleobject'>SimpleObject</a>
+    <a href="#simpleobject">SimpleObject</a>
     {' | '}
-    <a href='#aggregateobject'>AggregateObject</a>
+    <a href="#aggregateobject">AggregateObject</a>
   </code>
 </pre>
 
@@ -287,13 +287,13 @@ author_aggregate {
 
 <pre>
   <code>
-    <a href='#distinctonexp'>DistinctOnExp</a>
+    <a href="#distinctonexp">DistinctOnExp</a>
     {` | `}
-    <a href='#whereexp'>WhereExp</a>
+    <a href="#whereexp">WhereExp</a>
     {` | `}
-    <a href='#orderbyexp'>OrderByExp</a>
+    <a href="#orderbyexp">OrderByExp</a>
     {` | `}
-    <a href='#paginationexp'>PaginationExp</a>
+    <a href="#paginationexp">PaginationExp</a>
   </code>
 </pre>
 
@@ -306,7 +306,7 @@ author_aggregate {
 <pre>
   <code>
     {`distinct_on: [`}
-    <a href='#tableselectcolumnenum'>TableSelectColumnEnum</a>
+    <a href="#tableselectcolumnenum">TableSelectColumnEnum</a>
     {`]`}
   </code>
 </pre>
@@ -344,7 +344,7 @@ enum article_select_column {
 <pre>
   <code>
     {`where: `}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
   </code>
 </pre>
 
@@ -369,17 +369,17 @@ query {
 
 <pre>
   <code>
-    <a href='#andexp'>AndExp</a>
+    <a href="#andexp">AndExp</a>
     {` | `}
-    <a href='#orexp'>OrExp</a>
+    <a href="#orexp">OrExp</a>
     {` | `}
-    <a href='#notexp'>NotExp</a>
+    <a href="#notexp">NotExp</a>
     {` | `}
-    <a href='#trueexp'>TrueExp</a>
+    <a href="#trueexp">TrueExp</a>
     {` | `}
-    <a href='#columnexp'>ColumnExp</a>
+    <a href="#columnexp">ColumnExp</a>
     {` | `}
-    <a href='#aggregationexp'>AggregationExp</a>
+    <a href="#aggregationexp">AggregationExp</a>
   </code>
 </pre>
 
@@ -393,7 +393,7 @@ query {
   <code>
     {`{
   _and: [`}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
     {`]
 }`}
   </code>
@@ -468,7 +468,7 @@ rating: {
   <code>
     {`{
   _or: [`}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
     {`]
 }`}
   </code>
@@ -489,7 +489,7 @@ query {
 
 :::info Note
 
-The `_or` operator expects an array of expressions as input. Passing an object to it will result in the behaviour of the
+The `_or` operator expects an array of expressions as input. Passing an object to it will result in the behavior of the
 `_and` operator due to the way
 [GraphQL list input coercion](https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List) behaves.
 
@@ -536,7 +536,7 @@ _Example:_
   <code>
     {`{
   _not: `}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
     {`
 }`}
   </code>
@@ -585,7 +585,7 @@ query {
   <code>
     {`{
   field-name: { `}
-    <a href='#operator'>Operator</a>
+    <a href="#operator">Operator</a>
     {`: Value }
 }`}
   </code>
@@ -606,7 +606,7 @@ query {
 
 ###### Operator {#operator}
 
-<div id='generic-operators' />
+<div id="generic-operators" />
 
 **Generic operators (all column types except json, jsonb):**
 
@@ -625,7 +625,7 @@ query {
 [comparison operators](https://www.postgresql.org/docs/current/functions-comparison.html) and
 [list based search operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 
-<div id='text-operators' />
+<div id="text-operators" />
 
 **Text related operators:**
 
@@ -645,7 +645,7 @@ query {
 (For more details on text related operators, refer to the
 [Postgres docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 
-<div id='null-expression' />
+<div id="null-expression" />
 
 **Checking for NULL values:**
 
@@ -656,7 +656,7 @@ query {
 (For more details on the `IS NULL` expression, refer to the
 [Postgres docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 
-<div id='type-casting' />
+<div id="type-casting" />
 
 **Type casting:**
 
@@ -667,7 +667,7 @@ query {
 (For more details on type casting, refer to the
 [Postgres docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 
-<div id='jsonb-operators' />
+<div id="jsonb-operators" />
 
 **JSONB operators:**
 
@@ -682,7 +682,7 @@ query {
 (For more details on JSONB operators, refer to the
 [Postgres docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE).)
 
-<div id='geometry-operators' />
+<div id="geometry-operators" />
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -713,7 +713,7 @@ query {
 
 :::
 
-<div id='intersect-operators' />
+<div id="intersect-operators" />
 
 **Intersect Operators on RASTER columns:**
 
@@ -726,7 +726,7 @@ query {
 (For more details on intersect operators on `raster` columns refer to the
 [PostGIS docs](https://postgis.net/docs/RT_ST_Intersects.html).)
 
-<div id='ltree-operators' />
+<div id="ltree-operators" />
 
 **ltree operators:**
 
@@ -750,7 +750,7 @@ query {
 <pre>
   <code>
     {`{ type-name: {`}
-    <a href='#operator'>Operator</a>
+    <a href="#operator">Operator</a>
     {`: Value} }`}
   </code>
 </pre>
@@ -794,14 +794,13 @@ Currently, only the following type casts are supported:
 
 ###### AggregationExp
 
-
 <div className="parsed-literal">
 
 <pre>
   <code>
     {`{
   field-name_aggregate: { `}
-    <a href='#aggregationPredicate'>AggregationPredicate</a>
+    <a href="#aggregationPredicate">AggregationPredicate</a>
     {` }
 }`}
   </code>
@@ -835,11 +834,16 @@ query {
 <div className="parsed-literal">
 
 <pre>
-  <code>{`function-name: {
+  <code>
+    {`function-name: {
     arguments: (column-name | [column-name] | { argument-name: column-name })
     distinct: true | false
-    filter: `} <a href='#boolexp'>BoolExp</a> {`
-    predicate: `} <a href='#operator'>Operator</a> {`
+    filter: `}{' '}
+    <a href="#boolexp">BoolExp</a>{' '}
+    {`
+    predicate: `}{' '}
+    <a href="#operator">Operator</a>{' '}
+    {`
   }`}
   </code>
 </pre>
@@ -889,9 +893,9 @@ _Examples_
 <pre>
   <code>
     {`order_by: (`}
-    <a href='#tableorderby'>TableOrderBy</a>
+    <a href="#tableorderby">TableOrderBy</a>
     {` | [`}
-    <a href='#tableorderby'>TableOrderBy</a>
+    <a href="#tableorderby">TableOrderBy</a>
     {`])`}
   </code>
 </pre>
@@ -940,7 +944,7 @@ query {
 <pre>
   <code>
     {`{ column: `}
-    <a href='#orderbyenum'>OrderByEnum</a>
+    <a href="#orderbyenum">OrderByEnum</a>
     {` }`}
   </code>
 </pre>
@@ -965,7 +969,7 @@ query {
 <pre>
   <code>
     {`{ relation-name: `}
-    <a href='#tableorderby'>TableOrderBy</a>
+    <a href="#tableorderby">TableOrderBy</a>
     {` }`}
   </code>
 </pre>
@@ -990,7 +994,7 @@ query {
 <pre>
   <code>
     {`{ relation-name_aggregate: `}
-    <a href='#aggregateorderby'>AggregateOrderBy</a>
+    <a href="#aggregateorderby">AggregateOrderBy</a>
     {` }`}
   </code>
 </pre>
@@ -1016,7 +1020,7 @@ Returning scalar values:
 <pre>
   <code>
     {`{ computed-field-name: `}
-    <a href='#orderbyenum'>OrderByEnum</a>
+    <a href="#orderbyenum">OrderByEnum</a>
     {` }`}
   </code>
 </pre>
@@ -1030,7 +1034,7 @@ Returning set of table rows:
 <pre>
   <code>
     {`{ computed-field-name: `}
-    <a href='#tableorderby'>TableOrderBy</a>
+    <a href="#tableorderby">TableOrderBy</a>
     {` }`}
   </code>
 </pre>
@@ -1042,7 +1046,7 @@ Returning set of table rows:
 <pre>
   <code>
     {`{ computed-field-name_aggregate: `}
-    <a href='#aggregateorderby'>AggregateOrderBy</a>
+    <a href="#aggregateorderby">AggregateOrderBy</a>
     {` }`}
   </code>
 </pre>
@@ -1071,7 +1075,7 @@ input article_order_by {
 <pre>
   <code>
     {`{ computed-field-name: `}
-    <a href='#orderbyenum'>OrderByEnum</a>
+    <a href="#orderbyenum">OrderByEnum</a>
     {` }`}
   </code>
 </pre>
@@ -1102,7 +1106,7 @@ Computed fields returning set of table rows can be used to sort the query by the
 <pre>
   <code>
     {`{ computed-field-name_aggregate: `}
-    <a href='#aggregateorderby'>AggregateOrderBy</a>
+    <a href="#aggregateorderby">AggregateOrderBy</a>
     {` }`}
   </code>
 </pre>
@@ -1157,7 +1161,7 @@ enum order_by {
 <pre>
   <code>
     {`{ count: `}
-    <a href='#orderbyenum'>OrderByEnum</a>
+    <a href="#orderbyenum">OrderByEnum</a>
     {` }`}
   </code>
 </pre>
@@ -1181,7 +1185,7 @@ query {
 <pre>
   <code>
     {`{ op_name: `}
-    <a href='#tableaggoporderby'>TableAggOpOrderBy</a>
+    <a href="#tableaggoporderby">TableAggOpOrderBy</a>
     {` }`}
   </code>
 </pre>
@@ -1208,7 +1212,7 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`, `stddev_samp`, `s
 <pre>
   <code>
     {`{ column: `}
-    <a href='#orderbyenum'>OrderByEnum</a>
+    <a href="#orderbyenum">OrderByEnum</a>
     {` }`}
   </code>
 </pre>

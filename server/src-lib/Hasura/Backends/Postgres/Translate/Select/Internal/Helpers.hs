@@ -114,6 +114,8 @@ selectFromToFromItem prefix = \case
           S.mkFunctionAlias
             qf
             (fmap (fmap (first S.toColumnAlias)) defListM)
+  -- This behavior is hidden behind a flag, so cannot be triggered yet.
+  FromNativeQuery _ -> error "unimplemented"
 
 -- | Converts a function name to an 'Identifier'.
 --

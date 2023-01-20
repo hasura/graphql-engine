@@ -26,23 +26,32 @@ export function StepperNavbar(props: StepperNavbarProps) {
 
   return (
     <nav>
-      <ol className="border-t border-l border-r border-gray-300 rounded-t divide-y mb-0 divide-gray-300 md:flex md:divide-y-0 bg-white">
+      <ol className="font-sans border-t border-l border-r border-gray-300 rounded-t divide-y mb-0 divide-gray-300 md:flex md:divide-y-0 bg-white">
         {steps.map((stepDetails, index) => (
           <li key={stepDetails.text} className="relative flex-grow md:flex">
             <div className="group flex items-center w-full">
               <span className="px-md py-sm flex items-center">
                 <span
                   className={clsx(
-                    `font-semibold text-sm`,
+                    `font-bold text-sm`,
                     commmonListItemStyle,
                     index === currentActiveIndex
-                      ? `bg-[#f9c548] border-amber-500 text-gray-800`
-                      : `border-gray-300 text-gray-500`
+                      ? `bg-[#f9c548] border-amber-500 text-slate-900`
+                      : `border-gray-300 text-muted-dark`
                   )}
                 >
                   {stepDetails.step}
                 </span>
-                <span className="ml-sm text-gray-900">{stepDetails.text}</span>
+                <span
+                  className={clsx(
+                    'ml-sm font-bold ',
+                    index === currentActiveIndex
+                      ? 'text-slate-900'
+                      : 'text-muted-dark'
+                  )}
+                >
+                  {stepDetails.text}
+                </span>
               </span>
             </div>
             <div

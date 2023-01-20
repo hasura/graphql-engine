@@ -35,52 +35,48 @@ backendTypeMetadata =
               DateTime:
                 comparison_operators:
                   _in_year: int
-                  _eq: DateTime
-                  _gt: DateTime
-                  _gte: DateTime
-                  _lt: DateTime
-                  _lte: DateTime
-                  _neq: DateTime
+                graphql_type: String
               string:
                 comparison_operators:
                   _like: string
                   _glob: string
-                  _eq: string
-                  _gt: string
-                  _gte: string
-                  _lt: string
-                  _lte: string
-                  _neq: string
+                aggregate_functions:
+                  min: string
+                  max: string
+                graphql_type: String
               decimal:
                 comparison_operators:
-                  _modulus_is_zero: number
-                  _eq: number
-                  _gt: number
-                  _gte: number
-                  _lt: number
-                  _lte: number
-                  _neq: number
+                  _modulus_is_zero: decimal
+                aggregate_functions:
+                  min: decimal
+                  max: decimal
+                  sum: decimal
+                update_column_operators:
+                  inc:
+                    argument_type: decimal
+                  dec:
+                    argument_type: decimal
+                graphql_type: Float
               number:
                 comparison_operators:
                   _modulus_is_zero: number
-                  _eq: number
-                  _gt: number
-                  _gte: number
-                  _lt: number
-                  _lte: number
-                  _neq: number
+                aggregate_functions:
+                  min: number
+                  max: number
+                  sum: number
+                update_column_operators:
+                  inc:
+                    argument_type: number
+                  dec:
+                    argument_type: number
+                graphql_type: Float
               bool:
                 comparison_operators:
                   _and: bool
                   _or: bool
                   _nand: bool
                   _xor: bool
-                  _eq: bool
-                  _gt: bool
-                  _gte: bool
-                  _lt: bool
-                  _lte: bool
-                  _neq: bool
+                graphql_type: Boolean
             queries: {}
             relationships: {}
             comparisons:

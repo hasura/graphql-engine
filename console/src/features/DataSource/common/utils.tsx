@@ -1,12 +1,7 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
 import { MetadataTable, Source, Table } from '@/features/hasura-metadata-types';
-import {
-  IntrospectedTable,
-  TableColumn,
-  TableFkRelationships,
-  TableRow,
-} from '../types';
+import { IntrospectedTable, TableFkRelationships, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
 
 export const adaptIntrospectedTables = (
@@ -28,17 +23,6 @@ export const adaptIntrospectedTables = (
     }));
 
   return adaptedResponse ?? [];
-};
-
-export const adaptTableColumns = (
-  result: RunSQLResponse['result']
-): TableColumn[] => {
-  if (!result) return [];
-
-  return result.slice(1).map(row => ({
-    name: row[0],
-    dataType: row[1],
-  }));
 };
 
 export const convertToTreeData = (

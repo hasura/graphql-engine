@@ -54,7 +54,6 @@ import {
   getAlterColumnCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
 } from './sqlUtils';
 import {
@@ -215,7 +214,6 @@ export const cockroach: DataSourcesAPI = {
   getAlterColumnCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
   createIndexSql: getCreateIndexSql,
   dropIndexSql: getDropIndexSql,

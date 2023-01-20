@@ -24,16 +24,16 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 Further Reading:
 - https://hasura.io/docs/latest/actions/codegen/index/
 `,
-		Example: `  # Generate code for all actions
+		Example: `  # Generate code for all Actions
   hasura actions codegen
 
-  # Generate code for an action
+  # Generate code for an Action
   hasura actions codegen [action-name]
 
-  # Generate code for two or more actions
+  # Generate code for two or more Actions
   hasura actions codegen [action-name] [action-name...]
 
-  # Derive an action from a hasura operation
+  # Derive an Action from a Hasura operation
   hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -58,7 +58,7 @@ Further Reading:
 	}
 	f := actionsCodegenCmd.Flags()
 
-	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a hasura operation")
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive Action from a Hasura operation")
 	return actionsCodegenCmd
 }
 

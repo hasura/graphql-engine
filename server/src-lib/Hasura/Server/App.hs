@@ -899,6 +899,9 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
   -- API Console and Root Dir
   when (enableConsole && enableMetadata) serveApiConsole
 
+  -- Local console assets for server and CLI consoles
+  serveApiConsoleAssets
+
   -- Health check endpoint with logs
   let healthzAction = do
         let errorMsg = "ERROR"
@@ -1127,11 +1130,6 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       -- redirect / to /console
       Spock.get Spock.root $ Spock.redirect "console"
 
-      -- serve static files if consoleAssetsDir is set
-      for_ consoleAssetsDir $ \dir ->
-        Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
-          consoleAssetsHandler logger (scLoggingSettings serverCtx) dir (T.unpack path)
-
       -- serve console html
       Spock.get ("console" <//> Spock.wildcard) $ \path -> do
         req <- Spock.request
@@ -1139,6 +1137,12 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
             authMode = scAuthMode serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
         either (raiseGenericApiError logger (scLoggingSettings serverCtx) headers . internalError . T.pack) Spock.html consoleHtml
+
+    serveApiConsoleAssets = do
+      -- serve static files if consoleAssetsDir is set
+      for_ consoleAssetsDir $ \dir ->
+        Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
+          consoleAssetsHandler logger (scLoggingSettings serverCtx) dir (T.unpack path)
 
 raiseGenericApiError ::
   forall m.

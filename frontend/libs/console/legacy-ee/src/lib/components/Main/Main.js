@@ -25,7 +25,7 @@ import { Spinner } from '@hasura/console-oss';
 import {
   NotificationSection,
   Onboarding,
-  OnboardingWizard,
+  CloudOnboarding,
   Tooltip,
   fetchConsoleNotifications,
   loadInconsistentObjects,
@@ -554,7 +554,7 @@ class Main extends React.Component {
               />
             ) : null}
           </div>
-          <OnboardingWizard />
+          <CloudOnboarding />
         </div>
       </div>
     );

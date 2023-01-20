@@ -1,4 +1,5 @@
 import { z, ZodString } from 'zod';
+import { isJsonString } from '@/components/Common/utils/export.utils';
 import { NeonButtonProps } from './types';
 import { RequiredEnvVar } from '../../types';
 import { NeonIntegrationStatus } from '../../../../../components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
@@ -13,13 +14,24 @@ export const generateDefaultValues = (envVars: RequiredEnvVar[]) => {
 };
 
 export const generateEnvVarsFormSchema = (envVars: RequiredEnvVar[]) => {
-  const dynamicSchemaObject: Record<string, ZodString> = {};
+  const dynamicSchemaObject: Record<
+    string,
+    ZodString | z.ZodEffects<z.ZodString, string, string>
+  > = {};
 
   envVars.forEach(envVar => {
     if (envVar.Mandatory) {
-      dynamicSchemaObject[envVar.Name] = z
-        .string()
-        .min(1, `${envVar.Name} is a required field!`);
+      if (envVar.ValueType === 'JSON') {
+        dynamicSchemaObject[envVar.Name] = z
+          .string()
+          .refine((arg: string) => isJsonString(arg), {
+            message: `${envVar.Name} must be valid JSON`,
+          });
+      } else {
+        dynamicSchemaObject[envVar.Name] = z
+          .string()
+          .min(1, `${envVar.Name} is a required field`);
+      }
     } else {
       dynamicSchemaObject[envVar.Name] = z.string();
     }
@@ -151,3 +163,26 @@ export const verifyProjectHealthAndProceed = (
       }, 1500);
     });
 };
+
+export function getEnvVarFormSegments(envVars: RequiredEnvVar[]) {
+  const databaseEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_DATABASE');
+
+  const dynamicEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_DYNAMIC');
+
+  const staticEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_STATIC');
+
+  databaseEnvVars.sort((a, b) =>
+    (a.Position ?? 1) <= (b.Position ?? 1) ? -1 : 1
+  );
+
+  const isPGDatabaseEnvVarPresent = databaseEnvVars.some(
+    envVariable => envVariable.SubKind === 'postgres'
+  );
+
+  return {
+    isPGDatabaseEnvVarPresent,
+    databaseEnvVars,
+    dynamicEnvVars,
+    staticEnvVars,
+  };
+}

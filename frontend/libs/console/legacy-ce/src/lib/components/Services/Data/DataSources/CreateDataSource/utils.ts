@@ -137,7 +137,7 @@ export const setDBURLInEnvVars = (dbURL: string) => {
     });
 };
 
-const getProjectHealth = () => {
+export const getProjectHealth = () => {
   const healthEndpoint = `${Globals.dataApiUrl}/healthz`;
   return fetch(healthEndpoint, {
     method: 'GET',

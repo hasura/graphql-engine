@@ -230,15 +230,15 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
                 <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
+                <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
                 <&> Lens.set (key "options" . key "uri") J.Null
-                <&> Lens.set (_Object . Lens.at "display_name") (Just J.Null)
+                <&> Lens.set (_Object . Lens.at "display_name") Nothing
             )
             [yaml|
             capabilities: *backendCapabilities
             config_schema_response:
               config_schema: null
               other_schemas: null
-            display_name: null
             options:
               uri: null
             |]
@@ -287,27 +287,35 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
               - builtin: true
                 kind: pg
                 display_name: pg
+                available: true
               - builtin: true
                 kind: citus
                 display_name: citus
+                available: true
               - builtin: true
                 kind: cockroach
                 display_name: cockroach
+                available: true
               - builtin: true
                 kind: mssql
                 display_name: mssql
+                available: true
               - builtin: true
                 kind: bigquery
                 display_name: bigquery
+                available: true
               - builtin: true
                 kind: mysql
                 display_name: mysql
+                available: true
               - builtin: false
                 kind: *backendString
                 display_name: *backendDisplayName
+                available: true
               - builtin: false
                 display_name: "FOOBARDB (foobar)"
                 kind: foobar
+                available: true
             |]
 
   describe "<kind>_add_source" $ do

@@ -30,6 +30,15 @@ export const fetchAllOnboardingDataQuery = `
       git_repository_branch
       hasura_directory
     }
+    one_click_deployment_sample_apps {
+      git_repository_url
+      git_repository_branch
+      hasura_directory
+      name
+      description
+      rank
+      react_icons_fa_component_name
+    }
   }
 `;
 

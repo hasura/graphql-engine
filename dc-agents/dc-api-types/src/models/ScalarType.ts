@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ScalarType = ('string' | 'number' | 'bool' | string);
-
+export type ScalarType = string;

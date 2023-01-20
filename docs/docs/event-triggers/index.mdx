@@ -1,5 +1,6 @@
 ---
 description: Manage Event Triggers with Hasura
+title: Event Triggers
 keywords:
   - hasura
   - docs
@@ -8,8 +9,9 @@ slug: index
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import EventTriggers from '@site/static/icons/features/event_triggers.svg';
 
-# Event Triggers
+# <EventTriggers /> Event Triggers
 
 ## Introduction
 
@@ -41,7 +43,7 @@ Events can be of the following types:
 :::caution Caveat on different Hasura instances connected to the same database
 
 Event Triggers store their data in the underlying database and hence different instances acting on the same data can
-cause undefined behaviour during run-time. This should not be a problem if the Hasura instances have the same metadata.
+cause undefined behavior during run-time. This should not be a problem if the Hasura instances have the same metadata.
 
 :::
 

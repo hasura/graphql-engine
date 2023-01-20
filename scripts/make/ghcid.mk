@@ -2,18 +2,10 @@
 GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code
 GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0
 
-PANE_WIDTH = $(shell tmux display -p "\#{pane_width}" || echo 80)
-PANE_HEIGHT = $(shell tmux display -p "\#{pane_height}" || echo 30 )
-
-# once ghcid's window errors are fixed we can remove this explicit width/height
-# nonsense
-# this needs to make it into ghcid: https://github.com/biegunka/terminal-size/pull/16
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
 		HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-			--test "main" \
-			--width=$(PANE_WIDTH) \
-			--height=$(PANE_HEIGHT); \
+			--test "main"; \
 	else \
   	HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main"; \
@@ -24,9 +16,7 @@ define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
 		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
-			--setup ":set args $(2)" \
-			--width=$(PANE_WIDTH) \
-			--height=$(PANE_HEIGHT); \
+			--setup ":set args $(2)"; \
 	else \
   	HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main" \
@@ -36,11 +26,7 @@ endef
 
 
 define run_ghcid
-	@if [[ $$(uname -p) == 'arm' ]]; then \
-		ghcid -c "cabal repl $(1) $(GHCID_FLAGS)" --width=$(PANE_WIDTH) --height=$(PANE_HEIGHT); \
-	else \
-  	ghcid -c "cabal repl $(1) $(GHCID_FLAGS)"; \
-	fi
+	ghcid -c "cabal repl $(1) $(GHCID_FLAGS)";
 endef
 
 .PHONY: ghcid-library

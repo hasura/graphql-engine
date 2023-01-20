@@ -1,4 +1,5 @@
 import ToolTip from '@/components/Common/Tooltip/Tooltip';
+import { isNumber } from '@/components/Common/utils/jsUtils';
 import { TaskEvent } from '@/features/ConnectDB';
 import { Badge } from '@/new-components/Badge';
 import React, { useState } from 'react';
@@ -78,21 +79,25 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
         <div className="flex items-center">
           <div className="text-gray-600 font-semibold mr-xs break-all">
             {dataSource.name}{' '}
-            <span className="font-normal">
+            <span className="font-normal mr-px">
               ({driverToLabel[dataSource.driver]})
             </span>
-            {dbLatencyData && (
-              <ToolTip
-                message={`Latency: ${dbLatencyData.avg_latency} ms`}
-                placement="top"
-              >
-                <Badge color={getBadgeColorForLatencyData(dbLatencyData)}>
-                  {getBadgeTextForLatencyData(dbLatencyData)}
-                </Badge>
-              </ToolTip>
-            )}
+            {dbLatencyData &&
+              !isNumber(dbLatencyData.avg_latency) &&
+              Math.ceil(dbLatencyData.avg_latency) > 0 && (
+                <ToolTip
+                  message={`Latency: ${Math.ceil(
+                    dbLatencyData.avg_latency
+                  )} ms`}
+                  placement="top"
+                >
+                  <Badge color={getBadgeColorForLatencyData(dbLatencyData)}>
+                    {getBadgeTextForLatencyData(dbLatencyData)}
+                  </Badge>
+                </ToolTip>
+              )}
           </div>
-          <div className="flex ml-auto w-full sm:w-6/12">
+          <div className="flex ml-auto w-[30%] sm:w-1/4">
             {!!dataSource?.read_replicas?.length && (
               <span className="mr-xs inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-gray-800">
                 {dataSource.read_replicas.length} Replicas

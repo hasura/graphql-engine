@@ -1,6 +1,16 @@
 import { MetadataResponse } from '@/features/MetadataAPI';
+import { Api } from '@/hooks/apiUtils';
+import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
+import dataHeaders from '@/components/Services/Data/Common/Headers';
+import {
+  ConnectDBEvent,
+  sendTelemetryEvent,
+  trackRuntimeError,
+} from '@/telemetry';
+import { RunSQLSelectResponse } from '@/features/DataSource';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
+
 import {
   ConnectionParams,
   ConnectionPoolSettings,
@@ -14,52 +24,53 @@ import {
   SSLConfigOptions,
 } from './types';
 import {
-  showSuccessNotification,
   showErrorNotification,
   showNotification,
+  showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import {
-  deleteAllowListQuery,
-  deleteAllowedQueryQuery,
-  createAllowListQuery,
   addAllowedQueriesQuery,
+  addAllowedQuery,
   addInheritedRole,
+  addInsecureDomainQuery,
+  allowedQueriesCollection,
+  createAllowListQuery,
+  deleteAllowedQueryQuery,
+  deleteAllowListQuery,
+  deleteDomain,
   deleteInheritedRole,
-  updateInheritedRole,
   getReloadCacheAndGetInconsistentObjectsQuery,
+  getRemoteSchemaNameFromInconsistentObjects,
+  getSourceFromInconistentObjects,
   reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery,
   updateAllowedQueryQuery,
-  allowedQueriesCollection,
-  addAllowedQuery,
-  getSourceFromInconistentObjects,
-  getRemoteSchemaNameFromInconsistentObjects,
-  addInsecureDomainQuery,
-  deleteDomain,
+  updateInheritedRole,
 } from './utils';
 import {
+  fetchDataInit,
   makeMigrationCall,
   setConsistentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
-  fetchDataInit,
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
 import {
-  inconsistentObjectsQuery,
+  createRESTEndpointQuery,
   dropInconsistentObjectsQuery,
+  dropRESTEndpointQuery,
   exportMetadataQuery,
   generateReplaceMetadataQuery,
+  inconsistentObjectsQuery,
   resetMetadataQuery,
-  createRESTEndpointQuery,
-  dropRESTEndpointQuery,
 } from './queryUtils';
-import { Driver, setDriver } from '../dataSources';
-import { addSource, removeSource, reloadSource } from './sourcesUtils';
+import { currentDriver, dataSource, Driver, setDriver } from '../dataSources';
+import { addSource, reloadSource, removeSource } from './sourcesUtils';
 import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
 import {
   getConfirmation,
   isConsoleError,
+  hashString,
 } from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
@@ -251,13 +262,11 @@ export const exportMetadata =
     errorCb?: (err: string) => void
   ): Thunk<Promise<ReduxState | void>, MetadataActions> =>
   (dispatch, getState) => {
-    const { dataHeaders } = getState().tables;
-
     const query = exportMetadataQuery;
 
     const options = {
       method: 'POST',
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(query),
     };
 
@@ -274,6 +283,99 @@ export const exportMetadata =
         if (errorCb) errorCb(err);
       });
   };
+
+const fetchDBEntities = (
+  dataSourceName: string,
+  headers: Record<string, string>,
+  successHandler: (response: string[]) => void,
+  errorCb?: (err: string) => void,
+  noSupportCb?: () => void
+) => {
+  const dbTableNamesQuery = dataSource?.getDatabaseTableNames;
+
+  if (!dbTableNamesQuery) {
+    if (noSupportCb) noSupportCb();
+    return;
+  }
+
+  const url = Endpoints.query;
+
+  const query = getRunSqlQuery(dbTableNamesQuery, dataSourceName, false, true);
+
+  Api.post<RunSQLSelectResponse>({
+    url,
+    headers,
+    body: query,
+  })
+    .then(dbTablesResponse => {
+      // sample: dbTablesResponse.result = [['table_name'], ['<table1>'], ['<table2>'], ...]
+      const tableNames = dbTablesResponse.result
+        .slice(1) // remove db results header
+        .map((res: string[]) => res[0]) // extract table name from result array
+        .sort(); // ensure order is maintained for consistent results
+
+      successHandler(tableNames);
+    })
+    .catch(err => {
+      trackRuntimeError(err);
+      if (errorCb) errorCb(err);
+    });
+};
+
+const makeConnectDBTelemetryEvent = (
+  eventHandler: (event: ConnectDBEvent) => void,
+  dbKind: Driver,
+  dbEntities?: string[]
+) => {
+  // send entity_count only if DB entity data is available
+  const connectDBEvent: ConnectDBEvent = {
+    type: 'CONNECT_DB',
+    data: {
+      db_kind: dbKind,
+      entity_count: dbEntities ? dbEntities.length : undefined,
+      entity_hash: undefined,
+    },
+  };
+
+  // set entity_hash only if non-zero entities exist
+  if (dbEntities?.length) {
+    const setEntityHashAndHandleEvent = (hash: string) => {
+      connectDBEvent.data.entity_hash = hash;
+
+      eventHandler(connectDBEvent);
+    };
+
+    hashString(dbEntities.toString()).then(entityHash =>
+      setEntityHashAndHandleEvent(entityHash)
+    );
+  } else {
+    eventHandler(connectDBEvent);
+  }
+};
+
+// TODO: move to some utils
+const sendInitialDBStateTelemetry = (
+  dataSourceName: string,
+  headers: Record<string, string>
+) => {
+  const dbKind = currentDriver;
+
+  const onDataFetch = (dbEntities: string[]) => {
+    makeConnectDBTelemetryEvent(sendTelemetryEvent, dbKind, dbEntities);
+  };
+
+  const onNoDBSupport = () => {
+    makeConnectDBTelemetryEvent(sendTelemetryEvent, dbKind);
+  };
+
+  fetchDBEntities(
+    dataSourceName,
+    headers,
+    onDataFetch,
+    undefined,
+    onNoDBSupport
+  );
+};
 
 export const addDataSource =
   (
@@ -311,6 +413,10 @@ export const addDataSource =
       };
       return dispatch(exportMetadata()).then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));
+
+        // send DB initial state to telemetry
+        sendInitialDBStateTelemetry(data.payload.name, dataHeaders(getState));
+
         if (shouldShowNotifications) {
           dispatch(
             showNotification(
@@ -609,7 +715,7 @@ export const resetMetadata =
     errorCb: (err: string) => void
   ): Thunk<void, MetadataActions> =>
   (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
 
     const options = {
       method: 'POST',
@@ -714,7 +820,7 @@ export const loadInconsistentObjects = (
     const inconsistentRemoteSchemas =
       getRemoteSchemaNameFromInconsistentObjects(inconsistentObjectsInMetadata);
 
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
     const source = getState().tables.currentDataSource;
     const {
       shouldReloadMetadata,
@@ -784,13 +890,11 @@ export const reloadDataSource =
     data: ReloadDataSourceRequest['data']
   ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
   (dispatch, getState) => {
-    const { dataHeaders } = getState().tables;
-
     const query = reloadSource(data.name);
 
     const options = {
       method: 'POST',
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(query),
     };
 
@@ -812,7 +916,7 @@ export const reloadRemoteSchema = (
   failureCb: (err: string) => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
     const source = getState().tables.currentDataSource;
 
     const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
@@ -879,7 +983,7 @@ export const dropInconsistentObjects = (
   failureCb: () => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
     dispatch({ type: 'Metadata/DROP_INCONSISTENT_METADATA_REQUEST' });
     return dispatch(
       requestAction(Endpoints.metadata, {

@@ -5,7 +5,7 @@ GRAPHQL_ENGINE_PRO_PATH=$(shell cabal list-bin exe:graphql-engine-pro)
 ## test-bigquery: run tests for BigQuery backend
 # will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
 test-bigquery: build remove-tix-file
-	docker compose up -d --wait postgres
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
@@ -14,7 +14,7 @@ test-bigquery: build remove-tix-file
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for MS SQL Server backend
 test-sqlserver: build remove-tix-file
-	docker compose up -d --wait postgres sqlserver-healthcheck
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres sqlserver-healthcheck
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
@@ -23,7 +23,7 @@ test-sqlserver: build remove-tix-file
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
 test-citus: build remove-tix-file
-	docker compose up -d --wait postgres citus
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres citus
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=Citus \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
@@ -32,8 +32,8 @@ test-citus: build remove-tix-file
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
 test-data-connectors: build remove-tix-file
-	docker compose build
-	docker compose up -d --wait postgres dc-reference-agent dc-sqlite-agent
+	$(API_TESTS_DOCKER_COMPOSE) build
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres dc-reference-agent dc-sqlite-agent
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=DataConnector \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
@@ -42,7 +42,7 @@ test-data-connectors: build remove-tix-file
 .PHONY: test-cockroach
 ## test-cockroach: run tests for Cockroach backend
 test-cockroach: build remove-tix-file
-	docker compose up -d --wait postgres cockroach
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres cockroach
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
@@ -53,7 +53,7 @@ test-cockroach: build remove-tix-file
 # we have a few tests labeled with 'Postgres' which test their variants, too,
 # so this also starts containers for Postgres variants
 test-postgres: build remove-tix-file
-	docker compose up -d --wait postgres cockroach citus dc-sqlite-agent
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres cockroach citus dc-sqlite-agent
 	$(call stop_after, \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
@@ -79,7 +79,7 @@ test-backends: build start-backends remove-tix-file
 .PHONY: test-matrix
 ## test-matrix: postgres test matrix generator
 test-matrix: build remove-tix-file
-	docker compose up -d --wait postgres cockroach citus dc-sqlite-agent
+	$(API_TESTS_DOCKER_COMPOSE) up -d --wait postgres cockroach citus dc-sqlite-agent
 	$(call stop_after, \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:produce-feature-matrix +RTS -N4 -RTS)

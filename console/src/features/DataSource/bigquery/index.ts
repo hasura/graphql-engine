@@ -1,4 +1,6 @@
+import { Table } from '@/features/hasura-metadata-types';
 import { Database, Feature } from '..';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getTrackableTables,
   getTableColumns,
@@ -10,6 +12,7 @@ import { getTableRows } from './query';
 export type BigQueryTable = { name: string; dataset: string };
 
 export const bigquery: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => ({
       name: 'bigquery',
@@ -30,5 +33,11 @@ export const bigquery: Database = {
   },
   query: {
     getTableRows,
+  },
+  config: {
+    getDefaultQueryRoot: async (table: Table) => {
+      const { name, dataset } = table as BigQueryTable;
+      return `${dataset}_${name};`;
+    },
   },
 };

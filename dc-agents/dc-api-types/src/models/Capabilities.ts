@@ -4,6 +4,7 @@
 
 import type { ComparisonCapabilities } from './ComparisonCapabilities';
 import type { DataSchemaCapabilities } from './DataSchemaCapabilities';
+import type { DatasetCapabilities } from './DatasetCapabilities';
 import type { ExplainCapabilities } from './ExplainCapabilities';
 import type { MetricsCapabilities } from './MetricsCapabilities';
 import type { MutationCapabilities } from './MutationCapabilities';
@@ -16,6 +17,7 @@ import type { SubscriptionCapabilities } from './SubscriptionCapabilities';
 export type Capabilities = {
   comparisons?: ComparisonCapabilities;
   data_schema?: DataSchemaCapabilities;
+  datasets?: DatasetCapabilities;
   explain?: ExplainCapabilities;
   metrics?: MetricsCapabilities;
   mutations?: MutationCapabilities;

@@ -608,7 +608,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
       )
         `arr` (SourceInfo b)
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
-      let SourceMetadata sourceName _backendKind tables functions _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+      let SourceMetadata sourceName _backendKind tables functions customSQL _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -687,9 +687,10 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
                   (functionInfo, dep) <- buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
                   recordDependenciesM metadataObject schemaObject (Seq.singleton dep)
                   pure functionInfo
+
       let functionCache = mapFromL _fiSQLName $ catMaybes functionCacheMaybes
 
-      returnA -< SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig resolvedCustomization
+      returnA -< SourceInfo sourceName tableCache functionCache customSQL sourceConfig queryTagsConfig resolvedCustomization
 
     buildAndCollectInfo ::
       forall arr m.
@@ -719,7 +720,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys) ->
             HS.fromList $
               concat $
                 OMap.elems sources >>= \(BackendSourceMetadata e) ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _ _ _ _) -> do
+                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _customSQL _ _ _ _) -> do
                     table <- OMap.elems tables
                     pure $
                       OMap.keys (_tmInsertPermissions table)

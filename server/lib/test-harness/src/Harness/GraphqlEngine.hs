@@ -13,6 +13,7 @@ module Harness.GraphqlEngine
     postMetadata_,
     postMetadata,
     postMetadataWithStatus,
+    postMetadataWithStatusAndHeaders,
     postExplain,
     exportMetadata,
     reloadMetadata,
@@ -209,6 +210,10 @@ postMetadata testEnvironment = withFrozenCallStack $ post testEnvironment "/v1/m
 postMetadataWithStatus :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
 postMetadataWithStatus statusCode testEnvironment v =
   withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/metadata" mempty v
+
+postMetadataWithStatusAndHeaders :: HasCallStack => Int -> TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+postMetadataWithStatusAndHeaders statusCode testEnvironment =
+  withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/metadata"
 
 -- | Resets metadata, removing all sources or remote schemas.
 --

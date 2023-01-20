@@ -53,7 +53,8 @@ data SourceKindInfo = SourceKindInfo
   { _skiSourceKind :: Text,
     _skiDisplayName :: Maybe Text,
     _skiReleaseName :: Maybe Text,
-    _skiBuiltin :: SourceType
+    _skiBuiltin :: SourceType,
+    _skiAvailable :: Bool
   }
 
 instance FromJSON SourceKindInfo where
@@ -62,16 +63,18 @@ instance FromJSON SourceKindInfo where
     _skiDisplayName <- o .:? "display_name"
     _skiReleaseName <- o .:? "release_name"
     _skiBuiltin <- o .: "builtin"
+    _skiAvailable <- o .: "available"
     pure SourceKindInfo {..}
 
 instance ToJSON SourceKindInfo where
   toJSON SourceKindInfo {..} =
     Aeson.object $
       [ "kind" .= _skiSourceKind,
-        "builtin" .= _skiBuiltin
+        "builtin" .= _skiBuiltin,
+        "available" .= _skiAvailable
       ]
-        ++ (if nullishT _skiDisplayName then [] else ["display_name" .= _skiDisplayName])
-        ++ (if nullishT _skiReleaseName then [] else ["release_name" .= _skiReleaseName])
+        ++ ["display_name" .= _skiDisplayName | not (nullishT _skiDisplayName)]
+        ++ ["release_name" .= _skiReleaseName | not (nullishT _skiReleaseName)]
     where
       nullishT x = isNothing x || x == Just ""
 
@@ -102,7 +105,8 @@ mkAgentSource (dcName, DC.Types.DataConnectorOptions {_dcoDisplayName}) =
     { _skiSourceKind = skiKind,
       _skiDisplayName = _dcoDisplayName,
       _skiReleaseName = Nothing,
-      _skiBuiltin = Agent
+      _skiBuiltin = Agent,
+      _skiAvailable = True
     }
   where
     skiKind = GQL.unName (DC.Types.unDataConnectorName dcName)
@@ -116,7 +120,8 @@ mkNativeSource = \case
         { _skiSourceKind = fromMaybe (toTxt b) (Backend.backendShortName b),
           _skiBuiltin = Builtin,
           _skiDisplayName = Nothing,
-          _skiReleaseName = Nothing
+          _skiReleaseName = Nothing,
+          _skiAvailable = True
         }
 
 runListSourceKinds'' ::
@@ -135,17 +140,19 @@ runListSourceKinds'' x = do
     suffixKey a b = b <> " (" <> a <> ")"
 
     setNames :: SourceKindInfo -> m SourceKindInfo
-    setNames ski@SourceKindInfo {_skiSourceKind, _skiDisplayName} = do
-      ci <- getCapabilities ski
-      -- Prefer metadata, then capabilities, then source-kind key
-      pure
-        ski
-          { _skiReleaseName = DC.Types._dciReleaseName =<< ci,
-            _skiDisplayName =
-              (suffixKey _skiSourceKind <$> _skiDisplayName) -- Question: Should we suffix the key if the user explicitly sets a name?
-                <|> (suffixKey _skiSourceKind <$> (DC.Types._dciDisplayName =<< ci))
-                <|> Just _skiSourceKind
-          }
+    setNames ski@SourceKindInfo {_skiSourceKind, _skiDisplayName} =
+      -- If there are issues fetching the capabilities for an agent, then list it as unavailable.
+      flip catchError (const $ pure $ ski {_skiAvailable = False}) do
+        ci <- getCapabilities ski
+        -- Prefer metadata, then capabilities, then source-kind key
+        pure
+          ski
+            { _skiReleaseName = DC.Types._dciReleaseName =<< ci,
+              _skiDisplayName =
+                (suffixKey _skiSourceKind <$> _skiDisplayName) -- Question: Should we suffix the key if the user explicitly sets a name?
+                  <|> (suffixKey _skiSourceKind <$> (DC.Types._dciDisplayName =<< ci))
+                  <|> Just _skiSourceKind
+            }
 
     getCapabilities :: SourceKindInfo -> m (Maybe DC.Types.DataConnectorInfo)
     getCapabilities SourceKindInfo {_skiSourceKind, _skiBuiltin} = case (_skiBuiltin, NE.Text.mkNonEmptyText _skiSourceKind) of

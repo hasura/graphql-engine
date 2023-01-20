@@ -67,7 +67,12 @@ const OneOffScheduledEventForm = (props: Props) => {
           <RetryConfiguration />
         </div>
         <div className="flex items-center mb-lg">
-          <Button type="submit" mode="primary" isLoading={mutation.isLoading}>
+          <Button
+            data-testid="create-scheduled-event"
+            type="submit"
+            mode="primary"
+            isLoading={mutation.isLoading}
+          >
             Create scheduled event
           </Button>
         </div>

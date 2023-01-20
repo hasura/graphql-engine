@@ -165,6 +165,8 @@ processSelectParams
         FromTable table -> S.QualTable table
         FromIdentifier i -> S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
         FromFunction qf _ _ -> S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
+        -- This behavior is hidden behind a flag, so cannot be triggered yet.
+        FromNativeQuery _ -> error "unimplemented"
 
 processAnnAggregateSelect ::
   forall pgKind m.

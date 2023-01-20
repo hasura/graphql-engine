@@ -21,7 +21,7 @@ spec = do
   describe "ColumnInfo" $ do
     describe "minimal" $
       testFromJSON
-        (ColumnInfo (ColumnName "my_column_name") StringTy False Nothing False False)
+        (ColumnInfo (ColumnName "my_column_name") (ScalarType "string") False Nothing False False)
         [aesonQQ|
           { "name": "my_column_name",
             "type": "string",
@@ -30,7 +30,7 @@ spec = do
         |]
     describe "non-minimal" $
       testToFromJSONToSchema
-        (ColumnInfo (ColumnName "my_column_name") NumberTy True (Just "My column description") True True)
+        (ColumnInfo (ColumnName "my_column_name") (ScalarType "number") True (Just "My column description") True True)
         [aesonQQ|
           { "name": "my_column_name",
             "type": "number",

@@ -25,7 +25,7 @@ initialSourceCatalogVersion :: SourceCatalogVersion
 initialSourceCatalogVersion = Version.SourceCatalogVersion 1
 
 latestSourceCatalogVersion :: SourceCatalogVersion
-latestSourceCatalogVersion = Version.SourceCatalogVersion 3
+latestSourceCatalogVersion = Version.SourceCatalogVersion 4
 
 previousSourceCatalogVersions :: [SourceCatalogVersion]
 previousSourceCatalogVersions = [initialSourceCatalogVersion .. pred latestSourceCatalogVersion]

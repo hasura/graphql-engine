@@ -338,16 +338,22 @@ const makeConnectDBTelemetryEvent = (
   };
 
   // set entity_hash only if non-zero entities exist
-  if (dbEntities?.length) {
-    const setEntityHashAndHandleEvent = (hash: string) => {
-      connectDBEvent.data.entity_hash = hash;
+  if (dbEntities) {
+    if (dbEntities.length) {
+      const setEntityHashAndHandleEvent = (hash: string) => {
+        connectDBEvent.data.entity_hash = hash;
 
+        eventHandler(connectDBEvent);
+      };
+
+      hashString(dbEntities.toString()).then(entityHash =>
+        setEntityHashAndHandleEvent(entityHash)
+      );
+    } else {
+      // set fixed hash value for 0 entities
+      connectDBEvent.data.entity_hash = '00000000000000000000000000000000';
       eventHandler(connectDBEvent);
-    };
-
-    hashString(dbEntities.toString()).then(entityHash =>
-      setEntityHashAndHandleEvent(entityHash)
-    );
+    }
   } else {
     eventHandler(connectDBEvent);
   }

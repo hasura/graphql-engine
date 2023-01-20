@@ -15,11 +15,23 @@ export default {
 } as ComponentMeta<typeof BrowseRows>;
 
 export const Basic: ComponentStory<typeof BrowseRows> = () => {
-  return <BrowseRows table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <BrowseRows
+      table={['Album']}
+      dataSourceName="sqlite_test"
+      primaryKeys={[]}
+    />
+  );
 };
 
 export const BasicDisplayTest: ComponentStory<typeof BrowseRows> = () => {
-  return <BrowseRows table={['Album']} dataSourceName="sqlite_test" />;
+  return (
+    <BrowseRows
+      table={['Album']}
+      dataSourceName="sqlite_test"
+      primaryKeys={[]}
+    />
+  );
 };
 
 BasicDisplayTest.storyName = '🧪 Test - Table with Relationships';

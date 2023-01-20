@@ -1,4 +1,6 @@
+import { Table } from '@/features/hasura-metadata-types';
 import { Database } from '..';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
   getTrackableTables,
@@ -12,6 +14,7 @@ import { getTableRows } from '../postgres/query';
 export type AlloyDbTable = { name: string; schema: string };
 
 export const alloy: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => ({
       name: 'alloy',
@@ -30,5 +33,11 @@ export const alloy: Database = {
   },
   query: {
     getTableRows,
+  },
+  config: {
+    getDefaultQueryRoot: async (table: Table) => {
+      const { name, schema } = table as AlloyDbTable;
+      return schema === 'public' ? name : `${schema}_${name};`;
+    },
   },
 };

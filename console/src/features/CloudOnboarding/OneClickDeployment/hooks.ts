@@ -28,12 +28,19 @@ export const useTriggerDeployment = (projectId: string) => {
       // As graphql does not return error codes, react-query will always consider a
       // successful request, we have to parse the data to check for errors
       if (data.errors && data.errors.length > 0) {
-        fireNotification({
-          type: 'error',
-          title: 'Error!',
-          message: 'Something went wrong while triggering deployment',
-          error: data.errors[0],
-        });
+        // http exception while calling webhook is already handled in the CLI screen UI, so we
+        // don't want to display an additional error notification for it
+        if (
+          !data.errors[0].message ||
+          data.errors[0].message !== 'http exception when calling webhook'
+        ) {
+          fireNotification({
+            type: 'error',
+            title: 'Error!',
+            message: 'Something went wrong while triggering deployment',
+            error: data.errors[0],
+          });
+        }
       }
     },
     // there might still be network errors, etc. which could be caught here

@@ -20,7 +20,7 @@ import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig, validateConfiguration)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
@@ -64,7 +64,11 @@ instance BackendMetadata 'DataConnector where
   parseBoolExpOperations = parseBoolExpOperations'
   parseCollectableType = parseCollectableType'
   buildComputedFieldInfo = error "buildComputedFieldInfo: not implemented for the Data Connector backend."
+
+  -- If/when we implement enums for Data Connector backend, we will also need to fix columnTypeToScalarType function
+  -- in Hasura.Backends.DataConnector.Adapter.Backend. See note there for more information.
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
+
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
@@ -147,8 +151,7 @@ resolveSourceConfig'
     DC.DataConnectorInfo {..} <- getDataConnectorInfo dataConnectorName backendInfo
     let DC.DataConnectorOptions {_dcoUri} = _dciOptions
 
-    transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
-    validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
+    transformedConfig <- transformConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
     schemaResponseU <-
       ignoreTraceT

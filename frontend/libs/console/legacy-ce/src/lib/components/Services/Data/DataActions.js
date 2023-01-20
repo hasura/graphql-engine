@@ -221,7 +221,11 @@ const loadSchema = (configOptions = {}) => {
 
     return dispatch(exportMetadata()).then(state => {
       const metadataTables = getTablesInfoSelector(state)({});
-      return dispatch(requestAction(url, options)).then(
+      const notifierPromise = new Promise(resolve =>
+        setTimeout(resolve, 10000, 'notify')
+      );
+
+      const actionPromise = dispatch(requestAction(url, options)).then(
         data => {
           if (!data || !data[0] || !data[0].result) return;
           let mergedData = [];
@@ -268,6 +272,23 @@ const loadSchema = (configOptions = {}) => {
           );
         }
       );
+
+      return Promise.race([notifierPromise, actionPromise]).then(value => {
+        if (value === 'notify') {
+          return dispatch(
+            showErrorNotification(
+              'The request is taking longer than expected',
+              '',
+              {
+                action: body.args,
+                message:
+                  'Click "Details" to see more information about the request',
+              }
+            )
+          );
+        }
+        return value;
+      });
     });
   };
 };

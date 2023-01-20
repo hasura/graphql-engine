@@ -42,7 +42,7 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
 
 :::
 
-### Breaking behaviour changes {#hasura-v2-behaviour-changes}
+### Breaking behavior changes {#hasura-v2-behavior-changes}
 
 <div id="hasura-v2-null-where-change" />
 
@@ -56,14 +56,14 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
   For example: The mutation `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is
   `null` instead of deleting all users.
 
-  The older behaviour can be preserved by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true`.
+  The older behavior can be preserved by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true`.
 
 - **Semantics of "null" join values in Remote Schema relationships have changed**
 
   In a Remote Schema relationship query, the Remote Schema will be queried when all of the joining arguments are not
   `null` values. When there are `null` value(s), the Remote Schema won't be queried and the response of the remote
   relationship field will be `null`. Earlier, the Remote Schema was queried with the `null` value arguments and the
-  response depended upon how the Remote Schema handled the `null` arguments but as per user feedback, this behaviour was
+  response depended upon how the Remote Schema handled the `null` arguments but as per user feedback, this behavior was
   clearly not expected.
 
 - **Order of keys in objects passed as "order_by" operator inputs is not preserved**
@@ -80,7 +80,7 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
 
   For example: The query `fetch_users(order_by: {age: desc, name: asc}) {id name age}` which is intended to fetch users
   ordered by their age and then by their name is now not guaranteed to return results first ordered by age and then by
-  their name as the `order_by` input is passed as an object. To achieve the expected behaviour, the following query
+  their name as the `order_by` input is passed as an object. To achieve the expected behavior, the following query
   `fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}` should be used which uses an array to define the
   order of fields to generate the appropriate `order by` clause.
 

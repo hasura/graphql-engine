@@ -3,6 +3,7 @@ import { Story, Meta } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { dangerouslyDelay } from '@/storybook/utils/dangerouslyDelay';
 import { handlers } from '../../../RemoteRelationships/RemoteSchemaRelationships/__mocks__/handlers.mock';
 import { DbToRsForm, DbToRsFormProps } from './DbToRsForm';
 
@@ -168,20 +169,18 @@ export const PlaygroundWithEditModeTest: Story<DbToRsFormProps> = args => (
 PlaygroundWithEditModeTest.args = EditMode.args;
 
 PlaygroundWithEditModeTest.play = async ({ canvasElement }) => {
-  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
   const canvas = within(canvasElement);
 
   const submitButton = await canvas.findByText('Save Relationship');
 
-  await delay(1000); // time to settle down the mock response (introspection)
+  await dangerouslyDelay(1000); // time to settle down the mock response (introspection)
 
   const fromField = await canvas.findByLabelText('From Field');
   userEvent.selectOptions(fromField, 'Name');
 
   userEvent.click(submitButton);
 
-  await delay(1000); // time to settle down the mock response (create relationship)
+  await dangerouslyDelay(1000); // time to settle down the mock response (create relationship)
 
   expect(JSON.stringify(callbackResponse)).toContain('Success');
   expect(JSON.stringify(callbackResponse)).toContain(

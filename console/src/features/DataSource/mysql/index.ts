@@ -1,8 +1,10 @@
 import { Database, Feature } from '..';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 
 export type MySQLTable = { name: string };
 
-export const postgres: Database = {
+export const mysql: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => ({
       name: 'mysql',

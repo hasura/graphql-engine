@@ -194,7 +194,7 @@ func (ec *ExecutionContext) setupGlobalConfig() error {
 	}
 	err = ec.readGlobalConfig()
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }

@@ -18,7 +18,6 @@ export const getMutationRoot = ({
   configuration?: MetadataTable['configuration'];
   operation: AllowedMutationOperation;
   sourceCustomization?: Source['customization'];
-  defaultSchema?: string;
 }): string => {
   /**
    * Priority 1: Check if `operation` has a custom name. If so, use that for the query root.
@@ -26,6 +25,8 @@ export const getMutationRoot = ({
    * and can uniquely identify an operation query
    */
   const customRootName = configuration?.custom_root_fields?.[operation];
+
+  console.log('!', customRootName);
   if (customRootName)
     return `${sourceCustomization?.root_fields?.prefix ?? ''}${customRootName}${
       sourceCustomization?.root_fields?.suffix ?? ''
@@ -45,10 +46,17 @@ export const getMutationRoot = ({
   /**
    * for `select_by_pk` and `select_aggregate` the following suffixes are required if there is no custom field name set
    */
-  if (operation === 'insert_one') baseQueryRoot = `${baseQueryRoot}_one`;
+  if (operation === 'insert') baseQueryRoot = `insert_${baseQueryRoot}`;
+  if (operation === 'insert_one') baseQueryRoot = `insert_${baseQueryRoot}_one`;
 
-  if (operation === 'update_by_pk' || operation === 'delete_by_pk')
-    baseQueryRoot = `${baseQueryRoot}_by_pk`;
+  if (operation === 'update') baseQueryRoot = `update_${baseQueryRoot}`;
+  if (operation === 'update_by_pk')
+    baseQueryRoot = `update_${baseQueryRoot}_by_pk`;
+
+  if (operation === 'delete_by_pk')
+    baseQueryRoot = `delete_${baseQueryRoot}_by_pk`;
+
+  if (operation === 'delete') baseQueryRoot = `delete_${baseQueryRoot}`;
 
   /**
    * The `select` operation has no operation suffix.

@@ -2,7 +2,42 @@ import { DEFAULT_STALE_TIME } from '@/features/DatabaseRelationships';
 import { DataSource, OrderBy, WhereClause } from '@/features/DataSource';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
+import { AxiosInstance } from 'axios';
 import { useQuery } from 'react-query';
+
+type FetchRowsArgs = {
+  columns: UseRowsPropType['columns'];
+  dataSourceName: UseRowsPropType['dataSourceName'];
+  httpClient: AxiosInstance;
+  options: UseRowsPropType['options'];
+  table: UseRowsPropType['table'];
+};
+
+export const fetchRows = async ({
+  columns,
+  dataSourceName,
+  httpClient,
+  options,
+  table,
+}: FetchRowsArgs) => {
+  const tableColumns = await DataSource(httpClient).getTableColumns({
+    dataSourceName,
+    table,
+  });
+
+  console.log('>>>', columns, tableColumns);
+
+  const result = await DataSource(httpClient).getTableRows({
+    dataSourceName,
+    table,
+    columns: columns ?? tableColumns.map(column => column.name),
+    options,
+  });
+
+  console.log('>>>', result);
+
+  return result;
+};
 
 export type UseRowsPropType = {
   dataSourceName: string;
@@ -33,19 +68,13 @@ export const useRows = ({
     ],
     queryFn: async () => {
       try {
-        const tableColumns = await DataSource(httpClient).getTableColumns({
+        return await fetchRows({
+          columns,
           dataSourceName,
-          table,
-        });
-
-        const result = await DataSource(httpClient).getTableRows({
-          dataSourceName,
-          table,
-          columns: columns ?? tableColumns.map(column => column.name),
+          httpClient,
           options,
+          table,
         });
-
-        return result;
       } catch (err: any) {
         throw new Error(err);
       }

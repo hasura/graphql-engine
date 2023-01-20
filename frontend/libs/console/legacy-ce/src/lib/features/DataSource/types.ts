@@ -56,7 +56,14 @@ export type IntrospectedTable = {
 
 export type TableColumn = {
   name: string;
-  dataType: string;
+  dataType:
+    | 'string'
+    | 'number'
+    | 'bool'
+    | 'json'
+    | 'datetime'
+    | 'timestamp'
+    | 'xml';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {
@@ -122,7 +129,10 @@ type columnName = string;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 export type WhereClause = Record<
   columnName,
-  Record<validOperators, string | number | boolean>
+  Record<
+    validOperators,
+    string | number | boolean | string[] | number[] | boolean[]
+  >
 >;
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';

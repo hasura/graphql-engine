@@ -240,12 +240,13 @@ msDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
+  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'MSSQL ->
   MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
+msDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete

@@ -31,6 +31,10 @@ Default.play = async ({ canvasElement }) => {
     })
   );
 
+  await waitFor(() => {
+    return canvas.queryByTestId('search');
+  });
+
   // wait for searchbox to appear
   const searchBox = await canvas.findByTestId('search');
   // count number of operations
@@ -57,11 +61,8 @@ Default.play = async ({ canvasElement }) => {
   userEvent.click(canvas.getByTestId(/^operation.*/));
   // wait for generate action button to be enabled
   await waitFor(() => {
-    return (
-      canvas
-        .getByText('Generate Action')
-        .parentElement?.getAttribute('disabled') === ''
-    );
+    return expect(
+      canvas.getByText('Generate Action').parentElement
+    ).toHaveAttribute('disabled', '');
   });
-  expect(canvas.getByText('Generate Action').parentElement).not.toBeDisabled();
 };

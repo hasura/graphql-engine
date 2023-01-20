@@ -348,6 +348,11 @@ func AddDatabaseToHasura(t TestingT, hgeEndpoint, sourceName, databaseKind strin
 		return connectionStringMSSQL, teardownMSSQL
 
 	}
+	if databaseKind == "cockroach" {
+		connectionString, teardown := StartCockroachContainer(t)
+		AddCockroachSourceToHasura(t, hgeEndpoint, connectionString, sourceName)
+		return connectionString, teardown
+	}
 	return "", nil
 }
 
@@ -553,5 +558,117 @@ func AddCitusSourceToHasura(t TestingT, hasuraEndpoint, connectionString, source
 		}
 		defer r.Body.Close()
 		t.Fatalf("cannot add citus source to hasura: %s", string(body))
+	}
+}
+
+func StartHasuraWithCockroachSource(t TestingT, image string) (hasuraPort, sourceName string, teardown func()) {
+	hasuraPort, hasuraTeardown := StartHasuraWithMetadataDatabase(t, image)
+	sourceName = randomdata.SillyName()
+	connectionStr, cocTeardown := StartCockroachContainer(t)
+
+	teardown = func() {
+		hasuraTeardown()
+		cocTeardown()
+	}
+	hasuraEndpoint := fmt.Sprintf("%s:%s", BaseURL, hasuraPort)
+	AddCockroachSourceToHasura(t, hasuraEndpoint, connectionStr, sourceName)
+	return hasuraPort, sourceName, teardown
+}
+
+func StartCockroachContainer(t TestingT) (connectionString string, teardown func()) {
+	user := "root"
+	database := "defaultdb"
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		t.Fatalf("Could not connect to Docker: %s", err)
+	}
+	uniqueName := getUniqueName(t)
+	containerOpts := &dockertest.RunOptions{
+		Name:       fmt.Sprintf("%s-%s", uniqueName, "cockroach"),
+		Repository: "cockroachdb/cockroach-unstable",
+		Tag:        "v22.2.0-beta.4",
+		Env: []string{
+			fmt.Sprintf("COCKROACH_USER=%s", user),
+			fmt.Sprintf("COCKROACH_DATABASE=%s", database),
+		},
+		Cmd: []string{
+			"start-single-node",
+			"--insecure",
+			"--accept-sql-without-tls",
+		},
+		ExposedPorts: []string{"26257",
+			"8080", // port for cockroach console
+		},
+		Auth: getDockerAuthConfig(t),
+	}
+	container, err := pool.RunWithOptions(containerOpts)
+	if err != nil {
+		t.Fatalf("Could not start CockroachDB container: %s", err)
+	}
+	var db *sql.DB
+	if err = pool.Retry(func() error {
+		var err error
+		connectionString = fmt.Sprintf("postgresql://%s@%s:%s/%s?sslmode=disable", user, "0.0.0.0", container.GetPort("26257/tcp"), database)
+		db, err = sql.Open("postgres", connectionString)
+		if err != nil {
+			return err
+		}
+		return db.Ping()
+	}); err != nil {
+		t.Fatal(err)
+	}
+	teardown = func() {
+		if err = pool.Purge(container); err != nil {
+			t.Fatalf("Could not purge CockroachDB container: %s", err)
+		}
+	}
+	connectionString = fmt.Sprintf("postgresql://%s@%s:%s/%s?sslmode=disable", user, DockerSwitchIP, container.GetPort("26257/tcp"), database)
+	return connectionString, teardown
+}
+
+func AddCockroachSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName string) {
+	addSourceToHasura(t, hasuraEndpoint, connectionString, sourceName, "cockroach_add_source")
+}
+
+func addSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName, requestType string) {
+	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
+	body := fmt.Sprintf(`
+{
+  "type": "%s",
+  "args": {
+	"name": "%s",
+	"configuration": {
+		"connection_info": {
+			"database_url": "%s"
+		}
+	}
+  }
+}
+`, requestType, sourceName, connectionString)
+
+	fmt.Println(connectionString)
+	fmt.Println(hasuraEndpoint)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if adminSecret != "" {
+		req.Header.Set("x-hasura-admin-secret", adminSecret)
+	}
+
+	r, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer r.Body.Close()
+		t.Fatalf("cannot add %s source to hasura: %s", sourceName, string(body))
 	}
 }

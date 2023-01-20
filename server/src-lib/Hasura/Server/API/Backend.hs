@@ -21,6 +21,7 @@ module Hasura.Server.API.Backend
     tableCommands,
     tablePermissionsCommands,
     computedFieldCommands,
+    nativeAccessCommands,
   )
 where
 
@@ -158,4 +159,11 @@ computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser 
 computedFieldCommands =
   [ commandParser "add_computed_field" $ RMAddComputedField . mkAnyBackend @b,
     commandParser "drop_computed_field" $ RMDropComputedField . mkAnyBackend @b
+  ]
+
+nativeAccessCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+nativeAccessCommands =
+  [ commandParser "get_custom_sql" $ RMGetCustomSQL . mkAnyBackend @b,
+    commandParser "track_custom_sql" $ RMTrackCustomSQL . mkAnyBackend @b,
+    commandParser "untrack_custom_sql" $ RMUntrackCustomSQL . mkAnyBackend @b
   ]

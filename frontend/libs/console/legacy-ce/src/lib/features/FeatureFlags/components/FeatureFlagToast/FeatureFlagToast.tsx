@@ -29,7 +29,7 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
   )
     return null;
   return (
-    <div className="fixed bottom-8 right-8 bg-white border overflow-hidden shadow-xl rounded-lg w-px-320 font-sans">
+    <div className="fixed bottom-8 right-8 bg-white border overflow-hidden shadow-xl rounded-lg w-px-320 font-sans z-[1]">
       <div className="bg-primary px-4 py-3 flex align-middle">
         <h3 className="text-lg font-bold mb-0">
           Coming Soon: {featureFlag?.title}

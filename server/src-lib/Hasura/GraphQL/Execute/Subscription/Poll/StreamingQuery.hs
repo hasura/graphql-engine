@@ -34,6 +34,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
+import Hasura.SQL.Tag (backendTag, reify)
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -298,8 +300,17 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                   }
           pure (cohortExecutionDetails, (currentCohortKey, (cohort, updatedCohortKey, snapshottedNewSubs)))
       let processedCohortBatch = snd <$> cohortsExecutionDetails
+
+          -- Note: We want to keep the '_bedPgExecutionTime' field for backwards
+          -- compatibility reason, which will be 'Nothing' for non-PG backends.
+          -- See https://hasurahq.atlassian.net/browse/GS-329
+          pgExecutionTime = case reify (backendTag @b) of
+            Postgres Vanilla -> Just queryExecutionTime
+            _ -> Nothing
+
           batchExecDetails =
             BatchExecutionDetails
+              pgExecutionTime
               queryExecutionTime
               pushTime
               batchId
@@ -312,6 +323,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
   let pollDetails =
         PollDetails
           { _pdPollerId = pollerId,
+            _pdKind = Streaming,
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
             _pdBatches = fst <$> batchesDetailsAndProcessedCohorts,

@@ -58,12 +58,22 @@ export const TableRow = React.memo(
         <CardedTable.TableBodyCell>{table.type}</CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>
           {table.is_tracked ? (
-            <Button size="sm" onClick={untrack} isLoading={loading}>
+            <Button
+              data-testid={`untrack-${table.name}`}
+              size="sm"
+              onClick={untrack}
+              isLoading={loading}
+            >
               Untrack
             </Button>
           ) : (
             <div className="flex flex-row">
-              <Button size="sm" onClick={() => track()} isLoading={loading}>
+              <Button
+                data-testid={`track-${table.name}`}
+                size="sm"
+                onClick={() => track()}
+                isLoading={loading}
+              >
                 Track
               </Button>
               {/* Hiding this customize button while loading as it looks odd to have two buttons in "loading mode" */}

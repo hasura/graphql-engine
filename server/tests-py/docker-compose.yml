@@ -2,6 +2,8 @@
 
 version: "3.6"
 
+name: hge-python-tests
+
 services:
   cabal-update:
     image: hasura/graphql-engine-server-builder:${DOCKER_PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}

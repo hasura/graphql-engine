@@ -9,24 +9,8 @@ import {
   runMetadataQuery,
 } from '../../api';
 import { GetTableColumnsProps, TableColumn } from '../../types';
-
-/**
- * Refer - https://github.com/hasura/graphql-engine-mono/blob/main/dc-agents/dc-api-types/src/models/TableInfo.ts
- */
-
-export type GetTableInfoResponse = {
-  name: GDCTable;
-  columns: { name: string; type: string; nullable: boolean }[];
-  primary_key?: string[] | null;
-  description?: string;
-  foreign_keys?: Record<
-    string,
-    {
-      foreign_table: GDCTable;
-      column_mapping: Record<string, string>;
-    }
-  >;
-};
+import { adaptAgentDataType } from './utils';
+import { GetTableInfoResponse } from './types';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;
@@ -34,6 +18,8 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
   try {
     const introspectionResult = await runIntrospectionQuery({ httpClient });
     const { metadata } = await exportMetadata({ httpClient });
+
+    if (!metadata) throw Error('Metadata could not be retrieved');
 
     const metadataSource = metadata.sources.find(
       s => s.name === dataSourceName
@@ -92,7 +78,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
 
       return {
         name: column.name,
-        dataType: column.type,
+        dataType: adaptAgentDataType(column.type),
         nullable: column.nullable,
         isPrimaryKey: primaryKeys.includes(column.name),
         graphQLProperties: {

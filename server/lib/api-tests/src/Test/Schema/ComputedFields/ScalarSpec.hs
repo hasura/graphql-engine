@@ -68,7 +68,7 @@ authorTable =
 
 -- * SQL
 
-authorFullNameSQL :: SchemaName -> String
+authorFullNameSQL :: SchemaName -> Text
 authorFullNameSQL schemaName =
   [i|
       CREATE FUNCTION #{ unSchemaName schemaName }.author_full_name(author_row author)

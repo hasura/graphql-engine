@@ -12,6 +12,7 @@ import {
   FaFilter,
   FaRegTimesCircle,
   FaSearch,
+  FaSortAmountDownAlt,
   FaSortAmountUpAlt,
   FaTimes,
 } from 'react-icons/fa';
@@ -95,7 +96,11 @@ const DisplayOrderByClauses = ({
         <Badge color="yellow" key={id}>
           <div className={`gap-3 ${twFlexCenter}`}>
             <span className={`min-h-3 ${twFlexCenter}`}>
-              <FaSortAmountUpAlt />
+              {orderByClause.type === 'desc' ? (
+                <FaSortAmountDownAlt />
+              ) : (
+                <FaSortAmountUpAlt />
+              )}
             </span>
             <span className={twFlexCenter}>
               {orderByClause.column} ({orderByClause.type})

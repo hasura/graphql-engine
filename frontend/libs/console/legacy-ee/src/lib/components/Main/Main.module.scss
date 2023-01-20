@@ -718,7 +718,6 @@
 }
 
 .main {
-  padding: 0;
   // width: 100vw;
   min-width: $minContainerWidth;
   background-color: #f8fafb;
@@ -726,7 +725,7 @@
   font-family: 'Gudea';
   // color: #767E93;
   color: #4d4d4d;
-  padding-top: 54px;
+  padding: 54px 0 0 !important;
 }
 
 .mainCollapsed {

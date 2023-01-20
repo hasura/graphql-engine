@@ -30,6 +30,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
+import Hasura.SQL.Tag (backendTag, reify)
 import Hasura.Session
 import Refined (unrefine)
 
@@ -118,8 +120,16 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
                 _cedResponseSize = snd <$> respData,
                 _cedBatchId = batchId
               }
+
+      -- Note: We want to keep the '_bedPgExecutionTime' field for backwards
+      -- compatibility reason, which will be 'Nothing' for non-PG backends. See
+      -- https://hasurahq.atlassian.net/browse/GS-329
+      let pgExecutionTime = case reify (backendTag @b) of
+            Postgres Vanilla -> Just queryExecutionTime
+            _ -> Nothing
       pure $
         BatchExecutionDetails
+          pgExecutionTime
           queryExecutionTime
           pushTime
           batchId
@@ -131,6 +141,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
   let pollDetails =
         PollDetails
           { _pdPollerId = pollerId,
+            _pdKind = LiveQuery,
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
             _pdBatches = batchesDetails,

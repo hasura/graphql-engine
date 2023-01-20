@@ -83,6 +83,7 @@ class
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
+    Env.Environment ->
     Options.StringifyNumbers ->
     SourceName ->
     SourceConfig b ->

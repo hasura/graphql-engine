@@ -35,13 +35,7 @@ argument to specify:
 - a **unique or primary key constraint** using the `constraint` field, and
 - the **columns to be updated** in the case of a violation of that constraint using the `update_columns` field.
 
-The value of the `update_columns` field determines the behaviour of the upsert request as shown via the use cases below.
-
-:::info Note
-
-Partial unique indexes cannot be used in the `constraint` field.
-
-:::
+The value of the `update_columns` field determines the behavior of the upsert request as shown via the use cases below.
 
 :::info Note
 

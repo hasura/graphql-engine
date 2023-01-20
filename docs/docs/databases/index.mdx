@@ -8,7 +8,9 @@ keywords:
 slug: index
 ---
 
-# Databases
+import Databases from '@site/static/icons/features/database.svg';
+
+# <Databases /> Databases
 
 ## Introduction
 
@@ -51,6 +53,8 @@ Each ✅ below links **directly** to the feature within a particular type of dat
 
 #### Schema
 
+<div className="db-tables">
+
 |                      | Postgres                                              | Citus                                                                                                  | SQL Server                                                 | BigQuery                                             | CockroachDB                                                                                    | CosmosDB                                              |
 | -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | Table Relationships  | [✅](/schema/postgres/table-relationships/index.mdx)  | [✅](/schema/postgres/table-relationships/index.mdx)                                                   | [✅](/schema/ms-sql-server/table-relationships/index.mdx)  | [✅](/schema/bigquery/table-relationships/index.mdx) | [✅](/schema/postgres/table-relationships/index.mdx)                                           | [✅](/schema/postgres/table-relationships/index.mdx)  |
@@ -63,7 +67,7 @@ Each ✅ below links **directly** to the feature within a particular type of dat
 | Relay Schema         | [✅](/schema/postgres/relay-schema.mdx)               | [✅](/schema/postgres/relay-schema.mdx)                                                                | ❌                                                         | ❌                                                   | ❌                                                                                             | [✅](/schema/postgres/relay-schema.mdx)               |
 | Naming Conventions   | [✅](/schema/postgres/naming-convention.mdx)          | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#naming-conventions) | ❌                                                         | ❌                                                   | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#naming-conventions) | ❌                                                    |
 | Custom Fields        | [✅](/schema/postgres/custom-field-names.mdx)         | [✅](/schema/postgres/custom-field-names.mdx)                                                          | [✅](/schema/ms-sql-server/custom-field-names.mdx)         | [✅](/schema/bigquery/custom-field-names.mdx)        | [✅](/schema/postgres/custom-field-names.mdx)                                                  | [✅](/schema/postgres/custom-field-names.mdx)         |
-| Default Values       | [✅](/schema/postgres/default-values/index.mdx)       | [✅](/schema/postgres/default-values/index.mdx)                                                        | [✅](/schema/ms-sql-server/default-values/index.mdx)       | ❌                                                   | [✅](/schema/postgres/default-values/index.mdx)                                                | [✅](/schema/postgres/default-values/index.mdx)         |
+| Default Values       | [✅](/schema/postgres/default-values/index.mdx)       | [✅](/schema/postgres/default-values/index.mdx)                                                        | [✅](/schema/ms-sql-server/default-values/index.mdx)       | ❌                                                   | [✅](/schema/postgres/default-values/index.mdx)                                                | [✅](/schema/postgres/default-values/index.mdx)       |
 
 #### Queries
 
@@ -107,6 +111,8 @@ Each ✅ below links **directly** to the feature within a particular type of dat
 | UPDATE | [✅](/event-triggers/index.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/index.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
 | DELETE | [✅](/event-triggers/index.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/index.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
 | MANUAL | [✅](/event-triggers/index.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/index.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
+
+</div>
 
 :::info Additional Resources
 

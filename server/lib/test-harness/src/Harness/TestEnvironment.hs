@@ -183,6 +183,9 @@ data Server = Server
     thread :: Async ()
   }
 
+instance Show Server where
+  show = serverUrl
+
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
 getServer :: TestEnvironment -> Server
 getServer TestEnvironment {globalEnvironment} = server globalEnvironment

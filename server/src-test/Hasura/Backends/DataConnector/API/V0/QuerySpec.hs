@@ -33,7 +33,7 @@ spec = do
   describe "Field" $ do
     describe "ColumnField" $
       testToFromJSONToSchema
-        (ColumnField (ColumnName "my_column_name") StringTy)
+        (ColumnField (ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|
           { "type": "column",
             "column": "my_column_name",
@@ -55,7 +55,7 @@ spec = do
   describe "Query" $ do
     let query =
           Query
-            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") StringTy)],
+            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") (ScalarType "string"))],
               _qAggregates = Just $ HashMap.fromList [(FieldName "my_aggregate", StarCount)],
               _qLimit = Just 10,
               _qOffset = Just 20,

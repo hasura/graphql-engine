@@ -27,6 +27,8 @@ import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Insert qualified as Postgres (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
+import Hasura.NativeQuery.IR (NativeQueryImpl)
+import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
@@ -114,6 +116,9 @@ instance
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
   type BackendInsert ('Postgres pgKind) = Postgres.BackendInsert pgKind
+
+  type NativeQueryInfo ('Postgres pgKind) = NativeQueryInfoImpl ('Postgres pgKind)
+  type NativeQuery ('Postgres pgKind) = NativeQueryImpl ('Postgres pgKind)
 
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable

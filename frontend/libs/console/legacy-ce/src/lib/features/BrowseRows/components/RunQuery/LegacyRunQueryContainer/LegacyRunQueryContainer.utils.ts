@@ -24,12 +24,12 @@ const convertValue = (
   if (Array.isArray(value)) {
     return value;
   }
-  if (tableColumnType === 'integer') {
+  if (tableColumnType === 'integer' || tableColumnType === 'number') {
     const parsed = parseInt(value, 10);
     if (!isNaN(parsed)) return parsed;
     return value;
   }
-  if (tableColumnType === 'boolean') {
+  if (tableColumnType === 'boolean' || tableColumnType === 'bool') {
     if (typeof value === 'string') {
       return value === 'true';
     }

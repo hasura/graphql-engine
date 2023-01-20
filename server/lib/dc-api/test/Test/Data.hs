@@ -65,7 +65,7 @@ schemaTables :: [API.TableInfo]
 schemaTables = sortOn API._tiName . either error id . eitherDecodeStrict $ schemaBS
 
 numericColumns :: [API.ColumnName]
-numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.NumberTy then Just _ciName else Nothing))
+numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
 
 chinookXmlBS :: ByteString
 chinookXmlBS = $(makeRelativeToProject "test/Test/Data/ChinookData.xml.gz" >>= embedFile)
@@ -344,19 +344,17 @@ data TestData = TestData
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
     _tdGenresTableRelationships :: API.TableRelationships,
     -- = Scalar Types
-    _tdStringType :: API.ScalarType,
-    _tdIntType :: API.ScalarType,
-    _tdFloatType :: API.ScalarType,
+    _tdFindColumnScalarType :: API.TableName -> Text -> API.ScalarType,
     -- = Utility functions
     _tdColumnName :: Text -> API.ColumnName,
-    _tdColumnField :: Text -> API.ScalarType -> API.Field,
+    _tdColumnField :: API.TableName -> Text -> API.Field,
     _tdQueryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
-mkTestData :: TestConfig -> TestData
-mkTestData TestConfig {..} =
+mkTestData :: API.SchemaResponse -> TestConfig -> TestData
+mkTestData schemaResponse TestConfig {..} =
   TestData
     { _tdSchemaTables = formatTableInfo <$> schemaTables,
       _tdArtistsTableName = formatTableName artistsTableName,
@@ -395,14 +393,12 @@ mkTestData TestConfig {..} =
       _tdGenresTableName = formatTableName genresTableName,
       _tdGenresRows = genresRows,
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
-      _tdColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing,
-      _tdColumnField = columnField . applyNameCasing _tcColumnNameCasing,
-      _tdStringType = API.StringTy,
-      _tdIntType = API.NumberTy,
-      _tdFloatType = API.NumberTy,
-      _tdQueryComparisonColumn = queryComparisonColumn . applyNameCasing _tcColumnNameCasing,
-      _tdCurrentComparisonColumn = currentComparisonColumn . applyNameCasing _tcColumnNameCasing,
-      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (applyNameCasing _tcColumnNameCasing name)
+      _tdColumnName = formatColumnName . API.ColumnName,
+      _tdColumnField = columnField,
+      _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName $ API.ColumnName name),
+      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName . API.ColumnName,
+      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName . API.ColumnName,
+      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName $ API.ColumnName name)
     }
   where
     formatTableName :: API.TableName -> API.TableName
@@ -431,6 +427,13 @@ mkTestData TestConfig {..} =
                  >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
              )
 
+    columnField :: API.TableName -> Text -> API.Field
+    columnField tableName columnName =
+      API.ColumnField columnName' scalarType
+      where
+        columnName' = formatColumnName $ API.ColumnName columnName
+        scalarType = findColumnScalarType schemaResponse tableName columnName'
+
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
   case NonEmpty.nonEmpty prefix of
@@ -442,6 +445,13 @@ applyNameCasing casing text = case casing of
   PascalCase -> text
   Lowercase -> Text.toLower text
   Uppercase -> Text.toUpper text
+
+findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
+findColumnScalarType API.SchemaResponse {..} tableName columnName =
+  maybe (error $ "Can't find the scalar type of column " <> show columnName <> " in table " <> show tableName) API._ciType columnInfo
+  where
+    tableInfo = find (\API.TableInfo {..} -> _tiName == tableName) _srTables
+    columnInfo = find (\API.ColumnInfo {..} -> _ciName == columnName) =<< API._tiColumns <$> tableInfo
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
@@ -511,15 +521,6 @@ _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
 _RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
 _RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
 
-columnField :: Text -> API.ScalarType -> API.Field
-columnField name scalarType = API.ColumnField (API.ColumnName name) scalarType
-
-queryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
-queryComparisonColumn columnName scalarType = API.ComparisonColumn API.QueryTable (API.ColumnName columnName) scalarType
-
-currentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
-currentComparisonColumn columnName scalarType = API.ComparisonColumn API.CurrentTable (API.ColumnName columnName) scalarType
-
-orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
+orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
-  API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection
+  API.OrderByElement targetPath (API.OrderByColumn columnName) orderDirection

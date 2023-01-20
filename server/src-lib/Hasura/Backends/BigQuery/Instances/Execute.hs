@@ -124,12 +124,13 @@ bqDBMutationPlan ::
   ( MonadError E.QErr m
   ) =>
   UserInfo ->
+  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'BigQuery ->
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
+bqDBMutationPlan _userInfo _environment _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain

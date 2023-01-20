@@ -933,18 +933,6 @@ When you track a table in Hasura, by default it exposes all the root fields avai
 you may want a role to only have access to certain root fields of a table or have the table be accessible only through
 [relationships](/schema/postgres/table-relationships/index.mdx).
 
-:::info Note
-
-Only query and subscription root fields can be disabled.
-
-:::
-
-:::tip Supported from
-
-Disabling root fields is supported in version `v2.8.0` and above.
-
-:::
-
 <Tabs groupId="user-preference" className="api-tabs">
 
 <TabItem value="console" label="Console">
@@ -1034,6 +1022,18 @@ all fields are allowed and an empty array means no fields are allowed.
 
 </TabItem>
 </Tabs>
+
+:::info Note
+
+Only query and subscription root fields can be disabled.
+
+:::
+
+:::tip Supported from
+
+Disabling root fields is supported in version `v2.8.0` and above.
+
+:::
 
 #### Use cases
 

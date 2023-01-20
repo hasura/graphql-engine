@@ -1,6 +1,7 @@
 module Test.Specs.ErrorSpec (spec) where
 
 import Control.Lens ((&), (?~))
+import Data.Aeson (Value (..))
 import Hasura.Backends.DataConnector.API
 import Test.AgentClient (queryExpectError)
 import Test.Data (TestData (..))
@@ -16,13 +17,15 @@ spec TestData {..} sourceName config _capabilities = describe "Error Protocol" d
   where
     brokenQueryRequest :: QueryRequest
     brokenQueryRequest =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query =
             Data.emptyQuery
               & qFields ?~ fields
               & qWhere
                 ?~ ApplyBinaryComparisonOperator
                   (CustomBinaryComparisonOperator "FOOBAR")
-                  (ComparisonColumn CurrentTable (ColumnName "ArtistId") NumberTy)
-                  (ScalarValue "1" StringTy)
+                  (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType)
+                  (ScalarValue (Number 1) $ artistIdScalarType)
        in QueryRequest _tdArtistsTableName [] query
+
+    artistIdScalarType = _tdFindColumnScalarType _tdArtistsTableName "ArtistId"

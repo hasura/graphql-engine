@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { DevTool } from '@hookform/devtools';
 
 import {
-  Checkbox,
+  CheckboxesField,
   CodeEditorField,
   InputField,
   Radio,
@@ -195,13 +195,12 @@ export const AllInputs: ComponentStory<any> = () => {
     inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
     textareaName: z.string().min(1, { message: 'Mandatory field' }),
     selectName: z.string().min(1, { message: 'Mandatory field' }),
-    checkboxNames: z
-      // When nothing is selected, the value is a false boolean
-      .union([z.string().array(), z.boolean()])
-      .refine(
-        value => Array.isArray(value) && value.length > 0,
-        'Choose at least one option'
-      ),
+    checkboxesFieldNames: z
+      .enum(['checkboxValue0', 'checkboxValue1', 'checkboxValue2'])
+      .array()
+      .nonempty({
+        message: 'Choose at least one option',
+      }),
     radioName: z
       // When nothing is selected, the value is null
       .union([z.string(), z.null()])
@@ -266,19 +265,19 @@ export const AllInputs: ComponentStory<any> = () => {
           tooltip="The select tooltip"
           placeholder="--Select placeholder--"
         />
-        <Checkbox
-          name="checkboxNames"
+        <CheckboxesField
+          name="checkboxesFieldNames"
           label="The checkbox label *"
           description="The checkbox description"
           tooltip="The checkbox tooltip"
           options={[
-            { value: 'checkboxValue0', label: 'Checkbox value 0' },
+            { value: 'checkboxValue0', label: 'CheckboxesField value 0' },
             {
               value: 'checkboxValue1',
-              label: 'Checkbox value 1',
+              label: 'CheckboxesField value 1',
               disabled: true,
             },
-            { value: 'checkboxValue2', label: 'Checkbox value 2' },
+            { value: 'checkboxValue2', label: 'CheckboxesField value 2' },
           ]}
           orientation="horizontal"
         />

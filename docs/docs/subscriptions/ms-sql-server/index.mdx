@@ -97,8 +97,8 @@ It uses the provided CORS configuration (as per
 1.  When it is `*`, the cookie is read and the CORS check is not enforced.
 2.  When there are explicit domains, the cookie will only be read if the request originates from one of the listed
     domains.
-3.  If CORS is disabled, the default behaviour is that the cookie won't be read (because of potential security issues).
-    To override the behaviour, you can use the flag `--ws-read-cookie` or the environment variable
+3.  If CORS is disabled, the default behavior is that the cookie won't be read (because of potential security issues).
+    To override the behavior, you can use the flag `--ws-read-cookie` or the environment variable
     `HASURA_GRAPHQL_WS_READ_COOKIE`. See
     [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for the setting.
 
