@@ -42,6 +42,7 @@ library
     , directory
     , fast-logger
     , filepath
+    , graphql-engine
     , graphql-parser
     , hasura-prelude
     , hspec
@@ -109,6 +110,7 @@ library
     Test.DataConnector.SelectPermissionsSpec
     Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTriggers.MSSQL.EventTriggerNextRetryAtTimezoneSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec
