@@ -33,7 +33,8 @@
       ],
       "@hasura/console-oss/lib/main": [
         "libs/console/legacy-ce/src/exports/main.js"
-      ]
+      ],
+      "@hasura/internal-plugin": ["libs/nx/internal-plugin/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

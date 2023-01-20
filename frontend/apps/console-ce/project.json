@@ -5,22 +5,10 @@
   "tags": [],
   "targets": {
     "build-server-assets": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "@hasura/internal-plugin:build-server-assets",
       "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
       "outputs": ["dist/apps/server-assets-console-ce"],
-      "dependsOn": ["build"],
-      "options": {
-        "commands": [
-          "rm -rf dist/apps/server-assets-console-ce",
-          "cp -r dist/apps/console-ce dist/apps/server-assets-console-ce",
-          "mkdir -p dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.css dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.js dist/apps/server-assets-console-ce/versioned",
-          "gzip -r -f dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.map  dist/apps/server-assets-console-ce/*.txt dist/apps/server-assets-console-ce/versioned"
-        ],
-        "parallel": false
-      }
+      "dependsOn": ["build"]
     },
     "build": {
       "executor": "@nrwl/web:webpack",
@@ -69,7 +57,7 @@
           "extractCss": false,
           "sourceMap": true,
           "namedChunks": true,
-          "generateIndexHtml": false,
+          "generateIndexHtml": true,
           "extractLicenses": false,
           "vendorChunk": true
         }
