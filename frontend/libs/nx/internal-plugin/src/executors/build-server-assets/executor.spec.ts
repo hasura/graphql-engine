@@ -157,7 +157,7 @@ describe('generateDynamicLoadCalls', () => {
       js: [],
     });
 
-    expect(result).toEqual('loadCss(basePath + "todo.css");\n');
+    expect(result).toEqual('loadCss(basePath + "todo.css.gz");\n');
   });
   it('should generate the css in the same order as the dom', () => {
     const result = generateDynamicLoadCalls({
@@ -176,8 +176,8 @@ describe('generateDynamicLoadCalls', () => {
       js: [],
     });
 
-    expect(result).toEqual(`loadCss(basePath + "todo.css");
-loadCss(basePath + "my.css");
+    expect(result).toEqual(`loadCss(basePath + "todo.css.gz");
+loadCss(basePath + "my.css.gz");
 `);
   });
 
@@ -194,7 +194,7 @@ loadCss(basePath + "my.css");
       css: [],
     });
 
-    expect(result).toEqual('loadJs(basePath + "todo.js");\n');
+    expect(result).toEqual('loadJs(basePath + "todo.js.gz");\n');
   });
   it('should generate the js loader with support for js modules', () => {
     const result = generateDynamicLoadCalls({
@@ -210,7 +210,7 @@ loadCss(basePath + "my.css");
     });
 
     expect(result).toEqual(
-      'loadJs(basePath + "todo.js", { type: "module" });\n'
+      'loadJs(basePath + "todo.js.gz", { type: "module" });\n'
     );
   });
   it('should generate the js loader in the same order as the dom', () => {
@@ -232,8 +232,8 @@ loadCss(basePath + "my.css");
       css: [],
     });
 
-    expect(result).toEqual(`loadJs(basePath + "todo.js", { type: "module" });
-loadJs(basePath + "my.js");
+    expect(result).toEqual(`loadJs(basePath + "todo.js.gz", { type: "module" });
+loadJs(basePath + "my.js.gz");
 `);
   });
 
@@ -262,9 +262,9 @@ loadJs(basePath + "my.js");
       ],
     });
 
-    expect(result).toEqual(`loadCss(basePath + "my.css");
-loadJs(basePath + "todo.js", { type: "module" });
-loadJs(basePath + "my.js");
+    expect(result).toEqual(`loadCss(basePath + "my.css.gz");
+loadJs(basePath + "todo.js.gz", { type: "module" });
+loadJs(basePath + "my.js.gz");
 `);
   });
 });
@@ -317,9 +317,9 @@ describe('generateAssetLoaderFile', () => {
       };
 
       window.__loadConsoleAssetsFromBasePath = (basePath) => {
-      loadCss(basePath + \\"my.css\\");
-      loadJs(basePath + \\"todo.js\\", { type: \\"module\\" });
-      loadJs(basePath + \\"my.js\\");
+      loadCss(basePath + \\"my.css.gz\\");
+      loadJs(basePath + \\"todo.js.gz\\", { type: \\"module\\" });
+      loadJs(basePath + \\"my.js.gz\\");
       }"
     `);
   });
@@ -375,9 +375,9 @@ describe('generatePolyfillLoaderFile', () => {
       };
 
       window.__loadConsoleAssetsFromBasePath = (basePath) => {
-      loadCss(basePath + \\"my.css\\");
-      loadJs(basePath + \\"todo.js\\", { type: \\"module\\" });
-      loadJs(basePath + \\"my.js\\");
+      loadCss(basePath + \\"my.css.gz\\");
+      loadJs(basePath + \\"todo.js.gz\\", { type: \\"module\\" });
+      loadJs(basePath + \\"my.js.gz\\");
       }
 
       // This is from the old console template for the CLI

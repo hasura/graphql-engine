@@ -89,15 +89,15 @@ export const extractAssets = (html: string): Assets => {
 
 export const generateDynamicLoadCalls = (assets: Assets): string => {
   const cssMap = assets.css
-    .map(it => `loadCss(basePath + "${it.url}");\n`)
+    .map(it => `loadCss(basePath + "${it.url}.gz");\n`)
     .join('');
 
   const jsMap = assets.js
     .map(it => {
       if (it.jsModule) {
-        return `loadJs(basePath + "${it.url}", { type: "module" });\n`;
+        return `loadJs(basePath + "${it.url}.gz", { type: "module" });\n`;
       }
-      return `loadJs(basePath + "${it.url}");\n`;
+      return `loadJs(basePath + "${it.url}.gz");\n`;
     })
     .join('');
 
@@ -105,6 +105,11 @@ export const generateDynamicLoadCalls = (assets: Assets): string => {
 };
 
 export const generateAssetLoaderFile = (assets: Assets): string => {
+  const loadedAssets = generateDynamicLoadCalls(assets);
+
+  console.log('This will be the loaded assets from this build :');
+  console.log(loadedAssets);
+
   return `// THIS FILE IS GENERATED; DO NOT MODIFY BY HAND.
 
 const loadCss = (url) => {
@@ -125,7 +130,7 @@ const loadJs = (url, { type }) => {
 };
 
 window.__loadConsoleAssetsFromBasePath = (basePath) => {
-${generateDynamicLoadCalls(assets)}}`;
+${loadedAssets}}`;
 };
 
 export const generatePolyfillLoaderFile = (
@@ -182,7 +187,6 @@ export default async function runMyExecutor(
 
   printChanges(tree.listChanges());
   flushChanges(context.root, tree.listChanges());
-
   await runCommands(
     {
       commands: [
