@@ -81,7 +81,7 @@ instance J.FromJSON RemoteSchemaDef where
       <*> o J..:? "timeout_seconds"
       <*> o J..:? "customization"
 
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m (EnvRecord N.URI)
+getUrlFromEnv :: (MonadError QErr m) => Env.Environment -> Text -> m (EnvRecord N.URI)
 getUrlFromEnv env urlFromEnv = do
   let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
   uri <- onNothing mEnv (throw400 InvalidParams $ envNotFoundMsg urlFromEnv)

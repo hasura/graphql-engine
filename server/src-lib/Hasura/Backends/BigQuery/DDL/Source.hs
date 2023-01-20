@@ -28,7 +28,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function (FunctionOverloads (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
@@ -93,9 +92,8 @@ readNonNegative i paramName =
 resolveSource ::
   (MonadIO m) =>
   BigQuerySourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'BigQuery))
-resolveSource sourceConfig customization =
+  m (Either QErr (DBObjectsIntrospection 'BigQuery))
+resolveSource sourceConfig =
   runExceptT $ do
     tables <- getTables sourceConfig
     routines <- getRoutines sourceConfig
@@ -108,10 +106,8 @@ resolveSource sourceConfig customization =
         seconds <- liftIO $ fmap systemSeconds getSystemTime
         let functions = FunctionOverloads <$> HM.groupOnNE (routineReferenceToFunctionName . routineReference) restRoutines
         pure
-          ( ResolvedSource
-              { _rsConfig = sourceConfig,
-                _rsCustomization = customization,
-                _rsTables =
+          ( DBObjectsIntrospection
+              { _rsTables =
                   HM.fromList
                     [ ( restTableReferenceToTableName tableReference,
                         DBTableMetadata

@@ -51,7 +51,6 @@ import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata (SourceMetadata (..), TableMetadata (..), _cfmDefinition)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Internal
@@ -160,24 +159,20 @@ resolveDatabaseMetadata ::
   ) =>
   SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource ('Postgres pgKind)))
-resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExceptT do
-  (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) PG.ReadOnly $ do
-    tablesMeta <- fetchTableMetadata $ HM.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
-    let allFunctions =
-          Set.fromList $
-            OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
-              <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
-    functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
-    pgScalars <- fetchPgScalars
-    let scalarsMap = Map.fromList do
-          scalar <- Set.toList pgScalars
-          name <- afold @(Either QErr) $ mkScalarTypeName scalar
-          pure (name, scalar)
-    pure (tablesMeta, functionsMeta, scalarsMap)
-
-  pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta (ScalarMap pgScalars)
+  m (Either QErr (DBObjectsIntrospection ('Postgres pgKind)))
+resolveDatabaseMetadata sourceMetadata sourceConfig = runExceptT $ runTx (_pscExecCtx sourceConfig) PG.ReadOnly do
+  tablesMeta <- fetchTableMetadata $ HM.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
+  let allFunctions =
+        Set.fromList $
+          OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
+            <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
+  functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
+  pgScalars <- fetchPgScalars
+  let scalarsMap = Map.fromList do
+        scalar <- Set.toList pgScalars
+        name <- afold @(Either QErr) $ mkScalarTypeName scalar
+        pure (name, scalar)
+  pure $ DBObjectsIntrospection tablesMeta functionsMeta (ScalarMap scalarsMap)
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata
     getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]

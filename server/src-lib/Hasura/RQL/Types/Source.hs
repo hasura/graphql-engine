@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -22,7 +23,7 @@ module Hasura.RQL.Types.Source
     _siNativeQueries,
 
     -- * Schema cache
-    ResolvedSource (..),
+    DBObjectsIntrospection (..),
     ScalarMap (..),
 
     -- * Source resolver
@@ -44,7 +45,7 @@ where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as Map
 import Data.Maybe (fromJust)
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as BS
@@ -90,7 +91,7 @@ _siNativeQueries :: forall b. Backend b => CustomSQLFields b -> NativeQueryCache
 _siNativeQueries = foldMap toItem
   where
     toItem :: CustomSQLMetadata b -> HashMap NativeQueryName (NativeQueryInfo b)
-    toItem csm = HM.fromList [(toNativeQueryName (_csmRootFieldName csm), toInfo csm)]
+    toItem csm = Map.fromList [(toNativeQueryName (_csmRootFieldName csm), toInfo csm)]
 
     toNativeQueryName :: G.Name -> NativeQueryName
     toNativeQueryName = NativeQueryName . G.unName
@@ -112,7 +113,7 @@ _siNativeQueries = foldMap toItem
     toArgs = foldMap toArg
 
     toArg :: CustomSQLParameter -> HashMap NativeQueryArgumentName (ScalarType b)
-    toArg CustomSQLParameter {..} = HM.fromList [(toArgName cspName, toScalarType cspType)]
+    toArg CustomSQLParameter {..} = Map.fromList [(toArgName cspName, toScalarType cspType)]
 
     toArgName :: CustomSQLParameterName -> NativeQueryArgumentName
     toArgName CustomSQLParameterName {..} = NativeQueryArgumentName cspnName
@@ -174,18 +175,27 @@ unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 --------------------------------------------------------------------------------
 -- Schema cache
 
--- | Contains Postgres connection configuration and essential metadata from the
--- database to build schema cache for tables and function.
-data ResolvedSource b = ResolvedSource
-  { _rsConfig :: SourceConfig b,
-    _rsCustomization :: SourceTypeCustomization,
-    _rsTables :: DBTablesMetadata b,
+-- | Contains metadata (introspection) from the database, used to build the
+-- schema cache.  This type only contains results of introspecting DB objects,
+-- i.e. the DB types specified by tables, functions, and scalars.  Notably, it
+-- does not include the additional introspection that takes place on Postgres,
+-- namely reading the contents of tables used as Enum Values -- see
+-- @fetchAndValidateEnumValues@.
+data DBObjectsIntrospection b = DBObjectsIntrospection
+  { _rsTables :: DBTablesMetadata b,
     _rsFunctions :: DBFunctionsMetadata b,
     _rsScalars :: ScalarMap b
   }
-  deriving (Eq)
+  deriving (Eq, Generic)
 
-instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
+instance Backend b => FromJSON (DBObjectsIntrospection b) where
+  parseJSON = withObject "DBObjectsIntrospection" \o -> do
+    tables <- o .: "tables"
+    functions <- o .: "functions"
+    scalars <- o .: "scalars"
+    pure $ DBObjectsIntrospection (Map.fromList tables) (Map.fromList functions) (ScalarMap (Map.fromList scalars))
+
+instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
     where
       rsLog =
@@ -195,16 +205,10 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
           ]
 
 -- | A map from GraphQL name to equivalent scalar type for a given backend.
-data ScalarMap b where
-  ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
+newtype ScalarMap b = ScalarMap (HashMap G.Name (ScalarType b))
+  deriving newtype (Semigroup, Monoid)
 
-deriving stock instance Eq (ScalarMap b)
-
-instance Backend b => Semigroup (ScalarMap b) where
-  ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2
-
-instance Backend b => Monoid (ScalarMap b) where
-  mempty = ScalarMap mempty
+deriving stock instance Backend b => Eq (ScalarMap b)
 
 --------------------------------------------------------------------------------
 -- Source resolver
