@@ -29,7 +29,12 @@ import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
 -- Preamble
 
 spec :: SpecWith GlobalTestEnvironment
-spec = Fixture.runWithLocalTestEnvironment contexts tests
+spec = do
+  Fixture.hgeWithEnv [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "true")] $
+    Fixture.runWithLocalTestEnvironment contexts testsWithFeatureOn
+
+  Fixture.hgeWithEnv [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "false")] $
+    Fixture.runWithLocalTestEnvironment contexts testsWithFeatureOff
   where
     lhsFixtures = [lhsPostgres, lhsRemoteServer]
     rhsFixtures = [rhsPostgres]
@@ -44,12 +49,7 @@ lhsPostgres tableName =
     { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
       Fixture.setupTeardown = \testEnv ->
         [ SetupAction.noTeardown (lhsPostgresSetup tableName testEnv)
-        ],
-      Fixture.customOptions =
-        Just $
-          Fixture.defaultOptions
-            { Fixture.stringifyNumbers = True
-            }
+        ]
     }
 
 lhsRemoteServer :: Fixture.LHSFixture
@@ -61,12 +61,7 @@ lhsRemoteServer tableName =
             { Fixture.setupAction = lhsRemoteServerSetup tableName testEnv,
               Fixture.teardownAction = \_ -> lhsRemoteServerTeardown testEnv
             }
-        ],
-      Fixture.customOptions =
-        Just $
-          Fixture.defaultOptions
-            { Fixture.stringifyNumbers = True
-            }
+        ]
     }
 
 --------------------------------------------------------------------------------
@@ -327,36 +322,63 @@ rhsPostgresSetup (testEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-tests opts = describe "object-relationship" $ do
-  executionTests opts
-
 -- | Basic queries using *-to-DB joins
-executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-executionTests opts = describe "execution" $ do
+testsWithFeatureOn :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
+testsWithFeatureOn opts = describe "object-relationship (stringified numeric types)" $ do
   -- fetches the relationship data
   it "related-data" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
-            query {
-              track: hasura_track {
-                album {
-                  title
-                  play_count
-                  version
+              query {
+                track: hasura_track {
+                  album {
+                    title
+                    play_count
+                    version
+                  }
                 }
               }
-            }
-          |]
+            |]
         expectedResponse =
           [interpolateYaml|
-            data:
-              track:
-              - album:
-                  title: "album1"
-                  play_count: "1000000000000"
-                  version: "1.075"
-          |]
+              data:
+                track:
+                - album:
+                    title: "album1"
+                    play_count: "1000000000000"
+                    version: "1.075"
+            |]
+    shouldReturnYaml
+      opts
+      (GraphqlEngine.postGraphql testEnvironment query)
+      expectedResponse
+
+-- | Expected behaviour when HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES is false
+testsWithFeatureOff :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
+testsWithFeatureOff opts = describe "object-relationship (no stringified numeric types)" $ do
+  -- fetches the relationship data
+  it "related-data" $ \(testEnvironment, _) -> do
+    let query =
+          [graphql|
+              query {
+                track: hasura_track {
+                  album {
+                    title
+                    play_count
+                    version
+                  }
+                }
+              }
+            |]
+        expectedResponse =
+          [interpolateYaml|
+              data:
+                track:
+                - album:
+                    title: "album1"
+                    play_count: 1.0e12
+                    version: 1.075
+            |]
     shouldReturnYaml
       opts
       (GraphqlEngine.postGraphql testEnvironment query)

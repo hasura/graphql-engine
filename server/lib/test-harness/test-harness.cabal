@@ -49,7 +49,6 @@ library
     , resourcet
     , safe
     , safe-exceptions
-    , scientific
     , servant-server
     , sop-core
     , stm
