@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -8,10 +9,12 @@ module Hasura.RQL.DDL.Schema.Cache.Common
   ( ApolloFederationConfig (..),
     ApolloFederationVersion (..),
     BackendInvalidationKeysWrapper (..),
+    BackendIntrospection (..),
     BuildOutputs (..),
     CacheBuild,
     CacheBuildParams (CacheBuildParams),
     InvalidationKeys (..),
+    StoredIntrospection (..),
     ikMetadata,
     ikRemoteSchemas,
     ikSources,
@@ -46,14 +49,17 @@ import Control.Arrow.Interpret
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique
+import Data.Aeson.Extended
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
@@ -68,6 +74,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.Metadata
+import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
@@ -127,6 +134,51 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     invalidateDataConnectors :: BackendInvalidationKeysWrapper 'DataConnector -> BackendInvalidationKeysWrapper 'DataConnector
     invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
       BackendInvalidationKeysWrapper $ foldl' (flip invalidate) invalidationKeys ciDataConnectors
+
+data BackendIntrospection (b :: BackendType) = BackendIntrospection
+  { biMetadata :: DBObjectsIntrospection b,
+    biEnumValues :: HashMap (TableName b) EnumValues
+  }
+  deriving stock (Generic)
+
+instance Backend b => FromJSON (BackendIntrospection b) where
+  parseJSON = withObject "BackendIntrospection" \o -> do
+    metadata <- o .: "metadata"
+    enumValues <- o .: "enum_values"
+    pure $ BackendIntrospection metadata (M.fromList enumValues)
+
+deriving stock instance BackendMetadata b => Eq (BackendIntrospection b)
+
+data StoredIntrospection = StoredIntrospection
+  { siBackendIntrospection :: HashMap SourceName (AnyBackend BackendIntrospection),
+    -- We'd prefer to pass the results of introspecting remote GraphQL schemas
+    -- as a structured Haskell type, rather than the opaque `EncJSON`.  What
+    -- makes this complicated is that, in the `introspect_remote_schema` API, we
+    -- need to return the result of the specific introspection query stored in
+    -- `server/src-rsr/introspection.json`.  That has a very specific format
+    -- (see e.g. `fragment TypeRef`).  Additionally, it requires us to return
+    -- introspection results for directives, which so far we have avoided
+    -- parsing entirely (for better or for worse).
+    --
+    -- In the future, perhaps we can change the implementation of
+    -- `introspect_remote_schema` to be backed by Stored Introspection directly.
+    -- Then we could pass around highly structured data internally here, but
+    -- also return the original raw introspection to the user on request.  But
+    -- this approach would require a wholesale commitment to Stored
+    -- Introspection.
+    siRemotes :: HashMap RemoteSchemaName EncJSON
+  }
+
+instance Eq StoredIntrospection where
+  -- compare introspected remotes as serialized values, not as JSON value equality
+  StoredIntrospection bi1 r1 == StoredIntrospection bi2 r2 = bi1 == bi2 && (encJToBS <$> r1) == (encJToBS <$> r2)
+
+instance FromJSON StoredIntrospection where
+  parseJSON = withObject "StoredIntrospection" \o -> do
+    -- Use of `parseJSONKeyValue` here means that the backend type is specified as a key
+    backendIntrospection <- traverse parseJSONKeyValue =<< o .: "backend_introspection"
+    remotes <- o .: "remotes"
+    pure $ StoredIntrospection backendIntrospection remotes
 
 data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
@@ -210,7 +262,7 @@ data CacheBuildParams = CacheBuildParams
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
 newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
-  deriving
+  deriving newtype
     ( Functor,
       Applicative,
       Monad,
@@ -263,7 +315,7 @@ runCacheBuildM m = do
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
   }
 
 bindErrorA ::

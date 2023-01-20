@@ -38,8 +38,7 @@ import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Source (ResolvedSource (..))
-import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
@@ -183,9 +182,8 @@ resolveDatabaseMetadata' ::
   Applicative m =>
   SourceMetadata 'DataConnector ->
   DC.SourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'DataConnector))
-resolveDatabaseMetadata' _ sc@DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} customization =
+  m (Either QErr (DBObjectsIntrospection 'DataConnector))
+resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
   let foreignKeys = fmap API._tiForeignKeys _srTables
       tables = Map.fromList $ do
         API.TableInfo {..} <- _srTables
@@ -218,10 +216,8 @@ resolveDatabaseMetadata' _ sc@DC.SourceConfig {_scSchema = API.SchemaResponse {.
         pure (coerce _tiName, meta)
    in pure $
         pure $
-          ResolvedSource
-            { _rsConfig = sc,
-              _rsCustomization = customization,
-              _rsTables = tables,
+          DBObjectsIntrospection
+            { _rsTables = tables,
               _rsFunctions = mempty,
               _rsScalars = mempty
             }

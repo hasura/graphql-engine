@@ -2,7 +2,9 @@
 
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema,
+    stitchRemoteSchema,
     execRemoteGQ,
+    FromIntrospection (..),
   )
 where
 
@@ -57,13 +59,28 @@ fetchRemoteSchema ::
   RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
-  (_, _, _rscRawIntrospectionResult) <-
+fetchRemoteSchema env manager _rscName rsDef = do
+  (_, _, rawIntrospectionResult) <-
     execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
+  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult _rscName rsDef
+  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
+  -- the introspection result of the remote server. We store this in the
+  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
+  -- is called by simple encoding the result to JSON.
+  pure (ir, rawIntrospectionResult, rsi)
 
+-- | Parses the remote schema introspection result, and check whether it looks
+-- like it's a valid GraphQL endpoint even under the configured customization.
+stitchRemoteSchema ::
+  (MonadIO m, MonadError QErr m) =>
+  BL.ByteString ->
+  RemoteSchemaName ->
+  ValidatedRemoteSchemaDef ->
+  m (IntrospectionResult, RemoteSchemaInfo)
+stitchRemoteSchema rawIntrospectionResult _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   -- Parse the JSON into flat GraphQL type AST.
   FromIntrospection _rscIntroOriginal <-
-    J.eitherDecode _rscRawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
+    J.eitherDecode rawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
 
   -- Possibly transform type names from the remote schema, per the user's 'RemoteSchemaDef'.
   let rsCustomizer = getCustomizer (addDefaultRoots _rscIntroOriginal) _vrsdCustomization
@@ -82,12 +99,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
           _rscIntroOriginal
           mempty -- remote relationships
           remoteSchemaInfo
-
-  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
-  -- the introspection result of the remote server. We store this in the
-  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
-  -- is called by simple encoding the result to JSON.
-  return (_rscIntroOriginal, _rscRawIntrospectionResult, remoteSchemaInfo)
+  return (_rscIntroOriginal, remoteSchemaInfo)
   where
     -- If there is no explicit mutation or subscription root type we need to check for
     -- objects type definitions with the default names "Mutation" and "Subscription".

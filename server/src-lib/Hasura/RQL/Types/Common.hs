@@ -235,6 +235,8 @@ instance FromJSON SourceName where
     "default" -> pure SNDefault
     t -> SNName <$> parseJSON (String t)
 
+instance FromJSONKey SourceName
+
 instance HasCodec SourceName where
   codec = dimapCodec dec enc nonEmptyTextCodec
     where

@@ -298,7 +298,8 @@ runDeleteRemoteSchemaRemoteRelationship DeleteRemoteSchemaRemoteRelationship {..
 -- collection, and used here to build remote field info.
 data PartiallyResolvedSource b = PartiallyResolvedSource
   { _prsSourceMetadata :: SourceMetadata b,
-    _resolvedSource :: ResolvedSource b,
+    _prsConfig :: SourceConfig b,
+    _prsIntrospection :: DBObjectsIntrospection b,
     _tableCoreInfoMap :: HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
     _eventTriggerInfoMap :: HashMap (TableName b) (EventTriggerInfoMap b)
   }
@@ -331,7 +332,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
         Map.lookup _tsrdSource allSources
           `onNothing` throw400 NotFound ("source not found: " <>> _tsrdSource)
       AB.dispatchAnyBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b') -> do
-        let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo _ = partiallyResolvedSource
+        let PartiallyResolvedSource _ sourceConfig _ targetTablesInfo _ = partiallyResolvedSource
         (targetTable :: TableName b') <- runAesonParser J.parseJSON _tsrdTable
         targetColumns <-
           fmap _tciFieldInfoMap $
@@ -348,8 +349,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
             ColumnScalar scalarType -> pure scalarType
             ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
           pure (srcFieldName, (srcColumn, tgtScalar, ciColumn tgtColumn))
-        let sourceConfig = _rsConfig targetSourceInfo
-            rsri =
+        let rsri =
               RemoteSourceFieldInfo _rrName _tsrdRelationshipType _tsrdSource sourceConfig targetTable $
                 fmap (\(_, tgtType, tgtColumn) -> (tgtType, tgtColumn)) $
                   Map.fromList columnMapping

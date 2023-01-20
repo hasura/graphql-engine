@@ -112,6 +112,8 @@ import Control.Applicative
 import Control.Arrow.Extended (ArrowChoice)
 import Control.Lens (preview, _Right)
 import Data.Aeson
+import Data.Aeson.Extended
+import Data.Aeson.Key qualified as Key
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
 import Hasura.Backends.DataConnector.Adapter.Types (mkDataConnectorName)
@@ -502,6 +504,11 @@ deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 deriving instance i `SatisfiesForAllBackends` Ord => Ord (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
+
+instance i `SatisfiesForAllBackends` FromJSON => FromJSONKeyValue (AnyBackend i) where
+  parseJSONKeyValue (backendTypeStr, value) = do
+    backendType <- parseBackendTypeFromText $ Key.toText backendTypeStr
+    parseAnyBackendFromJSON backendType value
 
 backendSourceKindFromText :: Text -> Maybe (AnyBackend BackendSourceKind)
 backendSourceKindFromText text =

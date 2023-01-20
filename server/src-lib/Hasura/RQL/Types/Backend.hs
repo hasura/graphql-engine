@@ -104,6 +104,7 @@ class
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
     FromJSON (HealthCheckTest b),
+    FromJSON (RawFunctionInfo b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
