@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Skeleton from 'react-loading-skeleton';
 
 import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapsible } from '@/new-components/Collapsible';
@@ -7,6 +8,7 @@ interface CollapsibleFieldWrapperProps {
   inputFieldName: string;
   label: string;
   tooltip: string;
+  loading?: boolean;
 }
 
 /**
@@ -22,24 +24,30 @@ interface CollapsibleFieldWrapperProps {
  */
 export const CollapsibleFieldWrapper: React.FC<CollapsibleFieldWrapperProps> =
   props => {
-    const { inputFieldName, label, tooltip, children } = props;
+    const { inputFieldName, label, tooltip, children, loading } = props;
+
+    if (loading) return <Skeleton className="h-8" />;
 
     return (
-      <Collapsible
-        triggerChildren={
-          <label
-            htmlFor={inputFieldName}
-            className="block pt-1 text-gray-600 mb-xs pr-8 flex-grow220px"
-          >
-            <span className="flex items-center font-semibold">
-              <span>{label}</span>
-              <span className="font-normal ml-1">(Optional)</span>
-              <IconTooltip message={tooltip} />
-            </span>
-          </label>
-        }
-      >
-        {children}
-      </Collapsible>
+      <>
+        <Collapsible
+          triggerChildren={
+            <>
+              <label
+                htmlFor={inputFieldName}
+                className="block pt-1 text-gray-600 mb-xs pr-8 flex-grow220px"
+              >
+                <span className="flex items-center font-semibold">
+                  <span>{label}</span>
+                  <span className="font-normal ml-1">(Optional)</span>
+                  <IconTooltip message={tooltip} />
+                </span>
+              </label>
+            </>
+          }
+        >
+          {children}
+        </Collapsible>
+      </>
     );
   };

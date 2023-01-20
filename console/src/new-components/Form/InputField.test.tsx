@@ -1,8 +1,8 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
-import { SimpleForm, InputField, InputFieldProps } from '..';
-import { Button } from '../../Button';
+import { SimpleForm, InputField, InputFieldProps } from '.';
+import { Button } from '../Button';
 
 const renderInputField = (
   props: Omit<InputFieldProps<any>, 'name'>,

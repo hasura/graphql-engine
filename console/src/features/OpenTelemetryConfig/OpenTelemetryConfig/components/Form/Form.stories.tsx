@@ -23,6 +23,7 @@ export default {
 // - passing default values and expecting them to be rendered - not tested because it's a Form component feature
 // - testing all the input fields error messages - not tested because it's a Form component feature that accepts a schema with error messages
 // - testing the all open/close possibilities of the collapsible fields - not tested because it's a Collapsible component feature
+// - testing that the submit button is disabled when the form is submitting - not tested because it's a Form component feature
 
 // -------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------
@@ -48,7 +49,7 @@ Default.storyName = '💠 Default';
 // component props
 const defaultStoryArgs: ComponentPropsWithoutRef<typeof Form> = {
   defaultValues,
-  loading: false,
+  skeletonMode: false,
   onSubmit: action('onSubmit'),
 };
 Default.args = defaultStoryArgs;
@@ -58,7 +59,7 @@ Default.args = defaultStoryArgs;
 // -------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------
-// SUBMITTING STORY
+// SKELETON PATH TEST
 // #region
 // -------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------
@@ -67,11 +68,9 @@ Default.args = defaultStoryArgs;
 // --------------------------------------------------
 // STORY DEFINITION
 // --------------------------------------------------
-export const Submitting: ComponentStory<typeof Form> = args => (
-  <Form {...args} />
-);
+export const Skeleton: ComponentStory<typeof Form> = args => <Form {...args} />;
 
-Submitting.storyName = '💠 Loading';
+Skeleton.storyName = '💠 Skeleton';
 
 // --------------------------------------------------
 // PROPS
@@ -79,13 +78,13 @@ Submitting.storyName = '💠 Loading';
 // Explicitly defining the story' args allows leveraging TS protection over them since story.args is
 // a Partial<Props> and then developers cannot know that they break the story by changing the
 // component props
-const submittingStoryArgs: ComponentPropsWithoutRef<typeof Form> = {
+const skeletonStoryArgs: ComponentPropsWithoutRef<typeof Form> = {
   defaultValues,
-  loading: true,
+  skeletonMode: true,
   onSubmit: action('onSubmit'),
 };
 
-Submitting.args = submittingStoryArgs;
+Skeleton.args = skeletonStoryArgs;
 
 // #endregion
 
@@ -118,7 +117,7 @@ HappyPath.parameters = { chromatic: { disableSnapshot: true } };
 // component props
 const happyPathStoryArgs: ComponentPropsWithoutRef<typeof Form> = {
   defaultValues,
-  loading: false,
+  skeletonMode: false,
   onSubmit: action('onSubmit'),
 };
 HappyPath.args = happyPathStoryArgs;
@@ -218,7 +217,7 @@ HappyPath.play = async ({ args, canvasElement }) => {
 
   // STEP: Check the callback arguments
   expect(receivedValues).toMatchObject<FormValues>({
-    status: true,
+    enabled: true,
     endpoint: 'http://hasura.io',
     connectionType: 'http',
     dataType: ['traces'],
@@ -229,64 +228,6 @@ HappyPath.play = async ({ args, canvasElement }) => {
     ],
     attributes: [{ name: 'foo', type: 'from_value', value: 'bar' }],
   });
-};
-
-// #endregion
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// PREVENT SUBMITTING TEST
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const PreventSubmitting: ComponentStory<typeof Form> = args => (
-  <Form {...args} />
-);
-
-PreventSubmitting.storyName =
-  '🧪 Testing - When loading, the form prevent submitting';
-
-PreventSubmitting.parameters = { chromatic: { disableSnapshot: true } };
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const preventSubmittingStoryArgs: ComponentPropsWithoutRef<typeof Form> = {
-  defaultValues,
-  loading: true,
-  onSubmit: action('onSubmit'),
-};
-
-PreventSubmitting.args = preventSubmittingStoryArgs;
-
-// --------------------------------------------------
-// INTERACTION TEST
-// --------------------------------------------------
-PreventSubmitting.play = async ({ args, canvasElement }) => {
-  const canvas = within(canvasElement);
-  const submitButton = await canvas.findByRole('button', {
-    name: 'Updating...',
-  });
-
-  expect(submitButton).toHaveAttribute('disabled');
-
-  // Try to click the submit button even if it's disabled
-  userEvent.click(submitButton);
-
-  // This assertion is reliable only if there is another test that checks that the onSubmit function
-  // is called when it should be called (the happy path) otherwise it could result in false negatives
-  // (for instance: if the form does not call the onSubmit function at all, even the submit button is
-  // enabled)
-  expect(args.onSubmit).not.toHaveBeenCalled();
 };
 
 // #endregion

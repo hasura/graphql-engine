@@ -1,16 +1,23 @@
 import { z } from 'zod';
 import { requestHeadersSelectorSchema } from '@/new-components/RequestHeadersSelector';
 
-export const FormSchema = z.object({
-  status: z.boolean(),
+export const formSchema = z.object({
+  enabled: z.boolean(),
 
-  // ENDPOINT
   endpoint: z.string().url({ message: 'Invalid URL' }),
 
-  // CONNECTION TYPE
   connectionType: z.enum(['http', 'http2']),
 
-  // BATCH SIZE
+  dataType: z.enum(['traces']).array(),
+
+  headers: requestHeadersSelectorSchema,
+
+  // ATTENTION: a restricted version of requestHeadersSelectorSchema should be used here! Because
+  // the attributes cannot be sent as env vars, even if the same RequestHeadersSelector component is
+  // used. RequestHeadersSelector accepts a typeSelect prop but the schema does not reflect it!
+  attributes: requestHeadersSelectorSchema,
+
+  // TODO: migrate to coerce
   batchSize: z.preprocess(
     // see: https://github.com/colinhacks/zod/discussions/330#discussioncomment-4043200
     Number,
@@ -22,24 +29,12 @@ export const FormSchema = z.object({
       .min(1, { message: 'The value should be between 1 and 512' })
       .max(512, { message: 'The value should be between 1 and 512' })
   ),
-
-  // DATA TYPE
-  dataType: z.enum(['traces']).array(),
-
-  // HEADERS
-  headers: requestHeadersSelectorSchema,
-
-  // ATTRIBUTES
-  // ATTENTION: a restricted version of requestHeadersSelectorSchema should be used here! Because
-  // the attributes cannot be sent as env vars, even if the same RequestHeadersSelector component is
-  // used. RequestHeadersSelector accepts a typeSelect prop but the schema does not reflect it!
-  attributes: requestHeadersSelectorSchema,
 });
 
-export type FormValues = z.infer<typeof FormSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
 export const defaultValues: FormValues = {
-  status: false,
+  enabled: false,
 
   // At the time of writing, it's impossible to get a default value that satisfies the use cases.
   // localhost would not work because HGE is running inside Docker, and the OpenTelemetry host is not.
