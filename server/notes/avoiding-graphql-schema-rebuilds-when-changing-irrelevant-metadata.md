@@ -1,7 +1,7 @@
-This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L270).
+This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L271).
 It is referenced at:
-  - line 415 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L415)
-  - line 188 of [Hasura.RQL.DDL.Schema.Cache.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Common.hs#L188)
+  - line 416 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L416)
+  - line 240 of [Hasura.RQL.DDL.Schema.Cache.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Common.hs#L240)
   - line 257 of [Hasura.RQL.DDL.Schema.Cache.Dependencies](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Dependencies.hs#L257)
 
 # Avoiding GraphQL schema rebuilds when changing irrelevant Metadata
