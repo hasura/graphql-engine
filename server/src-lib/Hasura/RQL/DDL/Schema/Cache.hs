@@ -907,27 +907,27 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
       MonadWriter (Seq (Either InconsistentMetadata md)) m =>
       OpenTelemetryConfig ->
       m OpenTelemetryInfo
-    buildOpenTelemetry openTelemetryConfig = do
-      case _ocStatus openTelemetryConfig of
-        OtelDisabled ->
-          -- Disable all components if OpenTelemetry export not enabled
-          pure $ OpenTelemetryInfo Nothing Nothing
-        OtelEnabled -> do
-          mOtelExporterInfo <-
-            let exporterOtlp = _ocExporterOtlp openTelemetryConfig
-             in withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON exporterOtlp)) $
-                  liftEither $
-                    parseOtelExporterConfig env exporterOtlp
-          mOtelBatchSpanProcessorInfo <-
-            let batchSpanProcessor = _ocBatchSpanProcessor openTelemetryConfig
-             in withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON batchSpanProcessor)) $
-                  liftEither $
-                    parseOtelBatchSpanProcessorConfig batchSpanProcessor
-          pure $
+    buildOpenTelemetry OpenTelemetryConfig {..} = do
+      -- Always perform validation, even if OpenTelemetry is disabled
+      mOtelExporterInfo <-
+        fmap join $
+          withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON _ocExporterOtlp)) $
+            liftEither $
+              parseOtelExporterConfig _ocStatus env _ocExporterOtlp
+      mOtelBatchSpanProcessorInfo <-
+        withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON _ocBatchSpanProcessor)) $
+          liftEither $
+            parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
+      pure $
+        case _ocStatus of
+          OtelDisabled ->
+            -- Disable all components if OpenTelemetry export not enabled
+            OpenTelemetryInfo Nothing Nothing
+          OtelEnabled ->
             OpenTelemetryInfo
               mOtelExporterInfo
               -- Disable data types if they are not in the enabled set
-              ( if OtelTraces `S.member` _ocEnabledDataTypes openTelemetryConfig
+              ( if OtelTraces `S.member` _ocEnabledDataTypes
                   then mOtelBatchSpanProcessorInfo
                   else Nothing
               )
