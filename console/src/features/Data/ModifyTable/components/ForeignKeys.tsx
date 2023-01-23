@@ -23,9 +23,9 @@ export const ForeignKeys: React.VFC<ForeignKeysProps> = props => {
       </IndicatorCard>
     );
 
-  if (!foreignKeys.length) {
+  if (foreignKeys.length === 0) {
     // Some databases don't support foreign keys
-    return null;
+    return <div className="text-gray-500 mx-2">No foreign keys found.</div>;
   }
 
   return (
