@@ -31,6 +31,7 @@ import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
+import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Migrate
 import Hasura.Server.MigrateSuite qualified as MigrateSuite
 import Hasura.Server.Types
@@ -89,7 +90,7 @@ main = do
                 readOnlyMode
                 Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
                 emptyMetadataDefaults
-                defaultUsePQNP
+                FF.defaultValueIO
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 

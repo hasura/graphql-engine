@@ -680,6 +680,7 @@ library
                      , Hasura.Server.Init.Arg.PrettyPrinter
                      , Hasura.Server.Init.Config
                      , Hasura.Server.Init.Env
+                     , Hasura.Server.Init.FeatureFlag
                      , Hasura.Server.Init.Logging
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
@@ -795,6 +796,7 @@ library
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.DataConnector
                      , Hasura.RQL.DDL.Endpoint
+                     , Hasura.RQL.DDL.FeatureFlag
                      , Hasura.RQL.DDL.GraphqlSchemaIntrospection
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers

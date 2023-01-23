@@ -143,7 +143,8 @@ data ServerCtx = ServerCtx
     scShutdownLatch :: ShutdownLatch,
     scMetaVersionRef :: STM.TMVar MetadataResourceVersion,
     scPrometheusMetrics :: PrometheusMetrics,
-    scTraceSamplingPolicy :: Tracing.SamplingPolicy
+    scTraceSamplingPolicy :: Tracing.SamplingPolicy,
+    scCheckFeatureFlag :: !(FeatureFlag -> IO Bool)
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -448,6 +449,7 @@ v1QueryHandler query = do
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
       defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
+      checkFeatureFlag <- asks (scCheckFeatureFlag . hcServerCtx)
       let serverConfigCtx =
             ServerConfigCtx
               functionPermsCtx
@@ -459,7 +461,7 @@ v1QueryHandler query = do
               readOnlyMode
               defaultNamingCase
               metadataDefaults
-              defaultUsePQNP
+              checkFeatureFlag
       runQuery
         env
         logger
@@ -500,7 +502,7 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
   _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   _sccDefaultNamingConvention <- asks (scDefaultNamingConvention . hcServerCtx)
   _sccMetadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
-  let _sccUsePQNP = defaultUsePQNP
+  _sccCheckFeatureFlag <- asks (scCheckFeatureFlag . hcServerCtx)
   let serverConfigCtx = ServerConfigCtx {..}
   r <-
     withSchemaCacheUpdate
@@ -556,6 +558,7 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
       defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
       defaultMetadata <- asks (scMetadataDefaults . hcServerCtx)
+      checkFeatureFlag <- asks (scCheckFeatureFlag . hcServerCtx)
       let serverConfigCtx =
             ServerConfigCtx
               functionPermsCtx
@@ -567,7 +570,7 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
               readOnlyMode
               defaultNamingCase
               defaultMetadata
-              defaultUsePQNP
+              checkFeatureFlag
 
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 

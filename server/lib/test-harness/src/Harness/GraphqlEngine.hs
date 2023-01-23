@@ -64,6 +64,7 @@ import Hasura.Logging (Hasura)
 import Hasura.Prelude
 import Hasura.Server.App (Loggers (..), ServerCtx (..))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..), unsafePort)
+import Hasura.Server.Init.FeatureFlag qualified as FeatureFlag
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Tracing (sampleAlways)
@@ -325,7 +326,7 @@ runApp serveOptions = do
           liftIO $ createServerMetrics $ EKG.subset ServerSubset store
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
     prometheusMetrics <- makeDummyPrometheusMetrics
-    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \serverCtx@ServerCtx {..} ->
+    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways FeatureFlag.defaultValueIO) $ \serverCtx@ServerCtx {..} ->
       do
         let Loggers _ _ pgLogger = scLoggers
         flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger)
@@ -339,6 +340,7 @@ runApp serveOptions = do
               initTime
               Nothing
               ekgStore
+              FeatureFlag.defaultValueIO
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

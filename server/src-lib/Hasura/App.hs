@@ -345,8 +345,9 @@ initialiseServerCtx ::
   ServerMetrics ->
   PrometheusMetrics ->
   Tracing.SamplingPolicy ->
+  (FeatureFlag -> IO Bool) ->
   ManagedT m ServerCtx
-initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy = do
+initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryHook serverMetrics prometheusMetrics traceSamplingPolicy checkFeatureFlag = do
   instanceId <- liftIO generateInstanceId
   latch <- liftIO newShutdownLatch
   loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -403,7 +404,7 @@ initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryH
           soReadOnlyMode
           soDefaultNamingConvention
           soMetadataDefaults
-          defaultUsePQNP
+          checkFeatureFlag
 
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -464,7 +465,8 @@ initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryH
         scShutdownLatch = latch,
         scMetaVersionRef = metaVersionRef,
         scPrometheusMetrics = prometheusMetrics,
-        scTraceSamplingPolicy = traceSamplingPolicy
+        scTraceSamplingPolicy = traceSamplingPolicy,
+        scCheckFeatureFlag = checkFeatureFlag
       }
 
 mkLoggers ::
@@ -606,10 +608,11 @@ runHGEServer ::
   -- | A hook which can be called to indicate when the server is started succesfully
   Maybe (IO ()) ->
   EKG.Store EKG.EmptyMetrics ->
+  (FeatureFlag -> IO Bool) ->
   ManagedT m ()
-runHGEServer setupHook env serveOptions serverCtx@ServerCtx {..} initTime startupStatusHook ekgStore = do
+runHGEServer setupHook env serveOptions serverCtx@ServerCtx {..} initTime startupStatusHook ekgStore checkFeatureFlag = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serverCtx ekgStore
+    mkHGEServer setupHook env serveOptions serverCtx ekgStore checkFeatureFlag
 
   let logger = _lsLogger $ scLoggers
   -- `startupStatusHook`: add `Service started successfully` message to config_status
@@ -692,8 +695,9 @@ mkHGEServer ::
   ServeOptions impl ->
   ServerCtx ->
   EKG.Store EKG.EmptyMetrics ->
+  (FeatureFlag -> IO Bool) ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore = do
+mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore checkFeatureFlag = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -744,7 +748,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore = 
           soReadOnlyMode
           soDefaultNamingConvention
           soMetadataDefaults
-          defaultUsePQNP
+          checkFeatureFlag
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)

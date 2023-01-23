@@ -28,6 +28,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Types (HasServerConfigCtx (..), ServerConfigCtx (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -213,7 +214,7 @@ throwIfFeatureDisabled :: (HasServerConfigCtx m, MonadIO m, MonadError QErr m) =
 throwIfFeatureDisabled = do
   configCtx <- askServerConfigCtx
 
-  enableCustomSQL <- liftIO (_sccUsePQNP configCtx)
+  enableCustomSQL <- liftIO (_sccCheckFeatureFlag configCtx FF.nativeQueryInterface)
 
   unless enableCustomSQL (throw500 "CustomSQL is disabled!")
 

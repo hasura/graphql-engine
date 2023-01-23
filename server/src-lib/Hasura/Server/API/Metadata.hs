@@ -31,6 +31,7 @@ import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
+import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata
@@ -215,6 +216,8 @@ data RQLMetadataV1
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
+  | -- Feature Flags
+    RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
   deriving (Generic)
@@ -294,6 +297,7 @@ instance FromJSON RQLMetadataV1 where
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "set_opentelemetry_config" -> RMSetOpenTelemetryConfig <$> args
       "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
+      "get_feature_flag" -> RMGetFeatureFlag <$> args
       "bulk" -> RMBulk <$> args
       -- Backend prefixed metadata actions:
       _ -> do
@@ -572,6 +576,7 @@ queryModifiesMetadata = \case
       RMSetQueryTagsConfig _ -> True
       RMSetOpenTelemetryConfig _ -> True
       RMSetOpenTelemetryStatus _ -> True
+      RMGetFeatureFlag _ -> False
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -758,6 +763,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
+  RMGetFeatureFlag q -> runGetFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
     dispatchMetadata ::

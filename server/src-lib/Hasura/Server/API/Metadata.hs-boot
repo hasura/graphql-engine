@@ -8,6 +8,7 @@ import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
+import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.QueryTags
@@ -170,6 +171,8 @@ data RQLMetadataV1
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
+  | -- Feature Flags
+    RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 
