@@ -42,17 +42,16 @@ You can handle these use cases by writing resolvers in a custom GraphQL server a
 schema" with the existing auto-generated schema. You can also add multiple Remote Schemas. Think of the merged schema as
 a union of top-level nodes from each of the sub-schemas.
 
-:::info Note
-
-If you are looking for adding authorization & access control for your app users to the GraphQL APIs that are
-auto-generated via Hasura, head to [Authentication & Authorization](/auth/index.mdx).
-
-:::
-
 :::info Health monitoring of Remote Schemas in Hasura Cloud
 
 Hasura Cloud offers built-in API metrics with integrated Health Checks and distributed tracing for your Remote Schemas.
 Read more at [Distributed Tracing in Hasura Cloud](/observability/tracing.mdx).
+
+:::
+
+:::info Remote Schema Subscriptions
+
+Note that subscriptions are currently not supported for Remote Schemas.
 
 :::
 
