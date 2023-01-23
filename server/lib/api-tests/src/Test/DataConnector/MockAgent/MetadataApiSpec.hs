@@ -8,20 +8,18 @@ module Test.DataConnector.MockAgent.MetadataApiSpec where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
-import Data.Aeson.KeyMap qualified as KM
-import Data.IORef qualified as IORef
+import Data.Aeson.Lens (_Array)
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
+import Harness.Backend.DataConnector.Mock (MockRequestResults (..), mockAgentMetadataTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
-import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldReturnYamlF)
-import Hasura.Backends.DataConnector.API.V0.ConfigSchema (Config (..))
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it, pendingWith, shouldBe)
+import Test.HUnit (assertFailure)
+import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
 
@@ -57,41 +55,41 @@ sourceMetadata =
 --------------------------------------------------------------------------------
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests opts = do
+tests _opts = do
   describe "MetadataAPI Mock Tests" $ do
-    it "Should peform a template transform when calling _get_source_tables" $ \(testEnvironment, Mock.MockAgentEnvironment {maeRecordedRequestConfig}) -> do
-      let sortYamlArray :: Aeson.Value -> IO Aeson.Value
-          sortYamlArray (Aeson.Array a) = pure $ Aeson.Array (Vector.fromList (sort (Vector.toList a)))
-          sortYamlArray _ = fail "Should return Array"
+    mockAgentMetadataTest "Should perform a template transform when calling get_source_tables" $ \testEnvironment performMetadataRequest -> do
+      sourceString <-
+        BackendType.backendSourceName
+          <$> getBackendTypeConfig testEnvironment
+          `onNothing` assertFailure "Backend source name not found in test environment"
 
-      case BackendType.backendSourceName <$> getBackendTypeConfig testEnvironment of
-        Nothing -> pendingWith "Backend not found for testEnvironment"
-        Just sourceString -> do
-          queryConfig <- IORef.readIORef maeRecordedRequestConfig
-          IORef.writeIORef maeRecordedRequestConfig Nothing
-
-          queryConfig `shouldBe` Just (Config $ KM.fromList [("DEBUG", Aeson.Object (KM.fromList [("test", Aeson.String "data")]))])
-
-          shouldReturnYamlF
-            sortYamlArray
-            opts
-            ( GraphqlEngine.postMetadata
-                testEnvironment
-                [yaml|
-                type: get_source_tables
-                args:
-                  source: *sourceString
-              |]
-            )
+      let request =
             [yaml|
-              - - Album
-              - - Artist
-              - - Customer
-              - - Employee
-              - - Genre
-              - - Invoice
-              - - InvoiceLine
-              - - MediaType
-              - - MyCustomScalarsTable
-              - - Track
+              type: get_source_tables
+              args:
+                source: *sourceString
             |]
+
+      MockRequestResults {..} <- performMetadataRequest Mock.chinookMock request
+
+      Aeson.toJSON _mrrRecordedRequestConfig
+        `shouldBe` [yaml|
+            DEBUG:
+              test: data
+          |]
+
+      -- The order of the results can be arbitrary, so we sort to produce a consistent view
+      let sortedResponse = _mrrResponse & _Array %~ (Vector.fromList . sort . Vector.toList)
+      sortedResponse
+        `shouldBe` [yaml|
+          - - Album
+          - - Artist
+          - - Customer
+          - - Employee
+          - - Genre
+          - - Invoice
+          - - InvoiceLine
+          - - MediaType
+          - - MyCustomScalarsTable
+          - - Track
+        |]

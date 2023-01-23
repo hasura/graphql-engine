@@ -9,7 +9,7 @@ module Test.DataConnector.MockAgent.ErrorSpec (spec) where
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -61,7 +61,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Error Protocol Tests" $ do
-  mockAgentTest "handles returned errors correctly" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "handles returned errors correctly" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -77,7 +77,7 @@ tests _opts = describe "Error Protocol Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           -

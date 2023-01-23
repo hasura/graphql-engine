@@ -9,7 +9,7 @@ import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -128,7 +128,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Object Relationships Tests" $ do
-  mockAgentTest "works with multiple object relationships" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with multiple object relationships" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -165,7 +165,7 @@ tests _opts = describe "Object Relationships Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           Track:
@@ -257,7 +257,7 @@ tests _opts = describe "Object Relationships Tests" $ do
               }
         )
 
-  mockAgentTest "works with an order by that navigates relationships" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with an order by that navigates relationships" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -292,7 +292,7 @@ tests _opts = describe "Object Relationships Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           Track:
@@ -408,7 +408,7 @@ tests _opts = describe "Object Relationships Tests" $ do
               }
         )
 
-  mockAgentTest "works with an order by that navigates a relationship with table permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with an order by that navigates a relationship with table permissions" $ \performGraphqlRequest -> do
     let headers = [("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -427,7 +427,7 @@ tests _opts = describe "Object Relationships Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           Employee:

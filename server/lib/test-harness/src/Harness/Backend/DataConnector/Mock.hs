@@ -19,7 +19,8 @@ module Harness.Backend.DataConnector.Mock
     MockRequestResults (..),
     mockQueryResponse,
     mockMutationResponse,
-    mockAgentTest,
+    mockAgentGraphqlTest,
+    mockAgentMetadataTest,
   )
 where
 
@@ -145,7 +146,7 @@ mkLocalTestEnvironment _ = mkTestResource do
       }
 
 data MockRequestResults = MockRequestResults
-  { _mrrGraphqlResponse :: Aeson.Value,
+  { _mrrResponse :: Aeson.Value,
     _mrrRecordedRequest :: Maybe AgentRequest,
     _mrrRecordedRequestConfig :: Maybe API.Config
   }
@@ -158,12 +159,20 @@ mockMutationResponse :: API.MutationResponse -> MockConfig -> MockConfig
 mockMutationResponse mutationResponse mockConfig =
   mockConfig {_mutationResponse = \_ -> Right mutationResponse}
 
-mockAgentTest :: HasCallStack => String -> ((MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
-mockAgentTest name testBody =
-  it name $ \env -> testBody (postMockAgentGraphqlWithHeaders env)
+mockAgentGraphqlTest :: HasCallStack => String -> ((MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentGraphqlTest name testBody =
+  it name $ \(env, agentEnv) ->
+    let performGraphqlRequest mockConfig requestHeaders graphqlRequest = performRecordedRequest agentEnv mockConfig (GraphqlEngine.postGraphqlWithHeaders env requestHeaders graphqlRequest)
+     in testBody performGraphqlRequest
 
-postMockAgentGraphqlWithHeaders :: HasCallStack => (TestEnvironment, MockAgentEnvironment) -> MockConfig -> RequestHeaders -> Aeson.Value -> IO MockRequestResults
-postMockAgentGraphqlWithHeaders (testEnvironment, MockAgentEnvironment {..}) mockConfig requestHeaders graphqlRequest = do
+mockAgentMetadataTest :: HasCallStack => String -> (TestEnvironment -> (MockConfig -> Aeson.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentMetadataTest name testBody =
+  it name $ \(env, agentEnv) ->
+    let performMetadataRequest mockConfig metadataRequest = performRecordedRequest agentEnv mockConfig (GraphqlEngine.postMetadata env metadataRequest)
+     in testBody env performMetadataRequest
+
+performRecordedRequest :: HasCallStack => MockAgentEnvironment -> MockConfig -> IO Aeson.Value -> IO MockRequestResults
+performRecordedRequest MockAgentEnvironment {..} mockConfig performRequest = do
   -- Set the Agent with the 'MockConfig'
   I.writeIORef maeConfig mockConfig
 
@@ -172,10 +181,10 @@ postMockAgentGraphqlWithHeaders (testEnvironment, MockAgentEnvironment {..}) moc
   I.writeIORef maeRecordedRequestConfig Nothing
 
   -- Perform GraphQL request
-  graphqlResponse <- GraphqlEngine.postGraphqlWithHeaders testEnvironment requestHeaders graphqlRequest
+  response <- performRequest
 
   -- Capture recordings
   recordedRequest <- I.readIORef maeRecordedRequest
   recordedRequestConfig <- I.readIORef maeRecordedRequestConfig
 
-  pure $ MockRequestResults graphqlResponse recordedRequest recordedRequestConfig
+  pure $ MockRequestResults response recordedRequest recordedRequestConfig

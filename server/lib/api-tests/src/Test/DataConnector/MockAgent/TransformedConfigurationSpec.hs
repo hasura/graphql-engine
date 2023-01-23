@@ -8,7 +8,7 @@ module Test.DataConnector.MockAgent.TransformedConfigurationSpec (spec) where
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -101,7 +101,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Transformed Configuration Tests" $ do
-  mockAgentTest "works with configuration transformation Kriti template" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with configuration transformation Kriti template" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -122,7 +122,7 @@ tests _opts = describe "Transformed Configuration Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           albums:

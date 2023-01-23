@@ -7,7 +7,7 @@ import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockMutationResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockMutationResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -89,7 +89,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = do
-  mockAgentTest "insert multiple rows with insert permissions" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "insert multiple rows with insert permissions" $ \performGraphqlRequest -> do
     let headers = [("X-Hasura-ArtistId", "2"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
           [graphql|
@@ -147,7 +147,7 @@ tests _opts = do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
           data:
             insert_Album:

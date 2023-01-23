@@ -10,7 +10,7 @@ import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -106,7 +106,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Basic Tests" $ do
-  mockAgentTest "works with simple object query" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with simple object query" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -127,7 +127,7 @@ tests _opts = describe "Basic Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           albums:
@@ -158,7 +158,7 @@ tests _opts = describe "Basic Tests" $ do
               }
         )
 
-  mockAgentTest "works with order_by id" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with order_by id" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -185,7 +185,7 @@ tests _opts = describe "Basic Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           albums:
@@ -220,7 +220,7 @@ tests _opts = describe "Basic Tests" $ do
               }
         )
 
-  mockAgentTest "works with an exists-based permissions filter" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with an exists-based permissions filter" $ \performGraphqlRequest -> do
     let headers =
           [ ("X-Hasura-Role", testRoleName),
             ("X-Hasura-EmployeeId", "1")
@@ -246,7 +246,7 @@ tests _opts = describe "Basic Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           Customer:

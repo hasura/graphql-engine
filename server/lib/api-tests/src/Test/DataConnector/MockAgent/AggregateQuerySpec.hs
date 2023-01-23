@@ -7,7 +7,7 @@ module Test.DataConnector.MockAgent.AggregateQuerySpec (spec) where
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -85,7 +85,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Aggregate Query Tests" $ do
-  mockAgentTest "works with multiple nodes fields and through array relations" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with multiple nodes fields and through array relations" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -124,7 +124,7 @@ tests _opts = describe "Aggregate Query Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           Artist_aggregate:
@@ -194,7 +194,7 @@ tests _opts = describe "Aggregate Query Tests" $ do
               }
         )
 
-  mockAgentTest "works with multiple aggregate fields and through array relations" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with multiple aggregate fields and through array relations" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -248,7 +248,7 @@ tests _opts = describe "Aggregate Query Tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           Invoice_aggregate:

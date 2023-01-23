@@ -9,7 +9,7 @@ module Test.DataConnector.MockAgent.CustomScalarsSpec (spec) where
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -52,7 +52,7 @@ sourceMetadata =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests _opts = describe "Custom scalar parsing tests" $ do
-  mockAgentTest "works with simple object query" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "works with simple object query" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -71,7 +71,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
@@ -110,7 +110,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
               }
         )
 
-  mockAgentTest "parses scalar literals in where queries" \performGraphqlRequest -> do
+  mockAgentGraphqlTest "parses scalar literals in where queries" \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -136,7 +136,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
@@ -202,7 +202,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
               }
         )
 
-  mockAgentTest "fails parsing float when expecting int" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting int" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -218,7 +218,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -229,7 +229,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing string when expecting int" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing string when expecting int" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -245,7 +245,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -256,7 +256,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing boolean when expecting int" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting int" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -272,7 +272,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -283,7 +283,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "succeeds parsing int when expecting float" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing int when expecting float" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -299,14 +299,14 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
             - MyIntColumn: 42
       |]
 
-  mockAgentTest "fails parsing string when expecting float" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing string when expecting float" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -322,7 +322,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -333,7 +333,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing boolean when expecting float" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting float" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -349,7 +349,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -360,7 +360,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing int when expecting string" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing int when expecting string" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -376,7 +376,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -387,7 +387,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing float when expecting string" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting string" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -403,7 +403,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -414,7 +414,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing boolean when expecting string" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting string" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -430,7 +430,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -441,7 +441,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing int when expecting boolean" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing int when expecting boolean" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -457,7 +457,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -468,7 +468,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing float when expecting boolean" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting boolean" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -484,7 +484,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -495,7 +495,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing string when expecting boolean" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing string when expecting boolean" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -511,7 +511,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -522,7 +522,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "succeeds parsing int when expecting ID" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing int when expecting ID" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -538,14 +538,14 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
             - MyIntColumn: 42
       |]
 
-  mockAgentTest "fails parsing float when expecting ID" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing float when expecting ID" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -561,7 +561,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -572,7 +572,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "fails parsing boolean when expecting ID" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "fails parsing boolean when expecting ID" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -588,7 +588,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
           - extensions:
@@ -599,7 +599,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     _mrrRecordedRequest `shouldBe` Nothing
 
-  mockAgentTest "succeeds parsing int when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing int when expecting anything" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -615,14 +615,14 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
             - MyIntColumn: 42
       |]
 
-  mockAgentTest "succeeds parsing float when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing float when expecting anything" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -638,14 +638,14 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
             - MyIntColumn: 42
       |]
 
-  mockAgentTest "succeeds parsing string when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing string when expecting anything" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -661,14 +661,14 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
             - MyIntColumn: 42
       |]
 
-  mockAgentTest "succeeds parsing boolean when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing boolean when expecting anything" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -684,14 +684,14 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
             - MyIntColumn: 42
       |]
 
-  mockAgentTest "succeeds parsing array when expecting anything" $ \performGraphqlRequest -> do
+  mockAgentGraphqlTest "succeeds parsing array when expecting anything" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -707,7 +707,7 @@ tests _opts = describe "Custom scalar parsing tests" $ do
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
-    _mrrGraphqlResponse
+    _mrrResponse
       `shouldBeYaml` [yaml|
         data:
           MyCustomScalarsTable:
