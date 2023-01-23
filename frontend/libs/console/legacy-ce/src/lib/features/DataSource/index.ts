@@ -104,7 +104,11 @@ export type Database = {
       props: GetTableRowsProps
     ) => Promise<TableRow[] | Feature.NotImplemented>;
   };
-  modify?: null;
+  config: {
+    getDefaultQueryRoot: (
+      table: Table
+    ) => Promise<string | Feature.NotImplemented>;
+  };
 };
 
 const drivers: Record<SupportedDrivers, Database> = {
@@ -415,6 +419,21 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const operators = await introspection.getSupportedOperators({ httpClient });
 
     return operators;
+  },
+  getDefaultQueryRoot: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    const result = await database.config.getDefaultQueryRoot(table);
+
+    if (result === Feature.NotImplemented) return Feature.NotImplemented;
+
+    return result;
   },
 });
 

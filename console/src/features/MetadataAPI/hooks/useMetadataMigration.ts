@@ -3,8 +3,8 @@ import Endpoints from '@/Endpoints';
 import { Api } from '@/hooks/apiUtils';
 import { RunSQLResponse } from '@/hooks/types';
 import { useConsoleConfig } from '@/hooks/useEnvVars';
-import { useAppSelector } from '@/store';
 import { useMutation, UseMutationOptions, useQueryClient } from 'react-query';
+import { useSelector } from 'react-redux';
 import { allowedMetadataTypes, MetadataResponse } from '../types';
 
 const maxAllowedLength = 255;
@@ -26,7 +26,11 @@ export function useMetadataMigration(
   >
 ) {
   const { mode } = useConsoleConfig();
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  // Needed to avoid circular dependency
+  const headers = useSelector<any>(state => state.tables.dataHeaders) as Record<
+    string,
+    string
+  >;
   const queryClient = useQueryClient();
   return useMutation(
     async props => {

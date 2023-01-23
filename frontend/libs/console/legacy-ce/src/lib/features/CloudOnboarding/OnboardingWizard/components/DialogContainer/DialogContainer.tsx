@@ -34,20 +34,26 @@ export const DialogContainer: React.FC<DialogContainer> = props => {
       <Dialog.Content className="fixed top-0 w-full h-full focus:outline-none bg-gray-50 overflow-y-scroll z-[100]">
         <TopHeaderBar />
         <div className="max-w-5xl p-md ml-auto mr-auto mt-xl">
-          <div className="mb-5">
+          <div className="mb-5 font-sans">
             {showSubHeaderAboveHeader ? (
               <>
-                {subHeader && <div>{subHeader}</div>}
-                <h1 className="text-xl font-semibold text-cloud-darkest">
+                {subHeader && (
+                  <div className="text-sm text-muted-dark font-normal">
+                    {subHeader}
+                  </div>
+                )}
+                <h1 className="text-xl font-bold text-cloud-darkest">
                   {header}
                 </h1>
               </>
             ) : (
               <>
-                <h1 className="text-xl font-semibold text-cloud-darkest">
+                <h1 className="text-xl font-bold text-cloud-darkest">
                   {header}
                 </h1>
-                {subHeader && <div>{subHeader}</div>}
+                {subHeader && (
+                  <div className="text-muted-dark font-normal">{subHeader}</div>
+                )}
               </>
             )}
           </div>

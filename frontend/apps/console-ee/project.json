@@ -32,7 +32,7 @@
           "apps/console-ee/src/css/tailwind.css"
         ],
         "scripts": [],
-        "webpackConfig": "apps/console-ee/custom-webpack.config.js",
+        "webpackConfig": "custom-webpack.config.js",
         "postcssConfig": "apps/console-ee/postcss.config.js"
       },
       "configurations": {

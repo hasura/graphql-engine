@@ -1,6 +1,6 @@
 import {
   MetadataUtils,
-  useInvalidateMetata,
+  useInvalidateMetadata,
   useMetadata,
 } from '@/features/hasura-metadata-api';
 import { MetadataTable } from '@/features/hasura-metadata-types';
@@ -16,7 +16,7 @@ export const useUpdateTableConfiguration = (
 
   const { fireNotification } = useFireNotification();
 
-  const invalidateMetadata = useInvalidateMetata();
+  const invalidateMetadata = useInvalidateMetadata();
 
   const { data } = useMetadata(m => ({
     source: MetadataUtils.findMetadataSource(dataSourceName, m),

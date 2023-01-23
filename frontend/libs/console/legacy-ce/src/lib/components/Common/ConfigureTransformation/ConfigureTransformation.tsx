@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   RequestTransformMethod,
   RequestTransformContentType,
+  QueryParams,
 } from '@/metadata/types';
 import { Button } from '@/new-components/Button';
 import { Analytics } from '@/features/Analytics';
@@ -28,7 +29,7 @@ type ConfigureTransformationProps = {
   sessionVarsOnChange: (sessionVars: KeyValuePair[]) => void;
   requestMethodOnChange: (requestMethod: RequestTransformMethod) => void;
   requestUrlOnChange: (requestUrl: string) => void;
-  requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
+  requestQueryParamsOnChange: (requestQueryParams: QueryParams) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
   requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
@@ -77,7 +78,6 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> =
       isRequestUrlTransform,
       isRequestPayloadTransform,
     } = requestTransfromState;
-
     const [isContextAreaActive, toggleContextArea] = useState<boolean>(false);
 
     const contextAreaText = isContextAreaActive

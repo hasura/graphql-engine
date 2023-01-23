@@ -5,6 +5,7 @@ import {
   OneClickDeploymentState,
   UserFacingStep,
   ProgressStateStatus,
+  FallbackApp,
 } from '../../types';
 import { StatusIcon } from './components/StatusIcon';
 import { getStepText } from './utils';
@@ -14,10 +15,11 @@ type Props = {
   step: UserFacingStep;
   status: ProgressStateStatus;
   retryAction: VoidFunction;
+  fallbackApps: FallbackApp[];
 };
 
 export const CliLog: React.VFC<Props> = props => {
-  const { step, status, retryAction } = props;
+  const { step, status, retryAction, fallbackApps } = props;
 
   const [progressBarPercent, setProgressBarPercent] =
     React.useState<number>(-1);
@@ -56,7 +58,7 @@ export const CliLog: React.VFC<Props> = props => {
             <div className="mt-xs mr-xs">
               <StatusIcon step={step} status={status} />
             </div>
-            <div className="mt-xs font-mono text-white tracking-widest">
+            <div className="mt-xs text-slate-50 tracking-widest">
               {getStepText(step, status)}
             </div>
           </div>
@@ -71,6 +73,7 @@ export const CliLog: React.VFC<Props> = props => {
                 step={step}
                 error={status.error}
                 retryAction={retryAction}
+                fallbackApps={fallbackApps}
               />
             </div>
           </div>

@@ -5,11 +5,11 @@ import {
   showWarningNotification,
   showInfoNotification,
 } from '@/components/Services/Common/Notification';
-import { useAppDispatch } from '@/store';
+import { useDispatch } from 'react-redux';
 
 // this is just a placeholder until we can revamp our notif system to react-hot-toast
 export const useFireNotification = () => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
 
   const fireNotification = useCallback(
     ({

@@ -10,6 +10,7 @@ export function useOnboardingData() {
     fetchAllOnboardingDataQueryFn,
     {
       staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
     }
   );
 }

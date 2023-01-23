@@ -5,7 +5,6 @@ import { useFormContext } from 'react-hook-form';
 import { ErrorComponentTemplate } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { NeonButtonIcons, NeonButtonProps } from '../../types';
-import { NeonIcon } from './NeonIcon';
 import { RequiredEnvVar } from '../../../../types';
 
 export type Props = {
@@ -14,9 +13,9 @@ export type Props = {
 };
 
 const neonButtonIconMap: Record<NeonButtonIcons, JSX.Element> = {
-  refresh: <MdRefresh className="text-black" />,
-  create: <FaPlusCircle className="text-black" />,
-  loading: <FaSpinner className="text-black animate-spin" />,
+  refresh: <MdRefresh className="text-slate-900" />,
+  create: <FaPlusCircle className="text-slate-900" />,
+  loading: <FaSpinner className="text-slate-900 animate-spin" />,
 };
 
 export function NeonButton(props: Props) {
@@ -34,7 +33,7 @@ export function NeonButton(props: Props) {
 
   return (
     <>
-      <div className="mb-[0.45] flex items-center">
+      <div className="flex items-center">
         <Button
           onClick={neonButtonProps.onClickConnect}
           icon={
@@ -45,16 +44,10 @@ export function NeonButton(props: Props) {
           size="md"
           disabled={neonButtonProps.status.status === 'loading'}
         >
-          <span className="text-lg tracking-tight text-black">
+          <span className="text-lg font-bold text-slate-900">
             {neonButtonProps.buttonText}
           </span>
         </Button>
-        <div className="ml-sm text-gray-600">
-          Powered by
-          <span className="ml-xs">
-            <NeonIcon />
-          </span>
-        </div>
       </div>
 
       {errorMessage ? (

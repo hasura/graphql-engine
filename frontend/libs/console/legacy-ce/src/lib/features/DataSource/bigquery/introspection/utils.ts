@@ -23,16 +23,25 @@ export const adaptIntrospectedBigQueryTables = (
   return adaptedResponse ?? [];
 };
 
-export function adaptSQLDataType(sqlDataType: string): TableColumn['dataType'] {
-  const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
-    bool: ['BOOL'],
-    string: ['STRING', 'STRUCT', 'varchar'],
-    number: ['BIGNUMERIC', 'FLOAT64', 'INT64', 'INTERVAL', 'NUMERIC'],
-    datetime: ['DATE', 'DATETIME'],
-    timestamp: ['TIME', 'TIMESTAMP'],
-    xml: ['xml'],
-    json: ['JSON'],
-  };
+export function adaptSQLDataType(
+  sqlDataType: string
+): TableColumn['consoleDataType'] {
+  const DataTypeToSQLTypeMap: Record<TableColumn['consoleDataType'], string[]> =
+    {
+      boolean: ['BOOL'],
+      text: [],
+      string: [
+        'STRING',
+        'STRUCT',
+        'varchar',
+        'DATE',
+        'DATETIME',
+        'TIME',
+        'TIMESTAMP',
+      ],
+      number: ['BIGNUMERIC', 'FLOAT64', 'INT64', 'INTERVAL', 'NUMERIC'],
+      json: ['JSON', 'xml'],
+    };
 
   const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
     value.includes(sqlDataType)

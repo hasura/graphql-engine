@@ -2,8 +2,9 @@ import React from 'react';
 import { InputField } from '@/new-components/Form';
 import { Collapsible } from '@/new-components/Collapsible';
 import { RequiredEnvVar } from '../../../types';
-import { postgresSubKind } from '../../../constants';
-import { PgDatabaseField } from './PgDatabaseField';
+import { NeonIcon } from './PgDatabaseField';
+import { getEnvVarFormSegments } from '../utils';
+import { DatabaseField } from './DatabaseField';
 
 export type EnvVarsFormFieldsProps = {
   envVars: RequiredEnvVar[];
@@ -12,9 +13,12 @@ export type EnvVarsFormFieldsProps = {
 export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
   const { envVars } = props;
 
-  const databaseEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_DATABASE');
-
-  const dynamicEnvVars = envVars.filter(ev => ev.Kind === 'ENV_TYPE_DYNAMIC');
+  const {
+    isPGDatabaseEnvVarPresent,
+    databaseEnvVars,
+    dynamicEnvVars,
+    staticEnvVars,
+  } = React.useMemo(() => getEnvVarFormSegments(envVars), [envVars]);
 
   return (
     <>
@@ -22,23 +26,27 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
         <Collapsible
           defaultOpen
           triggerChildren={
-            <span className="font-semibold capitalize text-gray-600">
-              Databases
-            </span>
+            <div className="flex w-full">
+              <span className="font-bold capitalize text-gray-600">
+                Database Connections
+              </span>
+              {isPGDatabaseEnvVarPresent && (
+                <>
+                  <div className="flex w-[325px]" />
+                  <div className="flex text-gray-600">
+                    Database creation powered by{' '}
+                    <div className="ml-2">
+                      <NeonIcon />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           }
         >
           {databaseEnvVars.map((envVar, index) => (
             <div key={index}>
-              {envVar.SubKind === postgresSubKind ? (
-                <PgDatabaseField dbEnvVar={envVar} />
-              ) : (
-                <InputField
-                  name={envVar.Name}
-                  label={`${envVar.Name} *`}
-                  placeholder={envVar.Name}
-                  description={envVar.Description}
-                />
-              )}
+              <DatabaseField envVar={envVar} />
             </div>
           ))}
         </Collapsible>
@@ -48,8 +56,8 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
         <Collapsible
           defaultOpen
           triggerChildren={
-            <span className="font-semibold capitalize text-gray-600">
-              Environment Variables
+            <span className="font-bold capitalize text-gray-600">
+              Variables
             </span>
           }
         >
@@ -60,6 +68,28 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
                 label={envVar.Mandatory ? `${envVar.Name} *` : envVar.Name}
                 placeholder={envVar.Name}
                 description={envVar.Description}
+              />
+            </div>
+          ))}
+        </Collapsible>
+      ) : null}
+
+      {staticEnvVars.length > 0 ? (
+        <Collapsible
+          triggerChildren={
+            <span className="font-bold capitalize text-gray-600">
+              Preset Variables
+            </span>
+          }
+        >
+          {staticEnvVars.map((envVar, index) => (
+            <div key={index}>
+              <InputField
+                name={envVar.Name}
+                label={envVar.Mandatory ? `${envVar.Name} *` : envVar.Name}
+                placeholder={envVar.Name}
+                description={envVar.Description}
+                disabled
               />
             </div>
           ))}

@@ -11,9 +11,10 @@ type Props = {
 const Modify: React.FC<Props> = props => {
   const name = props.currentTrigger?.name;
   return (
-    <Analytics name="ScheduledTriggerModify" {...REDACT_EVERYTHING}>
+    <Analytics name="ScheduledTri<EggerModify" {...REDACT_EVERYTHING}>
       <div className="mb-md">
         <CronTriggers.Form
+          key={name}
           cronTriggerName={name}
           onSuccess={(triggerName?: string) => {
             browserHistory.push(`/events/cron/${triggerName}/modify`);

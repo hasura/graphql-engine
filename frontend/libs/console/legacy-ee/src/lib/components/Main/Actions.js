@@ -514,6 +514,8 @@ const idTokenReceived = (data, shouldRedirect = true) => (
         name: project.name,
         privileges: decodedToken.payload.collaborator_privileges || [],
         metricsFQDN: decodedToken.payload.metrics_fqdn,
+        plan_name: project?.plan_name,
+        is_enterprise_user: project?.enterprise_users?.is_active
       },
     });
     /* Flush to the local storage */
@@ -642,6 +644,10 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
                 metrics_fqdn
               }
             }
+            plan_name
+            enterprise_users {
+              is_active
+            }
           }
         } 
       `,
@@ -684,6 +690,8 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
                 ?.project_collaborator_privileges || []
           ).map(p => p.privilege_slug),
         metricsFQDN: project.tenant?.region_info?.metrics_fqdn || '',
+        plan_name: project?.plan_name,
+        is_enterprise_user: project?.enterprise_users?.is_active
       };
 
       dispatch({

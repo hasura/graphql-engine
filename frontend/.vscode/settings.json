@@ -1,3 +1,10 @@
 {
-  "eslint.validate": ["json"]
+  "eslint.validate": ["json"],
+  "cSpell.words": ["clsx"],
+  "tailwindCSS.experimental.classRegex": [
+  
+    "tw\\w+ ?= ?`([^`]*)`",
+    "tw\\w+: ?`([^`]*)`"
+  ],
+  "tailwindCSS.rootFontSize": 14
 }

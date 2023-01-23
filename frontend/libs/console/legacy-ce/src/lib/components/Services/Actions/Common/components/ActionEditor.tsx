@@ -257,7 +257,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
                       BETA
                     </Badge>
                     <div className="text-muted font-normal">
-                      Generate GraphQL types from the currenty
+                      Generate GraphQL types from the current
                       <p>state of an existing tracked table.</p>
                     </div>
                   </div>

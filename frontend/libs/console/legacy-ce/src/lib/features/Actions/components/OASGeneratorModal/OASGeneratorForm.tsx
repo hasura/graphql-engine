@@ -21,7 +21,7 @@ import { GeneratedAction, Operation } from './types';
 export const formSchema = z.object({
   oas: z.string(),
   operation: z.string(),
-  url: z.string(),
+  url: z.string().url({ message: 'Invalid URL' }),
   search: z.string(),
 });
 
@@ -52,7 +52,8 @@ export const OasGeneratorForm = (props: {
 
   const isUnMounted = useIsUnmounted();
 
-  const { watch, setValue, setError, clearErrors } = useFormContext();
+  const { watch, setValue, setError, clearErrors, trigger, formState } =
+    useFormContext();
   const oas = watch('oas');
   const operation = watch('operation');
   const search = watch('search');
@@ -77,8 +78,15 @@ export const OasGeneratorForm = (props: {
       if (parsedOas && operation) {
         try {
           const generatedAction = await generateAction(parsedOas, operation);
-          if (!isUnMounted()) {
+          await trigger('url');
+          if (isUnMounted()) {
+            return;
+          }
+
+          if (formState.isValid) {
             setValues({ ...generatedAction, baseUrl: url });
+          } else {
+            setValues(undefined);
           }
         } catch (e) {
           setError('operation', {
@@ -106,7 +114,6 @@ export const OasGeneratorForm = (props: {
     async () => {
       let localParsedOas: Oas3 | undefined;
       clearErrors();
-      setOperations([]);
       if (oas && oas?.trim() !== '') {
         try {
           localParsedOas = JSON.parse(oas) as Oas3;
@@ -117,6 +124,7 @@ export const OasGeneratorForm = (props: {
             setError('oas', {
               message: 'Invalid JSON or YAML format',
             });
+            setOperations([]);
           }
         }
       }
@@ -124,6 +132,11 @@ export const OasGeneratorForm = (props: {
         if (localParsedOas) {
           if (!url && localParsedOas.servers?.[0]?.url) {
             setValue('url', localParsedOas.servers?.[0]?.url);
+          } else {
+            await trigger('url');
+            if (isUnMounted()) {
+              return;
+            }
           }
           const ops = await getOperations(localParsedOas);
           setOperations(ops);

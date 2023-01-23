@@ -32,6 +32,12 @@ const App = ({
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
+    try {
+      document.getElementsByClassName('loadingWrapper')[0].style.display =
+        'none';
+    } catch (e) {
+      console.error('Could not find loadingWrapper', e);
+    }
     trackCustomEvent({
       location: 'Console',
       action: 'Load',

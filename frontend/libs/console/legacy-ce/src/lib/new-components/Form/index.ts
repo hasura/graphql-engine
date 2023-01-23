@@ -1,4 +1,5 @@
 export * from './Checkbox';
+export * from './CheckboxesField';
 export * from './CodeEditorField';
 export * from './SimpleForm';
 export { InputField, InputFieldProps } from './InputField';

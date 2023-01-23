@@ -3,9 +3,9 @@ import Endpoints from '@/Endpoints';
 import { Api } from '@/hooks/apiUtils';
 import { RunSQLResponse } from '@/hooks/types';
 import { useConsoleConfig } from '@/hooks/useEnvVars';
-import { useAppSelector } from '@/store';
 import { useMutation, UseMutationOptions, useQueryClient } from 'react-query';
 import { allowedMetadataTypes, MetadataResponse } from '../types';
+import { useSelector } from 'react-redux';
 
 const maxAllowedLength = 255;
 const unixEpochLength = 14;
@@ -26,7 +26,11 @@ export function useMetadataMigration(
   >
 ) {
   const { mode } = useConsoleConfig();
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  // Needed to avoid circular dependency
+  const headers = useSelector<any>(state => state.tables.dataHeaders) as Record<
+    string,
+    string
+  >;
   const queryClient = useQueryClient();
   return useMutation(
     async props => {
@@ -47,7 +51,7 @@ export function useMetadataMigration(
     {
       ...mutationOptions,
       onSuccess: (data, variables, ctx) => {
-        /* 
+        /*
           During console CLI mode, alert the CLI server to update it's local filesystem after metadata API call is successfull
         */
         if (mode === CLI_CONSOLE_MODE) {
@@ -64,7 +68,7 @@ export function useMetadataMigration(
           });
         }
 
-        /* 
+        /*
           Get the latest metadata from server (this will NOT update metadata that is in the redux state, to do that please pass a custom onSuccess)
         */
         queryClient.refetchQueries(['metadata'], { active: true });

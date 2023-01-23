@@ -515,7 +515,6 @@
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  position: fixed;
   width: 100%;
   z-index: 100;
 
@@ -718,6 +717,7 @@
 }
 
 .main {
+  padding: 0 !important;
   // width: 100vw;
   min-width: $minContainerWidth;
   background-color: #f8fafb;
@@ -725,7 +725,6 @@
   font-family: 'Gudea';
   // color: #767E93;
   color: #4d4d4d;
-  padding: 54px 0 0 !important;
 }
 
 .mainCollapsed {
@@ -1349,23 +1348,5 @@
     a {
       font-size: 12px;
     }
-  }
-}
-
-@media (max-width: 1300px) {
-  .sidebar {
-    .sidebarItems {
-      li {
-        p {
-          display: none;
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .sidebar {
-    min-width: 600px;
   }
 }

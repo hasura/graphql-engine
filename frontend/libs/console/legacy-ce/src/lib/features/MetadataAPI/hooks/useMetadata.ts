@@ -1,8 +1,8 @@
 import Endpoints from '@/Endpoints';
 import { Api } from '@/hooks/apiUtils';
-import { useAppSelector } from '@/store';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import type { MetadataResponse } from '../types';
+import { useSelector } from 'react-redux';
 
 // overloads
 export function useMetadata(): UseQueryResult<MetadataResponse, Error>;
@@ -35,7 +35,11 @@ export function useMetadata(
     args: {},
   };
 
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  // Needed to avoid circular dependency
+  const headers = useSelector<any>(state => state.tables.dataHeaders) as Record<
+    string,
+    string
+  >;
   const queryFn = () => {
     return Api.post<MetadataResponse>({
       headers,

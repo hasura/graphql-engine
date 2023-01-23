@@ -1,8 +1,14 @@
+import { getEntries } from '@/components/Services/Data/Common/tsUtils';
 import { TableColumn } from '../types';
 
-export function adaptSQLDataType(sqlDataType: string): TableColumn['dataType'] {
-  const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
-    bool: ['boolean', 'bool'],
+export function adaptSQLDataType(
+  sqlDataType: string
+): TableColumn['consoleDataType'] {
+  const consoleDataTypeToSQLTypeMap: Record<
+    TableColumn['consoleDataType'],
+    string[]
+  > = {
+    boolean: ['boolean', 'bool'],
     string: [
       'box',
       'character',
@@ -17,14 +23,20 @@ export function adaptSQLDataType(sqlDataType: string): TableColumn['dataType'] {
       'pg_snapshot',
       'point',
       'polygon',
-      'text',
       'tsquery',
       'tsvector',
       'txid_snapshot',
       'uuid',
       'char',
       'varchar',
+      'date',
+      'time',
+      'time',
+      'timetz',
+      'timestamptz',
+      'timestamp',
     ],
+    text: ['text'],
     number: [
       'bigint',
       'bigserial',
@@ -53,15 +65,12 @@ export function adaptSQLDataType(sqlDataType: string): TableColumn['dataType'] {
       'serial2',
       'serial4',
     ],
-    datetime: ['date', 'time', 'time', 'timetz'],
-    timestamp: ['timestamptz', 'timestamp'],
-    xml: ['xml'],
-    json: ['interval', 'json', 'jsonb'],
+    json: ['interval', 'json', 'jsonb', 'xml'],
   };
 
-  const [dataType] = Object.entries(DataTypeToSQLTypeMap).find(([, value]) =>
+  const [dataType] = getEntries(consoleDataTypeToSQLTypeMap).find(([, value]) =>
     value.includes(sqlDataType)
   ) ?? ['string', []];
 
-  return dataType as TableColumn['dataType'];
+  return dataType;
 }

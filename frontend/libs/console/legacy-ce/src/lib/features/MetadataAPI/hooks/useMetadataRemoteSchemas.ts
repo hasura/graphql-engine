@@ -3,13 +3,13 @@ import { useQueryClient } from 'react-query';
 import { buildClientSchema, GraphQLSchema } from 'graphql';
 import Endpoints from '@/Endpoints';
 import { Api } from '@/hooks/apiUtils';
-import { useAppSelector } from '@/store';
 import { APIError } from '@/hooks/error';
 
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
 
 import type { SchemaResponse } from '../types';
+import { useSelector } from 'react-redux';
 
 export const useGetAllRemoteSchemaRelationships = () => {
   return useMetadata(MetadataSelector.getAllRemoteSchemaRelationships());
@@ -21,7 +21,11 @@ export const useListRemoteSchemas = () => {
 
 export const useRemoteSchema = () => {
   const client = useQueryClient();
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  // Needed to avoid circular dependency
+  const headers = useSelector<any>(state => state.tables.dataHeaders) as Record<
+    string,
+    string
+  >;
 
   const [data, setData] = React.useState<GraphQLSchema>();
   const [isLoading, setIsLoading] = React.useState(false);

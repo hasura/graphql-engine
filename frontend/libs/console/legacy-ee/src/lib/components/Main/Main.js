@@ -67,6 +67,7 @@ import styles from './Main.module.scss';
 import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
 import projectImg from './images/project.svg';
+import EELogo from './images/hasura-ee-mono-light.svg';
 
 class Main extends React.Component {
   constructor(props) {
@@ -272,6 +273,17 @@ class Main extends React.Component {
     dispatch(clearCollaboratorSignInState());
   }
 
+  /**
+   * checks if current project is an enterprise project
+   * NOTE: an enterprise project is any non free plan project
+   * created by a Hasura enterprise user
+   */
+  isEnterpriseProject() {
+    return (this.props?.project?.is_enterprise_user &&
+      this.props?.project?.plan_name !== 'cloud_free'
+      ) || globals.consoleType === 'pro-lite'
+  };
+
   render() {
     const {
       children,
@@ -439,6 +451,14 @@ class Main extends React.Component {
       </Link>
     );
 
+    const getLogoSrc = () => {
+      if (this.isEnterpriseProject()) {
+        return EELogo
+      }
+
+      return logo
+    };
+
     return (
       <div className={styles.container}>
         <div className={styles.flexRow}>
@@ -449,7 +469,7 @@ class Main extends React.Component {
                   <Link
                     to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
                   >
-                    <img className="img img-responsive" src={logo} />
+                    <img className="img img-responsive" src={getLogoSrc()} />
                   </Link>
                 </div>
                 <Link

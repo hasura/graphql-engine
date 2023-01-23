@@ -1,4 +1,6 @@
+import { Table } from '@/features/hasura-metadata-types';
 import { Database } from '..';
+import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
   getTrackableTables,
@@ -12,6 +14,7 @@ import { getTableRows } from './query';
 export type PostgresTable = { name: string; schema: string };
 
 export const postgres: Database = {
+  ...defaultDatabaseProps,
   introspection: {
     getDriverInfo: async () => ({
       name: 'postgres',
@@ -30,5 +33,11 @@ export const postgres: Database = {
   },
   query: {
     getTableRows,
+  },
+  config: {
+    getDefaultQueryRoot: async (table: Table) => {
+      const { name, schema } = table as PostgresTable;
+      return schema === 'public' ? name : `${schema}_${name}`;
+    },
   },
 };

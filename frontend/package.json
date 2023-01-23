@@ -175,7 +175,7 @@
     "uuid": "8.3.2",
     "valid-url": "1.0.9",
     "xstate": "^4.30.1",
-    "zod": "3.17.3"
+    "zod": "3.20.2"
   },
   "devDependencies": {
     "@babel/core": "7.12.13",

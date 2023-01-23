@@ -21,6 +21,7 @@ import {
   setSessionVars,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
+  QueryParams,
   RequestTransform,
   RequestTransformContentType,
   RequestTransformMethod,
@@ -115,7 +116,7 @@ export const CronRequestTransformation = (
     transformDispatch(setRequestUrlPreview(requestUrlPreview));
   };
 
-  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+  const requestQueryParamsOnChange = (requestQueryParams: QueryParams) => {
     transformDispatch(setRequestQueryParams(requestQueryParams));
   };
 

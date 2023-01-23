@@ -183,7 +183,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </span>
         )}
       </td>
-      <td className="px-sm py-xs max-w-xs align-top">
+      <td className="px-sm py-xs max-w-xs align-center">
         <CollapsibleToggle
           dataSource={dataSource}
           dbVersion={dbVersion}
@@ -202,7 +202,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </ToolTip>
         )}
       </td>
-      <td className="px-sm py-xs max-w-xs align-top break-all">
+      <td className="px-sm py-xs max-w-xs align-center break-all">
         {showUrl ? (
           typeof dataSource.url === 'string' ? (
             dataSource.url

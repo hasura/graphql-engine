@@ -1,9 +1,10 @@
+import type { Metadata } from '@/features/hasura-metadata-types';
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { Metadata } from '@/features/hasura-metadata-types';
 
 import { metadataHandlers as allowListMetadataHandlers } from '@/features/AllowLists';
-import { metadataHandlers as queryCollectionMetadataHandlers } from '@/features/QueryCollections';
 import { metadataHandlers as adhocEventMetadataHandlers } from '@/features/AdhocEvents';
+import { metadataHandlers as queryCollectionMetadataHandlers } from '@/features/QueryCollections';
+import { metadataHandlers as openTelemetryMetadataHandlers } from '@/features/OpenTelemetryConfig';
 
 import { TMigration } from '../features/MetadataAPI/hooks/useMetadataMigration';
 
@@ -30,6 +31,7 @@ const metadataHandlers: Partial<Record<allowedMetadataTypes, MetadataReducer>> =
     ...allowListMetadataHandlers,
     ...queryCollectionMetadataHandlers,
     ...adhocEventMetadataHandlers,
+    ...openTelemetryMetadataHandlers,
   };
 
 export const metadataReducer: MetadataReducer = (state, action) => {

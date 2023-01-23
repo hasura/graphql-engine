@@ -98,7 +98,7 @@
   border-right: 1px solid #788095;
   width: 20%;
   min-width: 240px;
-  height: 54px;
+  height: $headerHeight;
 
   .logoParent {
     display: flex;
@@ -428,7 +428,6 @@
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  position: fixed;
   width: 100%;
   z-index: 100;
 
@@ -621,6 +620,7 @@
 }
 
 .main {
+  padding: 0 !important;
   // width: 100vw;
   min-width: $minContainerWidth;
   background-color: #f8fafb;
@@ -628,7 +628,6 @@
   font-family: 'Gudea';
   // color: #767E93;
   color: #4d4d4d;
-  padding: 54px 0 0 !important;
 }
 
 .mainCollapsed {
@@ -1531,32 +1530,6 @@
 @media (max-width: 150px) {
   .secureSectionText {
     display: none;
-  }
-}
-
-@media (max-width: 1350px) {
-  .sidebar {
-    .header_logo_wrapper {
-      padding: 0px 10px;
-    }
-  }
-}
-
-@media (max-width: 1250px) {
-  .sidebar {
-    .sidebarItems {
-      li {
-        p {
-          display: none;
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .sidebar {
-    min-width: 600px;
   }
 }
 

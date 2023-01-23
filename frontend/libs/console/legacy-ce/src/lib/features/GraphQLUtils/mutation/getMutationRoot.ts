@@ -5,6 +5,7 @@ export type AllowedMutationOperation =
   | 'insert_one'
   | 'update'
   | 'update_by_pk'
+  | 'update_many'
   | 'delete'
   | 'delete_by_pk';
 
@@ -52,6 +53,8 @@ export const getMutationRoot = ({
   if (operation === 'update') baseQueryRoot = `update_${baseQueryRoot}`;
   if (operation === 'update_by_pk')
     baseQueryRoot = `update_${baseQueryRoot}_by_pk`;
+  if (operation === 'update_many')
+    baseQueryRoot = `update_${baseQueryRoot}_many`;
 
   if (operation === 'delete_by_pk')
     baseQueryRoot = `delete_${baseQueryRoot}_by_pk`;

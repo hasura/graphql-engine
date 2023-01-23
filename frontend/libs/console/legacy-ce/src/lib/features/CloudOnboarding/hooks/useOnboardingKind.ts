@@ -1,25 +1,11 @@
 import * as React from 'react';
-import { GitRepoDetails, OneClickDeploymentState } from '../OneClickDeployment';
+import { OneClickDeploymentState } from '../OneClickDeployment';
 import {
   useOnboardingData,
   emitOnboardingEvent,
   oneClickDeploymentOnboardingShown,
 } from '../OnboardingWizard';
-
-type OnboardingKind =
-  | {
-      kind: 'wizard';
-    }
-  | {
-      kind: 'one-click-deployment';
-      deployment: {
-        deploymentId: number;
-        gitRepoDetails: GitRepoDetails;
-      };
-    }
-  | {
-      kind: 'none';
-    };
+import { OnboardingKind } from '../types';
 
 export const useOnboardingKind = () => {
   const { data, error, isLoading } = useOnboardingData();
@@ -59,6 +45,7 @@ export const useOnboardingKind = () => {
             hasuraDirectory: data.data.one_click_deployment[0].hasura_directory,
           },
         },
+        fallbackApps: data.data.one_click_deployment_sample_apps || [],
       });
       // emit onboarding event denoting onboarding through one click deployment
       emitOnboardingEvent(oneClickDeploymentOnboardingShown);

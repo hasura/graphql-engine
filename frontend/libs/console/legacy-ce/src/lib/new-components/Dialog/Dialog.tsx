@@ -96,7 +96,7 @@ const dialogSizing: Record<DialogSize, string> = {
 
 export type DialogProps = {
   children: string | React.ReactElement;
-  title: string | React.ReactElement;
+  title?: string | React.ReactElement;
   titleTooltip?: string;
   description?: string;
   hasBackdrop?: boolean;
