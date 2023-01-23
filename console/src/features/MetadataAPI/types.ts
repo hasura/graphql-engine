@@ -1,9 +1,10 @@
-import { HasuraMetadataV3 } from '@/metadata/types';
-import { MetadataQueryType } from '@/metadata/queryUtils';
-import { IntrospectionQuery } from 'graphql';
-import { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
+import type { HasuraMetadataV3 } from '@/metadata/types';
+import type { MetadataQueryType } from '@/metadata/queryUtils';
+import type { OpenTelemetryQueries } from '@/features/hasura-metadata-types';
+import type { IntrospectionQuery } from 'graphql';
+import type { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
 
-import { DataTarget } from '../Datasources';
+import type { DataTarget } from '../Datasources';
 
 export interface MetadataResponse {
   resource_version: number;
@@ -92,4 +93,5 @@ export type AllMetadataQueries =
 export type allowedMetadataTypes =
   | typeof allowedMetadataTypesArr[number]
   | AllMetadataQueries
-  | MetadataQueryType;
+  | MetadataQueryType
+  | OpenTelemetryQueries;

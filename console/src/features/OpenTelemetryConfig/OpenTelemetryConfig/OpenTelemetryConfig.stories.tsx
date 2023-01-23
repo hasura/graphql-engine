@@ -16,9 +16,6 @@ import { OpenTelemetryConfig } from './OpenTelemetryConfig';
 export default {
   title: 'Features/OpenTelemetryConfig/OpenTelemetryConfig',
   component: OpenTelemetryConfig,
-  argTypes: {
-    updateOpenTelemetryConfig: { action: true },
-  },
 } as ComponentMeta<typeof OpenTelemetryConfig>;
 
 // -------------------------------------------------------------------------------------------------
@@ -46,8 +43,8 @@ Disabled.storyName = '💠 Disabled';
 // a Partial<Props> and then developers cannot know that they break the story by changing the
 // component props
 const disabledArgs: ComponentPropsWithoutRef<typeof OpenTelemetryConfig> = {
-  updateOpenTelemetryConfig: (...args) => {
-    action('updateOpenTelemetryConfig')(...args);
+  updateOpenTelemetry: (...args) => {
+    action('updateOpenTelemetry')(...args);
 
     // Fake the server loading
     return new Promise(resolve => setTimeout(resolve, 1000));
@@ -62,7 +59,7 @@ const disabledArgs: ComponentPropsWithoutRef<typeof OpenTelemetryConfig> = {
     batchSize: 512,
     attributes: [],
     dataType: ['traces'],
-    connectionType: 'http',
+    connectionType: 'http/protobuf',
   },
 };
 Disabled.args = disabledArgs;
@@ -94,8 +91,8 @@ Enabled.storyName = '💠 Enabled';
 // a Partial<Props> and then developers cannot know that they break the story by changing the
 // component props
 const enabledArgs: ComponentPropsWithoutRef<typeof OpenTelemetryConfig> = {
-  updateOpenTelemetryConfig: (...args) => {
-    action('updateOpenTelemetryConfig')(...args);
+  updateOpenTelemetry: (...args) => {
+    action('updateOpenTelemetry')(...args);
 
     // Fake the server loading
     return new Promise(resolve => setTimeout(resolve, 1000));
@@ -110,7 +107,7 @@ const enabledArgs: ComponentPropsWithoutRef<typeof OpenTelemetryConfig> = {
     batchSize: 512,
     attributes: [],
     dataType: ['traces'],
-    connectionType: 'http',
+    connectionType: 'http/protobuf',
   },
 };
 Enabled.args = enabledArgs;
@@ -142,7 +139,7 @@ Skeleton.storyName = '💠 Skeleton';
 // a Partial<Props> and then developers cannot know that they break the story by changing the
 // component props
 const skeletonArgs: ComponentPropsWithoutRef<typeof OpenTelemetryConfig> = {
-  updateOpenTelemetryConfig: (...args) => {
+  updateOpenTelemetry: (...args) => {
     action('updateOpenT')(...args);
 
     // Fake the server loading

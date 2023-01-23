@@ -1,8 +1,11 @@
-import { Moment } from 'moment';
-import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
-import { Nullable } from './../components/Common/utils/tsUtils';
-import { Driver } from '../dataSources';
-import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
+import type { Moment } from 'moment';
+
+import type { OpenTelemetry } from '@/features/hasura-metadata-types';
+import type { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+
+import type { Driver } from '../dataSources';
+import type { Nullable } from './../components/Common/utils/tsUtils';
+import type { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
 export type DataSource = {
   name: string;
@@ -1232,6 +1235,14 @@ export interface HasuraMetadataV3 {
   graphql_schema_introspection?: {
     disabled_for_roles: string[];
   };
+
+  /**
+   * The EE Lite OpenTelemetry settings.
+   *
+   * ATTENTION: Both Lux and the EE Lite server allow configuring OpenTelemetry. Anyway, this only
+   * represents the EE Lite one since Lux stores the OpenTelemetry settings by itself.
+   */
+  opentelemetry?: OpenTelemetry;
 }
 
 // Inconsistent Objects

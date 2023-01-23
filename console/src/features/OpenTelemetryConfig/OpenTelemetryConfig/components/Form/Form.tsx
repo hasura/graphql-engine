@@ -61,7 +61,7 @@ export function Form(props: FormProps) {
         name="connectionType"
         label="Connection Type"
         tooltip="The protocol to be used for the communication with the receiver. At the moment, only HTTP is supported."
-        options={[{ value: 'http', label: 'HTTP' }]}
+        options={[{ value: 'http/protobuf', label: 'HTTP' }]}
         loading={skeletonMode}
         // At the beginning, only one Connection Type is available, hence it does not make sense
         // to enable the users to change it.

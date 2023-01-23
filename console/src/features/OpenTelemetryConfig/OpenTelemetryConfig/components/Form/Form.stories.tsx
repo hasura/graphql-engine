@@ -219,7 +219,7 @@ HappyPath.play = async ({ args, canvasElement }) => {
   expect(receivedValues).toMatchObject<FormValues>({
     enabled: true,
     endpoint: 'http://hasura.io',
-    connectionType: 'http',
+    connectionType: 'http/protobuf',
     dataType: ['traces'],
     batchSize: 100,
     headers: [

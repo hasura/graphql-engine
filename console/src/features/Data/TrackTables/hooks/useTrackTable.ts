@@ -2,7 +2,7 @@ import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import React, { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-import { useInvalidateMetata } from '@/features/hasura-metadata-api';
+import { useInvalidateMetadata } from '@/features/hasura-metadata-api';
 import { useIsUnmounted } from '@/components/Services/Data';
 import { useMetadataSource, tablesQueryKey } from '@/features/Data';
 import type { TrackableTable } from '../types';
@@ -18,7 +18,7 @@ export const useTrackTable = (dataSourceName: string) => {
   const unMounted = useIsUnmounted();
 
   const { data } = useMetadataSource(dataSourceName);
-  const invalidateMetadata = useInvalidateMetata();
+  const invalidateMetadata = useInvalidateMetadata();
 
   const metadata = data?.metadata;
 

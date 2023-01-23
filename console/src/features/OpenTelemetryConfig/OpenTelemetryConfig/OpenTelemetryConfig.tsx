@@ -9,14 +9,14 @@ import { Header } from './components/Header/Header';
 interface OpenTelemetryConfigProps {
   skeletonMode: boolean;
   metadataFormValues: FormValues | undefined;
-  updateOpenTelemetryConfig: (formValues: FormValues) => Promise<void>;
+  updateOpenTelemetry: (formValues: FormValues) => Promise<void>;
 }
 
 /**
  * All the OpenTelemetry page without any external dependency.
  */
 export function OpenTelemetryConfig(props: OpenTelemetryConfigProps) {
-  const { skeletonMode, metadataFormValues, updateOpenTelemetryConfig } = props;
+  const { skeletonMode, metadataFormValues, updateOpenTelemetry } = props;
 
   const formValues = metadataFormValues || defaultValues;
 
@@ -33,7 +33,7 @@ export function OpenTelemetryConfig(props: OpenTelemetryConfigProps) {
       <div>
         {/* This div avoid space-y-md separating too much the toggle and the form */}
         <Form
-          onSubmit={updateOpenTelemetryConfig}
+          onSubmit={updateOpenTelemetry}
           defaultValues={formValues}
           skeletonMode={skeletonMode}
         />
