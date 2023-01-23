@@ -260,7 +260,7 @@ X-Hasura-Role: admin
 | get_rows_count | false                      | Boolean                                                                       | Flag to indicate whether number of rows returned should be included in the response. |
 | status         | false                      | [[ScheduledEventStatus]](/api-reference/syntax-defs.mdx#scheduledEventStatus) | Filter scheduled events by the status                                                |
 
-## get_scheduled_event_invocations {#metadata-get-scheduled-event_invocations}
+## get_scheduled_event_invocations {#metadata-get-scheduled-event-invocations}
 
 `get_scheduled_event_invocations` provides a way to retrieve the scheduled
 event invocations of a specific scheduled event or a cron trigger.
@@ -275,9 +275,6 @@ X-Hasura-Role: admin
     "args": {
         "type": "cron",
         "trigger_name": "daily_trigger",
-        "status": [
-            "scheduled"
-        ],
         "limit": 10,
         "offset": 0
     }
