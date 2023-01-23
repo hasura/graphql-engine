@@ -122,4 +122,5 @@ export const defaultValuesInput: Parameters<typeof createDefaultValues>[0] = {
     },
   ],
   schema,
+  defaultQueryRoot: 'Artist',
 };

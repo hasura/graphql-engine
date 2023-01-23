@@ -53,6 +53,13 @@ export const useFormData = ({
         table,
       });
 
+      const defaultQueryRoot = await DataSource(httpClient).getDefaultQueryRoot(
+        {
+          dataSourceName,
+          table,
+        }
+      );
+
       const defaultValues = createDefaultValues({
         queryType,
         roleName,
@@ -61,6 +68,7 @@ export const useFormData = ({
         table,
         tableColumns,
         schema,
+        defaultQueryRoot,
       });
 
       const formData = createFormData({

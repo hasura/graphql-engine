@@ -61,7 +61,7 @@ export const mssql: Database = {
   config: {
     getDefaultQueryRoot: async (table: Table) => {
       const { name, schema } = table as MssqlTable;
-      return schema === 'dbo' ? name : `${schema}_${name};`;
+      return schema === 'dbo' ? name : `${schema}_${name}`;
     },
   },
 };

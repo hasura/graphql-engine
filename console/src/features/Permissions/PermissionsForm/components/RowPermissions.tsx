@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
-import { exportMetadata } from '@/features/DataSource';
+import { DataSource, exportMetadata } from '@/features/DataSource';
 import { areTablesEqual } from '@/features/RelationshipsTable';
 import { getTypeName } from '@/features/GraphQLUtils';
 import { InputField } from '@/new-components/Form';
@@ -106,9 +106,16 @@ const useTypeName = ({
       if (!metadataSource || !metadataTable)
         throw Error('unable to generate type name');
 
+      const defaultQueryRoot = await DataSource(httpClient).getDefaultQueryRoot(
+        {
+          dataSourceName,
+          table,
+        }
+      );
+
       // This is very GDC specific. We have to move this to DAL later
       const typeName = getTypeName({
-        defaultQueryRoot: (table as string[]).join('_'),
+        defaultQueryRoot,
         operation: 'select',
         sourceCustomization: metadataSource?.customization,
         configuration: metadataTable.configuration,

@@ -37,7 +37,7 @@ export const bigquery: Database = {
   config: {
     getDefaultQueryRoot: async (table: Table) => {
       const { name, dataset } = table as BigQueryTable;
-      return `${dataset}_${name};`;
+      return `${dataset}_${name}`;
     },
   },
 };

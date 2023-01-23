@@ -46,6 +46,7 @@ interface Args {
   metadata: Metadata;
   tableColumns: TableColumn[];
   schema: GraphQLSchema;
+  defaultQueryRoot: string | never[];
 }
 
 export const createDefaultValues = ({
@@ -56,6 +57,7 @@ export const createDefaultValues = ({
   metadata,
   tableColumns,
   schema,
+  defaultQueryRoot,
 }: Args) => {
   const selectedTable = getMetadataTable({
     dataSourceName,
@@ -70,8 +72,9 @@ export const createDefaultValues = ({
   /**
    * This is GDC specific, we have to move this to DAL later
    */
+
   const tableName = getTypeName({
-    defaultQueryRoot: (table as string[]).join('_'),
+    defaultQueryRoot,
     operation: 'select',
     sourceCustomization: metadataSource?.customization,
     configuration: selectedTable?.configuration,

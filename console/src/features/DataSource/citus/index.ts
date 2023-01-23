@@ -72,7 +72,7 @@ export const citus: Database = {
   config: {
     getDefaultQueryRoot: async (table: Table) => {
       const { name, schema } = table as CitusTable;
-      return schema === 'public' ? name : `${schema}_${name};`;
+      return schema === 'public' ? name : `${schema}_${name}`;
     },
   },
 };

@@ -37,7 +37,7 @@ export const alloy: Database = {
   config: {
     getDefaultQueryRoot: async (table: Table) => {
       const { name, schema } = table as AlloyDbTable;
-      return schema === 'public' ? name : `${schema}_${name};`;
+      return schema === 'public' ? name : `${schema}_${name}`;
     },
   },
 };

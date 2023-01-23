@@ -70,7 +70,7 @@ export const cockroach: Database = {
   config: {
     getDefaultQueryRoot: async (table: Table) => {
       const { name, schema } = table as CockroachDBTable;
-      return schema === 'public' ? name : `${schema}_${name};`;
+      return schema === 'public' ? name : `${schema}_${name}`;
     },
   },
 };

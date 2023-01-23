@@ -428,7 +428,6 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     table: Table;
   }) => {
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
-    if (!database) return [];
 
     const result = await database.config.getDefaultQueryRoot(table);
 

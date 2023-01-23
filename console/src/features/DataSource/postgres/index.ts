@@ -37,7 +37,7 @@ export const postgres: Database = {
   config: {
     getDefaultQueryRoot: async (table: Table) => {
       const { name, schema } = table as PostgresTable;
-      return schema === 'public' ? name : `${schema}_${name};`;
+      return schema === 'public' ? name : `${schema}_${name}`;
     },
   },
 };
