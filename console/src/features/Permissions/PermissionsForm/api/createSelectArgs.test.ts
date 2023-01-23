@@ -9,9 +9,9 @@ const selectArgs: CreateInsertArgs = {
   role: 'user',
   formData: {
     queryType: 'select',
-
     filterType: 'none',
-
+    query_root_fields: null,
+    subscription_root_fields: null,
     filter: {},
     rowCount: '0',
     columns: {
@@ -59,7 +59,7 @@ test('create select args object from form data', () => {
     {
       args: {
         permission: {
-          aggregation_enabled: false,
+          allow_aggregations: false,
           columns: ['email', 'type'],
           filter: {},
         },

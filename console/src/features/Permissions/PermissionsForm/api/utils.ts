@@ -8,8 +8,10 @@ import { PermissionsSchema } from '../../schema';
 type SelectPermissionMetadata = {
   columns: string[];
   filter: Record<string, any>;
-  aggregation_enabled?: boolean;
+  allow_aggregations?: boolean;
   limit?: number;
+  query_root_fields?: any[];
+  subscription_root_fields?: any[];
 };
 
 const createSelectObject = (input: PermissionsSchema) => {
@@ -37,8 +39,16 @@ const createSelectObject = (input: PermissionsSchema) => {
     const permissionObject: SelectPermissionMetadata = {
       columns,
       filter,
-      aggregation_enabled: input.aggregationEnabled,
+      allow_aggregations: input.aggregationEnabled,
     };
+
+    if (input.query_root_fields) {
+      permissionObject.query_root_fields = input.query_root_fields;
+    }
+    if (input.subscription_root_fields) {
+      permissionObject.subscription_root_fields =
+        input.subscription_root_fields;
+    }
 
     if (input.rowCount && input.rowCount !== '0') {
       permissionObject.limit = parseInt(input.rowCount, 10);
@@ -71,7 +81,7 @@ const createPermission = (formData: PermissionsSchema) => {
 export interface CreateInsertArgs {
   dataSourceName: string;
   table: unknown;
-  queryType: string;
+  queryType: any;
   role: string;
   accessType: AccessType;
   formData: PermissionsSchema;
@@ -82,7 +92,7 @@ export interface CreateInsertArgs {
 interface ExistingPermission {
   table: unknown;
   role: string;
-  queryType: string;
+  queryType: any;
 }
 /**
  * creates the insert arguments to update permissions

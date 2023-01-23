@@ -105,7 +105,7 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
 };
 
 export interface ClonePermissionsSectionProps {
-  queryType: string;
+  queryType: any;
   tables: string[];
   supportedQueryTypes: string[];
   roles: string[];
@@ -115,7 +115,7 @@ export interface ClonePermissionsSectionProps {
 export interface ClonePermission {
   id: number;
   tableName: string;
-  queryType: string;
+  queryType: any;
   roleName: string;
 }
 

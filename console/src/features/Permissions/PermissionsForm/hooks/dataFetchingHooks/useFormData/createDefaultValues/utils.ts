@@ -151,6 +151,7 @@ export const createPermission = {
     const backendOnly: boolean = permission?.backend_only || false;
 
     return {
+      // Needs to be cast to const for the zod schema to accept it as a literal for the discriminated union
       queryType: 'insert' as const,
       check,
       checkType,
@@ -182,6 +183,7 @@ export const createPermission = {
     const aggregationEnabled: boolean = permission?.allow_aggregations || false;
 
     const selectPermissions = {
+      // Needs to be cast to const for the zod schema to accept it as a literal for the discriminated union
       queryType: 'select' as const,
       filter,
       filterType,
@@ -189,6 +191,8 @@ export const createPermission = {
       rowCount,
       aggregationEnabled,
       operators,
+      query_root_fields: permission.query_root_fields || null,
+      subscription_root_fields: permission.subscription_root_fields || null,
     };
 
     if (rowCount) {
@@ -214,6 +218,7 @@ export const createPermission = {
     });
 
     return {
+      // Needs to be cast to const for the zod schema to accept it as a literal for the discriminated union
       queryType: 'update' as const,
       check,
       checkType,
@@ -236,6 +241,7 @@ export const createPermission = {
     });
 
     return {
+      // Needs to be cast to const for the zod schema to accept it as a literal for the discriminated union
       queryType: 'delete' as const,
       filter,
       filterType,

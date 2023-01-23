@@ -35,11 +35,14 @@ const defaultValuesMockResult: ReturnType<typeof createDefaultValues> = {
       typeName: 'ArtistId',
     },
   },
+  query_root_fields: null,
+  subscription_root_fields: ['select', 'select_by_pk'],
   queryType: 'select',
   rowCount: '3',
 };
 
 test('use default values returns values correctly', () => {
   const result = createDefaultValues(defaultValuesInput);
+
   expect(result).toEqual(defaultValuesMockResult);
 });

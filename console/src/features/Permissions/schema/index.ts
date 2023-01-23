@@ -31,6 +31,8 @@ export const schema = z.discriminatedUnion('queryType', [
     rowCount: z.string().optional(),
     aggregationEnabled: z.boolean().optional(),
     clonePermissions: z.array(z.any()).optional(),
+    query_root_fields: z.array(z.string()).nullable().optional(),
+    subscription_root_fields: z.array(z.string()).nullable().optional(),
   }),
   z.object({
     queryType: z.literal('update'),

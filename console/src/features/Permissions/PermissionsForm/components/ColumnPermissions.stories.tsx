@@ -2,6 +2,7 @@ import React from 'react';
 import { Meta, Story } from '@storybook/react';
 import { z } from 'zod';
 import { SimpleForm } from '@/new-components/Form';
+import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 
 import {
   ColumnPermissionsSection,
@@ -14,6 +15,7 @@ export default {
   title: 'Features/Permissions/Form/Column Section',
   component: ColumnPermissionsSection,
   decorators: [
+    ReactQueryDecorator(),
     (StoryComponent: React.FC) => (
       <SimpleForm
         schema={schema}

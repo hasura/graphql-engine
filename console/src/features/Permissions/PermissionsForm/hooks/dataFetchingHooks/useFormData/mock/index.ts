@@ -36,6 +36,7 @@ const metadata: Metadata = {
                   },
                   allow_aggregations: true,
                   limit: 3,
+                  subscription_root_fields: ['select', 'select_by_pk'],
                 },
               },
             ],

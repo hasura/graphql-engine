@@ -1,11 +1,8 @@
 import React from 'react';
-
 import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-
 import { PermissionsSchema, schema } from './../schema';
-
 import { AccessType, QueryType } from '../types';
 import {
   AggregationSection,
@@ -17,6 +14,7 @@ import {
 } from './components';
 
 import { useFormData, useUpdatePermissions } from './hooks';
+import ColumnRootFieldPermissions from './components/RootFieldPermissions/RootFieldPermissions';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -60,7 +58,7 @@ const Component = (props: ComponentProps) => {
 
   const isSubmittingError =
     updatePermissions.isError || deletePermissions.isError;
-
+  //
   // for update it is possible to set pre update and post update row checks
   const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
 
@@ -101,7 +99,6 @@ const Component = (props: ComponentProps) => {
             {queryType}
           </h3>
         </div>
-
         <RowPermissionsSectionWrapper
           roleName={roleName}
           queryType={queryType}
@@ -131,32 +128,37 @@ const Component = (props: ComponentProps) => {
             </React.Fragment>
           ))}
         </RowPermissionsSectionWrapper>
-
         {queryType !== 'delete' && (
           <ColumnPermissionsSection
             roleName={roleName}
             queryType={queryType}
             columns={formData?.columns}
+            table={table}
+            dataSourceName={dataSourceName}
           />
         )}
-
         {['insert', 'update'].includes(queryType) && (
           <ColumnPresetsSection
             queryType={queryType}
             columns={formData?.columns}
           />
         )}
-
         {queryType === 'select' && (
           <AggregationSection queryType={queryType} roleName={roleName} />
         )}
-
         {['insert', 'update', 'delete'].includes(queryType) && (
           <BackendOnlySection queryType={queryType} />
         )}
 
-        <hr className="my-4" />
+        {queryType === 'select' && (
+          <ColumnRootFieldPermissions
+            filterType={filterType}
+            dataSourceName={dataSourceName}
+            table={table}
+          />
+        )}
 
+        <hr className="my-4" />
         {/* {!!tableNames?.length && (
             <ClonePermissionsSection
               queryType={queryType}
@@ -165,7 +167,6 @@ const Component = (props: ComponentProps) => {
               roles={allRoles}
             />
           )} */}
-
         <div className="pt-2 flex gap-2">
           <Button
             type="submit"
