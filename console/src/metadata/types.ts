@@ -1,4 +1,5 @@
 import { Moment } from 'moment';
+import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import { Nullable } from './../components/Common/utils/tsUtils';
 import { Driver } from '../dataSources';
 import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
@@ -946,7 +947,7 @@ export type RequestTransformBodyActions =
 export type RequestTransformBody = {
   action: RequestTransformBodyActions;
   template?: string;
-  form_template?: Record<string, string>;
+  form_template?: Record<string, string> | string;
 };
 
 export type ResponseTransformBody = {
@@ -966,7 +967,7 @@ interface RequestTransformFields {
   url?: Nullable<string>;
   content_type?: Nullable<RequestTransformContentType>;
   request_headers?: Nullable<RequestTransformHeaders>;
-  query_params?: Nullable<Record<string, string>>;
+  query_params?: Nullable<Record<string, string>> | string;
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
 
@@ -1270,3 +1271,5 @@ type InconsistentObjectDefinition = {
   url_from_env: string;
   forward_client_headers: boolean;
 };
+
+export type QueryParams = KeyValuePair[] | string;

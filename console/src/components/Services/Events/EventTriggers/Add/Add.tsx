@@ -23,6 +23,7 @@ import {
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import { showErrorNotification } from '@/components/Services/Common/Notification';
 import {
+  QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
@@ -143,7 +144,7 @@ const Add: React.FC<Props> = props => {
     transformDispatch(setRequestUrlPreview(requestUrlPreview));
   };
 
-  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+  const requestQueryParamsOnChange = (requestQueryParams: QueryParams) => {
     transformDispatch(setRequestQueryParams(requestQueryParams));
   };
 

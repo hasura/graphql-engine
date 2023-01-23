@@ -1,5 +1,5 @@
 import React from 'react';
-import { RequestTransformMethod } from '../../../metadata/types';
+import { QueryParams, RequestTransformMethod } from '../../../metadata/types';
 import { KeyValuePair } from './stateDefaults';
 import { focusYellowRing } from './utils';
 import { Nullable } from '../utils/tsUtils';
@@ -12,11 +12,11 @@ type RequestOptionsTransformsProps = {
   requestUrl: string;
   requestUrlError: string;
   requestUrlPreview: string;
-  requestQueryParams: KeyValuePair[];
+  requestQueryParams: QueryParams;
   requestAddHeaders: KeyValuePair[];
   requestMethodOnChange: (requestMethod: RequestTransformMethod) => void;
   requestUrlOnChange: (requestUrl: string) => void;
-  requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
+  requestQueryParamsOnChange: (requestQueryParams: QueryParams) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
 };
 

@@ -2,6 +2,7 @@ import {
   RequestTransformMethod,
   RequestTransformContentType,
   RequestTransformBodyActions,
+  QueryParams,
 } from '../../../metadata/types';
 import {
   SET_ENV_VARS,
@@ -100,7 +101,7 @@ export const setRequestUrlPreview = (
 });
 
 export const setRequestQueryParams = (
-  requestQueryParams: KeyValuePair[]
+  requestQueryParams: QueryParams
 ): SetRequestQueryParams => ({
   type: SET_REQUEST_QUERY_PARAMS,
   requestQueryParams,

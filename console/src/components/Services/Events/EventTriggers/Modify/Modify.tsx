@@ -23,6 +23,7 @@ import {
   getEventRequestTransformDefaultState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
+  QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
@@ -162,7 +163,7 @@ const Modify: React.FC<Props> = props => {
     transformDispatch(setRequestUrlPreview(requestUrlPreview));
   };
 
-  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+  const requestQueryParamsOnChange = (requestQueryParams: QueryParams) => {
     transformDispatch(setRequestQueryParams(requestQueryParams));
   };
 
@@ -345,7 +346,10 @@ const Modify: React.FC<Props> = props => {
 
   return (
     <Analytics name="ModifyEventTriggers" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto bg-gray-50">
+      <div
+        key={currentTrigger.name}
+        className="w-full overflow-y-auto bg-gray-50"
+      >
         <div className="max-w-6xl">
           <TableHeader
             count={null}

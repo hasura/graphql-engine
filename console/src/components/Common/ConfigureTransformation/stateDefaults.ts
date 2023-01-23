@@ -14,6 +14,7 @@ import {
   RequestTransformTemplateEngine,
   RequestTransformBody,
   ResponseTransformBody,
+  QueryParams,
 } from '../../../metadata/types';
 import { Nullable } from '../utils/tsUtils';
 
@@ -82,7 +83,7 @@ export interface SetRequestUrlPreview extends ReduxAction {
 
 export interface SetRequestQueryParams extends ReduxAction {
   type: typeof SET_REQUEST_QUERY_PARAMS;
-  requestQueryParams: KeyValuePair[];
+  requestQueryParams: QueryParams;
 }
 
 export interface SetRequestAddHeaders extends ReduxAction {
@@ -176,7 +177,7 @@ export type RequestTransformState = {
   requestUrl: string;
   requestUrlError: string;
   requestUrlPreview: string;
-  requestQueryParams: KeyValuePair[];
+  requestQueryParams: QueryParams;
   requestAddHeaders: KeyValuePair[];
   requestBody: RequestTransformStateBody;
   requestBodyError: string;

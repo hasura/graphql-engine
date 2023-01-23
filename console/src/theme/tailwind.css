@@ -189,6 +189,7 @@ label {
   transform: none;
   width: 100%;
 }
+
 /* Hide placeholder when input is focused to mitigate alignment issue between placeholder and text value */
 .ace_text-input:focus ~ .ace_scroller .ace_placeholder {
   display: none;
