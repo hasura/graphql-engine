@@ -27,9 +27,7 @@ export const FormLayout = ({
           Cancel
         </Button>
         <span className="font-semibold text-muted ml-1.5">
-          {existingRelationship
-            ? 'Edit Relationship'
-            : 'Create New Relationship'}
+          {existingRelationship ? 'Edit Relationship' : 'Add Relationship'}
         </span>
       </div>
       <hr className="mb-md border-gray-300" />

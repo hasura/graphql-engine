@@ -146,7 +146,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
             <p className="font-semibold m-0">
               {existingRelationshipName
                 ? 'Edit Relationship'
-                : 'Create New Relationship'}
+                : 'Add Relationship'}
             </p>
           </div>
 

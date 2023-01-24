@@ -4,14 +4,18 @@ export const schema = z.object({
   name: z.string().min(1, 'Name is a required field'),
   relationship_type: z.union([z.literal('Object'), z.literal('Array')]),
   fromSource: z.object({
-    dataSourceName: z.string().min(1, 'Origin source is a required field'),
-    table: z.any(),
+    value: z.object({
+      dataSourceName: z.string().min(1, 'From source is a required field'),
+      table: z.any(),
+    }),
   }),
   toSource: z.object({
-    dataSourceName: z
-      .string()
-      .min(1, 'Desitination source is a required field'),
-    table: z.any(),
+    value: z.object({
+      dataSourceName: z
+        .string()
+        .min(1, 'To Reference source is a required field'),
+      table: z.any(),
+    }),
   }),
   columnMap: z
     .array(z.object({ from: z.string(), to: z.string() }))

@@ -36,7 +36,7 @@ module.exports = {
           DEFAULT: '#f8fafb',
         },
         muted: {
-          DEFAULT: '#475569',
+          DEFAULT: '#64748B',
           dark: '#64748B',
         },
       },

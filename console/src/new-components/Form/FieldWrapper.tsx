@@ -141,7 +141,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
 
   if (label) {
     FieldLabel = () => (
-      <label htmlFor={id} className={clsx('block pt-1 text-gray-600 mb-xs')}>
+      <label htmlFor={id} className={clsx('block pt-1 text-muted mb-xs')}>
         <span className={clsx('flex items-center font-semibold')}>
           <span className={loading ? 'relative' : ''}>
             <FieldLabelIcon />

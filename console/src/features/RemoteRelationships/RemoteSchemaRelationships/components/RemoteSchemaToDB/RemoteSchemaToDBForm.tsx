@@ -151,7 +151,7 @@ export const RemoteSchemaToDbForm = ({
             <span className="font-semibold ml-sm">
               {existingRelationshipName
                 ? 'Edit Relationship'
-                : 'Create New Relationship'}
+                : 'Add Relationship'}
             </span>
           </div>
           <hr className="mb-md border-gray-300" />

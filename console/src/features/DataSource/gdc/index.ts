@@ -13,7 +13,7 @@ import { getTableRows } from './query';
 
 /**
  * Why is GDCTable as string[] ?
- * It denotes the table along with it's hierarachy based on the DB. For example, in a mysql source
+ * It denotes the table along with it's hierarchy based on the DB. For example, in a mysql source
  * you'd have just the table name -> ["Album"] but in a db with schemas -> ["Public", "Album"].
  */
 export type GDCTable = string[];

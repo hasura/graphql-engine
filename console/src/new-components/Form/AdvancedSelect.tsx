@@ -1,19 +1,27 @@
-import React, { ComponentProps, ReactText } from 'react';
-import get from 'lodash.get';
+import React, { ComponentProps, FocusEventHandler, ReactElement } from 'react';
 import clsx from 'clsx';
-import { Controller, FieldError, useFormContext } from 'react-hook-form';
-import Select, { OptionsType, OptionTypeBase, components } from 'react-select';
+import {
+  ControllerRenderProps,
+  FieldValues,
+  RefCallBack,
+} from 'react-hook-form';
+import Select, {
+  Props as SelectProps,
+  OptionsType,
+  OptionTypeBase,
+  components,
+} from 'react-select';
 import { FiX, FiChevronDown } from 'react-icons/fi';
 import { Tooltip } from '@/new-components/Tooltip';
-import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
+import { FieldWrapperPassThroughProps } from './FieldWrapper';
 
-type MultiSelectItem = {
-  label: ReactText;
+export type MultiSelectItem = {
+  label: string | ReactElement;
   value: any;
   disabled?: boolean;
 };
 
-export type MultiSelectProps = FieldWrapperPassThroughProps & {
+export type AdvancedSelectProps = FieldWrapperPassThroughProps & {
   /**
    * The field name
    */
@@ -23,17 +31,41 @@ export type MultiSelectProps = FieldWrapperPassThroughProps & {
    */
   options: MultiSelectItem[];
   /**
-   * The placeholder text to display when the field is not valued
+   * The placeholder text to display when the select is not valued
    */
   placeholder?: string;
   /**
-   * Flag to indicate if the field is disabled
+   * Flag to indicate if the select is disabled
    */
   disabled?: boolean;
   /**
-   * The value of the field
+   * The default value
+   */
+  defaultValue?: MultiSelectItem | null;
+  /**
+   * The value
    */
   value?: string;
+  /**
+   * Flag to indicate if the dropdown is multi values
+   */
+  isMulti?: boolean;
+  /**
+   * On blur callback
+   */
+  onChange?: SelectProps<OptionTypeBase>['onChange'];
+  /**
+   * On blur callback
+   */
+  onBlur?: FocusEventHandler;
+  /**
+   * Prop to be used with react-hook-form
+   */
+  field?: ControllerRenderProps<FieldValues, string>;
+  /**
+   * Useful to be used with react-hook-form
+   */
+  ref?: RefCallBack;
 };
 
 const customComponents: ComponentProps<typeof Select>['components'] = {
@@ -58,7 +90,9 @@ const customComponents: ComponentProps<typeof Select>['components'] = {
           props.isDisabled
             ? 'cursor-not-allowed text-gray-200'
             : 'cursor-pointer hover:bg-gray-100',
-          props.isFocused && props.isDisabled ? 'bg-transparent' : ''
+          props.isFocused && props.isDisabled ? 'bg-transparent' : '',
+          props.isFocused && !props.isDisabled ? 'bg-slate-200' : '',
+          props.isSelected && 'bg-slate-200 text-slate-800'
         )}
       />
     );
@@ -79,7 +113,8 @@ const customComponents: ComponentProps<typeof Select>['components'] = {
         {...props}
         className={clsx(
           className,
-          'flex h-full items-center justify-between px-2 rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400'
+          'flex h-full items-center justify-between px-2 rounded border border-gray-300 hover:border-gray-400',
+          props.isFocused && 'ring-2 ring-yellow-200 border-yellow-400'
         )}
       />
     );
@@ -128,24 +163,20 @@ const customComponents: ComponentProps<typeof Select>['components'] = {
   },
 };
 
-export const MultiSelect: React.VFC<MultiSelectProps> = ({
+export const AdvancedSelect: React.VFC<AdvancedSelectProps> = ({
   name,
+  ref,
   options,
   placeholder,
   dataTest,
   disabled = false,
-  value: val,
-  ...wrapperProps
+  value,
+  defaultValue,
+  isMulti = false,
+  field,
+  onBlur,
+  onChange,
 }) => {
-  const {
-    register,
-    formState: { errors },
-    watch,
-    control,
-  } = useFormContext();
-
-  const maybeError = get(errors, name) as FieldError | undefined;
-
   // Convert the options to the format that react-select expects
   const selectOptions: OptionsType<OptionTypeBase> = options.map(option => {
     return {
@@ -155,54 +186,50 @@ export const MultiSelect: React.VFC<MultiSelectProps> = ({
     };
   });
 
-  const { onBlur, ref } = register(name);
-  const watchValue = watch(name);
-
   return (
-    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
-      {/* Based on https://react-hook-form.com/get-started/#IntegratingwithUIlibraries */}
-      <Controller
-        name={name}
-        control={control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            ref={ref}
-            name={name}
-            onBlur={onBlur}
-            defaultValue={val || watchValue}
-            id={name}
-            isMulti
-            className={clsx(
-              'block w-full h-input shadow-sm rounded border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
-              watchValue?.length === 0 ? 'text-black' : 'text-gray-500',
-              disabled
-                ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
-                : 'hover:border-gray-400'
-            )}
-            components={customComponents}
-            classNamePrefix="select"
-            data-test={dataTest}
-            data-testid={name}
-            options={selectOptions}
-            isDisabled={disabled}
-            styles={{
-              multiValueLabel: baseStyles => ({
-                ...baseStyles,
-                maxWidth: 100,
-              }),
-            }}
-            placeholder={placeholder}
-            theme={theme => ({
-              ...theme,
-              spacing: {
-                ...theme.spacing,
-                controlHeight: 26, // h-input - py-xs
-              },
-            })}
-          />
-        )}
-      />
-    </FieldWrapper>
+    <Select
+      {...field}
+      ref={ref}
+      name={name}
+      onBlur={onBlur}
+      onChange={(_value, action) => {
+        if (field?.onChange) {
+          field?.onChange(_value, action);
+        }
+        if (onChange) {
+          onChange(_value, action);
+        }
+      }}
+      defaultValue={defaultValue}
+      id={name}
+      isMulti={isMulti}
+      className={clsx(
+        'block w-full h-input shadow-sm rounded border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
+        value?.length === 0 ? 'text-black' : 'text-gray-500',
+        disabled
+          ? 'cursor-not-allowed bg-slate-200 border-slate-200 hover:border-gray-200'
+          : 'hover:border-slate-400'
+      )}
+      components={customComponents}
+      classNamePrefix="select"
+      data-test={dataTest}
+      data-testid={name}
+      options={selectOptions}
+      isDisabled={disabled}
+      styles={{
+        multiValueLabel: baseStyles => ({
+          ...baseStyles,
+          maxWidth: 100,
+        }),
+      }}
+      placeholder={placeholder}
+      theme={theme => ({
+        ...theme,
+        spacing: {
+          ...theme.spacing,
+          controlHeight: 26, // h-input - py-xs
+        },
+      })}
+    />
   );
 };

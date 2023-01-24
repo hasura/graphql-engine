@@ -16,26 +16,30 @@ export default {
 export const Basic: ComponentStory<typeof TablePicker> = () => (
   <SimpleForm
     schema={z.object({
-      from: z.object({
-        dataSourceName: z.string(),
-        table: z.unknown(),
+      fromSource: z.object({
+        value: z.object({
+          dataSourceName: z.string(),
+          table: z.unknown(),
+        }),
       }),
     })}
     onSubmit={action('onSubmit')}
     options={{
       defaultValues: {
-        from: {
-          dataSourceName: 'bikes',
-          table: {
-            name: 'orders',
-            schema: 'sales',
+        fromSource: {
+          value: {
+            dataSourceName: 'bikes',
+            table: {
+              name: 'orders',
+              schema: 'sales',
+            },
           },
         },
       },
     }}
   >
     <>
-      <TablePicker name="from" />
+      <TablePicker type="fromSource" />
       <Button type="submit">Submit</Button>
     </>
   </SimpleForm>

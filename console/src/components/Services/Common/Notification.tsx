@@ -280,7 +280,7 @@ const showErrorNotification = (
     const getNotificationAction = () => {
       if (errorJson) {
         const errorDetails = [
-          getNotificationDetails(errorJson, getRefreshBtn()),
+          getNotificationDetails(errorJson as Json, getRefreshBtn()),
         ];
 
         const action = {

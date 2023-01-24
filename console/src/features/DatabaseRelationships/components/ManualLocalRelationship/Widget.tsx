@@ -2,11 +2,10 @@ import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { InputField, Select, SimpleForm } from '@/new-components/Form';
 import React from 'react';
+import { FaArrowRight } from 'react-icons/fa';
 import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';
 import { LocalRelationship } from '../../types';
 import { MapColumns } from '../common/ColumnMapping';
-import { LinkBlockHorizontal } from '../common/LinkBlockHorizontal';
-import { LinkBlockVertical } from '../common/LinkBlockVertical';
 import { TablePicker } from '../common/TablePicker';
 import { Schema, schema } from './schema';
 
@@ -32,11 +31,11 @@ export const Widget = (props: WidgetProps) => {
     const localRelationship: LocalRelationship = {
       name: data.name,
       type: 'localRelationship',
-      fromSource: data.fromSource.dataSourceName,
-      fromTable: data.fromSource.table,
+      fromSource: data.fromSource.value.dataSourceName,
+      fromTable: data.fromSource.value.table,
       relationshipType: data.relationship_type,
       definition: {
-        toTable: data.toSource.table,
+        toTable: data.toSource.value.table,
         mapping: (data.columnMap ?? []).reduce(
           (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
           {}
@@ -55,86 +54,80 @@ export const Widget = (props: WidgetProps) => {
         defaultValues: {
           relationship_type: 'Object',
           fromSource: {
-            dataSourceName,
-            table,
+            value: {
+              dataSourceName,
+              table,
+            },
           },
           toSource: {
-            dataSourceName,
+            value: {
+              dataSourceName,
+            },
           },
           columnMap: [{ from: '', to: '' }],
         },
       }}
       onSubmit={handleFormSubmit}
     >
-      <div id="create-local-rel" className="mt-4">
+      <div id="create-local-rel" className="mt-4 px-7">
         <InputField
           name="name"
-          label="Name"
-          placeholder="Relationship name"
+          label="Relationship Name"
+          placeholder="Name..."
           dataTest="local-db-to-db-rel-name"
-        />
-
-        <Select
-          name="relationship_type"
-          label="Relationship Type"
-          dataTest="local-db-to-db-select-rel-type"
-          placeholder="Select a relationship type..."
-          options={[
-            {
-              label: 'Object Relationship',
-              value: 'Object',
-            },
-            {
-              label: 'Array Relationship',
-              value: 'Array',
-            },
-          ]}
         />
 
         <div>
           <div className="grid grid-cols-12">
             <div className="col-span-5">
-              <div className="rounded bg-gray-50 border border-gray-300 p-md gap-y-4 border-l-4 border-l-green-600">
-                <TablePicker
-                  name="fromSource"
-                  options={{
-                    dataSource: { disabled: true },
-                    table: { disabled: true },
-                  }}
-                />
-              </div>
+              <TablePicker type="fromSource" disabled isCurrentSource />
             </div>
 
-            <LinkBlockHorizontal />
+            <div className="col-span-2 flex relative items-center justify-center w-full py-2 mt-3 text-muted">
+              <FaArrowRight />
+            </div>
 
             <div className="col-span-5">
-              <div className="rounded bg-gray-50 border border-gray-300 p-md gap-y-4 border-l-4 border-l-indigo-600">
-                <TablePicker
-                  name="toSource"
-                  options={{
-                    dataSource: { disabled: true },
-                  }}
-                />
-              </div>
+              <TablePicker type="toSource" filterDataSource={dataSourceName} />
             </div>
           </div>
 
-          <LinkBlockVertical title="Columns Mapped To" />
-
-          <MapColumns />
-
-          <div className="flex justify-end gap-2 mb-md">
-            <Button onClick={onCancel}>Close</Button>
-            <Button
-              type="submit"
-              mode="primary"
-              isLoading={isLoading}
-              loadingText="Creating"
-            >
-              Create
-            </Button>
+          <div className="bg-white rounded-md shadow-sm border border-gray-300 mt-2 mb-4">
+            <div className="p-3 text-slate-900 font-semibold text-lg border-b border-gray-300">
+              Relationship Details
+            </div>
+            <div className="px-6 pt-4">
+              <Select
+                name="relationship_type"
+                label="Relationship Type"
+                dataTest="local-db-to-db-select-rel-type"
+                placeholder="Select a relationship type..."
+                options={[
+                  {
+                    label: 'Object Relationship',
+                    value: 'Object',
+                  },
+                  {
+                    label: 'Array Relationship',
+                    value: 'Array',
+                  },
+                ]}
+              />
+            </div>
+            <MapColumns />
           </div>
         </div>
+      </div>
+      <div className="flex justify-end gap-2 sticky bottom-0 bg-slate-50 px-8 py-3 border-t border-gray-300 z-[100]">
+        <Button onClick={onCancel}>Close</Button>
+        <Button
+          type="submit"
+          mode="primary"
+          isLoading={isLoading}
+          loadingText="Creating"
+        >
+          Create Relationship
+        </Button>
       </div>
     </SimpleForm>
   );
