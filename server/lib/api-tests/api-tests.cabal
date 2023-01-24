@@ -100,6 +100,7 @@ library
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.CustomScalarsSpec
+    Test.DataConnector.MockAgent.DeleteMutationsSpec
     Test.DataConnector.MockAgent.ErrorSpec
     Test.DataConnector.MockAgent.InsertMutationsSpec
     Test.DataConnector.MockAgent.MetadataApiSpec

@@ -92,8 +92,15 @@ translateMutationDB sessionVariables = \case
           _mrInsertSchema = [],
           _mrOperations = API.UpdateOperation <$> updateOperations
         }
-  MDBDelete _delete ->
-    throw400 NotSupported "translateMutationDB: delete mutations not implemented for the Data Connector backend."
+  MDBDelete delete -> do
+    (deleteOperation, tableRelationships) <- CPS.runWriterT $ translateDelete sessionVariables delete
+    let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
+    pure $
+      API.MutationRequest
+        { _mrTableRelationships = apiTableRelationships,
+          _mrInsertSchema = [],
+          _mrOperations = [API.DeleteOperation deleteOperation]
+        }
   MDBFunction _returnsSet _select ->
     throw400 NotSupported "translateMutationDB: function mutations not implemented for the Data Connector backend."
 
@@ -115,7 +122,8 @@ translateInsert sessionVariables AnnotatedInsert {..} = do
       }
   where
     tableName = Witch.from _aiTableName
-    insertCheckCondition = fst _aiCheckCondition
+    -- Update check condition must be used once upserts are supported
+    (insertCheckCondition, _updateCheckCondition) = _aiCheckCondition
     AnnotatedInsertData {..} = _aiData
 
 translateInsertRow ::
@@ -223,6 +231,24 @@ translateUpdateOperations sessionVariables columnUpdates =
       case preparedLiteral of
         ValueLiteral scalarType value -> pure (scalarType, value)
         ArrayLiteral _scalarType _values -> throw400 NotSupported "translateUpdateOperations: Array literals are not supported as column update values"
+
+translateDelete ::
+  MonadError QErr m =>
+  SessionVariables ->
+  AnnDelG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  CPS.WriterT TableRelationships m API.DeleteMutationOperation
+translateDelete sessionVariables AnnDel {..} = do
+  whereExp <- translateBoolExpToExpression sessionVariables tableName (BoolAnd [permissionFilter, whereClause])
+  returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _adOutput
+  pure $
+    API.DeleteMutationOperation
+      { API._dmoTable = tableName,
+        API._dmoWhere = whereExp,
+        API._dmoReturningFields = HashMap.mapKeys (API.FieldName . getFieldNameTxt) returningFields
+      }
+  where
+    tableName = Witch.from _adTable
+    (permissionFilter, whereClause) = _adWhere
 
 translateMutationOutputToReturningFields ::
   ( MonadError QErr m,
