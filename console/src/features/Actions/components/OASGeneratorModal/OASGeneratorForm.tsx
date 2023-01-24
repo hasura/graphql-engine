@@ -40,6 +40,7 @@ const badgeColors: Record<string, BadgeColor> = {
   DELETE: 'red',
   PATCH: 'purple',
 };
+
 export const OasGeneratorForm = (props: {
   setValues: (values?: GeneratedAction) => void;
 }) => {

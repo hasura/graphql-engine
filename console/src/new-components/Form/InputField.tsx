@@ -93,6 +93,10 @@ export type InputFieldProps<T extends z.infer<Schema>> =
      * Renders a button to clear the input onClick
      */
     clearButton?: boolean;
+    /**
+     * The input field classes
+     */
+    inputClassName?: string;
   };
 
 export const InputField = <T extends z.infer<Schema>>({
@@ -108,6 +112,7 @@ export const InputField = <T extends z.infer<Schema>>({
   inputTransform,
   renderDescriptionLineBreaks = false,
   clearButton,
+  inputClassName,
   ...wrapperProps
 }: InputFieldProps<T>) => {
   const {
@@ -171,7 +176,8 @@ export const InputField = <T extends z.infer<Schema>>({
                 'pl-10': iconPosition === 'start' && icon,
                 'pr-10': iconPosition === 'end' && icon,
               },
-              type === 'file' && 'h-auto'
+              type === 'file' && 'h-auto',
+              inputClassName
             )}
             placeholder={placeholder}
             {...regReturn}
