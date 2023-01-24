@@ -2,15 +2,15 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
-import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
+import 'react-loading-skeleton/dist/skeleton.css';
 import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
 import styles from './App.module.scss';
-import 'react-loading-skeleton/dist/skeleton.css';
+import { ToastsHub } from '../../new-components/Toasts';
 
 import { theme } from '../UIKit/theme';
 import { trackCustomEvent } from '@/features/Analytics';
@@ -22,7 +22,6 @@ const App = ({
   percent,
   intervalTime,
   children,
-  notifications,
   connectionFailed,
   dispatch,
   metadata,
@@ -91,7 +90,7 @@ const App = ({
               />
             )}
             <div>{children}</div>
-            <Notifications notifications={notifications} />
+            <ToastsHub className="mt-16" />
           </div>
         </ErrorBoundary>
       </ThemeProvider>

@@ -133,6 +133,26 @@ module.exports = {
             transform: `translateX(0)`,
           },
         },
+        notificationOpen: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(100%)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        notificationClose: {
+          from: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+          to: {
+            opacity: `0`,
+            transform: `translateY(-100%)`,
+          },
+        },
       },
       animation: {
         collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
@@ -144,6 +164,8 @@ module.exports = {
           'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideLeftAndFade:
           'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        notificationOpen: 'notificationOpen 300ms ease-in-out',
+        notificationClose: 'notificationClose 300ms ease-in-out',
       },
     },
   },

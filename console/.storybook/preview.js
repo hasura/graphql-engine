@@ -10,6 +10,7 @@ import { store } from '../src/store';
 import '../src/components/Common/Common.module.scss';
 import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { ToastsHub } from '../src/new-components/Toasts';
 
 // Needed to use Jest mocks (jest.fn() and so on) in Storybook stories
 import * as jest from 'jest-mock';
@@ -74,7 +75,12 @@ export const decorators = [
   mswDecorator,
   Story => {
     document.body.classList.add('hasura-tailwind-on');
-    return <div className={'bg-legacybg'}>{Story()}</div>;
+    return (
+      <>
+        <ToastsHub />
+        <div className={'bg-legacybg'}>{Story()}</div>
+      </>
+    );
   },
 ];
 

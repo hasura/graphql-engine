@@ -1,10 +1,7 @@
-import React, { ReactText } from 'react';
+import React, { ReactNode, ReactText } from 'react';
 import AceEditor from 'react-ace';
-import {
-  removeAll as removeNotifications,
-  show as displayNotification,
-  NotificationLevel,
-} from 'react-notification-system-redux';
+import { toast } from 'react-hot-toast/headless';
+import { hasuraToast, ToastProps, ToastType } from '@/new-components/Toasts';
 import { showModal } from '@/store/modal/modal.actions';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import { Button } from '@/new-components/Button';
@@ -15,7 +12,7 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.module.scss';
-import { AlternateActionButton } from './AlternateActionButton';
+import { useGetAnalyticsAttributes } from '../../../features/Analytics';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -35,43 +32,59 @@ export interface Notification {
     onClick: () => void;
     trackId?: string;
   };
+  onRemove?: () => void;
 }
 
 export const showNotification = (
   options: Notification,
-  level: NotificationLevel,
+  level: ToastType,
   noDismissNotifications?: boolean
 ): Thunk => {
-  return dispatch => {
-    if (level === 'success' && !noDismissNotifications) {
-      dispatch(removeNotifications());
-    }
-
-    const commonNotificationConfig = {
-      position: options.position || 'tr',
-      autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-      dismissible: ['error', 'warning'].includes(level)
-        ? ('button' as any) // bug in @types/react-notification-system-redux types
-        : ('click' as any),
-      ...options,
+  return () => {
+    console.log('showNotification', options, level, noDismissNotifications);
+    const toastProps: ToastProps = {
+      type: level,
     };
+    let titleAsNode: ReactNode | undefined;
+    let messageAsNode: ReactNode | undefined;
 
-    if (!options.alternateActionButtonProps) {
-      dispatch(displayNotification(commonNotificationConfig, level));
-      return;
+    if (level === 'success') {
+      toast.remove();
     }
 
-    dispatch(
-      displayNotification(
-        {
-          ...commonNotificationConfig,
-          children: (
-            <AlternateActionButton {...options.alternateActionButtonProps} />
-          ),
-        },
-        level
-      )
+    if (options.alternateActionButtonProps) {
+      toastProps.button = {
+        label: options.alternateActionButtonProps.label,
+        onClick: options.alternateActionButtonProps.onClick,
+      };
+      if (options.alternateActionButtonProps.trackId) {
+        toastProps.button.dataAttributes = useGetAnalyticsAttributes(
+          options.alternateActionButtonProps.trackId
+        );
+      }
+    }
+
+    if (typeof options?.title === 'object' && toastProps?.children) {
+      titleAsNode = options.title;
+    } else if (typeof options?.title === 'string') {
+      toastProps.title = options.title;
+    }
+
+    if (typeof options?.message === 'object' && toastProps?.children) {
+      messageAsNode = options.message;
+    } else if (typeof options?.message === 'string') {
+      toastProps.message = options.message;
+    }
+
+    toastProps.children = (
+      <>
+        {titleAsNode}
+        {messageAsNode}
+        {options.children}
+      </>
     );
+
+    hasuraToast(toastProps);
   };
 };
 
