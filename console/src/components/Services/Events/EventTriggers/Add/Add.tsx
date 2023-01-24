@@ -1,7 +1,9 @@
+/* eslint-disable no-underscore-dangle */
 import React, { useState, useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { isProConsole } from '@/utils';
 import {
   getEventRequestTransformDefaultState,
   requestTransformReducer,
@@ -290,7 +292,20 @@ const Add: React.FC<Props> = props => {
       return;
     }
 
-    dispatch(createEventTrigger(state, transformState));
+    const newState = { ...state };
+
+    /* don't cleanup_config if console type is oss */
+    if (!isProConsole(window.__env)) {
+      delete newState?.cleanupConfig;
+    }
+
+    /* if auto cleanup is paused while creating event trigger */
+    /* remove the cleanup_config from the state */
+    if (state.cleanupConfig?.paused) {
+      delete newState?.cleanupConfig;
+    }
+
+    dispatch(createEventTrigger(newState, transformState));
   };
 
   const handleTriggerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

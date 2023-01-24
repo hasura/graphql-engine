@@ -2,6 +2,7 @@
 import React, { useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
 import {
   requestTransformReducer,
   setEnvVars,
@@ -327,9 +328,19 @@ const Modify: React.FC<Props> = props => {
         );
         return;
       }
+
+      const modifyTriggerState = { ...state };
+
+      if (
+        !currentTrigger?.configuration?.cleanup_config &&
+        state.cleanupConfig?.paused
+      ) {
+        delete modifyTriggerState?.cleanupConfig;
+      }
+
       dispatch(
         modifyEventTrigger(
-          state,
+          modifyTriggerState,
           transformState,
           currentTrigger,
           databaseInfo,
@@ -396,7 +407,6 @@ const Modify: React.FC<Props> = props => {
                     state?.cleanupConfig || defaultState.cleanupConfig
                   }
                 />
-                <hr className="my-md" />
               </div>
             )}
             <HeadersEditor
