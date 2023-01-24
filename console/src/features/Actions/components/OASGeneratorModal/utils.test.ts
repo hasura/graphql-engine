@@ -1,6 +1,34 @@
 import { Oas3 } from 'openapi-to-graphql';
+import { ParameterObject } from 'openapi-to-graphql/dist/types/oas3';
 import petStore from './petstore.json';
-import { getOperations, generateAction } from './utils';
+import { getOperations, generateAction, generateQueryParams } from './utils';
+
+const tags: ParameterObject = {
+  name: 'tags',
+  in: 'query',
+  description: 'Tags to filter by',
+  required: false,
+  explode: true,
+  schema: {
+    type: 'array',
+    items: {
+      type: 'string',
+    },
+  },
+};
+
+const status: ParameterObject = {
+  name: 'status',
+  in: 'query',
+  description: 'Status values that need to be considered for filter',
+  required: false,
+  explode: true,
+  schema: {
+    type: 'string',
+    default: 'available',
+    enum: ['available', 'pending', 'sold'],
+  },
+};
 
 describe('getOperations', () => {
   it('should return an array of operations', async () => {
@@ -44,17 +72,22 @@ describe('generateAction', () => {
       path: '/pets',
       requestTransforms: '',
       responseTransforms: '',
-      sampleInput:
-        '{\n' +
-        '  "action": {\n' +
-        '    "name": "findPets"\n' +
-        '  },\n' +
-        '  "input": {\n' +
-        '    "limit": 10\n' +
-        '  }\n' +
-        '}',
+      sampleInput: JSON.stringify(
+        {
+          action: {
+            name: 'findPets',
+          },
+          input: {
+            limit: 10,
+            tags: ['foo', 'bar'],
+          },
+        },
+        null,
+        2
+      ),
       headers: [],
-      queryParams: ['tags', 'limit'],
+      queryParams:
+        '{{ concat ([concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }}), "limit={{$body.input.limit}}&"]) }}',
     });
   });
 
@@ -62,5 +95,26 @@ describe('generateAction', () => {
     await expect(
       generateAction({} as unknown as Oas3, 'findPets')
     ).rejects.toThrow();
+  });
+});
+
+describe('generateQueryParams', () => {
+  it('should generate query params with one non-array param', async () => {
+    const queryParams = await generateQueryParams([status]);
+    expect(queryParams).toStrictEqual([
+      { name: 'status', value: '{{$body.input.status}}' },
+    ]);
+  });
+  it('should generate query params with one non-array param and one array param', async () => {
+    const queryParams = await generateQueryParams([status, tags]);
+    expect(queryParams).toBe(
+      '{{ concat (["status={{$body.input.status}}&", concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }})]) }}'
+    );
+  });
+  it('should generate query params with one non-array param and one array param (reversed)', async () => {
+    const queryParams = await generateQueryParams([tags, status]);
+    expect(queryParams).toBe(
+      '{{ concat ([concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input.status}}&"]) }}'
+    );
   });
 });

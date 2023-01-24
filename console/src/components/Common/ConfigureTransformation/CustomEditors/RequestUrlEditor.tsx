@@ -35,9 +35,10 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   requestQueryParamsOnChange,
 }) => {
   const [localUrl, setLocalUrl] = useState<string>(requestUrl);
-  const [queryParamsType, setQueryParamstype] = useState(
-    typeof requestQueryParams === 'string' ? 'url-string' : 'key-value'
-  );
+  const [queryParamsType, setQueryParamstype] = useState<
+    QueryParmsOptions['value']
+  >(typeof requestQueryParams === 'string' ? 'url-string' : 'key-value');
+
   const [keyValueQueryParams, setKeyValueQueryParams] = useState(
     typeof requestQueryParams !== 'string'
       ? requestQueryParams
@@ -50,6 +51,22 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
     useState<Nullable<string>>(requestUrlError);
   const [localQueryParams, setLocalQueryParams] =
     useState<QueryParams>(requestQueryParams);
+
+  useEffect(() => {
+    setQueryParamstype(
+      typeof requestQueryParams === 'string' ? 'url-string' : 'key-value'
+    );
+    setKeyValueQueryParams(
+      typeof requestQueryParams !== 'string'
+        ? requestQueryParams
+        : keyValueQueryParams
+    );
+    setStringQueryParams(
+      typeof requestQueryParams === 'string'
+        ? requestQueryParams
+        : stringQueryParams
+    );
+  }, [requestQueryParams]);
 
   const executionOptions: QueryParmsOptions[] = [
     {

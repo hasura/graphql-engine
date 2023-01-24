@@ -22,6 +22,7 @@ import {
   DataDefinition,
   GeneratedAction,
   Operation,
+  OperationParameters,
   Result,
   SubDefinition,
 } from './types';
@@ -53,6 +54,37 @@ export const formatQuery = (query?: string): string => {
   } catch (e) {
     return query ?? '';
   }
+};
+
+const isSchemaObject = (
+  schema: SchemaObject | ReferenceObject | undefined
+): schema is SchemaObject => schema !== undefined && 'type' in schema;
+
+// {{ concat ([concat({{ range _, x := ["apple", "banana"] }} "tags={{x}}&" {{ end }})]) }}
+export const generateQueryParams = (parameters: OperationParameters) => {
+  const isThereArray = parameters.some(parameter => {
+    return (
+      isSchemaObject(parameter?.schema) && parameter.schema.type === 'array'
+    );
+  });
+  if (isThereArray) {
+    const stringParams = parameters.map(param => {
+      if (isSchemaObject(param?.schema) && param.schema.type === 'array') {
+        return `concat({{ range _, x := $body.input.${param.name} }} "${param.name}={{x}}&" {{ end }})`;
+      }
+      return `"${param.name}={{$body.input.${param.name}}}&"`;
+    });
+
+    return `{{ concat ([${stringParams.join(', ')}]) }}`.replace(/&&/, '&');
+  }
+  const parameterNames =
+    parameters
+      ?.filter(param => param.in === 'query')
+      ?.map(param => param.name) || [];
+  return parameterNames.map(name => ({
+    name,
+    value: `{{$body.input.${name}}}`,
+  }));
 };
 
 const lowerCaseFirstLetter = (str: string): string => {
@@ -370,10 +402,8 @@ export const translateAction = (
       ?.filter(param => param.in === 'header')
       ?.map(param => param.name) || [];
 
-  const queryParams =
-    operation.parameters
-      ?.filter(param => param.in === 'query')
-      ?.map(param => param.name) || [];
+  const queryParams = generateQueryParams(operation.parameters ?? []);
+
   return {
     operationId: operation.operationId,
     actionType:

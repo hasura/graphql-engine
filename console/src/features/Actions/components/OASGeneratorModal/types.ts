@@ -17,7 +17,7 @@ export type GeneratedAction = {
   responseTransforms: string;
   sampleInput: string;
   headers: string[];
-  queryParams: string[];
+  queryParams: string | { name: string; value: string }[];
 };
 
 export type Result = Awaited<ReturnType<typeof createGraphQLSchema>>;
@@ -25,3 +25,5 @@ export type Operation = Result['data']['operations'][0];
 
 export type DataDefinition = Operation['responseDefinition'];
 export type SubDefinition = Operation['responseDefinition']['subDefinitions'];
+
+export type OperationParameters = Operation['parameters'];

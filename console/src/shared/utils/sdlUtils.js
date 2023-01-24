@@ -134,8 +134,10 @@ export const getTypesFromSdl = sdl => {
 
   schemaAst.definitions.forEach(def => {
     const typeDef = getTypeFromAstDef(def);
-    typeDefinition.error = typeDef.error;
-    typeDefinition.types.push(typeDef);
+    if (typeDef) {
+      typeDefinition.error = typeDef.error;
+      typeDefinition.types.push(typeDef);
+    }
   });
 
   return typeDefinition;

@@ -394,13 +394,8 @@ const AddAction: React.FC<AddActionProps> = ({
     transformDispatch(setRequestSampleInput(sampleInput));
     requestMethodOnChange(method);
     requestUrlTransformOnChange(true);
-    requestUrlOnChange(path);
-    requestQueryParamsOnChange(
-      queryParams.map(name => ({
-        name,
-        value: `{{$body.input.${name}}}`,
-      }))
-    );
+    requestUrlOnChange(path.replace(/\{([^}]+)\}/g, '{{$body.input.$1}}'));
+    requestQueryParamsOnChange(queryParams);
     setHeaders(
       actionHeaders.map(name => ({
         name,
