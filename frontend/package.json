@@ -192,7 +192,7 @@
     "@babel/runtime": "7.14.8",
     "@graphql-codegen/cli": "2.13.8",
     "@graphql-codegen/typescript-operations": "^2.5.5",
-    "@hookform/devtools": "^4.2.2",
+    "@hookform/devtools": "4.0.1",
     "@nrwl/cli": "14.5.2",
     "@nrwl/cypress": "14.5.2",
     "@nrwl/devkit": "14.5.2",
