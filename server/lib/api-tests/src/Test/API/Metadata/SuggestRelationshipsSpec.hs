@@ -11,7 +11,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (mapObject, shouldReturnYaml, shouldReturnYamlF, sortArray)
+import Harness.Yaml (mapObject, shouldReturnYamlF, sortArray)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -132,7 +132,8 @@ tests opts = do
           sourceName = Fixture.backendSourceName backendTypeMetadata
           schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
 
-      shouldReturnYaml
+      shouldReturnYamlF
+        (pure . mapObject sortArray)
         opts
         ( GraphqlEngine.postMetadataWithStatus
             200
@@ -153,7 +154,8 @@ tests opts = do
           relationships:
             - from:
                 columns:
-                  - publication_id
+                  - author_id
+                constraint_name: article_author_id_fkey
                 table:
                   name: article
                   schema: hasura
@@ -161,9 +163,23 @@ tests opts = do
                 columns:
                   - id
                 table:
-                  name: publication
+                  name: author
                   schema: hasura
               type: object
+            - from:
+                columns:
+                  - id
+                table:
+                  name: author
+                  schema: hasura
+              to:
+                columns:
+                  - author_id
+                constraint_name: article_author_id_fkey
+                table:
+                  name: article
+                  schema: hasura
+              type: array
             - from:
                 columns:
                   - id
@@ -173,8 +189,23 @@ tests opts = do
               to:
                 columns:
                   - publication_id
+                constraint_name: article_publication_id_fkey
                 table:
                   name: article
+                  schema: hasura
+              type: object
+            - from:
+                columns:
+                  - publication_id
+                constraint_name: article_publication_id_fkey
+                table:
+                  name: article
+                  schema: hasura
+              to:
+                columns:
+                  - id
+                table:
+                  name: publication
                   schema: hasura
               type: object
         |]
@@ -183,7 +214,8 @@ tests opts = do
       let backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
           sourceName = Fixture.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
+      shouldReturnYamlF
+        (pure . mapObject sortArray)
         opts
         ( GraphqlEngine.postMetadataWithStatus
             200
@@ -201,6 +233,7 @@ tests opts = do
             - from:
                 columns:
                   - author_id
+                constraint_name: article_author_id_fkey
                 table:
                   name: article
                   schema: hasura
@@ -220,6 +253,7 @@ tests opts = do
               to:
                 columns:
                   - author_id
+                constraint_name: article_author_id_fkey
                 table:
                   name: article
                   schema: hasura
@@ -230,7 +264,8 @@ tests opts = do
       let backendTypeMetadata = Maybe.fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
           sourceName = Fixture.backendSourceName backendTypeMetadata
 
-      shouldReturnYaml
+      shouldReturnYamlF
+        (pure . mapObject sortArray)
         opts
         ( GraphqlEngine.postMetadataWithStatus
             200
@@ -267,6 +302,7 @@ tests opts = do
             - from:
                 columns:
                   - author_id
+                constraint_name: article_author_id_fkey
                 table:
                   name: article
                   schema: hasura
@@ -286,6 +322,7 @@ tests opts = do
               to:
                 columns:
                   - author_id
+                constraint_name: article_author_id_fkey
                 table:
                   name: article
                   schema: hasura
@@ -299,6 +336,7 @@ tests opts = do
               to:
                 columns:
                   - publication_id
+                constraint_name: article_publication_id_fkey
                 table:
                   name: article
                   schema: hasura
@@ -306,6 +344,7 @@ tests opts = do
             - from:
                 columns:
                   - publication_id
+                constraint_name: article_publication_id_fkey
                 table:
                   name: article
                   schema: hasura
