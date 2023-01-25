@@ -46,9 +46,10 @@ runQuery ::
   SourceConfig 'BigQuery ->
   Tracing.TraceT (ExceptT QErr IO) EncJSON ->
   Maybe Text ->
+  ResolvedConnectionTemplate 'BigQuery ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql = do
+runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   -- log the generated SQL and the graphql query
   -- FIXME: fix logging by making logQueryLog expect something backend agnostic!
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
@@ -60,7 +61,7 @@ runQueryExplain ::
   ) =>
   DBStepInfo 'BigQuery ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action) = run $ ignoreTraceT action
+runQueryExplain (DBStepInfo _ _ _ action _) = run $ ignoreTraceT action
 
 runMutation ::
   ( MonadError QErr m
@@ -73,10 +74,11 @@ runMutation ::
   SourceConfig 'BigQuery ->
   Tracing.TraceT (ExceptT QErr IO) EncJSON ->
   Maybe Text ->
+  ResolvedConnectionTemplate 'BigQuery ->
   -- | Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runMutation _reqId _query _fieldName _userInfo _logger _sourceConfig _tx _genSql =
+runMutation _reqId _query _fieldName _userInfo _logger _sourceConfig _tx _genSql _ =
   -- do
   throw500 "BigQuery does not support mutations!"
 
@@ -92,6 +94,7 @@ mkQueryLog ::
   RequestId ->
   QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
+  -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing)
   where
     generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null

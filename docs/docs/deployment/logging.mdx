@@ -124,6 +124,12 @@ It will also log the generated SQL for GraphQL queries (but not mutations and su
         "prepared_arguments": ["{\"x-hasura-role\":\"admin\"}", "foobar"],
         "query": "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"username\" AS \"username\"       ) AS \"_1_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"profile\"  WHERE ((\"public\".\"profile\".\"username\") = ($2))     ) AS \"_0_root.base\"      ) AS \"_2_root\"      "
       }
+    },
+    "connection_template": {
+      "result": {
+        "routing_to": "primary",
+        "value": null
+      }
     }
   }
 }
@@ -131,7 +137,7 @@ It will also log the generated SQL for GraphQL queries (but not mutations and su
 
 The `type` of in the log with be `query-log`. All the details are nested under the `detail` key.
 
-This log contains 3 important fields:
+This log contains 4 important fields:
 
 - `kind`: indicates the type or kind of operation. `kind` can be `database`, `action`, `remote-schema`, `cached` or
   `introspection`
@@ -140,6 +146,10 @@ This log contains 3 important fields:
 - `query`: Contains the full GraphQL request including the variables and operation name.
 - `generated_sql`: this contains the generated SQL for GraphQL queries. For mutations and subscriptions this field will
   be `null`.
+- `connection_template`(\*): if there is any connection template associated with the source, this contains the `result`
+  of the connection template resolution.
+
+(\*) - Supported only in Cloud and Enterprise editions only
 
 ### **http-log** structure
 

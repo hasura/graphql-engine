@@ -246,8 +246,9 @@ pollStreamingQuery ::
   G.Name ->
   SubscriptionPostPollHook ->
   Maybe (IO ()) -> -- Optional IO action to make this function (pollStreamingQuery) testable
+  ResolvedConnectionTemplate b ->
   IO ()
-pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe = do
+pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     -- This STM transaction is a read only transaction i.e. it doesn't mutate any state
@@ -266,9 +267,11 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
     -- concurrently process each batch and also get the processed cohort with the new updated cohort key
     batchesDetailsAndProcessedCohorts <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <-
-        runDBStreamingSubscription @b sourceConfig query $
-          over (each . _2) C._csVariables $
-            fmap (fmap fst) cohorts
+        runDBStreamingSubscription @b
+          sourceConfig
+          query
+          (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
+          resolvedConnectionTemplate
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
           -- batch response size is the sum of the response sizes of the cohorts

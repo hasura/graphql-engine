@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll.Common
     PollerId (..),
     PollerIOState (..),
     PollerKey (..),
+    BackendPollerKey (..),
     PollerMap,
     dumpPollerMap,
     PollDetails (..),
@@ -63,8 +64,10 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType)
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import ListT qualified
@@ -247,47 +250,56 @@ data PollerIOState = PollerIOState
     _pId :: !PollerId
   }
 
-data PollerKey =
+data PollerKey b =
   -- we don't need operation name here as a subscription will only have a
   -- single top level field
   PollerKey
-  { _lgSource :: !SourceName,
-    _lgRole :: !RoleName,
-    _lgQuery :: !Text
+  { _lgSource :: SourceName,
+    _lgRole :: RoleName,
+    _lgQuery :: Text,
+    _lgConnectionKey :: (ResolvedConnectionTemplate b)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
 
-instance Hashable PollerKey
+deriving instance (Backend b) => Show (PollerKey b)
 
-instance J.ToJSON PollerKey where
-  toJSON (PollerKey source role query) =
+deriving instance (Backend b) => Eq (PollerKey b)
+
+instance (Backend b) => Hashable (PollerKey b)
+
+instance J.ToJSON (PollerKey b) where
+  toJSON (PollerKey source role query _connectionKey) =
     J.object
       [ "source" J..= source,
         "role" J..= role,
         "query" J..= query
       ]
 
-type PollerMap streamCursor = STMMap.Map PollerKey (Poller streamCursor)
+newtype BackendPollerKey = BackendPollerKey {unBackendPollerKey :: AB.AnyBackend PollerKey}
+  deriving (Eq, Show, Hashable)
+
+type PollerMap streamCursor = STMMap.Map BackendPollerKey (Poller streamCursor)
 
 dumpPollerMap :: Bool -> PollerMap streamCursor -> IO J.Value
 dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT pollerMap
-    forM entries $ \(PollerKey source role query, Poller cohortsMap ioState) -> do
-      PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
-      cohortsJ <-
-        if extended
-          then Just <$> dumpCohortMap cohortsMap
-          else return Nothing
-      return $
-        J.object
-          [ "source" J..= source,
-            "role" J..= role,
-            "thread_id" J..= show (Immortal.threadId threadId),
-            "poller_id" J..= pollerId,
-            "multiplexed_query" J..= query,
-            "cohorts" J..= cohortsJ
-          ]
+    forM entries $ \(pollerKey, Poller cohortsMap ioState) ->
+      AB.dispatchAnyBackend @Backend (unBackendPollerKey pollerKey) $ \(PollerKey source role query _connectionKey) -> do
+        PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
+        cohortsJ <-
+          if extended
+            then Just <$> dumpCohortMap cohortsMap
+            else return Nothing
+        return $
+          J.object
+            [ "source" J..= source,
+              "role" J..= role,
+              "thread_id" J..= show (Immortal.threadId threadId),
+              "poller_id" J..= pollerId,
+              "multiplexed_query" J..= query,
+              "cohorts" J..= cohortsJ
+            ]
 
 -- | An ID to track unique 'Poller's, so that we can gather metrics about each
 -- poller

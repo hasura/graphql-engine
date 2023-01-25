@@ -669,7 +669,8 @@ gqlExplainHandler query = do
   onlyAdmin
   scRef <- asks (scCacheRef . hcServerCtx)
   sc <- liftIO $ getSchemaCache scRef
-  res <- GE.explainGQLQuery sc query
+  reqHeaders <- asks hcReqHeaders
+  res <- GE.explainGQLQuery sc reqHeaders query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp

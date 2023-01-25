@@ -21,6 +21,7 @@ import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
+import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
@@ -87,6 +88,7 @@ class
     Representable (ComputedFieldReturn b),
     Representable (HealthCheckTest b),
     Eq (RawFunctionInfo b),
+    Representable (ResolvedConnectionTemplate b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
@@ -105,6 +107,7 @@ class
     FromJSON (BackendSourceKind b),
     FromJSON (HealthCheckTest b),
     FromJSON (RawFunctionInfo b),
+    FromJSON (ConnectionTemplateRequestContext b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
@@ -127,6 +130,7 @@ class
     ToJSON (ComputedFieldImplicitArguments b),
     ToJSON (ComputedFieldReturn b),
     ToJSON (HealthCheckTest b),
+    ToJSON (ResolvedConnectionTemplate b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -340,6 +344,18 @@ class
   type XNestedInserts b :: Type
 
   type XStreamingSubscription b :: Type
+
+  -- The result of dynamic connection template resolution
+  type ResolvedConnectionTemplate b :: Type
+  type ResolvedConnectionTemplate b = () -- Uninmplemented value
+
+  -- The request context for dynamic connection template resolution. This is
+  -- defined for the `<backend>_test_connection_template` metadata API
+  type ConnectionTemplateRequestContext b :: Type
+  type ConnectionTemplateRequestContext b = () -- Uninmplemented value
+
+  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Either QErr EncJSON
+  resolveConnectionTemplate _ _ = Left (err400 (NotSupported) "connection template is not implemented")
 
   -- functions on types
   isComparableType :: ScalarType b -> Bool

@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 -------------------------------------------------------------------------------
 -- Executing a remote join
@@ -61,16 +62,18 @@ makeSourceJoinCall ::
   FieldName ->
   -- | Mapping from 'JoinArgumentId' to its corresponding 'JoinArgument'.
   IntMap.IntMap JoinArgument ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value))
-makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments = do
+makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName = do
   -- step 1: create the SourceJoinCall
   -- maybeSourceCall <-
   --   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) ->
   --     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc
   maybeSourceCall <-
     AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin $
-      buildSourceJoinCall userInfo jaFieldName joinArguments
+      buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
   -- if there actually is a remote call:
   for maybeSourceCall \sourceCall -> do
     -- step 2: send this call over the network
@@ -97,9 +100,11 @@ buildSourceJoinCall ::
   UserInfo ->
   FieldName ->
   IntMap.IntMap JoinArgument ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   RemoteSourceJoin b ->
   m (Maybe (AB.AnyBackend SourceJoinCall))
-buildSourceJoinCall userInfo jaFieldName joinArguments remoteSourceJoin = do
+buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
   let rows =
         IntMap.toList joinArguments <&> \(argumentId, argument) ->
           KM.insert "__argument_id__" (J.toJSON argumentId) $
@@ -119,6 +124,8 @@ buildSourceJoinCall userInfo jaFieldName joinArguments remoteSourceJoin = do
         rowSchema
         (FieldName "__argument_id__")
         (FieldName "f", _rsjRelationship remoteSourceJoin)
+        reqHeaders
+        operationName
         (_rsjStringifyNum remoteSourceJoin)
     -- This should never fail, as field names in remote relationships are
     -- validated when building the schema cache.

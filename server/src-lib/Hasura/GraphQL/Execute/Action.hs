@@ -121,7 +121,7 @@ runActionExecution userInfo aep =
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
           let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) PG.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
+          liftEitherM $ runExceptT $ _pecRunTx (_pscExecCtx srcConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
 -- | This function is generally used on the result of 'selectQuerySQL',

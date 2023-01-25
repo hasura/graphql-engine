@@ -571,6 +571,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Source
                      , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
+                     , Hasura.Backends.Postgres.Execute.ConnectionTemplate
                      , Hasura.Backends.Postgres.Execute.Subscription
                      , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
@@ -793,6 +794,7 @@ library
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
+                     , Hasura.RQL.DDL.ConnectionTemplate
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.DataConnector
                      , Hasura.RQL.DDL.Endpoint

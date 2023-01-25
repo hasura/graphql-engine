@@ -42,9 +42,10 @@ runQuery ::
   SourceConfig 'MySQL ->
   Tracing.TraceT (ExceptT QErr IO) EncJSON ->
   Maybe (PreparedQuery 'MySQL) ->
+  ResolvedConnectionTemplate 'MySQL ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql = do
+runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $
     trace ("MySQL Query for root field " <>> fieldName) $
@@ -61,7 +62,7 @@ runQueryExplain ::
   ) =>
   DBStepInfo 'MySQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action) = run $ ignoreTraceT action
+runQueryExplain (DBStepInfo _ _ _ action _) = run $ ignoreTraceT action
 
 mkQueryLog ::
   GQLReqUnparsed ->
@@ -70,7 +71,8 @@ mkQueryLog ::
   RequestId ->
   QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
+  -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId (QueryLogKindDatabase Nothing)
   where
     generatedQuery =
       preparedSql <&> \queryString ->

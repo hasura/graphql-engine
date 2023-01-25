@@ -355,4 +355,4 @@ runSelect ::
   m EncJSON
 runSelect q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (getSourceDMLQuery q)
-  phaseOne q >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadOnly . phaseTwo
+  phaseOne q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . phaseTwo

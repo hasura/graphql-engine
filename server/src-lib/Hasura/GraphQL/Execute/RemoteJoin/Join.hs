@@ -25,7 +25,7 @@ import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.RemoteServer (execRemoteGQ)
 import Hasura.GraphQL.Transport.Backend qualified as TB
-import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqOutgoing, GQLReqUnparsed)
+import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqOutgoing, GQLReqUnparsed, _grOperationName, _unOperationName)
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -35,6 +35,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
@@ -79,6 +80,8 @@ processRemoteJoins requestId logger env manager requestHeaders userInfo lhs mayb
         userInfo
         (Identity lhsParsed)
         joinTree
+        requestHeaders
+        (_unOperationName <$> _grOperationName gqlreq)
     pure $ encJFromOrderedValue $ runIdentity jsonResult
   where
     -- How to process a source join call over the network.
@@ -99,6 +102,7 @@ processRemoteJoins requestId logger env manager requestHeaders userInfo lhs mayb
             _sjcSourceConfig
             (EB.dbsiAction _sjcStepInfo)
             (EB.dbsiPreparedQuery _sjcStepInfo)
+            (EB.dbsiResolvedConnectionTemplate _sjcStepInfo)
         pure $ encJToLBS $ snd response
 
     -- How to process a remote schema join call over the network.
@@ -132,8 +136,10 @@ foldJoinTreeWith ::
   -- | Initial accumulator; the LHS of this join tree.
   (f JO.Value) ->
   RemoteJoins ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (f JO.Value)
-foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree = do
+foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
   joinIndices <- fmap catMaybes $
     for joins $ \JoinArguments {..} -> do
@@ -144,7 +150,7 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree = do
           maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin joinArguments
           pure $ fmap (childJoinTree,) maybeJoinIndex
         RemoteJoinSource sourceJoin childJoinTree -> do
-          maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments
+          maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
           pure $ fmap (childJoinTree,) maybeJoinIndex
       for previousStep $ \(childJoinTree, joinIndex) -> do
         forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
@@ -155,6 +161,8 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree = do
               userInfo
               (IntMap.elems joinIndex)
               childRemoteJoins
+              reqHeaders
+              operationName
           pure $ IntMap.fromAscList $ zip (IntMap.keys joinIndex) results
   joinResults joinIndices compositeValue
 

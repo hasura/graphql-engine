@@ -82,8 +82,9 @@ pollLiveQuery ::
   MultiplexedQuery b ->
   CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
+  ResolvedConnectionTemplate b ->
   IO ()
-pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook = do
+pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -98,7 +99,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
-      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query $ over (each . _2) C._csVariables cohorts
+      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
 
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes

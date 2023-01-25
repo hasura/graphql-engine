@@ -58,6 +58,9 @@ import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.HTTP
+  ( HttpResponse (HttpResponse, _hrBody),
+    addHttpResponseHeaders,
+  )
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
@@ -432,11 +435,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         -}
         case coalescePostgresMutations mutationPlans of
           -- we are in the aforementioned case; we circumvent the normal process
-          Just (sourceConfig, pgMutations) -> do
+          Just (sourceConfig, resolvedConnectionTemplate, pgMutations) -> do
             res <-
               runExceptT $
                 doQErr $
-                  runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig pgMutations
+                  runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
             -- we do not construct response parts since we have only one part
             buildResponse Telem.Mutation res \(telemTimeIO_DT, parts) ->
               let responseData = Right $ encJToLBS $ encodeEncJSONResults parts
@@ -467,8 +470,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (telemTimeIO_DT, resp) <-
           AB.dispatchAnyBackend @BackendTransport
             exists
-            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-              runDBQuery @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
+              runDBQuery @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql resolvedConnectionTemplate
         finalResponse <-
           RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
@@ -501,8 +504,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (telemTimeIO_DT, resp) <-
           AB.dispatchAnyBackend @BackendTransport
             exists
-            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-              runDBMutation @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
+              runDBMutation @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql resolvedConnectionTemplate
         finalResponse <-
           RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders
@@ -640,14 +643,16 @@ coalescePostgresMutations ::
   EB.ExecutionPlan ->
   Maybe
     ( SourceConfig ('Postgres 'Vanilla),
+      ResolvedConnectionTemplate ('Postgres 'Vanilla),
       InsOrdHashMap RootFieldAlias (EB.DBStepInfo ('Postgres 'Vanilla))
     )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
-  (oneSourceName, oneSourceConfig) <- case toList plan of
+  (oneSourceName, oneResolvedConnectionTemplate, oneSourceConfig) <- case toList plan of
     (E.ExecStepDB _ exists _remoteJoins : _) ->
       AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
         ( EB.dbsiSourceName dbsi,
+          EB.dbsiResolvedConnectionTemplate dbsi,
           EB.dbsiSourceConfig dbsi
         )
     _ -> Nothing
@@ -656,10 +661,13 @@ coalescePostgresMutations plan = do
   mutations <- for plan \case
     E.ExecStepDB _ exists remoteJoins -> do
       dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
-      guard $ oneSourceName == EB.dbsiSourceName dbStepInfo && isNothing remoteJoins
+      guard $
+        oneSourceName == EB.dbsiSourceName dbStepInfo
+          && isNothing remoteJoins
+          && oneResolvedConnectionTemplate == EB.dbsiResolvedConnectionTemplate dbStepInfo
       Just dbStepInfo
     _ -> Nothing
-  Just (oneSourceConfig, mutations)
+  Just (oneSourceConfig, oneResolvedConnectionTemplate, mutations)
 
 data GraphQLResponse
   = GraphQLResponseErrors [J.Value]

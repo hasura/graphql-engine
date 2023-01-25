@@ -19,6 +19,7 @@ import Hasura.GraphQL.Transport.Backend (BackendTransport (..))
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.Logging (Hasura, Logger, nullLogger)
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend (ResolvedConnectionTemplate)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Server.Types (RequestId)
 import Hasura.Session (UserInfo)
@@ -30,9 +31,9 @@ instance BackendTransport 'DataConnector where
   runDBQuery = runDBQuery'
   runDBQueryExplain = runDBQueryExplain'
   runDBMutation = runDBMutation'
-  runDBStreamingSubscription _ _ _ =
+  runDBStreamingSubscription _ _ _ _ =
     liftIO . throwIO $ userError "runDBStreamingSubscription: not implemented for the Data Connector backend."
-  runDBSubscription _ _ _ =
+  runDBSubscription _ _ _ _ =
     liftIO . throwIO $ userError "runDBSubscription: not implemented for the Data Connector backend."
 
 runDBQuery' ::
@@ -49,8 +50,9 @@ runDBQuery' ::
   SourceConfig ->
   AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
   Maybe DataConnectorPreparedQuery ->
+  ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
-runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest = do
+runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest _ = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
@@ -69,13 +71,14 @@ mkQueryLog gqlQuery fieldName maybeQuery requestId =
     gqlQuery
     ((\query -> (fieldName, HGL.GeneratedQuery (encodePreparedQueryToJsonText query) J.Null)) <$> maybeQuery)
     requestId
-    HGL.QueryLogKindDatabase
+    -- @QueryLogKindDatabase Nothing@ means that the backend doesn't support connection templates
+    (HGL.QueryLogKindDatabase Nothing)
 
 runDBQueryExplain' ::
   (MonadIO m, MonadError QErr m) =>
   DBStepInfo 'DataConnector ->
   m EncJSON
-runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action) =
+runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action _) =
   liftEitherM
     . liftIO
     . runExceptT
@@ -97,8 +100,9 @@ runDBMutation' ::
   SourceConfig ->
   AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
   Maybe DataConnectorPreparedQuery ->
+  ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
-runDBMutation' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest = do
+runDBMutation' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest _ = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.trace ("Data Connector backend mutation for root field " <>> fieldName)

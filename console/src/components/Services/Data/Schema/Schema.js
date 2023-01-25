@@ -55,6 +55,7 @@ import { modalKeySelector } from '../../../../store/modal/modal.selectors';
 import { showModal, hideModal } from '../../../../store/modal/modal.actions';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import { EmptyState } from './components/EmptyState/EmptyState';
+import { PrimaryDBInfo } from '@/components/Common/EditableHeading/PrimaryDBInfo';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -729,6 +730,10 @@ class Schema extends Component {
             </h2>
             {getCreateBtn()}
           </div>
+          <div className="pt-4">
+            <PrimaryDBInfo source={currentDataSource} />
+          </div>
+
           <hr className="my-md" />
           {getCurrentSchemaSection()}
           <hr className="my-md" />

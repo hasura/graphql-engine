@@ -17,6 +17,7 @@ module Harness.Subscriptions
     SubscriptionHandle,
     withSubscriptions,
     withSubscriptions',
+    withSubscriptionsHeaders,
     getNextResponse,
   )
 where
@@ -29,10 +30,11 @@ import Control.Concurrent.STM (atomically, newTVarIO, readTVar, writeTVar)
 import Control.Lens (preview)
 import Data.Aeson
 import Data.Aeson.Lens (key, _String)
-import Data.Aeson.QQ.Simple
+import Data.Aeson.QQ
 import Data.Aeson.Types (Pair)
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Map.Strict qualified as Map
+import Data.Text qualified as T
 import Harness.Exceptions (throw, withFrozenCallStack)
 import Harness.Logging.Messages
 import Harness.TestEnvironment
@@ -47,19 +49,19 @@ import System.Timeout (timeout)
 import Test.Hspec
 
 -- | A subscription's connection initiation message.
-initMessage :: Value
-initMessage =
+initMessage :: [(T.Text, T.Text)] -> Value
+initMessage headers =
   [aesonQQ|
   {
     "type": "connection_init",
     "payload": {
-      "headers": {
-        "content-type": "application/json"
-      },
+      "headers": #{hdrs},
       "lazy": true
     }
   }
   |]
+  where
+    hdrs = mkInitMessageHeaders headers
 
 -- | A subscription's start query message.
 startQueryMessage :: Int -> Value -> [Pair] -> Value
@@ -99,7 +101,10 @@ newtype SubscriptionHandle = SubscriptionHandle {unSubscriptionHandle :: MVar Va
 -- >         actual = getNextResponse query
 -- >     actual `shouldBe` expected
 withSubscriptions :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
-withSubscriptions = withSubscriptions' id
+withSubscriptions = withSubscriptionsHeaders []
+
+withSubscriptionsHeaders :: [(T.Text, T.Text)] -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
+withSubscriptionsHeaders headers = withSubscriptionsHeaders' headers id
 
 -- | A composable @'withSubscriptions'. Helpful in writing tests involving multiple websocket clients.
 -- Example usage:
@@ -107,7 +112,7 @@ withSubscriptions = withSubscriptions' id
 -- > spec :: SpecWith (TestEnvironment)
 -- > spec = do
 -- >   describe "subscriptions multiple clients" $
--- >     withSubscriptions' id (withSubscriptons' snd subscriptionsSpec)
+-- >     withSubscriptions' [] id (withSubscriptons' snd subscriptionsSpec)
 --
 -- > subscriptionsSpec :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))
 -- > subscriptionsSpec = do
@@ -129,7 +134,10 @@ withSubscriptions = withSubscriptions' id
 -- >         actual2 = getNextResponse query2
 -- >     actual2 `shouldBe` expected
 withSubscriptions' :: (a -> TestEnvironment) -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, a) -> SpecWith a
-withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a -> do
+withSubscriptions' = withSubscriptionsHeaders' []
+
+withSubscriptionsHeaders' :: [(T.Text, T.Text)] -> (a -> TestEnvironment) -> SpecWith (Value -> [Pair] -> IO SubscriptionHandle, a) -> SpecWith a
+withSubscriptionsHeaders' headers getTestEnvironment = aroundAllWith \actionWithSubAndTest a -> do
   let testEnvironment = getTestEnvironment a
   WS.runClient "127.0.0.1" (fromIntegral $ port $ server $ globalEnvironment testEnvironment) "/v1/graphql" \conn -> do
     -- CAVE: loads of stuff still outstanding:
@@ -138,7 +146,7 @@ withSubscriptions' getTestEnvironment = aroundAllWith \actionWithSubAndTest a ->
     --  * timeouts on blocking operations, NDAT-230
 
     -- send initialization message
-    WS.sendTextData conn (encode initMessage)
+    WS.sendTextData conn (encode $ initMessage headers)
 
     -- Open communication channel with responses.
     --
@@ -238,3 +246,6 @@ getNextResponse handle = do
 
 subscriptionsTimeoutTime :: Seconds
 subscriptionsTimeoutTime = 20
+
+mkInitMessageHeaders :: [(T.Text, T.Text)] -> Value
+mkInitMessageHeaders hdrs = (toJSON $ Map.fromList $ [("content-type", "application/json")] <> hdrs)

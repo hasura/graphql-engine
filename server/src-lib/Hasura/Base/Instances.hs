@@ -17,6 +17,8 @@ import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as UT
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
+import Kriti qualified
+import Kriti.Parser qualified as Kriti
 import Language.Haskell.TH.Lift qualified as TH (deriveLift)
 import Language.Haskell.TH.Syntax qualified as TH
 import System.Cron.Parser qualified as C
@@ -138,3 +140,14 @@ instance PG.FromCol C.CronSchedule where
         case C.parseCronSchedule dbCron of
           Left err' -> Left $ "invalid cron schedule " <> T.pack err'
           Right cron -> Right cron
+
+--------------------------------------------------------------------------------
+-- Kriti
+
+instance NFData Kriti.AlexSourcePos
+
+instance NFData Kriti.Span
+
+instance NFData Kriti.Elif
+
+instance NFData Kriti.ValueExt

@@ -160,19 +160,20 @@ resolveDatabaseMetadata ::
   SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
   m (Either QErr (DBObjectsIntrospection ('Postgres pgKind)))
-resolveDatabaseMetadata sourceMetadata sourceConfig = runExceptT $ runTx (_pscExecCtx sourceConfig) PG.ReadOnly do
-  tablesMeta <- fetchTableMetadata $ HM.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
-  let allFunctions =
-        Set.fromList $
-          OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
-            <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
-  functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
-  pgScalars <- fetchPgScalars
-  let scalarsMap = Map.fromList do
-        scalar <- Set.toList pgScalars
-        name <- afold @(Either QErr) $ mkScalarTypeName scalar
-        pure (name, scalar)
-  pure $ DBObjectsIntrospection tablesMeta functionsMeta (ScalarMap scalarsMap)
+resolveDatabaseMetadata sourceMetadata sourceConfig =
+  runExceptT $ _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) do
+    tablesMeta <- fetchTableMetadata $ HM.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
+    let allFunctions =
+          Set.fromList $
+            OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
+              <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
+    functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
+    pgScalars <- fetchPgScalars
+    let scalarsMap = Map.fromList do
+          scalar <- Set.toList pgScalars
+          name <- afold @(Either QErr) $ mkScalarTypeName scalar
+          pure (name, scalar)
+    pure $ DBObjectsIntrospection tablesMeta functionsMeta (ScalarMap scalarsMap)
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata
     getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]
@@ -184,7 +185,8 @@ prepareCatalog ::
   (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
   ExceptT QErr m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
-prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
+-- TODO: SHould we prepare the catalog in Serializable isolation mode like the 'prepareCatalog' of MSSQL
+prepareCatalog sourceConfig = _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery) do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
@@ -465,7 +467,7 @@ postDropSourceHook sourceConfig tableTriggersMap = do
   --   3. non-default postgres source (necessarily without metadata tables)
   --   In this case, we want to drop the entire "hdb_catalog" schema.
   liftEitherM $
-    runPgSourceWriteTx sourceConfig $ do
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
       hdbMetadataTableExist <- doesTableExist "hdb_catalog" "hdb_metadata"
       if
           -- If "hdb_metadata" exists, we have one of two possible cases:
@@ -495,7 +497,7 @@ postDropSourceHook sourceConfig tableTriggersMap = do
               dropHdbCatalogSchema
 
   -- Destory postgres source connection
-  liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig
+  liftIO $ _pecRunAction (_pscExecCtx sourceConfig) DestroyConnMode
 
   -- Run other drop hooks configured at source creation time
   liftIO $ _pscPostDropHook sourceConfig

@@ -135,8 +135,10 @@ buildSubscriptionPlan ::
   UserInfo ->
   RootFieldMap (IR.QueryRootField IR.UnpreparedValue) ->
   ParameterizedQueryHash ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m SubscriptionExecution
-buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
+buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName = do
   ((liveQueryOnSourceFields, noRelationActionFields), streamingFields) <- foldlM go ((mempty, mempty), mempty) (OMap.toList rootFields)
 
   if
@@ -160,6 +162,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
                                   sourceName
                                   sourceConfig
                                   (rootFieldName, qdb)
+                                  reqHeaders
+                                  operationName
                               )
                               queryTagsComment
                       pure $
@@ -264,7 +268,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedSubscriptionQueryPlan
-            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
+            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs reqHeaders operationName) queryTagsComment
       pure (sourceName, subscriptionPlan)
 
     checkField ::
@@ -417,7 +421,7 @@ getResolvedExecPlan
             _ ->
               unless (allowMultipleRootFields && isSingleNamespace unpreparedAST) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-          subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash
+          subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash reqHeaders maybeOperationName
           pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan)
     -- the parameterized query hash is calculated here because it is used in multiple
     -- places and instead of calculating it separately, this is a common place to calculate

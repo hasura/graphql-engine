@@ -26,6 +26,7 @@ module Hasura.Session
     adminUserInfo,
     BackendOnlyFieldAccess (..),
     ExtraUserInfo (..),
+    maybeRoleFromSessionVariables,
   )
 where
 

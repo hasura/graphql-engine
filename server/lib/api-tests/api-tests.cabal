@@ -74,6 +74,7 @@ library
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
     Test.API.Metadata.NativeAccessSpec
     Test.API.Schema.RunSQLSpec

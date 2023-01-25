@@ -26,6 +26,7 @@ import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.ConnectionTemplate
 import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.DataConnector
@@ -129,6 +130,8 @@ data RQLMetadataV1
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
+  | -- Connection template
+    RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
   | -- Native access
     RMGetCustomSQL !(AnyBackend CustomSQL.GetCustomSQL)
   | RMTrackCustomSQL !(AnyBackend CustomSQL.TrackCustomSQL)
@@ -486,6 +489,7 @@ queryModifiesMetadata = \case
       RMListSourceKinds _ -> False
       RMGetSourceTables _ -> False
       RMGetTableInfo _ -> False
+      RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
       RMGetCustomSQL _ -> False
       RMTrackCustomSQL _ -> True
@@ -669,6 +673,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
+  RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
   RMGetCustomSQL q -> dispatchMetadata CustomSQL.runGetCustomSQL q
   RMTrackCustomSQL q -> dispatchMetadata CustomSQL.runTrackCustomSQL q
   RMUntrackCustomSQL q -> dispatchMetadata CustomSQL.runUntrackCustomSQL q

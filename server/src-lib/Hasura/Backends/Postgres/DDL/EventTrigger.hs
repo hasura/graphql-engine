@@ -91,7 +91,7 @@ fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetc
     Right fetchEventsTx ->
       liftEitherM $
         liftIO $
-          runPgSourceWriteTx sourceConfig fetchEventsTx
+          runPgSourceWriteTx sourceConfig InternalRawQuery fetchEventsTx
 
 setRetry ::
   ( MonadIO m,
@@ -103,7 +103,7 @@ setRetry ::
   MaintenanceMode MaintenanceModeVersion ->
   m ()
 setRetry sourceConfig event retryTime maintenanceModeVersion =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig (setRetryTx event retryTime maintenanceModeVersion)
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery (setRetryTx event retryTime maintenanceModeVersion)
 
 insertManualEvent ::
   (MonadIO m, MonadError QErr m) =>
@@ -122,7 +122,7 @@ insertManualEvent sourceConfig tableName triggerName payload userInfo traceCtx =
   -- in the absence of these methods.
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $
+      runPgSourceWriteTx sourceConfig InternalRawQuery $
         setHeadersTx (_uiSession userInfo)
           >> setTraceContextInTx traceCtx
           >> insertPGManualEvent tableName triggerName payload
@@ -145,7 +145,7 @@ recordSuccess ::
   m (Either QErr ())
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
   liftIO $
-    runPgSourceWriteTx sourceConfig $ do
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
       insertInvocation (tmName (eTrigger event)) invocation
       setSuccessTx event maintenanceModeVersion
 
@@ -170,7 +170,7 @@ recordError' ::
   m (Either QErr ())
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
-    runPgSourceWriteTx sourceConfig $ do
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
       for_ invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> setRetryTx event retryTime maintenanceModeVersion
@@ -182,7 +182,7 @@ redeliverEvent ::
   EventId ->
   m ()
 redeliverEvent sourceConfig eventId =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig (redeliverEventTx eventId)
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery (redeliverEventTx eventId)
 
 dropTriggerAndArchiveEvents ::
   ( MonadIO m,
@@ -195,7 +195,7 @@ dropTriggerAndArchiveEvents ::
 dropTriggerAndArchiveEvents sourceConfig triggerName _table =
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $ do
+      runPgSourceWriteTx sourceConfig InternalRawQuery $ do
         dropTriggerQ triggerName
         archiveEvents triggerName
 
@@ -216,7 +216,7 @@ createMissingSQLTriggers ::
 createMissingSQLTriggers sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $
-    runPgSourceWriteTx sourceConfig $ do
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
       for_ (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
       for_ (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
       for_ (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
@@ -251,7 +251,7 @@ createTableEventTrigger ::
   TriggerOpsDef ('Postgres pgKind) ->
   Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind))) ->
   m (Either QErr ())
-createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
+createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition _ = runPgSourceWriteTx sourceConfig InternalRawQuery $ do
   -- Create the given triggers
   flip runReaderT serverConfigCtx $
     mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition
@@ -268,7 +268,7 @@ dropDanglingSQLTrigger ::
 dropDanglingSQLTrigger sourceConfig triggerName _ ops =
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $
+      runPgSourceWriteTx sourceConfig InternalRawQuery $
         traverse_ (dropTriggerOp triggerName) ops
 
 updateColumnInEventTrigger ::
@@ -307,7 +307,7 @@ unlockEventsInSource ::
   NE.NESet EventId ->
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
-  liftIO $ runPgSourceWriteTx sourceConfig (unlockEventsTx $ toList eventIds)
+  liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery (unlockEventsTx $ toList eventIds)
 
 -- Check if any trigger function for any of the operation exists with the 'triggerName'
 checkIfTriggerExists ::
@@ -319,7 +319,7 @@ checkIfTriggerExists ::
 checkIfTriggerExists sourceConfig triggerName ops = do
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $
+      runPgSourceWriteTx sourceConfig InternalRawQuery $
         -- We want to avoid creating event triggers with same name since this will
         -- cause undesired behaviour. Note that only SQL functions associated with
         -- SQL triggers are dropped when "replace = true" is set in the event trigger
@@ -874,7 +874,7 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
     unless (null scheduledTriggersAndTimestamps) $
       liftEitherM $
         liftIO $
-          runPgSourceWriteTx sourceConfig $
+          runPgSourceWriteTx sourceConfig InternalRawQuery $
             insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the fiven trigger name and schedules
@@ -928,7 +928,7 @@ deleteAllScheduledCleanups ::
   TriggerName ->
   m ()
 deleteAllScheduledCleanups sourceConfig triggerName =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteAllScheduledCleanupsTx triggerName
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ deleteAllScheduledCleanupsTx triggerName
 
 getCleanupEventsForDeletionTx :: PG.TxE QErr ([(Text, TriggerName)])
 getCleanupEventsForDeletionTx =
@@ -968,7 +968,7 @@ getCleanupEventsForDeletion ::
   PGSourceConfig ->
   m [(Text, TriggerName)]
 getCleanupEventsForDeletion sourceConfig =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ getCleanupEventsForDeletionTx
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ getCleanupEventsForDeletionTx
 
 markCleanupEventsAsDeadTx :: [Text] -> PG.TxE QErr ()
 markCleanupEventsAsDeadTx toDeadEvents = do
@@ -993,7 +993,7 @@ updateCleanupEventStatusToDead ::
   [Text] ->
   m ()
 updateCleanupEventStatusToDead sourceConfig toDeadEvents =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ markCleanupEventsAsDeadTx toDeadEvents
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ markCleanupEventsAsDeadTx toDeadEvents
 
 updateCleanupEventStatusToPausedTx :: Text -> PG.TxE QErr ()
 updateCleanupEventStatusToPausedTx cleanupLogId =
@@ -1014,7 +1014,7 @@ updateCleanupEventStatusToPaused ::
   Text ->
   m ()
 updateCleanupEventStatusToPaused sourceConfig cleanupLogId =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ updateCleanupEventStatusToPausedTx cleanupLogId
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ updateCleanupEventStatusToPausedTx cleanupLogId
 
 updateCleanupEventStatusToCompletedTx :: Text -> DeletedEventLogStats -> PG.TxE QErr ()
 updateCleanupEventStatusToCompletedTx cleanupLogId (DeletedEventLogStats numEventLogs numInvocationLogs) =
@@ -1043,7 +1043,7 @@ updateCleanupEventStatusToCompleted ::
   DeletedEventLogStats ->
   m ()
 updateCleanupEventStatusToCompleted sourceConfig cleanupLogId delStats =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ updateCleanupEventStatusToCompletedTx cleanupLogId delStats
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ updateCleanupEventStatusToCompletedTx cleanupLogId delStats
 
 deleteEventTriggerLogsTx :: TriggerLogCleanupConfig -> PG.TxE QErr DeletedEventLogStats
 deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
@@ -1149,4 +1149,4 @@ deleteEventTriggerLogs ::
   m DeletedEventLogStats
 deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
   deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
-    runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ deleteEventTriggerLogsTx cleanupConfig

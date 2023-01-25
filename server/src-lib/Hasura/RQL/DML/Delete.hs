@@ -122,6 +122,6 @@ runDelete q = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   userInfo <- askUserInfo
   validateDeleteQ q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
       . flip runReaderT emptyQueryTagsComment
       . execDeleteQuery strfyNum Nothing userInfo

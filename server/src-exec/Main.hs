@@ -109,7 +109,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
                       False
                       PG.ReadCommitted
                       Nothing
-               in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema
+               in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (throwErrJExit DowngradeProcessError) (liftIO . print) res
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion

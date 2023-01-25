@@ -88,11 +88,13 @@ keywords:
 
 ## PGConfiguration {#pgconfiguration}
 
-| Key               | Required | Schema                                                | Description                                                                                      |
-| ----------------- | -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| connection_info   | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                             |
-| read_replicas     | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration _(supported only in cloud/enterprise versions)_      |
-| extensions_schema | false    | String                                                | Name of the schema where the graphql-engine will install database extensions (default: `public`) |
+| Key                 | Required | Schema                                                                      | Description                                                                                        |
+| ------------------- | -------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| connection_info     | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)                           | Connection parameters for the source                                                               |
+| read_replicas       | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\]                       | Optional list of read replica configuration *(supported only in cloud/enterprise versions)*        |
+| extensions_schema   | false    | String                                                                      | Name of the schema where the graphql-engine will install database extensions (default: `public`)   |
+| connection_template | false    | [PGConnectionTemplate](#pgconnectiontemplate)                               | DB connection template *(supported only in cloud/enterprise versions)*                             |
+| connection_set      | false    | \[[ConnectionSetElementConfig](#connectionsetelementconfig)\]               | Connection Set used for DB connection template*(supported only in cloud/enterprise versions)*      |
 
 ## MsSQLConfiguration {#mssqlconfiguration}
 
@@ -1622,7 +1624,6 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | sources | true     | `'*'` \| [[SourceName]](#sourcename) | Sources for which to update the cleaner status (or all sources when `'*'` is provided) |
 
 ## EventTriggerQualifier {#eventtriggerqualifier}
-
 | Key            | required | Schema                        | Description                               |
 | -------------- | -------- | ----------------------------- | ----------------------------------------- |
 | event_triggers | true     | [[TriggerName]](#triggername) | List of trigger names                     |
@@ -1648,3 +1649,32 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | ---------------- | -------- | ---------------------- | -------------------------------------------------------------------- |
 | unique_params    | false    | `String` \| [`String`] | This would be either fixed value `IP` or a list of Session variables |
 | max_reqs_per_min | true     | Integer                | Maximum requests per minute to be allowed                            |
+
+## PGConnectionTemplate {#pgconnectiontemplate}
+| Key      | required | Schema | Description                                               |
+| -------- | -------- | ------ | --------------------------------------------------------- |
+| template | true     | String | Template for the dynamic DB connection                    |
+| version  | false    | Int    | Version of the template (Possible value is 1, default: 1) |
+
+
+## ConnectionSetElementConfig {#connectionsetelementconfig}
+
+| Key               | required | Schema                                            | Description                          |
+| ----------------- | -------- | ------------------------------------------------- | ------------------------------------ |
+| name              | true     | String                                            | name of the connection               |
+| connection_info   | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo) | Connection parameters for the source |
+
+## RequestContext {#requestcontext}
+
+| Key     | required | Schema                                                         | Description               |
+|---------|----------|----------------------------------------------------------------|---------------------------|
+| headers | false    | Object ([HeaderKey](#headerkey) : [HeaderValue](#headervalue)) | Request header            |
+| session | false    | Object (String : String)                                       | Request session variables |
+| query   | false    | [QueryContext](#queryContext)                                  | Operation details         |
+
+## QueryContext {#queryContext}
+
+| Key            | required | Schema                          | Description                   |
+|----------------|----------|---------------------------------|-------------------------------|
+| operation_type | true     | query | mutation | subscription | Type of the graphql operation |
+| operation_name | false    | String                          | Name of the graphql operation |

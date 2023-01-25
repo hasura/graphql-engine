@@ -55,7 +55,7 @@ instance BackendExecute 'DataConnector where
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = AgentClientT (Tracing.TraceT (ExceptT QErr IO))
 
-  mkDBQueryPlan UserInfo {..} env sourceName sourceConfig ir = do
+  mkDBQueryPlan UserInfo {..} env sourceName sourceConfig ir _headers _gName = do
     queryPlan@DC.Plan {..} <- DC.mkQueryPlan _uiSession sourceConfig ir
     transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
     pure
@@ -63,10 +63,11 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-          dbsiAction = buildQueryAction sourceName transformedSourceConfig queryPlan
+          dbsiAction = buildQueryAction sourceName transformedSourceConfig queryPlan,
+          dbsiResolvedConnectionTemplate = ()
         }
 
-  mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
+  mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir _headers _gName = do
     queryPlan@DC.Plan {..} <- DC.mkQueryPlan _uiSession sourceConfig ir
     transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.object [])] Env.emptyEnvironment
     pure $
@@ -75,9 +76,10 @@ instance BackendExecute 'DataConnector where
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = transformedSourceConfig,
             dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-            dbsiAction = buildExplainAction fieldName sourceName transformedSourceConfig queryPlan
+            dbsiAction = buildExplainAction fieldName sourceName transformedSourceConfig queryPlan,
+            dbsiResolvedConnectionTemplate = ()
           }
-  mkDBMutationPlan UserInfo {..} env _stringifyNum sourceName sourceConfig mutationDB = do
+  mkDBMutationPlan UserInfo {..} env _stringifyNum sourceName sourceConfig mutationDB _headers _gName = do
     mutationPlan@DC.Plan {..} <- DC.mkMutationPlan _uiSession mutationDB
     transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
     pure
@@ -85,13 +87,14 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just $ MutationRequest _pRequest,
-          dbsiAction = buildMutationAction sourceName transformedSourceConfig mutationPlan
+          dbsiAction = buildMutationAction sourceName transformedSourceConfig mutationPlan,
+          dbsiResolvedConnectionTemplate = ()
         }
-  mkLiveQuerySubscriptionPlan _ _ _ _ _ =
+  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
-  mkDBStreamingSubscriptionPlan _ _ _ _ =
+  mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
-  mkDBRemoteRelationshipPlan _ _ _ _ _ _ _ _ =
+  mkDBRemoteRelationshipPlan _ _ _ _ _ _ _ _ _ _ =
     throw500 "mkDBRemoteRelationshipPlan: not implemented for the Data Connector backend."
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."

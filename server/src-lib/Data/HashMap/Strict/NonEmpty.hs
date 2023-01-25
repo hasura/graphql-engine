@@ -16,6 +16,7 @@ module Data.HashMap.Strict.NonEmpty
     lookup,
     (!?),
     keys,
+    elems,
 
     -- * Combine
     union,
@@ -104,6 +105,10 @@ lookup k (NEHashMap m) = M.lookup k m
 -- | Return a list of this map's keys.
 keys :: NEHashMap k v -> [k]
 keys = M.keys . unNEHashMap
+
+-- | Return a list of this map's set of values
+elems :: NEHashMap k v -> [v]
+elems = M.elems . unNEHashMap
 
 -------------------------------------------------------------------------------
 

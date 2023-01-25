@@ -67,7 +67,7 @@ import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.TH
-import Data.Aeson.Types (prependFailure, typeMismatch)
+import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Scientific (toBoundedInteger)
@@ -230,10 +230,13 @@ data SourceName
   | SNName NonEmptyText
   deriving (Show, Eq, Ord, Generic)
 
+sourceNameParser :: Text -> Parser SourceName
+sourceNameParser = \case
+  "default" -> pure SNDefault
+  t -> SNName <$> parseJSON (String t)
+
 instance FromJSON SourceName where
-  parseJSON = withText "String" $ \case
-    "default" -> pure SNDefault
-    t -> SNName <$> parseJSON (String t)
+  parseJSON = withText "String" sourceNameParser
 
 instance FromJSONKey SourceName
 

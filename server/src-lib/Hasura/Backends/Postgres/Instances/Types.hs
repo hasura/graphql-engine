@@ -16,6 +16,7 @@ import Data.Kind (Type)
 import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
+import Hasura.Backends.Postgres.Execute.ConnectionTemplate qualified as Postgres
 import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
@@ -127,6 +128,9 @@ instance
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
+  type ResolvedConnectionTemplate ('Postgres pgKind) = Maybe Postgres.PostgresResolvedConnectionTemplate -- 'Nothing' represents no connection template configured
+  type ConnectionTemplateRequestContext ('Postgres pgKind) = Postgres.RequestContext
+
   type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
   healthCheckImplementation =
     Just $
@@ -157,6 +161,8 @@ instance
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
 
-  resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)
+  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecRunAction (Postgres._pscExecCtx sourceConfig)) (Postgres.ResizePoolMode serverReplicas)
 
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
+
+  resolveConnectionTemplate = Postgres.pgResolveConnectionTemplate

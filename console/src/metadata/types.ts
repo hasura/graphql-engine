@@ -1156,6 +1156,12 @@ type GraphQLCustomizationMetadata = {
   naming_convention: GraphQLFieldCustomization['namingConvention'];
 };
 
+// Used for Dynamic Connection Routing
+type ConnectionSet = {
+  connection_info: SourceConnectionInfo;
+  name: string;
+};
+
 export interface MetadataDataSource {
   name: string;
   kind:
@@ -1171,6 +1177,7 @@ export interface MetadataDataSource {
     extensions_schema?: string;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
+    connection_set?: ConnectionSet[];
     service_account?: BigQueryServiceAccount;
     global_select_limit?: number;
     project_id?: string;

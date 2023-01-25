@@ -224,7 +224,7 @@ runRunSQL q@RunSQL {..} = do
           withUserInfo userInfo $
             execRawSQL rSql
     else do
-      runTxWithCtx pgExecCtx rTxAccessMode $ execRawSQL rSql
+      runTxWithCtx pgExecCtx (Tx rTxAccessMode Nothing) RunSQLQuery $ execRawSQL rSql
   where
     execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =
@@ -277,7 +277,7 @@ withMetadataCheck source cascade txAccess runSQLQuery = do
       let tables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources schemaCache
       serverConfigCtx <- askServerConfigCtx
       liftEitherM $
-        runPgSourceWriteTx sourceConfig $
+        runPgSourceWriteTx sourceConfig RunSQLQuery $
           forM_ (M.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
             let table = _tciName coreInfo
                 columns = getCols $ _tciFieldInfoMap coreInfo
@@ -310,7 +310,7 @@ runTxWithMetadataCheck ::
 runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx =
   liftEitherM $
     runExceptT $
-      runTx (_pscExecCtx sourceConfig) txAccess $ do
+      _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx txAccess Nothing) RunSQLQuery) $ do
         -- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions
 
         -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.

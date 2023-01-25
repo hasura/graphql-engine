@@ -36,6 +36,8 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 instance BackendExecute 'BigQuery where
   type PreparedQuery 'BigQuery = Text
@@ -44,9 +46,9 @@ instance BackendExecute 'BigQuery where
 
   mkDBQueryPlan = bqDBQueryPlan
   mkDBMutationPlan = bqDBMutationPlan
-  mkLiveQuerySubscriptionPlan _ _ _ _ _ =
+  mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
-  mkDBStreamingSubscriptionPlan _ _ _ _ =
+  mkDBStreamingSubscriptionPlan _ _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
   mkSubscriptionExplain _ =
@@ -70,8 +72,10 @@ bqDBQueryPlan ::
   SourceName ->
   SourceConfig 'BigQuery ->
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (DBStepInfo 'BigQuery)
-bqDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
+bqDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let action = do
@@ -82,7 +86,7 @@ bqDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
         case result of
           Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ Aeson.toJSON err
           Right recordSet -> pure $! recordSetToEncJSON (BigQuery.selectCardinality select) recordSet
-  pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action
+  pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action ()
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
 recordSetToEncJSON :: BigQuery.Cardinality -> DataLoader.RecordSet -> EncJSON
@@ -129,8 +133,10 @@ bqDBMutationPlan ::
   SourceName ->
   SourceConfig 'BigQuery ->
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _userInfo _environment _stringifyNum _sourceName _sourceConfig _mrf =
+bqDBMutationPlan _userInfo _environment _stringifyNum _sourceName _sourceConfig _mrf _headers _gName =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain
@@ -142,19 +148,26 @@ bqDBQueryExplain ::
   SourceName ->
   SourceConfig 'BigQuery ->
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (AB.AnyBackend DBStepInfo)
-bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let textSQL = selectSQLTextForExplain select
   pure $
     AB.mkAnyBackend $
-      DBStepInfo @'BigQuery sourceName sourceConfig Nothing $
-        pure $
-          encJFromJValue $
-            ExplainPlan
-              fieldName
-              (Just $ textSQL)
-              (Just $ T.lines $ textSQL)
+      DBStepInfo @'BigQuery
+        sourceName
+        sourceConfig
+        Nothing
+        ( pure $
+            encJFromJValue $
+              ExplainPlan
+                fieldName
+                (Just $ textSQL)
+                (Just $ T.lines $ textSQL)
+        )
+        ()
 
 -- | Get the SQL text for a select, with parameters left as $1, $2, .. holes.
 selectSQLTextForExplain :: BigQuery.Select -> Text
@@ -200,10 +213,12 @@ bqDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   FieldName ->
   (FieldName, SourceRelationshipSelection 'BigQuery Void UnpreparedValue) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo 'BigQuery)
-bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship stringifyNumbers = do
-  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection
+bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
+  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection reqHeaders operationName
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema

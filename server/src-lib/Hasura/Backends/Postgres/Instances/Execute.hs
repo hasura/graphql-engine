@@ -22,6 +22,7 @@ import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Execute.ConnectionTemplate (QueryContext (..), QueryOperationType (..))
 import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction)
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.Execute.Prepare
@@ -33,7 +34,7 @@ import Hasura.Backends.Postgres.Execute.Prepare
     withUserVars,
   )
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
-import Hasura.Backends.Postgres.Execute.Types (PGSourceConfig (..), dmlTxErrorHandler)
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
@@ -92,6 +93,7 @@ import Hasura.SQL.Backend
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 data PreparedSql = PreparedSql
   { _psQuery :: PG.Query,
@@ -131,14 +133,21 @@ pgDBQueryPlan ::
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
+pgDBQueryPlan userInfo _env sourceName sourceConfig qrf reqHeaders operationName = do
   (preparedQuery, PlanningSt _ _ planVals) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
   queryTagsComment <- ask
+  resolvedConnectionTemplate <-
+    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
+      Just $
+        QueryContext operationName $
+          QueryOperationType G.OperationTypeQuery
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
-  pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action
+  pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL action resolvedConnectionTemplate
 
 pgDBQueryExplain ::
   forall pgKind m.
@@ -151,8 +160,10 @@ pgDBQueryExplain ::
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (AB.AnyBackend DBStepInfo)
-pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
+pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection reqHeaders operationName = do
   preparedQuery <- traverse (prepareWithoutPlan userInfo) rootSelection
   let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
       textSQL = PG.getQueryText querySQL
@@ -163,9 +174,14 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
         liftTx $
           PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
             encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
+  resolvedConnectionTemplate <-
+    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
+      Just $
+        QueryContext operationName $
+          QueryOperationType G.OperationTypeQuery
   pure $
     AB.mkAnyBackend $
-      DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing action
+      DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing action resolvedConnectionTemplate
 
 pgDBSubscriptionExplain ::
   ( MonadError QErr m,
@@ -181,11 +197,12 @@ pgDBSubscriptionExplain plan = do
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
       explainQuery = PG.fromText $ "EXPLAIN " <> queryText
+      resolvedConnectionTemplate = _sqpResolvedConnectionTemplate plan
   cohortId <- newCohortId
   explanationLines <-
     liftEitherM $
       runExceptT $
-        runTx pgExecCtx PG.ReadOnly $
+        _pecRunTx pgExecCtx (PGExecCtxInfo (Tx PG.ReadOnly Nothing) (GraphQLQuery resolvedConnectionTemplate)) $
           map runIdentity <$> PGL.executeQuery explainQuery [(cohortId, _sqpVariables plan)]
   pure $ SubscriptionQueryPlanExplanation queryText explanationLines $ _sqpVariables plan
 
@@ -286,15 +303,22 @@ pgDBMutationPlan ::
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf = do
-  go <$> case mrf of
+pgDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf reqHeaders operationName = do
+  resolvedConnectionTemplate <-
+    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
+      Just $
+        QueryContext operationName $
+          QueryOperationType G.OperationTypeMutation
+  go resolvedConnectionTemplate <$> case mrf of
     MDBInsert s -> convertInsert userInfo s stringifyNum
     MDBUpdate s -> convertUpdate userInfo s stringifyNum
     MDBDelete s -> convertDelete userInfo s stringifyNum
     MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
   where
-    go v = DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing v
+    go resolvedConnectionTemplate v = DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing v resolvedConnectionTemplate
 
 -- subscription
 
@@ -311,8 +335,10 @@ pgDBLiveQuerySubscriptionPlan ::
   SourceConfig ('Postgres pgKind) ->
   Maybe G.Name ->
   RootFieldMap (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
+pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST reqHeaders operationName = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
       for unpreparedAST $
@@ -324,11 +350,18 @@ pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unprep
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
+  resolvedConnectionTemplate <-
+    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
+      Just $
+        QueryContext operationName $
+          QueryOperationType G.OperationTypeSubscription
+
   -- Cohort Id: Used for validating the multiplexed query. See @'testMultiplexedQueryTx'.
   -- It is disposed when the subscriber is added to existing cohort.
   cohortId <- newCohortId
 
-  cohortVariables <- liftEitherM $ liftIO $ runExceptT $ runTx (_pscExecCtx sourceConfig) PG.ReadOnly do
+  let pgExecCtxInfo = PGExecCtxInfo (Tx PG.ReadOnly Nothing) (GraphQLQuery resolvedConnectionTemplate)
+  cohortVariables <- liftEitherM $ liftIO $ runExceptT $ _pecRunTx (_pscExecCtx sourceConfig) pgExecCtxInfo do
     -- We need to ensure that the values provided for variables are correct according to Postgres.
     -- Without this check an invalid value for a variable for one instance of the subscription will
     -- take down the entire multiplexed query.
@@ -347,7 +380,7 @@ pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unprep
     testMultiplexedQueryTx multiplexedQueryWithQueryTags cohortId cohortVariables
     pure cohortVariables
 
-  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId cohortVariables namespace
+  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId resolvedConnectionTemplate cohortVariables namespace
 
 pgDBStreamingSubscriptionPlan ::
   forall pgKind m.
@@ -361,8 +394,10 @@ pgDBStreamingSubscriptionPlan ::
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   (RootFieldAlias, (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)))) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias, unpreparedAST) = do
+pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias, unpreparedAST) reqHeaders operationName = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
       traverse (PGL.resolveMultiplexedValue (_uiSession userInfo)) unpreparedAST
@@ -373,11 +408,18 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
+  resolvedConnectionTemplate <-
+    applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
+      Just $
+        QueryContext operationName $
+          QueryOperationType G.OperationTypeSubscription
+
   -- Cohort Id: Used for validating the multiplexed query. See @'testMultiplexedQueryTx'.
   -- It is disposed when the subscriber is added to existing cohort.
   cohortId <- newCohortId
 
-  cohortVariables <- liftEitherM $ liftIO $ runExceptT $ runTx (_pscExecCtx sourceConfig) PG.ReadOnly do
+  let pgExecCtxInfo = PGExecCtxInfo (Tx PG.ReadOnly Nothing) (GraphQLQuery resolvedConnectionTemplate)
+  cohortVariables <- liftEitherM $ liftIO $ runExceptT $ _pecRunTx (_pscExecCtx sourceConfig) pgExecCtxInfo do
     -- We need to ensure that the values provided for variables are correct according to Postgres.
     -- Without this check an invalid value for a variable for one instance of the subscription will
     -- take down the entire multiplexed query.
@@ -397,7 +439,7 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
     testMultiplexedQueryTx multiplexedQueryWithQueryTags cohortId cohortVariables
     pure cohortVariables
 
-  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId cohortVariables $ _rfaNamespace rootFieldAlias
+  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortId resolvedConnectionTemplate cohortVariables $ _rfaNamespace rootFieldAlias
   where
     getCursorVars qdb =
       case qdb of
@@ -512,15 +554,17 @@ pgDBRemoteRelationshipPlan ::
   -- response along with the relationship.
   FieldName ->
   (FieldName, IR.SourceRelationshipSelection ('Postgres pgKind) Void UnpreparedValue) ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   Options.StringifyNumbers ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship stringifyNumbers = do
+pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
   -- NOTE: 'QueryTags' currently cannot support remote relationship queries.
   --
   -- In the future if we want to add support we'll need to add a new type of
   -- metadata (e.g. 'ParameterizedQueryHash' doesn't make sense here) and find
   -- a root field name that makes sense to attach to it.
-  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection
+  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection reqHeaders operationName
   where
     coerceToColumn = Postgres.unsafePGCol . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema

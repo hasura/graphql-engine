@@ -8,9 +8,12 @@ module Harness.Backend.Postgres
     makeFreshDbConnectionString,
     metadataLivenessCheck,
     run_,
+    runCustomDB_,
     runSQL,
+    defaultConnectInfo,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    defaultPostgresConnectionString,
     createDatabase,
     dropDatabase,
     createTable,
@@ -29,6 +32,9 @@ module Harness.Backend.Postgres
     mkPrimaryKeySql,
     mkReferenceSql,
     wrapIdentifier,
+    createCustomDatabase,
+    createTableOnCustomDB,
+    insertTableOnCustomDB,
   )
 where
 
@@ -170,6 +176,12 @@ run_ testEnvironment =
     (logger $ globalEnvironment testEnvironment)
     (makeFreshDbConnectionString testEnvironment)
 
+runCustomDB_ :: HasCallStack => TestEnvironment -> Postgres.ConnectInfo -> Text -> IO ()
+runCustomDB_ testEnvironment connectionInfo =
+  Postgres.run
+    (logger $ globalEnvironment testEnvironment)
+    (postgresServerUrl connectionInfo)
+
 runSQL :: String -> TestEnvironment -> IO ()
 runSQL = Schema.runSQL (BackendType.backendSourceName backendTypeMetadata)
 
@@ -210,6 +222,26 @@ createTable testEnv table@(Schema.Table {tableName, tableColumns, tablePrimaryKe
     testEnv
     [i|
       CREATE TABLE #{ qualifiedTableName testEnv table }
+        (#{
+          commaSeparated $
+            (mkColumnSql <$> tableColumns)
+              <> (bool [mkPrimaryKeySql pk] [] (null pk))
+              <> (mkReferenceSql schemaName <$> tableReferences)
+              <> map uniqueConstraintSql tableConstraints
+        });
+    |]
+
+  for_ tableUniqueIndexes (run_ testEnv . createUniqueIndexSql schemaName tableName)
+
+createTableOnCustomDB :: TestEnvironment -> Schema.Table -> Postgres.ConnectInfo -> IO ()
+createTableOnCustomDB testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} connectionInfo = do
+  let schemaName = Schema.getSchemaName testEnv
+
+  runCustomDB_
+    testEnv
+    connectionInfo
+    [i|
+      CREATE TABLE #{ Constants.postgresDb }."#{ tableName }"
         (#{
           commaSeparated $
             (mkColumnSql <$> tableColumns)
@@ -278,6 +310,18 @@ insertTable testEnv table@(Schema.Table {tableColumns, tableData}) = unless (nul
     testEnv
     [i|
       INSERT INTO #{ qualifiedTableName testEnv table }
+        (#{ commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns) })
+      VALUES
+        #{ commaSeparated $ mkRow <$> tableData };
+    |]
+
+insertTableOnCustomDB :: TestEnvironment -> Schema.Table -> Postgres.ConnectInfo -> IO ()
+insertTableOnCustomDB testEnv Schema.Table {tableName, tableColumns, tableData} connectionInfo = unless (null tableData) do
+  runCustomDB_
+    testEnv
+    connectionInfo
+    [i|
+      INSERT INTO "#{ Constants.postgresDb }"."#{ tableName }"
         (#{ commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns) })
       VALUES
         #{ commaSeparated $ mkRow <$> tableData };
@@ -357,6 +401,31 @@ dropDatabase testEnvironment = do
     (logger (globalEnvironment testEnvironment))
     (defaultPostgresConnectionString (globalEnvironment testEnvironment))
     (uniqueDbName (uniqueTestId testEnvironment))
+
+createCustomDatabase :: TestEnvironment -> Postgres.ConnectInfo -> IO ()
+createCustomDatabase testEnvironment connectionInfo = do
+  let customDbName = T.pack $ Postgres.connectDatabase connectionInfo
+
+  Postgres.run
+    (logger (globalEnvironment testEnvironment))
+    (defaultPostgresConnectionString (globalEnvironment testEnvironment))
+    ("CREATE DATABASE " <> customDbName <> ";")
+
+  -- Create schema
+  let schemaName = Schema.getSchemaName testEnvironment
+  Postgres.run
+    (logger $ globalEnvironment testEnvironment)
+    (postgresServerUrl connectionInfo)
+    [i|
+      BEGIN;
+      SET LOCAL client_min_messages = warning;
+      CREATE SCHEMA IF NOT EXISTS #{unSchemaName schemaName};
+      COMMIT;
+    |]
+
+-- | Build @'PostgresServerUrl' from @'ConnectInfo' data structure
+postgresServerUrl :: Postgres.ConnectInfo -> Postgres.PostgresServerUrl
+postgresServerUrl = Postgres.PostgresServerUrl . bsToTxt . Postgres.postgreSQLConnectionString
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.

@@ -383,7 +383,7 @@ initialiseServerCtx env GlobalCtx {..} serveOptions@ServeOptions {..} liveQueryH
                     _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (PG.cpAllowPrepare soConnParams) soTxIso Nothing
-           in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
+           in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
       optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
@@ -1274,7 +1274,7 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
           }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty (_pccExtensionsSchema config) mempty Nothing
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
