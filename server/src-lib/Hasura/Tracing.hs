@@ -33,6 +33,7 @@ import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Aeson.Lens qualified as JL
 import Data.ByteString.Char8 qualified as Char8
+import Data.IORef
 import Data.String (fromString)
 import Hasura.Prelude
 import Hasura.Tracing.TraceId
@@ -57,19 +58,21 @@ type TracingMetadata = [(Text, Text)]
 newtype Reporter = Reporter
   { runReporter ::
       forall io a.
-      MonadIO io =>
+      (MonadIO io, MonadBaseControl IO io) =>
       TraceContext ->
       -- the current trace context
       Text ->
       -- human-readable name for this block of code
-      io (a, TracingMetadata) ->
-      -- the action whose execution we want to report, returning
-      -- any metadata emitted
+      IO TracingMetadata ->
+      -- an IO action that gets all of the metadata logged so far by the action
+      -- being traced
+      io a ->
+      -- the action we want to trace
       io a
   }
 
 noReporter :: Reporter
-noReporter = Reporter \_ _ -> fmap fst
+noReporter = Reporter \_ _ _ -> id
 
 -- | A type class for monads which support some way to report execution traces.
 --
@@ -124,6 +127,7 @@ samplingStateFromHeader = \case
 data TraceTEnv = TraceTEnv
   { tteTraceContext :: TraceContext,
     tteReporter :: Reporter,
+    tteMetadataRef :: IORef TracingMetadata,
     tteSamplingDecision :: SamplingDecision
   }
 
@@ -185,14 +189,14 @@ sampleOneInN denominator
 
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
-newtype TraceT m a = TraceT {unTraceT :: ReaderT TraceTEnv (WriterT TracingMetadata m) a}
+newtype TraceT m a = TraceT {unTraceT :: ReaderT TraceTEnv m a}
   deriving (Functor, Applicative, Monad, MonadIO, MonadFix, MonadMask, MonadCatch, MonadThrow, MonadBase b, MonadBaseControl b)
 
 instance MonadTrans TraceT where
-  lift = TraceT . lift . lift
+  lift = TraceT . lift
 
 instance MFunctor TraceT where
-  hoist f (TraceT rwma) = TraceT (hoist (hoist f) rwma)
+  hoist f (TraceT rwma) = TraceT (hoist f rwma)
 
 instance MonadError e m => MonadError e (TraceT m) where
   throwError = lift . throwError
@@ -208,15 +212,27 @@ instance (HasHttpManagerM m) => HasHttpManagerM (TraceT m) where
 -- | Run an action in the 'TraceT' monad transformer.
 -- 'runTraceT' delimits a new trace with its root span, and the arguments
 -- specify a name and metadata for that span.
-runTraceT :: (HasReporter m, MonadIO m) => SamplingPolicy -> Text -> TraceT m a -> m a
+runTraceT ::
+  (HasReporter m, MonadIO m, MonadBaseControl IO m) =>
+  SamplingPolicy ->
+  Text ->
+  TraceT m a ->
+  m a
 runTraceT policy name tma = do
   rep <- askReporter
   runTraceTWithReporter rep policy name tma
 
 runTraceTWith ::
-  MonadIO m => TraceContext -> Reporter -> SamplingPolicy -> Text -> TraceT m a -> m a
+  (MonadIO m, MonadBaseControl IO m) =>
+  TraceContext ->
+  Reporter ->
+  SamplingPolicy ->
+  Text ->
+  TraceT m a ->
+  m a
 runTraceTWith ctx rep policy name tma = do
   samplingDecision <- liftIO $ decideSampling (tcSamplingState ctx) policy
+  metadataRef <- liftIO $ newIORef []
   let subCtx =
         ctx
           { tcSamplingState =
@@ -224,15 +240,21 @@ runTraceTWith ctx rep policy name tma = do
           }
       report =
         case samplingDecision of
-          SampleNever -> fmap fst
-          SampleAlways -> runReporter rep ctx name
-  report . runWriterT $
-    runReaderT (unTraceT tma) (TraceTEnv subCtx rep samplingDecision)
+          SampleNever -> id
+          SampleAlways -> do
+            runReporter rep ctx name (readIORef metadataRef)
+  report $
+    runReaderT (unTraceT tma) (TraceTEnv subCtx rep metadataRef samplingDecision)
 
 -- | Run an action in the 'TraceT' monad transformer in an
 -- existing context.
 runTraceTInContext ::
-  (MonadIO m, HasReporter m) => TraceContext -> SamplingPolicy -> Text -> TraceT m a -> m a
+  (MonadIO m, MonadBaseControl IO m, HasReporter m) =>
+  TraceContext ->
+  SamplingPolicy ->
+  Text ->
+  TraceT m a ->
+  m a
 runTraceTInContext ctx policy name tma = do
   rep <- askReporter
   runTraceTWith ctx rep policy name tma
@@ -240,7 +262,12 @@ runTraceTInContext ctx policy name tma = do
 -- | Run an action in the 'TraceT' monad transformer in an
 -- existing context.
 runTraceTWithReporter ::
-  MonadIO m => Reporter -> SamplingPolicy -> Text -> TraceT m a -> m a
+  (MonadIO m, MonadBaseControl IO m) =>
+  Reporter ->
+  SamplingPolicy ->
+  Text ->
+  TraceT m a ->
+  m a
 runTraceTWithReporter rep policy name tma = do
   ctx <-
     TraceContext
@@ -252,7 +279,7 @@ runTraceTWithReporter rep policy name tma = do
 
 -- | Run an action in the 'TraceT' monad transformer while suppressing all
 -- tracing-related side-effects.
-ignoreTraceT :: MonadIO m => TraceT m a -> m a
+ignoreTraceT :: (MonadIO m, MonadBaseControl IO m) => TraceT m a -> m a
 ignoreTraceT = runTraceTWithReporter noReporter sampleNever ""
 
 -- | Monads which support tracing. 'TraceT' is the standard example.
@@ -266,6 +293,9 @@ class Monad m => MonadTrace m where
 
   -- | Ask for the current tracing reporter
   currentReporter :: m Reporter
+
+  -- | Ask for the current handle on the tracing metadata
+  currentMetadataRef :: m (IORef TracingMetadata)
 
   -- | Ask for the current sampling decision
   currentSamplingDecision :: m SamplingDecision
@@ -296,49 +326,55 @@ class Monad m => MonadTrace m where
 -- Laws:
 --
 -- > interpTraceT id (hoist f (TraceT x)) = interpTraceT f (TraceT x)
-interpTraceT ::
-  MonadTrace n =>
-  (m (a, TracingMetadata) -> n (b, TracingMetadata)) ->
-  TraceT m a ->
-  n b
-interpTraceT f (TraceT rwma) = do
+interpTraceT :: MonadTrace n => (m a -> n b) -> TraceT m a -> n b
+interpTraceT f (TraceT rma) = do
   ctx <- currentContext
   rep <- currentReporter
+  metadataRef <- currentMetadataRef
   samplingDecision <- currentSamplingDecision
-  (b, meta) <- f (runWriterT (runReaderT rwma (TraceTEnv ctx rep samplingDecision)))
-  attachMetadata meta
-  pure b
+  f (runReaderT rma (TraceTEnv ctx rep metadataRef samplingDecision))
 
 -- | If the underlying monad can report trace data, then 'TraceT' will
 -- collect it and hand it off to that reporter.
-instance MonadIO m => MonadTrace (TraceT m) where
+instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
   -- Note: this implementation is so awkward because we don't want to give the
   -- derived MonadReader/Writer instances to TraceT
-  trace name ma = TraceT . ReaderT $ \env@(TraceTEnv ctx rep samplingDecision) -> do
-    case samplingDecision of
-      SampleNever -> runReaderT (unTraceT ma) env
-      SampleAlways -> do
-        spanId <- liftIO randomSpanId
-        let subCtx =
-              ctx
-                { tcCurrentSpan = spanId,
-                  tcCurrentParent = Just (tcCurrentSpan ctx)
-                }
-        lift . runReporter rep subCtx name . runWriterT $
-          runReaderT (unTraceT ma) (TraceTEnv subCtx rep samplingDecision)
+  trace name ma =
+    TraceT $
+      ReaderT $ \env@(TraceTEnv ctx rep _ samplingDecision) -> do
+        case samplingDecision of
+          SampleNever -> runReaderT (unTraceT ma) env
+          SampleAlways -> do
+            spanId <- liftIO randomSpanId
+            let subCtx =
+                  ctx
+                    { tcCurrentSpan = spanId,
+                      tcCurrentParent = Just (tcCurrentSpan ctx)
+                    }
+            metadataRef <- liftIO $ newIORef []
+            runReporter rep subCtx name (readIORef metadataRef) $
+              runReaderT
+                (unTraceT ma)
+                (TraceTEnv subCtx rep metadataRef samplingDecision)
 
   currentContext = TraceT (asks tteTraceContext)
 
   currentReporter = TraceT (asks tteReporter)
 
+  currentMetadataRef = TraceT (asks tteMetadataRef)
+
   currentSamplingDecision = TraceT (asks tteSamplingDecision)
 
-  attachMetadata = TraceT . tell
+  attachMetadata metadata =
+    TraceT $
+      ReaderT $ \env ->
+        liftIO $ modifyIORef' (tteMetadataRef env) (metadata ++)
 
 instance MonadTrace m => MonadTrace (ReaderT r m) where
   trace = mapReaderT . trace
   currentContext = lift currentContext
   currentReporter = lift currentReporter
+  currentMetadataRef = lift currentMetadataRef
   currentSamplingDecision = lift currentSamplingDecision
   attachMetadata = lift . attachMetadata
 
@@ -346,6 +382,7 @@ instance MonadTrace m => MonadTrace (StateT e m) where
   trace = mapStateT . trace
   currentContext = lift currentContext
   currentReporter = lift currentReporter
+  currentMetadataRef = lift currentMetadataRef
   currentSamplingDecision = lift currentSamplingDecision
   attachMetadata = lift . attachMetadata
 
@@ -353,6 +390,7 @@ instance MonadTrace m => MonadTrace (ExceptT e m) where
   trace = mapExceptT . trace
   currentContext = lift currentContext
   currentReporter = lift currentReporter
+  currentMetadataRef = lift currentMetadataRef
   currentSamplingDecision = lift currentSamplingDecision
   attachMetadata = lift . attachMetadata
 

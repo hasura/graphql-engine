@@ -4,6 +4,7 @@
 module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Control.Arrow.Extended
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -80,6 +81,7 @@ resolveBackendInfo' ::
     Inc.ArrowDistribute arr,
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     MonadIO m,
+    MonadBaseControl IO m,
     HasHttpManagerM m
   ) =>
   Logger Hasura ->
@@ -100,6 +102,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         HasHttpManagerM m
       ) =>
       (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
@@ -114,7 +117,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         |) metadataObj
 
     getDataConnectorCapabilities ::
-      MonadIO m =>
+      (MonadIO m, MonadBaseControl IO m) =>
       DC.DataConnectorOptions ->
       HTTP.Manager ->
       m (Either QErr DC.DataConnectorInfo)
@@ -130,7 +133,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 
 resolveSourceConfig' ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->

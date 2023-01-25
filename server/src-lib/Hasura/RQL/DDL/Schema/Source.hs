@@ -359,7 +359,8 @@ runGetSourceTables ::
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
-    MonadIO m
+    MonadIO m,
+    MonadBaseControl IO m
   ) =>
   Env.Environment ->
   GetSourceTables ->
@@ -410,7 +411,8 @@ runGetTableInfo ::
     MonadReader r m,
     MonadError Error.QErr m,
     Metadata.MetadataM m,
-    MonadIO m
+    MonadIO m,
+    MonadBaseControl IO m
   ) =>
   Env.Environment ->
   GetTableInfo ->
@@ -453,7 +455,15 @@ lookupDataConnectorOptions dcName bmap =
    in (InsOrdHashMap.lookup dcName =<< backendConfig)
         `onNothing` (Error.throw400 Error.DataConnectorError ("Data connector named " <> Text.E.toTxt dcName <> " was not found in the data connector backend config"))
 
-querySourceSchema :: (MonadIO m, MonadError QErr m) => L.Logger L.Hasura -> HTTP.Manager.Manager -> Maybe DC.Types.SourceTimeout -> BaseUrl -> SourceName -> API.Config -> m API.SchemaResponse
+querySourceSchema ::
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  L.Logger L.Hasura ->
+  HTTP.Manager.Manager ->
+  Maybe DC.Types.SourceTimeout ->
+  BaseUrl ->
+  SourceName ->
+  API.Config ->
+  m API.SchemaResponse
 querySourceSchema logger manager timeout uri sourceName transformedConfig =
   Tracing.ignoreTraceT
     . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger uri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))

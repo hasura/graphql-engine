@@ -438,6 +438,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         Inc.ArrowDistribute arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         HasHttpManagerM m
       ) =>
       (BackendConfigWrapper b, Inc.Dependency (BackendMap BackendInvalidationKeysWrapper)) `arr` BackendCache
@@ -455,6 +456,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         Inc.ArrowDistribute arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         HasHttpManagerM m
       ) =>
       (Inc.Dependency (BackendMap BackendInvalidationKeysWrapper), [AB.AnyBackend BackendConfigWrapper]) `arr` BackendCache
@@ -473,6 +475,7 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
         Inc.ArrowCache m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         MonadResolveSource m,
         HasHttpManagerM m,
         BackendMetadata b

@@ -116,6 +116,7 @@ where
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
 import Control.Lens (view)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -217,6 +218,7 @@ generateCronEventsFrom startTime CronTriggerInfo {..} =
 
 processCronEvents ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
@@ -269,6 +271,7 @@ processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEv
 
 processOneOffScheduledEvents ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
@@ -316,6 +319,7 @@ processOneOffScheduledEvents
 
 processScheduledTriggers ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
@@ -349,6 +353,7 @@ processScheduledEvent ::
     Has HTTP.Manager r,
     Has (L.Logger L.Hasura) r,
     MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage m
   ) =>

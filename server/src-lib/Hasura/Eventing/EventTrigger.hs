@@ -353,6 +353,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
         Has (L.Logger L.Hasura) r,
         Tracing.HasReporter io,
         MonadMask io,
+        MonadBaseControl IO io,
         BackendEventTrigger b
       ) =>
       EventWithSource b ->

@@ -74,6 +74,7 @@ class
       Inc.ArrowDistribute arr,
       ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
       MonadIO m,
+      MonadBaseControl IO m,
       HasHttpManagerM m
     ) =>
     Logger Hasura ->
@@ -89,7 +90,7 @@ class
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
-    (MonadIO m, MonadResolveSource m) =>
+    (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
     Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->

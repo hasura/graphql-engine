@@ -313,7 +313,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
 
   let runTraceT ::
         forall m1 a1.
-        (MonadIO m1, Tracing.HasReporter m1) =>
+        (MonadIO m1, MonadBaseControl IO m1, Tracing.HasReporter m1) =>
         Tracing.TraceT m1 a1 ->
         m1 a1
       runTraceT = do

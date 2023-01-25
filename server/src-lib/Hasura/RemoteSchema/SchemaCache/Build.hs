@@ -8,6 +8,7 @@ where
 
 import Control.Arrow.Extended
 import Control.Arrow.Interpret
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
@@ -40,6 +41,7 @@ buildRemoteSchemas ::
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
+    MonadBaseControl IO m,
     HasHttpManagerM m,
     Eq remoteRelationshipDefinition,
     ToJSON remoteRelationshipDefinition,
