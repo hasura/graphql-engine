@@ -15,7 +15,7 @@ describe('validateAllowedAssets', () => {
           css: [],
         })
       ).toThrowError(
-        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since older cli may load this instead of the correct assets.`
+        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.`
       );
     });
     it(`should reject a css asset with the name ${forbiddenAsset}`, () => {
@@ -25,7 +25,7 @@ describe('validateAllowedAssets', () => {
           js: [],
         })
       ).toThrowError(
-        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since older cli may load this instead of the correct assets.`
+        `Cannot use ${forbiddenAsset}: This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.`
       );
     });
   }
@@ -49,6 +49,7 @@ const exampleHtml = `
     <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script src="https://graphql-engine-cdn.hasura.io/pro-console/assets/common/js/lottie.min.js"></script>
     <script>
       window.__env = envVars;
 
@@ -62,6 +63,10 @@ const exampleHtml = `
       transition: opacity 0.2s linear;
     }
   </style>
+    <script
+      src="https://graphql-engine-cdn.hasura.io/pro-console/wasm_exec.js"
+      charset="UTF-8"
+    ></script>
   <script src="runtime.esm.js" type="module"></script><script src="polyfills.esm.js" type="module"></script><script src="vendor.esm.js" type="module"></script><script src="main.esm.js" type="module"></script></body>
 </html>
 `;
@@ -209,9 +214,7 @@ loadCss(basePath + "my.css.gz");
       css: [],
     });
 
-    expect(result).toEqual(
-      'loadJs(basePath + "todo.js.gz", { type: "module" });\n'
-    );
+    expect(result).toEqual('loadJs(basePath + "todo.js.gz", "module");\n');
   });
   it('should generate the js loader in the same order as the dom', () => {
     const result = generateDynamicLoadCalls({
@@ -232,7 +235,7 @@ loadCss(basePath + "my.css.gz");
       css: [],
     });
 
-    expect(result).toEqual(`loadJs(basePath + "todo.js.gz", { type: "module" });
+    expect(result).toEqual(`loadJs(basePath + "todo.js.gz", "module");
 loadJs(basePath + "my.js.gz");
 `);
   });
@@ -263,7 +266,7 @@ loadJs(basePath + "my.js.gz");
     });
 
     expect(result).toEqual(`loadCss(basePath + "my.css.gz");
-loadJs(basePath + "todo.js.gz", { type: "module" });
+loadJs(basePath + "todo.js.gz", "module");
 loadJs(basePath + "my.js.gz");
 `);
   });
@@ -306,7 +309,7 @@ describe('generateAssetLoaderFile', () => {
         linkElem.href = url;
         document.body.append(linkElem);
       };
-      const loadJs = (url, { type }) => {
+      const loadJs = (url, type) => {
         const scriptElem = document.createElement(\\"script\\");
         scriptElem.charset = \\"UTF-8\\";
         scriptElem.src = url;
@@ -316,9 +319,10 @@ describe('generateAssetLoaderFile', () => {
         document.body.append(scriptElem);
       };
 
-      window.__loadConsoleAssetsFromBasePath = (basePath) => {
+      window.__loadConsoleAssetsFromBasePath = (root) => {
+      const basePath = root.endsWith('/') ? root : root + '/';
       loadCss(basePath + \\"my.css.gz\\");
-      loadJs(basePath + \\"todo.js.gz\\", { type: \\"module\\" });
+      loadJs(basePath + \\"todo.js.gz\\", \\"module\\");
       loadJs(basePath + \\"my.js.gz\\");
       }"
     `);
@@ -364,7 +368,7 @@ describe('generatePolyfillLoaderFile', () => {
         linkElem.href = url;
         document.body.append(linkElem);
       };
-      const loadJs = (url, { type }) => {
+      const loadJs = (url, type) => {
         const scriptElem = document.createElement(\\"script\\");
         scriptElem.charset = \\"UTF-8\\";
         scriptElem.src = url;
@@ -374,16 +378,17 @@ describe('generatePolyfillLoaderFile', () => {
         document.body.append(scriptElem);
       };
 
-      window.__loadConsoleAssetsFromBasePath = (basePath) => {
+      window.__loadConsoleAssetsFromBasePath = (root) => {
+      const basePath = root.endsWith('/') ? root : root + '/';
       loadCss(basePath + \\"my.css.gz\\");
-      loadJs(basePath + \\"todo.js.gz\\", { type: \\"module\\" });
+      loadJs(basePath + \\"todo.js.gz\\", \\"module\\");
       loadJs(basePath + \\"my.js.gz\\");
       }
 
       // This is from the old console template for the CLI
       window.__loadConsoleAssetsFromBasePath(window.__env.versionedAssetsPath);
 
-      console.log('Please update your CLI to the latest version to remove the console network errors.');
+      console.log('Please note that the error of loading vendor.js and main.css is normal.');
 
       "
     `);

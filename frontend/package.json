@@ -9,8 +9,10 @@
     "storybook": "nx run console-legacy-ce:storybook",
     "start:ce": "nx run console-ce:serve",
     "build:ce": "nx run console-ce:build",
+    "server-build:ce": "nx run console-ce:build-server-assets",
     "start:ee": "nx run console-ee:serve",
-    "build:ee": "nx run console-ee:build"
+    "build:ee": "nx run console-ee:build",
+    "server-build:ee": "nx run console-ee:build-server-assets"
   },
   "private": true,
   "overrides": {

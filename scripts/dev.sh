@@ -317,7 +317,7 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   RUN_INVOCATION=(cabal new-run --project-file=cabal/dev-sh.project --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
-    --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
+    --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-ce"
     )
 
   echo_pretty 'About to do:'
@@ -348,8 +348,8 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty "    http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/console"
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
-    echo_pretty "      $ cd \"$PROJECT_ROOT/console\""
-    echo_pretty "      $ npm ci && make server-build "
+    echo_pretty "      $ cd \"$PROJECT_ROOT/frontend\""
+    echo_pretty "      $ npm ci && npm run server-build:ce"
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
@@ -522,7 +522,7 @@ elif [ "$MODE" = "test" ]; then
         --metadata-database-url="$PG_DB_URL" serve \
         --stringify-numeric-types \
         --enable-console \
-        --console-assets-dir ../console/static/dist \
+        --console-assets-dir ../frontend/dist/apps/server-assets-console-ce \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"

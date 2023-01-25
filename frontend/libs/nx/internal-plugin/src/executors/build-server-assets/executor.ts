@@ -24,7 +24,7 @@ type Assets = {
 };
 
 const legacyNamesThatWeCantUseReason =
-  "This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since older cli may load this instead of the correct assets.";
+  "This file cannot be used anymore give it was used prior to 2.18 and we can't use that file name anymore since cli may load this instead of the correct assets.";
 const forbiddenAssets: Record<string, string> = {
   'main.css': legacyNamesThatWeCantUseReason,
   'main.js': legacyNamesThatWeCantUseReason,
@@ -53,7 +53,10 @@ export const extractAssets = (html: string): Assets => {
   const domParser = new DomParser();
   const parsedDocument = domParser.parseFromString(html);
   parsedDocument.getElementsByTagName('script')?.forEach(element => {
-    if (element.getAttribute('src')) {
+    if (
+      element.getAttribute('src') &&
+      !element.getAttribute('src').startsWith('http')
+    ) {
       assets.js.push({
         tag: element.outerHTML,
         url: element.getAttribute('src') || 'not_found',
@@ -65,7 +68,10 @@ export const extractAssets = (html: string): Assets => {
   parsedDocument
     .getElementsByAttribute('rel', 'stylesheet')
     ?.forEach(element => {
-      if (element.getAttribute('href')) {
+      if (
+        element.getAttribute('href') &&
+        !element.getAttribute('href').startsWith('http')
+      ) {
         assets.css.push({
           tag: element.outerHTML,
           url: element.getAttribute('href') || 'not_found',
@@ -95,7 +101,7 @@ export const generateDynamicLoadCalls = (assets: Assets): string => {
   const jsMap = assets.js
     .map(it => {
       if (it.jsModule) {
-        return `loadJs(basePath + "${it.url}.gz", { type: "module" });\n`;
+        return `loadJs(basePath + "${it.url}.gz", "module");\n`;
       }
       return `loadJs(basePath + "${it.url}.gz");\n`;
     })
@@ -119,7 +125,7 @@ const loadCss = (url) => {
   linkElem.href = url;
   document.body.append(linkElem);
 };
-const loadJs = (url, { type }) => {
+const loadJs = (url, type) => {
   const scriptElem = document.createElement("script");
   scriptElem.charset = "UTF-8";
   scriptElem.src = url;
@@ -129,7 +135,8 @@ const loadJs = (url, { type }) => {
   document.body.append(scriptElem);
 };
 
-window.__loadConsoleAssetsFromBasePath = (basePath) => {
+window.__loadConsoleAssetsFromBasePath = (root) => {
+const basePath = root.endsWith('/') ? root : root + '/';
 ${loadedAssets}}`;
 };
 
@@ -142,7 +149,7 @@ ${assetLoaderString}
 // This is from the old console template for the CLI
 window.__loadConsoleAssetsFromBasePath(window.__env.versionedAssetsPath);
 
-console.log('Please update your CLI to the latest version to remove the console network errors.');
+console.log('Please note that the error of loading vendor.js and main.css is normal.');
 
 `;
 };
