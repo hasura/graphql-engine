@@ -1,1 +1,0 @@
-export { generateGraphQLDeleteMutation } from './generateGraphQLDeleteMutation';
