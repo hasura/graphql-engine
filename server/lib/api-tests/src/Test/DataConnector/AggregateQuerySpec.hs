@@ -6,8 +6,13 @@ module Test.DataConnector.AggregateQuerySpec
   )
 where
 
+--------------------------------------------------------------------------------
+
+import Control.Lens qualified as Lens
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Lens (key, _Array)
 import Data.List.NonEmpty qualified as NE
+import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
@@ -18,9 +23,11 @@ import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
+
+--------------------------------------------------------------------------------
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
@@ -39,6 +46,8 @@ spec =
         ]
     )
     tests
+
+--------------------------------------------------------------------------------
 
 sourceMetadata :: BackendTypeConfig -> Aeson.Value -> Aeson.Value
 sourceMetadata backendTypeMetadata config =
@@ -179,7 +188,12 @@ nodeTests opts = describe "Nodes Tests" $ do
         |]
 
   it "works with array relations" $ \(testEnvironment, _) -> do
-    shouldReturnYaml
+    let sortYamlArray :: Aeson.Value -> IO Aeson.Value
+        sortYamlArray (Aeson.Array a) = pure $ Aeson.Array (Vector.fromList (sort (Vector.toList a)))
+        sortYamlArray _ = fail "Should return Array"
+
+    shouldReturnYamlF
+      (Lens.traverseOf (key "data" . key "Artist_aggregate" . key "nodes" . _Array . traverse . key "Albums" . key "nodes") sortYamlArray)
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment

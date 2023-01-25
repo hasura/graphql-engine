@@ -84,6 +84,22 @@ test-matrix: build remove-tix-file
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		cabal run api-tests:exe:produce-feature-matrix +RTS -N4 -RTS)
 
+.PHONY: test-data-connectors-pro
+## test-backends-pro: run tests for HGE pro for all backends
+test-data-connectors-pro: build-pro remove-tix-file
+	docker compose up -d --wait postgres dc-sqlite-agent
+	$(call stop_after, \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		cabal run api-tests-pro:exe:api-tests-pro)
+
+.PHONY: test-data-connectors-snowflake-pro
+## test-data-connectors-snowflake-pro: run tests for HGE pro for all backends
+test-data-connectors-snowflake-pro: build-pro remove-tix-file
+	docker compose up -d --wait postgres dc-sqlite-agent
+	$(call stop_after, \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		cabal run api-tests-pro:exe:api-tests-pro -- --match "DataConnector \"snowflake\"")
+
 .PHONY: test-backends-pro
 ## test-backends-pro: run tests for HGE pro for all backends
 test-backends-pro: build-pro start-backends remove-tix-file

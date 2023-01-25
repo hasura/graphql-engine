@@ -154,6 +154,7 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
         Nothing -> pendingWith "Backend not found for testEnvironment"
         Just sourceString -> do
           let album = formatTableName ["Album"]
+              artist = formatTableName ["Artist"]
               albumId = formatColumnName "AlbumId"
               artistId = formatColumnName "ArtistId"
               title = formatColumnName "Title"
@@ -200,10 +201,9 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               deletable: *supportsDeletes
               foreign_keys:
                 *artistForeignKeys:
-                  foreign_table:
-                    - Artist
+                  foreign_table: *artist
                   column_mapping:
-                    ArtistId: ArtistId
+                    *artistId: *artistId
             |]
                 & applyWhen (columnNullability == API.OnlyNullableColumns) (Lens.set (key "columns" . _Array . Lens.each . key "nullable") (J.Bool True))
                 & Lens.over (atKey "primary_key") (maybe Nothing (\value -> bool Nothing (Just value) supportsPrimaryKeys))
@@ -417,6 +417,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
           let actionType = backendType <> "_create_array_relationship"
               albumTable = formatTableName ["Album"]
               artistTable = formatTableName ["Artist"]
+              artistId = formatColumnName "ArtistId"
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -431,7 +432,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                     foreign_key_constraint_on:
                       table: *albumTable
                       columns:
-                        - ArtistId
+                        - *artistId
               |]
             )
             [yaml|
@@ -446,6 +447,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
           let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
               albumTable = formatTableName ["Album"]
               artistTable = formatTableName ["Artist"]
+              artistId = formatColumnName "ArtistId"
           shouldReturnYaml
             opts
             ( GraphqlEngine.postMetadata
@@ -470,13 +472,13 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
                   - object_relationships:
                     - name: Artist
                       using:
-                        foreign_key_constraint_on: ArtistId
+                        foreign_key_constraint_on: *artistId
                     table: *albumTable
                   - array_relationships:
                     - name: Albums
                       using:
                         foreign_key_constraint_on:
-                          column: ArtistId
+                          column: *artistId
                           table: *albumTable
                     table: *artistTable
                 version: 3
