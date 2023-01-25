@@ -303,6 +303,14 @@ The DataConnector agent might be out of date. If you are getting a lot of test
 failures, first try rebuilding the containers with `docker compose build` to
 make sure you are using the latest version of the agent.
 
+### `make test-sqlserver` fails with `Inconsistent object: mssql connection error`
+
+Try updating the `mssql-tools` symlink:
+```sh
+brew install microsoft/mssql-release/mssql-tools@18
+brew unlink mssql-tools18 && brew link mssql-tools18
+```
+
 ### Microsoft SQL Server failures on Apple aarch64 chips
 
 This applies to all Apple hardware that uses aarch64 chips, e.g. the MacBook M1
