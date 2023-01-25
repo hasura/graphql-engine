@@ -1,0 +1,1 @@
+export { useUpdateTableConfiguration } from './useUpdateTableConfiguration';

@@ -1,0 +1,4967 @@
+{
+  "__schema": {
+    "directives": [
+      {
+        "args": [
+          {
+            "name": "if",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+            },
+            "description": null
+          }
+        ],
+        "name": "include",
+        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+        "description": null
+      },
+      {
+        "args": [
+          {
+            "name": "if",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+            },
+            "description": null
+          }
+        ],
+        "name": "skip",
+        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+        "description": null
+      }
+    ],
+    "queryType": { "name": "query_root" },
+    "subscriptionType": { "name": "subscription_root" },
+    "types": [
+      {
+        "inputFields": null,
+        "kind": "SCALAR",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "Boolean",
+        "enumValues": null,
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "SCALAR",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "Float",
+        "enumValues": null,
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "SCALAR",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "ID",
+        "enumValues": null,
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "SCALAR",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "Int",
+        "enumValues": null,
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "_eq",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_gt",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_gte",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_in",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "_is_null",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_lt",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_lte",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_neq",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_nin",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+              }
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "Int_comparison_exp",
+        "enumValues": null,
+        "description": "expression to compare columns of type Int. All fields are combined with logical 'AND'.",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "SCALAR",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "String",
+        "enumValues": null,
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "_eq",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_gt",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_gte",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_ilike",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_in",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "_is_null",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_like",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_lt",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_lte",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_neq",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_nilike",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_nin",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "_nlike",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_nsimilar",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "_similar",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "String_comparison_exp",
+        "enumValues": null,
+        "description": "expression to compare columns of type String. All fields are combined with logical 'AND'.",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "__Directive",
+        "enumValues": null,
+        "description": null,
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "args",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "__InputValue",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "description",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "locations",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "__DirectiveLocation",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "__DirectiveLocation",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "ARGUMENT_DEFINITION",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "ENUM",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "ENUM_VALUE",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "FIELD",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "FIELD_DEFINITION",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "FRAGMENT_DEFINITION",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "FRAGMENT_SPREAD",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "INLINE_FRAGMENT",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "INPUT_FIELD_DEFINITION",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "INPUT_OBJECT",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "INTERFACE",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "MUTATION",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "OBJECT",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "QUERY",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "SCALAR",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "SCHEMA",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "SUBSCRIPTION",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "UNION",
+            "description": null
+          }
+        ],
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "__EnumValue",
+        "enumValues": null,
+        "description": null,
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "deprecationReason",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "description",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "isDeprecated",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "__Field",
+        "enumValues": null,
+        "description": null,
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "args",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "__InputValue",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "deprecationReason",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "description",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "isDeprecated",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "type",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "OBJECT", "name": "__Type", "ofType": null }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "__InputValue",
+        "enumValues": null,
+        "description": null,
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "defaultValue",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "description",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "type",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "OBJECT", "name": "__Type", "ofType": null }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "__Schema",
+        "enumValues": null,
+        "description": null,
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "directives",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "__Directive",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "mutationType",
+            "type": { "kind": "OBJECT", "name": "__Type", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "queryType",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "OBJECT", "name": "__Type", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "subscriptionType",
+            "type": { "kind": "OBJECT", "name": "__Type", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "types",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "__Type",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "__Type",
+        "enumValues": null,
+        "description": null,
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "description",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "defaultValue": "false",
+                "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "enumValues",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "__EnumValue",
+                  "ofType": null
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "defaultValue": "false",
+                "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "fields",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "__Field",
+                  "ofType": null
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "inputFields",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "__InputValue",
+                  "ofType": null
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "interfaces",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "__Type", "ofType": null }
+              }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "kind",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "ENUM", "name": "__TypeKind", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "ofType",
+            "type": { "kind": "OBJECT", "name": "__Type", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "possibleTypes",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "__Type", "ofType": null }
+              }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "__TypeKind",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "ENUM",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "INPUT_OBJECT",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "INTERFACE",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "LIST",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "NON_NULL",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "OBJECT",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "SCALAR",
+            "description": null
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "UNION",
+            "description": null
+          }
+        ],
+        "description": null,
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books",
+        "enumValues": null,
+        "description": "columns and relationships of \"books\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "book_name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "user",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "OBJECT", "name": "users", "ofType": null }
+            },
+            "description": "An object relationship"
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_aggregate",
+        "enumValues": null,
+        "description": "aggregated selection of \"books\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "aggregate",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_aggregate_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "nodes",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "books",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_aggregate_fields",
+        "enumValues": null,
+        "description": "aggregate fields of \"books\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "avg",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_avg_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [
+              {
+                "name": "columns",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": null
+              },
+              {
+                "name": "distinct",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "count",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "max",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_max_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "min",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_min_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "stddev",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_stddev_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "stddev_pop",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_stddev_pop_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "stddev_samp",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_stddev_samp_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "sum",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_sum_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "var_pop",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_var_pop_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "var_samp",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_var_samp_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "variance",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_variance_fields",
+              "ofType": null
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "avg",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_avg_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "count",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "max",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_max_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "min",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_min_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "stddev",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_stddev_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "stddev_pop",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_stddev_pop_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "stddev_samp",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_stddev_samp_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "sum",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_sum_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "var_pop",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_var_pop_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "var_samp",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_var_samp_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "variance",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_variance_order_by",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_aggregate_order_by",
+        "enumValues": null,
+        "description": "order by aggregate values of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "data",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "books_insert_input",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "on_conflict",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_on_conflict",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_arr_rel_insert_input",
+        "enumValues": null,
+        "description": "input type for inserting array relation for remote table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_avg_fields",
+        "enumValues": null,
+        "description": "aggregate avg on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_avg_order_by",
+        "enumValues": null,
+        "description": "order by avg() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "_and",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "books_bool_exp",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "_not",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_bool_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "_or",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "books_bool_exp",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "book_name",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_comparison_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "user",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_bool_exp",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_bool_exp",
+        "enumValues": null,
+        "description": "Boolean expression to filter rows from the table \"books\". All fields are combined with a logical 'AND'.",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_constraint",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books_pkey",
+            "description": "unique or primary key constraint"
+          }
+        ],
+        "description": "unique or primary key constraints on table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_inc_input",
+        "enumValues": null,
+        "description": "input type for incrementing integer column in table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "book_name",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "user",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_obj_rel_insert_input",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_insert_input",
+        "enumValues": null,
+        "description": "input type for inserting data into table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_max_fields",
+        "enumValues": null,
+        "description": "aggregate max on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "book_name",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "book_name",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_max_order_by",
+        "enumValues": null,
+        "description": "order by max() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_min_fields",
+        "enumValues": null,
+        "description": "aggregate min on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "book_name",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "book_name",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_min_order_by",
+        "enumValues": null,
+        "description": "order by min() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_mutation_response",
+        "enumValues": null,
+        "description": "response of any mutation on the table \"books\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "affected_rows",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": "number of affected rows by the mutation"
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "returning",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "books",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "data of the affected rows by the mutation"
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "data",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "books_insert_input",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "on_conflict",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_on_conflict",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_obj_rel_insert_input",
+        "enumValues": null,
+        "description": "input type for inserting object relation for remote table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "constraint",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "books_constraint",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "update_columns",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "books_update_column",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "where",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_bool_exp",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_on_conflict",
+        "enumValues": null,
+        "description": "on conflict condition type for table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "book_name",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "user",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_order_by",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_order_by",
+        "enumValues": null,
+        "description": "ordering options when selecting data from \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_pk_columns_input",
+        "enumValues": null,
+        "description": "primary key columns input for table: \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_select_column",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "description": "column name"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "book_name",
+            "description": "column name"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "description": "column name"
+          }
+        ],
+        "description": "select columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "book_name",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_set_input",
+        "enumValues": null,
+        "description": "input type for updating data in table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_stddev_fields",
+        "enumValues": null,
+        "description": "aggregate stddev on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_stddev_order_by",
+        "enumValues": null,
+        "description": "order by stddev() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_stddev_pop_fields",
+        "enumValues": null,
+        "description": "aggregate stddev_pop on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_stddev_pop_order_by",
+        "enumValues": null,
+        "description": "order by stddev_pop() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_stddev_samp_fields",
+        "enumValues": null,
+        "description": "aggregate stddev_samp on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_stddev_samp_order_by",
+        "enumValues": null,
+        "description": "order by stddev_samp() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_sum_fields",
+        "enumValues": null,
+        "description": "aggregate sum on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_sum_order_by",
+        "enumValues": null,
+        "description": "order by sum() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_update_column",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "description": "column name"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "book_name",
+            "description": "column name"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "description": "column name"
+          }
+        ],
+        "description": "update columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_var_pop_fields",
+        "enumValues": null,
+        "description": "aggregate var_pop on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_var_pop_order_by",
+        "enumValues": null,
+        "description": "order by var_pop() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_var_samp_fields",
+        "enumValues": null,
+        "description": "aggregate var_samp on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_var_samp_order_by",
+        "enumValues": null,
+        "description": "order by var_samp() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "books_variance_fields",
+        "enumValues": null,
+        "description": "aggregate variance on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "author",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "author",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "books_variance_order_by",
+        "enumValues": null,
+        "description": "order by variance() on columns of table \"books\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "mutation_root",
+        "enumValues": null,
+        "description": "mutation root",
+        "fields": [
+          {
+            "args": [
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "books_bool_exp",
+                    "ofType": null
+                  }
+                },
+                "description": "filter the rows which have to be deleted"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "delete_books",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_mutation_response",
+              "ofType": null
+            },
+            "description": "delete data from the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "id",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "delete_books_by_pk",
+            "type": { "kind": "OBJECT", "name": "books", "ofType": null },
+            "description": "delete single row from the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "users_bool_exp",
+                    "ofType": null
+                  }
+                },
+                "description": "filter the rows which have to be deleted"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "delete_users",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_mutation_response",
+              "ofType": null
+            },
+            "description": "delete data from the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "id",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "delete_users_by_pk",
+            "type": { "kind": "OBJECT", "name": "users", "ofType": null },
+            "description": "delete single row from the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "objects",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "books_insert_input",
+                        "ofType": null
+                      }
+                    }
+                  }
+                },
+                "description": "the rows to be inserted"
+              },
+              {
+                "name": "on_conflict",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_on_conflict",
+                  "ofType": null
+                },
+                "description": "on conflict condition"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "insert_books",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_mutation_response",
+              "ofType": null
+            },
+            "description": "insert data into the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "object",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "books_insert_input",
+                    "ofType": null
+                  }
+                },
+                "description": "the row to be inserted"
+              },
+              {
+                "name": "on_conflict",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_on_conflict",
+                  "ofType": null
+                },
+                "description": "on conflict condition"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "insert_books_one",
+            "type": { "kind": "OBJECT", "name": "books", "ofType": null },
+            "description": "insert a single row into the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "objects",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "users_insert_input",
+                        "ofType": null
+                      }
+                    }
+                  }
+                },
+                "description": "the rows to be inserted"
+              },
+              {
+                "name": "on_conflict",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_on_conflict",
+                  "ofType": null
+                },
+                "description": "on conflict condition"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "insert_users",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_mutation_response",
+              "ofType": null
+            },
+            "description": "insert data into the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "object",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "users_insert_input",
+                    "ofType": null
+                  }
+                },
+                "description": "the row to be inserted"
+              },
+              {
+                "name": "on_conflict",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_on_conflict",
+                  "ofType": null
+                },
+                "description": "on conflict condition"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "insert_users_one",
+            "type": { "kind": "OBJECT", "name": "users", "ofType": null },
+            "description": "insert a single row into the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "_inc",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_inc_input",
+                  "ofType": null
+                },
+                "description": "increments the integer columns with given value of the filtered values"
+              },
+              {
+                "name": "_set",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_set_input",
+                  "ofType": null
+                },
+                "description": "sets the columns of the filtered rows to the given values"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "books_bool_exp",
+                    "ofType": null
+                  }
+                },
+                "description": "filter the rows which have to be updated"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "update_books",
+            "type": {
+              "kind": "OBJECT",
+              "name": "books_mutation_response",
+              "ofType": null
+            },
+            "description": "update data of the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "_inc",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_inc_input",
+                  "ofType": null
+                },
+                "description": "increments the integer columns with given value of the filtered values"
+              },
+              {
+                "name": "_set",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_set_input",
+                  "ofType": null
+                },
+                "description": "sets the columns of the filtered rows to the given values"
+              },
+              {
+                "name": "pk_columns",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "books_pk_columns_input",
+                    "ofType": null
+                  }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "update_books_by_pk",
+            "type": { "kind": "OBJECT", "name": "books", "ofType": null },
+            "description": "update single row of the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "_inc",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_inc_input",
+                  "ofType": null
+                },
+                "description": "increments the integer columns with given value of the filtered values"
+              },
+              {
+                "name": "_set",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_set_input",
+                  "ofType": null
+                },
+                "description": "sets the columns of the filtered rows to the given values"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "users_bool_exp",
+                    "ofType": null
+                  }
+                },
+                "description": "filter the rows which have to be updated"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "update_users",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_mutation_response",
+              "ofType": null
+            },
+            "description": "update data of the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "_inc",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_inc_input",
+                  "ofType": null
+                },
+                "description": "increments the integer columns with given value of the filtered values"
+              },
+              {
+                "name": "_set",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_set_input",
+                  "ofType": null
+                },
+                "description": "sets the columns of the filtered rows to the given values"
+              },
+              {
+                "name": "pk_columns",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "users_pk_columns_input",
+                    "ofType": null
+                  }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "update_users_by_pk",
+            "type": { "kind": "OBJECT", "name": "users", "ofType": null },
+            "description": "update single row of the table: \"users\""
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "order_by",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "asc",
+            "description": "in the ascending order, nulls last"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "asc_nulls_first",
+            "description": "in the ascending order, nulls first"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "asc_nulls_last",
+            "description": "in the ascending order, nulls last"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "desc",
+            "description": "in the descending order, nulls first"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "desc_nulls_first",
+            "description": "in the descending order, nulls first"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "desc_nulls_last",
+            "description": "in the descending order, nulls last"
+          }
+        ],
+        "description": "column ordering options",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "query_root",
+        "enumValues": null,
+        "description": "query root",
+        "fields": [
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "books_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "books",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "fetch data from the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "books_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books_aggregate",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "books_aggregate",
+                "ofType": null
+              }
+            },
+            "description": "fetch aggregated fields from the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "id",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books_by_pk",
+            "type": { "kind": "OBJECT", "name": "books", "ofType": null },
+            "description": "fetch data from the table: \"books\" using primary key columns"
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "users_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "users_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "users",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "fetch data from the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "users_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "users_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users_aggregate",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "users_aggregate",
+                "ofType": null
+              }
+            },
+            "description": "fetch aggregated fields from the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "id",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users_by_pk",
+            "type": { "kind": "OBJECT", "name": "users", "ofType": null },
+            "description": "fetch data from the table: \"users\" using primary key columns"
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "subscription_root",
+        "enumValues": null,
+        "description": "subscription root",
+        "fields": [
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "books_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "books",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "fetch data from the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "books_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books_aggregate",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "books_aggregate",
+                "ofType": null
+              }
+            },
+            "description": "fetch aggregated fields from the table: \"books\""
+          },
+          {
+            "args": [
+              {
+                "name": "id",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books_by_pk",
+            "type": { "kind": "OBJECT", "name": "books", "ofType": null },
+            "description": "fetch data from the table: \"books\" using primary key columns"
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "users_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "users_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "users",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "fetch data from the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "users_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "users_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "users_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users_aggregate",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "users_aggregate",
+                "ofType": null
+              }
+            },
+            "description": "fetch aggregated fields from the table: \"users\""
+          },
+          {
+            "args": [
+              {
+                "name": "id",
+                "defaultValue": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+                },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users_by_pk",
+            "type": { "kind": "OBJECT", "name": "users", "ofType": null },
+            "description": "fetch data from the table: \"users\" using primary key columns"
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users",
+        "enumValues": null,
+        "description": "columns and relationships of \"users\"",
+        "fields": [
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "books_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "books",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "An array relationship"
+          },
+          {
+            "args": [
+              {
+                "name": "distinct_on",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "books_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "distinct select on columns"
+              },
+              {
+                "name": "limit",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "limit the number of rows returned"
+              },
+              {
+                "name": "offset",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                "description": "skip the first n rows. Use only with order_by"
+              },
+              {
+                "name": "order_by",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "books_order_by",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "sort the rows by one or more columns"
+              },
+              {
+                "name": "where",
+                "defaultValue": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "books_bool_exp",
+                  "ofType": null
+                },
+                "description": "filter the rows returned"
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "books_aggregate",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "books_aggregate",
+                "ofType": null
+              }
+            },
+            "description": "An aggregated array relationship"
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_aggregate",
+        "enumValues": null,
+        "description": "aggregated selection of \"users\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "aggregate",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_aggregate_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "nodes",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "users",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_aggregate_fields",
+        "enumValues": null,
+        "description": "aggregate fields of \"users\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "avg",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_avg_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [
+              {
+                "name": "columns",
+                "defaultValue": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "ENUM",
+                      "name": "users_select_column",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": null
+              },
+              {
+                "name": "distinct",
+                "defaultValue": null,
+                "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+                "description": null
+              }
+            ],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "count",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "max",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_max_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "min",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_min_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "stddev",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_stddev_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "stddev_pop",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_stddev_pop_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "stddev_samp",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_stddev_samp_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "sum",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_sum_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "var_pop",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_var_pop_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "var_samp",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_var_samp_fields",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "variance",
+            "type": {
+              "kind": "OBJECT",
+              "name": "users_variance_fields",
+              "ofType": null
+            },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "avg",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_avg_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "count",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "max",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_max_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "min",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_min_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "stddev",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_stddev_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "stddev_pop",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_stddev_pop_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "stddev_samp",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_stddev_samp_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "sum",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_sum_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "var_pop",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_var_pop_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "var_samp",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_var_samp_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "variance",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_variance_order_by",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_aggregate_order_by",
+        "enumValues": null,
+        "description": "order by aggregate values of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "data",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "users_insert_input",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "on_conflict",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_on_conflict",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_arr_rel_insert_input",
+        "enumValues": null,
+        "description": "input type for inserting array relation for remote table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_avg_fields",
+        "enumValues": null,
+        "description": "aggregate avg on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_avg_order_by",
+        "enumValues": null,
+        "description": "order by avg() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "_and",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "users_bool_exp",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "_not",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_bool_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "_or",
+            "defaultValue": null,
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "users_bool_exp",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "books",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_bool_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Int_comparison_exp",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "name",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_comparison_exp",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_bool_exp",
+        "enumValues": null,
+        "description": "Boolean expression to filter rows from the table \"users\". All fields are combined with a logical 'AND'.",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_constraint",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "users_pkey",
+            "description": "unique or primary key constraint"
+          }
+        ],
+        "description": "unique or primary key constraints on table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_inc_input",
+        "enumValues": null,
+        "description": "input type for incrementing integer column in table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "books",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_arr_rel_insert_input",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "name",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_insert_input",
+        "enumValues": null,
+        "description": "input type for inserting data into table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_max_fields",
+        "enumValues": null,
+        "description": "aggregate max on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "name",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_max_order_by",
+        "enumValues": null,
+        "description": "order by max() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_min_fields",
+        "enumValues": null,
+        "description": "aggregate min on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "name",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_min_order_by",
+        "enumValues": null,
+        "description": "order by min() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_mutation_response",
+        "enumValues": null,
+        "description": "response of any mutation on the table \"users\"",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "affected_rows",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": "number of affected rows by the mutation"
+          },
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "returning",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "users",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "data of the affected rows by the mutation"
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "data",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "users_insert_input",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "on_conflict",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_on_conflict",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_obj_rel_insert_input",
+        "enumValues": null,
+        "description": "input type for inserting object relation for remote table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "constraint",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "users_constraint",
+                "ofType": null
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "update_columns",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "users_update_column",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null
+          },
+          {
+            "name": "where",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "users_bool_exp",
+              "ofType": null
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_on_conflict",
+        "enumValues": null,
+        "description": "on conflict condition type for table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "books_aggregate",
+            "defaultValue": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "books_aggregate_order_by",
+              "ofType": null
+            },
+            "description": null
+          },
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "name",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_order_by",
+        "enumValues": null,
+        "description": "ordering options when selecting data from \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": { "kind": "SCALAR", "name": "Int", "ofType": null }
+            },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_pk_columns_input",
+        "enumValues": null,
+        "description": "primary key columns input for table: \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_select_column",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "description": "column name"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "description": "column name"
+          }
+        ],
+        "description": "select columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          },
+          {
+            "name": "name",
+            "defaultValue": null,
+            "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_set_input",
+        "enumValues": null,
+        "description": "input type for updating data in table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_stddev_fields",
+        "enumValues": null,
+        "description": "aggregate stddev on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_stddev_order_by",
+        "enumValues": null,
+        "description": "order by stddev() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_stddev_pop_fields",
+        "enumValues": null,
+        "description": "aggregate stddev_pop on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_stddev_pop_order_by",
+        "enumValues": null,
+        "description": "order by stddev_pop() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_stddev_samp_fields",
+        "enumValues": null,
+        "description": "aggregate stddev_samp on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_stddev_samp_order_by",
+        "enumValues": null,
+        "description": "order by stddev_samp() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_sum_fields",
+        "enumValues": null,
+        "description": "aggregate sum on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_sum_order_by",
+        "enumValues": null,
+        "description": "order by sum() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "ENUM",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_update_column",
+        "enumValues": [
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "description": "column name"
+          },
+          {
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "name",
+            "description": "column name"
+          }
+        ],
+        "description": "update columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_var_pop_fields",
+        "enumValues": null,
+        "description": "aggregate var_pop on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_var_pop_order_by",
+        "enumValues": null,
+        "description": "order by var_pop() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_var_samp_fields",
+        "enumValues": null,
+        "description": "aggregate var_samp on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_var_samp_order_by",
+        "enumValues": null,
+        "description": "order by var_samp() on columns of table \"users\"",
+        "fields": null
+      },
+      {
+        "inputFields": null,
+        "kind": "OBJECT",
+        "possibleTypes": null,
+        "interfaces": [],
+        "name": "users_variance_fields",
+        "enumValues": null,
+        "description": "aggregate variance on columns",
+        "fields": [
+          {
+            "args": [],
+            "isDeprecated": false,
+            "deprecationReason": null,
+            "name": "id",
+            "type": { "kind": "SCALAR", "name": "Float", "ofType": null },
+            "description": null
+          }
+        ]
+      },
+      {
+        "inputFields": [
+          {
+            "name": "id",
+            "defaultValue": null,
+            "type": { "kind": "ENUM", "name": "order_by", "ofType": null },
+            "description": null
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "possibleTypes": null,
+        "interfaces": null,
+        "name": "users_variance_order_by",
+        "enumValues": null,
+        "description": "order by variance() on columns of table \"users\"",
+        "fields": null
+      }
+    ],
+    "mutationType": { "name": "mutation_root" }
+  }
+}
