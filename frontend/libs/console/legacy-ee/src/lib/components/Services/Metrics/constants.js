@@ -1,0 +1,183 @@
+const FILTER_TYPE_DROPDOWN = 'dropdown';
+const FILTER_TYPE_DROPDOWN_DEFAULT = 'dropdown_default';
+const FILTER_TYPE_INPUT = 'input';
+const FILTER_TYPE_CHECKBOX = 'checkbox';
+
+const relativeModulePath = '/pro';
+const moduleName = 'pro';
+
+/* Time range filter values */
+
+const TIME_RANGE_BY_HOUR = 'Last hour';
+const TIME_RANGE_BY_DAY = 'Last 24 hours';
+const TIME_RANGE_BY_WEEK = 'Last week';
+const TIME_RANGE_BY_MONTH = 'Last month';
+const TIME_RANGE_BY_6_HOURS = 'Last 6 hours';
+const TIME_RANGE_BY_12_HOURS = 'Last 12 hours';
+
+/* Transport values */
+const TRANSPORT_HTTP = 'http';
+const TRANSPORT_WS = 'ws';
+
+/*Subscription statuses */
+const SUBSCRIPTION_OPEN = 'started';
+const SUBSCRIPTION_CLOSED = 'closed';
+
+/*Websocket status */
+const WEBSOCKET_OPEN = 'started';
+const WEBSOCKET_CLOSED = 'closed';
+
+/*
+ * Symbols represent the backend names for the filters/groupbys
+ * */
+
+const OPERATION_ID_SYMBOL = 'operation_id';
+const OPERATION_NAME_SYMBOL = 'operation_name';
+const OPERATION_TYPE_SYMBOL = 'operation_type';
+const ROLE_SYMBOL = 'user_role';
+const ERROR_CODE_SYMBOL = 'error_code';
+const CLIENT_NAME_SYMBOL = 'client_name';
+const TIME_RANGE_SYMBOL = 'time_range';
+const REQUEST_ID_SYMBOL = 'request_id';
+const TRANSPORT_SYMBOL = 'transport';
+const SHOW_ONLY_ERRORS_SYMBOL = 'show_only_errors';
+const OPERATION_GROUP_NAME = 'operation_group_name';
+const INSTANCE_ID_SYMBOL = 'instance_uid';
+const WEBSOCKET_ID_SYMBOL = 'websocket_id';
+const WEBSOCKET_OP_ID_SYMBOL = 'ws_operation_id';
+const SUBSCRIPTION_STATUS_SYMBOL = 'status';
+const WEBSOCKET_STATUS_SYMBOL = 'event_type';
+const WORKER_ID_SYMBOL = 'poller_id';
+const SELECT_ALL_SYMBOL = 'select_all';
+const HIDE_INTROPSECTION_QUERY_SYMBOL = 'hide_introspection_query';
+
+/* Display names of the above columns */
+const OPERATION_ID_DISPLAY = 'Operation ID';
+const OPERATION_NAME_DISPLAY = 'Operation Name';
+const OPERATION_TYPE_DISPLAY = 'Operation Type';
+const ROLE_DISPLAY = 'Role';
+const ERROR_CODE_DISPLAY = 'Error Code';
+const TIME_RANGE_DISPLAY = 'Time Range';
+const CLIENT_NAME_DISPLAY = 'Client Name';
+const REQUEST_ID_DISPLAY = 'Request ID';
+const TRANSPORT_DISPLAY = 'Transport';
+const SHOW_ONLY_ERROR_DISPLAY = 'Show only errors';
+const OPERATION_GROUP_NAME_DISPLAY = 'Operation Group';
+const INSTANCE_ID_NAME_DISPLAY = 'Instance ID';
+const WEBSOCKET_NAME_DISPLAY = 'Websocket ID';
+const WEBSOCKET_OP_NAME_DISPLAY = 'Websocket Operation ID';
+const SUBSCRIPTION_STATUS_NAME_DISPLAY = 'Status';
+const WEBSOCKET_STATUS_NAME_DISPLAY = 'Websocket Status';
+const WORKER_ID_DISPLAY = 'Worker Id';
+const SELECT_ALL_NAME_DISPLAY = 'Select All';
+const HIDE_INTROPSECTION_QUERY_DISPLAY = 'Hide Introspection Query';
+
+/*
+ * Symbols representing empty values for filter
+ * */
+const EMPTY_OPERATION_TYPE_SYMBOL = 'No Operation Type';
+const EMPTY_ROLE_SYMBOL = 'No Role';
+const EMPTY_ERROR_CODE_SYMBOL = 'No Error Code';
+const EMPTY_OPERATION_NAME_SYMBOL = 'No Operation Name';
+const EMPTY_CLIENT_NAME_SYMBOL = 'No Client Name';
+const EMPTY_TRANSPORT_SYMBOL = 'No Client Name';
+
+/* Default filter options */
+export const timeRangeFilters = [
+  TIME_RANGE_BY_HOUR,
+  TIME_RANGE_BY_6_HOURS,
+  TIME_RANGE_BY_12_HOURS,
+  TIME_RANGE_BY_DAY,
+];
+
+export const transportFilters = [TRANSPORT_HTTP, TRANSPORT_WS];
+
+export const subscriptionWorkerFilters = [
+  SUBSCRIPTION_OPEN,
+  SUBSCRIPTION_CLOSED,
+];
+
+export const websocketStatusFilters = [WEBSOCKET_OPEN, WEBSOCKET_CLOSED];
+
+export const TITLE_MAP = {
+  [OPERATION_ID_SYMBOL]: OPERATION_ID_DISPLAY,
+  [OPERATION_NAME_SYMBOL]: OPERATION_NAME_DISPLAY,
+  [OPERATION_TYPE_SYMBOL]: OPERATION_TYPE_DISPLAY,
+  [ROLE_SYMBOL]: ROLE_DISPLAY,
+  [ERROR_CODE_SYMBOL]: ERROR_CODE_DISPLAY,
+  [TIME_RANGE_SYMBOL]: TIME_RANGE_DISPLAY,
+  [CLIENT_NAME_SYMBOL]: CLIENT_NAME_DISPLAY,
+  [TRANSPORT_SYMBOL]: TRANSPORT_DISPLAY,
+  [SUBSCRIPTION_STATUS_SYMBOL]: SUBSCRIPTION_STATUS_NAME_DISPLAY,
+};
+
+export const NO_TITLE_MAP = {
+  [OPERATION_TYPE_SYMBOL]: EMPTY_OPERATION_TYPE_SYMBOL,
+  [OPERATION_NAME_SYMBOL]: EMPTY_OPERATION_NAME_SYMBOL,
+  [ROLE_SYMBOL]: EMPTY_ROLE_SYMBOL,
+  [ERROR_CODE_SYMBOL]: EMPTY_ERROR_CODE_SYMBOL,
+  [CLIENT_NAME_SYMBOL]: EMPTY_CLIENT_NAME_SYMBOL,
+};
+const EMPTY_WEBSOCKET_NAME_SYMBOL = 'No Websocket ID';
+
+export {
+  FILTER_TYPE_DROPDOWN,
+  FILTER_TYPE_DROPDOWN_DEFAULT,
+  FILTER_TYPE_INPUT,
+  FILTER_TYPE_CHECKBOX,
+  TIME_RANGE_BY_HOUR,
+  TIME_RANGE_BY_DAY,
+  TIME_RANGE_BY_WEEK,
+  TIME_RANGE_BY_MONTH,
+  TIME_RANGE_BY_6_HOURS,
+  TIME_RANGE_BY_12_HOURS,
+  OPERATION_ID_SYMBOL,
+  OPERATION_NAME_SYMBOL,
+  OPERATION_TYPE_SYMBOL,
+  ROLE_SYMBOL,
+  TRANSPORT_SYMBOL,
+  ERROR_CODE_SYMBOL,
+  CLIENT_NAME_SYMBOL,
+  TIME_RANGE_SYMBOL,
+  REQUEST_ID_SYMBOL,
+  SHOW_ONLY_ERRORS_SYMBOL,
+  EMPTY_OPERATION_NAME_SYMBOL,
+  EMPTY_OPERATION_TYPE_SYMBOL,
+  EMPTY_ERROR_CODE_SYMBOL,
+  EMPTY_ROLE_SYMBOL,
+  EMPTY_CLIENT_NAME_SYMBOL,
+  EMPTY_TRANSPORT_SYMBOL,
+  OPERATION_ID_DISPLAY,
+  OPERATION_NAME_DISPLAY,
+  OPERATION_TYPE_DISPLAY,
+  ROLE_DISPLAY,
+  TRANSPORT_DISPLAY,
+  ERROR_CODE_DISPLAY,
+  TIME_RANGE_DISPLAY,
+  CLIENT_NAME_DISPLAY,
+  REQUEST_ID_DISPLAY,
+  SHOW_ONLY_ERROR_DISPLAY,
+  OPERATION_GROUP_NAME,
+  OPERATION_GROUP_NAME_DISPLAY,
+  TRANSPORT_HTTP,
+  TRANSPORT_WS,
+  relativeModulePath,
+  moduleName,
+  INSTANCE_ID_SYMBOL,
+  INSTANCE_ID_NAME_DISPLAY,
+  WEBSOCKET_NAME_DISPLAY,
+  WEBSOCKET_ID_SYMBOL,
+  EMPTY_WEBSOCKET_NAME_SYMBOL,
+  WEBSOCKET_OP_ID_SYMBOL,
+  WEBSOCKET_OP_NAME_DISPLAY,
+  SUBSCRIPTION_STATUS_SYMBOL,
+  SUBSCRIPTION_STATUS_NAME_DISPLAY,
+  WEBSOCKET_STATUS_SYMBOL,
+  WEBSOCKET_STATUS_NAME_DISPLAY,
+  WORKER_ID_SYMBOL,
+  WORKER_ID_DISPLAY,
+  SELECT_ALL_SYMBOL,
+  SELECT_ALL_NAME_DISPLAY,
+  HIDE_INTROPSECTION_QUERY_DISPLAY,
+  HIDE_INTROPSECTION_QUERY_SYMBOL,
+};
