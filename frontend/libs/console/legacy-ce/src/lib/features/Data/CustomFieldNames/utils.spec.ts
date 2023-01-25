@@ -1,10 +1,10 @@
 import {
   getQualifiedTable,
   getTrackTableType,
-  getTrackingTableFormPlaceholders,
-} from '../utils';
+  customFieldNamesPlaceholders,
+} from './utils';
 
-import { TrackingTableFormValues } from '../types';
+import { CustomFieldNamesFormVals } from './types';
 
 describe('getTrackTableType', () => {
   it.each`
@@ -46,7 +46,7 @@ describe('getTableObjectType', () => {
 
 describe('getTrackingTableFormPlaceholders', () => {
   it('returns the placeholder', () => {
-    const expected: TrackingTableFormValues = {
+    const expected: CustomFieldNamesFormVals = {
       custom_name: 'customizeTableName (default)',
 
       select: 'customizeTableName (default)',
@@ -66,7 +66,7 @@ describe('getTrackingTableFormPlaceholders', () => {
       update_many: 'update_many_customizeTableName (default)',
     };
 
-    const result = getTrackingTableFormPlaceholders('customizeTableName');
+    const result = customFieldNamesPlaceholders('customizeTableName');
 
     expect(result).toEqual(expected);
   });

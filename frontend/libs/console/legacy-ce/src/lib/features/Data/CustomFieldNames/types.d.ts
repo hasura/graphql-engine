@@ -1,7 +1,7 @@
 import { MetadataTableConfig } from '@/features/hasura-metadata-types';
 import { Driver } from '@/dataSources';
 
-export type TrackingTableFormValues = {
+export type CustomFieldNamesFormVals = {
   custom_name: string;
 } & Required<MetadataTableConfig['custom_root_fields']>;
 

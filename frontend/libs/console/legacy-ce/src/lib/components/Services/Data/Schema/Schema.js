@@ -1,61 +1,60 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router';
 
+import { PrimaryDBInfo } from '@/components/Common/EditableHeading/PrimaryDBInfo';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { CustomFieldNames } from '@/features/Data';
 import { Button } from '@/new-components/Button';
+import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import { BsBoxArrowUpRight } from 'react-icons/bs';
-import _push from '../push';
+import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
 import {
-  setTableName,
-  addExistingTableSql,
-  addAllUntrackedTablesSql,
-} from '../Add/AddExistingTableViewActions';
-import {
-  updateSchemaInfo,
-  fetchFunctionInit,
-  updateCurrentSchema,
-} from '../DataActions';
-import {
-  autoAddRelName,
-  autoTrackRelations,
-} from '../TableRelationships/Actions';
-import { getRelDef } from '../TableRelationships/utils';
+  currentDriver,
+  dataSource,
+  getSchemaTables,
+  getUntrackedTables,
+  isFeatureSupported,
+} from '../../../../dataSources';
+import { getConsistentFunctions } from '../../../../metadata/selector';
+import { hideModal, showModal } from '../../../../store/modal/modal.actions';
+import { modalKeySelector } from '../../../../store/modal/modal.selectors';
+import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import styles from '../../../Common/Common.module.scss';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { getConfirmation, isEmpty } from '../../../Common/utils/jsUtils';
 import {
   getDataSourceBaseRoute,
   getSchemaAddTableRoute,
   getSchemaBaseRoute,
   getSchemaPermissionsRoute,
 } from '../../../Common/utils/routesUtils';
-import { createNewSchema, deleteCurrentSchema } from './Actions';
-import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
-import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import {
-  getSchemaTables,
-  getUntrackedTables,
-  dataSource,
-  currentDriver,
-  isFeatureSupported,
-} from '../../../../dataSources';
-import { isEmpty } from '../../../Common/utils/jsUtils';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+  addAllUntrackedTablesSql,
+  addExistingTableSql,
+  setTableName,
+} from '../Add/AddExistingTableViewActions';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import styles from '../../../Common/Common.module.scss';
-import { getConsistentFunctions } from '../../../../metadata/selector';
-import { RightContainer } from '../../../Common/Layout/RightContainer';
+import {
+  fetchFunctionInit,
+  updateCurrentSchema,
+  updateSchemaInfo,
+} from '../DataActions';
+import _push from '../push';
+import {
+  autoAddRelName,
+  autoTrackRelations,
+} from '../TableRelationships/Actions';
+import { getRelDef } from '../TableRelationships/utils';
+import { createNewSchema, deleteCurrentSchema } from './Actions';
+import { EmptyState } from './components/EmptyState/EmptyState';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
-import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
-import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
-import { TableTrackingCustomizationModalContainer } from './tableTrackCustomization/TableTrackingCustomizationContainer';
-import { modalKeySelector } from '../../../../store/modal/modal.selectors';
-import { showModal, hideModal } from '../../../../store/modal/modal.actions';
-import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
-import { EmptyState } from './components/EmptyState/EmptyState';
-import { PrimaryDBInfo } from '@/components/Common/EditableHeading/PrimaryDBInfo';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -753,12 +752,14 @@ class Schema extends Component {
     return (
       <RightContainer>
         {modalKey === TableTrackingCustomizationModalKey && (
-          <TableTrackingCustomizationModalContainer
+          <CustomFieldNames.LegacyModal
             onClose={() => hideTableTrackingModal()}
             tableName={this.state.customizedTableName}
             dataSource={currentDataSource}
             schema={currentSchema}
             driver={currentDriver}
+            callToAction="Customize & Track"
+            callToActionLoadingText="Saving..."
           />
         )}
         <Analytics name="Schema" {...REDACT_EVERYTHING}>

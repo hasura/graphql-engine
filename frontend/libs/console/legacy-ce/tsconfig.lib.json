@@ -7,7 +7,7 @@
   "files": [
     "../../../node_modules/@nrwl/react/typings/cssmodule.d.ts",
     "../../../node_modules/@nrwl/react/typings/image.d.ts",
-    "../../types/externalNotTypesLibs.d.ts"
+    "../../../types/externalNotTypesLibs.d.ts"
   ],
   "exclude": [
     "jest.config.ts",

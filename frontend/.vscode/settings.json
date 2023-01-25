@@ -1,6 +1,6 @@
 {
   "eslint.validate": ["json"],
-  "cSpell.words": ["clsx"],
+  "cSpell.words": ["clsx", "hasura", "citus"],
   "tailwindCSS.experimental.classRegex": [
     "tw\\w+ ?= ?`([^`]*)`",
     "tw\\w+: ?`([^`]*)`"

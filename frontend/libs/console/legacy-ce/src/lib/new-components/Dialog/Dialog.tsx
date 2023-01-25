@@ -7,13 +7,13 @@ import { FaTimes } from 'react-icons/fa';
 import { Button, ButtonProps } from '../Button/Button';
 
 export type FooterProps = {
-  callToAction: string;
+  callToAction?: string;
   callToActionLoadingText?: string;
   callToActionIcon?: ButtonProps['icon'];
   callToActionIconPosition?: ButtonProps['iconPosition'];
   callToDeny?: string;
   onSubmit?: () => void;
-  onClose: () => void;
+  onClose?: () => void;
   isLoading?: boolean;
   className?: string;
   onSubmitAnalyticsName?: string;

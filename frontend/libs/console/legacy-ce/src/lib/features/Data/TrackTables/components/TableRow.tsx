@@ -1,4 +1,4 @@
-import { TableTrackingCustomizationModal } from '@/components/Services/Data/Schema/tableTrackCustomization/TableTrackingCustomizationModal';
+import { CustomFieldNames } from '@/features/Data';
 import { MetadataTable } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
@@ -88,7 +88,7 @@ export const TableRow = React.memo(
                 </Button>
               )}
 
-              <TableTrackingCustomizationModal
+              <CustomFieldNames.Modal
                 tableName={table.name}
                 onSubmit={(formValues, config) => {
                   track(config);
@@ -97,6 +97,7 @@ export const TableRow = React.memo(
                   setShowCustomModal(false);
                 }}
                 callToAction="Customize & Track"
+                callToDeny="Cancel"
                 callToActionLoadingText="Saving..."
                 isLoading={loading}
                 show={showCustomModal}

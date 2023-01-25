@@ -7,7 +7,7 @@ import { ModifyTable } from './ModifyTable';
 
 const props = {
   table: ['Customer'],
-  dataSourceName: 'sqlite-test',
+  dataSourceName: 'music_db',
   tableName: 'Customer',
 };
 
@@ -16,7 +16,6 @@ export default {
    * See https://storybook.js.org/docs/react/configure/overview#configure-story-loading
    * to learn how to generate automatic titles
    */
-  title: 'Data / ModifyTable',
   component: ModifyTable,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof ModifyTable>;

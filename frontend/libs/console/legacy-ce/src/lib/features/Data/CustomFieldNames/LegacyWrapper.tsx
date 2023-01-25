@@ -2,7 +2,6 @@ import {
   getTableBrowseRoute,
   getTableModifyRoute,
 } from '@/components/Common/utils/routesUtils';
-import { TrackingTableFormValues as FormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Driver } from '@/dataSources';
 import {
   allowedMetadataTypes,
@@ -14,23 +13,28 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { AnyAction } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
-import { REQUEST_SUCCESS, updateSchemaInfo } from '../../DataActions';
-import { setSidebarLoading } from '../../DataSubSidebar';
-import _push from '../../push';
 import {
-  TableTrackingCustomizationModal,
-  TableTrackingCustomizationModalProps,
-} from './TableTrackingCustomizationModal';
+  REQUEST_SUCCESS,
+  updateSchemaInfo,
+} from '../../../components/Services/Data/DataActions';
+import { setSidebarLoading } from '../../../components/Services/Data/DataSubSidebar';
+import _push from '../../../components/Services/Data/push';
+import {
+  CustomFieldNamesModal,
+  CustomFieldNamesModalProps,
+} from './CustomFieldNamesModal';
+
+import { CustomFieldNamesFormVals } from './types';
 import { getQualifiedTable, getTrackTableType } from './utils';
 
-type TableTrackingCustomizationModalContainerProps = Omit<
-  TableTrackingCustomizationModalProps,
-  'onSubmit'
-> & { dataSource: string; driver: Driver; schema: string };
+type LegacyWrapperProps = Omit<CustomFieldNamesModalProps, 'onSubmit'> & {
+  dataSource: string;
+  driver: Driver;
+  schema: string;
+};
 
-export const TableTrackingCustomizationModalContainer: React.FC<
-  TableTrackingCustomizationModalContainerProps
-> = ({ onClose, tableName, schema, dataSource, driver }) => {
+export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
+  const { tableName, schema, dataSource, driver, onClose } = props;
   const { fireNotification } = useFireNotification();
   const dispatch: ThunkDispatch<ReduxState, unknown, AnyAction> = useDispatch();
   const mutation = useMetadataMigration({
@@ -60,7 +64,7 @@ export const TableTrackingCustomizationModalContainer: React.FC<
     },
   });
 
-  const onCustomizationFormSubmit = (values: FormValues) => {
+  const onCustomizationFormSubmit = (values: CustomFieldNamesFormVals) => {
     const requestBody = {
       type: getTrackTableType(driver) as allowedMetadataTypes,
       args: {
@@ -94,10 +98,9 @@ export const TableTrackingCustomizationModalContainer: React.FC<
   };
 
   return (
-    <TableTrackingCustomizationModal
-      tableName={tableName}
+    <CustomFieldNamesModal
+      {...props}
       onSubmit={onCustomizationFormSubmit}
-      onClose={onClose}
       isLoading={mutation.isLoading}
     />
   );
