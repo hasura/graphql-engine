@@ -141,7 +141,7 @@ export const createInsertArgs = ({
           role,
           source: dataSourceName,
         },
-      } as typeof initialArgs[0]);
+      } as (typeof initialArgs)[0]);
     }
 
     // this has been commented out as cloned permissions is not currently used

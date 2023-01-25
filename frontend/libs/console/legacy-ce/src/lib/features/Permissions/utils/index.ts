@@ -25,6 +25,6 @@ export const isPermission = (props: {
   key: string;
   value: any;
 }): props is {
-  key: typeof metadataPermissionKeys[number];
+  key: (typeof metadataPermissionKeys)[number];
   value: Permission[];
 } => props.key in keyToPermission;

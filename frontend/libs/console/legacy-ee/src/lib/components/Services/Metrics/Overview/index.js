@@ -29,9 +29,7 @@ const Overview = ({
     if (!metadata.loading && _isAdmin) refetchMetadata();
   }, []);
   const [fromTime, setFromTime] = useState(
-    moment()
-      .subtract(1, 'hour')
-      .toISOString()
+    moment().subtract(1, 'hour').toISOString()
   );
 
   const liveStats = useSubscription(fetchLiveStats, {

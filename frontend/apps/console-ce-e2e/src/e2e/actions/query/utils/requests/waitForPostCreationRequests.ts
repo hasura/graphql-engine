@@ -37,71 +37,71 @@
  * @see https://github.com/bahmutov/cypress-network-idle
  */
 
- import 'cypress-wait-until';
- 
- export function waitForPostCreationRequests() {
-    let waitCompleted = false;
-  
-    cy.log('*--- All requests must be settled*');
-  
-    const pendingRequests = new Map();
-    cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
-      if (waitCompleted) return;
-  
-      Cypress.log({ message: '*--- Request pending*' });
-  
-      pendingRequests.set(req, true);
-  
-      req.continue(() => {
-        Cypress.log({ message: '*--- Request settled*' });
-  
-        pendingRequests.delete(req);
-      });
+import 'cypress-wait-until';
+
+export function waitForPostCreationRequests() {
+  let waitCompleted = false;
+
+  cy.log('*--- All requests must be settled*');
+
+  const pendingRequests = new Map();
+  cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+    if (waitCompleted) return;
+
+    Cypress.log({ message: '*--- Request pending*' });
+
+    pendingRequests.set(req, true);
+
+    req.continue(() => {
+      Cypress.log({ message: '*--- Request settled*' });
+
+      pendingRequests.delete(req);
     });
-  
-    Cypress.log({ message: '*--- Waiting for the first request to start*' });
-  
-    // Check if at least one request has been caught. This check must protect from the following case
-    //
-    //            check          requests start           test failure, the requests got the UI re-rendered
-    //            |              |                        |
-    // |--🚦🔴----⚠️---🚦🟢-------1-2-3-4-5-6-7-1----------💥
-    //
-    // where checking that "there are no pending requests" falls in the false positive case where
-    // there are no pending requests because no one started at all.
-    //
-    // The check runs every millisecond to be 100% sure that no request can escape (ex. because of a
-    // super fast server). A false-negative case represented here
-    //
-    //         requests start requests end   check              check               test failure, no first request caught
-    //         |            | |           |  |                  |                   |
-    // |--🚦🔴--1-2-3-4-5-6-7-1-2-3-4-5-6-7--⚠️------------------⚠️------------------💥
-    cy.waitUntil(() => pendingRequests.size > 0, {
-      timeout: 5000, // 5 seconds is the default Cypress wait for a request to start
-      interval: 1,
-      errorMsg: 'No first request caught',
-    });
-  
-    Cypress.log({ message: '*--- Waiting for all the requests to start*' });
-  
-    // Let pass some time to collect all the requests. Otherwise, it could detect that the first
-    // request complete and go on with the test, even if another one will be performed in a while.
-    //
-    // This fixed wait protects from the following timeline
-    //
-    //           1st request start     first request end       other requests start   test failure, the requests got the UI re-rendered
-    //           |                     |                       |                      |
-    // |--🚦🔴---1---------------------1----🚦🟢----------------2-3-4-5-6-7-1----------💥
-    //
-    // Obviously, it is an empiric waiting, that also slows down the test.
-    cy.wait(500);
-  
-    Cypress.log({ message: '*--- Waiting for all the requests to be settled*' });
-  
-    cy.waitUntil(() => pendingRequests.size === 0, {
-      timeout: 30000, // 30 seconds is the default Cypress wait for the request to complete
-      errorMsg: 'Some requests are not settled yet',
-    }).then(() => {
-      waitCompleted = true;
-    });
-  }
+  });
+
+  Cypress.log({ message: '*--- Waiting for the first request to start*' });
+
+  // Check if at least one request has been caught. This check must protect from the following case
+  //
+  //            check          requests start           test failure, the requests got the UI re-rendered
+  //            |              |                        |
+  // |--🚦🔴----⚠️---🚦🟢-------1-2-3-4-5-6-7-1----------💥
+  //
+  // where checking that "there are no pending requests" falls in the false positive case where
+  // there are no pending requests because no one started at all.
+  //
+  // The check runs every millisecond to be 100% sure that no request can escape (ex. because of a
+  // super fast server). A false-negative case represented here
+  //
+  //         requests start requests end   check              check               test failure, no first request caught
+  //         |            | |           |  |                  |                   |
+  // |--🚦🔴--1-2-3-4-5-6-7-1-2-3-4-5-6-7--⚠️------------------⚠️------------------💥
+  cy.waitUntil(() => pendingRequests.size > 0, {
+    timeout: 5000, // 5 seconds is the default Cypress wait for a request to start
+    interval: 1,
+    errorMsg: 'No first request caught',
+  });
+
+  Cypress.log({ message: '*--- Waiting for all the requests to start*' });
+
+  // Let pass some time to collect all the requests. Otherwise, it could detect that the first
+  // request complete and go on with the test, even if another one will be performed in a while.
+  //
+  // This fixed wait protects from the following timeline
+  //
+  //           1st request start     first request end       other requests start   test failure, the requests got the UI re-rendered
+  //           |                     |                       |                      |
+  // |--🚦🔴---1---------------------1----🚦🟢----------------2-3-4-5-6-7-1----------💥
+  //
+  // Obviously, it is an empiric waiting, that also slows down the test.
+  cy.wait(500);
+
+  Cypress.log({ message: '*--- Waiting for all the requests to be settled*' });
+
+  cy.waitUntil(() => pendingRequests.size === 0, {
+    timeout: 30000, // 30 seconds is the default Cypress wait for the request to complete
+    errorMsg: 'Some requests are not settled yet',
+  }).then(() => {
+    waitCompleted = true;
+  });
+}

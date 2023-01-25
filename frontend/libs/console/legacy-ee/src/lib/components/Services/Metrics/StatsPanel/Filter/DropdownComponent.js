@@ -25,7 +25,7 @@ const DropdownComponent = props => {
   const selectedValuesList =
     Object.keys(selectedValues).length === options.length - 1
       ? Object.assign({ ...selectedValues }, { 'Select All': true })
-      : selectedValues
+      : selectedValues;
   const handleToggle = (isOpen, event, metadata) => {
     if (isOpen || metadata.source !== 'select') {
       setShow(isOpen);

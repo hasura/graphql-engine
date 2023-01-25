@@ -1,5 +1,5 @@
-@import "../../../Common/Common.module";
-@import "../../../Common/TextAreaWithCopy/TextAreaWithCopy.module";
+@import '../../../Common/Common.module';
+@import '../../../Common/TextAreaWithCopy/TextAreaWithCopy.module';
 
 .wd100 {
   width: 100%;
@@ -11,7 +11,7 @@
   height: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-right:8px solid #fff;
+  border-right: 8px solid #fff;
   position: absolute;
   left: 0;
   bottom: 20px;
@@ -32,7 +32,7 @@
 }
 
 .commonBorBottom {
-  border-bottom: 1px solid #DEDEDE;
+  border-bottom: 1px solid #dedede;
 }
 
 .addPaddLeft {
@@ -59,12 +59,12 @@
   top: 60px;
   left: 524px;
 }
-.popupWrapper
-{
+.popupWrapper {
   bottom: 0px;
   left: 244px;
 }
-.popupWrapper, .popupWrapperPos {
+.popupWrapper,
+.popupWrapperPos {
   box-shadow: 0 0 14px 0 rgba(0, 0, 0, 0.16);
   background-color: #ffffff;
   position: absolute;
@@ -90,7 +90,6 @@
   }
 
   .copyGenerated {
-
   }
 
   .copyTooltip .tooltiptext::after {

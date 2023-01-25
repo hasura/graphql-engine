@@ -21,125 +21,126 @@ export type TableTrackingCustomizationFormProps = {
   onClose: () => void;
 };
 
-export const TableTrackingCustomizationForm: React.VFC<TableTrackingCustomizationFormProps> =
-  props => {
-    const { onClose } = props;
+export const TableTrackingCustomizationForm: React.VFC<
+  TableTrackingCustomizationFormProps
+> = props => {
+  const { onClose } = props;
 
-    const {
-      errors,
-      formMethods,
-      handleSubmit,
-      hasValues,
-      isMutateOpen,
-      isQueryOpen,
-      placeholders,
-      reset,
-      setCustomTableName,
-    } = useGqlCustomizationForm(props);
+  const {
+    errors,
+    formMethods,
+    handleSubmit,
+    hasValues,
+    isMutateOpen,
+    isQueryOpen,
+    placeholders,
+    reset,
+    setCustomTableName,
+  } = useGqlCustomizationForm(props);
 
-    return (
-      <FormProvider {...formMethods}>
-        <form onSubmit={formMethods.handleSubmit(handleSubmit)}>
-          <div>
-            <div className="px-sm pb-sm">
-              <SanitizeTips />
-              <div className="mb-4 flex justify-end">
-                <Button disabled={!hasValues} size="sm" onClick={reset}>
-                  Clear All Fields
-                </Button>
-              </div>
+  return (
+    <FormProvider {...formMethods}>
+      <form onSubmit={formMethods.handleSubmit(handleSubmit)}>
+        <div>
+          <div className="px-sm pb-sm">
+            <SanitizeTips />
+            <div className="mb-4 flex justify-end">
+              <Button disabled={!hasValues} size="sm" onClick={reset}>
+                Clear All Fields
+              </Button>
+            </div>
 
-              <div className="pl-6">
-                <InputField
-                  label="Custom Table Name"
-                  fieldName="custom_name"
-                  placeholder={placeholders.custom_name}
-                  onClear={() => {
-                    setCustomTableName('');
-                  }}
-                  onChange={value => {
-                    setCustomTableName(value);
-                  }}
-                />
-              </div>
-              {errors.custom_name?.type === 'required' && (
-                <div className="grid grid-cols-12 gap-3">
-                  <div className="col-span-4 flex items-center" />
-                  <div className="col-span-8">
-                    <div
-                      role="alert"
-                      aria-label="custom table name is a required field!"
-                      className="text-red-600 flex items-center text-sm pt-1"
-                    >
-                      <span className="flex items-center">
-                        <FaExclamationCircle className="mr-1" />
-                        This field is required!
-                      </span>
-                    </div>
+            <div className="pl-6">
+              <InputField
+                label="Custom Table Name"
+                fieldName="custom_name"
+                placeholder={placeholders.custom_name}
+                onClear={() => {
+                  setCustomTableName('');
+                }}
+                onChange={value => {
+                  setCustomTableName(value);
+                }}
+              />
+            </div>
+            {errors.custom_name?.type === 'required' && (
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-4 flex items-center" />
+                <div className="col-span-8">
+                  <div
+                    role="alert"
+                    aria-label="custom table name is a required field!"
+                    className="text-red-600 flex items-center text-sm pt-1"
+                  >
+                    <span className="flex items-center">
+                      <FaExclamationCircle className="mr-1" />
+                      This field is required!
+                    </span>
                   </div>
                 </div>
-              )}
-
-              <div className="mb-sm">
-                <div className="flex items-center">
-                  <Collapse
-                    defaultOpen={isQueryOpen}
-                    title="Query and Subscription"
-                    rootClassName="w-full"
-                  >
-                    <Collapse.Content>
-                      <div className="pl-sm py-xs ml-[0.47rem]">
-                        <div className="space-y-sm">
-                          {query_field_props.map(name => (
-                            <InputField
-                              key={`query-and-subscription-${name}`}
-                              fieldName={name}
-                              label={name}
-                              placeholder={placeholders[name]}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </Collapse.Content>
-                  </Collapse>
-                </div>
               </div>
+            )}
 
-              <div>
-                <div className="flex items-center">
-                  <Collapse
-                    defaultOpen={isMutateOpen}
-                    title="Mutation"
-                    rootClassName="w-full"
-                  >
-                    <Collapse.Content>
-                      <div className="pl-sm py-xs ml-[0.47rem]">
-                        <div className="space-y-sm">
-                          {mutation_field_props.map(name => (
-                            <InputField
-                              key={`mutation-${name}`}
-                              label={name}
-                              fieldName={name}
-                              placeholder={placeholders[name]}
-                            />
-                          ))}
-                        </div>
+            <div className="mb-sm">
+              <div className="flex items-center">
+                <Collapse
+                  defaultOpen={isQueryOpen}
+                  title="Query and Subscription"
+                  rootClassName="w-full"
+                >
+                  <Collapse.Content>
+                    <div className="pl-sm py-xs ml-[0.47rem]">
+                      <div className="space-y-sm">
+                        {query_field_props.map(name => (
+                          <InputField
+                            key={`query-and-subscription-${name}`}
+                            fieldName={name}
+                            label={name}
+                            placeholder={placeholders[name]}
+                          />
+                        ))}
                       </div>
-                    </Collapse.Content>
-                  </Collapse>
-                </div>
+                    </div>
+                  </Collapse.Content>
+                </Collapse>
               </div>
             </div>
 
-            <Dialog.Footer
-              callToAction="Save"
-              callToActionLoadingText="Saving..."
-              callToDeny="Cancel"
-              onClose={onClose}
-              className="absolute w-full bottom-0"
-            />
+            <div>
+              <div className="flex items-center">
+                <Collapse
+                  defaultOpen={isMutateOpen}
+                  title="Mutation"
+                  rootClassName="w-full"
+                >
+                  <Collapse.Content>
+                    <div className="pl-sm py-xs ml-[0.47rem]">
+                      <div className="space-y-sm">
+                        {mutation_field_props.map(name => (
+                          <InputField
+                            key={`mutation-${name}`}
+                            label={name}
+                            fieldName={name}
+                            placeholder={placeholders[name]}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </Collapse.Content>
+                </Collapse>
+              </div>
+            </div>
           </div>
-        </form>
-      </FormProvider>
-    );
-  };
+
+          <Dialog.Footer
+            callToAction="Save"
+            callToActionLoadingText="Saving..."
+            callToDeny="Cancel"
+            onClose={onClose}
+            className="absolute w-full bottom-0"
+          />
+        </div>
+      </form>
+    </FormProvider>
+  );
+};

@@ -53,16 +53,17 @@ export const Basic: ComponentStory<typeof ReactTableWrapper> = () => {
   );
 };
 
-export const SelectionDisabled: ComponentStory<typeof ReactTableWrapper> =
-  () => {
-    return (
-      <ReactTableWrapper
-        rows={mockDataForRows}
-        isRowsSelectionEnabled={false}
-        onRowsSelect={action('onRowsSelect')}
-      />
-    );
-  };
+export const SelectionDisabled: ComponentStory<
+  typeof ReactTableWrapper
+> = () => {
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      isRowsSelectionEnabled={false}
+      onRowsSelect={action('onRowsSelect')}
+    />
+  );
+};
 
 Basic.storyName = '🧪 Test - Basic data with columns';
 
@@ -88,50 +89,51 @@ Basic.play = async ({ canvasElement }) => {
   );
 };
 
-export const WithRelationships: ComponentStory<typeof ReactTableWrapper> =
-  () => {
-    const relationships: Relationship[] = [
-      {
-        name: 'Artist',
-        fromSource: 'sqlite_test',
-        fromTable: ['Album'],
-        relationshipType: 'Object',
-        type: 'localRelationship',
-        definition: {
-          toTable: ['Artist'],
-          mapping: {
-            ArtistId: 'ArtistId',
-          },
+export const WithRelationships: ComponentStory<
+  typeof ReactTableWrapper
+> = () => {
+  const relationships: Relationship[] = [
+    {
+      name: 'Artist',
+      fromSource: 'sqlite_test',
+      fromTable: ['Album'],
+      relationshipType: 'Object',
+      type: 'localRelationship',
+      definition: {
+        toTable: ['Artist'],
+        mapping: {
+          ArtistId: 'ArtistId',
         },
       },
-      {
-        name: 'Tracks',
-        fromSource: 'sqlite_test',
-        fromTable: ['Album'],
-        relationshipType: 'Object',
-        type: 'localRelationship',
-        definition: {
-          toTable: ['Track'],
-          mapping: {
-            AlbumId: 'AlbumId',
-          },
+    },
+    {
+      name: 'Tracks',
+      fromSource: 'sqlite_test',
+      fromTable: ['Album'],
+      relationshipType: 'Object',
+      type: 'localRelationship',
+      definition: {
+        toTable: ['Track'],
+        mapping: {
+          AlbumId: 'AlbumId',
         },
       },
-    ];
+    },
+  ];
 
-    return (
-      <ReactTableWrapper
-        rows={mockDataForRows}
-        relationships={{
-          allRelationships: relationships,
-          onClick: () => {},
-          onClose: () => {},
-        }}
-        isRowsSelectionEnabled
-        onRowsSelect={action('onRowsSelect')}
-      />
-    );
-  };
+  return (
+    <ReactTableWrapper
+      rows={mockDataForRows}
+      relationships={{
+        allRelationships: relationships,
+        onClick: () => {},
+        onClose: () => {},
+      }}
+      isRowsSelectionEnabled
+      onRowsSelect={action('onRowsSelect')}
+    />
+  );
+};
 
 WithRelationships.storyName = '🧪 Test - Data with Relationships';
 

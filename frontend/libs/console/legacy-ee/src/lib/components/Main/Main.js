@@ -180,12 +180,10 @@ class Main extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps) {
-    const {
-      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
-    } = this.props.featuresCompatibility;
-    const {
-      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
-    } = nextProps.featuresCompatibility;
+    const { [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility } =
+      this.props.featuresCompatibility;
+    const { [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility } =
+      nextProps.featuresCompatibility;
 
     const { accessState } = nextProps;
 
@@ -279,10 +277,12 @@ class Main extends React.Component {
    * created by a Hasura enterprise user
    */
   isEnterpriseProject() {
-    return (this.props?.project?.is_enterprise_user &&
-      this.props?.project?.plan_name !== 'cloud_free'
-      ) || globals.consoleType === 'pro-lite'
-  };
+    return (
+      (this.props?.project?.is_enterprise_user &&
+        this.props?.project?.plan_name !== 'cloud_free') ||
+      globals.consoleType === 'pro-lite'
+    );
+  }
 
   render() {
     const {
@@ -393,19 +393,20 @@ class Main extends React.Component {
         accessState.hasMetricAccess &&
         isMonitoringTabSupportedEnvironment(globals)
       ) {
-        return <HeaderNavItem
-          title='Monitoring'
-          icon={<FaChartLine aria-hidden="true" />}
-          tooltipText='Metrics'
-          itemPath={moduleName}
-          linkPath={relativeModulePath}
-          appPrefix={appPrefix}
-          currentActiveBlock={currentActiveBlock}
-        />
+        return (
+          <HeaderNavItem
+            title="Monitoring"
+            icon={<FaChartLine aria-hidden="true" />}
+            tooltipText="Metrics"
+            itemPath={moduleName}
+            linkPath={relativeModulePath}
+            appPrefix={appPrefix}
+            currentActiveBlock={currentActiveBlock}
+          />
+        );
       }
       return null;
     };
-
 
     const renderLogout = () => {
       // userRole is only being set for team console
@@ -453,10 +454,10 @@ class Main extends React.Component {
 
     const getLogoSrc = () => {
       if (this.isEnterpriseProject()) {
-        return EELogo
+        return EELogo;
       }
 
-      return logo
+      return logo;
     };
 
     return (
@@ -482,48 +483,68 @@ class Main extends React.Component {
             <div className={styles.header_items}>
               <ul className={styles.sidebarItems}>
                 <HeaderNavItem
-                  title='API'
+                  title="API"
                   icon={<FaFlask aria-hidden="true" />}
-                  tooltipText='Test the GraphQL APIs'
-                  itemPath='api'
-                  linkPath={getConsolidatedPath('/api/api-explorer', '/api', accessState)}
+                  tooltipText="Test the GraphQL APIs"
+                  itemPath="api"
+                  linkPath={getConsolidatedPath(
+                    '/api/api-explorer',
+                    '/api',
+                    accessState
+                  )}
                   appPrefix={appPrefix}
                   currentActiveBlock={currentActiveBlock}
                   isDefault
                 />
                 <HeaderNavItem
-                  title='Data'
+                  title="Data"
                   icon={<FaDatabase aria-hidden="true" />}
-                  tooltipText='Data & Schema management'
-                  itemPath='data'
-                  linkPath={getConsolidatedPath(getDataPath(), '/data', accessState)}
+                  tooltipText="Data & Schema management"
+                  itemPath="data"
+                  linkPath={getConsolidatedPath(
+                    getDataPath(),
+                    '/data',
+                    accessState
+                  )}
                   appPrefix={appPrefix}
                   currentActiveBlock={currentActiveBlock}
                 />
                 <HeaderNavItem
-                  title='Actions'
+                  title="Actions"
                   icon={<FaCogs aria-hidden="true" />}
-                  tooltipText='Manage Actions'
-                  itemPath='actions'
-                  linkPath={getConsolidatedPath('/actions/manage/actions', '/actions', accessState)}
+                  tooltipText="Manage Actions"
+                  itemPath="actions"
+                  linkPath={getConsolidatedPath(
+                    '/actions/manage/actions',
+                    '/actions',
+                    accessState
+                  )}
                   appPrefix={appPrefix}
                   currentActiveBlock={currentActiveBlock}
                 />
                 <HeaderNavItem
-                  title='Remote Schemas'
+                  title="Remote Schemas"
                   icon={<FaPlug aria-hidden="true" />}
-                  tooltipText='Manage Remote Schemas'
-                  itemPath='remote-schemas'
-                  linkPath={getConsolidatedPath('/remote-schemas/manage/schemas', '/remote-schemas', accessState)}
+                  tooltipText="Manage Remote Schemas"
+                  itemPath="remote-schemas"
+                  linkPath={getConsolidatedPath(
+                    '/remote-schemas/manage/schemas',
+                    '/remote-schemas',
+                    accessState
+                  )}
                   appPrefix={appPrefix}
                   currentActiveBlock={currentActiveBlock}
                 />
                 <HeaderNavItem
-                  title='Events'
+                  title="Events"
                   icon={<FaCloud aria-hidden="true" />}
-                  tooltipText='Manage Event and Scheduled Triggers'
-                  itemPath='events'
-                  linkPath={getConsolidatedPath('/events/data/manage', '/events', accessState)}
+                  tooltipText="Manage Event and Scheduled Triggers"
+                  itemPath="events"
+                  linkPath={getConsolidatedPath(
+                    '/events/data/manage',
+                    '/events',
+                    accessState
+                  )}
                   appPrefix={appPrefix}
                   currentActiveBlock={currentActiveBlock}
                 />

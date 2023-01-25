@@ -46,7 +46,7 @@ export const drivers = [
   'cockroach',
   'alloy',
 ] as const;
-export type Driver = typeof drivers[number];
+export type Driver = (typeof drivers)[number];
 
 export const driverToLabel: Record<Driver, string> = {
   postgres: 'PostgreSQL',

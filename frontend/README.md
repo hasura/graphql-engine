@@ -6,8 +6,7 @@ Visit the [Nx Documentation](https://nx.dev) to learn more about it.
 
 This `frontend` monorepo contains the Hasura Console, in all the possible modes.
 
-
-*Last import [2023-01-12](https://github.com/hasura/graphql-engine-mono/tree/a8cbb297437e4c2d9ba4cab5da1e464d4eac43e4)*
+_Last import [2023-01-12](https://github.com/hasura/graphql-engine-mono/tree/a8cbb297437e4c2d9ba4cab5da1e464d4eac43e4)_
 
 ## Nx Console
 

@@ -120,7 +120,6 @@ const BrowseRows = props => {
 
   const { limit, offset, order_by } = browseState;
 
-
   const argsClause = {
     project_ids: projectId ? `{${projectId}}` : '{}',
     poller_ids: arrayToPostgresArray(getFilterObj.poller_ids),
@@ -133,12 +132,12 @@ const BrowseRows = props => {
     !getFilterObj.operation_name || !getFilterObj.operation_name.length
       ? {}
       : {
-        operation_logs: {
-          operation_name: {
-            _in: [...getFilterObj.operation_name],
+          operation_logs: {
+            operation_name: {
+              _in: [...getFilterObj.operation_name],
+            },
           },
-        },
-      };
+        };
   const updateLimit = l => {
     setState({
       ...browseState,
@@ -206,8 +205,8 @@ const BrowseRows = props => {
     subscriptionWorkers.length <= 0
       ? []
       : Object.keys(subscriptionWorkers[0]).filter(
-        f => defaultColumns.indexOf(getIfAliased(f)) !== -1
-      );
+          f => defaultColumns.indexOf(getIfAliased(f)) !== -1
+        );
 
   const getHeaders = () => {
     if (subscriptionWorkers.length > 0) {

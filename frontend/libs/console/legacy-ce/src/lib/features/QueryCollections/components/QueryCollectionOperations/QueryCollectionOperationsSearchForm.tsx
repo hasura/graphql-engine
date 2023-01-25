@@ -30,15 +30,16 @@ const SearchInput: React.FC<QueryCollectionsOperationsSearchFormProps> = ({
   );
 };
 
-export const QueryCollectionsOperationsSearchForm: React.FC<QueryCollectionsOperationsSearchFormProps> =
-  ({ setSearch }) => {
-    return (
-      <SimpleForm
-        schema={schema}
-        onSubmit={() => {}}
-        className="pr-0 pt-0 pb-0 relative top-2"
-      >
-        <SearchInput setSearch={setSearch} />
-      </SimpleForm>
-    );
-  };
+export const QueryCollectionsOperationsSearchForm: React.FC<
+  QueryCollectionsOperationsSearchFormProps
+> = ({ setSearch }) => {
+  return (
+    <SimpleForm
+      schema={schema}
+      onSubmit={() => {}}
+      className="pr-0 pt-0 pb-0 relative top-2"
+    >
+      <SearchInput setSearch={setSearch} />
+    </SimpleForm>
+  );
+};

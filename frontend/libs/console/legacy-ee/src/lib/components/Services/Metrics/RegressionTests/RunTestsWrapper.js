@@ -13,10 +13,8 @@ import { createOptionEntry } from '../AllowLists/utils';
  * */
 
 export const RunTestsWrapper = props => {
-  const {
-    projectId: currentProjectId,
-    projectName: currentProjectName,
-  } = props;
+  const { projectId: currentProjectId, projectName: currentProjectName } =
+    props;
 
   const [project, setProject] = useState({
     projectName: currentProjectName,
@@ -58,7 +56,11 @@ export const RunTestsWrapper = props => {
           currentProjectId={currentProjectId}
         >
           {({ testSuiteId, testProjectId }) => (
-            <RunTests {...props} testSuiteId={testSuiteId} testProjectId={testProjectId} />
+            <RunTests
+              {...props}
+              testSuiteId={testSuiteId}
+              testProjectId={testProjectId}
+            />
           )}
         </ContentWithTestSuite>
       </span>

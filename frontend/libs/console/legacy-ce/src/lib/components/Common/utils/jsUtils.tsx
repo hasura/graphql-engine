@@ -192,7 +192,7 @@ export function getAllJsonPaths(
   const handleSubJson = (subJson: any, newPrefix: string) => {
     const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
 
-    subPaths.forEach((subPath: typeof subPaths[0]) => {
+    subPaths.forEach((subPath: (typeof subPaths)[0]) => {
       paths.push(subPath);
     });
 

@@ -91,7 +91,7 @@ export type AllMetadataQueries =
 
 // TODO: these could be more strongly typed
 export type allowedMetadataTypes =
-  | typeof allowedMetadataTypesArr[number]
+  | (typeof allowedMetadataTypesArr)[number]
   | AllMetadataQueries
   | MetadataQueryType
   | OpenTelemetryQueries;

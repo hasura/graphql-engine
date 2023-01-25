@@ -150,24 +150,26 @@ CloudMetadataKo.parameters = {
   msw: mockHandlers({}),
 };
 
-export const ProLitePrometheusEnabled: ComponentStory<typeof Sidebar> =
-  args => {
-    // eslint-disable-next-line no-underscore-dangle
-    window.__env.consoleType = 'pro-lite';
-    return <Sidebar {...args} />;
-  };
+export const ProLitePrometheusEnabled: ComponentStory<
+  typeof Sidebar
+> = args => {
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'pro-lite';
+  return <Sidebar {...args} />;
+};
 ProLitePrometheusEnabled.storyName = '💠 Demo Pro Lite Prometheus Enabled';
 ProLitePrometheusEnabled.args = generateArgs();
 ProLitePrometheusEnabled.parameters = {
   msw: mockHandlers({ prometheusEnabled: true }),
 };
 
-export const ProLitePrometheusDisabled: ComponentStory<typeof Sidebar> =
-  args => {
-    // eslint-disable-next-line no-underscore-dangle
-    window.__env.consoleType = 'pro-lite';
-    return <Sidebar {...args} />;
-  };
+export const ProLitePrometheusDisabled: ComponentStory<
+  typeof Sidebar
+> = args => {
+  // eslint-disable-next-line no-underscore-dangle
+  window.__env.consoleType = 'pro-lite';
+  return <Sidebar {...args} />;
+};
 ProLitePrometheusDisabled.storyName = '💠 Demo Pro Lite Prometheus Disabled';
 ProLitePrometheusDisabled.args = generateArgs();
 ProLitePrometheusDisabled.parameters = {

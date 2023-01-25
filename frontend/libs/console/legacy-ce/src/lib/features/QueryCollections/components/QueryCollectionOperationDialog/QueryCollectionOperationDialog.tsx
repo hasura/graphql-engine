@@ -85,17 +85,18 @@ export const QueryCollectionOperationDialog = (
     },
   });
 
-  const handleOnSubmit: SubmitHandler<QueryCollectionOperation> =
-    async values => {
-      const data = { ...values };
-      if ((values as UploadedQueryPayload).gqlFile) {
-        const gqlFileValue = (values as UploadedQueryPayload).gqlFile;
-        (data as UploadedQueryPayload).gqlFile = parseQueryString(
-          await readFileAsync(gqlFileValue[0])
-        );
-      }
-      onSubmit(data);
-    };
+  const handleOnSubmit: SubmitHandler<
+    QueryCollectionOperation
+  > = async values => {
+    const data = { ...values };
+    if ((values as UploadedQueryPayload).gqlFile) {
+      const gqlFileValue = (values as UploadedQueryPayload).gqlFile;
+      (data as UploadedQueryPayload).gqlFile = parseQueryString(
+        await readFileAsync(gqlFileValue[0])
+      );
+    }
+    onSubmit(data);
+  };
 
   return (
     <Form onSubmit={handleOnSubmit}>

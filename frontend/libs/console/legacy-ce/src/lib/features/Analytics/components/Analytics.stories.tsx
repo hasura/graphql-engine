@@ -205,17 +205,18 @@ function ComponentThatAcceptHtmlAttributes(props: Record<string, string>) {
 // STORY DEFINITION
 // --------------------------------------------------
 
-export const PassingButtonComponent: ComponentStory<typeof Analytics> =
-  args => {
-    return (
-      <Analytics {...args}>
-        <Button>
-          The Analytics component passes the HTML attributes to the Button
-          (please inspect the DOM to find the rendered HTML attributes)
-        </Button>
-      </Analytics>
-    );
-  };
+export const PassingButtonComponent: ComponentStory<
+  typeof Analytics
+> = args => {
+  return (
+    <Analytics {...args}>
+      <Button>
+        The Analytics component passes the HTML attributes to the Button (please
+        inspect the DOM to find the rendered HTML attributes)
+      </Button>
+    </Analytics>
+  );
+};
 PassingButtonComponent.storyName = '⚙️ Passing the Button component';
 
 // --------------------------------------------------

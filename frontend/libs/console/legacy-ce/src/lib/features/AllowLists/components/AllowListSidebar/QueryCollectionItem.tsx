@@ -7,24 +7,25 @@ interface QueryCollectionItemProps extends React.ComponentProps<'a'> {
   selected: boolean;
 }
 
-export const QueryCollectionItem: React.FC<QueryCollectionItemProps> =
-  props => {
-    const { name, selected, className, ...rest } = props;
-    const Icon = selected ? FaFolderOpen : FaFolder;
-    const textClassName = selected
-      ? 'text-amber-500 hover:text-amber-600 focus:text-amber-600'
-      : 'text-muted hover:bg-gray-100 hover:text-gray-900';
-    return (
-      <a
-        className={clsx(
-          `cursor-pointer flex items-center rounded py-1.5 px-sm hover:no-underline focus:no-underline`,
-          textClassName,
-          className
-        )}
-        {...rest}
-      >
-        <Icon className="mr-1.5" />
-        {name}
-      </a>
-    );
-  };
+export const QueryCollectionItem: React.FC<
+  QueryCollectionItemProps
+> = props => {
+  const { name, selected, className, ...rest } = props;
+  const Icon = selected ? FaFolderOpen : FaFolder;
+  const textClassName = selected
+    ? 'text-amber-500 hover:text-amber-600 focus:text-amber-600'
+    : 'text-muted hover:bg-gray-100 hover:text-gray-900';
+  return (
+    <a
+      className={clsx(
+        `cursor-pointer flex items-center rounded py-1.5 px-sm hover:no-underline focus:no-underline`,
+        textClassName,
+        className
+      )}
+      {...rest}
+    >
+      <Icon className="mr-1.5" />
+      {name}
+    </a>
+  );
+};

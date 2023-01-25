@@ -4,7 +4,6 @@ export const FT_JWT_ANALYZER = 'JWTAnalyzer';
 export const RELOAD_METADATA_API_CHANGE = 'reloadMetaDataApiChange';
 export const FT_LOGIN_WITH_HASURA = 'LOGINWITHHASURA';
 
-
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.0'

@@ -15,7 +15,9 @@ export default {
 export const HeroEnabled: ComponentStory<typeof HeroEnabledComponent> = () => (
   <HeroEnabledComponent />
 );
-export const HeroDisabled: ComponentStory<typeof HeroDisabledComponent> =
-  () => <HeroDisabledComponent />;
-export const HeroSkeleton: ComponentStory<typeof HeroSkeletonComponent> =
-  () => <HeroSkeletonComponent />;
+export const HeroDisabled: ComponentStory<
+  typeof HeroDisabledComponent
+> = () => <HeroDisabledComponent />;
+export const HeroSkeleton: ComponentStory<
+  typeof HeroSkeletonComponent
+> = () => <HeroSkeletonComponent />;

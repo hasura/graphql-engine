@@ -8,7 +8,7 @@ import { EditableCell, InputCell } from './components/Cells';
 import { TableMachine } from './hooks';
 
 const queryType = ['insert', 'select', 'update', 'delete'] as const;
-type QueryType = typeof queryType[number];
+type QueryType = (typeof queryType)[number];
 
 interface ViewPermissionsNoteProps {
   viewsSupported: boolean;

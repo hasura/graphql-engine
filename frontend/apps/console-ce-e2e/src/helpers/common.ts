@@ -18,7 +18,7 @@ export const setPromptValue = (value: string | null) => {
 };
 
 // This is works as setPromptValue with no unnecessary waiting
-export const setPromptWithCb = (value: string | null, cb: () => void) => { 
+export const setPromptWithCb = (value: string | null, cb: () => void) => {
   cy.window().then(win => {
     cy.stub(win, 'prompt').returns(value);
     cb();

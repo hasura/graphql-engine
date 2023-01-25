@@ -12,9 +12,12 @@ export default {
 // --------------------------------------------------
 // STORY DEFINITION
 // --------------------------------------------------
-export const BadgeEnabled: ComponentStory<typeof BadgeEnabledComponent> =
-  () => <BadgeEnabledComponent />;
-export const BadgeDisabled: ComponentStory<typeof BadgeDisabledComponent> =
-  () => <BadgeDisabledComponent />;
-export const BadgeSkeleton: ComponentStory<typeof BadgeSkeletonComponent> =
-  () => <BadgeSkeletonComponent />;
+export const BadgeEnabled: ComponentStory<
+  typeof BadgeEnabledComponent
+> = () => <BadgeEnabledComponent />;
+export const BadgeDisabled: ComponentStory<
+  typeof BadgeDisabledComponent
+> = () => <BadgeDisabledComponent />;
+export const BadgeSkeleton: ComponentStory<
+  typeof BadgeSkeletonComponent
+> = () => <BadgeSkeletonComponent />;

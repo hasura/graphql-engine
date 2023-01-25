@@ -14,5 +14,5 @@ export const config: ServerConfig = {
     claims_namespace: '',
     claims_format: '',
   },
-  is_prometheus_metrics_enabled: false
+  is_prometheus_metrics_enabled: false,
 };

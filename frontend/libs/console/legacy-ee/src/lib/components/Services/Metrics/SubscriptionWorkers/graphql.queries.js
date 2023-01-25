@@ -29,9 +29,7 @@ const getSubscriptionWorkers = () => {
       ) {
         started: min_time
         status
-        operation_logs(where: {
-          transport: { _eq: "ws" }
-        }, limit: 1) {
+        operation_logs(where: { transport: { _eq: "ws" } }, limit: 1) {
           operation_name
         }
         role: user_role
@@ -69,9 +67,7 @@ const fetchSubscriptionWorkerDetail = gql`
       total_subscribers
       session_variables
       generated_sql
-      operation_logs(where: {
-        transport: { _eq: "ws" }
-      }, limit: 1) {
+      operation_logs(where: { transport: { _eq: "ws" } }, limit: 1) {
         operation_id
         operation_name
         variables: query(path: ".variables")

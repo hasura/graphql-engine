@@ -55,147 +55,145 @@ export interface ColumnPermissionsSectionProps {
   dataSourceName: string;
 }
 
-export const ColumnRootFieldPermissions: React.FC<ColumnPermissionsSectionProps> =
-  ({ dataSourceName, table, filterType }) => {
-    const { watch, setValue } = useFormContext();
+export const ColumnRootFieldPermissions: React.FC<
+  ColumnPermissionsSectionProps
+> = ({ dataSourceName, table, filterType }) => {
+  const { watch, setValue } = useFormContext();
 
-    const [
-      hasEnabledAggregations,
-      selectedColumns,
-      queryRootFields,
-      subscriptionRootFields,
-    ] = watch([
-      'aggregationEnabled',
-      'columns',
-      'query_root_fields',
-      'subscription_root_fields',
-    ]);
-    console.log('table', table);
-    const disabled = filterType === 'none';
-    const { columns: tableColumns } = useListAllTableColumns(
-      dataSourceName,
-      table
-    );
+  const [
+    hasEnabledAggregations,
+    selectedColumns,
+    queryRootFields,
+    subscriptionRootFields,
+  ] = watch([
+    'aggregationEnabled',
+    'columns',
+    'query_root_fields',
+    'subscription_root_fields',
+  ]);
+  console.log('table', table);
+  const disabled = filterType === 'none';
+  const { columns: tableColumns } = useListAllTableColumns(
+    dataSourceName,
+    table
+  );
 
-    const hasSelectedPrimaryKeys = hasSelectedPrimaryKeyFinder(
-      selectedColumns,
-      tableColumns
-    );
+  const hasSelectedPrimaryKeys = hasSelectedPrimaryKeyFinder(
+    selectedColumns,
+    tableColumns
+  );
 
-    const updateFormValues = (
-      key: RootKeyValues,
-      value: PermissionRootTypes
-    ) => {
-      setValue(key, value);
-    };
-
-    const rootFieldPermissions = useRootFieldPermissions({
-      queryRootFields,
-      subscriptionRootFields,
-      hasEnabledAggregations,
-      hasSelectedPrimaryKeys,
-      updateFormValues,
-    });
-
-    const {
-      isSubscriptionStreamingEnabled,
-      onEnableSectionSwitchChange,
-      onToggleAll,
-      isRootPermissionsSwitchedOn,
-      onUpdatePermission,
-    } = rootFieldPermissions;
-
-    const supportsStreaming = useSourceSupportStreaming(dataSourceName);
-    const getFilteredSubscriptionRootPermissionFields = (
-      fields: SubscriptionRootPermissionType[]
-    ) => {
-      if (!supportsStreaming)
-        return fields.filter(field => field !== 'select_stream');
-      return fields;
-    };
-
-    const bodyTitle = disabled ? 'Set row permissions first' : '';
-
-    return (
-      <Collapse defaultOpen={!disabled}>
-        <Collapse.Header
-          title="Root field permissions"
-          tooltip="Choose root fields to be added under the query and subscription root fields."
-          status={getSectionStatusLabel({
-            queryRootPermissions: queryRootFields,
-            subscriptionRootPermissions: subscriptionRootFields,
-            hasEnabledAggregations,
-            hasSelectedPrimaryKeys,
-            isSubscriptionStreamingEnabled,
-          })}
-          disabledMessage="Set row permissions first"
-        />
-        <Collapse.Content>
-          <div title={bodyTitle}>
-            <div
-              className={`px-md mb-xs flex items-center ${clsx(
-                disabled && `opacity-70 pointer-events-none`
-              )}`}
-            >
-              <Switch
-                checked={isRootPermissionsSwitchedOn}
-                onCheckedChange={onEnableSectionSwitchChange}
-              />
-              <div className="mx-xs">
-                Enable GraphQL root field visibility customization.
-              </div>
-
-              <OverlayTrigger
-                placement="right"
-                overlay={
-                  <Tooltip tooltipContentChildren>
-                    By enabling this you can customize the root field
-                    permissions. When this switch is turned off, all values are
-                    enabled by default.
-                  </Tooltip>
-                }
-              >
-                <FaQuestionCircle aria-hidden="true" />
-              </OverlayTrigger>
-            </div>
-            <div
-              className={`px-md ${clsx(
-                !isRootPermissionsSwitchedOn && 'hidden'
-              )}`}
-            >
-              <SelectPermissionsRow
-                currentPermissions={queryRootFields}
-                description={<QueryRootFieldDescription />}
-                hasEnabledAggregations={hasEnabledAggregations}
-                hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
-                isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
-                permissionFields={queryRootPermissionFields}
-                permissionType={QUERY_ROOT_VALUES}
-                onToggleAll={() =>
-                  onToggleAll(QUERY_ROOT_VALUES, queryRootFields)
-                }
-                onUpdate={onUpdatePermission}
-              />
-              <SelectPermissionsRow
-                currentPermissions={subscriptionRootFields}
-                description={<SubscriptionRootFieldDescription />}
-                hasEnabledAggregations={hasEnabledAggregations}
-                hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
-                isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
-                permissionFields={getFilteredSubscriptionRootPermissionFields(
-                  subscriptionRootPermissionFields
-                )}
-                permissionType={SUBSCRIPTION_ROOT_VALUES}
-                onToggleAll={() =>
-                  onToggleAll(SUBSCRIPTION_ROOT_VALUES, subscriptionRootFields)
-                }
-                onUpdate={onUpdatePermission}
-              />
-            </div>
-          </div>
-        </Collapse.Content>
-      </Collapse>
-    );
+  const updateFormValues = (key: RootKeyValues, value: PermissionRootTypes) => {
+    setValue(key, value);
   };
+
+  const rootFieldPermissions = useRootFieldPermissions({
+    queryRootFields,
+    subscriptionRootFields,
+    hasEnabledAggregations,
+    hasSelectedPrimaryKeys,
+    updateFormValues,
+  });
+
+  const {
+    isSubscriptionStreamingEnabled,
+    onEnableSectionSwitchChange,
+    onToggleAll,
+    isRootPermissionsSwitchedOn,
+    onUpdatePermission,
+  } = rootFieldPermissions;
+
+  const supportsStreaming = useSourceSupportStreaming(dataSourceName);
+  const getFilteredSubscriptionRootPermissionFields = (
+    fields: SubscriptionRootPermissionType[]
+  ) => {
+    if (!supportsStreaming)
+      return fields.filter(field => field !== 'select_stream');
+    return fields;
+  };
+
+  const bodyTitle = disabled ? 'Set row permissions first' : '';
+
+  return (
+    <Collapse defaultOpen={!disabled}>
+      <Collapse.Header
+        title="Root field permissions"
+        tooltip="Choose root fields to be added under the query and subscription root fields."
+        status={getSectionStatusLabel({
+          queryRootPermissions: queryRootFields,
+          subscriptionRootPermissions: subscriptionRootFields,
+          hasEnabledAggregations,
+          hasSelectedPrimaryKeys,
+          isSubscriptionStreamingEnabled,
+        })}
+        disabledMessage="Set row permissions first"
+      />
+      <Collapse.Content>
+        <div title={bodyTitle}>
+          <div
+            className={`px-md mb-xs flex items-center ${clsx(
+              disabled && `opacity-70 pointer-events-none`
+            )}`}
+          >
+            <Switch
+              checked={isRootPermissionsSwitchedOn}
+              onCheckedChange={onEnableSectionSwitchChange}
+            />
+            <div className="mx-xs">
+              Enable GraphQL root field visibility customization.
+            </div>
+
+            <OverlayTrigger
+              placement="right"
+              overlay={
+                <Tooltip tooltipContentChildren>
+                  By enabling this you can customize the root field permissions.
+                  When this switch is turned off, all values are enabled by
+                  default.
+                </Tooltip>
+              }
+            >
+              <FaQuestionCircle aria-hidden="true" />
+            </OverlayTrigger>
+          </div>
+          <div
+            className={`px-md ${clsx(
+              !isRootPermissionsSwitchedOn && 'hidden'
+            )}`}
+          >
+            <SelectPermissionsRow
+              currentPermissions={queryRootFields}
+              description={<QueryRootFieldDescription />}
+              hasEnabledAggregations={hasEnabledAggregations}
+              hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
+              isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
+              permissionFields={queryRootPermissionFields}
+              permissionType={QUERY_ROOT_VALUES}
+              onToggleAll={() =>
+                onToggleAll(QUERY_ROOT_VALUES, queryRootFields)
+              }
+              onUpdate={onUpdatePermission}
+            />
+            <SelectPermissionsRow
+              currentPermissions={subscriptionRootFields}
+              description={<SubscriptionRootFieldDescription />}
+              hasEnabledAggregations={hasEnabledAggregations}
+              hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
+              isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
+              permissionFields={getFilteredSubscriptionRootPermissionFields(
+                subscriptionRootPermissionFields
+              )}
+              permissionType={SUBSCRIPTION_ROOT_VALUES}
+              onToggleAll={() =>
+                onToggleAll(SUBSCRIPTION_ROOT_VALUES, subscriptionRootFields)
+              }
+              onUpdate={onUpdatePermission}
+            />
+          </div>
+        </div>
+      </Collapse.Content>
+    </Collapse>
+  );
+};
 
 export default ColumnRootFieldPermissions;

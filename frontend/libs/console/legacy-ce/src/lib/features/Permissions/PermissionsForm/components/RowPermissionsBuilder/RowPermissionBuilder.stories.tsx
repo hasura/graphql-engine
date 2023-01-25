@@ -43,8 +43,9 @@ Primary.decorators = [
   },
 ];
 
-export const WithDefaults: ComponentStory<typeof RowPermissionBuilder> =
-  args => <RowPermissionBuilder {...args} />;
+export const WithDefaults: ComponentStory<
+  typeof RowPermissionBuilder
+> = args => <RowPermissionBuilder {...args} />;
 WithDefaults.args = {
   tableName: 'Album',
   nesting: ['filter'],
@@ -72,8 +73,9 @@ WithDefaults.decorators = [
   },
 ];
 
-export const WithDefaultsBool: ComponentStory<typeof RowPermissionBuilder> =
-  args => <RowPermissionBuilder {...args} />;
+export const WithDefaultsBool: ComponentStory<
+  typeof RowPermissionBuilder
+> = args => <RowPermissionBuilder {...args} />;
 
 WithDefaultsBool.args = {
   tableName: 'user',

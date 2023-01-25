@@ -92,7 +92,9 @@ export const failCTWrongDefaultValue = () => {
 };
 
 export const passCT = () => {
-  cy.get(getElementFromAlias('frequently-used-columns')).first().should('exist');
+  cy.get(getElementFromAlias('frequently-used-columns'))
+    .first()
+    .should('exist');
   // Set second column
   cy.get(getElementFromAlias('column-1')).clear().type(getColName(1));
   tableColumnTypeSelector('col-type-1');

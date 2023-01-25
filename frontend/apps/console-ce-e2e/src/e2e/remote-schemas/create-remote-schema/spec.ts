@@ -25,26 +25,16 @@ export const checkCreateRemoteSchemaRoute = () => {
 };
 
 export const failRSWithInvalidRemoteUrl = () => {
+  cy.get('[data-testid=name]').type(getRemoteSchemaName(0, testName));
+  cy.get('[data-testid=url]').type(getInvalidRemoteSchemaUrl());
 
-  cy.get('[data-testid=name]').type(
-    getRemoteSchemaName(0, testName)
-  );
-  cy.get('[data-testid=url]').type(
-    getInvalidRemoteSchemaUrl() 
-  );
-  
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Error');
-
 };
 
 export const createSimpleRemoteSchema = () => {
-  cy.get('[data-testid=name]')
-    .clear()
-    .type(getRemoteSchemaName(1, testName));
-  cy.get('[data-testid=url]')
-    .clear()
-    .type(getRemoteGraphQLURL());
+  cy.get('[data-testid=name]').clear().type(getRemoteSchemaName(1, testName));
+  cy.get('[data-testid=url]').clear().type(getRemoteGraphQLURL());
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Success');
   validateRS(getRemoteSchemaName(1, testName), ResultType.SUCCESS);
@@ -59,12 +49,8 @@ export const createSimpleRemoteSchema = () => {
 
 export const failRSDuplicateSchemaName = () => {
   cy.visit('remote-schemas/manage/add');
-  cy.get('[data-testid=name]')
-    .clear()
-    .type(getRemoteSchemaName(1, testName));
-  cy.get('[data-testid=url]')
-    .clear()
-    .type(getRemoteGraphQLURL());
+  cy.get('[data-testid=name]').clear().type(getRemoteSchemaName(1, testName));
+  cy.get('[data-testid=url]').clear().type(getRemoteGraphQLURL());
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Error');
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
@@ -72,12 +58,8 @@ export const failRSDuplicateSchemaName = () => {
 
 export const failRSDuplicateSchemaNodes = () => {
   cy.visit('remote-schemas/manage/add');
-  cy.get('[data-testid=name]')
-    .clear()
-    .type(getRemoteSchemaName(2, testName));
-  cy.get('[data-testid=url]')
-    .clear()
-    .type(getRemoteGraphQLURL());
+  cy.get('[data-testid=name]').clear().type(getRemoteSchemaName(2, testName));
+  cy.get('[data-testid=url]').clear().type(getRemoteGraphQLURL());
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Error');
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
@@ -112,15 +94,9 @@ export const deleteSimpleRemoteSchema = () => {
 
 export const failWithRemoteSchemaEnvUrl = () => {
   cy.visit('remote-schemas/manage/add');
-  cy.get('[data-testid=name]')
-    .clear()
-    .type(getRemoteSchemaName(3, testName));
-  cy.get(
-    '[name="url.type"]'
-  ).select('from_env');
-  cy.get('[data-testid=url]')
-    .clear()
-    .type(getRemoteGraphQLURLFromEnv());
+  cy.get('[data-testid=name]').clear().type(getRemoteSchemaName(3, testName));
+  cy.get('[name="url.type"]').select('from_env');
+  cy.get('[data-testid=url]').clear().type(getRemoteGraphQLURLFromEnv());
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Error');
   cy.url().should('eq', `${baseUrl}/remote-schemas/manage/add`);
@@ -128,38 +104,22 @@ export const failWithRemoteSchemaEnvUrl = () => {
 
 export const failWithRemoteSchemaEnvHeader = () => {
   cy.visit('remote-schemas/manage/add');
-  cy.get('[data-testid=name]')
-    .clear()
-    .type(getRemoteSchemaName(3, testName));
-  cy.get('[data-testid=url]')
-    .clear()
-    .type(getRemoteGraphQLURL());
+  cy.get('[data-testid=name]').clear().type(getRemoteSchemaName(3, testName));
+  cy.get('[data-testid=url]').clear().type(getRemoteGraphQLURL());
 
-  cy.get('[data-testid="add-header')
-    .click()
+  cy.get('[data-testid="add-header').click();
 
-  cy.get('[name="headers[0].name"]')
-    .clear()
-    .type('sampleHeader1');
+  cy.get('[name="headers[0].name"]').clear().type('sampleHeader1');
 
-  cy.get('[name="headers[0].value"]')
-    .clear()
-    .type('sampleHeaderValue1');
+  cy.get('[name="headers[0].value"]').clear().type('sampleHeaderValue1');
 
-  cy.get('[data-testid="add-header')
-    .click()
+  cy.get('[data-testid="add-header').click();
 
-  cy.get('[name="headers[1].name"]')
-    .clear()
-    .type('sampleHeader2');
+  cy.get('[name="headers[1].name"]').clear().type('sampleHeader2');
 
-  cy.get(
-    '[name="headers[1].type"]'
-  ).select("from_env");
+  cy.get('[name="headers[1].type"]').select('from_env');
 
-  cy.get('[name="headers[1].value"]')
-    .clear()
-    .type('SAMPLE_ENV_HEADER');
+  cy.get('[name="headers[1].value"]').clear().type('SAMPLE_ENV_HEADER');
 
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Error');
@@ -168,34 +128,20 @@ export const failWithRemoteSchemaEnvHeader = () => {
 
 export const passWithRemoteSchemaHeader = () => {
   cy.visit('remote-schemas/manage/add');
-  cy.get('[data-testid=name]')
-    .clear()
-    .type(getRemoteSchemaName(3, testName));
-  cy.get('[data-testid=url]')
-    .clear()
-    .type(getRemoteGraphQLURL());
+  cy.get('[data-testid=name]').clear().type(getRemoteSchemaName(3, testName));
+  cy.get('[data-testid=url]').clear().type(getRemoteGraphQLURL());
 
-  cy.get('[data-testid="add-header')
-    .click()
+  cy.get('[data-testid="add-header').click();
 
-  cy.get('[name="headers[0].name"]')
-    .clear()
-    .type('sampleHeader1');
+  cy.get('[name="headers[0].name"]').clear().type('sampleHeader1');
 
-  cy.get('[name="headers[0].value"]')
-    .clear()
-    .type('sampleHeaderValue1');
+  cy.get('[name="headers[0].value"]').clear().type('sampleHeaderValue1');
 
-  cy.get('[data-testid="add-header')
-    .click()
+  cy.get('[data-testid="add-header').click();
 
-  cy.get('[name="headers[1].name"]')
-    .clear()
-    .type('sampleHeader2');
+  cy.get('[name="headers[1].name"]').clear().type('sampleHeader2');
 
-  cy.get('[name="headers[1].value"]')
-    .clear()
-    .type('sampleHeaderValue2');
+  cy.get('[name="headers[1].value"]').clear().type('sampleHeaderValue2');
 
   cy.get('[data-testid=submit]').click();
   cy.get('.notifications-wrapper').contains('Success');
@@ -240,7 +186,7 @@ export const createSimpleRemoteSchemaPermission = () => {
   cy.get(getElementFromAlias('save-remote-schema-permissions')).click({
     force: true,
   });
-  cy.get('.notifications-wrapper').contains('saved')
+  cy.get('.notifications-wrapper').contains('saved');
   cy.url().should(
     'eq',
     `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(

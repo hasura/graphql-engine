@@ -17,14 +17,15 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof RenderWidget>;
 
-export const WithManualConfiguration: ComponentStory<typeof RenderWidget> =
-  () => (
-    <RenderWidget
-      dataSourceName="bikes"
-      table={{ name: 'orders', schema: 'sales' }}
-      mode={MODE.CREATE}
-      onCancel={() => {}}
-      onSuccess={() => {}}
-      onError={() => {}}
-    />
-  );
+export const WithManualConfiguration: ComponentStory<
+  typeof RenderWidget
+> = () => (
+  <RenderWidget
+    dataSourceName="bikes"
+    table={{ name: 'orders', schema: 'sales' }}
+    mode={MODE.CREATE}
+    onCancel={() => {}}
+    onSuccess={() => {}}
+    onError={() => {}}
+  />
+);

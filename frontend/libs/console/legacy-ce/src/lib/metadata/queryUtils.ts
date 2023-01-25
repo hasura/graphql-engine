@@ -104,7 +104,7 @@ export const metadataQueryTypes = [
   'dc_delete_agent',
 ] as const;
 
-export type MetadataQueryType = typeof metadataQueryTypes[number];
+export type MetadataQueryType = (typeof metadataQueryTypes)[number];
 
 export type MetadataQueries = Record<Driver, Record<MetadataQueryType, string>>;
 

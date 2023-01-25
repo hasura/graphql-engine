@@ -9,8 +9,9 @@ export default {
   argTypes: { onChange: { action: 'change' } },
 } as ComponentMeta<typeof GraphQLFieldCustomization>;
 
-export const Playground: ComponentStory<typeof GraphQLFieldCustomization> =
-  args => <GraphQLFieldCustomization {...args} />;
+export const Playground: ComponentStory<
+  typeof GraphQLFieldCustomization
+> = args => <GraphQLFieldCustomization {...args} />;
 
 Playground.args = {
   rootFields: {

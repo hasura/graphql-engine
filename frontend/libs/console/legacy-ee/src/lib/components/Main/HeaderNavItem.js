@@ -1,11 +1,8 @@
-import styles from "./Main.module.scss";
-import {Link} from "react-router";
-import React from "react";
+import styles from './Main.module.scss';
+import { Link } from 'react-router';
+import React from 'react';
 
-import {
-  Tooltip,
-} from '@hasura/console-oss';
-
+import { Tooltip } from '@hasura/console-oss';
 
 const HeaderNavItem = ({
   title,
@@ -15,9 +12,12 @@ const HeaderNavItem = ({
   linkPath,
   appPrefix,
   currentActiveBlock,
-  isDefault = false
+  isDefault = false,
 }) => {
-  const className = currentActiveBlock === itemPath || (isDefault && currentActiveBlock === '') ? styles.navSideBarActive : '';
+  const className =
+    currentActiveBlock === itemPath || (isDefault && currentActiveBlock === '')
+      ? styles.navSideBarActive
+      : '';
 
   return (
     <li>
@@ -39,6 +39,6 @@ const HeaderNavItem = ({
       </Tooltip>
     </li>
   );
-}
+};
 
 export default HeaderNavItem;

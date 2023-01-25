@@ -28,9 +28,7 @@
             "output": "common"
           }
         ],
-        "styles": [
-          "apps/console-ee/src/css/tailwind.css"
-        ],
+        "styles": ["apps/console-ee/src/css/tailwind.css"],
         "scripts": [],
         "webpackConfig": "custom-webpack.config.js",
         "postcssConfig": "apps/console-ee/postcss.config.js"

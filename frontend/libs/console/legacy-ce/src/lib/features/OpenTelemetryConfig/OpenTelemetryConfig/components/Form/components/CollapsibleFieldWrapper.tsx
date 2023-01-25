@@ -22,32 +22,33 @@ interface CollapsibleFieldWrapperProps {
  * TODO: Fix the a11y issue for which a button cannot be child of another button (speaking about the
  * tooltip trigger being a child of the collapsible trigger)
  */
-export const CollapsibleFieldWrapper: React.FC<CollapsibleFieldWrapperProps> =
-  props => {
-    const { inputFieldName, label, tooltip, children, loading } = props;
+export const CollapsibleFieldWrapper: React.FC<
+  CollapsibleFieldWrapperProps
+> = props => {
+  const { inputFieldName, label, tooltip, children, loading } = props;
 
-    if (loading) return <Skeleton className="h-8" />;
+  if (loading) return <Skeleton className="h-8" />;
 
-    return (
-      <>
-        <Collapsible
-          triggerChildren={
-            <>
-              <label
-                htmlFor={inputFieldName}
-                className="block pt-1 text-gray-600 mb-xs pr-8 flex-grow220px"
-              >
-                <span className="flex items-center font-semibold">
-                  <span>{label}</span>
-                  <span className="font-normal ml-1">(Optional)</span>
-                  <IconTooltip message={tooltip} />
-                </span>
-              </label>
-            </>
-          }
-        >
-          {children}
-        </Collapsible>
-      </>
-    );
-  };
+  return (
+    <>
+      <Collapsible
+        triggerChildren={
+          <>
+            <label
+              htmlFor={inputFieldName}
+              className="block pt-1 text-gray-600 mb-xs pr-8 flex-grow220px"
+            >
+              <span className="flex items-center font-semibold">
+                <span>{label}</span>
+                <span className="font-normal ml-1">(Optional)</span>
+                <IconTooltip message={tooltip} />
+              </span>
+            </label>
+          </>
+        }
+      >
+        {children}
+      </Collapsible>
+    </>
+  );
+};

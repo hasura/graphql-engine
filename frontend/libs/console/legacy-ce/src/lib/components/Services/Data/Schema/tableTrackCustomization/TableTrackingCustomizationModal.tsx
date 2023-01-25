@@ -22,41 +22,42 @@ export type TableTrackingCustomizationModalProps = {
   currentConfiguration?: MetadataTableConfig;
 };
 
-export const TableTrackingCustomizationModal: React.FC<TableTrackingCustomizationModalProps> =
-  ({
-    tableName,
-    onSubmit,
-    onClose,
-    show = true,
-    currentConfiguration,
-    dialogDescription,
-  }) => {
-    return (
-      <>
-        {show && (
-          <Analytics
-            name="TableTrackingCustomizationModal"
-            {...REDACT_EVERYTHING}
+export const TableTrackingCustomizationModal: React.FC<
+  TableTrackingCustomizationModalProps
+> = ({
+  tableName,
+  onSubmit,
+  onClose,
+  show = true,
+  currentConfiguration,
+  dialogDescription,
+}) => {
+  return (
+    <>
+      {show && (
+        <Analytics
+          name="TableTrackingCustomizationModal"
+          {...REDACT_EVERYTHING}
+        >
+          <Dialog
+            hasBackdrop
+            title={tableName}
+            description={dialogDescription}
+            onClose={onClose}
+            titleTooltip="Customize table name and root fields for GraphQL operations."
+            contentContainer={{
+              className: 'mb-[60px]',
+            }}
           >
-            <Dialog
-              hasBackdrop
-              title={tableName}
-              description={dialogDescription}
+            <TableTrackingCustomizationForm
+              initialTableName={tableName}
+              currentConfiguration={currentConfiguration}
               onClose={onClose}
-              titleTooltip="Customize table name and root fields for GraphQL operations."
-              contentContainer={{
-                className: 'mb-[60px]',
-              }}
-            >
-              <TableTrackingCustomizationForm
-                initialTableName={tableName}
-                currentConfiguration={currentConfiguration}
-                onClose={onClose}
-                onSubmit={onSubmit}
-              />
-            </Dialog>
-          </Analytics>
-        )}
-      </>
-    );
-  };
+              onSubmit={onSubmit}
+            />
+          </Dialog>
+        </Analytics>
+      )}
+    </>
+  );
+};

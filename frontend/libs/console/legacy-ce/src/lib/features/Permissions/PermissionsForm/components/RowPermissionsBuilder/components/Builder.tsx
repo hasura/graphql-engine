@@ -151,25 +151,26 @@ export const Builder = (props: Props) => {
     return [];
   }, [tableName, dropDownState, schema, tableConfig]);
 
-  const handleDropdownChange: React.ChangeEventHandler<HTMLSelectElement> =
-    e => {
-      const value = e.target.value;
+  const handleDropdownChange: React.ChangeEventHandler<
+    HTMLSelectElement
+  > = e => {
+    const value = e.target.value;
 
-      // as the form is populated a json object is built up
-      // when the dropdown changes at a specific level
-      // everything below that level needs to be removed
-      // set value undefined is necessary to remove field arrays
-      if (dropDownState?.name === '_and' || dropDownState?.name === '_or') {
-        setValue(permissionsKey, undefined);
-      }
-      // when the dropdown changes both the permissions object
-      // and operators object need to be unregistered below this level
-      unregister(permissionsKey);
-      unregister(operatorsKey);
+    // as the form is populated a json object is built up
+    // when the dropdown changes at a specific level
+    // everything below that level needs to be removed
+    // set value undefined is necessary to remove field arrays
+    if (dropDownState?.name === '_and' || dropDownState?.name === '_or') {
+      setValue(permissionsKey, undefined);
+    }
+    // when the dropdown changes both the permissions object
+    // and operators object need to be unregistered below this level
+    unregister(permissionsKey);
+    unregister(operatorsKey);
 
-      const newValue = getNewValues({ value, data });
-      return setValue(operatorsKey, newValue);
-    };
+    const newValue = getNewValues({ value, data });
+    return setValue(operatorsKey, newValue);
+  };
 
   const handleColumnChange: React.ChangeEventHandler<HTMLSelectElement> = e => {
     const target = e.target.value;
