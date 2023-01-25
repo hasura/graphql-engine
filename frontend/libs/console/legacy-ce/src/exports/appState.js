@@ -1,1 +1,1 @@
-export * from '../src/components/AppState';
+export * from '../lib/components/AppState';

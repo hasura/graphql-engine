@@ -1,7 +1,7 @@
-import DragFoldTable from '../src/components/Common/TableCommon/DragFoldTable';
+import DragFoldTable from '../lib/components/Common/TableCommon/DragFoldTable';
 
-import Editor from '../src/components/Common/Layout/ExpandableEditor/Editor';
-import SearchableSelectBox from '../src/components/Common/SearchableSelect/SearchableSelect';
+import Editor from '../lib/components/Common/Layout/ExpandableEditor/Editor';
+import SearchableSelectBox from '../lib/components/Common/SearchableSelect/SearchableSelect';
 
 export { DragFoldTable };
 

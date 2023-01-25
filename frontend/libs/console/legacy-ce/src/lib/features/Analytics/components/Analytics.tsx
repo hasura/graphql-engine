@@ -91,8 +91,6 @@ export function Analytics(props: AnalyticsProps) {
   // Handling the <Analytics><title>XXX</title></Analytics> edge case
   if (
     type === 'htmlElement' &&
-    // @ts-expect-error TS 4.5.2 (used in the Console at the time of writing) does not support inferring
-    // the correct type of children. TS 4.8 (which I tested) works fine.
     typedChildren.type === 'title' &&
     isNotProduction
   )

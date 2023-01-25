@@ -1,77 +1,77 @@
-const CommonScss = require('../src/components/Common/Common.module.scss');
-const filterQueryScss = require('../src/components/Common/FilterQuery/FilterQuery.module.scss');
-const tableScss = require('../src/components/Common/TableCommon/Table.module.scss');
+const CommonScss = require('../lib/components/Common/Common.module.scss');
+const filterQueryScss = require('../lib/components/Common/FilterQuery/FilterQuery.module.scss');
+const tableScss = require('../lib/components/Common/TableCommon/Table.module.scss');
 
-import * as EndpointNamedExps from '../src/Endpoints';
+import * as EndpointNamedExps from '../lib/Endpoints';
 
 export {
   persistGraphiQLHeaders,
   getPersistedGraphiQLHeaders,
-} from '../src/components/Services/ApiExplorer/ApiRequest/utils';
-export { fetchConsoleNotifications } from '../src/components/Main/Actions';
-export { default as NotificationSection } from '../src/components/Main/NotificationSection';
-export { default as Onboarding } from '../src/components/Common/Onboarding';
+} from '../lib/components/Services/ApiExplorer/ApiRequest/utils';
+export { fetchConsoleNotifications } from '../lib/components/Main/Actions';
+export { default as NotificationSection } from '../lib/components/Main/NotificationSection';
+export { default as Onboarding } from '../lib/components/Common/Onboarding';
 export {
   Analytics,
   startTracing,
   addUserProperties,
   programmaticallyTraceError,
-} from '../src/features/Analytics';
-export { CloudOnboarding } from '../src/features/CloudOnboarding';
-export { prefetchSurveysData } from '../src/features/Surveys';
-export { prefetchOnboardingData } from '../src/features/CloudOnboarding/OnboardingWizard';
-export { default as PageNotFound } from '../src/components/Error/PageNotFound';
-export * from '../src/new-components/Button/';
-export * from '../src/new-components/Tooltip/';
-export { CONSOLE_ADMIN_SECRET } from '../src/components/AppState';
-export { default as dataHeaders } from '../src/components/Services/Data/Common/Headers';
-export { handleMigrationErrors } from '../src/components/Services/Data/TableModify/ModifyActions';
-export { loadMigrationStatus } from '../src/components/Main/Actions';
+} from '../lib/features/Analytics';
+export { CloudOnboarding } from '../lib/features/CloudOnboarding';
+export { prefetchSurveysData } from '../lib/features/Surveys';
+export { prefetchOnboardingData } from '../lib/features/CloudOnboarding/OnboardingWizard';
+export { default as PageNotFound } from '../lib/components/Error/PageNotFound';
+export * from '../lib/new-components/Button/';
+export * from '../lib/new-components/Tooltip/';
+export { CONSOLE_ADMIN_SECRET } from '../lib/components/AppState';
+export { default as dataHeaders } from '../lib/components/Services/Data/Common/Headers';
+export { handleMigrationErrors } from '../lib/components/Services/Data/TableModify/ModifyActions';
+export { loadMigrationStatus } from '../lib/components/Main/Actions';
 export {
   fetchSchemaList,
   updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
   UPDATE_DATA_HEADERS,
   ADMIN_SECRET_ERROR,
-} from '../src/components/Services/Data/DataActions';
-export { default as generatedVoyagerConnector } from '../src/components/Services/VoyagerView/VoyagerView';
-export { default as Spinner } from '../src/components/Common/Spinner/Spinner';
+} from '../lib/components/Services/Data/DataActions';
+export { default as generatedVoyagerConnector } from '../lib/components/Services/VoyagerView/VoyagerView';
+export { default as Spinner } from '../lib/components/Common/Spinner/Spinner';
 export { CommonScss };
-export * from '../src/components/Services/Settings';
+export * from '../lib/components/Services/Settings';
 export {
   loadInconsistentObjects,
   exportMetadata,
-} from '../src/metadata/actions';
-import { isMetadataStatusPage } from '../src/components/Error/ErrorBoundary.tsx';
-import { redirectToMetadataStatus } from '../src/components/Common/utils/routesUtils.ts';
-import { ApiLimits } from '../src/components/Services/ApiExplorer/Security';
-import { IntrospectionOptions } from '../src/components/Services/ApiExplorer/Security/Introspection';
+} from '../lib/metadata/actions';
+import { isMetadataStatusPage } from '../lib/components/Error/ErrorBoundary.tsx';
+import { redirectToMetadataStatus } from '../lib/components/Common/utils/routesUtils.ts';
+import { ApiLimits } from '../lib/components/Services/ApiExplorer/Security';
+import { IntrospectionOptions } from '../lib/components/Services/ApiExplorer/Security/Introspection';
 
-export { default as globals } from '../src/Globals';
-export { default as endpoints } from '../src/Endpoints';
-export { default as mainState } from '../src/components/Main/State';
+export { default as globals } from '../lib/Globals';
+export { default as endpoints } from '../lib/Endpoints';
+export { default as mainState } from '../lib/components/Main/State';
 export {
   changeRequestHeader,
   removeRequestHeader,
-} from '../src/components/Services/ApiExplorer/Actions';
+} from '../lib/components/Services/ApiExplorer/Actions';
 export { filterQueryScss, tableScss };
-export * from '../src/components/Common';
-export { loadConsoleOpts } from '../src/telemetry/Actions';
-export * from '../src/telemetry';
-export { default as Endpoints } from '../src/Endpoints';
+export * from '../lib/components/Common';
+export { loadConsoleOpts } from '../lib/telemetry/Actions';
+export * from '../lib/telemetry';
+export { default as Endpoints } from '../lib/Endpoints';
 export { EndpointNamedExps };
 
-export { updateRequestHeaders } from '../src/components/Main/Main';
+export { updateRequestHeaders } from '../lib/components/Main/Main';
 
 export {
   showErrorNotification,
   showSuccessNotification,
-} from '../src/components/Services/Common/Notification';
+} from '../lib/components/Services/Common/Notification';
 
-export { default as CreateRestView } from '../src/components/Services/ApiExplorer/Rest/Form/';
-export { default as RestListView } from '../src/components/Services/ApiExplorer/Rest/List';
-export { default as DetailsView } from '../src/components/Services/ApiExplorer/Rest/Details';
-export { default as ApiContainer } from '../src/components/Services/ApiExplorer/Container';
+export { default as CreateRestView } from '../lib/components/Services/ApiExplorer/Rest/Form/';
+export { default as RestListView } from '../lib/components/Services/ApiExplorer/Rest/List';
+export { default as DetailsView } from '../lib/components/Services/ApiExplorer/Rest/Details';
+export { default as ApiContainer } from '../lib/components/Services/ApiExplorer/Container';
 
 export {
   redirectToMetadataStatus,
@@ -81,17 +81,17 @@ export {
 };
 
 export * from './table';
-export { ReactQueryProvider, reactQueryClient } from '../src/lib/reactQuery';
+export { ReactQueryProvider, reactQueryClient } from '../lib/lib/reactQuery';
 
-export { PrometheusSettings } from '../src/features/Prometheus';
+export { PrometheusSettings } from '../lib/features/Prometheus';
 
-export { FeatureFlags } from '../src/features/FeatureFlags';
+export { FeatureFlags } from '../lib/features/FeatureFlags';
 
 export {
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
-} from '../src/utils/proConsole';
+} from '../lib/utils/proConsole';
 
-export { AllowListDetail } from '../src/components/Services/AllowList/AllowListDetail';
+export { AllowListDetail } from '../lib/components/Services/AllowList/AllowListDetail';
 
-export { default as generatedAdminSecretLoginConnector } from '../src/components/Login/Login';
+export { default as generatedAdminSecretLoginConnector } from '../lib/components/Login/Login';

@@ -39,6 +39,8 @@
     "npm": ">=8"
   },
   "dependencies": {
+    "deepmerge-ts": "4.2.2",
+    "react-hot-toast": "2.4.0",
     "@ant-design/icons": "4.7.0",
     "@apollo/react-hooks": "^3.0.1",
     "@babel/plugin-transform-runtime": "^7.14.5",
@@ -178,6 +180,15 @@
     "zod": "3.20.2"
   },
   "devDependencies": {
+    "react-a11y": "0.2.8",
+    "@cypress/snapshot": "^2.1.7",
+    "@storybook/addon-docs": "6.5.10",
+    "@types/js-yaml": "^4.0.5",
+    "nyc": "15.0.1",
+    "remark-external-links": "8.0.0",
+    "remark-slug": "6.1.0",
+    "tailwindcss": "3.2.4",
+    "whatwg-fetch": "^3.6.2",
     "@babel/core": "7.12.13",
     "@babel/eslint-parser": "^7.19.1",
     "@babel/plugin-proposal-class-properties": "7.8.3",
@@ -336,7 +347,6 @@
     "storybook-dark-mode": "^1.1.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
-    "tailwindcss": "^3.1.8",
     "tailwindcss-radix": "^2.5.0",
     "ts-jest": "27.1.4",
     "ts-node": "~10.8.0",

@@ -1,4 +1,4 @@
-export * from '../src/components/App/Actions';
-export { default as progressBarReducer } from '../src/components/App/Actions';
+export * from '../lib/components/App/Actions';
+export { default as progressBarReducer } from '../lib/components/App/Actions';
 
-export { default as App } from '../src/components/App/App';
+export { default as App } from '../lib/components/App/App';

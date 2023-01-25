@@ -1,2 +1,2 @@
-export { default as NotificationSection } from './src/components/Main/NotificationSection';
-export { default as Onboarding } from './src/components/Common/Onboarding';
+export { default as NotificationSection } from './lib/components/Main/NotificationSection';
+export { default as Onboarding } from './lib/components/Common/Onboarding';
