@@ -6,7 +6,12 @@ GENERATED_CABAL_FILES = $(foreach package_file,$(PACKAGE_YAML_FILES),$(wildcard 
 
 .PHONY: build-all
 ## build-all: build all haskell packages, or "have i broken anything?"
-build-all: build build-tests build-integration-tests build-pro build-pro-tests build-multitenant build-multitenant-integration-tests build-tests-dc-api build-pro-api-tests
+build-all: build build-tests build-integration-tests build-pro build-pro-tests build-multitenant build-multitenant-integration-tests build-tests-dc-api build-pro-api-tests build-console-assets
+
+.PHONY: build-console-assets
+## build-console-assets
+build-console-assets:
+	cd frontend && npm install && npm run server-build:ce
 
 .PHONY: build
 ## build: build non-pro graphql executable
