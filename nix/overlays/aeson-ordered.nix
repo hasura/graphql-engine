@@ -5,7 +5,7 @@ final: prev: {
         overrides = prev.lib.composeExtensions
           (old.overrides or (_: _: { }))
           (hfinal: hprev: {
-            resource-pool = final.haskell.packages."${prev.ghcName}".callCabal2nix "resource-pool" ../../server/lib/pool { };
+            aeson-ordered = final.haskell.packages."${prev.ghcName}".callCabal2nix "aeson-ordered" ../../server/lib/aeson-ordered { };
           });
       });
     };
