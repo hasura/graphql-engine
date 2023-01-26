@@ -1,10 +1,10 @@
 import {
   getElementFromAlias,
-  baseUrl,
   tableColumnTypeSelector,
   makeDataAPIOptions,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 import { validateCT, ResultType } from '../../validators/validators';
 import { toggleOnMigrationMode } from '../../data/migration-mode/utils';
 import { setPromptValue } from '../../../helpers/common';

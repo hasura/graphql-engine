@@ -1,9 +1,9 @@
 import {
   getElementFromAlias,
-  baseUrl,
   tableColumnTypeSelector,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import {
   setMetaData,

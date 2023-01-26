@@ -1,8 +1,8 @@
 import {
-  baseUrl,
   getElementFromAlias,
   getElementFromClassName,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 const statements = {
   createTableSql:

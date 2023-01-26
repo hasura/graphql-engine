@@ -1,6 +1,6 @@
+import { baseUrl } from '../../../helpers/common';
 import {
   getElementFromAlias,
-  baseUrl,
   getRemoteSchemaName,
   getInvalidRemoteSchemaUrl,
   getRemoteGraphQLURL,

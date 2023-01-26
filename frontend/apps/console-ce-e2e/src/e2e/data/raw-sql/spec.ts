@@ -1,4 +1,5 @@
-import { baseUrl, getElementFromAlias } from '../../../helpers/dataHelpers';
+import { getElementFromAlias } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 let prevStr = '';
 

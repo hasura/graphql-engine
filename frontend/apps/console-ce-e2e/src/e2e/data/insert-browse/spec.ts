@@ -1,5 +1,4 @@
 import {
-  baseUrl,
   getColName,
   getTableName,
   dataTypes,
@@ -8,6 +7,7 @@ import {
   tableColumnTypeSelector,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import {
   validateInsert,

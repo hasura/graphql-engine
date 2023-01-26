@@ -115,6 +115,9 @@ export const hasuraToast = ({
         style={{
           ...t.style,
         }}
+        data-testid="notification"
+        data-notificationtype={type}
+        data-toastid={t.id}
       >
         <div className="flex flex-col flex-grow items-stretch">
           {title ? (

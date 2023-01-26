@@ -1,11 +1,11 @@
 import {
   tableColumnTypeSelector,
-  baseUrl,
   getTableName,
   getElementFromAlias,
   getColName,
   queryTypes,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import { setMetaData } from '../../validators/validators';
 

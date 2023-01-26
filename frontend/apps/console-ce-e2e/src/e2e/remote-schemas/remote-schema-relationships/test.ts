@@ -95,9 +95,7 @@ describe('check if remote schema relationships are displayed properly', () => {
   });
 
   it('verify if the rows exist on the remote schema table', () => {
-    cy.visit(
-      'http://localhost:3000/remote-schemas/manage/source_rs/relationships'
-    );
+    cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.get(getElementFromAlias('remote-schema-relationships-table')).should(
       'exist'
     );

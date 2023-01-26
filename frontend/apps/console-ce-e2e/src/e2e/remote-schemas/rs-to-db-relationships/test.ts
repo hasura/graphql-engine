@@ -53,9 +53,7 @@ describe('check if remote schema to db relationships are created properly', () =
   });
 
   it('verify creating a new rs-to-db relationship', () => {
-    cy.visit(
-      'http://localhost:3000/remote-schemas/manage/source_rs/relationships'
-    );
+    cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.get(getElementFromAlias('add-a-new-rs-relationship')).click();
     cy.get(getElementFromAlias('radio-select-remoteDB')).click();
     cy.get(getElementFromAlias('rs-to-db-rel-name')).type('RelationshipName');

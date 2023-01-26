@@ -1,6 +1,5 @@
 import {
   tableColumnTypeSelector,
-  baseUrl,
   getTableName,
   getColName,
   getElementFromAlias,
@@ -8,6 +7,7 @@ import {
   dropUntrackedFunctionSQL,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import {
   setMetaData,

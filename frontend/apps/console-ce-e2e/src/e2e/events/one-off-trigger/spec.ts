@@ -6,8 +6,9 @@ import {
   getNoOfRetries,
   getIntervalSeconds,
   getTimeoutSeconds,
-  baseUrl,
 } from '../../../helpers/eventHelpers';
+import { baseUrl } from '../../../helpers/common';
+
 import { validateCTrigger, ResultType } from '../../validators/validators';
 
 const EVENT_TRIGGER_INDEX_ROUTE = '/events/data';

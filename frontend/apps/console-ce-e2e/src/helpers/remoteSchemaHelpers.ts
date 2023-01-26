@@ -1,7 +1,5 @@
 import { ADMIN_SECRET_HEADER_KEY } from './constants';
 
-export const baseUrl = Cypress.config('baseUrl');
-
 export const getRemoteSchemaName = (i: number, schemaName: string) =>
   `test-remote-schema-${schemaName}-${i}`;
 

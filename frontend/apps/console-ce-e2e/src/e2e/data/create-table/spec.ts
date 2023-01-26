@@ -3,9 +3,9 @@ import {
   getElementFromAlias,
   getTableName,
   getColName,
-  baseUrl,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 import {
   setMetaData,
   validateCT,
