@@ -1,4 +1,4 @@
-This note is in [Hasura.Backends.Postgres.SQL.RenameIdentifiers](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/RenameIdentifiers.hs#L35).
+This note is in [Hasura.Backends.Postgres.SQL.RenameIdentifiers](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/RenameIdentifiers.hs#L36).
 
 # Postgres identifier length limitations
 
