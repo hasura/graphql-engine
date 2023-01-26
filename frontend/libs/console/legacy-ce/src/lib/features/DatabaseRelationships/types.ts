@@ -21,8 +21,8 @@ export type RemoteSchemaRelationship = BasicRelationshipDetails & {
   relationshipType: 'Remote';
   definition: {
     toRemoteSchema: string;
-    toTable: Table;
-    mapping: Record<string, string>;
+    lhs_fields: string[];
+    remote_field: Record<string, any>;
   };
 };
 

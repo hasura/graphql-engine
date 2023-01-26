@@ -1,18 +1,27 @@
 import {
   DataSource,
+  isLegacyRemoteSchemaRelationship,
   isManualArrayRelationship,
   isManualObjectRelationship,
+  isRemoteSchemaRelationship,
 } from '@/features/DataSource';
 import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
-import { LocalRelationship } from '../types';
 import {
+  LocalRelationship,
+  RemoteDatabaseRelationship,
+  RemoteSchemaRelationship,
+} from '../types';
+import {
+  adaptLegacyRemoteSchemaRelationship,
   adaptLocalArrayRelationshipWithFkConstraint,
   adaptLocalArrayRelationshipWithManualConfiguration,
   adaptLocalObjectRelationshipWithFkConstraint,
   adaptLocalObjectRelationshipWithManualConfigruation,
+  adaptRemoteDatabaseRelationship,
+  adaptRemoteSchemaRelationship,
 } from '../utils/adaptResponse';
 import {
   DEFAULT_STALE_TIME,
@@ -100,12 +109,36 @@ export const useListAllDatabaseRelationships = ({
     });
   });
 
-  // TODO (post beta release): adapt remote DB relationships
+  const remoteRelationships = (metadataTable?.remote_relationships ?? []).map<
+    RemoteSchemaRelationship | RemoteDatabaseRelationship
+  >(relationship => {
+    if (isRemoteSchemaRelationship(relationship))
+      return adaptRemoteSchemaRelationship({
+        table,
+        dataSourceName,
+        relationship,
+      });
 
-  // TODO (post beta release): adapt remote schema relationships
+    if (isLegacyRemoteSchemaRelationship(relationship))
+      return adaptLegacyRemoteSchemaRelationship({
+        table,
+        dataSourceName,
+        relationship,
+      });
+
+    return adaptRemoteDatabaseRelationship({
+      table,
+      dataSourceName,
+      relationship,
+    });
+  });
 
   return {
-    data: [...localArrayRelationships, ...localObjectRelationships],
+    data: [
+      ...localArrayRelationships,
+      ...localObjectRelationships,
+      ...remoteRelationships,
+    ],
     isFetching: isMetadataPending || isDALIntrospectionPending,
     isLoading: isMetadataLoading || isDALIntrospectionLoading,
     error: [metadataError, dalError],

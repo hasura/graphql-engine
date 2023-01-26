@@ -8,7 +8,6 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { TablePicker } from './TablePicker';
 
 export default {
-  title: 'GDC Console/Relationships/components/Table Picker',
   component: TablePicker,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof TablePicker>;

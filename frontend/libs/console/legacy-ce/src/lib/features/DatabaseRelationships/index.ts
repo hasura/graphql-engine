@@ -1,4 +1,4 @@
-export { DatabaseRelationships } from './components/DatabaseRelationships';
+export { DatabaseRelationships } from './DatabaseRelationships';
 export { Relationship } from './types';
 export { useListAllDatabaseRelationships } from './hooks/useListAllDatabaseRelationships';
 export { getTableDisplayName } from './utils/helpers';

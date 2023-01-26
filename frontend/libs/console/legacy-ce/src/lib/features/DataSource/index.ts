@@ -42,6 +42,7 @@ import {
   RunSQLResponse,
   RunSQLSelectResponse,
   RunSQLCommandResponse,
+  runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
@@ -448,6 +449,7 @@ export {
   RunSQLResponse,
   RunSQLSelectResponse,
   RunSQLCommandResponse,
+  runMetadataQuery,
   getDriverPrefix,
   runIntrospectionQuery,
   AlloyDbTable,

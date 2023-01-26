@@ -3,10 +3,10 @@ import { Button } from '@/new-components/Button';
 import { useFireNotification } from '@/new-components/Notifications';
 import React, { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
-import { MODE, Relationship } from '../types';
-import { AvailableRelationshipsList } from './AvailableRelationshipsList/AvailableRelationshipsList';
-import { NOTIFICATIONS } from './constants';
-import { RenderWidget } from './RenderWidget/RenderWidget';
+import { MODE, Relationship } from './types';
+import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
+import { NOTIFICATIONS } from './components/constants';
+import { RenderWidget } from './components/RenderWidget/RenderWidget';
 
 export interface DatabaseRelationshipsProps {
   dataSourceName: string;
