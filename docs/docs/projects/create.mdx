@@ -11,7 +11,6 @@ sidebar_label: Create Projects
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
-import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Create Projects
 
@@ -19,12 +18,13 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 ## Introduction
 
-You can create a new Hasura Cloud project with either a new Postgres database, or an existing Postgres database with a
-publicly available IP address.
+You can create a new Hasura Cloud Project with either a new database, or an existing database with a publicly
+available IP address. For a list of supported databases and features [see here](/databases/index.mdx).
 
-## Step 1: Project setup
+## Project setup
 
-To begin, navigate to the `Projects` page, and click the `New Project` link.
+You can quickly and easily create a new Hasura Cloud Project. To begin, navigate to the
+[Projects](https://cloud.hasura.io/projects) page on Hasura Cloud and click the "New Project" link.
 
 This opens a form on the right where you can create your new project.
 
@@ -40,86 +40,7 @@ Once you have completed the project setup, click `Create Project`.
 
 Once created, you can specify a new name for your Project if you want.
 
-## Step 2: Database setup {#cloud-projects-db-setup}
+## Connect to a database
 
-Click `Launch Console` to open the Hasura console in your browser.
-
-<Thumbnail
-  src="/img/projects/create-project-assign-name_console_2.12.png"
-  alt="database setup with new database"
-  width="900px"
-/>
-
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database`:
-
-### Connect or create a new database
-
-Hasura Cloud does not host databases, but does provide integrations with which you can connect databases including from
-many 3rd party managed cloud providers. Check out a
-[list of supported databases here](/databases/index.mdx#supported-databases).
-
-To get started with a demo database, choose `Create New Database`:
-
-<Thumbnail
-  src="/img/projects/create-database-neon-2.15.png"
-  alt="database setup with existing
-database"
-  width="700px"
-/>
-
-Select `Create Neon Database` and follow the prompts. Hasura Cloud will integrate with your Neon account and manage the
-initial setup of a Postgres instance. You can always upgrade the instance and manage options later through your Neon
-account:
-
-<Thumbnail
-  src="/img/projects/connect-database-neon-2.15.png"
-  alt="database setup with existing
-database"
-  width="700px"
-/>
-
-### Existing database
-
-To use an existing database, choose `Connect existing database` and enter your database connection URL and enter your
-database connection string (looks like `postgres://username:password@hostname:port/dbname`).
-
-<Thumbnail src="/img/projects/connect-database_console_2.15.png" alt="database setup with new database" width="700px" />
-
-:::info
-
-Note You can connect to databases either using env vars or by using their raw connection string/parameters. It is
-recommended to use env vars for better security _(as connection details are part of Hasura Metadata)_ as well as to
-allow configuring different databases in different environments _(like staging/production)_ easily.
-
-:::
-
-### Allowing connections from Hasura Cloud IP {#cloud-projects-create-allow-nat-ip}
-
-For some cloud services, like GCP, you'll need to adjust your Postgres connection settings to allow connections from the
-Hasura Cloud IP address. You can copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's
-details view.
-
-<Thumbnail src="/img/projects/project-general-ip-address_console_2.12.png" alt="Hasura Cloud IP field" width="1000px" />
-
-<Thumbnail
-  src="/img/projects/gcp-postgres-authorized-network.png"
-  alt="whitelist Hasura instance IP in Postgres settings"
-  width="727px"
-/>
-
-## Postgres requirements
-
-Hasura GraphQL Engine supports all supported versions of Postgres per the
-[public documentation](https://www.postgresql.org/support/versioning/).
-
-Make sure your database user has the right
-[Postgres permissions](/deployment/postgres-requirements.mdx#managed-pg-permissions).
-
-## Connecting to a database not exposed over the internet
-
-[Contact us](https://hasura.io/contact-us/) for VPC peering and on-premise solutions.
-
-## More databases
-
-Support for more databases is coming soon. Stay up to date with
-[supported databases here](/databases/index.mdx#supported-databases).
+Once your project is created you can connect to a new or existing database. For full details on how to connect to a
+database, see [connecting to a database here](/databases/connect-db/index.mdx).
