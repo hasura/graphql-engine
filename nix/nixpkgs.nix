@@ -10,5 +10,6 @@ import nixpkgs {
     (import ./overlays/ghc.nix)
     (import ./overlays/msodbcsql18.nix)
     (import ./overlays/graphql-parser.nix)
+    (import ./overlays/resource-pool.nix)
   ];
 }
