@@ -326,7 +326,7 @@ runApp serveOptions = do
           liftIO $ createServerMetrics $ EKG.subset ServerSubset store
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
     prometheusMetrics <- makeDummyPrometheusMetrics
-    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways FeatureFlag.defaultValueIO) $ \serverCtx@ServerCtx {..} ->
+    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways (FeatureFlag.checkFeatureFlag env)) $ \serverCtx@ServerCtx {..} ->
       do
         let Loggers _ _ pgLogger = scLoggers
         flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger)
@@ -340,7 +340,7 @@ runApp serveOptions = do
               initTime
               Nothing
               ekgStore
-              FeatureFlag.defaultValueIO
+              (FeatureFlag.checkFeatureFlag env)
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

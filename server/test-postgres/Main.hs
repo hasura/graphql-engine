@@ -89,7 +89,7 @@ main = do
                 readOnlyMode
                 Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
                 emptyMetadataDefaults
-                FF.defaultValueIO
+                (FF.checkFeatureFlag mempty)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 

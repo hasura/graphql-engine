@@ -82,7 +82,7 @@ import Hasura.Server.API.V2Query qualified as V2Q
 import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
 import Hasura.Server.Cors
-import Hasura.Server.Init
+import Hasura.Server.Init hiding (checkFeatureFlag)
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics)

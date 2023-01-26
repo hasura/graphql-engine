@@ -120,7 +120,7 @@ import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
 import Hasura.Server.Auth
 import Hasura.Server.CheckUpdates (checkForUpdates)
-import Hasura.Server.Init
+import Hasura.Server.Init hiding (checkFeatureFlag)
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))

@@ -3,7 +3,7 @@
 -- | Feature Flags are /temporary/ toggles.
 module Hasura.Server.Init.FeatureFlag
   ( FeatureFlag (..),
-    defaultValueIO,
+    checkFeatureFlag,
     Identifier (..),
     FeatureFlags (..),
     featureFlags,
@@ -14,6 +14,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Prelude
 
@@ -27,14 +28,19 @@ newtype Identifier = Identifier {getIdentifier :: Text}
 data FeatureFlag = FeatureFlag
   { ffIdentifier :: Identifier,
     ffDefaultValue :: Bool,
-    ffDescription :: Text
+    ffDescription :: Text,
+    ffEnvVar :: String
   }
   deriving stock (Eq, Generic)
   deriving anyclass (Hashable, FromJSON, ToJSON)
 
--- | We hardcode all feature flags to their default value in OSS.
-defaultValueIO :: FeatureFlag -> IO Bool
-defaultValueIO = pure . ffDefaultValue
+-- | In OSS we look for a environment variable or fall back to the default
+-- value
+checkFeatureFlag :: Env.Environment -> FeatureFlag -> IO Bool
+checkFeatureFlag env (FeatureFlag {ffEnvVar = envVar, ffDefaultValue = defaultValue}) =
+  case Env.lookupEnv env envVar of
+    Just found -> pure $ fromMaybe defaultValue (readMaybe found)
+    Nothing -> pure $ defaultValue
 
 --------------------------------------------------------------------------------
 
@@ -55,7 +61,8 @@ testFlag =
   FeatureFlag
     { ffIdentifier = Identifier "test-flag",
       ffDefaultValue = False,
-      ffDescription = "Testing feature flag integration"
+      ffDescription = "Testing feature flag integration",
+      ffEnvVar = "HASURA_FF_TEST_FLAG"
     }
 
 nativeQueryInterface :: FeatureFlag
@@ -63,5 +70,6 @@ nativeQueryInterface =
   FeatureFlag
     { ffIdentifier = Identifier "native-query-interface",
       ffDefaultValue = False,
-      ffDescription = "Expose custom views, permissions and advanced SQL functionality via custom queries"
+      ffDescription = "Expose custom views, permissions and advanced SQL functionality via custom queries",
+      ffEnvVar = "HASURA_FF_NATIVE_QUERY_INTERFACE"
     }

@@ -19,24 +19,27 @@ import Test.Hspec (SpecWith, describe, it)
 -- We currently don't need the table to exist in order to set up a custom SQL
 -- stanza.
 
+featureFlagForNativeQuery :: String
+featureFlagForNativeQuery = "HASURA_FF_NATIVE_QUERY_INTERFACE"
+
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.run
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Postgres.setupTablesAction [] testEnv
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.skipTests =
-                        Just "Disabled until we can dynamically switch on Native Access with a command line option in NDAT-452"
-                    }
-            }
-        ]
-    )
-    tests
+  Fixture.hgeWithEnv [(featureFlagForNativeQuery, "True")] $
+    Fixture.run
+      ( NE.fromList
+          [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnv, _) ->
+                  [ Postgres.setupTablesAction [] testEnv
+                  ],
+                Fixture.customOptions =
+                  Just $
+                    Fixture.defaultOptions
+                      { Fixture.skipTests = Just "Skipped until we merge the implementation"
+                      }
+              }
+          ]
+      )
+      tests
 
 -- ** Setup and teardown
 
