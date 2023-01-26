@@ -8,6 +8,7 @@ module Hasura.Backends.Postgres.Translate.Types
     ArrayConnectionSource (ArrayConnectionSource, _acsSource),
     ArrayRelationSource (ArrayRelationSource),
     ComputedFieldTableSetSource (ComputedFieldTableSetSource),
+    CustomSQLCTEs (..),
     DistinctAndOrderByExpr (ASorting),
     JoinTree (..),
     MultiRowSelectNode (..),
@@ -21,6 +22,7 @@ module Hasura.Backends.Postgres.Translate.Types
     SortingAndSlicing (SortingAndSlicing),
     SourcePrefixes (..),
     SimilarArrayFields,
+    SelectWriter (..),
     applySortingAndSlicing,
     noSortingAndSlicing,
     objectSelectSourceToSelectSource,
@@ -220,6 +222,8 @@ deriving instance Eq ArrayConnectionSource
 
 instance Hashable ArrayConnectionSource
 
+----
+
 data JoinTree = JoinTree
   { _jtObjectRelations :: HM.HashMap ObjectRelationSource SelectNode,
     _jtArrayRelations :: HM.HashMap ArrayRelationSource MultiRowSelectNode,
@@ -246,3 +250,24 @@ data PermissionLimitSubQuery
   deriving (Show, Eq)
 
 type SimilarArrayFields = HM.HashMap FieldName [FieldName]
+
+----
+
+newtype CustomSQLCTEs = CustomSQLCTEs
+  { getCustomSQLCTEs :: HM.HashMap Postgres.TableAlias Postgres.RawSQL
+  }
+  deriving newtype (Eq, Show, Semigroup, Monoid)
+
+----
+
+data SelectWriter = SelectWriter
+  { _swJoinTree :: JoinTree,
+    _swCustomSQLCTEs :: CustomSQLCTEs
+  }
+
+instance Semigroup SelectWriter where
+  (SelectWriter jtA cteA) <> (SelectWriter jtB cteB) =
+    SelectWriter (jtA <> jtB) (cteA <> cteB)
+
+instance Monoid SelectWriter where
+  mempty = SelectWriter mempty mempty

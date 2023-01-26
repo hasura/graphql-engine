@@ -64,6 +64,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     fromTableRowArgs,
     hasNextPageIdentifier,
     hasPreviousPageIdentifier,
+    nativeQueryNameToAlias,
     pageInfoSelectAliasIdentifier,
     selectFromToFromItem,
     startCursorIdentifier,
@@ -80,6 +81,7 @@ import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
 import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.NativeQuery.IR (NativeQueryImpl (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
@@ -93,7 +95,7 @@ import Hasura.SQL.Backend
 processSelectParams ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind)
   ) =>
   SourcePrefixes ->
@@ -118,9 +120,10 @@ processSelectParams
   tableArgs = do
     (additionalExtrs, selectSorting, cursorExp) <-
       processOrderByItems (identifierToTableIdentifier thisSourcePrefix) fieldAlias similarArrFields distM orderByM
+    whereSource <- selectFromToQual selectFrom
     let fromItem = selectFromToFromItem (identifierToTableIdentifier $ _pfBase sourcePrefixes) selectFrom
         finalWhere =
-          toSQLBoolExp (selectFromToQual selectFrom) $
+          toSQLBoolExp whereSource $
             maybe permFilter (andAnnBoolExps permFilter) whereM
         sortingAndSlicing = SortingAndSlicing selectSorting selectSlicing
         selectSource =
@@ -160,18 +163,28 @@ processSelectParams
       --
       -- More precisely, 'selectFromToFromItem' is injective but not surjective, so
       -- any S.FromItem -> S.Qual function would have to be partial.
-      selectFromToQual :: SelectFrom ('Postgres pgKind) -> S.Qual
+      selectFromToQual :: SelectFrom ('Postgres pgKind) -> m S.Qual
       selectFromToQual = \case
-        FromTable table -> S.QualTable table
-        FromIdentifier i -> S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
-        FromFunction qf _ _ -> S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
-        -- This behavior is hidden behind a flag, so cannot be triggered yet.
-        FromNativeQuery _ -> error "unimplemented"
+        FromTable table -> pure $ S.QualTable table
+        FromIdentifier i -> pure $ S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
+        FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
+        FromNativeQuery nq -> do
+          -- we are going to cram our SQL in a CTE, and this is what we will call it
+          let cteName = nativeQueryNameToAlias (nqName nq)
+
+          -- emit the query itself to the Writer
+          tell $
+            mempty
+              { _swCustomSQLCTEs =
+                  CustomSQLCTEs (HM.singleton cteName (S.RawSQL $ nqRawBody nq))
+              }
+
+          pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing
 
 processAnnAggregateSelect ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -266,7 +279,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 processAnnFields ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -448,7 +461,7 @@ mkSimilarArrayFields annFields maybeOrderBys =
 processArrayRelation ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -523,7 +536,7 @@ aggregateFieldToExp aggFlds strfyNum = jsonRow
 processAnnSimpleSelect ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -545,7 +558,13 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
       permLimitSubQuery
       tablePermissions
       tableArgs
-  annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldAlias similarArrayFields annSelFields tCase
+  annFieldsExtr <-
+    processAnnFields
+      (identifierToTableIdentifier $ _pfThis sourcePrefixes)
+      fieldAlias
+      similarArrayFields
+      annSelFields
+      tCase
   let allExtractors = HM.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
   where
@@ -556,7 +575,7 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
 processConnectionSelect ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -670,7 +689,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     processFields ::
       forall n.
       ( MonadReader Options.StringifyNumbers n,
-        MonadWriter JoinTree n,
+        MonadWriter SelectWriter n,
         MonadState [(S.ColumnAlias, S.SQLExp)] n
       ) =>
       SelectSource ->

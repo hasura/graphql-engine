@@ -75,7 +75,7 @@ Otherwise:
 processOrderByItems ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind)
   ) =>
   TableIdentifier ->
