@@ -163,6 +163,7 @@ test-suite tests
       TypeFamilies
       TypeOperators
   ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists -main-is Main
+  build-tool-depends: hspec-discover:hspec-discover
   build-depends:
       hasura-schema-parsers
     , hspec

@@ -96,6 +96,7 @@ library
 test-suite tests-dc-api
   import: common-all
   type: exitcode-stdio-1.0
+  build-tool-depends: hspec-discover:hspec-discover
   build-depends:
     Diff,
     aeson,
