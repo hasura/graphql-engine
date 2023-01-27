@@ -57,60 +57,61 @@ Log into the [Azure portal](https://portal.azure.com).
 
 On the Azure portal, type "postgres" in the search window and choose `Azure Database for PostgreSQL servers`:
 
-<Thumbnail src="/img/cloud-dbs/azure/select-postgres-db.png" alt="Select Postgres database on Azure" />
+<Thumbnail src="/img/cloud-dbs/azure/navigate.png" alt="Navigate to 'Azure Database for PostgreSQL servers'" />
 
-Click the `+ Add` button to create a new Postgres database:
+Click the `+ Create` button to create a new Postgres database:
 
-<Thumbnail src="/img/cloud-dbs/azure/add-postgres-db.png" alt="Add Postgres database on Azure" />
+<Thumbnail src="/img/cloud-dbs/azure/create-db.png" alt="Create a Postgres database on Azure" />
 
-Choose the plan that fits your requirements. For this tutorial, we'll choose `Single server`:
+Choose the plan that fits your requirements. For this tutorial, we'll choose `Flexible server`:
 
-<Thumbnail src="/img/cloud-dbs/azure/pg-single-server.png" alt="Select single server on Azure" width="600px" />
+<Thumbnail src="/img/cloud-dbs/azure/select-db.png" alt="Select 'Flexible server' on Azure" />
 
 Configure your database with all required fields:
 
-<Thumbnail src="/img/cloud-dbs/azure/configure-db.png" alt="Configure database on Azure" width="600px" />
+<Thumbnail src="/img/cloud-dbs/azure/basic-configuration.png" alt="Configure database on Azure" />
 
-Then click `Review + create`.
+Then click `Next : Networking >`.
 
-:::info Note
+## Step 4: Allow connections to your DB from Hasura
+
+If you're using Hasura Cloud, you can quickly find your IP address from the
+`Hasura Cloud IP` field on the project's details view:
+
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" />
+
+:::info SELF-HOSTED INSTANCES
+
+If you're using a self-hosted solution, you'll need to determine the IP address
+manually depending on your hosting service.
+
+:::
+
+Add the Hasura IP address that you copied:
+
+<Thumbnail src="/img/cloud-dbs/azure/network-configuration.png" alt="Add Hasura IP on Azure" />
+
+Then click `Save` on the top left.
+
+Optionally, select `Allow public access from any Azure service within Azure to
+this server`, if you require intra-Azure connectivity.
+
+Finally, click `Review + create` to review your settings, and if you're happy, create the database.
+
+:::info POSTGRES PERMISSIONS
 
 If you're using a database user other than the default one, make sure to give it the right
 [Postgres permissions](/deployment/postgres-requirements.mdx#managed-pg-permissions).
 
 :::
 
-:::info Note
+:::info JIT COMPATIBIILITY
 
-For Azure flexible server, Hasura v1.x does not work with
+For Azure flexible server, Hasura `v1.x` does not work with
 [JIT](https://www.postgresql.org/docs/11/runtime-config-query.html#GUC-JIT) turned on. JIT can be turned off from Azure
-console. Hasura v2.x works fine with JIT enabled.
+console. Hasura `v2.x` works fine with JIT enabled.
 
 :::
-
-## Step 4: Allow connections to your DB from Hasura
-
-On the database dashboard, click on `Connection security` under `Settings` on the left navigation bar.
-
-On `Allow access to Azure services`, click the `Yes` button. Then add a Firewall rule for Hasura.
-
-If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
-details view:
-
-<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
-
-:::info Note
-
-If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
-service.
-
-:::
-
-Add the Hasura IP address that you copied:
-
-<Thumbnail src="/img/cloud-dbs/azure/add-hasura-ip.png" alt="Add Hasura IP on Azure" />
-
-Then click `Save` on the top left.
 
 ## Step 5: Construct the database connection URL {#get-db-url-azure}
 
