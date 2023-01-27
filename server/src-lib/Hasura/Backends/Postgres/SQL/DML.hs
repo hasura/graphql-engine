@@ -6,7 +6,7 @@ module Hasura.Backends.Postgres.SQL.DML
     TableAlias (..),
     BinOp (AndOp, OrOp),
     BoolExp (..),
-    TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate),
+    TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate, CTEUnsafeRawSQL),
     CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
     CountType (CTDistinct, CTSimple, CTStar),
     DistinctExpr (DistinctOn, DistinctSimple),
@@ -31,6 +31,7 @@ module Hasura.Backends.Postgres.SQL.DML
     OrderType (OTAsc, OTDesc),
     QIdentifier (QIdentifier),
     Qual (QualTable, QualVar, QualifiedIdentifier),
+    RawSQL (..),
     RetExp (RetExp),
     SQLConflict (..),
     SQLConflictTarget (SQLColumn, SQLConstraint),
@@ -42,7 +43,7 @@ module Hasura.Backends.Postgres.SQL.DML
     SQLUpdate (..),
     Select (Select, selCTEs, selDistinct, selExtr, selFrom, selLimit, selOffset, selOrderBy, selWhere),
     SelectWith,
-    SelectWithG (SelectWith),
+    SelectWithG (..),
     SetExp (SetExp),
     SetExpItem (..),
     TupleExp (TupleExp),
@@ -1169,6 +1170,7 @@ data TopLevelCTE
   | CTEInsert SQLInsert
   | CTEUpdate SQLUpdate
   | CTEDelete SQLDelete
+  | CTEUnsafeRawSQL RawSQL
   deriving (Show, Eq)
 
 instance ToSQL TopLevelCTE where
@@ -1177,6 +1179,10 @@ instance ToSQL TopLevelCTE where
     CTEInsert q -> toSQL q
     CTEUpdate q -> toSQL q
     CTEDelete q -> toSQL q
+    CTEUnsafeRawSQL (RawSQL q) -> TB.text q
+
+newtype RawSQL = RawSQL Text
+  deriving newtype (Eq, Ord, Show)
 
 -- | A @SELECT@ statement with Common Table Expressions.
 --   <https://www.postgresql.org/docs/current/queries-with.html>
@@ -1199,6 +1205,7 @@ instance (NFData v) => NFData (SelectWithG v)
 instance (Hashable v) => Hashable (SelectWithG v)
 
 instance (ToSQL v) => ToSQL (SelectWithG v) where
+  toSQL (SelectWith [] sel) = toSQL sel
   toSQL (SelectWith ctes sel) =
     "WITH " <> (", " <+> map f ctes) <~> toSQL sel
     where

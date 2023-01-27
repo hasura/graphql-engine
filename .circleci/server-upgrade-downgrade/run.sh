@@ -187,29 +187,30 @@ get_server_upgrade_tests() {
 	# FIXME: add back `test_limit_orderby_column_query` after next release
 	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" \
 		-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
-		--deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_introspection \
-		--deselect test_schema_stitching.py::TestAddRemoteSchemaCompareRootQueryFields::test_schema_check_arg_default_values_and_field_and_arg_types \
-		--deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
-		--deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_backend_user_no_admin_secret_fail \
-		--deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
-		--deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
-		--deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
-		--deselect test_events.py::TestCreateAndDelete::test_create_reset \
-		--deselect test_events.py::TestUpdateEvtQuery::test_update_basic \
-		--deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_schema \
-		--deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
-		--deselect test_events.py \
-		--deselect test_graphql_queries.py::TestGraphQLQueryFunctions \
-		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
-		--deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
-		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
+    --deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_introspection \
+    --deselect test_schema_stitching.py::TestAddRemoteSchemaCompareRootQueryFields::test_schema_check_arg_default_values_and_field_and_arg_types \
+    --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
+    --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_backend_user_no_admin_secret_fail \
+    --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
+    --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
+    --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
+    --deselect test_events.py::TestCreateAndDelete::test_create_reset \
+    --deselect test_events.py::TestUpdateEvtQuery::test_update_basic \
+    --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_schema \
+    --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
+    --deselect test_events.py \
+    --deselect test_graphql_queries.py::TestGraphQLQueryFunctions \
+    --deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
+    --deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
+    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQL::test_documented_subscription \
 		  1>/dev/null 2>/dev/null
 	set +x
 	# Choose the subset of jobs to run based on possible parallelism in this buildkite job
@@ -244,20 +245,21 @@ run_server_upgrade_pytest() {
 		pytest --hge-urls "${HGE_URL}" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" \
 			--avoid-error-message-checks "$@" \
 			-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
-			--deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
-			--deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
-			--deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
-			--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
-			--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
-		    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
-			--deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
-			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
-			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
-			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
-			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
-			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
-			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
-			-v $tests_to_run
+      --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
+      --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
+      --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
+      --deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
+      --deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
+      --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQL::test_documented_subscription \
+      -v $tests_to_run
 		set +x
 		cd -
 	}

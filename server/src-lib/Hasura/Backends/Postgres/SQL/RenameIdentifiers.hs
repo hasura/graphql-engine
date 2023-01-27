@@ -20,6 +20,7 @@ module Hasura.Backends.Postgres.SQL.RenameIdentifiers
   ( -- * Exported API
     renameIdentifiers,
     renameIdentifiersSelectWith,
+    renameIdentifiersSelectWithTopLevelCTE,
   )
 where
 
@@ -49,6 +50,10 @@ renameIdentifiers = renameTablesAndLongIdentifiers
 -- | prefix table names with undescores and rename long identifiers.
 renameIdentifiersSelectWith :: S.SelectWithG S.Select -> S.SelectWithG S.Select
 renameIdentifiersSelectWith = renameTablesAndLongIdentifiersWith
+
+-- | prefix table names with undescores and rename long identifiers.
+renameIdentifiersSelectWithTopLevelCTE :: S.SelectWithG S.TopLevelCTE -> S.SelectWithG S.TopLevelCTE
+renameIdentifiersSelectWithTopLevelCTE = renameTablesAndLongIdentifiersWithCTEs
 
 ------------------------------------------------
 
@@ -110,6 +115,9 @@ renameTablesAndLongIdentifiers = runMyState . uSelect
 
 renameTablesAndLongIdentifiersWith :: S.SelectWithG S.Select -> S.SelectWithG S.Select
 renameTablesAndLongIdentifiersWith = runMyState . uSelectWith
+
+renameTablesAndLongIdentifiersWithCTEs :: S.SelectWithG S.TopLevelCTE -> S.SelectWithG S.TopLevelCTE
+renameTablesAndLongIdentifiersWithCTEs = runMyState . uSelectWithCTEs
 
 ------------------------------------------------
 
@@ -176,13 +184,36 @@ restoringTables action = do
 
 -- ** Algorithm
 
+-- | We apply the renaming algorithm to @SELECT@ parts and ignore the others, as we don't
+--   generally generate long identifiers on mutations.
+uSelectWithCTEs :: S.SelectWithG S.TopLevelCTE -> MyState (S.SelectWithG S.TopLevelCTE)
+uSelectWithCTEs (S.SelectWith ctes baseSelect) =
+  S.SelectWith
+    <$> forM
+      ctes
+      ( \(alias, topLevelCTE) ->
+          (,)
+            <$> addAliasAndPrefixHash alias
+            <*> ( case topLevelCTE of
+                    S.CTESelect select -> S.CTESelect <$> restoringTables (uSelect select)
+                    other -> pure other
+                )
+      )
+    <*> uSelect baseSelect
+
 -- | We run the algorithm on each CTE separately and discard the table names set,
 --   then we run the algorithm on the main select and return that result
 --   (with the table names found in scope).
 uSelectWith :: S.SelectWithG S.Select -> MyState (S.SelectWithG S.Select)
 uSelectWith (S.SelectWith ctes baseSelect) =
   S.SelectWith
-    <$> forM ctes (\(alias, sel) -> (prefixHashTableAlias alias,) <$> restoringTables (uSelect sel))
+    <$> forM
+      ctes
+      ( \(alias, sel) ->
+          (,)
+            <$> addAliasAndPrefixHash alias
+            <*> restoringTables (uSelect sel)
+      )
     <*> uSelect baseSelect
 
 -- | We go in order of each component in the select, starting with

@@ -17,6 +17,8 @@ data NativeQueryImpl b field = NativeQueryImpl
     -- native query definition.
     nqName :: NativeQueryName,
     -- | The arguments passed to the native query, if any.
-    nqArgs :: HashMap NativeQueryArgumentName (ColumnValue b)
+    nqArgs :: HashMap NativeQueryArgumentName (ColumnValue b),
+    -- | The raw sql to use in the query
+    nqRawBody :: Text
   }
   deriving (Eq, Functor, Foldable, Traversable, Show)

@@ -31,7 +31,7 @@ import Hasura.NativeQuery.Metadata
 import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
-import Hasura.RQL.IR.Select (QueryDB (QDBSingleRow))
+import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (UnpreparedValue, openValueOrigin)
 import Hasura.RQL.Types.Backend
@@ -80,14 +80,15 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
       P.subselection fieldName description ((,) <$> tableArgsParser <*> nativeQueryArgsParser) selectionSetParser
         <&> \((args, nqArgs), fields) ->
-          QDBSingleRow $
+          QDBMultipleRows $
             IR.AnnSelectG
               { IR._asnFields = fields,
                 IR._asnFrom =
                   IR.FromNativeQuery
                     NativeQueryImpl
                       { nqName = nqiiName,
-                        nqArgs
+                        nqArgs,
+                        nqRawBody = nqiiCode
                       },
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,

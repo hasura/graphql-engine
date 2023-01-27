@@ -16,6 +16,7 @@ module Hasura.Backends.Postgres.Execute.Mutation
   )
 where
 
+import Control.Monad.Writer (runWriter)
 import Data.Aeson
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
@@ -28,6 +29,7 @@ import Hasura.Backends.Postgres.Translate.Insert
 import Hasura.Backends.Postgres.Translate.Mutation
 import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Backends.Postgres.Translate.Select
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -45,7 +47,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
-import Hasura.SQL.Types
 import Hasura.Session
 
 data MutateResp (b :: BackendType) a = MutateResp
@@ -237,7 +238,7 @@ executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase
   let queryTx :: PG.FromRes a => m a
       queryTx = do
         let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
-            query = PG.fromBuilder $ toSQL selectWith
+            query = toQuery selectWith
             queryWithQueryTags = query {PG.getQueryText = (PG.getQueryText query) <> (_unQueryTagsComment queryTags)}
         -- See Note [Prepared statements in Mutations]
         liftTx (PG.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
@@ -272,14 +273,22 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     selFlds = flip map cols $
       \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
-    sqlText = PG.fromBuilder $ toSQL selectWith
-    selectWith = S.SelectWith [(rawAlias, getMutationCTE cte)] select
+    sqlText = toQuery selectWith
+
     select =
       S.mkSelect
         { S.selExtr =
             S.Extractor extrExp Nothing
               : bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
         }
+
+    selectWith =
+      S.SelectWith
+        ( [(rawAlias, getMutationCTE cte)]
+            <> customSQLToTopLevelCTEs customSQLCTEs
+        )
+        select
+
     checkErrExp = mkCheckErrorExp rawIdentifier
     extrExp =
       S.applyJsonBuildObj
@@ -295,7 +304,11 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
           { S.selExtr = [S.Extractor S.countStar Nothing],
             S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
           }
-    colSel =
-      S.SESelect $
-        mkSQLSelect JASMultipleRows $
-          AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+
+    (colSel, customSQLCTEs) =
+      runWriter $
+        S.SESelect
+          <$> mkSQLSelect
+            JASMultipleRows
+            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+            )
