@@ -72,7 +72,7 @@ package odbc
 source-repository-package
   type: git
   location: https://github.com/hasura/ekg-core.git
-  tag: b0cdc337ca2a52e392d427916ba3e28246b396c0
+  tag: df610859603b504494ad770bdbb7053a7f0b9a6c
 
 -- TODO relax these constraints in the package
 allow-newer: ekg-prometheus:bytestring
