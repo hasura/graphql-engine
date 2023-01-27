@@ -5,6 +5,7 @@
     "console-ce": "apps/console-ce",
     "console-ce-e2e": "apps/console-ce-e2e",
     "console-ee": "apps/console-ee",
+    "console-ee-e2e": "apps/console-ee-e2e",
     "console-legacy-ce": "libs/console/legacy-ce",
     "console-legacy-ee": "libs/console/legacy-ee",
     "nx-internal-plugin": "libs/nx/internal-plugin",
