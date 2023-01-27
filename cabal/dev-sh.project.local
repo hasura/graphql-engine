@@ -6,7 +6,6 @@
 -- during development (although that might break certain things).
 
 package *
-  documentation: true
   -- build with DWARF support. This may not be very useful yet, but we want
   -- to be able to experiment with it, and turning it from off to on requires
   -- a massive rebuild. To start, see:
@@ -28,7 +27,6 @@ package *
 flags: -optimize-hasura
 
 package graphql-engine
-  documentation: false
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
@@ -49,7 +47,6 @@ package graphql-engine
   library-vanilla: False
 
 package test-harness
-  documentation: false
   coverage: true
   ghc-options: -Werror
   ghc-options: -j
@@ -58,7 +55,6 @@ package test-harness
   library-vanilla: False
 
 package api-tests
-  documentation: false
   coverage: true
   ghc-options: -Werror
   ghc-options: -j
