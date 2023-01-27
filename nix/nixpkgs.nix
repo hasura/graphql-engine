@@ -11,6 +11,7 @@ import nixpkgs {
     (import ./overlays/msodbcsql18.nix)
     (import ./overlays/graphql-parser.nix)
     (import ./overlays/resource-pool.nix)
+    (import ./overlays/pg-client-hs.nix)
     (import ./overlays/aeson-ordered.nix)
   ];
 }
