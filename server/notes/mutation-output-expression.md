@@ -1,7 +1,7 @@
-This note is in [Hasura.Backends.Postgres.Translate.Returning](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Returning.hs#L113).
+This note is in [Hasura.Backends.Postgres.Translate.Returning](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Returning.hs#L119).
 It is referenced at:
-  - line 35 of [Hasura.Backends.Postgres.Translate.Returning](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Returning.hs#L35)
-  - line 137 of [Hasura.Backends.Postgres.Translate.Returning](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Returning.hs#L137)
+  - line 38 of [Hasura.Backends.Postgres.Translate.Returning](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Returning.hs#L38)
+  - line 143 of [Hasura.Backends.Postgres.Translate.Returning](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Returning.hs#L143)
 
 # Mutation output expression
 
