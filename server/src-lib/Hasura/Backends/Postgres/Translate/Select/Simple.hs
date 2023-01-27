@@ -8,13 +8,13 @@ module Hasura.Backends.Postgres.Translate.Select.Simple
 where
 
 import Control.Monad.Writer.Strict (runWriter)
-import Database.PG.Query (Query)
+import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiers)
 import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier))
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
@@ -28,6 +28,7 @@ import Hasura.RQL.Types.Common
     JsonAggSelect,
   )
 import Hasura.SQL.Backend (BackendType (Postgres))
+import Hasura.SQL.Types (ToSQL (toSQL))
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that
 -- are not aggregations, including subscriptions).
@@ -39,40 +40,35 @@ selectQuerySQL ::
   JsonAggSelect ->
   AnnSimpleSelect ('Postgres pgKind) ->
   Query
-selectQuerySQL jsonAggSelect =
-  toQuery
-    . selectToSelectWith
-    . mkSQLSelect jsonAggSelect
+selectQuerySQL jsonAggSelect sel =
+  fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
 
 mkSQLSelect ::
-  forall pgKind m.
+  forall pgKind.
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
-    MonadWriter CustomSQLCTEs m
+    PostgresAnnotatedFieldJSON pgKind
   ) =>
   JsonAggSelect ->
   AnnSimpleSelect ('Postgres pgKind) ->
-  m S.Select
-mkSQLSelect jsonAggSelect annSel = do
+  S.Select
+mkSQLSelect jsonAggSelect annSel =
   let permLimitSubQuery = PLSQNotRequired
       -- run an intermediary step in order to obtain:
       -- SelectSource: the primary source, along with its where clause and sorting/slicing information
       -- NodeExtractors: a map from aliases which need to be selected to the corresponding required SQLExp to select the value
-      -- : the join tree required for relationships (built via @MonadWriter@)
-      -- : any top-level Common Table Expressions needed for Native Queries
-      ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
+      -- JoinTree: the join tree required for relationships (built via @MonadWriter@)
+      ((selectSource, nodeExtractors), joinTree) =
         runWriter $
           flip runReaderT strfyNum $
             processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery annSel
-
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor =
         asJsonAggExtr jsonAggSelect rootFldAls permLimitSubQuery $
           orderByForJsonAgg selectSource
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
-  tell customSQLCTEs
-
-  pure $ generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+   in renameIdentifiers $
+        generateSQLSelectFromArrayNode selectSource arrayNode $
+          S.BELit True
   where
     strfyNum = _asnStrfyNum annSel
     rootFldIdentifier = toIdentifier rootFldName

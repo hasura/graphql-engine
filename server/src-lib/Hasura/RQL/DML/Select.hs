@@ -14,7 +14,6 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Translate.Select
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -31,6 +30,7 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
+import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -322,12 +322,9 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
 selectP2 :: JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> PG.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
   runIdentity . PG.getRow
-    <$> PG.rawQE dmlTxErrorHandler selectSQL (toList p) True
+    <$> PG.rawQE dmlTxErrorHandler (PG.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL =
-      toQuery $
-        selectToSelectWith $
-          mkSQLSelect jsonAggSelect sel
+    selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
 phaseOne ::
   (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m) =>

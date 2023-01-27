@@ -132,7 +132,6 @@ runTrackCustomSQL q = do
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMOCustomSQL @b fieldName
-
       metadata =
         CustomSQLMetadata
           { _csmType = tcsType q,

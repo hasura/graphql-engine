@@ -7,12 +7,12 @@ module Hasura.Backends.Postgres.Translate.Select.Connection
 where
 
 import Control.Monad.Writer (runWriter)
-import Database.PG.Query (Query)
+import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiersSelectWith)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (connectionToSelectWith)
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processConnectionSelect)
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
@@ -23,6 +23,7 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Common (FieldName (FieldName))
 import Hasura.SQL.Backend (BackendType (Postgres))
+import Hasura.SQL.Types (ToSQL (toSQL))
 
 -- | Translates IR to Postgres queries for "connection" queries (used for Relay).
 --
@@ -35,45 +36,30 @@ connectionSelectQuerySQL ::
   ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   Query
 connectionSelectQuerySQL =
-  toQuery
-    . ( \(selectWith, customCTEs) ->
-          selectWith
-            { S.swCTEs =
-                map (fmap S.CTESelect) (S.swCTEs selectWith)
-                  <> customSQLToTopLevelCTEs customCTEs
-            }
-      )
-    . runWriter
-    . mkConnectionSelect
+  fromBuilder . toSQL . mkConnectionSelect
 
 mkConnectionSelect ::
-  forall pgKind m.
+  forall pgKind.
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
-    MonadWriter CustomSQLCTEs m
+    PostgresAnnotatedFieldJSON pgKind
   ) =>
   ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
-  m (S.SelectWithG S.Select)
-mkConnectionSelect connectionSelect = do
-  let ( (connectionSource, topExtractor, nodeExtractors),
-        SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}
-        ) =
-          runWriter $
-            flip runReaderT strfyNum $
-              processConnectionSelect
-                sourcePrefixes
-                rootFieldName
-                (S.toTableAlias rootIdentifier)
-                mempty
-                connectionSelect
+  S.SelectWithG S.Select
+mkConnectionSelect connectionSelect =
+  let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
+        runWriter $
+          flip runReaderT strfyNum $
+            processConnectionSelect
+              sourcePrefixes
+              rootFieldName
+              (S.toTableAlias rootIdentifier)
+              mempty
+              connectionSelect
       selectNode =
         MultiRowSelectNode [topExtractor] $
           SelectNode nodeExtractors joinTree
-      selectWith =
+   in renameIdentifiersSelectWith $
         connectionToSelectWith (S.toTableAlias rootIdentifier) connectionSource selectNode
-  tell customSQLCTEs
-
-  pure selectWith
   where
     strfyNum = _asnStrfyNum $ _csSelect connectionSelect
     rootFieldName = FieldName "root"

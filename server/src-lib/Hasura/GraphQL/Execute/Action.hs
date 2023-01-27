@@ -45,7 +45,6 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Types.Function qualified as TF
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -74,6 +73,7 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
+import Hasura.SQL.Types
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
@@ -120,7 +120,7 @@ runActionExecution userInfo aep =
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
-          let querySQL = toQuery $ selectToSelectWith $ RS.mkSQLSelect jsonAggSelect selectResolved
+          let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
           liftEitherM $ runExceptT $ _pecRunTx (_pscExecCtx srcConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
