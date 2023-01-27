@@ -314,33 +314,28 @@ runApp serveOptions = do
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString
+      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci
-  do
-    (ekgStore, serverMetrics) <-
-      liftIO $ do
-        store <- EKG.newStore @TestMetricsSpec
-        serverMetrics <-
-          liftIO $ createServerMetrics $ EKG.subset ServerSubset store
-        pure (EKG.subset EKG.emptyOf store, serverMetrics)
-    prometheusMetrics <- makeDummyPrometheusMetrics
-    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways (FeatureFlag.checkFeatureFlag env)) $ \serverCtx@ServerCtx {..} ->
-      do
-        let Loggers _ _ pgLogger = scLoggers
-        flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger)
-          . lowerManagedT
-          $ do
-            App.runHGEServer
-              (const $ pure ())
-              env
-              serveOptions
-              serverCtx
-              initTime
-              Nothing
-              ekgStore
-              (FeatureFlag.checkFeatureFlag env)
+  (ekgStore, serverMetrics) <- liftIO do
+    store <- EKG.newStore @TestMetricsSpec
+    serverMetrics <- liftIO . createServerMetrics $ EKG.subset ServerSubset store
+    pure (EKG.subset EKG.emptyOf store, serverMetrics)
+  prometheusMetrics <- makeDummyPrometheusMetrics
+  let managedServerCtx = App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways (FeatureFlag.checkFeatureFlag env)
+  runManagedT managedServerCtx \serverCtx@ServerCtx {..} -> do
+    let Loggers _ _ pgLogger = scLoggers
+    flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger) . lowerManagedT $
+      App.runHGEServer
+        (const $ pure ())
+        env
+        serveOptions
+        serverCtx
+        initTime
+        Nothing
+        ekgStore
+        (FeatureFlag.checkFeatureFlag env)
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags
