@@ -1,4 +1,8 @@
-import { openTelemetrySchema } from '.';
+import {
+  openTelemetrySchema,
+  unexistingEnvVarSchema,
+  hasuraEnvVarsNotAllowedSchema,
+} from '.';
 
 /**
  * Allow to parse the data the server returns and early catch possible console/server misalignments.
@@ -13,4 +17,11 @@ import { openTelemetrySchema } from '.';
  */
 export function parseOpenTelemetry(object: unknown) {
   return openTelemetrySchema.safeParse(object);
+}
+
+export function parseUnexistingEnvVarSchemaError(errorBody: unknown) {
+  return unexistingEnvVarSchema.safeParse(errorBody);
+}
+export function parseHasuraEnvVarsNotAllowedError(errorBody: unknown) {
+  return hasuraEnvVarsNotAllowedSchema.safeParse(errorBody);
 }

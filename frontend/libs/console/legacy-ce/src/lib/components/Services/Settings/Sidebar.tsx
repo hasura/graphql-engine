@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import { useServerConfig } from '@/hooks';
+import { useMetadata } from '@/features/MetadataAPI';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
@@ -37,6 +38,7 @@ type SectionDataKey =
   | 'inherited-roles'
   | 'insecure-domain'
   | 'prometheus-settings'
+  | 'opentelemetry-settings'
   | 'feature-flags';
 
 interface SectionData {
@@ -152,6 +154,11 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     });
   }
 
+  const openTelemetryButton = useOpenTelemetryButton();
+  if (isProLiteConsole(window.__env)) {
+    sectionsData.push(openTelemetryButton);
+  }
+
   sectionsData.push({
     key: 'feature-flags',
     link: '/settings/feature-flags',
@@ -187,3 +194,31 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 };
 
 export default Sidebar;
+
+function useOpenTelemetryButton(): SectionData {
+  const { data: openTelemetry } = useMetadata(m => m.metadata.opentelemetry);
+
+  const openTelemetryStatus = !openTelemetry
+    ? 'unknown'
+    : openTelemetry.status === 'enabled'
+    ? 'enabled'
+    : 'disabled';
+
+  const title = (
+    <span>
+      OpenTelemetry Exporter{' '}
+      {openTelemetryStatus === 'enabled' ? (
+        <CheckIcon className="ml-sm" />
+      ) : openTelemetryStatus === 'disabled' ? (
+        <TimesCircleIcon className="ml-sm mb-1 h-5 w-5" />
+      ) : null}
+    </span>
+  );
+
+  return {
+    key: 'opentelemetry-settings',
+    link: '/settings/opentelemetry',
+    dataTestVal: 'opentelemetry-settings-link',
+    title,
+  };
+}

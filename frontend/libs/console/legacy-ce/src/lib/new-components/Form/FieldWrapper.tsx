@@ -5,6 +5,7 @@ import Skeleton from 'react-loading-skeleton';
 import { FaExclamationCircle } from 'react-icons/fa';
 
 import { IconTooltip } from '@/new-components/Tooltip';
+import { KnowMoreLink } from '../KnowMoreLink';
 
 type FieldWrapperProps = {
   /**
@@ -41,10 +42,6 @@ type FieldWrapperProps = {
    */
   description?: string;
   /**
-   * The field tooltip label
-   */
-  tooltip?: React.ReactNode;
-  /**
    * The field data test id for testing
    */
   dataTest?: string;
@@ -60,6 +57,14 @@ type FieldWrapperProps = {
    * Render line breaks in the description
    */
   renderDescriptionLineBreaks?: boolean;
+  /**
+   * The field tooltip label
+   */
+  tooltip?: React.ReactNode;
+  /**
+   * The link containing more information about the field
+   */
+  knowMoreLink?: string;
 };
 
 export type FieldWrapperPassThroughProps = Omit<
@@ -97,6 +102,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     id,
     labelIcon,
     label,
+    knowMoreLink,
     className,
     size = 'full',
     error,
@@ -141,14 +147,15 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
 
   if (label) {
     FieldLabel = () => (
-      <label htmlFor={id} className={clsx('block pt-1 text-muted mb-xs')}>
-        <span className={clsx('flex items-center font-semibold')}>
-          <span className={loading ? 'relative' : ''}>
+      <label htmlFor={id} className={clsx('block pt-1 text-gray-600 mb-xs')}>
+        <span className={clsx('flex items-center')}>
+          <span className={clsx('font-semibold', { relative: !!loading })}>
             <FieldLabelIcon />
             {label}
             {loading ? <Skeleton className="absolute inset-0" /> : null}
           </span>
           {!loading && tooltip ? <IconTooltip message={tooltip} /> : null}
+          {!loading && !!knowMoreLink && <KnowMoreLink href={knowMoreLink} />}
         </span>
         <FieldDescription />
       </label>

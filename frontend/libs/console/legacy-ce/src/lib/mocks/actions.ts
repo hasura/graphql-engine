@@ -4,7 +4,7 @@ import { allowedMetadataTypes } from '@/features/MetadataAPI';
 import { metadataHandlers as allowListMetadataHandlers } from '@/features/AllowLists';
 import { metadataHandlers as adhocEventMetadataHandlers } from '@/features/AdhocEvents';
 import { metadataHandlers as queryCollectionMetadataHandlers } from '@/features/QueryCollections';
-import { metadataHandlers as openTelemetryMetadataHandlers } from '@/features/OpenTelemetryConfig';
+import { metadataHandlers as openTelemetryMetadataHandlers } from '@/features/OpenTelemetry';
 
 import { TMigration } from '../features/MetadataAPI/hooks/useMetadataMigration';
 

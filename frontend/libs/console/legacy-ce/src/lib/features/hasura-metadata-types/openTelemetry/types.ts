@@ -102,9 +102,11 @@ const disabledOpenTelemetrySchema = {
 
   status: z.literal('disabled'),
 
-  exporter_otlp: exporterSchema.partial({
+  exporter_otlp: exporterSchema.extend({
     // If OpenTelemetry is disabled, the endpoint is not required
-    otlp_traces_endpoint: true,
+    otlp_traces_endpoint: validUrlSchema
+      .or(z.literal(''))
+      .or(z.literal(undefined)),
   }),
 };
 

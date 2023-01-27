@@ -1,6 +1,7 @@
+import { z } from 'zod';
 import type { OpenTelemetry } from './types';
 
-export type OpenTelemetryQueries = SetOpenTelemetryConfigQuery['type'];
+export type OpenTelemetryQueries = SetOpenTelemetryQuery['type'];
 
 // --------------------------------------------------
 // SET OPENTELEMETRY CONFIG
@@ -9,14 +10,14 @@ export type OpenTelemetryQueries = SetOpenTelemetryConfigQuery['type'];
 /**
  * Allow to set/update the OpenTelemetry configuration.
  */
-export type SetOpenTelemetryConfigQuery = {
+export type SetOpenTelemetryQuery = {
   type: 'set_opentelemetry_config';
 
   args: OpenTelemetry;
 
   successResponse: { message: 'success' };
 
-  errorResponse: SetOpenTelemetryConfigQueryErrors;
+  errorResponse: SetOpenTelemetryQueryErrors;
 };
 
 // ERRORS
@@ -26,15 +27,75 @@ export type SetOpenTelemetryConfigQuery = {
 // - passing a wrong OpenTelemetry config, prevented by the Console
 // that would result in something like {"code":"unexpected","error":"cannot continue due to new inconsistent metadata","internal":[{"definition":{"headers":[],"protocol":"http/protobuf","resource_attributes":[]},"name":"open_telemetry exporter_otlp","reason":"Inconsistent object: Missing traces endpoint","type":"open_telemetry"}],"path":"$.args"}%
 // - all the internal server errors
-// ATTENTION: the `unknown` type is useful to force the consumer to manage every kind of possible
-// error object. Unfortunately, we do not have good visibility over the server errors yet, and
-// treating them as a black box (apart from some particular cases) is the only thing we can do.
-type SetOpenTelemetryConfigQueryErrors = ErrorsNotManagedByTheConsole | unknown;
+export type SetOpenTelemetryQueryErrors = NotPreventedByTheConsoleErrors;
 
-type ErrorsNotManagedByTheConsole = {
+type NotPreventedByTheConsoleErrors = {
   httpStatus: 400;
-} & {
-  code: 'parse-failed';
-  error: `Environment variable not found: "${string}"`;
-  path: '$.args';
+  body:
+    | z.infer<typeof hasuraEnvVarsNotAllowedSchema>
+    | z.infer<typeof unexistingEnvVarSchema>
+    | UnknownError;
 };
+
+// Even in case of multiple HASURA_GRAPHQL_ env vars used, the server always report just one of them
+// in the error.
+export const hasuraEnvVarsNotAllowedSchema = z.object({
+  // ATTENTION: the real server error contains more data, but it's useless to type it because it only
+  // makes this schema more fragile. At the time of writing, the errors are not set in stone and can
+  // change in the future.
+
+  error:
+    // the use of z.custom is not more needed when this issue will be fixed: https://github.com/colinhacks/zod/issues/419
+    z.custom<`env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_${EnvVarName}`>(
+      val => {
+        if (typeof val !== 'string') return false;
+
+        // see: https://regex101.com/r/afZdol/1
+        return /^env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: HASURA_GRAPHQL_(?<envVarName>.[A-Z_]+)$/.test(
+          val
+        );
+      }
+    ),
+
+  // It would be nice to highlight the problematic env var in the Console's form but, at the time of
+  // writing, the  RequestHeadersSelector component is not connected to the form and cannot show
+  // the input field errors. Hence the `path` returned by the server is currently useless.
+  // path: `$.args.exporter_otlp.headers[${Base0Index}]`, // Base0Index = number
+});
+
+// Even in case of multiple unexisting env vars, the server always report just one of them in the
+// reason.
+export const unexistingEnvVarSchema = z.object({
+  // ATTENTION: the real server error contains more data, but it's useless to type it because it only
+  // makes this schema more fragile. At the time of writing, the errors are not set in stone and can
+  // change in the future.
+
+  internal: z.array(
+    z.object({
+      reason:
+        z.custom<`Inconsistent object: environment variable '${EnvVarName}' not set`>(
+          val => {
+            if (typeof val !== 'string') return false;
+
+            // see: https://regex101.com/r/CBCkEd/1
+            return /Inconsistent object: environment variable '(?<envVarName>.*?)' not set/.test(
+              val
+            );
+          }
+        ),
+    })
+  ),
+
+  // It would be nice to highlight the problematic env var in the Console's form but, at the time of
+  // writing, the  RequestHeadersSelector component is not connected to the form and cannot show
+  // the input field errors. More, the server does not get the name of the problematic var so only
+  // parsing the error message is possible (but it's better off to avoid it).
+});
+
+type UnknownError = unknown;
+
+type EnvVarName = string;
+
+/^env variables starting with \\"HASURA_GRAPHQL_\\" are not allowed in value_from_env: HASURA_GRAPHQL_(?<envVarName>.[A-Z_]+)$/.test(
+  'env variables starting with "HASURA_GRAPHQL_" are not allowed in value_from_env: HASURA_GRAPHQL_ENABLED_APIS'
+);
