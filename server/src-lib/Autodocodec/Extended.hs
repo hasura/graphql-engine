@@ -1,6 +1,7 @@
 module Autodocodec.Extended
   ( caseInsensitiveHashMapCodec,
     caseInsensitiveTextCodec,
+    graphQLExecutableDocumentCodec,
     graphQLFieldNameCodec,
     graphQLValueCodec,
     graphQLSchemaDocumentCodec,
@@ -24,7 +25,9 @@ import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
+import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Parser qualified as GParser
+import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
 import Text.Builder qualified as TB
@@ -45,6 +48,12 @@ caseInsensitiveHashMapCodec elemCodec =
 -- @Text@ or another type that implements @FoldCase@ and @HasCodec@.
 caseInsensitiveTextCodec :: forall a. (CI.FoldCase a, HasCodec a) => JSONCodec (CI.CI a)
 caseInsensitiveTextCodec = dimapCodec CI.mk CI.original codec
+
+graphQLExecutableDocumentCodec :: JSONCodec (G.ExecutableDocument G.Name)
+graphQLExecutableDocumentCodec = bimapCodec dec enc codec
+  where
+    dec = mapLeft T.unpack . G.parseExecutableDoc
+    enc = G.renderExecutableDoc
 
 -- | Codec for a GraphQL field name
 graphQLFieldNameCodec :: JSONCodec G.Name

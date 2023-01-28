@@ -18,7 +18,8 @@ import Data.OpenApi qualified as OpenApi
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray, PlaceholderObject)
 import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
-import Hasura.RQL.Types.Metadata.Common (RemoteSchemas, Sources, sourcesCodec)
+import Hasura.RQL.Types.Metadata.Common (QueryCollections, RemoteSchemas, Sources, sourcesCodec)
+import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
 
 -- | Revision 3 of the Metadata export format. Note that values of the types,
@@ -27,7 +28,7 @@ import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
 data MetadataV3 = MetadataV3
   { metaV3Sources :: Sources,
     metaV3RemoteSchemas :: RemoteSchemas,
-    metaV3QueryCollections :: Maybe PlaceholderArray,
+    metaV3QueryCollections :: QueryCollections,
     metaV3Allowlist :: Maybe PlaceholderArray,
     metaV3Actions :: Maybe PlaceholderArray,
     metaV3CustomTypes :: Maybe PlaceholderObject,
@@ -56,7 +57,12 @@ instance HasCodec MetadataV3 where
         <$ versionField 3
         <*> requiredFieldWith "sources" sourcesCodec "configured databases" .= metaV3Sources
         <*> optionalFieldWithOmittedDefaultWith "remote_schemas" (sortedElemsCodec _rsmName) [] "merge remote GraphQL schemas and provide a unified GraphQL API" .= metaV3RemoteSchemas
-        <*> optionalField "query_collections" "group queries using query collections" .= metaV3QueryCollections
+        <*> optionalFieldWithOmittedDefaultWith
+          "query_collections"
+          (sortedElemsCodec QC._ccName)
+          mempty
+          "group queries using query collections"
+          .= metaV3QueryCollections
         <*> optionalField "allowlist" "safe GraphQL operations - when allow lists are enabled only these operations are allowed" .= metaV3Allowlist
         <*> optionalField "actions" "action definitions which extend Hasura's schema with custom business logic using custom queries and mutations" .= metaV3Actions
         <*> optionalField "custom_types" "custom type definitions" .= metaV3CustomTypes
