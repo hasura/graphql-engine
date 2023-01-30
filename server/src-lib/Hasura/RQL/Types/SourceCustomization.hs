@@ -19,7 +19,6 @@ module Hasura.RQL.Types.SourceCustomization
     applyTypeNameCaseCust,
     applyFieldNameCaseIdentifier,
     applyTypeNameCaseIdentifier,
-    getNamingConvention,
     getNamingCase,
     getTextFieldName,
     getTextTypeName,
@@ -252,9 +251,6 @@ emptySourceCustomization = SourceCustomization Nothing Nothing Nothing
 getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
-getNamingConvention :: SourceCustomization -> Maybe NamingCase -> NamingCase
-getNamingConvention sc defaultNC = fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
-
 -- | Source customization as it appears in the SchemaCache.
 data ResolvedSourceCustomization = ResolvedSourceCustomization
   { _rscRootFields :: MkRootFieldName,
@@ -281,10 +277,11 @@ getNamingCase ::
   (MonadError QErr m) =>
   SourceCustomization ->
   SupportedNamingCase ->
-  Maybe NamingCase ->
+  NamingCase ->
   m NamingCase
 getNamingCase sc namingConventionSupport defaultNC = do
-  let namingConv = getNamingConvention sc defaultNC
+  -- Use the 'NamingCase' from 'SourceCustomization' or a provided default.
+  let namingConv = fromMaybe defaultNC (_scNamingConvention sc)
   -- The console currently constructs a graphql query based on table name and
   -- schema name to fetch the data from the database (other than postgres).
   -- Now, when we set @GraphqlCase@ for other (than postgres) databases, this

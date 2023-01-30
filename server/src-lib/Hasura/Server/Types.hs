@@ -147,7 +147,7 @@ data ServerConfigCtx = ServerConfigCtx
     _sccEventingMode :: EventingMode,
     _sccReadOnlyMode :: ReadOnlyMode,
     -- | stores global default naming convention
-    _sccDefaultNamingConvention :: Maybe NamingCase,
+    _sccDefaultNamingConvention :: NamingCase,
     _sccMetadataDefaults :: MetadataDefaults,
     _sccCheckFeatureFlag :: FeatureFlag -> IO Bool
   }

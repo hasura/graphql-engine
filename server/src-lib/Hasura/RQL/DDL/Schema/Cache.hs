@@ -778,7 +778,8 @@ buildSchemaCacheRule logger env = proc (metadataNoDefaults, invalidationKeys, st
                         Just (sourceConfig, source) -> do
                           let metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
                               (tableInputs, _, _) = unzip3 $ map mkTableInputs $ OMap.elems $ _smTables sourceMetadata
-                              !namingConv = if isNamingConventionEnabled then getNamingConvention (_smCustomization sourceMetadata) defaultNC else HasuraCase
+                              scNamingConvention = _scNamingConvention $ _smCustomization sourceMetadata
+                              !namingConv = if isNamingConventionEnabled then fromMaybe defaultNC scNamingConvention else HasuraCase
                           tablesCoreInfo <-
                             buildTableCache
                               -<

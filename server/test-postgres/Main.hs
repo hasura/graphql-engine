@@ -87,7 +87,7 @@ main = do
                 mempty
                 EventingEnabled
                 readOnlyMode
-                Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
+                (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
                 (FF.checkFeatureFlag mempty)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx

@@ -135,7 +135,7 @@ data ServerCtx = ServerCtx
     scLoggingSettings :: !LoggingSettings,
     scEventingMode :: !EventingMode,
     scEnableReadOnlyMode :: !ReadOnlyMode,
-    scDefaultNamingConvention :: !(Maybe NamingCase),
+    scDefaultNamingConvention :: !NamingCase,
     scServerMetrics :: !ServerMetrics,
     scMetadataDefaults :: !MetadataDefaults,
     scEnabledLogTypes :: HashSet (L.EngineLogType L.Hasura),
