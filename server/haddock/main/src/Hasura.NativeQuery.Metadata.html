@@ -1,24 +1,330 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module houses the types and functions associated with the default</span><span>
-</span><span id="line-2"></span><span class="hs-comment">-- implementation of the metadata of native queries.</span><span>
-</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Metadata</span><span>
-</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier">NativeQueryInfoImpl</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-8"></span><span>
-</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html"><span class="hs-identifier">Hasura.NativeQuery.Types</span></a></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
-</span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryArgumentName"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-var">NativeQueryArgumentName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryArgumentName"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-var">NativeQueryArgumentName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryArgumentName"><span class="annot"><span class="annottext">NativeQueryArgumentName -&gt; Text
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | This module houses the types and functions associated with the default</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- implementation of the metadata of native queries.</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Metadata</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier">NativeQueryNameImpl</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier">NativeQueryInfoImpl</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier">TrackNativeQueryImpl</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#defaultNativeQueryTrackToInfo"><span class="hs-identifier">defaultNativeQueryTrackToInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html"><span class="hs-identifier">Hasura.NativeQuery.Types</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier">ToTxt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Voidable.html"><span class="hs-identifier">Data.Voidable</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html"><span class="hs-identifier">Hasura.Metadata.DTO.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier">codecNamePrefix</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html"><span class="hs-identifier">Hasura.NativeQuery.Types</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- The name of a native query. This appears as a root field name in the graphql schema.</span><span>
+</span><span id="line-28"></span><span id="local-6989586621690592993"><span id="local-6989586621690592994"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryNameImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-var">NativeQueryNameImpl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryNameImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-var">NativeQueryNameImpl</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryNameImpl"><span class="annot"><span class="annottext">NativeQueryNameImpl -&gt; Text
+</span><a href="Hasura.NativeQuery.Metadata.html#getNativeQueryNameImpl"><span class="hs-identifier hs-var hs-var">getNativeQueryNameImpl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690592984"><span id="local-6989586621690592989"><span class="annot"><span class="annottext">NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+$c/= :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+== :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+$c== :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592951"><span id="local-6989586621690592955"><span id="local-6989586621690592959"><span id="local-6989586621690592963"><span id="local-6989586621690592967"><span id="local-6989586621690592971"><span id="local-6989586621690592976"><span class="annot"><span class="annottext">Eq NativeQueryNameImpl
+NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Ordering
+NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; NativeQueryNameImpl
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; NativeQueryNameImpl
+$cmin :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; NativeQueryNameImpl
+max :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; NativeQueryNameImpl
+$cmax :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; NativeQueryNameImpl
+&gt;= :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+$c&gt;= :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+&gt; :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+$c&gt; :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+&lt;= :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+$c&lt;= :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+&lt; :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+$c&lt; :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Bool
+compare :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Ordering
+$ccompare :: NativeQueryNameImpl -&gt; NativeQueryNameImpl -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592937"><span id="local-6989586621690592939"><span id="local-6989586621690592945"><span class="annot"><span class="annottext">Int -&gt; NativeQueryNameImpl -&gt; ShowS
+[NativeQueryNameImpl] -&gt; ShowS
+NativeQueryNameImpl -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [NativeQueryNameImpl] -&gt; ShowS
+$cshowList :: [NativeQueryNameImpl] -&gt; ShowS
+show :: NativeQueryNameImpl -&gt; String
+$cshow :: NativeQueryNameImpl -&gt; String
+showsPrec :: Int -&gt; NativeQueryNameImpl -&gt; ShowS
+$cshowsPrec :: Int -&gt; NativeQueryNameImpl -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep NativeQueryNameImpl x -&gt; NativeQueryNameImpl
+forall x. NativeQueryNameImpl -&gt; Rep NativeQueryNameImpl x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep NativeQueryNameImpl x -&gt; NativeQueryNameImpl
+$cfrom :: forall x. NativeQueryNameImpl -&gt; Rep NativeQueryNameImpl x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592924"><span id="local-6989586621690592928"><span class="annot"><span class="annottext">Eq NativeQueryNameImpl
+Int -&gt; NativeQueryNameImpl -&gt; Int
+NativeQueryNameImpl -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: NativeQueryNameImpl -&gt; Int
+$chash :: NativeQueryNameImpl -&gt; Int
+hashWithSalt :: Int -&gt; NativeQueryNameImpl -&gt; Int
+$chashWithSalt :: Int -&gt; NativeQueryNameImpl -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592919"><span class="annot"><span class="annottext">NativeQueryNameImpl -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: NativeQueryNameImpl -&gt; ()
+$crnf :: NativeQueryNameImpl -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592901"><span id="local-6989586621690592905"><span id="local-6989586621690592909"><span id="local-6989586621690592914"><span class="annot"><span class="annottext">[NativeQueryNameImpl] -&gt; Value
+[NativeQueryNameImpl] -&gt; Encoding
+NativeQueryNameImpl -&gt; Value
+NativeQueryNameImpl -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [NativeQueryNameImpl] -&gt; Encoding
+$ctoEncodingList :: [NativeQueryNameImpl] -&gt; Encoding
+toJSONList :: [NativeQueryNameImpl] -&gt; Value
+$ctoJSONList :: [NativeQueryNameImpl] -&gt; Value
+toEncoding :: NativeQueryNameImpl -&gt; Encoding
+$ctoEncoding :: NativeQueryNameImpl -&gt; Encoding
+toJSON :: NativeQueryNameImpl -&gt; Value
+$ctoJSON :: NativeQueryNameImpl -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592891"><span id="local-6989586621690592896"><span class="annot"><span class="annottext">Value -&gt; Parser [NativeQueryNameImpl]
+Value -&gt; Parser NativeQueryNameImpl
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [NativeQueryNameImpl]
+$cparseJSONList :: Value -&gt; Parser [NativeQueryNameImpl]
+parseJSON :: Value -&gt; Parser NativeQueryNameImpl
+$cparseJSON :: Value -&gt; Parser NativeQueryNameImpl
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592886"><span class="annot"><span class="annottext">NativeQueryNameImpl -&gt; Text
+forall a. (a -&gt; Text) -&gt; ToTxt a
+toTxt :: NativeQueryNameImpl -&gt; Text
+$ctoTxt :: NativeQueryNameImpl -&gt; Text
+</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592877"><span id="local-6989586621690592879"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span></span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592872"><span id="local-6989586621690592874"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span></span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621690592865"><span id="local-6989586621690592869"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span id="local-6989586621690592854"><span id="local-6989586621690592858"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621690592845"><span id="local-6989586621690592849"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span id="local-6989586621690592836"><span id="local-6989586621690592840"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span id="local-6989586621690592825"><span id="local-6989586621690592827"><span id="local-6989586621690592831"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span id="local-6989586621690592811"><span id="local-6989586621690592815"><span id="local-6989586621690592819"><span id="local-6989586621690592823"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span id="local-6989586621690592802"><span id="local-6989586621690592806"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592796"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621690592791"><span class="annot"><span class="annottext">codec :: JSONCodec NativeQueryNameImpl
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (HasCodec a, Coercible a b) =&gt; JSONCodec b
+</span><a href="Data.Voidable.html#coerceCodec"><span class="hs-identifier hs-var">coerceCodec</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | Default implementation of the Native Query metadata info object.</span><span>
+</span><span id="line-53"></span><span id="local-6989586621690592787"><span id="local-6989586621690592788"></span></span><span class="hs-keyword">data</span><span> </span><span id="NativeQueryInfoImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-var">NativeQueryInfoImpl</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690593231"><span class="annot"><a href="#local-6989586621690593231"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryInfoImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-var">NativeQueryInfoImpl</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="nqiiRootFieldName"><span class="annot"><span class="annottext">forall (b :: BackendType).
+NativeQueryInfoImpl b -&gt; NativeQueryNameImpl
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiRootFieldName"><span class="hs-identifier hs-var hs-var">nqiiRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span id="nqiiCode"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; Text
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiCode"><span class="hs-identifier hs-var hs-var">nqiiCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span id="nqiiReturns"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; TableName b
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiReturns"><span class="hs-identifier hs-var hs-var">nqiiReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593231"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span id="nqiiArguments"><span class="annot"><span class="annottext">forall (b :: BackendType).
+NativeQueryInfoImpl b
+-&gt; HashMap NativeQueryArgumentName (ScalarType b)
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiArguments"><span class="hs-identifier hs-var hs-var">nqiiArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593231"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span id="nqiiDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; Maybe Text
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiDescription"><span class="hs-identifier hs-var hs-var">nqiiDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (NativeQueryInfoImpl b) x -&gt; NativeQueryInfoImpl b
+forall (b :: BackendType) x.
+NativeQueryInfoImpl b -&gt; Rep (NativeQueryInfoImpl b) x
+$cto :: forall (b :: BackendType) x.
+Rep (NativeQueryInfoImpl b) x -&gt; NativeQueryInfoImpl b
+$cfrom :: forall (b :: BackendType) x.
+NativeQueryInfoImpl b -&gt; Rep (NativeQueryInfoImpl b) x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="local-6989586621690592767"><span id="local-6989586621690592777"><span id="local-6989586621690593217"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593217"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593217"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span id="local-6989586621690592751"><span id="local-6989586621690592753"><span id="local-6989586621690592764"><span id="local-6989586621690593213"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593213"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593213"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592745"><span id="local-6989586621690592747"><span id="local-6989586621690593212"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593212"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593212"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592743"><span id="local-6989586621690593211"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593211"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592740"><span id="local-6989586621690593210"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593210"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593210"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593210"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621690592709"><span class="annot"><span class="annottext">codec :: JSONCodec (NativeQueryInfoImpl b)
+</span><a href="#local-6989586621690592709"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">CommentCodec</span></span><span>
+</span><span id="line-73"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;A query in expressed in native code (SQL) to add to the GraphQL schema with configuration.&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). HasTag b =&gt; Text
+</span><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-var">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690593210"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;NativeQueryInfo&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+NativeQueryNameImpl
+-&gt; Text
+-&gt; TableName b
+-&gt; HashMap NativeQueryArgumentName (ScalarType b)
+-&gt; Maybe Text
+-&gt; NativeQueryInfoImpl b
+</span><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-var">NativeQueryInfoImpl</span></a></span><span>
+</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;root_field_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592704"><span class="hs-identifier hs-var">fieldNameDoc</span></a></span><span>
+</span><span id="line-77"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+NativeQueryInfoImpl b -&gt; NativeQueryNameImpl
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiRootFieldName"><span class="hs-identifier hs-var">nqiiRootFieldName</span></a></span><span>
+</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;code&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592702"><span class="hs-identifier hs-var">sqlDoc</span></a></span><span>
+</span><span id="line-79"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; Text
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiCode"><span class="hs-identifier hs-var">nqiiCode</span></a></span><span>
+</span><span id="line-80"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;returns&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592701"><span class="hs-identifier hs-var">returnsDoc</span></a></span><span>
+</span><span id="line-81"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; TableName b
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiReturns"><span class="hs-identifier hs-var">nqiiReturns</span></a></span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;arguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592700"><span class="hs-identifier hs-var">argumentDoc</span></a></span><span>
+</span><span id="line-83"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+NativeQueryInfoImpl b
+-&gt; HashMap NativeQueryArgumentName (ScalarType b)
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiArguments"><span class="hs-identifier hs-var">nqiiArguments</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><span class="hs-identifier hs-var">optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592698"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
+</span><span id="line-85"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; Maybe Text
+</span><a href="Hasura.NativeQuery.Metadata.html#nqiiDescription"><span class="hs-identifier hs-var">nqiiDescription</span></a></span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>      </span><span id="local-6989586621690592704"><span class="annot"><span class="annottext">fieldNameDoc :: Text
+</span><a href="#local-6989586621690592704"><span class="hs-identifier hs-var hs-var">fieldNameDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Root field name for the native query&quot;</span></span><span>
+</span><span id="line-88"></span><span>      </span><span id="local-6989586621690592702"><span class="annot"><span class="annottext">sqlDoc :: Text
+</span><a href="#local-6989586621690592702"><span class="hs-identifier hs-var hs-var">sqlDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Native code expression (SQL) to run&quot;</span></span><span>
+</span><span id="line-89"></span><span>      </span><span id="local-6989586621690592700"><span class="annot"><span class="annottext">argumentDoc :: Text
+</span><a href="#local-6989586621690592700"><span class="hs-identifier hs-var hs-var">argumentDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Free variables in the expression and their types&quot;</span></span><span>
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621690592701"><span class="annot"><span class="annottext">returnsDoc :: Text
+</span><a href="#local-6989586621690592701"><span class="hs-identifier hs-var hs-var">returnsDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Return type (table) of the expression&quot;</span></span><span>
+</span><span id="line-91"></span><span>      </span><span id="local-6989586621690592698"><span class="annot"><span class="annottext">descriptionDoc :: Text
+</span><a href="#local-6989586621690592698"><span class="hs-identifier hs-var hs-var">descriptionDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;A description of the query which appears in the graphql schema&quot;</span></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592690"><span id="local-6989586621690593180"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593180"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593180"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593180"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621690592685"><span class="annot"><span class="annottext">codec :: JSONCodec (Voidable [NativeQueryInfoImpl b])
+</span><a href="#local-6989586621690592685"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (HasCodec a, Coercible a b) =&gt; JSONCodec b
+</span><a href="Data.Voidable.html#coerceCodec"><span class="hs-identifier hs-var">coerceCodec</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593180"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span id="local-6989586621690592676"><span id="local-6989586621690592682"><span id="local-6989586621690593176"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593176"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593176"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span id="local-6989586621690592662"><span id="local-6989586621690592668"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621690593172"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593172"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593172"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593172"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593172"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621690592638"><span id="local-6989586621690592643"><span id="local-6989586621690592648"><span id="local-6989586621690592654"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621690593169"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span id="local-6989586621690592625"><span id="local-6989586621690592630"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-109"></span><span>  </span><span id="local-6989586621690593167"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593167"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-111"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593167"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593167"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593167"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span id="local-6989586621690592602"><span id="local-6989586621690592607"><span id="local-6989586621690592612"><span id="local-6989586621690592617"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621690593165"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593165"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-116"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593165"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593165"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593165"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span id="local-6989586621690592590"><span id="local-6989586621690592594"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690593163"><span class="annot"><a href="#local-6989586621690593163"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593163"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span id="local-6989586621690592571"><span id="local-6989586621690592575"><span id="local-6989586621690592579"><span id="local-6989586621690592583"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690593161"><span class="annot"><a href="#local-6989586621690593161"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593161"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593161"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593161"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span id="local-6989586621690592566"><span id="local-6989586621690592567"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryArgumentName"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-var">NativeQueryArgumentName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryArgumentName"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-var">NativeQueryArgumentName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryArgumentName"><span class="annot"><span class="annottext">NativeQueryArgumentName -&gt; Text
 </span><a href="Hasura.NativeQuery.Metadata.html#getNativeQueryArgumentName"><span class="hs-identifier hs-var hs-var">getNativeQueryArgumentName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-14"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690500907"><span id="local-6989586621690500912"><span class="annot"><span class="annottext">NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690592558"><span id="local-6989586621690592562"><span class="annot"><span class="annottext">NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 $c/= :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 == :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 $c== :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690500874"><span id="local-6989586621690500878"><span id="local-6989586621690500882"><span id="local-6989586621690500886"><span id="local-6989586621690500890"><span id="local-6989586621690500894"><span id="local-6989586621690500899"><span class="annot"><span class="annottext">Eq NativeQueryArgumentName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592528"><span id="local-6989586621690592532"><span id="local-6989586621690592536"><span id="local-6989586621690592540"><span id="local-6989586621690592544"><span id="local-6989586621690592548"><span id="local-6989586621690592552"><span class="annot"><span class="annottext">Eq NativeQueryArgumentName
 NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Ordering
 NativeQueryArgumentName
@@ -51,15 +357,7 @@ $c&lt;= :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 $c&lt; :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Bool
 compare :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Ordering
 $ccompare :: NativeQueryArgumentName -&gt; NativeQueryArgumentName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690500861"><span id="local-6989586621690500866"><span class="annot"><span class="annottext">Eq NativeQueryArgumentName
-Int -&gt; NativeQueryArgumentName -&gt; Int
-NativeQueryArgumentName -&gt; Int
-forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
-hash :: NativeQueryArgumentName -&gt; Int
-$chash :: NativeQueryArgumentName -&gt; Int
-hashWithSalt :: Int -&gt; NativeQueryArgumentName -&gt; Int
-$chashWithSalt :: Int -&gt; NativeQueryArgumentName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690500847"><span id="local-6989586621690500849"><span id="local-6989586621690500855"><span class="annot"><span class="annottext">Int -&gt; NativeQueryArgumentName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592517"><span id="local-6989586621690592519"><span id="local-6989586621690592523"><span class="annot"><span class="annottext">Int -&gt; NativeQueryArgumentName -&gt; ShowS
 [NativeQueryArgumentName] -&gt; ShowS
 NativeQueryArgumentName -&gt; String
 forall a.
@@ -70,21 +368,241 @@ show :: NativeQueryArgumentName -&gt; String
 $cshow :: NativeQueryArgumentName -&gt; String
 showsPrec :: Int -&gt; NativeQueryArgumentName -&gt; ShowS
 $cshowsPrec :: Int -&gt; NativeQueryArgumentName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-comment">-- | Provisional data type for modelling metadata</span><span>
-</span><span id="line-17"></span><span class="hs-keyword">data</span><span> </span><span id="NativeQueryInfoImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-var">NativeQueryInfoImpl</span></a></span></span><span> </span><span id="local-6989586621690500929"><span class="annot"><a href="#local-6989586621690500929"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryInfoImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-var">NativeQueryInfoImpl</span></a></span></span><span>
-</span><span id="line-18"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="nqiiName"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; NativeQueryName
-</span><a href="Hasura.NativeQuery.Metadata.html#nqiiName"><span class="hs-identifier hs-var hs-var">nqiiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-19"></span><span>    </span><span id="nqiiCode"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; Text
-</span><a href="Hasura.NativeQuery.Metadata.html#nqiiCode"><span class="hs-identifier hs-var hs-var">nqiiCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
-</span><span id="line-20"></span><span>    </span><span id="nqiiReturns"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; TableName b
-</span><a href="Hasura.NativeQuery.Metadata.html#nqiiReturns"><span class="hs-identifier hs-var hs-var">nqiiReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690500929"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-21"></span><span>    </span><span id="nqiiArgs"><span class="annot"><span class="annottext">forall (b :: BackendType).
-NativeQueryInfoImpl b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep NativeQueryArgumentName x -&gt; NativeQueryArgumentName
+forall x. NativeQueryArgumentName -&gt; Rep NativeQueryArgumentName x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep NativeQueryArgumentName x -&gt; NativeQueryArgumentName
+$cfrom :: forall x. NativeQueryArgumentName -&gt; Rep NativeQueryArgumentName x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690592507"><span id="local-6989586621690592511"><span class="annot"><span class="annottext">Eq NativeQueryArgumentName
+Int -&gt; NativeQueryArgumentName -&gt; Int
+NativeQueryArgumentName -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: NativeQueryArgumentName -&gt; Int
+$chash :: NativeQueryArgumentName -&gt; Int
+hashWithSalt :: Int -&gt; NativeQueryArgumentName -&gt; Int
+$chashWithSalt :: Int -&gt; NativeQueryArgumentName -&gt; Int
+</span><a href="#local-6989586621690592507"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span id="local-6989586621690592491"><span id="local-6989586621690592495"><span id="local-6989586621690592499"><span id="local-6989586621690592503"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span></span></span></span></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span id="local-6989586621690592482"><span id="local-6989586621690592486"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span></span></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span id="local-6989586621690592472"><span id="local-6989586621690592477"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span></span></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span id="local-6989586621690592463"><span id="local-6989586621690592468"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span></span></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592459"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | Default implementation of the 'track_native_query' request payload.</span><span>
+</span><span id="line-136"></span><span class="hs-keyword">data</span><span> </span><span id="TrackNativeQueryImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-var">TrackNativeQueryImpl</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690593160"><span class="annot"><a href="#local-6989586621690593160"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TrackNativeQueryImpl"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-var">TrackNativeQueryImpl</span></a></span></span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="tnqSource"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; SourceName
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqSource"><span class="hs-identifier hs-var hs-var">tnqSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>    </span><span id="tnqRootFieldName"><span class="annot"><span class="annottext">forall (b :: BackendType).
+TrackNativeQueryImpl b -&gt; NativeQueryNameImpl
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqRootFieldName"><span class="hs-identifier hs-var hs-var">tnqRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryNameImpl"><span class="hs-identifier hs-type">NativeQueryNameImpl</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>    </span><span id="tnqCode"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; Text
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqCode"><span class="hs-identifier hs-var hs-var">tnqCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-140"></span><span>    </span><span id="tnqArguments"><span class="annot"><span class="annottext">forall (b :: BackendType).
+TrackNativeQueryImpl b
 -&gt; HashMap NativeQueryArgumentName (ScalarType b)
-</span><a href="Hasura.NativeQuery.Metadata.html#nqiiArgs"><span class="hs-identifier hs-var hs-var">nqiiArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690500929"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-22"></span><span>    </span><span id="nqiiComment"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryInfoImpl b -&gt; Text
-</span><a href="Hasura.NativeQuery.Metadata.html#nqiiComment"><span class="hs-identifier hs-var hs-var">nqiiComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span></pre></body></html>
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqArguments"><span class="hs-identifier hs-var hs-var">tnqArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593160"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>    </span><span id="tnqDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; Maybe Text
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqDescription"><span class="hs-identifier hs-var hs-var">tnqDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>    </span><span id="tnqReturns"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; TableName b
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqReturns"><span class="hs-identifier hs-var hs-var">tnqReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593160"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span class="hs-comment">-- | Default implementation of the method 'nativeQueryTrackToInfo'.</span><span>
+</span><span id="line-146"></span><span id="local-6989586621690593152"><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#defaultNativeQueryTrackToInfo"><span class="hs-identifier hs-type">defaultNativeQueryTrackToInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593152"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593152"><span class="hs-identifier hs-type">b</span></a></span></span><span>
+</span><span id="line-147"></span><span id="defaultNativeQueryTrackToInfo"><span class="annot"><span class="annottext">defaultNativeQueryTrackToInfo :: forall (b :: BackendType).
+TrackNativeQueryImpl b -&gt; NativeQueryInfoImpl b
+</span><a href="Hasura.NativeQuery.Metadata.html#defaultNativeQueryTrackToInfo"><span class="hs-identifier hs-var hs-var">defaultNativeQueryTrackToInfo</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690592446"><span id="local-6989586621690592447"><span id="local-6989586621690592448"><span id="local-6989586621690592449"><span id="local-6989586621690592450"><span id="local-6989586621690592451"><span class="annot"><span class="annottext">Maybe Text
+HashMap NativeQueryArgumentName (ScalarType b)
+Text
+SourceName
+TableName b
+NativeQueryNameImpl
+tnqReturns :: TableName b
+tnqDescription :: Maybe Text
+tnqArguments :: HashMap NativeQueryArgumentName (ScalarType b)
+tnqCode :: Text
+tnqRootFieldName :: NativeQueryNameImpl
+tnqSource :: SourceName
+tnqReturns :: forall (b :: BackendType). TrackNativeQueryImpl b -&gt; TableName b
+tnqDescription :: forall (b :: BackendType). TrackNativeQueryImpl b -&gt; Maybe Text
+tnqArguments :: forall (b :: BackendType).
+TrackNativeQueryImpl b
+-&gt; HashMap NativeQueryArgumentName (ScalarType b)
+tnqCode :: forall (b :: BackendType). TrackNativeQueryImpl b -&gt; Text
+tnqRootFieldName :: forall (b :: BackendType).
+TrackNativeQueryImpl b -&gt; NativeQueryNameImpl
+tnqSource :: forall (b :: BackendType). TrackNativeQueryImpl b -&gt; SourceName
+</span><a href="#local-6989586621690592446"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryInfoImpl"><span class="hs-identifier hs-type">NativeQueryInfoImpl</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Maybe Text
+HashMap NativeQueryArgumentName (ScalarType b)
+Text
+TableName b
+NativeQueryNameImpl
+nqiiDescription :: Maybe Text
+nqiiArguments :: HashMap NativeQueryArgumentName (ScalarType b)
+nqiiReturns :: TableName b
+nqiiCode :: Text
+nqiiRootFieldName :: NativeQueryNameImpl
+nqiiDescription :: Maybe Text
+nqiiArguments :: HashMap NativeQueryArgumentName (ScalarType b)
+nqiiReturns :: TableName b
+nqiiCode :: Text
+nqiiRootFieldName :: NativeQueryNameImpl
+</span><a href="#local-6989586621690592441"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621690592445"><span class="annot"><span class="annottext">nqiiRootFieldName :: NativeQueryNameImpl
+</span><a href="#local-6989586621690592445"><span class="hs-identifier hs-var hs-var">nqiiRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NativeQueryNameImpl
+</span><a href="#local-6989586621690592450"><span class="hs-identifier hs-var">tnqRootFieldName</span></a></span><span>
+</span><span id="line-151"></span><span>    </span><span id="local-6989586621690592444"><span class="annot"><span class="annottext">nqiiCode :: Text
+</span><a href="#local-6989586621690592444"><span class="hs-identifier hs-var hs-var">nqiiCode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592449"><span class="hs-identifier hs-var">tnqCode</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621690592443"><span class="annot"><span class="annottext">nqiiReturns :: TableName b
+</span><a href="#local-6989586621690592443"><span class="hs-identifier hs-var hs-var">nqiiReturns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621690592446"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621690592442"><span class="annot"><span class="annottext">nqiiArguments :: HashMap NativeQueryArgumentName (ScalarType b)
+</span><a href="#local-6989586621690592442"><span class="hs-identifier hs-var hs-var">nqiiArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (ScalarType b)
+</span><a href="#local-6989586621690592448"><span class="hs-identifier hs-var">tnqArguments</span></a></span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621690592441"><span class="annot"><span class="annottext">nqiiDescription :: Maybe Text
+</span><a href="#local-6989586621690592441"><span class="hs-identifier hs-var hs-var">nqiiDescription</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690592447"><span class="hs-identifier hs-var">tnqDescription</span></a></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span id="local-6989586621690592432"><span id="local-6989586621690592437"><span id="local-6989586621690593148"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593148"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593148"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593148"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span id="local-6989586621690592412"><span id="local-6989586621690592416"><span id="local-6989586621690592420"><span id="local-6989586621690592425"><span id="local-6989586621690593145"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593145"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593145"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Voidable.html#Voidable"><span class="hs-identifier hs-type">Voidable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593145"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690592406"><span id="local-6989586621690593144"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-161"></span><span>  </span><span id="local-6989586621690592378"><span class="annot"><span class="annottext">codec :: JSONCodec (TrackNativeQueryImpl b)
+</span><a href="#local-6989586621690592378"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">CommentCodec</span></span><span>
+</span><span id="line-163"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;A request to track a native query&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). HasTag b =&gt; Text
+</span><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-var">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690593144"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TrackNativeQuery&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceName
+-&gt; NativeQueryNameImpl
+-&gt; Text
+-&gt; HashMap NativeQueryArgumentName (ScalarType b)
+-&gt; Maybe Text
+-&gt; TableName b
+-&gt; TrackNativeQueryImpl b
+</span><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-var">TrackNativeQueryImpl</span></a></span><span>
+</span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592377"><span class="hs-identifier hs-var">sourceDoc</span></a></span><span>
+</span><span id="line-167"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; SourceName
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqSource"><span class="hs-identifier hs-var">tnqSource</span></a></span><span>
+</span><span id="line-168"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;root_field_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592376"><span class="hs-identifier hs-var">rootFieldDoc</span></a></span><span>
+</span><span id="line-169"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+TrackNativeQueryImpl b -&gt; NativeQueryNameImpl
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqRootFieldName"><span class="hs-identifier hs-var">tnqRootFieldName</span></a></span><span>
+</span><span id="line-170"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;code&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592375"><span class="hs-identifier hs-var">codeDoc</span></a></span><span>
+</span><span id="line-171"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; Text
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqCode"><span class="hs-identifier hs-var">tnqCode</span></a></span><span>
+</span><span id="line-172"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;arguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592374"><span class="hs-identifier hs-var">argumentsDoc</span></a></span><span>
+</span><span id="line-173"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+TrackNativeQueryImpl b
+-&gt; HashMap NativeQueryArgumentName (ScalarType b)
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqArguments"><span class="hs-identifier hs-var">tnqArguments</span></a></span><span>
+</span><span id="line-174"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><span class="hs-identifier hs-var">optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592373"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
+</span><span id="line-175"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; Maybe Text
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqDescription"><span class="hs-identifier hs-var">tnqDescription</span></a></span><span>
+</span><span id="line-176"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;returns&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690592372"><span class="hs-identifier hs-var">returnsDoc</span></a></span><span>
+</span><span id="line-177"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQueryImpl b -&gt; TableName b
+</span><a href="Hasura.NativeQuery.Metadata.html#tnqReturns"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span>
+</span><span id="line-178"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-179"></span><span>      </span><span id="local-6989586621690592377"><span class="annot"><span class="annottext">sourceDoc :: Text
+</span><a href="#local-6989586621690592377"><span class="hs-identifier hs-var hs-var">sourceDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The source in whic this native query should be tracked&quot;</span></span><span>
+</span><span id="line-180"></span><span>      </span><span id="local-6989586621690592376"><span class="annot"><span class="annottext">rootFieldDoc :: Text
+</span><a href="#local-6989586621690592376"><span class="hs-identifier hs-var hs-var">rootFieldDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Root field name for the native query&quot;</span></span><span>
+</span><span id="line-181"></span><span>      </span><span id="local-6989586621690592375"><span class="annot"><span class="annottext">codeDoc :: Text
+</span><a href="#local-6989586621690592375"><span class="hs-identifier hs-var hs-var">codeDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Native code expression (SQL) to run&quot;</span></span><span>
+</span><span id="line-182"></span><span>      </span><span id="local-6989586621690592374"><span class="annot"><span class="annottext">argumentsDoc :: Text
+</span><a href="#local-6989586621690592374"><span class="hs-identifier hs-var hs-var">argumentsDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Free variables in the expression and their types&quot;</span></span><span>
+</span><span id="line-183"></span><span>      </span><span id="local-6989586621690592372"><span class="annot"><span class="annottext">returnsDoc :: Text
+</span><a href="#local-6989586621690592372"><span class="hs-identifier hs-var hs-var">returnsDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Return type (table) of the expression&quot;</span></span><span>
+</span><span id="line-184"></span><span>      </span><span id="local-6989586621690592373"><span class="annot"><span class="annottext">descriptionDoc :: Text
+</span><a href="#local-6989586621690592373"><span class="hs-identifier hs-var hs-var">descriptionDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;A description of the query which appears in the graphql schema&quot;</span></span><span>
+</span><span id="line-185"></span><span>
+</span><span id="line-186"></span><span id="local-6989586621690592357"><span id="local-6989586621690592362"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-187"></span><span>  </span><span id="local-6989586621690593149"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593149"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-189"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593149"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593149"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593149"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span id="local-6989586621690592335"><span id="local-6989586621690592340"><span id="local-6989586621690592345"><span id="local-6989586621690592350"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621690593146"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593146"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-193"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-194"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593146"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593146"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#TrackNativeQueryImpl"><span class="hs-identifier hs-type">TrackNativeQueryImpl</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690593146"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-195"></span></pre></body></html>
