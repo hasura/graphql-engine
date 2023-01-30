@@ -11,7 +11,6 @@ flag profiling
   manual: True
 
 common common-all
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
   default-language: Haskell2010
   default-extensions:
     BlockArguments
@@ -38,6 +37,21 @@ common common-all
     TypeApplications
     TypeFamilies
     TypeOperators
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
 
 library
   import: common-all
