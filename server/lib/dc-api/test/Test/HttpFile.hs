@@ -26,8 +26,8 @@ import Network.HTTP.Types (Header, Status (..))
 import Servant.Client (BaseUrl, showBaseUrl)
 import System.FilePath ((</>))
 
-writeRequest :: forall m. (MonadIO m, MonadThrow m) => BaseUrl -> HttpClient.Request -> Int -> FilePath -> m ()
-writeRequest baseUrl request counter testFolder = do
+writeRequest :: forall m. (MonadIO m, MonadThrow m) => BaseUrl -> HttpClient.Request -> String -> FilePath -> m ()
+writeRequest baseUrl request fileNamePrefix testFolder = do
   body <- getBody $ HttpClient.requestBody request
   liftIO . LazyText.writeFile filepath . TextBuilder.toLazyText $
     requestLine
@@ -35,7 +35,7 @@ writeRequest baseUrl request counter testFolder = do
       <> "\n"
       <> body
   where
-    filename = "agent-request-" <> show counter <> ".http"
+    filename = fileNamePrefix <> "-agent-request.http"
     filepath = testFolder </> filename
 
     requestLine :: TextBuilder.Builder
@@ -67,8 +67,8 @@ writeRequest baseUrl request counter testFolder = do
 
     getBody :: HttpClient.RequestBody -> m TextBuilder.Builder
     getBody = \case
-      HttpClient.RequestBodyLBS lazyBs -> pure $ formatIfJson (HttpClient.requestHeaders request) lazyBs
-      HttpClient.RequestBodyBS bs -> pure . formatIfJson (HttpClient.requestHeaders request) $ LazyBS.fromStrict bs
+      HttpClient.RequestBodyLBS lazyBs -> pure $ transformAndFormatIfJson id (HttpClient.requestHeaders request) lazyBs
+      HttpClient.RequestBodyBS bs -> pure . transformAndFormatIfJson id (HttpClient.requestHeaders request) $ LazyBS.fromStrict bs
       HttpClient.RequestBodyBuilder _ _ ->
         throwM $ UnsupportedError "Recording builder request bodies is not supported"
       HttpClient.RequestBodyStream _ _ ->
@@ -78,15 +78,15 @@ writeRequest baseUrl request counter testFolder = do
       HttpClient.RequestBodyIO bodyIO ->
         liftIO bodyIO >>= getBody
 
-writeResponse :: forall m. (MonadIO m) => HttpClient.Response LazyBS.ByteString -> Int -> FilePath -> m ()
-writeResponse response counter testFolder =
+writeResponse :: forall m. (MonadIO m) => (Aeson.Value -> Aeson.Value) -> HttpClient.Response LazyBS.ByteString -> String -> FilePath -> m ()
+writeResponse redactJsonResponse response fileNamePrefix testFolder =
   liftIO . LazyText.writeFile filepath . TextBuilder.toLazyText $
     statusLine
       <> responseHeaders
       <> "\n"
       <> body
   where
-    filename = "agent-response-" <> show counter <> ".http"
+    filename = fileNamePrefix <> "-agent-response.http"
     filepath = testFolder </> filename
 
     statusLine :: TextBuilder.Builder
@@ -114,7 +114,7 @@ writeResponse response counter testFolder =
        in nameBuilder <> ": " <> valueBuilder <> "\n"
 
     body :: TextBuilder.Builder
-    body = formatIfJson (HttpClient.responseHeaders response) $ HttpClient.responseBody response
+    body = transformAndFormatIfJson redactJsonResponse (HttpClient.responseHeaders response) $ HttpClient.responseBody response
 
 isJsonBody :: [Header] -> Bool
 isJsonBody headers =
@@ -123,12 +123,12 @@ isJsonBody headers =
     contentTypeHeader = lookup (CI.mk "Content-Type") headers
     contentTypeValueParts = maybe [] (fmap Text.strip . Text.splitOn ";" . Text.decodeUtf8) contentTypeHeader
 
-formatIfJson :: [Header] -> LazyBS.ByteString -> TextBuilder.Builder
-formatIfJson headers body =
+transformAndFormatIfJson :: (Aeson.Value -> Aeson.Value) -> [Header] -> LazyBS.ByteString -> TextBuilder.Builder
+transformAndFormatIfJson transform headers body =
   if isJsonBody headers
     then do
       case Aeson.decode body of
-        Just (json :: Aeson.Value) -> Aeson.encodePrettyToTextBuilder' (Aeson.defConfig {Aeson.confIndent = Aeson.Spaces 2}) json
+        Just (json :: Aeson.Value) -> Aeson.encodePrettyToTextBuilder' (Aeson.defConfig {Aeson.confIndent = Aeson.Spaces 2}) $ transform json
         Nothing -> lbsToBuilder body
     else lbsToBuilder body
 

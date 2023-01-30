@@ -55,7 +55,7 @@ data SensitiveOutputHandling
 
 data AgentOptions = AgentOptions
   { _aoAgentBaseUrl :: BaseUrl,
-    _aoAgentConfig :: API.Config
+    _aoAgentConfig :: Maybe API.Config
   }
 
 data NameCasing
@@ -181,12 +181,14 @@ agentOptionsParser =
           <> metavar "URL"
           <> help "The base URL of the Data Connector agent to be tested"
       )
-    <*> option
-      configValue
-      ( long "agent-config"
-          <> short 's'
-          <> metavar "JSON"
-          <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
+    <*> optional
+      ( option
+          configValue
+          ( long "agent-config"
+              <> short 's'
+              <> metavar "JSON"
+              <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. If omitted, datasets will be used to load test data and provide this configuration dynamically"
+          )
       )
 
 exportDataConfigParser :: Parser ExportDataConfig

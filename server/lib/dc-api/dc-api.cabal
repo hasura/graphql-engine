@@ -2,7 +2,7 @@ cabal-version: 3.0
 name: dc-api
 version: 1.0.0
 extra-source-files:
-  test/Test/Data/ChinookData.xml.gz
+  test/Test/Data/Chinook.xml.gz
   test/Test/Data/schema-tables.json
 
 flag profiling
@@ -137,6 +137,7 @@ test-suite tests-dc-api
     text,
     time,
     unordered-containers,
+    uuid,
     vector,
     xml-conduit,
     xml-lens,
@@ -150,13 +151,15 @@ test-suite tests-dc-api
   other-modules:
     Command
     Paths_dc_api
+    Test.AgentAPI
     Test.AgentClient
+    Test.AgentDatasets
+    Test.AgentTestContext
     Test.Data
     Test.DataExport
     Test.Expectations
     Test.HttpFile
     Test.Specs.CapabilitiesSpec
-    Test.Specs.ConfigSpec
     Test.Specs.ErrorSpec
     Test.Specs.ExplainSpec
     Test.Specs.HealthSpec

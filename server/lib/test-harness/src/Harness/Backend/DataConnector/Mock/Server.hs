@@ -819,12 +819,12 @@ metricsHandler = pure "# NOTE: Metrics would go here."
 rawHandler :: API.SourceName -> API.Config -> API.RawRequest -> Handler API.RawResponse
 rawHandler _ _ _ = pure $ API.RawResponse [] -- NOTE: Raw query response would go here.
 
-datasetHandler :: (API.DatasetTemplateName -> Handler API.DatasetGetResponse) :<|> ((API.DatasetCloneName -> API.DatasetPostRequest -> Handler API.DatasetPostResponse) :<|> (API.DatasetCloneName -> Handler API.DatasetDeleteResponse))
+datasetHandler :: (API.DatasetTemplateName -> Handler API.DatasetGetTemplateResponse) :<|> ((API.DatasetCloneName -> API.DatasetCreateCloneRequest -> Handler API.DatasetCreateCloneResponse) :<|> (API.DatasetCloneName -> Handler API.DatasetDeleteCloneResponse))
 datasetHandler = datasetGetHandler :<|> datasetPostHandler :<|> datasetDeleteHandler
   where
-    datasetGetHandler _ = pure $ API.datasetGetSuccess
-    datasetPostHandler _ _ = pure $ API.DatasetPostResponse API.emptyConfig
-    datasetDeleteHandler _ = pure $ API.datasetDeleteSuccess
+    datasetGetHandler _ = pure $ API.datasetGetTemplateSuccess
+    datasetPostHandler _ _ = pure $ API.DatasetCreateCloneResponse API.emptyConfig
+    datasetDeleteHandler _ = pure $ API.datasetDeleteCloneSuccess
 
 dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
 dcMockableServer mcfg mRecordedRequest mRecordedRequestConfig =

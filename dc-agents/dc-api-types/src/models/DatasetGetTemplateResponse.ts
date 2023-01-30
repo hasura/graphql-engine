@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type DatasetGetResponse = {
+export type DatasetGetTemplateResponse = {
   /**
    * Message detailing if the dataset exists
    */

@@ -3,16 +3,16 @@ module Test.Specs.ErrorSpec (spec) where
 import Control.Lens ((&), (?~))
 import Data.Aeson (Value (..))
 import Hasura.Backends.DataConnector.API
-import Test.AgentClient (queryExpectError)
+import Test.AgentAPI (queryExpectError)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Sandwich (describe, shouldBe)
-import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers (AgentDatasetTestSpec, it)
 
-spec :: TestData -> SourceName -> Config -> a -> AgentTestSpec
-spec TestData {..} sourceName config _capabilities = describe "Error Protocol" do
+spec :: TestData -> AgentDatasetTestSpec
+spec TestData {..} = describe "Error Protocol" do
   it "returns a structured error when sending an invalid query" do
-    receivedArtistsError <- queryExpectError sourceName config brokenQueryRequest
+    receivedArtistsError <- queryExpectError brokenQueryRequest
     _crType receivedArtistsError `shouldBe` UncaughtError
   where
     brokenQueryRequest :: QueryRequest

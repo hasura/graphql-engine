@@ -141,14 +141,7 @@ func (o *ConsoleOptions) Run() error {
 		return errors.E(op, err)
 	}
 
-	// Setup console server
-	const basePath = "templates/gohtml/"
-	const templateFilename = "console.gohtml"
-	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename, console.ConsoleFS)
-	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
-	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
-	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
-
+	var templateProvider console.TemplateProvider
 	adminSecretHeader := cli.GetAdminSecretHeaderName(o.EC.Version)
 	if o.EC.Config.ServerConfig.HasuraServerInternalConfig.ConsoleAssetsDir != "" {
 		o.UseServerAssets = true
@@ -159,7 +152,8 @@ func (o *ConsoleOptions) Run() error {
 		// change to dataApiUrl value user entered in flag --console-hge-endpoint
 		dataApiUrl = o.DataApiUrl
 	}
-	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
+	
+	templateVars := gin.H{
 		"apiHost":              o.APIHost.String(),
 		"apiPort":              o.APIPort,
 		"cliVersion":           o.EC.Version.GetCLIVersion(),
@@ -168,15 +162,48 @@ func (o *ConsoleOptions) Run() error {
 		"dataApiVersion":       "",
 		"hasAccessKey":         adminSecretHeader == cli.XHasuraAccessKey,
 		"adminSecret":          o.EC.Config.ServerConfig.AdminSecret,
-		"assetsPath":           templateProvider.GetAssetsCDN(),
-		"assetsVersion":        consoleAssetsVersion,
 		"enableTelemetry":      o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":              o.EC.GlobalConfig.UUID,
 		"migrateSkipExecution": true,
 		"cdnAssets":            !o.UseServerAssets,
 		"consolePath":          "/console",
 		"urlPrefix":            "/console",
-	})
+	}
+	const basePath = "templates/gohtml/"
+	const templateFilename = "console.gohtml"
+
+	versionInfo, err := o.EC.APIClient.V1Version.GetVersion()
+	if err != nil {
+		return errors.E(op, err)
+	}
+	templateProvider = console.NewDefaultTemplateProvider(basePath, templateFilename, console.ConsoleFS)
+	// we use the default template provider by default but
+	// if we are able to find out the server type from the version API
+	// introduced in: https://github.com/hasura/graphql-engine-mono/pull/7141
+	// we will use that information to choose the correct server type and set the
+	// template provider accordingly.
+	if versionInfo.ServerType != nil {
+		switch *versionInfo.ServerType {
+		case "ee":
+			templateVars["consoleType"] = "pro-lite"
+			templateProvider = console.NewEETemplateProvider(basePath, templateFilename, console.ConsoleFS)
+		case "ee-classic":
+			templateVars["consoleType"] = "pro"
+			templateProvider = console.NewEETemplateProvider(basePath, templateFilename, console.ConsoleFS)
+		case "cloud":
+			templateVars["consoleType"] = "cloud"
+			templateProvider = console.NewCloudTemplateProvider(basePath, templateFilename, console.ConsoleFS)
+		}
+	}
+	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
+	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
+	templateVars["assetsVersion"] = consoleAssetsVersion
+	templateVars["assetsPath"] = templateProvider.GetAssetsCDN()
+
+	// Setup console server
+	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
+
+	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, templateVars)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("error serving console: %w", err))
 	}
