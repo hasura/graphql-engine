@@ -61,15 +61,17 @@ All the log-types that can be enabled/disabled are:
 
 Apart from the above, there are other internal log-types which cannot be configured:
 
-| Log type             | Description                                                                                         | Log Level          |
-| -------------------- | --------------------------------------------------------------------------------------------------- | ------------------ |
-| `pg-client`          | Logs from the postgres client library                                                               | `warn`             |
-| `metadata`           | Logs inconsistent Metadata items                                                                    | `warn`             |
-| `telemetry-log`      | Logs error (if any) while sending out telemetry data                                                | `info`             |
-| `event-trigger`      | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
-| `ws-server`          | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
-| `schema-sync-thread` | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
-| `health-check-log`   | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
+| Log type                    | Description                                                                                         | Log Level          |
+|-----------------------------|-----------------------------------------------------------------------------------------------------|--------------------|
+| `pg-client`                 | Logs from the postgres client library                                                               | `warn`             |
+| `metadata`                  | Logs inconsistent Metadata items                                                                    | `warn`             |
+| `telemetry-log`             | Logs error (if any) while sending out telemetry data                                                | `info`             |
+| `event-trigger`             | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
+| `ws-server`                 | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
+| `schema-sync-thread`        | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
+| `health-check-log`          | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
+| `event-trigger-process`     | Logs the statistics of events fetched from database for each source                                 | `info` and `warn`  |
+| `scheduled-trigger-process` | Logs the statistics of scheduled and cron events fetched from metadata storage                      | `info` and `warn`  |
 
 
 ## Logging levels
@@ -524,9 +526,77 @@ The GraphQL Engine logs the Health Check status only when
 
 :::
 
+### **event-trigger-process** log structure
+
+Every 10 minutes, the Hasura Engine logs the count of events fetched from database for each source where event
+triggers are defined. The log also contains the number of fetches occurred within the 10 minute timeframe.
+
+```json
+{
+  "detail": {
+    "num_events_fetched": {
+      "default": 2,
+      "source_1": 1
+    },
+    "num_fetches": 601
+  },
+  "level": "info",
+  "timestamp": "2023-01-24T20:20:45.036+0530",
+  "type": "event-trigger-process"
+}
+```
+The `type` in the log will be `event-trigger-process` and details of the event trigger process will be under `detail`
+key.
+
+The `detail` field value is an object contains the following members.
+
+| Name                 | Type                         | Description                                       |
+|----------------------|------------------------------|---------------------------------------------------|
+| `num_events_fetched` | `FetchedEventsSource` object | The count of total events fetched for each source |
+| `num_fetches`        | int                          | The number of fetches happened within 10 minutes  |
+
+- **FetchedEventsSource** is a map of source name to the count of total events fetched. Contains sources with event
+  triggers defined.
+  ```
+  {
+    "source_1": <events_count_fetched_from_source_1>,
+    "source_2": <events_count_fetched_from_source_2>,
+    .           .
+    .           .
+  }
+  ```
+
+### **scheduled-trigger-process** log structure
+
+Every 10 minutes, the Hasura Engine logs the count of cron and scheduled events fetched from metadata storage. The
+log also contains the number of times new events are fetched within the 10 minute timeframe.
+
+```json
+{
+  "detail": {
+    "num_cron_events_fetched": 0,
+    "num_fetches": 60,
+    "num_one_off_scheduled_events_fetched": 0
+  },
+  "level": "info",
+  "timestamp": "2023-01-24T20:10:44.330+0530",
+  "type": "scheduled-trigger-process"
+}
+```
+The `type` in the log will be `scheduled-trigger-process` and details of the scheduled trigger process will be under
+`detail` key.
+
+The `detail` field value is an object contains the following members.
+
+| Name                                   | Type                       | Description                                            |
+|----------------------------------------|----------------------------|--------------------------------------------------------|
+| `num_cron_events_fetched`              | int                        | The count of total cron events fetched                 |
+| `num_one_off_scheduled_events_fetched` | int                        | The count of total one-off scheduled events fetched    |
+| `num_fetches`                          | int                        | The number of fetches happened within 10 minutes       |
+
 ## Monitoring frameworks
 
-You can integrate the logs emitted by Hasura GraphQL with external monitoring tools for better visibility as per your
+You can integrate the logs emitted by the Hasura Engine with external monitoring tools for better visibility as per your
 convenience.
 
 For some examples, see [Guides: Integrating with monitoring frameworks](/observability/integrations/index.mdx)

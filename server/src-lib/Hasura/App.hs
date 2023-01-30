@@ -950,6 +950,13 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
                 (length <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
                 (unrefine soGracefulShutdownTimeout)
+
+        -- Create logger for logging the statistics of events fetched
+        fetchedEventsStatsLogger <-
+          allocate
+            (createFetchedEventsStatsLogger logger)
+            (closeFetchedEventsStatsLogger logger)
+
         unLogger logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
         void
           $ C.forkManagedTWithGracefulShutdown
@@ -958,6 +965,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
             (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
           $ processEventQueue
             logger
+            fetchedEventsStatsLogger
             scManager
             (getSchemaCache cacheRef)
             eventEngineCtx
@@ -1007,6 +1015,12 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
       -- prepare scheduled triggers
       lift $ prepareScheduledEvents logger
 
+      -- Create logger for logging the statistics of scheduled events fetched
+      scheduledEventsStatsLogger <-
+        allocate
+          (createFetchedScheduledEventsStatsLogger logger)
+          (closeFetchedScheduledEventsStatsLogger logger)
+
       -- start a background thread to deliver the scheduled events
       -- _scheduledEventsThread <- do
       let scheduledEventsGracefulShutdownAction =
@@ -1028,6 +1042,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
         $ processScheduledTriggers
           env
           logger
+          scheduledEventsStatsLogger
           scManager
           scPrometheusMetrics
           (getSchemaCache cacheRef)

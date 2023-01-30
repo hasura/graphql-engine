@@ -22,7 +22,9 @@ module Hasura.Logging
     mkLoggerCtx,
     cleanLoggerCtx,
     eventTriggerLogType,
+    eventTriggerProcessLogType,
     scheduledTriggerLogType,
+    scheduledTriggerProcessLogType,
     sourceCatalogMigrationLogType,
     EnabledLogTypes (..),
     defaultEnabledEngineLogTypes,
@@ -118,7 +120,9 @@ data InternalLogTypes
   = -- | mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
     ILTUnstructured
   | ILTEventTrigger
+  | ILTEventTriggerProcess
   | ILTScheduledTrigger
+  | ILTScheduledTriggerProcess
   | -- | internal logs for the websocket server
     ILTWsServer
   | ILTPgClient
@@ -135,7 +139,9 @@ instance Witch.From InternalLogTypes Text where
   from = \case
     ILTUnstructured -> "unstructured"
     ILTEventTrigger -> "event-trigger"
+    ILTEventTriggerProcess -> "event-trigger-process"
     ILTScheduledTrigger -> "scheduled-trigger"
+    ILTScheduledTriggerProcess -> "scheduled-trigger-process"
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
@@ -309,8 +315,14 @@ nullLogger = Logger \_ -> pure ()
 eventTriggerLogType :: EngineLogType Hasura
 eventTriggerLogType = ELTInternal ILTEventTrigger
 
+eventTriggerProcessLogType :: EngineLogType Hasura
+eventTriggerProcessLogType = ELTInternal ILTEventTriggerProcess
+
 scheduledTriggerLogType :: EngineLogType Hasura
 scheduledTriggerLogType = ELTInternal ILTScheduledTrigger
+
+scheduledTriggerProcessLogType :: EngineLogType Hasura
+scheduledTriggerProcessLogType = ELTInternal ILTScheduledTriggerProcess
 
 sourceCatalogMigrationLogType :: EngineLogType Hasura
 sourceCatalogMigrationLogType = ELTInternal ILTSourceCatalogMigration

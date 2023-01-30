@@ -30,6 +30,8 @@
 -- failed requests at a regular (user-configurable) interval.
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx,
+    createFetchedEventsStatsLogger,
+    closeFetchedEventsStatsLogger,
     processEventQueue,
     defaultMaxEventThreads,
     defaultFetchInterval,
@@ -45,11 +47,14 @@ where
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM.TVar
+import Control.FoldDebounce qualified as FDebounce
 import Control.Lens
 import Control.Monad.Catch (MonadMask, bracket_, finally, mask_)
 import Control.Monad.STM
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as Key
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as M
@@ -200,6 +205,67 @@ type BackendEventWithSource = AB.AnyBackend EventWithSource
 
 type FetchEventArguments = ([BackendEventWithSource], Int, Bool)
 
+newtype EventsCount = EventsCount {unEventsCount :: Int}
+  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
+
+newtype NumEventsFetchedPerSource = NumEventsFetchedPerSource {unNumEventsFetchedPerSource :: HashMap SourceName EventsCount}
+  deriving (Eq, Show)
+
+instance J.ToJSON NumEventsFetchedPerSource where
+  toJSON (NumEventsFetchedPerSource m) =
+    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ M.toList m
+
+instance Semigroup NumEventsFetchedPerSource where
+  (NumEventsFetchedPerSource lMap) <> (NumEventsFetchedPerSource rMap) =
+    NumEventsFetchedPerSource $ M.unionWith (+) lMap rMap
+
+instance Monoid NumEventsFetchedPerSource where
+  mempty = NumEventsFetchedPerSource mempty
+
+data FetchedEventsStats = FetchedEventsStats
+  { _fesNumEventsFetched :: NumEventsFetchedPerSource,
+    _fesNumFetches :: Int
+  }
+  deriving (Eq, Show)
+
+$(deriveToJSON hasuraJSON ''FetchedEventsStats)
+
+instance L.ToEngineLog FetchedEventsStats L.Hasura where
+  toEngineLog stats =
+    (L.LevelInfo, L.eventTriggerProcessLogType, J.toJSON stats)
+
+instance Semigroup FetchedEventsStats where
+  (FetchedEventsStats lMap lFetches) <> (FetchedEventsStats rMap rFetches) =
+    FetchedEventsStats (lMap <> rMap) (lFetches + rFetches)
+
+instance Monoid FetchedEventsStats where
+  mempty = FetchedEventsStats mempty 0
+
+type FetchedEventsStatsLogger = FDebounce.Trigger FetchedEventsStats FetchedEventsStats
+
+-- | Logger to accumulate stats of fetched events over a period of time and log once using @'L.Logger L.Hasura'.
+-- See @'createStatsLogger' for more details.
+createFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedEventsStatsLogger
+createFetchedEventsStatsLogger = createStatsLogger
+
+-- | Close the fetched events stats logger.
+closeFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> FetchedEventsStatsLogger -> m ()
+closeFetchedEventsStatsLogger = closeStatsLogger L.eventTriggerProcessLogType
+
+-- | Log statistics of fetched events. See @'logStats' for more details.
+logFetchedEventsStatistics ::
+  (MonadIO m) =>
+  FetchedEventsStatsLogger ->
+  [BackendEventWithSource] ->
+  m ()
+logFetchedEventsStatistics logger backendEvents =
+  logStats logger (FetchedEventsStats numEventsFetchedPerSource 1)
+  where
+    numEventsFetchedPerSource =
+      let sourceNames = flip map backendEvents $
+            \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
+       in NumEventsFetchedPerSource $ M.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -218,6 +284,7 @@ processEventQueue ::
     MonadMask m
   ) =>
   L.Logger L.Hasura ->
+  FetchedEventsStatsLogger ->
   HTTP.Manager ->
   IO SchemaCache ->
   EventEngineCtx ->
@@ -226,7 +293,7 @@ processEventQueue ::
   EventTriggerMetrics ->
   MaintenanceMode () ->
   m (Forever m)
-processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
+processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -245,7 +312,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       allSources <- scSources <$> liftIO getSchemaCache
-      liftIO . fmap concat $
+      events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache _customSQLCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
@@ -274,6 +341,10 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                     liftIO $ L.unLogger logger $ EventInternalErr err
                     pure []
               else pure []
+
+      -- Log the statistics of events fetched
+      logFetchedEventsStatistics statsLogger events
+      pure events
 
     -- !!! CAREFUL !!!
     --     The logic here in particular is subtle and has been fixed, broken,

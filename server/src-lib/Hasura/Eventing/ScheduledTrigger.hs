@@ -78,6 +78,10 @@ module Hasura.Eventing.ScheduledTrigger
     CronEventSeed (..),
     LockedEventsCtx (..),
 
+    -- * Scheduled events stats logger
+    createFetchedScheduledEventsStatsLogger,
+    closeFetchedScheduledEventsStatsLogger,
+
     -- * Database interactions
 
     -- Following function names are similar to those present in
@@ -325,12 +329,13 @@ processScheduledTriggers ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  FetchedScheduledEventsStatsLogger ->
   HTTP.Manager ->
   PrometheusMetrics ->
   IO SchemaCache ->
   LockedEventsCtx ->
   m (Forever m)
-processScheduledTriggers env logger httpMgr prometheusMetrics getSC LockedEventsCtx {..} = do
+processScheduledTriggers env logger statsLogger httpMgr prometheusMetrics getSC LockedEventsCtx {..} = do
   return $
     Forever () $
       const $ do
@@ -338,6 +343,7 @@ processScheduledTriggers env logger httpMgr prometheusMetrics getSC LockedEvents
         case result of
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
+            logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
             processCronEvents logger httpMgr prometheusMetrics cronEvents getSC leCronEvents
             processOneOffScheduledEvents env logger httpMgr prometheusMetrics oneOffEvents leOneOffEvents
         -- NOTE: cron events are scheduled at times with minute resolution (as on
@@ -1082,3 +1088,23 @@ getScheduledEventsInvocationsQuery :: EventTables -> GetScheduledEventInvocation
 getScheduledEventsInvocationsQuery eventTables (GetScheduledEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
   let invocationsSelect = getScheduledEventsInvocationsQueryNoPagination eventTables invocationsBy
    in mkPaginationSelectExp invocationsSelect pagination shouldIncludeRowsCount
+
+-- | Logger to accumulate stats of fetched scheduled events over a period of time and log once using @'L.Logger L.Hasura'.
+-- See @'createStatsLogger' for more details.
+createFetchedScheduledEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedScheduledEventsStatsLogger
+createFetchedScheduledEventsStatsLogger = createStatsLogger
+
+-- | Close the fetched scheduled events stats logger.
+closeFetchedScheduledEventsStatsLogger ::
+  (MonadIO m) => L.Logger L.Hasura -> FetchedScheduledEventsStatsLogger -> m ()
+closeFetchedScheduledEventsStatsLogger = closeStatsLogger L.scheduledTriggerProcessLogType
+
+-- | Log statistics of fetched scheduled events. See @'logStats' for more details.
+logFetchedScheduledEventsStats ::
+  (MonadIO m) =>
+  FetchedScheduledEventsStatsLogger ->
+  CronEventsCount ->
+  OneOffScheduledEventsCount ->
+  m ()
+logFetchedScheduledEventsStats logger cron oneOff =
+  logStats logger (FetchedScheduledEventsStats cron oneOff 1)

@@ -449,6 +449,9 @@ common lib-depends
                      , mysql-simple
                       -- dependency of vendored 'ip':
                      , wide-word
+
+                     -- debounce logs
+                     , fold-debounce
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
