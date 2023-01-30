@@ -43,10 +43,10 @@ import Hasura.EncJSON
 import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as HL
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.API
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
-import Hasura.RQL.DDL.CustomSQL (dropCustomSQLInMetadata)
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
@@ -691,7 +691,7 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
-      SMOCustomSQL qc -> dropCustomSQLInMetadata @b source qc
+      SMONativeQuery nq -> dropNativeQueryInMetadata @b source nq
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

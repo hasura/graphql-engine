@@ -8,6 +8,7 @@ import Data.Text.Casing qualified as C
 import Database.MySQL.Base.Types qualified as MySQL
 import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Hasura.RQL.Types.Backend
@@ -147,3 +148,5 @@ instance Backend 'MySQL where
     Pool.tryTrimPool pool
 
   defaultTriggerOnReplication = Nothing
+
+instance NativeQueryMetadata 'MySQL

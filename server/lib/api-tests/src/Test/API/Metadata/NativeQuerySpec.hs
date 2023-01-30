@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Access to the SQL
-module Test.API.Metadata.NativeAccessSpec (spec) where
+-- | Tests of the Native Queryies feature.
+module Test.API.Metadata.NativeQuerySpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
@@ -17,7 +17,7 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
--- We currently don't need the table to exist in order to set up a custom SQL
+-- We currently don't need the table to exist in order to set up a Native Query
 -- stanza.
 
 featureFlagForNativeQuery :: String
@@ -54,11 +54,9 @@ tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   let query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
-
-  describe "Permissions" $ do
-    it "Fails to track custom SQL without admin access" $ \testEnv -> do
+  it "Fails to track a Native Query without admin access" $
+    \testEnv -> do
       let schemaName = Schema.getSchemaName testEnv
-
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatusAndHeaders
@@ -67,17 +65,15 @@ tests opts = do
             [ ("X-Hasura-Role", "not-admin")
             ]
             [yaml|
-              type: pg_track_custom_sql
+              type: pg_track_native_query
               args:
                 type: query
                 source: postgres
                 root_field_name: divided_stuff
-                sql: *query
-                parameters:
-                  - name: denominator
-                    type: "\"int\""
-                  - name: target_date
-                    type: "\"date\""
+                code: *query
+                arguments:
+                  denominator: int
+                  target_date: date
                 returns:
                   name: already_tracked_return_type
                   schema: *schemaName
@@ -88,8 +84,9 @@ tests opts = do
           error: "restricted access : admin only"
           path: "$.args"
         |]
-
-    it "Fails to untrack custom SQL without admin access" $ \testEnv -> do
+  it
+    "Fails to untrack a Native Query without admin access"
+    $ \testEnv -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatusAndHeaders
@@ -98,7 +95,7 @@ tests opts = do
             [ ("X-Hasura-Role", "not-admin")
             ]
             [yaml|
-              type: pg_untrack_custom_sql
+              type: pg_untrack_native_query
               args:
                 root_field_name: divided_stuff
                 source: postgres
@@ -109,8 +106,9 @@ tests opts = do
           error: "restricted access : admin only"
           path: "$.args"
         |]
-
-    it "Fails to list custom SQL without admin access" $ \testEnv -> do
+  it
+    "Fails to list a Native Query without admin access"
+    $ \testEnv -> do
       shouldReturnYaml
         opts
         ( GraphqlEngine.postMetadataWithStatusAndHeaders
@@ -119,7 +117,7 @@ tests opts = do
             [ ("X-Hasura-Role", "not-admin")
             ]
             [yaml|
-              type: pg_get_custom_sql
+              type: pg_get_native_query
               args:
                 source: postgres
             |]
@@ -129,7 +127,6 @@ tests opts = do
           error: "restricted access : admin only"
           path: "$.args"
         |]
-
   describe "Implementation" $ do
     it "Adds a native access function and returns a 200" $ \testEnv -> do
       let schemaName = Schema.getSchemaName testEnv
@@ -139,17 +136,15 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_track_custom_sql
+              type: pg_track_native_query
               args:
                 type: query
                 source: postgres
                 root_field_name: divided_stuff
-                sql: *query
-                parameters:
-                  - name: denominator
-                    type: "\"int\""
-                  - name: target_date
-                    type: "\"date\""
+                code: *query
+                arguments:
+                  denominator: int
+                  target_date: date
                 returns:
                   name: already_tracked_return_type
                   schema: *schemaName
@@ -167,17 +162,15 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_track_custom_sql
+              type: pg_track_native_query
               args:
                 type: query
                 source: postgres
                 root_field_name: divided_stuff
-                sql: *query
-                parameters:
-                  - name: denominator
-                    type: "\"int\""
-                  - name: target_date
-                    type: "\"date\""
+                code: *query
+                arguments:
+                  denominator: int
+                  target_date: date
                 returns:
                   name: already_tracked_return_type
                   schema: *schemaName
@@ -192,25 +185,20 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_get_custom_sql
+              type: pg_get_native_query
               args:
                 source: postgres
             |]
         )
         [yaml|
-          divided_stuff:
-            type: query
-            root_field_name: divided_stuff
-            sql: *query
-            parameters:
-              - name: denominator
-                type: "\"int\""
-              - name: target_date
-                type: "\"date\""
+          - root_field_name: divided_stuff
+            code: *query
+            arguments:
+              denominator: int
+              target_date: date
             returns:
               name: already_tracked_return_type
               schema: hasura
-
         |]
 
     it "Drops a native access function and returns a 200" $ \testEnv -> do
@@ -220,17 +208,15 @@ tests opts = do
         GraphqlEngine.postMetadata
           testEnv
           [yaml|
-            type: pg_track_custom_sql
+            type: pg_track_native_query
             args:
               type: query
               source: postgres
               root_field_name: divided_stuff
-              sql: *query
-              parameters:
-                - name: denominator
-                  type: "\"int\""
-                - name: target_date
-                  type: "\"date\""
+              code: *query
+              arguments:
+                denominator: int
+                target_date: date
               returns:
                 name: already_tracked_return_type
                 schema: *schemaName
@@ -241,7 +227,7 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_untrack_custom_sql
+              type: pg_untrack_native_query
               args:
                 source: postgres
                 root_field_name: divided_stuff
@@ -258,17 +244,15 @@ tests opts = do
         GraphqlEngine.postMetadata
           testEnv
           [yaml|
-            type: pg_track_custom_sql
+            type: pg_track_native_query
             args:
               type: query
               source: postgres
               root_field_name: divided_stuff
-              sql: *query
-              parameters:
-                - name: denominator
-                  type: "\"int\""
-                - name: target_date
-                  type: "\"date\""
+              code: *query
+              arguments:
+                denominator: int
+                target_date: date
               returns:
                 name: already_tracked_return_type
                 schema: *schemaName
@@ -278,7 +262,7 @@ tests opts = do
         GraphqlEngine.postMetadata
           testEnv
           [yaml|
-            type: pg_untrack_custom_sql
+            type: pg_untrack_native_query
             args:
               root_field_name: divided_stuff
               source: postgres
@@ -289,11 +273,11 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnv
             [yaml|
-              type: pg_get_custom_sql
+              type: pg_get_native_query
               args:
                 source: postgres
             |]
         )
         [yaml|
-          {}
+          []
         |]

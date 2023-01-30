@@ -3,10 +3,10 @@ module Hasura.Server.API.Metadata
   )
 where
 
+import Hasura.NativeQuery.API qualified as NativeQuery
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate
-import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.FeatureFlag
@@ -88,9 +88,9 @@ data RQLMetadataV1
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
   | -- Native access
-    RMGetCustomSQL !(AnyBackend CustomSQL.GetCustomSQL)
-  | RMTrackCustomSQL !(AnyBackend CustomSQL.TrackCustomSQL)
-  | RMUntrackCustomSQL !(AnyBackend CustomSQL.UntrackCustomSQL)
+    RMGetNativeQuery !(AnyBackend NativeQuery.GetNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQuery.BackendTrackNativeQuery)
+  | RMUntrackNativeQuery !(AnyBackend NativeQuery.UntrackNativeQuery)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

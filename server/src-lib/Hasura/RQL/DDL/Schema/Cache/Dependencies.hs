@@ -13,6 +13,7 @@ import Data.List (nub)
 import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.NativeQuery.Types (nativeQueryInfoName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -267,13 +268,13 @@ deleteMetadataObject = \case
         (AB.mkAnyBackend . deleteObjFn sourceObjId)
         $ unsafeSourceInfo sourceInfo
 
-    deleteObjFn :: (Backend b) => SourceMetadataObjId b -> SourceInfo b -> SourceInfo b
+    deleteObjFn :: forall b. (Backend b) => SourceMetadataObjId b -> SourceInfo b -> SourceInfo b
     deleteObjFn = \case
       SMOTable name -> siTables %~ M.delete name
       SMOFunction name -> siFunctions %~ M.delete name
       SMOFunctionPermission functionName role ->
         siFunctions . ix functionName . fiPermissions %~ M.delete role
-      SMOCustomSQL name -> siCustomSQL %~ OMap.delete name
+      SMONativeQuery name -> siNativeQueries %~ filter ((/= name) . nativeQueryInfoName @b)
       SMOTableObj tableName tableObjectId ->
         siTables . ix tableName %~ case tableObjectId of
           MTORel name _ -> tiCoreInfo . tciFieldInfoMap %~ M.delete (fromRel name)

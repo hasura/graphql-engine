@@ -218,6 +218,7 @@ common common-all
     DeriveLift
     DeriveTraversable
     DerivingVia
+    EmptyCase
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
@@ -493,21 +494,22 @@ library
                      , Data.Aeson.Kriti.Functions
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
-                     , Data.HashMap.Strict.Multi
-                     , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Autodocodec
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.HashMap.Strict.Multi
+                     , Data.HashMap.Strict.NonEmpty
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
-                     , Data.SqlCommenter
                      , Data.SerializableBlob
+                     , Data.SqlCommenter
                      , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
                      , Data.Trie
                      , Data.URL.Template
+                     , Data.Voidable
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP
@@ -733,13 +735,13 @@ library
                      , Hasura.Server.Telemetry.Types
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
-                     , Hasura.CustomSQL
                      , Hasura.GC
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
                      , Hasura.NativeQuery.IR
                      , Hasura.NativeQuery.Metadata
+                     , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Schema
                      , Hasura.NativeQuery.Types
                      , Hasura.Server.Auth.WebHook
@@ -827,7 +829,6 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
-                     , Hasura.RQL.DDL.CustomSQL
                      , Hasura.RQL.DDL.OpenTelemetry
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal

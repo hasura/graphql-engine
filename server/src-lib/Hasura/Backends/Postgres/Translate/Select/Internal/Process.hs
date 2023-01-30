@@ -170,13 +170,13 @@ processSelectParams
         FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
         FromNativeQuery nq -> do
           -- we are going to cram our SQL in a CTE, and this is what we will call it
-          let cteName = nativeQueryNameToAlias (nqName nq)
+          let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
 
           -- emit the query itself to the Writer
           tell $
             mempty
               { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HM.singleton cteName (S.RawSQL $ nqRawBody nq))
+                  CustomSQLCTEs (HM.singleton cteName (S.RawSQL $ nqCode nq))
               }
 
           pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing

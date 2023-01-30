@@ -70,15 +70,14 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_custom_sql
+              type: pg_track_native_query
               args:
                 type: query
                 source: *source
                 root_field_name: hello_world_function
-                sql: *query
-                parameters:
-                  - name: ignored
-                    type: "\"varchar\""
+                code: *query
+                arguments:
+                  ignored: varchar
                 returns:
                   name: hello_world_table
                   schema: *schemaName
