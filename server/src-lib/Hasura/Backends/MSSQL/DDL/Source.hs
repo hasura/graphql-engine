@@ -40,9 +40,10 @@ import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
+import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
+import Hasura.Server.Migrate.Version qualified as Version
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 import Text.Shakespeare.Text qualified as ST
@@ -64,11 +65,10 @@ resolveSourceConfig _logger name config _backendKind _backendConfig _env _manage
 resolveDatabaseMetadata ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'MSSQL))
-resolveDatabaseMetadata config customization = runExceptT do
+  m (Either QErr (DBObjectsIntrospection 'MSSQL))
+resolveDatabaseMetadata config = runExceptT do
   dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
-  pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
+  pure $ DBObjectsIntrospection dbTablesMetadata mempty mempty
   where
     MSSQLSourceConfig _connString mssqlExecCtx = config
 
@@ -133,21 +133,21 @@ doesTableExist tableName = do
 prepareCatalog ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
-  ExceptT QErr m RecreateEventTriggers
-prepareCatalog sourceConfig = mssqlRunReadWrite (_mscExecCtx sourceConfig) do
+  ExceptT QErr m (RecreateEventTriggers, SourceCatalogMigrationState)
+prepareCatalog sourceConfig = mssqlRunSerializableTx (_mscExecCtx sourceConfig) do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist $ TableName "event_log" "hdb_catalog"
   sourceVersionTableExist <- doesTableExist $ TableName "hdb_source_catalog_version" "hdb_catalog"
   if
       -- Fresh database
       | not hdbCatalogExist -> liftMSSQLTx do
-        unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
-        initSourceCatalog
-        return RETDoNothing
+          unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
+          initSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Only 'hdb_catalog' schema defined
       | not (sourceVersionTableExist || eventLogTableExist) -> do
-        liftMSSQLTx initSourceCatalog
-        return RETDoNothing
+          liftMSSQLTx initSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       | otherwise -> migrateSourceCatalog
   where
     initSourceCatalog = do
@@ -159,23 +159,23 @@ dropSourceCatalog = do
   let sql = $(makeRelativeToProject "src-rsr/mssql/drop_mssql_source.sql" >>= ODBC.sqlFile)
   liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler sql
 
-migrateSourceCatalog :: MonadMSSQLTx m => m RecreateEventTriggers
+migrateSourceCatalog :: MonadMSSQLTx m => m (RecreateEventTriggers, SourceCatalogMigrationState)
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
-migrateSourceCatalogFrom :: MonadMSSQLTx m => SourceCatalogVersion -> m RecreateEventTriggers
+migrateSourceCatalogFrom :: MonadMSSQLTx m => SourceCatalogVersion -> m (RecreateEventTriggers, SourceCatalogMigrationState)
 migrateSourceCatalogFrom prevVersion
-  | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
+  | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =
-    throw400 NotSupported $
-      "Expected source catalog version <= "
-        <> tshow latestSourceCatalogVersion
-        <> ", but the current version is "
-        <> tshow prevVersion
+      throw400 NotSupported $
+        "Expected source catalog version <= "
+          <> tshow latestSourceCatalogVersion
+          <> ", but the current version is "
+          <> tshow prevVersion
   | otherwise = do
-    liftMSSQLTx $ traverse_ snd neededMigrations
-    setSourceCatalogVersion latestSourceCatalogVersion
-    pure RETRecreate
+      liftMSSQLTx $ traverse_ snd neededMigrations
+      setSourceCatalogVersion latestSourceCatalogVersion
+      pure (RETRecreate, SCMSMigratedTo (Version.unSourceCatalogVersion prevVersion) (Version.unSourceCatalogVersion latestSourceCatalogVersion))
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations

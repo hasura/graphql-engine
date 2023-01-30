@@ -9,7 +9,6 @@ module Hasura.GraphQL.Schema.Postgres
 where
 
 import Hasura.GraphQL.Schema.Action
-import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser
 import Hasura.Prelude
@@ -17,10 +16,9 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.SQL.Backend
 
 buildActionQueryFields ::
-  MonadBuildSchema ('Postgres 'Vanilla) r m n =>
+  MonadBuildActionSchema r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
@@ -34,7 +32,7 @@ buildActionQueryFields customTypes actionInfo =
         fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjectTypes customTypes) actionInfo
 
 buildActionMutationFields ::
-  MonadBuildSchema ('Postgres 'Vanilla) r m n =>
+  MonadBuildActionSchema r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m [FieldParser n (MutationRootField UnpreparedValue)]
@@ -48,7 +46,7 @@ buildActionMutationFields customTypes actionInfo =
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation (_actInputTypes customTypes) actionInfo
 
 buildActionSubscriptionFields ::
-  MonadBuildSchema ('Postgres 'Vanilla) r m n =>
+  MonadBuildActionSchema r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]

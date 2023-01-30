@@ -47,6 +47,7 @@ module Hasura.RQL.IR.BoolExp
   )
 where
 
+import Autodocodec (Codec (CommentCodec), HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, named, valueCodec)
 import Control.Lens.Plated
 import Control.Lens.TH
 import Data.Aeson.Extended
@@ -54,10 +55,11 @@ import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
+import Data.Aeson.Types (parseEither)
 import Data.HashMap.Strict qualified as M
 import Data.Monoid
 import Data.Text.Extended
-import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -93,8 +95,6 @@ data GBoolExp (backend :: BackendType) field
 instance (Backend b, NFData a) => NFData (GBoolExp b a)
 
 instance (Backend b, Data a) => Plated (GBoolExp b a)
-
-instance (Backend b, Cacheable a) => Cacheable (GBoolExp b a)
 
 instance (Backend b, Hashable a) => Hashable (GBoolExp b a)
 
@@ -158,8 +158,6 @@ instance (Backend b, NFData a) => NFData (GExists b a)
 
 instance (Backend b, Data a) => Plated (GExists b a)
 
-instance (Backend b, Cacheable a) => Cacheable (GExists b a)
-
 instance (Backend b, Hashable a) => Hashable (GExists b a)
 
 instance (Backend b, FromJSONKeyValue a) => FromJSON (GExists b a) where
@@ -190,8 +188,6 @@ data ColExp = ColExp
 
 instance NFData ColExp
 
-instance Cacheable ColExp
-
 instance FromJSONKeyValue ColExp where
   parseJSONKeyValue (k, v) = ColExp (FieldName (K.toText k)) <$> parseJSON v
 
@@ -201,7 +197,24 @@ instance ToJSONKeyValue ColExp where
 -- | This @BoolExp@ type is a simple alias for the boolean expressions used in permissions, that
 -- uses 'ColExp' as the term in GBoolExp.
 newtype BoolExp (b :: BackendType) = BoolExp {unBoolExp :: GBoolExp b ColExp}
-  deriving newtype (Show, Eq, Generic, NFData, Cacheable, ToJSON, FromJSON)
+  deriving newtype (Show, Eq, Generic, NFData, ToJSON, FromJSON)
+
+-- TODO: This implementation delegates to Aeson instances for encoding and
+-- decoding GBoolExp. To accurately represent GBoolExp with a codec we will need
+-- Autodocodec to gain support for expressing an object type with "additional
+-- properties" for fields.
+instance Backend b => HasCodec (BoolExp b) where
+  codec = CommentCodec doc $ named (codecNamePrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
+    where
+      jsonCodec :: JSONCodec (GBoolExp b ColExp)
+      jsonCodec = bimapCodec (parseEither parseJSON) toJSON valueCodec
+      doc =
+        "Recursive object type with keys \"_and\", \"_or\", \"_not\", \"_exists\", or \"<field name>\". "
+          <> "Values for \"_and\" and \"_or\" are arrays of nested expressions. "
+          <> "A value for \"_not\" is a single nested expression. "
+          <> "A value for \"_exists\" is an object with \"table\" and \"where\" properties where \"table\" is a table name, "
+          <> "and \"where\" is another BoolExp expression. "
+          <> "All other properties represent fields where the property name represents a column name, and the value represents a row value."
 
 $(makeWrapped ''BoolExp)
 
@@ -221,22 +234,14 @@ deriving instance (Backend b) => Eq (PartialSQLExp b)
 deriving instance (Backend b) => Show (PartialSQLExp b)
 
 instance
-  ( Backend b,
-    NFData (SQLExpression b)
+  ( Backend b
   ) =>
   NFData (PartialSQLExp b)
 
 instance
-  ( Backend b,
-    Hashable (SQLExpression b)
+  ( Backend b
   ) =>
   Hashable (PartialSQLExp b)
-
-instance
-  ( Backend b,
-    Cacheable (SQLExpression b)
-  ) =>
-  Cacheable (PartialSQLExp b)
 
 instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case
@@ -294,8 +299,6 @@ deriving instance Backend b => Eq (RootOrCurrentColumn b)
 
 instance Backend b => NFData (RootOrCurrentColumn b)
 
-instance Backend b => Cacheable (RootOrCurrentColumn b)
-
 instance Backend b => Hashable (RootOrCurrentColumn b)
 
 instance Backend b => ToJSON (RootOrCurrentColumn b)
@@ -306,8 +309,6 @@ data RootOrCurrent = IsRoot | IsCurrent
   deriving (Eq, Show, Generic)
 
 instance NFData RootOrCurrent
-
-instance Cacheable RootOrCurrent
 
 instance Hashable RootOrCurrent
 
@@ -339,13 +340,6 @@ instance
     NFData a
   ) =>
   NFData (OpExpG b a)
-
-instance
-  ( Backend b,
-    Cacheable (BooleanOperators b a),
-    Cacheable a
-  ) =>
-  Cacheable (OpExpG b a)
 
 instance
   ( Backend b,
@@ -425,13 +419,6 @@ instance
 
 instance
   ( Backend b,
-    Cacheable (AnnBoolExp b a),
-    Cacheable (OpExpG b a)
-  ) =>
-  Cacheable (ComputedFieldBoolExp b a)
-
-instance
-  ( Backend b,
     Hashable (AnnBoolExp b a),
     Hashable (OpExpG b a)
   ) =>
@@ -489,13 +476,6 @@ instance
 
 instance
   ( Backend b,
-    Cacheable (ComputedFieldBoolExp b a),
-    Cacheable (FunctionArgsExp b a)
-  ) =>
-  Cacheable (AnnComputedFieldBoolExp b a)
-
-instance
-  ( Backend b,
     Hashable (ComputedFieldBoolExp b a),
     Hashable (FunctionArgsExp b a)
   ) =>
@@ -542,15 +522,6 @@ instance
     NFData (OpExpG b a)
   ) =>
   NFData (AnnBoolExpFld b a)
-
-instance
-  ( Backend b,
-    Cacheable (AggregationPredicates b a),
-    Cacheable (AnnBoolExp b a),
-    Cacheable (AnnComputedFieldBoolExp b a),
-    Cacheable (OpExpG b a)
-  ) =>
-  Cacheable (AnnBoolExpFld b a)
 
 instance
   ( Backend b,
@@ -619,8 +590,6 @@ data DWithinGeomOp field = DWithinGeomOp
 
 instance (NFData a) => NFData (DWithinGeomOp a)
 
-instance (Cacheable a) => Cacheable (DWithinGeomOp a)
-
 instance (Hashable a) => Hashable (DWithinGeomOp a)
 
 $(deriveJSON hasuraJSON ''DWithinGeomOp)
@@ -635,8 +604,6 @@ data DWithinGeogOp field = DWithinGeogOp
 
 instance (NFData a) => NFData (DWithinGeogOp a)
 
-instance (Cacheable a) => Cacheable (DWithinGeogOp a)
-
 instance (Hashable a) => Hashable (DWithinGeogOp a)
 
 $(deriveJSON hasuraJSON ''DWithinGeogOp)
@@ -650,8 +617,6 @@ data STIntersectsNbandGeommin field = STIntersectsNbandGeommin
 
 instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 
-instance (Cacheable a) => Cacheable (STIntersectsNbandGeommin a)
-
 instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
 
 $(deriveJSON hasuraJSON ''STIntersectsNbandGeommin)
@@ -664,8 +629,6 @@ data STIntersectsGeomminNband field = STIntersectsGeomminNband
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
 instance (NFData a) => NFData (STIntersectsGeomminNband a)
-
-instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
 
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 
@@ -698,13 +661,6 @@ instance
     NFData a
   ) =>
   NFData (AnnColumnCaseBoolExpField b a)
-
-instance
-  ( Backend b,
-    Cacheable (AnnBoolExpFld b a),
-    Cacheable a
-  ) =>
-  Cacheable (AnnColumnCaseBoolExpField b a)
 
 instance
   ( Backend b,

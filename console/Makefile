@@ -2,46 +2,30 @@ export PATH := node_modules/.bin:$(PATH)
 DIST_PATH ?= ./static/dist
 BUCKET_NAME ?= graphql-engine-cdn.hasura.io
 VERSION ?= $(shell ../scripts/get-version.sh)
+NODE_OPTIONS=--max-old-space-size=4096
 
-all: deps build gzip-assets gcloud-cp-stable gcloud-set-metadata
+all: deps build
 
 deps:
-	npm install
+	NODE_OPTIONS=$(NODE_OPTIONS) npm ci
 
 ci-deps:
-	if [ ! -d "node_modules" ]; then npm ci; fi
+	if [ ! -d "node_modules" ]; then NODE_OPTIONS=$(NODE_OPTIONS) npm ci; fi
 
 build:
-	npm run build
+	NODE_OPTIONS=$(NODE_OPTIONS) npm run build
 
 jest:
-	npm run jest -- --runInBand
+	NODE_OPTIONS=$(NODE_OPTIONS) npm run jest -- --runInBand
 
 test:
-	npm run dev & npm run test
-
-gzip-assets:
-	gzip $(DIST_PATH)/*.js
-	gzip $(DIST_PATH)/*.css
-	mv $(DIST_PATH)/main.js.gz $(DIST_PATH)/main.js
-	mv $(DIST_PATH)/vendor.js.gz $(DIST_PATH)/vendor.js
-	mv $(DIST_PATH)/main.css.gz $(DIST_PATH)/main.css
+	NODE_OPTIONS=$(NODE_OPTIONS) npm run dev & NODE_OPTIONS=$(NODE_OPTIONS) npm run test
 
 # to be run inside circle-ci
 ci-copy-assets:
 	mkdir -p /build/_console_output
 	cp $(DIST_PATH)/* /build/_console_output/
 	echo "$(VERSION)" > /build/_console_output/version.txt
-
-gcloud-cp-stable:
-	gsutil cp -r $(DIST_PATH)/main.css gs://$(BUCKET_NAME)/console/$(VERSION)/main.css
-	gsutil cp -r $(DIST_PATH)/main.js gs://$(BUCKET_NAME)/console/$(VERSION)/main.js
-	gsutil cp -r $(DIST_PATH)/vendor.js gs://$(BUCKET_NAME)/console/$(VERSION)/vendor.js
-
-gcloud-set-metadata:
-	gsutil setmeta -h "Content-Type: application/javascript" gs://$(BUCKET_NAME)/console/$(VERSION)/*.js
-	gsutil setmeta -h "Content-Type: text/css" gs://$(BUCKET_NAME)/console/$(VERSION)/*.css
-	gsutil setmeta -h "Content-Encoding: gzip" gs://$(BUCKET_NAME)/console/$(VERSION)/*
 
 server-build: node_modules $(DIST_PATH)/common
 	rm -rf "$(DIST_PATH)/versioned"
@@ -56,4 +40,4 @@ $(DIST_PATH)/common:
 	touch $@
 
 node_modules: package.json package-lock.json
-	npm ci
+	NODE_OPTIONS=$(NODE_OPTIONS) npm ci

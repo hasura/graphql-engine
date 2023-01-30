@@ -49,6 +49,7 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId)
@@ -93,9 +94,9 @@ dumpSubscriptionsState extended (SubscriptionsState liveQOpts streamQOpts lqMap 
 -- | SubscriberDetails contains the data required to locate a subscriber
 --   in the correct cohort within the correct poller in the operation map.
 data SubscriberDetails a = SubscriberDetails
-  { _sdPoller :: !PollerKey,
-    _sdCohort :: !a,
-    _sdSubscriber :: !SubscriberId
+  { _sdPoller :: BackendPollerKey,
+    _sdCohort :: a,
+    _sdSubscriber :: SubscriberId
   }
   deriving (Show)
 
@@ -113,14 +114,13 @@ type StreamingSubscriberDetails = SubscriberDetails (CohortKey, STM.TVar CursorV
 --   existing one.
 findPollerForSubscriber ::
   Subscriber ->
-  CohortId ->
   PollerMap streamCursorVars ->
-  PollerKey ->
+  BackendPollerKey ->
   CohortKey ->
   (Subscriber -> Cohort streamCursorVars -> STM.STM streamCursorVars) ->
-  (Subscriber -> CohortId -> Poller streamCursorVars -> STM.STM streamCursorVars) ->
+  (Subscriber -> Poller streamCursorVars -> STM.STM streamCursorVars) ->
   STM.STM ((Maybe (Poller streamCursorVars)), streamCursorVars)
-findPollerForSubscriber subscriber cohortId pollerMap pollerKey cohortKey addToCohort addToPoller =
+findPollerForSubscriber subscriber pollerMap pollerKey cohortKey addToCohort addToPoller =
   -- a handler is returned only when it is newly created
   STMMap.lookup pollerKey pollerMap >>= \case
     Just poller -> do
@@ -131,13 +131,13 @@ findPollerForSubscriber subscriber cohortId pollerMap pollerKey cohortKey addToC
           Just cohort -> addToCohort subscriber cohort
           -- cohort not found. Create a cohort with the subscriber and add
           -- the cohort to the poller
-          Nothing -> addToPoller subscriber cohortId poller
+          Nothing -> addToPoller subscriber poller
       return (Nothing, cursorVars)
     Nothing -> do
       -- no poller found, so create one with the cohort
       -- and the subscriber within it.
       !poller <- Poller <$> TMap.new <*> STM.newEmptyTMVar
-      cursorVars <- addToPoller subscriber cohortId poller
+      cursorVars <- addToPoller subscriber poller
       STMMap.insert poller pollerKey pollerMap
       return $ (Just poller, cursorVars)
 
@@ -173,18 +173,15 @@ addLiveQuery
   onResultAction = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
-    -- disposable UUIDs:
-    cohortId <- newCohortId
+    -- disposable subscriber UUID:
     subscriberId <- newSubscriberId
 
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
-
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
     (pollerMaybe, ()) <-
       STM.atomically $
         findPollerForSubscriber
           subscriber
-          cohortId
           lqMap
           handlerId
           cohortKey
@@ -193,11 +190,11 @@ addLiveQuery
 
     -- we can then attach a polling thread if it is new the livequery can only be
     -- cancelled after putTMVar
-    onJust pollerMaybe $ \poller -> do
+    for_ pollerMaybe $ \poller -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
         forever $ do
-          pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook
+          pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook resolvedConnectionTemplate
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -211,14 +208,14 @@ addLiveQuery
     where
       SubscriptionsState lqOpts _ lqMap _ postPollHook _ = subscriptionState
       SubscriptionsOptions _ refetchInterval = lqOpts
-      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortKey _ = plan
+      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
-      handlerId = PollerKey source role $ toTxt query
+      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
 
       addToCohort subscriber handlerC =
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
 
-      addToPoller subscriber cohortId handler = do
+      addToPoller subscriber handler = do
         !newCohort <-
           Cohort cohortId
             <$> STM.newTVar Nothing
@@ -263,8 +260,7 @@ addStreamSubscriptionQuery
   onResultAction = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
-    -- disposable UUIDs:
-    cohortId <- newCohortId
+    -- disposable subscriber UUID:
     subscriberId <- newSubscriberId
 
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
@@ -274,7 +270,6 @@ addStreamSubscriptionQuery
       STM.atomically $
         findPollerForSubscriber
           subscriber
-          cohortId
           streamQueryMap
           handlerId
           cohortKey
@@ -283,11 +278,11 @@ addStreamSubscriptionQuery
 
     -- we can then attach a polling thread if it is new the subscription can only be
     -- cancelled after putTMVar
-    onJust handlerM $ \handler -> do
+    for_ handlerM $ \handler -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger $
         forever $ do
-          pollStreamingQuery @b pollerId streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing
+          pollStreamingQuery @b pollerId streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing resolvedConnectionTemplate
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -301,15 +296,15 @@ addStreamSubscriptionQuery
     where
       SubscriptionsState _ streamQOpts _ streamQueryMap postPollHook _ = subscriptionState
       SubscriptionsOptions _ refetchInterval = streamQOpts
-      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortKey _ = plan
+      SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
-      handlerId = PollerKey source role $ toTxt query
+      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
 
       addToCohort subscriber handlerC = do
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
         pure $ _cStreamCursorVariables handlerC
 
-      addToPoller subscriber cohortId handler = do
+      addToPoller subscriber handler = do
         latestCursorValues <-
           STM.newTVar (CursorVariableValues (_unValidatedVariables (_cvCursorVariables cohortKey)))
         !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new <*> pure latestCursorValues
@@ -463,14 +458,14 @@ data LiveAsyncActionQueryWithNoRelationships = LiveAsyncActionQueryWithNoRelatio
   }
 
 data LiveAsyncActionQuery
-  = LAAQNoRelationships !LiveAsyncActionQueryWithNoRelationships
-  | LAAQOnSourceDB !LiveAsyncActionQueryOnSource
+  = LAAQNoRelationships LiveAsyncActionQueryWithNoRelationships
+  | LAAQOnSourceDB LiveAsyncActionQueryOnSource
 
 data AsyncActionQueryLive = AsyncActionQueryLive
-  { _aaqlActionIds :: !(NonEmpty ActionId),
+  { _aaqlActionIds :: NonEmpty ActionId,
     -- | An IO action to send error message (in case of any exception) to the websocket client
-    _aaqlOnException :: !(QErr -> IO ()),
-    _aaqlLiveExecution :: !LiveAsyncActionQuery
+    _aaqlOnException :: (QErr -> IO ()),
+    _aaqlLiveExecution :: LiveAsyncActionQuery
   }
 
 -- | A share-able state map which stores an async action live query with it's subscription operation id

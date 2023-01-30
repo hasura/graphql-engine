@@ -29,36 +29,41 @@ import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
 import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
+import { supportedFeatures as AlloySupportedFeatures } from './services/alloydb';
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
 import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
 import { supportedFeatures as CockroachQuerySupportedFeatures } from './services/cockroach';
 
+export { Table, TableColumn } from './types';
+
 export const drivers = [
   'postgres',
-  'mysql',
   'mssql',
+  'mysql',
   'bigquery',
   'citus',
   'cockroach',
+  'alloy',
 ] as const;
 export type Driver = typeof drivers[number];
 
 export const driverToLabel: Record<Driver, string> = {
-  mysql: 'MySQL',
   postgres: 'PostgreSQL',
+  mysql: 'MySQL',
   mssql: 'MS SQL Server',
   bigquery: 'BigQuery',
   citus: 'Citus',
   cockroach: 'CockroachDB',
+  alloy: 'AlloyDB',
 };
 
 export const sourceNames = {
-  postgres: PGSupportedFeatures?.driver?.name,
-  mssql: MssqlSupportedFeatures?.driver?.name,
   bigquery: BigQuerySupportedFeatures?.driver?.name,
   citus: CitusQuerySupportedFeatures?.driver?.name,
   cockroach: CockroachQuerySupportedFeatures?.driver?.name,
+  mssql: MssqlSupportedFeatures?.driver?.name,
+  postgres: PGSupportedFeatures?.driver?.name,
 };
 
 export type ColumnsInfoResult = {
@@ -429,10 +434,6 @@ export interface DataSourcesAPI {
   generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
   // New Simple Queries to fetch just what we need at a time
   schemaListQuery: string;
-  getDataTriggerLogsCountQuery?: (
-    triggerName: string,
-    triggerOp: TriggerOperation
-  ) => string;
   getDataTriggerLogsQuery?: (
     triggerOp: TriggerOperation,
     triggerName: string,
@@ -440,6 +441,7 @@ export interface DataSourcesAPI {
     offset?: number
   ) => string;
   getDataTriggerInvocations?: (eventId: string) => string;
+  getDatabaseTableNames?: string;
 }
 
 export let currentDriver: Driver = 'postgres';
@@ -457,6 +459,7 @@ export const isFeatureSupported = (
 export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
   [
     PGSupportedFeatures,
+    AlloySupportedFeatures,
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
     CitusQuerySupportedFeatures,

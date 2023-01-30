@@ -41,8 +41,8 @@ downgradeCommandParser =
           ( Opt.long "to-catalog-version"
               <> Opt.metavar "<VERSION>"
               <> Opt.help "The target catalog schema version (e.g. 31)"
-          ) :
-        map (uncurry shortcut) downgradeShortcuts
+          )
+          : map (uncurry shortcut) downgradeShortcuts
       )
     <*> Opt.switch
       ( Opt.long "dryRun"

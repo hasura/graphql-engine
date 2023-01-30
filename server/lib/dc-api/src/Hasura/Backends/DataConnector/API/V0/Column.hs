@@ -1,8 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
---
 module Hasura.Backends.DataConnector.API.V0.Column
   ( ColumnInfo (..),
+    ciName,
+    ciType,
+    ciNullable,
+    ciDescription,
+    ciInsertable,
+    ciUpdatable,
     ColumnName (..),
   )
 where
@@ -12,6 +18,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
@@ -38,9 +45,11 @@ data ColumnInfo = ColumnInfo
   { _ciName :: ColumnName,
     _ciType :: API.V0.Scalar.ScalarType,
     _ciNullable :: Bool,
-    _ciDescription :: Maybe Text
+    _ciDescription :: Maybe Text,
+    _ciInsertable :: Bool,
+    _ciUpdatable :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnInfo
 
@@ -52,3 +61,7 @@ instance HasCodec ColumnInfo where
         <*> requiredField "type" "Column type" .= _ciType
         <*> requiredField "nullable" "Is column nullable" .= _ciNullable
         <*> optionalFieldOrNull "description" "Column description" .= _ciDescription
+        <*> optionalFieldWithDefault "insertable" False "Whether or not the column can be inserted into" .= _ciInsertable
+        <*> optionalFieldWithDefault "updatable" False "Whether or not the column can be updated" .= _ciUpdatable
+
+$(makeLenses ''ColumnInfo)

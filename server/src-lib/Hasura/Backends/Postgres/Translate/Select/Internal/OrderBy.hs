@@ -9,19 +9,21 @@ import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
-  ( Identifier,
-    IsIdentifier (toIdentifier),
+  ( IsIdentifier (toIdentifier),
     PGCol (..),
+    TableIdentifier (..),
+    qualifiedObjectToText,
+    tableIdentifierToIdentifier,
   )
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
-  ( mkAggregateOrderByAlias,
+  ( contextualizeBaseTableColumn,
+    mkAggregateOrderByAlias,
     mkAnnOrderByAlias,
     mkArrayRelationAlias,
     mkArrayRelationSourcePrefix,
-    mkBaseTableAlias,
-    mkBaseTableColumnAlias,
-    mkComputedFieldTableAlias,
+    mkBaseTableIdentifier,
+    mkComputedFieldTableIdentifier,
     mkObjectRelationTableAlias,
     mkOrderByFieldName,
   )
@@ -31,7 +33,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( fromTableRowArgs,
-    functionToIdentifier,
     selectFromToFromItem,
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
@@ -74,10 +75,10 @@ Otherwise:
 processOrderByItems ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
-    MonadWriter JoinTree m,
+    MonadWriter SelectWriter m,
     Backend ('Postgres pgKind)
   ) =>
-  Identifier ->
+  TableIdentifier ->
   FieldName ->
   SimilarArrayFields ->
   Maybe (NE.NonEmpty PGCol) ->
@@ -105,13 +106,15 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
           <$> processAnnotatedOrderByElement sourcePrefix' fieldAlias' ordByCol
 
     processAnnotatedOrderByElement ::
-      Identifier -> FieldName -> AnnotatedOrderByElement ('Postgres pgKind) S.SQLExp -> m (S.ColumnAlias, (SQLExpression ('Postgres pgKind)))
+      TableIdentifier -> FieldName -> AnnotatedOrderByElement ('Postgres pgKind) S.SQLExp -> m (S.ColumnAlias, (SQLExpression ('Postgres pgKind)))
     processAnnotatedOrderByElement sourcePrefix fieldAlias annObCol = do
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias,) <$> case annObCol of
         AOCColumn pgColInfo ->
           pure $
-            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIdentifier $ ciColumn pgColInfo
+            S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $
+              toIdentifier $
+                ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
           let RelInfo relName _ colMapping relTable _ _ = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
@@ -120,7 +123,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
             processAnnotatedOrderByElement relSourcePrefix fieldName rest
           let selectSource =
                 ObjectSelectSource
-                  relSourcePrefix
+                  (tableIdentifierToIdentifier relSourcePrefix)
                   (S.FISimple relTable Nothing)
                   (toSQLBoolExp (S.QualTable relTable) relFilter)
               relSource = ObjectRelationSource relName colMapping selectSource
@@ -142,7 +145,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
               selectSource =
                 SelectSource
-                  relSourcePrefix
+                  (tableIdentifierToIdentifier relSourcePrefix)
                   (S.FISimple relTable Nothing)
                   (toSQLBoolExp (S.QualTable relTable) relFilter)
                   noSortingAndSlicing
@@ -161,15 +164,15 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               pure $ S.SEFunction functionExp
             CFOBETableAggregation _ tableFilter aggOrderBy -> withWriteComputedFieldTableSet $ do
               let fieldName = mkOrderByFieldName _cfobName
-                  computedFieldSourcePrefix = mkComputedFieldTableAlias sourcePrefix fieldName
+                  computedFieldSourcePrefix = mkComputedFieldTableIdentifier sourcePrefix fieldName
                   (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
                   fromItem =
                     selectFromToFromItem sourcePrefix $
                       FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
-                  functionQual = S.QualifiedIdentifier (functionToIdentifier _cfobFunction) Nothing
+                  functionQual = S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText _cfobFunction) Nothing
                   selectSource =
                     SelectSource
-                      computedFieldSourcePrefix
+                      (tableIdentifierToIdentifier computedFieldSourcePrefix)
                       fromItem
                       (toSQLBoolExp functionQual tableFilter)
                       noSortingAndSlicing
@@ -269,7 +272,7 @@ applyDistinctOnAtBase =
   S.DistinctOn . map (S.SEIdentifier . toIdentifier) . toList
 
 applyDistinctOnAtNode ::
-  Identifier ->
+  TableIdentifier ->
   NE.NonEmpty PGCol ->
   ( S.DistinctExpr,
     [(S.ColumnAlias, S.SQLExp)] -- additional column extractors
@@ -278,6 +281,6 @@ applyDistinctOnAtNode pfx neCols = (distOnExp, colExtrs)
   where
     cols = toList neCols
     distOnExp = S.DistinctOn $ map (S.SEIdentifier . toIdentifier . mkQColAls) cols
-    mkQCol c = S.mkQIdenExp (mkBaseTableAlias pfx) $ toIdentifier c
-    mkQColAls = mkBaseTableColumnAlias pfx
+    mkQCol c = S.mkQIdenExp (mkBaseTableIdentifier pfx) $ toIdentifier c
+    mkQColAls = contextualizeBaseTableColumn pfx
     colExtrs = flip map cols $ mkQColAls &&& mkQCol

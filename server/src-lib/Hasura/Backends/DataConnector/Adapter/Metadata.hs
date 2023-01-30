@@ -1,10 +1,10 @@
 {-# LANGUAGE Arrows #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Control.Arrow.Extended
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -16,15 +16,18 @@ import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
+import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
+import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
-import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw500, withPathK)
+import Hasura.Base.Error (Code (..), QErr (..), decodeValue, throw400, throw400WithDetail, throw500, withPathK)
 import Hasura.Incremental qualified as Inc
+import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
@@ -36,15 +39,15 @@ import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Source (ResolvedSource (..))
-import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
+import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
-import Hasura.Tracing (noReporter, runTraceTWithReporter)
+import Hasura.Tracing (ignoreTraceT)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Manager
@@ -53,7 +56,7 @@ import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
-  prepareCatalog _ = pure RETDoNothing
+  prepareCatalog _ = pure (RETDoNothing, SCMSNotSupported)
   type BackendInvalidationKeys 'DataConnector = HashMap DC.DataConnectorName Inc.InvalidationKey
   resolveBackendInfo = resolveBackendInfo'
   resolveSourceConfig = resolveSourceConfig'
@@ -61,7 +64,11 @@ instance BackendMetadata 'DataConnector where
   parseBoolExpOperations = parseBoolExpOperations'
   parseCollectableType = parseCollectableType'
   buildComputedFieldInfo = error "buildComputedFieldInfo: not implemented for the Data Connector backend."
+
+  -- If/when we implement enums for Data Connector backend, we will also need to fix columnTypeToScalarType function
+  -- in Hasura.Backends.DataConnector.Adapter.Backend. See note there for more information.
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
+
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
@@ -72,12 +79,13 @@ resolveBackendInfo' ::
   ( ArrowChoice arr,
     Inc.ArrowCache m arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     MonadIO m,
+    MonadBaseControl IO m,
     HasHttpManagerM m
   ) =>
   Logger Hasura ->
-  (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+  (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
 resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
@@ -92,15 +100,16 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       forall arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq CollectedInfo) arr,
+        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         HasHttpManagerM m
       ) =>
-      (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
+      (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
     getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (invalidationKeys, dataConnectorName, dataConnectorOptions) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
       httpMgr <- bindA -< askHttpManager
-      Inc.dependOn -< Inc.selectKeyD dataConnectorName invalidationKeys
+      Inc.dependOn -< Inc.selectMaybeD (Inc.ConstS dataConnectorName) invalidationKeys
       (|
         withRecordInconsistency
           ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr
@@ -108,19 +117,23 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         |) metadataObj
 
     getDataConnectorCapabilities ::
-      MonadIO m =>
+      (MonadIO m, MonadBaseControl IO m) =>
       DC.DataConnectorOptions ->
       HTTP.Manager ->
       m (Either QErr DC.DataConnectorInfo)
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
-      API.CapabilitiesResponse {..} <-
-        runTraceTWithReporter noReporter "capabilities"
+      capabilitiesU <-
+        ignoreTraceT
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
           $ genericClient // API._capabilities
-      return $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse
+
+      let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
+          capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
+
+      capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 
 resolveSourceConfig' ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->
@@ -137,18 +150,19 @@ resolveSourceConfig'
   backendInfo
   env
   manager = runExceptT do
-    DC.DataConnectorInfo {DC._dciOptions = DC.DataConnectorOptions {..}, ..} <-
-      Map.lookup dataConnectorName backendInfo
-        `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
+    DC.DataConnectorInfo {..} <- getDataConnectorInfo dataConnectorName backendInfo
+    let DC.DataConnectorOptions {_dcoUri} = _dciOptions
 
-    transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
+    transformedConfig <- transformConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
-    validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
-
-    schemaResponse <-
-      runTraceTWithReporter noReporter "resolve source"
+    schemaResponseU <-
+      ignoreTraceT
         . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
         $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
+
+    let defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
+
+    schemaResponse <- schemaCase defaultAction pure errorAction schemaResponseU
 
     pure
       DC.SourceConfig
@@ -162,62 +176,51 @@ resolveSourceConfig'
           _scDataConnectorName = dataConnectorName
         }
 
-validateConfiguration ::
-  MonadError QErr m =>
-  SourceName ->
-  DC.DataConnectorName ->
-  API.ConfigSchemaResponse ->
-  API.Config ->
-  m ()
-validateConfiguration sourceName dataConnectorName configSchema config = do
-  let errors = API.validateConfigAgainstConfigSchema configSchema config
-  unless (null errors) $
-    let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
-     in throw400
-          DataConnectorError
-          ("Configuration for source " <> sourceName <<> " is not valid based on the configuration schema declared by the " <> dataConnectorName <<> " data connector agent. Errors:\n" <> errorsText)
+getDataConnectorInfo :: (MonadError QErr m) => DC.DataConnectorName -> HashMap DC.DataConnectorName DC.DataConnectorInfo -> m DC.DataConnectorInfo
+getDataConnectorInfo dataConnectorName backendInfo =
+  onNothing (Map.lookup dataConnectorName backendInfo) $
+    throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
 resolveDatabaseMetadata' ::
   Applicative m =>
   SourceMetadata 'DataConnector ->
   DC.SourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'DataConnector))
-resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {..}}) customization =
-  -- We need agents to provide the foreign key contraints inside 'API.SchemaResponse'
+  m (Either QErr (DBObjectsIntrospection 'DataConnector))
+resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
   let foreignKeys = fmap API._tiForeignKeys _srTables
       tables = Map.fromList $ do
         API.TableInfo {..} <- _srTables
-        let primaryKeyColumns = Seq.fromList $ coerce <$> fromMaybe [] _tiPrimaryKey
+        let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
-                { _ptmiOid = OID 0,
+                { _ptmiOid = OID 0, -- TODO: This is wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 0 for all tables is problematic.
                   _ptmiColumns = do
                     API.ColumnInfo {..} <- _tiColumns
                     pure $
                       RQL.T.C.RawColumnInfo
                         { rciName = Witch.from _ciName,
-                          rciPosition = 1,
-                          rciType = Witch.from _ciType,
+                          rciPosition = 1, -- TODO: This is very wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 1 for all columns is problematic.
+                          rciType = DC.mkScalarType _scCapabilities _ciType,
                           rciIsNullable = _ciNullable,
                           rciDescription = fmap GQL.Description _ciDescription,
-                          -- TODO: Add Column Mutability to the 'TableInfo'
-                          rciMutability = RQL.T.C.ColumnMutability False False
+                          rciMutability = RQL.T.C.ColumnMutability _ciInsertable _ciUpdatable
                         },
                   _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = buildForeignKeySet foreignKeys,
-                  _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,
+                  _ptmiViewInfo =
+                    ( if _tiType == API.Table && _tiInsertable && _tiUpdatable && _tiDeletable
+                        then Nothing
+                        else Just $ RQL.T.T.ViewInfo _tiInsertable _tiUpdatable _tiDeletable
+                    ),
                   _ptmiDescription = fmap PGDescription _tiDescription,
                   _ptmiExtraTableMetadata = ()
                 }
         pure (coerce _tiName, meta)
    in pure $
         pure $
-          ResolvedSource
-            { _rsConfig = sc,
-              _rsCustomization = customization,
-              _rsTables = tables,
+          DBObjectsIntrospection
+            { _rsTables = tables,
               _rsFunctions = mempty,
               _rsScalars = mempty
             }
@@ -225,14 +228,14 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
 -- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
 -- 'DataConnector' to build the foreign key constraints in the table
 -- metadata.
-buildForeignKeySet :: [Maybe API.ForeignKeys] -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
-buildForeignKeySet (catMaybes -> foreignKeys) =
+buildForeignKeySet :: [API.ForeignKeys] -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
+buildForeignKeySet foreignKeys =
   HashSet.fromList $
     join $
       foreignKeys <&> \(API.ForeignKeys constraints) ->
         constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
           \constraintName API.Constraint {..} -> maybeToList do
-            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
+            let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
             columnMapping <- NEHashMap.fromList columnMapAssocList
             let foreignKey =
                   RQL.T.T.ForeignKey
@@ -368,8 +371,8 @@ parseCollectableType' collectableType = \case
     | HSU.isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
     | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
   val -> case collectableType of
-    CollectableTypeScalar scalarType ->
-      PSESQLExp . DC.ValueLiteral <$> RQL.T.C.parseScalarValueColumnType scalarType val
+    CollectableTypeScalar columnType ->
+      PSESQLExp . DC.ValueLiteral (columnTypeToScalarType columnType) <$> RQL.T.C.parseScalarValueColumnType columnType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported by the Data Connector backend"
 
@@ -380,8 +383,5 @@ mkTypedSessionVar ::
 mkTypedSessionVar columnType =
   PSESessVar (columnTypeToScalarType <$> columnType)
 
-columnTypeToScalarType :: RQL.T.C.ColumnType 'DataConnector -> DC.ScalarType
-columnTypeToScalarType = \case
-  RQL.T.C.ColumnScalar scalarType -> scalarType
-  -- NOTE: This should be unreachable:
-  RQL.T.C.ColumnEnumReference _ -> DC.StringTy
+errorAction :: MonadError QErr m => API.ErrorResponse -> m a
+errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)

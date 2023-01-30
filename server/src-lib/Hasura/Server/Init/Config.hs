@@ -77,10 +77,10 @@ import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Schema.Options
-import Hasura.Incremental (Cacheable)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
+import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Logging qualified as Server.Logging
@@ -222,7 +222,8 @@ instance ToJSON PostgresConnDetailsRaw where
 rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
 rawConnDetailsToUrlText PostgresConnDetailsRaw {..} =
   Text.pack $
-    "postgresql://" <> connUser
+    "postgresql://"
+      <> connUser
       <> ":"
       <> connPassword
       <> "@"
@@ -303,13 +304,14 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase,
-    rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema
+    rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
+    rsoMetadataDefaults :: Maybe MetadataDefaults
   }
 
 -- | An 'Int' representing a Port number in the range 0 to 65536.
 newtype Port = Port {_getPort :: Int}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving newtype (ToJSON, NFData, Cacheable, Hashable)
+  deriving newtype (ToJSON, NFData, Hashable)
 
 mkPort :: Int -> Maybe Port
 mkPort x = case x >= 0 && x < 65536 of
@@ -472,8 +474,9 @@ data ServeOptions impl = ServeOptions
     -- | See note '$readOnlyMode'
     soReadOnlyMode :: Server.Types.ReadOnlyMode,
     soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
-    soDefaultNamingConvention :: Maybe NamingCase,
-    soExtensionsSchema :: MonadTx.ExtensionsSchema
+    soDefaultNamingConvention :: NamingCase,
+    soExtensionsSchema :: MonadTx.ExtensionsSchema,
+    soMetadataDefaults :: MetadataDefaults
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

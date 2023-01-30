@@ -1,6 +1,5 @@
 import {
   tableColumnTypeSelector,
-  baseUrl,
   getTableName,
   getColName,
   getElementFromAlias,
@@ -8,6 +7,7 @@ import {
   dropUntrackedFunctionSQL,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import {
   setMetaData,
@@ -208,7 +208,9 @@ export const Addcolumnname = (name: string) => {
 };
 
 export const passMTAddColumn = () => {
-  cy.get(getElementFromAlias('frequently-used-columns')).first().should('exist');
+  cy.get(getElementFromAlias('frequently-used-columns'))
+    .first()
+    .should('exist');
   cy.get(getElementFromAlias('column-name')).type('{selectall}{del}');
   cy.get(getElementFromAlias('column-name')).type(getColName(0));
   tableColumnTypeSelector('col-type-0');

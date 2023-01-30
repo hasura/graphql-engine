@@ -226,7 +226,8 @@ transformAggregateSelect ::
   Collector (AnnAggregateSelectG b Void (UnpreparedValue b))
 transformAggregateSelect =
   traverseOf asnFields $
-    traverseFields $ traverseOf (_TAFNodes . _2) transformAnnFields
+    traverseFields $
+      traverseOf (_TAFNodes . _2) transformAnnFields
 
 -- Relay doesn't support remote relationships: we can drill down directly to the
 -- inner non-relay selection sets.
@@ -239,7 +240,8 @@ transformConnectionSelect =
   traverseOf (csSelect . asnFields) $
     traverseFields $
       traverseOf _ConnectionEdges $
-        traverseFields $ traverseOf _EdgeNode transformAnnFields
+        traverseFields $
+          traverseOf _EdgeNode transformAnnFields
 
 transformObjectSelect ::
   Backend b =>
@@ -321,7 +323,7 @@ transformAnnFields fields = do
             -- without which preserving the order of fields in the final response
             -- would require a lot of bookkeeping.
             remoteAnnPlaceholder,
-            Just $ createRemoteJoin joinColumnAliases _rrsRelationship
+            Just $ createRemoteJoin (Map.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
           )
 
   let transformedFields = (fmap . fmap) fst annotatedFields
@@ -434,7 +436,7 @@ transformActionFields fields = do
             -- without which preserving the order of fields in the final response
             -- would require a lot of bookkeeping.
             remoteActionPlaceholder,
-            Just $ createRemoteJoin joinColumnAliases _arrsRelationship
+            Just $ createRemoteJoin (Map.intersection joinColumnAliases _arrsLHSJoinFields) _arrsRelationship
           )
       ACFNestedObject fn fs ->
         (,Nothing) . ACFNestedObject fn <$> transformActionFields fs
@@ -519,28 +521,28 @@ transformObjectSelectionSet typename selectionSet = do
             FieldRemote SchemaRemoteRelationshipSelect {..} -> do
               pure
                 ( mkPlaceholderField alias,
-                  Just $ createRemoteJoin joinColumnAliases _srrsRelationship
+                  Just $ createRemoteJoin (Map.intersection joinColumnAliases _srrsLHSJoinFields) _srrsRelationship
                 )
   let internalTypeAlias = Name.___hasura_internal_typename
       remoteJoins = OMap.mapMaybe snd annotatedFields
       additionalFields =
         if
             | isJust typename && (not (null remoteJoins) || subfieldsContainRemoteJoins) ->
-              -- We are in a situation in which the type name matters, and we know
-              -- that there is at least one remote join in this part of tree, meaning
-              -- we might need to branch on the typename when traversing the join
-              -- tree: we insert a custom field that will return the type name.
-              OMap.singleton internalTypeAlias $
-                mkGraphQLField
-                  (Just internalTypeAlias)
-                  GName.___typename
-                  mempty
-                  mempty
-                  SelectionSetNone
+                -- We are in a situation in which the type name matters, and we know
+                -- that there is at least one remote join in this part of tree, meaning
+                -- we might need to branch on the typename when traversing the join
+                -- tree: we insert a custom field that will return the type name.
+                OMap.singleton internalTypeAlias $
+                  mkGraphQLField
+                    (Just internalTypeAlias)
+                    GName.___typename
+                    mempty
+                    mempty
+                    SelectionSetNone
             | otherwise ->
-              -- Either the typename doesn't matter, or this tree doesn't have remote
-              -- joins; this selection set isn't "ambiguous".
-              mempty
+                -- Either the typename doesn't matter, or this tree doesn't have remote
+                -- joins; this selection set isn't "ambiguous".
+                mempty
       transformedFields = fmap fst annotatedFields <> additionalFields
   case NEMap.fromList $ OMap.toList remoteJoins of
     Nothing -> pure $ fmap FieldGraphQL transformedFields
@@ -640,6 +642,7 @@ createRemoteJoin joinColumnAliases = \case
                 _rssConfig
                 transformedSourceRelationship
                 joinColumns
+                _rssStringifyNums
        in RemoteJoinSource anySourceJoin sourceRelationshipJoins
 
 -- | Constructs a 'JoinColumnAlias' for a given field in a selection set.
@@ -652,7 +655,7 @@ createRemoteJoin joinColumnAliases = \case
 -- NOTE: if the @fieldName@ argument is a valid GraphQL name, then the
 -- constructed alias MUST also be a valid GraphQL name.
 getJoinColumnAlias ::
-  (Eq field, Hashable field) =>
+  Hashable field =>
   FieldName ->
   field ->
   HashMap field FieldName ->

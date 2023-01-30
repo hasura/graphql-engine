@@ -1,0 +1,37 @@
+// Gallery for cloud db guides' vendor logos
+.vendor-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-gap: 20px;
+
+  a {
+    text-decoration: none;
+  }
+
+  .card-wrapper {
+    display: grid;
+    place-items: center center;
+    grid-gap: 1rem;
+    height: 100%;
+    width: 100%;
+    text-decoration: none;
+  }
+
+  .card {
+    display: grid;
+    place-items: center center;
+    height: 200px;
+    background: #fff;
+    width: 100%;
+
+    img {
+      width: 100px;
+      height: auto;
+    }
+
+    &:hover {
+      box-shadow: var(--ifm-global-shadow-md);
+      cursor: pointer;
+    }
+  }
+}

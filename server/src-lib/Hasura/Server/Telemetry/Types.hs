@@ -104,7 +104,8 @@ data HasuraTelemetry = HasuraTelemetry
     _htHasuraVersion :: Version,
     _htCi :: Maybe CI.CI,
     _htSourceMetadata :: SourceMetadata,
-    _htMetrics :: Metrics
+    _htMetrics :: Metrics,
+    _htExperimentalFeatures :: HashSet ExperimentalFeature
   }
   deriving (Show)
 

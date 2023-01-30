@@ -1,13 +1,11 @@
 import { getElementFromAlias } from '../../../helpers/eventHelpers';
 import { replaceMetadata, resetMetadata } from '../../../helpers/metadata';
-// import { postgres } from '../../data/manage-database/postgres.spec';
+import { postgres } from '../../data/manage-database/postgres.spec';
 
-// Temporarily skipped because of its flakiness, see: https://github.com/hasura/graphql-engine-mono/issues/5433
-// TODO: Fix and restore it
-describe.skip('check if remote schema relationships are displayed properly', () => {
+describe('check if remote schema relationships are displayed properly', () => {
   before(() => {
     // create a table called destination_table
-    // postgres.helpers.createTable('destination_table');
+    postgres.helpers.createTable('destination_table');
 
     // load stuff into the metadata
     replaceMetadata({
@@ -97,9 +95,7 @@ describe.skip('check if remote schema relationships are displayed properly', () 
   });
 
   it('verify if the rows exist on the remote schema table', () => {
-    cy.visit(
-      'http://localhost:3000/remote-schemas/manage/source_rs/relationships'
-    );
+    cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.get(getElementFromAlias('remote-schema-relationships-table')).should(
       'exist'
     );
@@ -121,6 +117,6 @@ describe.skip('check if remote schema relationships are displayed properly', () 
     resetMetadata();
 
     // delete the table
-    // postgres.helpers.deleteTable('destination_table');
+    postgres.helpers.deleteTable('destination_table');
   });
 });

@@ -143,7 +143,8 @@ transformTable tableInfo =
       primaryKey = transformPrimaryKey <$> staJoinedSysPrimaryKey tableInfo
       identityColumns =
         map (ColumnName . scName) $
-          filter scIsIdentity $ staJoinedSysColumn tableInfo
+          filter scIsIdentity $
+            staJoinedSysColumn tableInfo
    in ( tableName,
         DBTableMetadata
           tableOID

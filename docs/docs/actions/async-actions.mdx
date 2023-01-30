@@ -23,7 +23,7 @@ query/subscribe to its status.
 
 :::info Note
 
-Only actions of type `mutation` can be async. Actions of type query are
+Only Actions of type `mutation` can be async. Actions of type query are
 always executed synchronously.
 
 :::
@@ -52,7 +52,7 @@ action using this `action id`.
 
 ```graphql
 subscription getPlaceOrderResponse {
-  place_order (id: "23b1c256-7aff-4b95-95bd-68220d9f93f2") {
+  place_order(id: "23b1c256-7aff-4b95-95bd-68220d9f93f2") {
     output
     errors
   }

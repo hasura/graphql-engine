@@ -5,17 +5,20 @@
 -- | This module defines all missing instances of third party libraries.
 module Hasura.Base.Instances () where
 
+import Autodocodec qualified as AC
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Fixed (Fixed (..))
 import Data.Functor.Product (Product (Pair))
-import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
+import "dependent-sum" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as UT
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
+import Kriti qualified
+import Kriti.Parser qualified as Kriti
 import Language.Haskell.TH.Lift qualified as TH (deriveLift)
 import Language.Haskell.TH.Syntax qualified as TH
 import System.Cron.Parser qualified as C
@@ -103,6 +106,15 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
     GGT -> GGT
 
 --------------------------------------------------------------------------------
+-- HasCodec
+
+instance AC.HasCodec C.CronSchedule where
+  codec =
+    AC.named "CronSchedule" $
+      AC.bimapCodec C.parseCronSchedule C.serializeCronSchedule $
+        AC.codec @Text
+
+--------------------------------------------------------------------------------
 -- JSON
 
 instance J.FromJSON C.CronSchedule where
@@ -128,3 +140,14 @@ instance PG.FromCol C.CronSchedule where
         case C.parseCronSchedule dbCron of
           Left err' -> Left $ "invalid cron schedule " <> T.pack err'
           Right cron -> Right cron
+
+--------------------------------------------------------------------------------
+-- Kriti
+
+instance NFData Kriti.AlexSourcePos
+
+instance NFData Kriti.Span
+
+instance NFData Kriti.Elif
+
+instance NFData Kriti.ValueExt

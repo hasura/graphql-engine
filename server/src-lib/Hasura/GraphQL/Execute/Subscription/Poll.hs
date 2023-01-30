@@ -7,6 +7,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll
     pollLiveQuery,
     pollStreamingQuery,
     PollerKey (..),
+    BackendPollerKey (..),
     PollerMap,
     dumpPollerMap,
     PollDetails (..),

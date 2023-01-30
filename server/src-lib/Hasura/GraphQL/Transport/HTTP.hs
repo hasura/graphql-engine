@@ -58,15 +58,18 @@ import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.HTTP
+  ( HttpResponse (HttpResponse, _hrBody),
+    addHttpResponseHeaders,
+  )
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Init.Config
@@ -328,8 +331,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
           >>= flip onLeft throwError
 
-      operationLimit <- askGraphqlOperationLimit reqId
-      let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
+      operationLimit <- askGraphqlOperationLimit reqId userInfo (scApiLimits sc)
+      let runLimits = runResourceLimits operationLimit
 
       -- 2. Construct the first step of the execution plan from 'reqParsed :: GQLParsed'.
       queryParts <- getSingleOperation reqParsed
@@ -343,6 +346,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.getResolvedExecPlan
           env
           logger
+          prometheusMetrics
           userInfo
           sqlGenCtx
           readOnlyMode
@@ -431,11 +435,11 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         -}
         case coalescePostgresMutations mutationPlans of
           -- we are in the aforementioned case; we circumvent the normal process
-          Just (sourceConfig, pgMutations) -> do
+          Just (sourceConfig, resolvedConnectionTemplate, pgMutations) -> do
             res <-
               runExceptT $
                 doQErr $
-                  runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig pgMutations
+                  runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
             -- we do not construct response parts since we have only one part
             buildResponse Telem.Mutation res \(telemTimeIO_DT, parts) ->
               let responseData = Right $ encJToLBS $ encodeEncJSONResults parts
@@ -466,8 +470,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (telemTimeIO_DT, resp) <-
           AB.dispatchAnyBackend @BackendTransport
             exists
-            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-              runDBQuery @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
+              runDBQuery @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql resolvedConnectionTemplate
         finalResponse <-
           RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
@@ -500,8 +504,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (telemTimeIO_DT, resp) <-
           AB.dispatchAnyBackend @BackendTransport
             exists
-            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
-              runDBMutation @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
+              runDBMutation @b reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql resolvedConnectionTemplate
         finalResponse <-
           RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders
@@ -639,14 +643,16 @@ coalescePostgresMutations ::
   EB.ExecutionPlan ->
   Maybe
     ( SourceConfig ('Postgres 'Vanilla),
+      ResolvedConnectionTemplate ('Postgres 'Vanilla),
       InsOrdHashMap RootFieldAlias (EB.DBStepInfo ('Postgres 'Vanilla))
     )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
-  (oneSourceName, oneSourceConfig) <- case toList plan of
+  (oneSourceName, oneResolvedConnectionTemplate, oneSourceConfig) <- case toList plan of
     (E.ExecStepDB _ exists _remoteJoins : _) ->
       AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
         ( EB.dbsiSourceName dbsi,
+          EB.dbsiResolvedConnectionTemplate dbsi,
           EB.dbsiSourceConfig dbsi
         )
     _ -> Nothing
@@ -655,10 +661,13 @@ coalescePostgresMutations plan = do
   mutations <- for plan \case
     E.ExecStepDB _ exists remoteJoins -> do
       dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
-      guard $ oneSourceName == EB.dbsiSourceName dbStepInfo && isNothing remoteJoins
+      guard $
+        oneSourceName == EB.dbsiSourceName dbStepInfo
+          && isNothing remoteJoins
+          && oneResolvedConnectionTemplate == EB.dbsiResolvedConnectionTemplate dbStepInfo
       Just dbStepInfo
     _ -> Nothing
-  Just (oneSourceConfig, mutations)
+  Just (oneSourceConfig, oneResolvedConnectionTemplate, mutations)
 
 data GraphQLResponse
   = GraphQLResponseErrors [J.Value]
@@ -694,7 +703,8 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
   dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <-
     onNothing (JO.lookup fieldName' dataObj) $
-      do400 $ "expecting key " <> fieldName'
+      do400 $
+        "expecting key " <> fieldName'
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
@@ -726,7 +736,6 @@ runGQBatched ::
     MonadQueryLog m,
     MonadTrace m,
     MonadExecuteQuery m,
-    HttpLog m,
     MonadMetadataStorage (MetadataStorageT m),
     EB.MonadQueryTags m,
     HasResourceLimits m
@@ -741,17 +750,19 @@ runGQBatched ::
   E.GraphQLQueryType ->
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
-  m (HttpLogMetadata m, HttpResponse EncJSON)
+  m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
       (gqlQueryOperationLog, httpResp) <- runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
-      let httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)) L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog)))
-      pure (httpLoggingMetadata, snd <$> httpResp)
+      let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
+      pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
+      executionCtx <- ask
+      E.checkGQLBatchedReqs userInfo reqId reqs (E._ecxSchemaCache executionCtx) >>= flip onLeft throwError
       let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
           removeHeaders =
             flip HttpResponse []
@@ -768,7 +779,7 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
               )
               responses
           parameterizedQueryHashes = map gqolParameterizedQueryHash requestsOperationLogs
-          httpLoggingMetadata = buildHttpLogMetadata @m (PQHSetBatched parameterizedQueryHashes) L.RequestModeBatched (Just (GQLBatchedReqs batchOperationLogs))
-      pure (httpLoggingMetadata, removeHeaders (map ((fmap snd) . snd) responses))
+          httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeBatched ((Just (GQLBatchedReqs batchOperationLogs))), PQHSetBatched parameterizedQueryHashes)
+      pure (httpLoggingGQInfo, removeHeaders (map ((fmap snd) . snd) responses))
   where
     try = flip catchError (pure . Left) . fmap Right

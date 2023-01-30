@@ -1,4 +1,5 @@
-import { getElementFromAlias, baseUrl } from '../../../helpers/dataHelpers';
+import { getElementFromAlias } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 // fake inconsistentMetadata api response
 const inconsistentMetadata = {

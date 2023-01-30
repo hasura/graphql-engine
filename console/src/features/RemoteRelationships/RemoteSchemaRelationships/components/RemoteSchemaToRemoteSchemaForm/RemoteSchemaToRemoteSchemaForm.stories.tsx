@@ -41,7 +41,7 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
 
   await canvas.findByText('Name');
 
-  const submitButton = await canvas.findByText('Add Relationship');
+  const submitButton = (await canvas.findAllByText('Add Relationship'))[1];
 
   userEvent.click(submitButton);
 

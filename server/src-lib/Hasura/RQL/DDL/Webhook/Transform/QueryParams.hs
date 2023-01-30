@@ -1,32 +1,37 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Hasura.RQL.DDL.Webhook.Transform.QueryParams
   ( -- * Query transformations
     QueryParams (..),
     TransformFn (..),
+    TransformCtx (..),
     QueryParamsTransformFn (..),
   )
 where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, hashMapCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as M
 import Data.Validation (Validation)
 import Data.Validation qualified as V
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    TemplatingEngine,
+  ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
+  )
+import Hasura.RQL.DDL.Webhook.Transform.Request
+  ( RequestTransformCtx,
     runUnescapedRequestTemplateTransform',
     validateRequestUnescapedTemplateTransform',
   )
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.HTTP.Types.URI (parseQuery)
 
 -------------------------------------------------------------------------------
 
@@ -43,12 +48,14 @@ instance Transform QueryParams where
   newtype TransformFn QueryParams
     = QueryParamsTransformFn_ QueryParamsTransformFn
     deriving stock (Show, Eq, Generic)
-    deriving newtype (NFData, Cacheable, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
+
+  newtype TransformCtx QueryParams = TransformCtx RequestTransformCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyQueryParamsTransformFn' is defined
   -- separately.
-  transform (QueryParamsTransformFn_ fn) = applyQueryParamsTransformFn fn
+  transform (QueryParamsTransformFn_ fn) (TransformCtx reqCtx) = applyQueryParamsTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateQueryParamsTransformFn' is defined
@@ -57,10 +64,11 @@ instance Transform QueryParams where
     validateQueryParamsTransformFn engine fn
 
 -- | The defunctionalized transformation 'QueryParams'
-newtype QueryParamsTransformFn
+data QueryParamsTransformFn
   = AddOrReplace [(UnescapedTemplate, Maybe UnescapedTemplate)]
+  | ParamTemplate UnescapedTemplate
+  deriving (NFData)
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData)
 
 -- | Provide an implementation for the transformations defined by
 -- 'QueryParamsTransformFn'.
@@ -82,8 +90,14 @@ applyQueryParamsTransformFn fn context _oldQueryParams = case fn of
       for addOrReplaceParams \(rawKey, rawValue) -> do
         key <- runUnescapedRequestTemplateTransform' context rawKey
         value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
-        pure (key, value)
-    pure $ QueryParams queryParams
+        pure $
+          if key == "null" || value == Just "null"
+            then Nothing
+            else Just (key, value)
+    pure $ QueryParams (catMaybes queryParams)
+  ParamTemplate template -> do
+    resolvedValue <- liftEither . V.toEither $ runUnescapedRequestTemplateTransform' context template
+    pure $ QueryParams (parseQuery resolvedValue)
 
 -- | Validate that the provided 'QueryParamsTransformFn' is correct in the
 -- context of a particular 'TemplatingEngine'.
@@ -105,10 +119,28 @@ validateQueryParamsTransformFn engine = \case
       -- NOTE: There's a bug in `ApplicativeDo` which infers a `Monad`
       -- constraint on this block if it doens't end with `pure ()`
       pure ()
+  ParamTemplate template -> do
+    validateRequestUnescapedTemplateTransform' engine template
+    pure ()
 {-# ANN validateQueryParamsTransformFn ("HLint: ignore Redundant pure" :: String) #-}
+
+instance HasCodec QueryParamsTransformFn where
+  codec = dimapCodec dec enc $ disjointEitherCodec addOrReplaceCodec templateCodec
+    where
+      addOrReplaceCodec = hashMapCodec (codec @(Maybe UnescapedTemplate))
+      templateCodec = codec @UnescapedTemplate
+
+      dec (Left qps) = AddOrReplace $ M.toList qps
+      dec (Right template) = ParamTemplate template
+
+      enc (AddOrReplace addOrReplace) = Left $ M.fromList addOrReplace
+      enc (ParamTemplate template) = Right template
 
 instance J.ToJSON QueryParamsTransformFn where
   toJSON (AddOrReplace addOrReplace) = J.toJSON $ M.fromList addOrReplace
+  toJSON (ParamTemplate template) = J.toJSON template
 
 instance J.FromJSON QueryParamsTransformFn where
-  parseJSON v = AddOrReplace . M.toList <$> J.parseJSON v
+  parseJSON xs@(J.Object _) = AddOrReplace . M.toList <$> J.parseJSON xs
+  parseJSON xs@(J.String _) = ParamTemplate <$> J.parseJSON xs
+  parseJSON _ = fail "Invalid query parameter"

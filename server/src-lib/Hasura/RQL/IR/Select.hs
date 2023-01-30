@@ -375,12 +375,13 @@ instance Postgres.IsIdentifier FIIdentifier where
 
 data SelectFromG (b :: BackendType) v
   = FromTable (TableName b)
-  | FromIdentifier FIIdentifier
+  | FromIdentifier FIIdentifier -- TODO: Make this into TableIdentifier?
   | FromFunction
       (FunctionName b)
       (FunctionArgsExp b v)
       -- a definition list
       (Maybe [(Column b, ScalarType b)])
+  | FromNativeQuery (NativeQuery b v)
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Functor (SelectFromG b)
@@ -389,11 +390,29 @@ deriving stock instance (Backend b) => Foldable (SelectFromG b)
 
 deriving stock instance (Backend b) => Traversable (SelectFromG b)
 
-deriving stock instance (Backend b, Eq v, Eq (FunctionArgumentExp b v)) => Eq (SelectFromG b v)
+deriving stock instance
+  ( Backend b,
+    Eq v,
+    Eq (FunctionArgumentExp b v),
+    Eq (NativeQuery b v)
+  ) =>
+  Eq (SelectFromG b v)
 
-deriving stock instance (Backend b, Show v, Show (FunctionArgumentExp b v)) => Show (SelectFromG b v)
+deriving stock instance
+  ( Backend b,
+    Show v,
+    Show (FunctionArgumentExp b v),
+    Show (NativeQuery b v)
+  ) =>
+  Show (SelectFromG b v)
 
-instance (Backend b, Hashable v, Hashable (FunctionArgumentExp b v)) => Hashable (SelectFromG b v)
+instance
+  ( Backend b,
+    Hashable v,
+    Hashable (FunctionArgumentExp b v),
+    Hashable (NativeQuery b v)
+  ) =>
+  Hashable (SelectFromG b v)
 
 type SelectFrom b = SelectFromG b (SQLExpression b)
 
@@ -831,15 +850,13 @@ data AnnColumnField (b :: BackendType) v = AnnColumnField
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnColumnCaseBoolExp b v),
-    Eq (ScalarSelectionArguments b)
+    Eq (AnnColumnCaseBoolExp b v)
   ) =>
   Eq (AnnColumnField b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnColumnCaseBoolExp b v),
-    Show (ScalarSelectionArguments b)
+    Show (AnnColumnCaseBoolExp b v)
   ) =>
   Show (AnnColumnField b v)
 
@@ -1022,7 +1039,8 @@ data
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt))
+    _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt)),
+    _rssStringifyNums :: StringifyNumbers
   }
 
 deriving stock instance
@@ -1030,6 +1048,13 @@ deriving stock instance
     Eq (SourceRelationshipSelection tgt r vf)
   ) =>
   Eq (RemoteSourceSelect r vf tgt)
+
+deriving stock instance
+  ( Backend tgt,
+    Show (SourceRelationshipSelection tgt r vf),
+    Show (SourceConfig tgt)
+  ) =>
+  Show (RemoteSourceSelect r vf tgt)
 
 -- Permissions
 

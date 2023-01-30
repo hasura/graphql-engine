@@ -37,6 +37,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     SourceConfig b ->
     ExecutionMonad b EncJSON ->
     Maybe (PreparedQuery b) ->
+    ResolvedConnectionTemplate b ->
     m (DiffTime, EncJSON)
   runDBMutation ::
     forall m.
@@ -53,6 +54,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     SourceConfig b ->
     ExecutionMonad b EncJSON ->
     Maybe (PreparedQuery b) ->
+    ResolvedConnectionTemplate b ->
     m (DiffTime, EncJSON)
   runDBSubscription ::
     forall m.
@@ -61,6 +63,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
     [(CohortId, CohortVariables)] ->
+    ResolvedConnectionTemplate b ->
     m (DiffTime, Either QErr [(CohortId, B.ByteString)])
   runDBStreamingSubscription ::
     forall m.
@@ -69,6 +72,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
     [(CohortId, CohortVariables)] ->
+    ResolvedConnectionTemplate b ->
     m (DiffTime, Either QErr [(CohortId, B.ByteString, CursorVariableValues)])
   runDBQueryExplain ::
     forall m.

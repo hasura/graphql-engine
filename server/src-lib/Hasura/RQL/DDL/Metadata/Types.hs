@@ -26,7 +26,8 @@ module Hasura.RQL.DDL.Metadata.Types
 
     -- * Test Webhook Transform
     TestWebhookTransform (..),
-    twtTransformer,
+    twtRequestTransformer,
+    twtResponseTransformer,
     WebHookUrl (..),
 
     -- * Dump Internal State
@@ -50,7 +51,7 @@ import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTrans
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (Metadata, MetadataNoSources)
 import Hasura.RQL.Types.Metadata qualified as Metadata
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
@@ -92,7 +93,7 @@ instance (ToJSON a) => ToJSON (ReloadSpec a) where
     RSReloadAll -> Aeson.Bool True
     RSReloadList l -> Aeson.toJSON l
 
-instance (FromJSON a, Eq a, Hashable a) => FromJSON (ReloadSpec a) where
+instance (FromJSON a, Hashable a) => FromJSON (ReloadSpec a) where
   parseJSON (Aeson.Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
   parseJSON v = RSReloadList <$> Aeson.parseJSON v
 
@@ -284,8 +285,11 @@ data TestWebhookTransform = TestWebhookTransform
   }
   deriving (Eq)
 
-twtTransformer :: Lens' TestWebhookTransform RequestTransform
-twtTransformer = Lens.lens _twtTransformer \twt a -> twt {_twtTransformer = a}
+twtRequestTransformer :: Lens' TestWebhookTransform RequestTransform
+twtRequestTransformer = Lens.lens _twtTransformer \twt a -> twt {_twtTransformer = a}
+
+twtResponseTransformer :: Lens' TestWebhookTransform (Maybe MetadataResponseTransform)
+twtResponseTransformer = Lens.lens _twtResponseTransformer \twt a -> twt {_twtResponseTransformer = a}
 
 instance FromJSON TestWebhookTransform where
   parseJSON = Aeson.withObject "TestWebhookTransform" $ \o -> do

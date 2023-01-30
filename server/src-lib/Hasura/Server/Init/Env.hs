@@ -20,6 +20,8 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Morph qualified as Morph
+import Data.Aeson qualified as Aeson
+import Data.ByteString.Lazy.UTF8 qualified as BLU
 import Data.Char qualified as Char
 import Data.HashSet qualified as HashSet
 import Data.String qualified as String
@@ -36,6 +38,7 @@ import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
@@ -201,6 +204,15 @@ instance FromEnv Bool where
           ++ show falseVals
           ++ ". All values are case insensitive"
 
+instance FromEnv Aeson.Value where
+  fromEnv = Aeson.eitherDecode . BLU.fromString
+
+instance FromEnv MetadataDefaults where
+  fromEnv = Aeson.eitherDecode . BLU.fromString
+
+instance FromEnv Metadata where
+  fromEnv = Aeson.eitherDecode . BLU.fromString
+
 instance FromEnv Options.StringifyNumbers where
   fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool
 
@@ -244,17 +256,14 @@ instance FromEnv (HashSet Server.Types.ExperimentalFeature) where
   fromEnv = fmap HashSet.fromList . traverse readAPI . Text.splitOn "," . Text.pack
     where
       readAPI si = case Text.toLower $ Text.strip si of
-        "inherited_roles" -> Right Server.Types.EFInheritedRoles
-        "streaming_subscriptions" -> Right Server.Types.EFStreamingSubscriptions
-        "optimize_permission_filters" -> Right Server.Types.EFOptimizePermissionFilters
-        "naming_convention" -> Right Server.Types.EFNamingConventions
-        "apollo_federation" -> Right Server.Types.EFApolloFederation
-        "hide_update_many_fields" -> Right Server.Types.EFHideUpdateManyFields
-        "bigquery_string_numeric_input" -> Right Server.Types.EFBigQueryStringNumericInput
+        key | Just (_, ef) <- find ((== key) . fst) experimentalFeatures -> Right ef
         _ ->
           Left $
             "Only expecting list of comma separated experimental features, options are:"
-              ++ "inherited_roles, streaming_subscriptions, hide_update_many_fields, optimize_permission_filters, naming_convention, apollo_federation, bigquery_string_numeric_input"
+              ++ intercalate ", " (map (Text.unpack . fst) experimentalFeatures)
+
+      experimentalFeatures :: [(Text, Server.Types.ExperimentalFeature)]
+      experimentalFeatures = [(Server.Types.experimentalFeatureKey ef, ef) | ef <- [minBound .. maxBound]]
 
 instance FromEnv Subscription.Options.BatchSize where
   fromEnv s = do
@@ -312,10 +321,6 @@ instance FromEnv Template.URLTemplate where
 instance (Num a, Ord a, FromEnv a) => FromEnv (Refined NonNegative a) where
   fromEnv s =
     fmap (maybeToEither "Only expecting a non negative numeric") refineFail =<< fromEnv s
-
-instance FromEnv (Refined NonNegative DiffTime) where
-  fromEnv s =
-    fmap (maybeToEither "Only expecting a non negative difftime") refineFail =<< (fromEnv @DiffTime s)
 
 instance FromEnv (Refined Positive Int) where
   fromEnv s =

@@ -17,6 +17,26 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -55,7 +75,24 @@
             "description": ""
           },
           "400": {
-            "description": "Invalid `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": " or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -103,7 +140,24 @@
             "description": ""
           },
           "400": {
-            "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": " or `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -152,6 +206,71 @@
           },
           "400": {
             "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          }
+        }
+      }
+    },
+    "/mutation": {
+      "post": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": true,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/MutationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": " or `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -251,6 +370,103 @@
           }
         }
       }
+    },
+    "/datasets/templates/{template_name}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetGetTemplateResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "`template_name` not found"
+          }
+        }
+      }
+    },
+    "/datasets/clones/{clone_name}": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clone_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreateCloneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetCreateCloneResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `body`"
+          },
+          "404": {
+            "description": "`clone_name` not found"
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clone_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDeleteCloneResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "`clone_name` not found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -263,6 +479,12 @@
           },
           "config_schemas": {
             "$ref": "#/components/schemas/ConfigSchemaResponse"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "release_name": {
+            "type": "string"
           }
         },
         "required": [
@@ -276,11 +498,14 @@
           "comparisons": {
             "$ref": "#/components/schemas/ComparisonCapabilities"
           },
+          "data_schema": {
+            "$ref": "#/components/schemas/DataSchemaCapabilities"
+          },
+          "datasets": {
+            "$ref": "#/components/schemas/DatasetCapabilities"
+          },
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
-          },
-          "graphql_schema": {
-            "$ref": "#/components/schemas/GraphQLTypeDefinitions"
           },
           "metrics": {
             "$ref": "#/components/schemas/MetricsCapabilities"
@@ -306,29 +531,135 @@
         },
         "type": "object"
       },
-      "QueryCapabilities": {
+      "ColumnNullability": {
+        "enum": [
+          "only_nullable",
+          "nullable_and_non_nullable"
+        ],
+        "type": "string"
+      },
+      "DataSchemaCapabilities": {
         "properties": {
+          "column_nullability": {
+            "$ref": "#/components/schemas/ColumnNullability"
+          },
+          "supports_foreign_keys": {
+            "default": false,
+            "description": "Whether tables can have foreign keys",
+            "type": "boolean"
+          },
           "supports_primary_keys": {
-            "description": "Does the agent support querying a table by primary key?",
+            "default": false,
+            "description": "Whether tables can have primary keys",
             "type": "boolean"
           }
         },
+        "type": "object"
+      },
+      "QueryCapabilities": {},
+      "InsertCapabilities": {
+        "properties": {
+          "supports_nested_inserts": {
+            "default": false,
+            "description": "Whether or not nested inserts to related tables are supported",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateCapabilities": {},
+      "DeleteCapabilities": {},
+      "AtomicitySupportLevel": {
+        "description": "Describes the level of transactional atomicity the agent supports for mutation operations.\n'row': If multiple rows are affected in a single operation but one fails, only the failed row's changes will be reverted\n'single_operation': If multiple rows are affected in a single operation but one fails, all affected rows in the operation will be reverted\n'homogeneous_operations': If multiple operations of only the same type exist in the one mutation request, a failure in one will result in all changes being reverted\n'heterogeneous_operations': If multiple operations of any type exist in the one mutation request, a failure in one will result in all changes being reverted\n",
+        "enum": [
+          "row",
+          "single_operation",
+          "homogeneous_operations",
+          "heterogeneous_operations"
+        ],
+        "type": "string"
+      },
+      "ReturningCapabilities": {},
+      "MutationCapabilities": {
+        "properties": {
+          "atomicity_support_level": {
+            "$ref": "#/components/schemas/AtomicitySupportLevel"
+          },
+          "delete": {
+            "$ref": "#/components/schemas/DeleteCapabilities"
+          },
+          "insert": {
+            "$ref": "#/components/schemas/InsertCapabilities"
+          },
+          "returning": {
+            "$ref": "#/components/schemas/ReturningCapabilities"
+          },
+          "update": {
+            "$ref": "#/components/schemas/UpdateCapabilities"
+          }
+        },
+        "type": "object"
+      },
+      "SubscriptionCapabilities": {},
+      "ScalarType": {
+        "type": "string"
+      },
+      "ComparisonOperators": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ScalarType"
+        },
+        "description": "A map from comparison operator names to their argument types.\nOperator and argument type names must be valid GraphQL names.\nArgument type names must be defined scalar types declared in ScalarTypesCapabilities.\n",
+        "type": "object"
+      },
+      "AggregateFunctions": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ScalarType"
+        },
+        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types declared in ScalarTypesCapabilities.\n",
+        "type": "object"
+      },
+      "UpdateColumnOperatorDefinition": {
+        "properties": {
+          "argument_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
         "required": [
-          "supports_primary_keys"
+          "argument_type"
         ],
         "type": "object"
       },
-      "MutationCapabilities": {},
-      "SubscriptionCapabilities": {},
-      "GraphQLName": {
-        "description": "A valid GraphQL name",
+      "UpdateColumnOperators": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/UpdateColumnOperatorDefinition"
+        },
+        "description": "A map from update column operator names to their definitions.\nOperator names must be valid GraphQL names.\n",
+        "type": "object"
+      },
+      "GraphQLType": {
+        "enum": [
+          "Int",
+          "Float",
+          "String",
+          "Boolean",
+          "ID"
+        ],
         "type": "string"
       },
       "ScalarTypeCapabilities": {
-        "description": "Capabilities of a scalar type.\ncomparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.\n",
+        "description": "Capabilities of a scalar type.\ncomparison_operators: The comparison operators supported by the scalar type.\naggregate_functions: The aggregate functions supported by the scalar type.\nupdate_column_operators: The update column operators supported by the scalar type.\ngraphql_type: Associates the custom scalar type with one of the built-in GraphQL scalar types.  If a `graphql_type` is specified then HGE will use the parser for that built-in type when parsing values of the custom type. If not given then any JSON value will be accepted.\n",
         "properties": {
-          "comparison_type": {
-            "$ref": "#/components/schemas/GraphQLName"
+          "aggregate_functions": {
+            "$ref": "#/components/schemas/AggregateFunctions"
+          },
+          "comparison_operators": {
+            "$ref": "#/components/schemas/ComparisonOperators"
+          },
+          "graphql_type": {
+            "$ref": "#/components/schemas/GraphQLType"
+          },
+          "update_column_operators": {
+            "$ref": "#/components/schemas/UpdateColumnOperators"
           }
         },
         "type": "object"
@@ -340,22 +671,16 @@
         "description": "A map from scalar type names to their capabilities.\nKeys must be valid GraphQL names and must be defined as scalar types in the `graphql_schema`\n",
         "type": "object"
       },
-      "GraphQLTypeDefinitions": {
-        "description": "A valid GraphQL schema document containing type definitions",
-        "type": "string"
-      },
       "RelationshipCapabilities": {},
       "SubqueryComparisonCapabilities": {
         "nullable": true,
         "properties": {
           "supports_relations": {
+            "default": false,
             "description": "Does the agent support comparisons that involve related tables (ie. joins)?",
             "type": "boolean"
           }
         },
-        "required": [
-          "supports_relations"
-        ],
         "type": "object"
       },
       "ComparisonCapabilities": {
@@ -369,6 +694,7 @@
       "MetricsCapabilities": {},
       "ExplainCapabilities": {},
       "RawCapabilities": {},
+      "DatasetCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
@@ -667,6 +993,34 @@
         },
         "type": "object"
       },
+      "ErrorResponse": {
+        "properties": {
+          "details": {
+            "additionalProperties": true,
+            "default": null,
+            "description": "Error details"
+          },
+          "message": {
+            "description": "Error message",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ErrorResponseType"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "ErrorResponseType": {
+        "enum": [
+          "uncaught-error",
+          "mutation-constraint-violation",
+          "mutation-permission-check-failure"
+        ],
+        "type": "string"
+      },
       "SchemaResponse": {
         "properties": {
           "tables": {
@@ -689,21 +1043,12 @@
         },
         "type": "array"
       },
-      "ScalarType": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "string",
-              "number",
-              "bool"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
+      "TableType": {
+        "enum": [
+          "table",
+          "view"
+        ],
+        "type": "string"
       },
       "ColumnInfo": {
         "properties": {
@@ -711,6 +1056,11 @@
             "description": "Column description",
             "nullable": true,
             "type": "string"
+          },
+          "insertable": {
+            "default": false,
+            "description": "Whether or not the column can be inserted into",
+            "type": "boolean"
           },
           "name": {
             "description": "Column name",
@@ -722,6 +1072,11 @@
           },
           "type": {
             "$ref": "#/components/schemas/ScalarType"
+          },
+          "updatable": {
+            "default": false,
+            "description": "Whether or not the column can be updated",
+            "type": "boolean"
           }
         },
         "required": [
@@ -759,6 +1114,11 @@
             },
             "type": "array"
           },
+          "deletable": {
+            "default": false,
+            "description": "Whether or not existing rows can be deleted in the table",
+            "type": "boolean"
+          },
           "description": {
             "description": "Description of the table",
             "nullable": true,
@@ -768,20 +1128,33 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Constraint"
             },
+            "default": {},
             "description": "Foreign key constraints",
-            "nullable": true,
             "type": "object"
+          },
+          "insertable": {
+            "default": false,
+            "description": "Whether or not new rows can be inserted into the table",
+            "type": "boolean"
           },
           "name": {
             "$ref": "#/components/schemas/TableName"
           },
           "primary_key": {
+            "default": [],
             "description": "The primary key of the table",
             "items": {
               "type": "string"
             },
-            "nullable": true,
             "type": "array"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TableType"
+          },
+          "updatable": {
+            "default": false,
+            "description": "Whether or not existing rows can be updated in the table",
+            "type": "boolean"
           }
         },
         "required": [
@@ -972,6 +1345,9 @@
           "column": {
             "type": "string"
           },
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "column"
@@ -981,6 +1357,7 @@
         },
         "required": [
           "column",
+          "column_type",
           "type"
         ],
         "type": "object"
@@ -1027,16 +1404,7 @@
         "type": "object"
       },
       "SingleColumnAggregateFunction": {
-        "enum": [
-          "avg",
-          "max",
-          "min",
-          "stddev_pop",
-          "stddev_samp",
-          "sum",
-          "var_pop",
-          "var_samp"
-        ],
+        "description": "Single column aggregate function name.\nA valid GraphQL name",
         "type": "string"
       },
       "SingleColumnAggregate": {
@@ -1225,6 +1593,9 @@
       },
       "ComparisonColumn": {
         "properties": {
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "name": {
             "description": "The name of the column",
             "type": "string"
@@ -1239,7 +1610,8 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "column_type"
         ],
         "type": "object"
       },
@@ -1257,6 +1629,9 @@
             ],
             "type": "string"
           },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "values": {
             "items": {
               "additionalProperties": true
@@ -1268,6 +1643,7 @@
           "operator",
           "column",
           "values",
+          "value_type",
           "type"
         ],
         "type": "object"
@@ -1357,10 +1733,14 @@
           },
           "value": {
             "additionalProperties": true
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
           "value",
+          "value_type",
           "type"
         ],
         "type": "object"
@@ -1633,6 +2013,443 @@
         ],
         "type": "object"
       },
+      "MutationResponse": {
+        "properties": {
+          "operation_results": {
+            "description": "The results of each mutation operation, in the same order as they were received",
+            "items": {
+              "$ref": "#/components/schemas/MutationOperationResults"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "operation_results"
+        ],
+        "type": "object"
+      },
+      "MutationOperationResults": {
+        "properties": {
+          "affected_rows": {
+            "description": "The number of rows affected by the mutation operation",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "type": "number"
+          },
+          "returning": {
+            "description": "The rows affected by the mutation operation",
+            "items": {
+              "additionalProperties": {
+                "additionalProperties": true,
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ColumnFieldValue"
+                  },
+                  {
+                    "$ref": "#/components/schemas/QueryResponse"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NullColumnFieldValue"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
+          }
+        },
+        "required": [
+          "affected_rows"
+        ],
+        "type": "object"
+      },
+      "MutationRequest": {
+        "properties": {
+          "insert_schema": {
+            "description": "The schema by which to interpret row data specified in any insert operations in this request",
+            "items": {
+              "$ref": "#/components/schemas/TableInsertSchema"
+            },
+            "type": "array"
+          },
+          "operations": {
+            "description": "The mutation operations to perform",
+            "items": {
+              "$ref": "#/components/schemas/MutationOperation"
+            },
+            "type": "array"
+          },
+          "table_relationships": {
+            "description": "The relationships between tables involved in the entire mutation request",
+            "items": {
+              "$ref": "#/components/schemas/TableRelationships"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "table_relationships",
+          "insert_schema",
+          "operations"
+        ],
+        "type": "object"
+      },
+      "ObjectRelationInsertionOrder": {
+        "enum": [
+          "before_parent",
+          "after_parent"
+        ],
+        "type": "string"
+      },
+      "ObjectRelationInsertSchema": {
+        "properties": {
+          "insertion_order": {
+            "$ref": "#/components/schemas/ObjectRelationInsertionOrder"
+          },
+          "relationship": {
+            "description": "The name of the object relationship over which the related row must be inserted",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "object_relation"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "relationship",
+          "insertion_order",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ArrayRelationInsertSchema": {
+        "properties": {
+          "relationship": {
+            "description": "The name of the array relationship over which the related rows must be inserted",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "array_relation"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "relationship",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnInsertSchema": {
+        "properties": {
+          "column": {
+            "description": "The name of the column that this field should be inserted into",
+            "type": "string"
+          },
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "column_type",
+          "type"
+        ],
+        "type": "object"
+      },
+      "InsertFieldSchema": {
+        "discriminator": {
+          "mapping": {
+            "array_relation": "ArrayRelationInsertSchema",
+            "column": "ColumnInsertSchema",
+            "object_relation": "ObjectRelationInsertSchema"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ObjectRelationInsertSchema"
+          },
+          {
+            "$ref": "#/components/schemas/ArrayRelationInsertSchema"
+          },
+          {
+            "$ref": "#/components/schemas/ColumnInsertSchema"
+          }
+        ]
+      },
+      "TableInsertSchema": {
+        "properties": {
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/InsertFieldSchema"
+            },
+            "description": "The fields that will be found in the insert row data for the table and the schema for each field",
+            "type": "object"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          }
+        },
+        "required": [
+          "table",
+          "fields"
+        ],
+        "type": "object"
+      },
+      "ColumnInsertFieldValue": {
+        "additionalProperties": true
+      },
+      "ObjectRelationInsertFieldValue": {},
+      "RowObject": {
+        "additionalProperties": {
+          "additionalProperties": true,
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/ColumnInsertFieldValue"
+            },
+            {
+              "$ref": "#/components/schemas/ObjectRelationInsertFieldValue"
+            },
+            {
+              "$ref": "#/components/schemas/ArrayRelationInsertFieldValue"
+            },
+            {
+              "$ref": "#/components/schemas/NullColumnInsertFieldValue"
+            }
+          ]
+        },
+        "type": "object"
+      },
+      "ArrayRelationInsertFieldValue": {
+        "items": {
+          "$ref": "#/components/schemas/RowObject"
+        },
+        "type": "array"
+      },
+      "NullColumnInsertFieldValue": {
+        "type": "null"
+      },
+      "InsertMutationOperation": {
+        "properties": {
+          "post_insert_check": {
+            "$ref": "#/components/schemas/Expression"
+          },
+          "returning_fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "default": {},
+            "description": "The fields to return for the rows affected by this insert operation",
+            "nullable": true,
+            "type": "object"
+          },
+          "rows": {
+            "description": "The rows to insert into the table",
+            "items": {
+              "$ref": "#/components/schemas/RowObject"
+            },
+            "type": "array"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "insert"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "rows",
+          "type"
+        ],
+        "type": "object"
+      },
+      "DeleteMutationOperation": {
+        "properties": {
+          "returning_fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "default": {},
+            "description": "The fields to return for the rows affected by this delete operation",
+            "nullable": true,
+            "type": "object"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "delete"
+            ],
+            "type": "string"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "table",
+          "type"
+        ],
+        "type": "object"
+      },
+      "UpdateColumnOperatorName": {
+        "type": "string"
+      },
+      "CustomUpdateColumnOperatorRowUpdate": {
+        "properties": {
+          "column": {
+            "description": "The name of the column in the row",
+            "type": "string"
+          },
+          "operator_name": {
+            "$ref": "#/components/schemas/UpdateColumnOperatorName"
+          },
+          "type": {
+            "enum": [
+              "custom_operator"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "additionalProperties": true,
+            "description": "The value to use with the column operator"
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "operator_name",
+          "column",
+          "value",
+          "value_type",
+          "type"
+        ],
+        "type": "object"
+      },
+      "SetColumnRowUpdate": {
+        "properties": {
+          "column": {
+            "description": "The name of the column in the row",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "set"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "additionalProperties": true,
+            "description": "The value to use with the column operator"
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "column",
+          "value",
+          "value_type",
+          "type"
+        ],
+        "type": "object"
+      },
+      "RowUpdate": {
+        "discriminator": {
+          "mapping": {
+            "custom_operator": "CustomUpdateColumnOperatorRowUpdate",
+            "set": "SetColumnRowUpdate"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CustomUpdateColumnOperatorRowUpdate"
+          },
+          {
+            "$ref": "#/components/schemas/SetColumnRowUpdate"
+          }
+        ]
+      },
+      "UpdateMutationOperation": {
+        "properties": {
+          "post_update_check": {
+            "$ref": "#/components/schemas/Expression"
+          },
+          "returning_fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "default": {},
+            "description": "The fields to return for the rows affected by this update operation",
+            "nullable": true,
+            "type": "object"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "update"
+            ],
+            "type": "string"
+          },
+          "updates": {
+            "description": "The updates to make to the matched rows in the table",
+            "items": {
+              "$ref": "#/components/schemas/RowUpdate"
+            },
+            "type": "array"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "table",
+          "updates",
+          "type"
+        ],
+        "type": "object"
+      },
+      "MutationOperation": {
+        "discriminator": {
+          "mapping": {
+            "delete": "DeleteMutationOperation",
+            "insert": "InsertMutationOperation",
+            "update": "UpdateMutationOperation"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InsertMutationOperation"
+          },
+          {
+            "$ref": "#/components/schemas/DeleteMutationOperation"
+          },
+          {
+            "$ref": "#/components/schemas/UpdateMutationOperation"
+          }
+        ]
+      },
       "RawResponse": {
         "properties": {
           "rows": {
@@ -1660,6 +2477,61 @@
         },
         "required": [
           "query"
+        ],
+        "type": "object"
+      },
+      "DatasetGetTemplateResponse": {
+        "properties": {
+          "exists": {
+            "description": "Message detailing if the dataset exists",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exists"
+        ],
+        "type": "object"
+      },
+      "DatasetCreateCloneResponse": {
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/Config"
+          }
+        },
+        "required": [
+          "config"
+        ],
+        "type": "object"
+      },
+      "Config": {
+        "additionalProperties": {
+          "additionalProperties": true
+        },
+        "type": "object"
+      },
+      "DatasetCreateCloneRequest": {
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/DatasetTemplateName"
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "type": "object"
+      },
+      "DatasetTemplateName": {
+        "type": "string"
+      },
+      "DatasetDeleteCloneResponse": {
+        "properties": {
+          "message": {
+            "description": "The named dataset to clone from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       }

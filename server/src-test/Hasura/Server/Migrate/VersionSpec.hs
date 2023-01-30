@@ -40,7 +40,8 @@ spec = do
     it "cannot read any other non-integral number" $ hedgehog do
       expected <-
         forAll $
-          Gen.filter (/= 0.8) $ Gen.float (Range.constantFrom 0 (-1e6) 1e6)
+          Gen.filter (/= 0.8) $
+            Gen.float (Range.constantFrom 0 (-1e6) 1e6)
       let input = show expected
       let version :: Either String MetadataCatalogVersion = readEither input
       assert $ isLeft version

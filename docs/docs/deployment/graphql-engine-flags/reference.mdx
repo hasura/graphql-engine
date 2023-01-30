@@ -1,5 +1,5 @@
 ---
-description: Hasura GraphQL engine server config reference (Flags/Environment variables)
+description: Hasura GraphQL Engine server config reference (Flags/Environment variables)
 keywords:
   - hasura
   - docs
@@ -13,11 +13,11 @@ sidebar_position: 2
 sidebar_label: Server config reference
 ---
 
-# GraphQL Engine server config reference
+# GraphQL Engine Server Config Reference
 
 ## Introduction
 
-Every GraphQL engine command is structured as:
+Every GraphQL Engine command is structured as:
 
 ```bash
 $ graphql-engine <server-flags> serve <command-flags>
@@ -76,8 +76,8 @@ Example:
 </td>
 <td>
 
-Postgres database URL that will be used to store the Hasura metadata. By default the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` will be used to store the metadata.
+Postgres database URL that will be used to store the Hasura Metadata. By default the database configured using
+`HASURA_GRAPHQL_DATABASE_URL` will be used to store the Metadata.
 
 Postgres database URL:
 
@@ -185,8 +185,8 @@ Admin secret key, required to access this instance. This is mandatory when you u
 </td>
 <td>
 
-Interval in milliseconds to sleep before trying to fetch async actions again after a fetch returned no async actions
-from metadata storage. Value `0` implies completely disable fetching async actions from the storage.
+Interval in milliseconds to sleep before trying to fetch async Actions again after a fetch returned no async actions
+from Metadata storage. Value `0` implies completely disable fetching async Actions from the storage.
 
 _(Available for versions > v2.0.0)_
 
@@ -249,7 +249,7 @@ HTTP method to use for the authorization webhook. (default: `GET`)
 Maximum number of Postgres connections that can be opened per stripe (default: `50`). When the maximum is reached we
 will block until a new connection becomes available, even if there is capacity in other stripes.
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -272,7 +272,7 @@ Time from connection creation after which the connection should be destroyed and
 indicates we should never destroy an active connection. If `0` is passed, memory from large query results may not be
 reclaimed. (default: `600` **sec**)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -291,7 +291,7 @@ reclaimed. (default: `600` **sec**)
 </td>
 <td>
 
-Set the value to `/srv/console-assets` for the console to load assets from the server itself instead of CDN.
+Set the value to `/srv/console-assets` for the Console to load assets from the server itself instead of CDN.
 
 </td>
 </tr>
@@ -330,7 +330,7 @@ CSV of list of domains, including scheme (http/https) and port, to allow for COR
 </td>
 <td>
 
-The schema in which Hasura can install extensions in the metadata database. Default: `public`.
+The schema in which Hasura can install extensions in the Metadata database. Default: `public`.
 
 </td>
 </tr>
@@ -389,7 +389,7 @@ Disable CORS. Do not send any CORS headers on any request.
 </td>
 <td>
 
-Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured allow-list.
+Restrict queries allowed to be executed by the GraphQL Engine to those that are part of the configured allow-list.
 Default: `false`
 
 </td>
@@ -447,7 +447,7 @@ Enable sending compressed logs to metrics server.
 </td>
 <td>
 
-Disable updating of metadata on the server. (default: `false`)
+Disable updating of Metadata on the server. (default: `false`)
 
 _(Available for versions > v2.0.0)_
 
@@ -467,7 +467,7 @@ _(Available for versions > v2.0.0)_
 </td>
 <td>
 
-Enables the query field in http-logs for metadata queries. (default: `false`)
+Enables the query field in http-logs for Metadata queries. (default: `false`)
 
 </td>
 </tr>
@@ -486,7 +486,7 @@ Enables the query field in http-logs for metadata queries. (default: `false`)
 </td>
 <td>
 
-Enable remote schema permissions. (default: `false`)
+Enable Remote Schema permissions. (default: `false`)
 
 _(Available for versions > v2.0.0)_
 
@@ -624,7 +624,9 @@ Interval in milliseconds to sleep before trying to fetch events again after a fe
 <td>
 
 List of experimental features to be enabled. A comma separated value is expected. Options: `inherited_roles`,
-`naming_convention`, `streaming_subscriptions`, `hide_update_many_fields`.
+`optimise_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`,
+`bigquery_string_numeric_input`, `hide_aggregation_predicates`,
+`hide_stream_fields`.
 
 _(Available for versions > v2.0.0)_
 
@@ -645,7 +647,7 @@ _(Available for versions > v2.0.0)_
 </td>
 <td>
 
-Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to
+Timeout (in seconds) to wait for the in-flight events (Event Triggers and Scheduled Triggers) and async Actions to
 complete before the server shuts down completely (default: `60` **sec**). If the in-flight events are not completed
 within the timeout, those events are marked as pending.
 
@@ -670,7 +672,7 @@ _(Available for versions > v2.0.0)_
 
 Transaction isolation. read-committed / repeatable-read / serializable (default: read-committed)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -815,7 +817,7 @@ How long to wait when acquiring a Postgres connection, in seconds. (default: for
 
 The maximum number of query plans that can be cached, allowed values: 0-65535, 0 disables the cache. (Default: 4000)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -836,7 +838,7 @@ The maximum number of query plans that can be cached, allowed values: 0-65535, 0
 
 Number of retries if Postgres connection error occurs. (default: `1`)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -858,7 +860,7 @@ Number of retries if Postgres connection error occurs. (default: `1`)
 Number of stripes (distinct sub-pools) to maintain with Postgres (default: `1`). New connections will be taken from a
 particular stripe pseudo-randomly.
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -877,7 +879,7 @@ particular stripe pseudo-randomly.
 </td>
 <td>
 
-Interval to poll metadata storage for updates in milliseconds. Default: `1000` (`1` **sec**). Set to `0` to disable.
+Interval to poll Metadata storage for updates in milliseconds. Default: `1000` (`1` **sec**). Set to `0` to disable.
 
 _(Available for versions > v2.0.0)_
 
@@ -964,7 +966,7 @@ multiplexed. (Default: `1000`)
 <tr>
 <td>
 
-**Flag:**
+###### Flag: {#stringify-numeric-types}
 
 `--stringify-numeric-types`
 
@@ -997,7 +999,7 @@ don't fit into the `IEEE-754` spec for JSON encoding-decoding. (default: `false`
 
 Each connection's idle time before it is closed (default: `180` **sec**)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -1039,7 +1041,7 @@ JWT mode. Example: `anonymous`. Now whenever the "authorization" header is absen
 
 Use prepared statements for queries. (default: `true`)
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>
@@ -1079,7 +1081,7 @@ _(Available for versions > v2.0.0)_
 </td>
 <td>
 
-Used to set the connection initialisation timeout for `graphql-ws` clients. This is ignored for
+Used to set the connection initialization timeout for `graphql-ws` clients. This is ignored for
 `subscription-transport-ws` (Apollo) clients. (default: `3`)
 
 </td>
@@ -1160,7 +1162,7 @@ Maximum number of concurrent http workers delivering events at any time. (defaul
 </td>
 <td>
 
-Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres.
+Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres. (default: `1000`)
 
 </td>
 </tr>
@@ -1515,7 +1517,7 @@ Redis URL in the form `redis://username:password@host:port/db` to use for query 
 
 Number of stripes (connection pools) to maintain per read replica.
 
-**(Deprecated in versions > v2.0.0. [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
+**(Deprecated in versions > v2.0.0. [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-env-changes))**
 
 </td>
 </tr>

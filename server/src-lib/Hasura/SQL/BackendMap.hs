@@ -8,13 +8,14 @@ module Hasura.SQL.BackendMap
     elems,
     alter,
     modify,
+    overridesDeeply,
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (FromJSON, Key, ToJSON)
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Extended
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Data
@@ -22,11 +23,11 @@ import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended (toTxt)
-import Hasura.Incremental.Internal.Dependency (Cacheable, Dependency (..), selectD)
+import Hasura.Incremental.Internal.Dependency (Dependency (..), selectD)
 import Hasura.Incremental.Select
 import Hasura.Prelude hiding (empty, lookup, modify)
-import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', mkAnyBackend, parseAnyBackendFromJSON, unpackAnyBackend)
-import Hasura.SQL.Backend (BackendType, parseBackendTypeFromText)
+import Hasura.SQL.AnyBackend
+import Hasura.SQL.Backend (BackendType)
 import Hasura.SQL.Tag (BackendTag, HasTag, backendTag, reify)
 
 --------------------------------------------------------------------------------
@@ -41,16 +42,14 @@ deriving newtype instance i `SatisfiesForAllBackends` Show => Show (BackendMap i
 
 deriving newtype instance i `SatisfiesForAllBackends` Eq => Eq (BackendMap i)
 
-deriving newtype instance i `SatisfiesForAllBackends` Cacheable => Cacheable (BackendMap i)
-
 instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
   parseJSON =
     Aeson.withObject "BackendMap" $ \obj -> do
       BackendMap . Map.fromList
         <$> traverse
-          ( \(backendTypeStr, val) -> do
-              backendType <- parseBackendTypeFromText $ Key.toText backendTypeStr
-              (backendType,) <$> parseAnyBackendFromJSON backendType val
+          ( \keyValue -> do
+              out <- parseJSONKeyValue keyValue
+              pure $ (lowerTag out, out)
           )
           (KeyMap.toList obj)
 
@@ -129,3 +128,10 @@ alter f (BackendMap bmap) = BackendMap $ Map.alter (wrap . f . unwrap) (reify @b
 
     unwrap :: Maybe (AnyBackend i) -> Maybe (i b)
     unwrap x = x >>= unpackAnyBackend @b
+
+-- | The expression @a `overridesDeeply b@ applies the values from @a@ on top of the defaults @b@.
+-- In practice this should union the maps for each backend type.
+overridesDeeply :: i `SatisfiesForAllBackends` Semigroup => BackendMap i -> BackendMap i -> BackendMap i
+overridesDeeply (BackendMap a) (BackendMap b) = BackendMap (Map.unionWith override a b)
+  where
+    override a' b' = mergeAnyBackend @Semigroup (<>) a' b' a'

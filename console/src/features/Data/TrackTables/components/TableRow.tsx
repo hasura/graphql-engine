@@ -1,5 +1,5 @@
 import { TableTrackingCustomizationModal } from '@/components/Services/Data/Schema/tableTrackCustomization/TableTrackingCustomizationModal';
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
 import React from 'react';
@@ -21,7 +21,7 @@ export const TableRow = React.memo(
     const [showCustomModal, setShowCustomModal] = React.useState(false);
     const { trackTable, untrackTable, loading } = useTrackTable(dataSourceName);
 
-    const track = (customConfiguration?: MetadataTableConfig) => {
+    const track = (customConfiguration?: MetadataTable['configuration']) => {
       const t = { ...table };
       if (customConfiguration) {
         t.configuration = customConfiguration;
@@ -58,12 +58,22 @@ export const TableRow = React.memo(
         <CardedTable.TableBodyCell>{table.type}</CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>
           {table.is_tracked ? (
-            <Button size="sm" onClick={untrack} isLoading={loading}>
+            <Button
+              data-testid={`untrack-${table.name}`}
+              size="sm"
+              onClick={untrack}
+              isLoading={loading}
+            >
               Untrack
             </Button>
           ) : (
             <div className="flex flex-row">
-              <Button size="sm" onClick={() => track()} isLoading={loading}>
+              <Button
+                data-testid={`track-${table.name}`}
+                size="sm"
+                onClick={() => track()}
+                isLoading={loading}
+              >
                 Track
               </Button>
               {/* Hiding this customize button while loading as it looks odd to have two buttons in "loading mode" */}
@@ -86,6 +96,8 @@ export const TableRow = React.memo(
                 onClose={() => {
                   setShowCustomModal(false);
                 }}
+                callToAction="Customize & Track"
+                callToActionLoadingText="Saving..."
                 isLoading={loading}
                 show={showCustomModal}
               />

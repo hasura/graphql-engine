@@ -5,6 +5,8 @@ module Test.Data
   ( -- = Test Data
     TestData (..),
     mkTestData,
+    schemaTables,
+    allTableRows,
     -- = Utilities
     emptyQuery,
     sortBy,
@@ -23,17 +25,15 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
-    columnField,
-    queryComparisonColumn,
-    currentComparisonColumn,
+    _RelationshipFieldRows,
     orderByColumn,
   )
 where
 
 import Codec.Compression.GZip qualified as GZip
-import Command (TestConfig (..))
+import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Number, _String)
@@ -65,10 +65,10 @@ schemaTables :: [API.TableInfo]
 schemaTables = sortOn API._tiName . either error id . eitherDecodeStrict $ schemaBS
 
 numericColumns :: [API.ColumnName]
-numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.NumberTy then Just _ciName else Nothing))
+numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
 
 chinookXmlBS :: ByteString
-chinookXmlBS = $(makeRelativeToProject "test/Test/Data/ChinookData.xml.gz" >>= embedFile)
+chinookXmlBS = $(makeRelativeToProject "test/Test/Data/Chinook.xml.gz" >>= embedFile)
 
 chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS
@@ -267,6 +267,34 @@ genresTableRelationships =
             ]
         )
 
+playlistsTableName :: API.TableName
+playlistsTableName = mkTableName "Playlist"
+
+playlistsRows :: [HashMap API.FieldName API.FieldValue]
+playlistsRows = sortBy (API.FieldName "PlaylistId") $ readTableFromXmlIntoRows playlistsTableName
+
+playlistTracksTableName :: API.TableName
+playlistTracksTableName = mkTableName "PlaylistTrack"
+
+playlistTracksRows :: [HashMap API.FieldName API.FieldValue]
+playlistTracksRows = sortOn (\r -> (r ^? ix (API.FieldName "PlaylistId"), r ^? ix (API.FieldName "TrackId"))) $ readTableFromXmlIntoRows playlistTracksTableName
+
+allTableRows :: HashMap API.TableName ([HashMap API.FieldName API.FieldValue])
+allTableRows =
+  HashMap.fromList
+    [ (artistsTableName, artistsRows),
+      (albumsTableName, albumsRows),
+      (customersTableName, customersRows),
+      (employeesTableName, employeesRows),
+      (genresTableName, genresRows),
+      (invoicesTableName, invoicesRows),
+      (invoiceLinesTableName, invoiceLinesRows),
+      (mediaTypesTableName, mediaTypesRows),
+      (playlistsTableName, playlistsRows),
+      (playlistTracksTableName, playlistTracksRows),
+      (tracksTableName, tracksRows)
+    ]
+
 data TestData = TestData
   { -- = Schema
     _tdSchemaTables :: [API.TableInfo],
@@ -314,61 +342,116 @@ data TestData = TestData
     -- = Genres table
     _tdGenresTableName :: API.TableName,
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
-    _tdGenresTableRelationships :: API.TableRelationships
+    _tdGenresTableRelationships :: API.TableRelationships,
+    -- = Scalar Types
+    _tdFindColumnScalarType :: API.TableName -> Text -> API.ScalarType,
+    -- = Utility functions
+    _tdColumnName :: Text -> API.ColumnName,
+    _tdColumnField :: API.TableName -> Text -> API.Field,
+    _tdQueryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
+    _tdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
+    _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
-mkTestData :: TestConfig -> TestData
-mkTestData TestConfig {..} =
+mkTestData :: API.SchemaResponse -> TestConfig -> TestData
+mkTestData schemaResponse TestConfig {..} =
   TestData
-    { _tdSchemaTables = (API.tiName %~ applyTableNamePrefix _tcTableNamePrefix) <$> schemaTables,
-      _tdArtistsTableName = applyTableNamePrefix _tcTableNamePrefix artistsTableName,
+    { _tdSchemaTables = formatTableInfo <$> schemaTables,
+      _tdArtistsTableName = formatTableName artistsTableName,
       _tdArtistsRows = artistsRows,
       _tdArtistsRowsById = artistsRowsById,
-      _tdArtistsTableRelationships = prefixTableRelationships artistsTableRelationships,
+      _tdArtistsTableRelationships = formatTableRelationships artistsTableRelationships,
       _tdAlbumsRelationshipName = albumsRelationshipName,
-      _tdAlbumsTableName = applyTableNamePrefix _tcTableNamePrefix albumsTableName,
+      _tdAlbumsTableName = formatTableName albumsTableName,
       _tdAlbumsRows = albumsRows,
       _tdAlbumsRowsById = albumsRowsById,
-      _tdAlbumsTableRelationships = prefixTableRelationships albumsTableRelationships,
+      _tdAlbumsTableRelationships = formatTableRelationships albumsTableRelationships,
       _tdArtistRelationshipName = artistRelationshipName,
       _tdTracksRelationshipName = tracksRelationshipName,
-      _tdCustomersTableName = applyTableNamePrefix _tcTableNamePrefix customersTableName,
+      _tdCustomersTableName = formatTableName customersTableName,
       _tdCustomersRows = customersRows,
-      _tdCustomersTableRelationships = prefixTableRelationships customersTableRelationships,
+      _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
-      _tdEmployeesTableName = applyTableNamePrefix _tcTableNamePrefix employeesTableName,
+      _tdEmployeesTableName = formatTableName employeesTableName,
       _tdEmployeesRows = employeesRows,
       _tdEmployeesRowsById = employeesRowsById,
-      _tdEmployeesTableRelationships = prefixTableRelationships employeesTableRelationships,
+      _tdEmployeesTableRelationships = formatTableRelationships employeesTableRelationships,
       _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
-      _tdInvoicesTableName = applyTableNamePrefix _tcTableNamePrefix invoicesTableName,
+      _tdInvoicesTableName = formatTableName invoicesTableName,
       _tdInvoicesRows = invoicesRows,
-      _tdInvoiceLinesTableName = applyTableNamePrefix _tcTableNamePrefix invoiceLinesTableName,
+      _tdInvoiceLinesTableName = formatTableName invoiceLinesTableName,
       _tdInvoiceLinesRows = invoiceLinesRows,
-      _tdMediaTypesTableName = applyTableNamePrefix _tcTableNamePrefix mediaTypesTableName,
+      _tdMediaTypesTableName = formatTableName mediaTypesTableName,
       _tdMediaTypesRows = mediaTypesRows,
-      _tdTracksTableName = applyTableNamePrefix _tcTableNamePrefix tracksTableName,
+      _tdTracksTableName = formatTableName tracksTableName,
       _tdTracksRows = tracksRows,
-      _tdTracksTableRelationships = prefixTableRelationships tracksTableRelationships,
+      _tdTracksTableRelationships = formatTableRelationships tracksTableRelationships,
       _tdInvoiceLinesRelationshipName = invoiceLinesRelationshipName,
       _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
       _tdAlbumRelationshipName = albumRelationshipName,
       _tdGenreRelationshipName = genreRelationshipName,
-      _tdGenresTableName = applyTableNamePrefix _tcTableNamePrefix genresTableName,
+      _tdGenresTableName = formatTableName genresTableName,
       _tdGenresRows = genresRows,
-      _tdGenresTableRelationships = prefixTableRelationships genresTableRelationships
+      _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
+      _tdColumnName = formatColumnName . API.ColumnName,
+      _tdColumnField = columnField,
+      _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName $ API.ColumnName name),
+      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName . API.ColumnName,
+      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName . API.ColumnName,
+      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName $ API.ColumnName name)
     }
   where
+    formatTableName :: API.TableName -> API.TableName
+    formatTableName = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
+
+    formatTableRelationships :: API.TableRelationships -> API.TableRelationships
+    formatTableRelationships =
+      prefixTableRelationships
+        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+
+    formatColumnName :: API.ColumnName -> API.ColumnName
+    formatColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
-      API.trSourceTable %~ applyTableNamePrefix _tcTableNamePrefix
-        >>> API.trRelationships . traverse . API.rTargetTable %~ applyTableNamePrefix _tcTableNamePrefix
+      API.trSourceTable %~ formatTableName
+        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName
+
+    formatTableInfo :: API.TableInfo -> API.TableInfo
+    formatTableInfo =
+      API.tiName %~ formatTableName
+        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName
+        >>> API.tiPrimaryKey . traverse %~ formatColumnName
+        >>> API.tiForeignKeys . lens API.unForeignKeys (const API.ForeignKeys) . traverse
+          %~ ( API.cForeignTable %~ formatTableName
+                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+             )
+
+    columnField :: API.TableName -> Text -> API.Field
+    columnField tableName columnName =
+      API.ColumnField columnName' scalarType
+      where
+        columnName' = formatColumnName $ API.ColumnName columnName
+        scalarType = findColumnScalarType schemaResponse tableName columnName'
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
   case NonEmpty.nonEmpty prefix of
     Just prefix' -> API.TableName (prefix' <> rawTableName)
     Nothing -> tableName
+
+applyNameCasing :: NameCasing -> Text -> Text
+applyNameCasing casing text = case casing of
+  PascalCase -> text
+  Lowercase -> Text.toLower text
+  Uppercase -> Text.toUpper text
+
+findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
+findColumnScalarType API.SchemaResponse {..} tableName columnName =
+  maybe (error $ "Can't find the scalar type of column " <> show columnName <> " in table " <> show tableName) API._ciType columnInfo
+  where
+    tableInfo = find (\API.TableInfo {..} -> _tiName == tableName) _srTables
+    columnInfo = find (\API.ColumnInfo {..} -> _ciName == columnName) =<< API._tiColumns <$> tableInfo
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
@@ -435,15 +518,9 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
 
-columnField :: Text -> API.Field
-columnField = API.ColumnField . API.ColumnName
+_RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
+_RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
 
-queryComparisonColumn :: Text -> API.ComparisonColumn
-queryComparisonColumn columnName = API.ComparisonColumn API.QueryTable $ API.ColumnName columnName
-
-currentComparisonColumn :: Text -> API.ComparisonColumn
-currentComparisonColumn columnName = API.ComparisonColumn API.CurrentTable $ API.ColumnName columnName
-
-orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
+orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
-  API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection
+  API.OrderByElement targetPath (API.OrderByColumn columnName) orderDirection

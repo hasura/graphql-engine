@@ -4,8 +4,11 @@
   "projects": {
     "console-ce": "apps/console-ce",
     "console-ce-e2e": "apps/console-ce-e2e",
-    "console-legacy-oss": "libs/console/legacy-oss",
-    "console-legacy-pro": "libs/console/legacy-pro",
-    "console-pro": "apps/console-pro"
+    "console-ee": "apps/console-ee",
+    "console-ee-e2e": "apps/console-ee-e2e",
+    "console-legacy-ce": "libs/console/legacy-ce",
+    "console-legacy-ee": "libs/console/legacy-ee",
+    "nx-internal-plugin": "libs/nx/internal-plugin",
+    "nx-internal-plugin-e2e": "apps/nx/internal-plugin-e2e"
   }
 }

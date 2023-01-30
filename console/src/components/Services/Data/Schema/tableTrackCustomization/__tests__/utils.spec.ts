@@ -1,27 +1,10 @@
 import {
-  getDriverPrefix,
   getQualifiedTable,
   getTrackTableType,
   getTrackingTableFormPlaceholders,
 } from '../utils';
 
 import { TrackingTableFormValues } from '../types';
-
-describe('getDriverPrefix', () => {
-  it.each`
-    driver        | expected
-    ${'postgres'} | ${'pg'}
-    ${'mssql'}    | ${'mssql'}
-    ${'mysql'}    | ${'mysql'}
-    ${'citus'}    | ${'citus'}
-    ${'bigquery'} | ${'bigquery'}
-  `(
-    'Given a $driver driver, then returns $expected',
-    ({ driver, expected }) => {
-      expect(getDriverPrefix(driver)).toBe(expected);
-    }
-  );
-});
 
 describe('getTrackTableType', () => {
   it.each`
@@ -79,6 +62,8 @@ describe('getTrackingTableFormPlaceholders', () => {
 
       delete: 'delete_customizeTableName (default)',
       delete_by_pk: 'delete_by_pk_customizeTableName (default)',
+
+      update_many: 'update_many_customizeTableName (default)',
     };
 
     const result = getTrackingTableFormPlaceholders('customizeTableName');

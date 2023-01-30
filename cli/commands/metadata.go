@@ -8,6 +8,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -26,19 +27,28 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:     "metadata",
 		Aliases: []string{"md"},
-		Short:   "Manage Hasura GraphQL engine metadata saved in the database",
+		Short:   "Manage Hasura GraphQL Engine Metadata saved in the database",
+		Long: `This command allows you to manage the Hasura GraphQL Engine Metadata saved in the database via a collection of flags and subcommands.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/index/
+`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			err = ec.Validate()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
-			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
+			if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		SilenceUsage: true,
 	}
@@ -53,9 +63,9 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := metadataCmd.PersistentFlags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
@@ -72,28 +82,29 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
+	var op errors.Op = "commands.writeByOutputFormat"
 	switch format {
 	case rawOutputFormatJSON:
 		out := new(bytes.Buffer)
 		err := json.Indent(out, b, "", "  ")
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		_, err = io.Copy(w, out)
 		if err != nil {
-			return fmt.Errorf("writing output failed: %w", err)
+			return errors.E(op, fmt.Errorf("writing output failed: %w", err))
 		}
 	case rawOutputFormatYAML:
 		o, err := metadatautil.JSONToYAML(b)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		_, err = io.Copy(w, bytes.NewReader(o))
 		if err != nil {
-			return fmt.Errorf("writing output failed: %w", err)
+			return errors.E(op, fmt.Errorf("writing output failed: %w", err))
 		}
 	default:
-		return fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML)
+		return errors.E(op, fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML))
 	}
 	return nil
 }

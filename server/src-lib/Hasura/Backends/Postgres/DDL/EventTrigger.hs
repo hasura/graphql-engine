@@ -91,7 +91,7 @@ fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetc
     Right fetchEventsTx ->
       liftEitherM $
         liftIO $
-          runPgSourceWriteTx sourceConfig fetchEventsTx
+          runPgSourceWriteTx sourceConfig InternalRawQuery fetchEventsTx
 
 setRetry ::
   ( MonadIO m,
@@ -103,7 +103,7 @@ setRetry ::
   MaintenanceMode MaintenanceModeVersion ->
   m ()
 setRetry sourceConfig event retryTime maintenanceModeVersion =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig (setRetryTx event retryTime maintenanceModeVersion)
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery (setRetryTx event retryTime maintenanceModeVersion)
 
 insertManualEvent ::
   (MonadIO m, MonadError QErr m) =>
@@ -122,7 +122,7 @@ insertManualEvent sourceConfig tableName triggerName payload userInfo traceCtx =
   -- in the absence of these methods.
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $
+      runPgSourceWriteTx sourceConfig InternalRawQuery $
         setHeadersTx (_uiSession userInfo)
           >> setTraceContextInTx traceCtx
           >> insertPGManualEvent tableName triggerName payload
@@ -145,7 +145,7 @@ recordSuccess ::
   m (Either QErr ())
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
   liftIO $
-    runPgSourceWriteTx sourceConfig $ do
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
       insertInvocation (tmName (eTrigger event)) invocation
       setSuccessTx event maintenanceModeVersion
 
@@ -170,8 +170,8 @@ recordError' ::
   m (Either QErr ())
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
-    runPgSourceWriteTx sourceConfig $ do
-      onJust invocation $ insertInvocation (tmName (eTrigger event))
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
+      for_ invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> setRetryTx event retryTime maintenanceModeVersion
         PESetError -> setErrorTx event maintenanceModeVersion
@@ -182,7 +182,7 @@ redeliverEvent ::
   EventId ->
   m ()
 redeliverEvent sourceConfig eventId =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig (redeliverEventTx eventId)
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery (redeliverEventTx eventId)
 
 dropTriggerAndArchiveEvents ::
   ( MonadIO m,
@@ -195,7 +195,7 @@ dropTriggerAndArchiveEvents ::
 dropTriggerAndArchiveEvents sourceConfig triggerName _table =
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $ do
+      runPgSourceWriteTx sourceConfig InternalRawQuery $ do
         dropTriggerQ triggerName
         archiveEvents triggerName
 
@@ -210,15 +210,16 @@ createMissingSQLTriggers ::
   TableName ('Postgres pgKind) ->
   ([(ColumnInfo ('Postgres pgKind))], Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))) ->
   TriggerName ->
+  TriggerOnReplication ->
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
-createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefinition = do
+createMissingSQLTriggers sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $
-    runPgSourceWriteTx sourceConfig $ do
-      onJust (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
-      onJust (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
-      onJust (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
+      for_ (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
+      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
+      for_ (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
   where
     doesSQLTriggerExist serverConfigCtx op opSpec = do
       let opTriggerName = pgTriggerName op triggerName
@@ -236,7 +237,8 @@ createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefiniti
             (Identity opTriggerName)
             True
       unless doesOpTriggerFunctionExist $
-        flip runReaderT serverConfigCtx $ mkTrigger triggerName table allCols op opSpec
+        flip runReaderT serverConfigCtx $
+          mkTrigger triggerName table triggerOnReplication allCols op opSpec
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>
@@ -245,13 +247,14 @@ createTableEventTrigger ::
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   TriggerName ->
+  TriggerOnReplication ->
   TriggerOpsDef ('Postgres pgKind) ->
   Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind))) ->
   m (Either QErr ())
-createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
+createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition _ = runPgSourceWriteTx sourceConfig InternalRawQuery $ do
   -- Create the given triggers
   flip runReaderT serverConfigCtx $
-    mkAllTriggersQ triggerName table columns opsDefinition
+    mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition
 
 dropDanglingSQLTrigger ::
   ( MonadIO m,
@@ -265,7 +268,7 @@ dropDanglingSQLTrigger ::
 dropDanglingSQLTrigger sourceConfig triggerName _ ops =
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $
+      runPgSourceWriteTx sourceConfig InternalRawQuery $
         traverse_ (dropTriggerOp triggerName) ops
 
 updateColumnInEventTrigger ::
@@ -304,7 +307,7 @@ unlockEventsInSource ::
   NE.NESet EventId ->
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
-  liftIO $ runPgSourceWriteTx sourceConfig (unlockEventsTx $ toList eventIds)
+  liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery (unlockEventsTx $ toList eventIds)
 
 -- Check if any trigger function for any of the operation exists with the 'triggerName'
 checkIfTriggerExists ::
@@ -316,7 +319,7 @@ checkIfTriggerExists ::
 checkIfTriggerExists sourceConfig triggerName ops = do
   liftEitherM $
     liftIO $
-      runPgSourceWriteTx sourceConfig $
+      runPgSourceWriteTx sourceConfig InternalRawQuery $
         -- We want to avoid creating event triggers with same name since this will
         -- cause undesired behaviour. Note that only SQL functions associated with
         -- SQL triggers are dropped when "replace = true" is set in the event trigger
@@ -404,9 +407,9 @@ getMaintenanceModeVersionTx = liftTx $ do
       | catalogVersion == MetadataCatalogVersion 43 -> pure CurrentMMVersion
       | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
-        throw500 $
-          "Maintenance mode is only supported with catalog versions: 40, 43 and "
-            <> tshow latestCatalogVersionString
+          throw500 $
+            "Maintenance mode is only supported with catalog versions: 40, 43 and "
+              <> tshow latestCatalogVersionString
 
 -- | Lock and return events not yet being processed or completed, up to some
 -- limit. Process events approximately in created_at order, but we make no
@@ -415,7 +418,7 @@ getMaintenanceModeVersionTx = liftTx $ do
 fetchEvents :: SourceName -> [TriggerName] -> FetchBatchSize -> PG.TxE QErr [Event ('Postgres pgKind)]
 fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
   map uncurryEvent
-    <$> PG.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
       UPDATE hdb_catalog.event_log
@@ -432,12 +435,12 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
                     ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
       |]
       (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created, retryAt) =
       Event
         { eId = id',
           eSource = source,
@@ -445,7 +448,8 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
           eTrigger = TriggerMetadata triggerName,
           eEvent = payload,
           eTries = tries,
-          eCreatedAt = created
+          eCreatedAt = created,
+          eRetryAt = retryAt
         }
     limit = fromIntegral fetchBatchSize :: Word64
 
@@ -455,7 +459,7 @@ fetchEventsMaintenanceMode :: SourceName -> [TriggerName] -> FetchBatchSize -> M
 fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
   PreviousMMVersion ->
     map uncurryEvent
-      <$> PG.listQE
+      <$> PG.withQE
         defaultTxErrorHandler
         [PG.sql|
         UPDATE hdb_catalog.event_log
@@ -468,12 +472,12 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
                       ORDER BY created_at
                       LIMIT $1
                       FOR UPDATE SKIP LOCKED )
-        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
+        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
         |]
         (Identity limit)
         True
     where
-      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created) =
+      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created, retryAt) =
         Event
           { eId = id',
             eSource = SNDefault, -- in v1, there'll only be the default source
@@ -481,7 +485,8 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
             eTrigger = TriggerMetadata trn,
             eEvent = payload,
             eTries = tries,
-            eCreatedAt = created
+            eCreatedAt = created,
+            eRetryAt = retryAt
           }
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
   CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize
@@ -587,7 +592,7 @@ dropTriggerOp triggerName triggerOp =
 checkEvent :: EventId -> PG.TxE QErr ()
 checkEvent eid = do
   events <-
-    PG.listQE
+    PG.withQE
       defaultTxErrorHandler
       [PG.sql|
               SELECT l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
@@ -662,11 +667,10 @@ pgTriggerName op trn = qualifyTriggerName op $ triggerNameToTxt trn
     qualifyTriggerName op' trn' =
       QualifiedTriggerName $ "notify_hasura_" <> trn' <> "_" <> tshow op'
 
-pgIdenTrigger :: Ops -> TriggerName -> QualifiedTriggerName
-pgIdenTrigger op = QualifiedTriggerName . pgFmtIdentifier . unQualifiedTriggerName . pgTriggerName op
-
 -- | pgIdenTrigger is a method used to construct the name of the pg function
 -- used for event triggers which are present in the hdb_catalog schema.
+pgIdenTrigger :: Ops -> TriggerName -> QualifiedTriggerName
+pgIdenTrigger op = QualifiedTriggerName . pgFmtIdentifier . unQualifiedTriggerName . pgTriggerName op
 
 -- | Define the pgSQL trigger functions on database events.
 mkTriggerFunctionQ ::
@@ -732,7 +736,10 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
 
     mkQId opVar strfyNum colInfo =
       toJSONableExp strfyNum (ciType colInfo) False Nothing $
-        SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ ciColumn colInfo
+        SEQIdentifier $
+          QIdentifier (opToQual opVar) $
+            toIdentifier $
+              ciColumn colInfo
 
     -- Generate the SQL expression
     toExtractor sqlExp column
@@ -792,24 +799,34 @@ mkTrigger ::
   (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
   TriggerName ->
   QualifiedTable ->
+  TriggerOnReplication ->
   [ColumnInfo ('Postgres pgKind)] ->
   Ops ->
   SubscribeOpSpec ('Postgres pgKind) ->
   m ()
-mkTrigger triggerName table allCols op subOpSpec = do
+mkTrigger triggerName table triggerOnReplication allCols op subOpSpec = do
   -- create/replace the trigger function
-  dbTriggerName <- mkTriggerFunctionQ triggerName table allCols op subOpSpec
+  QualifiedTriggerName dbTriggerNameTxt <- mkTriggerFunctionQ triggerName table allCols op subOpSpec
   -- check if the SQL trigger exists and only if the SQL trigger doesn't exist
   -- we create the SQL trigger.
   doesTriggerExist <- liftTx $ checkIfTriggerExistsForTableQ (pgTriggerName op triggerName) table
   unless doesTriggerExist $
-    let sqlQuery =
-          PG.fromText $ createTriggerSQL dbTriggerName (toSQLTxt table) (tshow op)
-     in liftTx $ PG.unitQE defaultTxErrorHandler sqlQuery () False
+    let createTriggerSqlQuery =
+          PG.fromText $ createTriggerSQL dbTriggerNameTxt (toSQLTxt table) (tshow op)
+     in liftTx $ do
+          PG.unitQE defaultTxErrorHandler createTriggerSqlQuery () False
+          when (triggerOnReplication == TOREnableTrigger) $
+            PG.unitQE defaultTxErrorHandler (alwaysEnableTriggerQuery dbTriggerNameTxt (toSQLTxt table)) () False
   where
-    createTriggerSQL (QualifiedTriggerName triggerNameTxt) tableName opText =
+    createTriggerSQL triggerNameTxt tableName opText =
       [ST.st|
          CREATE TRIGGER #{triggerNameTxt} AFTER #{opText} ON #{tableName} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.#{triggerNameTxt}()
+      |]
+
+    alwaysEnableTriggerQuery triggerNameTxt tableTxt =
+      PG.fromText $
+        [ST.st|
+        ALTER TABLE #{tableTxt} ENABLE ALWAYS TRIGGER #{triggerNameTxt};
       |]
 
 mkAllTriggersQ ::
@@ -817,13 +834,14 @@ mkAllTriggersQ ::
   (Backend ('Postgres pgKind), MonadTx m, MonadReader ServerConfigCtx m) =>
   TriggerName ->
   QualifiedTable ->
+  TriggerOnReplication ->
   [ColumnInfo ('Postgres pgKind)] ->
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
-mkAllTriggersQ triggerName table allCols fullspec = do
-  onJust (tdInsert fullspec) (mkTrigger triggerName table allCols INSERT)
-  onJust (tdUpdate fullspec) (mkTrigger triggerName table allCols UPDATE)
-  onJust (tdDelete fullspec) (mkTrigger triggerName table allCols DELETE)
+mkAllTriggersQ triggerName table triggerOnReplication allCols fullspec = do
+  for_ (tdInsert fullspec) (mkTrigger triggerName table triggerOnReplication allCols INSERT)
+  for_ (tdUpdate fullspec) (mkTrigger triggerName table triggerOnReplication allCols UPDATE)
+  for_ (tdDelete fullspec) (mkTrigger triggerName table triggerOnReplication allCols DELETE)
 
 -- | Add cleanup logs for given trigger names and cleanup configs. This will perform the following steps:
 --
@@ -854,7 +872,10 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
             )
             triggersWithcleanupConfig
     unless (null scheduledTriggersAndTimestamps) $
-      liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+      liftEitherM $
+        liftIO $
+          runPgSourceWriteTx sourceConfig InternalRawQuery $
+            insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the fiven trigger name and schedules
 insertEventTriggerCleanupLogsTx :: [(TriggerName, [Time.UTCTime])] -> PG.TxET QErr IO ()
@@ -878,7 +899,7 @@ insertEventTriggerCleanupLogsTx triggersWithschedules = do
 -- | Get the last scheduled timestamp for a given event trigger name
 selectLastCleanupScheduledTimestamp :: [TriggerName] -> PG.TxET QErr IO [(TriggerName, Int, Time.UTCTime)]
 selectLastCleanupScheduledTimestamp triggerNames =
-  PG.listQE
+  PG.withQE
     defaultTxErrorHandler
     [PG.sql|
       SELECT trigger_name, count(1), max(scheduled_at)
@@ -907,11 +928,11 @@ deleteAllScheduledCleanups ::
   TriggerName ->
   m ()
 deleteAllScheduledCleanups sourceConfig triggerName =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteAllScheduledCleanupsTx triggerName
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ deleteAllScheduledCleanupsTx triggerName
 
 getCleanupEventsForDeletionTx :: PG.TxE QErr ([(Text, TriggerName)])
 getCleanupEventsForDeletionTx =
-  PG.listQE
+  PG.withQE
     defaultTxErrorHandler
     [PG.sql|
           WITH latest_events as (
@@ -947,7 +968,7 @@ getCleanupEventsForDeletion ::
   PGSourceConfig ->
   m [(Text, TriggerName)]
 getCleanupEventsForDeletion sourceConfig =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ getCleanupEventsForDeletionTx
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ getCleanupEventsForDeletionTx
 
 markCleanupEventsAsDeadTx :: [Text] -> PG.TxE QErr ()
 markCleanupEventsAsDeadTx toDeadEvents = do
@@ -972,7 +993,7 @@ updateCleanupEventStatusToDead ::
   [Text] ->
   m ()
 updateCleanupEventStatusToDead sourceConfig toDeadEvents =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ markCleanupEventsAsDeadTx toDeadEvents
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ markCleanupEventsAsDeadTx toDeadEvents
 
 updateCleanupEventStatusToPausedTx :: Text -> PG.TxE QErr ()
 updateCleanupEventStatusToPausedTx cleanupLogId =
@@ -993,7 +1014,7 @@ updateCleanupEventStatusToPaused ::
   Text ->
   m ()
 updateCleanupEventStatusToPaused sourceConfig cleanupLogId =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ updateCleanupEventStatusToPausedTx cleanupLogId
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ updateCleanupEventStatusToPausedTx cleanupLogId
 
 updateCleanupEventStatusToCompletedTx :: Text -> DeletedEventLogStats -> PG.TxE QErr ()
 updateCleanupEventStatusToCompletedTx cleanupLogId (DeletedEventLogStats numEventLogs numInvocationLogs) =
@@ -1022,7 +1043,7 @@ updateCleanupEventStatusToCompleted ::
   DeletedEventLogStats ->
   m ()
 updateCleanupEventStatusToCompleted sourceConfig cleanupLogId delStats =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ updateCleanupEventStatusToCompletedTx cleanupLogId delStats
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig InternalRawQuery $ updateCleanupEventStatusToCompletedTx cleanupLogId delStats
 
 deleteEventTriggerLogsTx :: TriggerLogCleanupConfig -> PG.TxE QErr DeletedEventLogStats
 deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
@@ -1031,7 +1052,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
   -- Select all the dead events based on criteria set in the cleanup config.
   deadEventIDs <-
     map runIdentity
-      <$> PG.listQE
+      <$> PG.withQE
         defaultTxErrorHandler
         ( PG.fromText
             [ST.st|
@@ -1124,6 +1145,8 @@ deleteEventTriggerLogs ::
   (MonadIO m, MonadError QErr m) =>
   PGSourceConfig ->
   TriggerLogCleanupConfig ->
+  IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
   m DeletedEventLogStats
-deleteEventTriggerLogs sourceConfig cleanupConfig =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
+  deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
+    runPgSourceWriteTx sourceConfig InternalRawQuery $ deleteEventTriggerLogsTx cleanupConfig

@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll.Common
     PollerId (..),
     PollerIOState (..),
     PollerKey (..),
+    BackendPollerKey (..),
     PollerMap,
     dumpPollerMap,
     PollDetails (..),
@@ -63,7 +64,10 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Subscription (SubscriptionType)
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import ListT qualified
@@ -246,47 +250,56 @@ data PollerIOState = PollerIOState
     _pId :: !PollerId
   }
 
-data PollerKey =
+data PollerKey b =
   -- we don't need operation name here as a subscription will only have a
   -- single top level field
   PollerKey
-  { _lgSource :: !SourceName,
-    _lgRole :: !RoleName,
-    _lgQuery :: !Text
+  { _lgSource :: SourceName,
+    _lgRole :: RoleName,
+    _lgQuery :: Text,
+    _lgConnectionKey :: (ResolvedConnectionTemplate b)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
 
-instance Hashable PollerKey
+deriving instance (Backend b) => Show (PollerKey b)
 
-instance J.ToJSON PollerKey where
-  toJSON (PollerKey source role query) =
+deriving instance (Backend b) => Eq (PollerKey b)
+
+instance (Backend b) => Hashable (PollerKey b)
+
+instance J.ToJSON (PollerKey b) where
+  toJSON (PollerKey source role query _connectionKey) =
     J.object
       [ "source" J..= source,
         "role" J..= role,
         "query" J..= query
       ]
 
-type PollerMap streamCursor = STMMap.Map PollerKey (Poller streamCursor)
+newtype BackendPollerKey = BackendPollerKey {unBackendPollerKey :: AB.AnyBackend PollerKey}
+  deriving (Eq, Show, Hashable)
+
+type PollerMap streamCursor = STMMap.Map BackendPollerKey (Poller streamCursor)
 
 dumpPollerMap :: Bool -> PollerMap streamCursor -> IO J.Value
 dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT pollerMap
-    forM entries $ \(PollerKey source role query, Poller cohortsMap ioState) -> do
-      PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
-      cohortsJ <-
-        if extended
-          then Just <$> dumpCohortMap cohortsMap
-          else return Nothing
-      return $
-        J.object
-          [ "source" J..= source,
-            "role" J..= role,
-            "thread_id" J..= show (Immortal.threadId threadId),
-            "poller_id" J..= pollerId,
-            "multiplexed_query" J..= query,
-            "cohorts" J..= cohortsJ
-          ]
+    forM entries $ \(pollerKey, Poller cohortsMap ioState) ->
+      AB.dispatchAnyBackend @Backend (unBackendPollerKey pollerKey) $ \(PollerKey source role query _connectionKey) -> do
+        PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
+        cohortsJ <-
+          if extended
+            then Just <$> dumpCohortMap cohortsMap
+            else return Nothing
+        return $
+          J.object
+            [ "source" J..= source,
+              "role" J..= role,
+              "thread_id" J..= show (Immortal.threadId threadId),
+              "poller_id" J..= pollerId,
+              "multiplexed_query" J..= query,
+              "cohorts" J..= cohortsJ
+            ]
 
 -- | An ID to track unique 'Poller's, so that we can gather metrics about each
 -- poller
@@ -319,15 +332,17 @@ data CohortExecutionDetails = CohortExecutionDetails
 
 -- | Execution information related to a single batched execution
 data BatchExecutionDetails = BatchExecutionDetails
-  { -- | postgres execution time of each batch
-    _bedPgExecutionTime :: !Clock.DiffTime,
+  { -- | postgres execution time of each batch ('Nothing' in case of non-PG dbs)
+    _bedPgExecutionTime :: Maybe Clock.DiffTime,
+    -- | database execution time of each batch
+    _bedDbExecutionTime :: Clock.DiffTime,
     -- | time to taken to push to all cohorts belonging to this batch
-    _bedPushTime :: !Clock.DiffTime,
+    _bedPushTime :: Clock.DiffTime,
     -- | id of the batch
-    _bedBatchId :: !BatchId,
+    _bedBatchId :: BatchId,
     -- | execution details of the cohorts belonging to this batch
-    _bedCohorts :: ![CohortExecutionDetails],
-    _bedBatchResponseSizeBytes :: !(Maybe Int)
+    _bedCohorts :: [CohortExecutionDetails],
+    _bedBatchResponseSizeBytes :: Maybe Int
   }
   deriving (Show, Eq)
 
@@ -339,10 +354,18 @@ batchExecutionDetailMinimal BatchExecutionDetails {..} =
           mempty
           (\respSize -> ["batch_response_size_bytes" J..= respSize])
           _bedBatchResponseSizeBytes
+      pgExecTime =
+        maybe
+          mempty
+          (\execTime -> ["pg_execution_time" J..= execTime])
+          _bedPgExecutionTime
    in J.object
-        ( [ "pg_execution_time" J..= _bedPgExecutionTime,
-            "push_time" J..= _bedPushTime
+        ( [ "db_execution_time" J..= _bedDbExecutionTime,
+            "push_time" J..= _bedPushTime,
+            "batch_id" J..= _bedBatchId
           ]
+            -- log pg exec time only when its not 'Nothing'
+            <> pgExecTime
             -- log batch resp size only when there are no errors
             <> batchRespSize
         )
@@ -351,21 +374,24 @@ batchExecutionDetailMinimal BatchExecutionDetails {..} =
 data PollDetails = PollDetails
   { -- | the unique ID (basically a thread that run as a 'Poller') for the
     -- 'Poller'
-    _pdPollerId :: !PollerId,
+    _pdPollerId :: PollerId,
+    -- | distinguish between the subscription type (i.e. live-query or streaming
+    -- subscription)
+    _pdKind :: SubscriptionType,
     -- | the multiplexed SQL query to be run against the database with all the
     -- variables together
-    _pdGeneratedSql :: !Text,
+    _pdGeneratedSql :: Text,
     -- | the time taken to get a snapshot of cohorts from our 'SubscriptionsState'
     -- data structure
-    _pdSnapshotTime :: !Clock.DiffTime,
+    _pdSnapshotTime :: Clock.DiffTime,
     -- | list of execution batches and their details
-    _pdBatches :: ![BatchExecutionDetails],
+    _pdBatches :: [BatchExecutionDetails],
     -- | total time spent on a poll cycle
-    _pdTotalTime :: !Clock.DiffTime,
-    _pdLiveQueryOptions :: !SubscriptionsOptions,
-    _pdSource :: !SourceName,
-    _pdRole :: !RoleName,
-    _pdParameterizedQueryHash :: !ParameterizedQueryHash
+    _pdTotalTime :: Clock.DiffTime,
+    _pdLiveQueryOptions :: SubscriptionsOptions,
+    _pdSource :: SourceName,
+    _pdRole :: RoleName,
+    _pdParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show, Eq)
 
@@ -384,11 +410,15 @@ pollDetailMinimal :: PollDetails -> J.Value
 pollDetailMinimal PollDetails {..} =
   J.object
     [ "poller_id" J..= _pdPollerId,
+      "kind" J..= _pdKind,
       "snapshot_time" J..= _pdSnapshotTime,
       "batches" J..= map batchExecutionDetailMinimal _pdBatches,
+      "subscriber_count" J..= sum (map (length . _bedCohorts) _pdBatches),
       "total_time" J..= _pdTotalTime,
       "source" J..= _pdSource,
-      "role" J..= _pdRole
+      "generated_sql" J..= _pdGeneratedSql,
+      "role" J..= _pdRole,
+      "subcription_options" J..= _pdLiveQueryOptions
     ]
 
 instance L.ToEngineLog PollDetails L.Hasura where

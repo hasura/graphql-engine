@@ -1,12 +1,9 @@
 import { ADMIN_SECRET_HEADER_KEY } from './constants';
 
-export const baseUrl = Cypress.config('baseUrl');
-
 export const getRemoteSchemaName = (i: number, schemaName: string) =>
   `test-remote-schema-${schemaName}-${i}`;
 
-export const getRemoteGraphQLURL = () =>
-  'https://graphql-pokemon2.vercel.app/';
+export const getRemoteGraphQLURL = () => 'https://graphql-pokemon2.vercel.app/';
 
 export const getRemoteGraphQLURLFromEnv = () => 'GRAPHQL_URL';
 

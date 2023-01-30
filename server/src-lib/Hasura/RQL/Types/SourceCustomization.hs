@@ -11,10 +11,7 @@ module Hasura.RQL.Types.SourceCustomization
     SourceCustomization (..),
     ResolvedSourceCustomization (..),
     mkResolvedSourceCustomization,
-    withSourceCustomization,
     MkRootFieldName (..),
-    CustomizeRemoteFieldName (..),
-    withRemoteFieldNameCustomization,
 
     -- * Naming Convention specific
     applyEnumValueCase,
@@ -22,10 +19,10 @@ module Hasura.RQL.Types.SourceCustomization
     applyTypeNameCaseCust,
     applyFieldNameCaseIdentifier,
     applyTypeNameCaseIdentifier,
-    getNamingConvention,
     getNamingCase,
     getTextFieldName,
     getTextTypeName,
+    setFieldNameCase,
 
     -- * Field name builders
     mkSelectField,
@@ -62,10 +59,14 @@ module Hasura.RQL.Types.SourceCustomization
     mkTableOperatorInputTypeName,
     mkTablePkColumnsInputTypeName,
     mkEnumTableTypeName,
+    mkStreamCursorInputTypeName,
+    mkStreamCursorValueInputTypeName,
   )
 where
 
-import Autodocodec (HasCodec (codec), named)
+import Autodocodec (HasCodec (codec), optionalField', optionalFieldWith')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens
 import Data.Aeson.Extended
 import Data.Has
@@ -77,12 +78,11 @@ import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
-import Hasura.Incremental.Internal.Dependency (Cacheable)
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RootFieldsCustomization = RootFieldsCustomization
@@ -92,7 +92,13 @@ data RootFieldsCustomization = RootFieldsCustomization
   }
   deriving (Eq, Show, Generic)
 
-instance Cacheable RootFieldsCustomization
+instance HasCodec RootFieldsCustomization where
+  codec =
+    AC.object "RootFieldsCustomization" $
+      RootFieldsCustomization
+        <$> optionalFieldWith' "namespace" graphQLFieldNameCodec AC..= _rootfcNamespace
+        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec AC..= _rootfcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec AC..= _rootfcSuffix
 
 instance ToJSON RootFieldsCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -109,7 +115,12 @@ data SourceTypeCustomization = SourceTypeCustomization
   }
   deriving (Eq, Show, Generic)
 
-instance Cacheable SourceTypeCustomization
+instance HasCodec SourceTypeCustomization where
+  codec =
+    AC.object "SourceTypeCustomization" $
+      SourceTypeCustomization
+        <$> optionalFieldWith' "prefix" graphQLFieldNameCodec AC..= _stcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec AC..= _stcSuffix
 
 instance ToJSON SourceTypeCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -179,6 +190,23 @@ applyEnumValueCase tCase v = case tCase of
   HasuraCase -> v
   GraphqlCase -> C.transformNameWith (T.toUpper) v
 
+-- | Builds field name with proper case. Please note that this is a pure
+--   function as all the validation has already been done while preparing
+--   @GQLNameIdentifier@.
+setFieldNameCase ::
+  NamingCase ->
+  TableInfo b ->
+  CustomRootField ->
+  (C.GQLNameIdentifier -> C.GQLNameIdentifier) ->
+  C.GQLNameIdentifier ->
+  G.Name
+setFieldNameCase tCase tInfo crf getFieldName tableName =
+  (applyFieldNameCaseIdentifier tCase fieldIdentifier)
+  where
+    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
+    crfName = fmap C.fromCustomName (_crfName crf)
+    fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
+
 -- | append/prepend the suffix/prefix in the graphql name
 applyPrefixSuffix :: Maybe G.Name -> Maybe G.Name -> NamingCase -> Bool -> G.Name -> G.Name
 applyPrefixSuffix Nothing Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [(name, C.CustomName)]
@@ -203,7 +231,13 @@ data SourceCustomization = SourceCustomization
   }
   deriving (Eq, Show, Generic)
 
-instance Cacheable SourceCustomization
+instance HasCodec SourceCustomization where
+  codec =
+    AC.object "SourceCustomization" $
+      SourceCustomization
+        <$> optionalField' "root_fields" AC..= _scRootFields
+        <*> optionalField' "type_names" AC..= _scTypeNames
+        <*> optionalField' "naming_convention" AC..= _scNamingConvention
 
 instance ToJSON SourceCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -211,18 +245,11 @@ instance ToJSON SourceCustomization where
 instance FromJSON SourceCustomization where
   parseJSON = genericParseJSON hasuraJSON
 
--- TODO: Write proper codec
-instance HasCodec SourceCustomization where
-  codec = named "SourceCustomization" placeholderCodecViaJSON
-
 emptySourceCustomization :: SourceCustomization
 emptySourceCustomization = SourceCustomization Nothing Nothing Nothing
 
 getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
-
-getNamingConvention :: SourceCustomization -> Maybe NamingCase -> NamingCase
-getNamingConvention sc defaultNC = fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
 
 -- | Source customization as it appears in the SchemaCache.
 data ResolvedSourceCustomization = ResolvedSourceCustomization
@@ -245,27 +272,16 @@ mkResolvedSourceCustomization sourceCustomization namingConv =
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
   deriving (Semigroup, Monoid) via (Endo G.Name)
 
--- | Inject NamingCase, typename and root field name customizations from @SourceCustomization@ into
--- the environment.
-withSourceCustomization ::
-  forall m r a.
-  (MonadReader r m, Has MkTypename r, Has NamingCase r) =>
-  ResolvedSourceCustomization ->
-  m a ->
-  m a
-withSourceCustomization ResolvedSourceCustomization {..} = do
-  withTypenameCustomization _rscTypeNames
-    . withNamingCaseCustomization _rscNamingConvention
-
 getNamingCase ::
   forall m.
   (MonadError QErr m) =>
   SourceCustomization ->
   SupportedNamingCase ->
-  Maybe NamingCase ->
+  NamingCase ->
   m NamingCase
 getNamingCase sc namingConventionSupport defaultNC = do
-  let namingConv = getNamingConvention sc defaultNC
+  -- Use the 'NamingCase' from 'SourceCustomization' or a provided default.
+  let namingConv = fromMaybe defaultNC (_scNamingConvention sc)
   -- The console currently constructs a graphql query based on table name and
   -- schema name to fetch the data from the database (other than postgres).
   -- Now, when we set @GraphqlCase@ for other (than postgres) databases, this
@@ -280,14 +296,6 @@ getNamingCase sc namingConventionSupport defaultNC = do
 
 withNamingCaseCustomization :: forall m r a. (MonadReader r m, Has NamingCase r) => NamingCase -> m a -> m a
 withNamingCaseCustomization = local . set hasLens
-
-newtype CustomizeRemoteFieldName = CustomizeRemoteFieldName
-  { runCustomizeRemoteFieldName :: G.Name -> G.Name -> G.Name
-  }
-  deriving (Semigroup, Monoid) via (G.Name -> Endo G.Name)
-
-withRemoteFieldNameCustomization :: forall m r a. (MonadReader r m, Has CustomizeRemoteFieldName r) => CustomizeRemoteFieldName -> m a -> m a
-withRemoteFieldNameCustomization = local . set hasLens
 
 -------------------------------------------------------------------------------
 -- Some helper functions to build the field names as an identifier
@@ -388,3 +396,9 @@ mkTablePkColumnsInputTypeName name = name <> C.fromAutogeneratedTuple $$(G.litGQ
 mkEnumTableTypeName :: GQLNameIdentifier -> Maybe G.Name -> GQLNameIdentifier
 mkEnumTableTypeName name (Just customName) = C.fromCustomName customName <> C.fromAutogeneratedName $$(G.litName "enum")
 mkEnumTableTypeName name Nothing = name <> C.fromAutogeneratedName $$(G.litName "enum")
+
+mkStreamCursorInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkStreamCursorInputTypeName tableName = tableName <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["stream", "cursor", "input"])
+
+mkStreamCursorValueInputTypeName :: GQLNameIdentifier -> GQLNameIdentifier
+mkStreamCursorValueInputTypeName tableName = tableName <> C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["stream", "cursor", "value", "input"])

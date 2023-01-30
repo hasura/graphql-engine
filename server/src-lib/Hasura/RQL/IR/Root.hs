@@ -27,7 +27,7 @@ import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
-import Hasura.RQL.Types.RemoteSchema qualified as RQL
+import Hasura.RemoteSchema.SchemaCache.Types qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 
@@ -79,6 +79,8 @@ data RemoteRelationshipField vf
   = RemoteSchemaField (RemoteSchemaSelect (RemoteRelationshipField vf))
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSourceField (AB.AnyBackend (RemoteSourceSelect (RemoteRelationshipField vf) vf))
+
+deriving instance AB.SatisfiesForAllBackends vf Show => Show (RemoteRelationshipField vf)
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =

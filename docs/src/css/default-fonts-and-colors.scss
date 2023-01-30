@@ -1,0 +1,240 @@
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBM-Plex-Sans-300.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBM-Plex-Sans-400.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: 400;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBM-Plex-Sans-500.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBM-Plex-Sans-600.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/IBM-Plex-Mono-300.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/IBM-Plex-Mono-600.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/IBM-Plex-Mono-normal.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono Regular';
+  src: url('/fonts/IBM-Plex-Mono-Regular.woff2') format('woff2');
+
+  /* Super Modern Browsers */
+  font-weight: normal;
+  font-display: swap;
+}
+
+/* You can override the default Infima variables here. */
+
+:root {
+  /* Custom Variables */
+  --color-gray-0: #ffffff;
+  --color-gray-4: #f3f5f7;
+  --color-gray-4-alpha-04: rgba(243, 245, 247, 0.4);
+  --color-gray-8: #e7ebef;
+  --color-gray-12: #dce2e8;
+  --color-gray-16: #cfd8df;
+  //new
+  --color-gray-20: #c2d0d8;
+  --color-gray-24: #b6c6ce;
+  --color-gray-28: #a9bcc4;
+  --color-gray-32: #9db2ba;
+  --color-gray-36: #91a8b0;
+  --color-gray-40: #849ea6;
+  --color-gray-44: #78949c;
+  --color-gray-48: #6c8a92;
+  --color-gray-52: #608088;
+  --color-gray-56: #54767e;
+  --color-gray-60: #486c74;
+  --color-gray-64: #3c626a;
+  --color-gray-68: #305860;
+  --color-gray-72: #244e56;
+  //end new
+  --color-gray-74: #344658;
+  --color-gray-78: #2c3b4b;
+  --color-gray-82: #23303d;
+  --color-gray-86: #1c262f;
+  --color-gray-86-alpha-04: rgba(28, 38, 47, 0.4);
+  --color-gray-90: #141c22;
+
+  /* Docusaurus Specific variables */
+  --ifm-color-primary: #0b89d0;
+  --ifm-color-primary-dark: #0079bd;
+  --ifm-color-primary-darker: #005c8f;
+  --ifm-color-primary-darkest: #00324e;
+  --ifm-color-primary-light: #1699e2;
+  --ifm-color-primary-lighter: #35b6ff;
+  --ifm-color-primary-lightest: #77ceff;
+  --ifm-color-primary-contrast-background: #e1f4ff;
+  --ifm-color-primary-contrast-foreground: #00324e;
+  --ifm-color-secondary: #e0e7ee;
+  --ifm-color-secondary-dark: #d5dee5;
+  --ifm-color-secondary-darker: #c3cdd6;
+  --ifm-color-secondary-darkest: #b1bcc7;
+  --ifm-color-secondary-light: #ebf1f6;
+  --ifm-color-secondary-lighter: #f2f7fb;
+  --ifm-color-secondary-lightest: #f8fcff;
+  --ifm-color-secondary-contrast-background: #ebf1f6;
+  --ifm-color-secondary-contrast-foreground: #1b2738;
+  --ifm-color-success: #46b486;
+  --ifm-color-success-dark: #37a476;
+  --ifm-color-success-darker: #02864f;
+  --ifm-color-success-darkest: #026d40;
+  --ifm-color-success-light: #54c596;
+  --ifm-color-success-lighter: #66d0a3;
+  --ifm-color-success-lightest: #77dbb1;
+  --ifm-color-success-contrast-background: #ddfaed;
+  --ifm-color-success-contrast-foreground: #003921;
+  --ifm-color-info: #5898d2;
+  --ifm-color-info-dark: #478bca;
+  --ifm-color-info-darker: #2771b6;
+  --ifm-color-info-darkest: #0b5599;
+  --ifm-color-info-light: #6aa4db;
+  --ifm-color-info-lighter: #7bb4e8;
+  --ifm-color-info-lightest: #8cc3f5;
+  --ifm-color-info-contrast-background: #e3f2ff;
+  --ifm-color-info-contrast-foreground: #00315f;
+  --ifm-color-warning: #dd9833;
+  --ifm-color-warning-dark: #c78017;
+  --ifm-color-warning-darker: #a66401;
+  --ifm-color-warning-darkest: #794900;
+  --ifm-color-warning-light: #f2b14f;
+  --ifm-color-warning-lighter: #f6ba61;
+  --ifm-color-warning-lightest: #f9c374;
+  --ifm-color-warning-contrast-background: #ffefd8;
+  --ifm-color-warning-contrast-foreground: #3e2500;
+  --ifm-color-danger: #e66d6d;
+  --ifm-color-danger-dark: #d95c5c;
+  --ifm-color-danger-darker: #c64242;
+  --ifm-color-danger-darkest: #a02929;
+  --ifm-color-danger-light: #f47e7e;
+  --ifm-color-danger-lighter: #f88e8e;
+  --ifm-color-danger-lightest: #fc9f9f;
+  --ifm-color-danger-contrast-background: #ffe8e8;
+  --ifm-color-danger-contrast-foreground: #6a0808;
+
+  --ifm-color-gray-100: var(--color-gray-12);
+  /*--ifm-color-gray-200: #EBF1F6;
+  --ifm-color-gray-300: #D5DEE5;
+  --ifm-color-gray-400: #B1BCC7;
+  --ifm-color-gray-500: #909DA6;
+  --ifm-color-gray-600: #74818A;
+  --ifm-color-gray-700: #616D75;
+  --ifm-color-gray-800: #404955; */
+  --ifm-color-gray-900: var(--color-gray-90);
+
+  /* --ifm-navbar-background-color; */
+  /* --ifm-background-color */
+  --ifm-heading-color: var(--color-gray-74);
+  --ifm-footer-background-color: var(--color-gray-8);
+  --ifm-color-content-secondary: #616d75;
+  --ifm-link-color: #0676c8;
+  --ifm-menu-color: var(--ifm-color-content);
+  --ifm-menu-color-active: var(--ifm-color-content);
+  --ifm-toc-link-color: var(--ifm-color-content);
+
+  --ifm-table-stripe-background: var(--color-gray-4-alpha-04);
+  --ifm-pre-background: var(--color-gray-4);
+  --ifm-code-background: var(--color-gray-4);
+  --ifm-code-font-size: 0.875rem; /* 14px */
+
+  /* --ifm-pre-color: inherit; */
+  --ifm-global-shadow-lw: 0px 2px 6px rgba(0, 0, 0, 0.2);
+  --ifm-global-shadow-md: 0px 4px 14px rgba(0, 0, 0, 0.16);
+  --ifm-global-shadow-tl: 0px 10px 30px rgba(0, 0, 0, 0.16);
+
+  --ifm-global-radius: 0.25rem;
+
+  --doc-sidebar-width: 320px !important;
+  --ifm-navbar-height: 72px !important;
+
+  --ifm-font-family-base: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans,
+  sans-serif, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+  'Segoe UI Symbol';
+  --ifm-font-family-monospace: 'IBM Plex Mono Regular', 'IBM Plex Mono', SFMono-Regular, Menlo, Monaco, Consolas,
+  'Liberation Mono', 'Courier New', monospace;
+  --ifm-font-size-base: 16px;
+  --ifm-line-height-base: 1.5; /* 150% */
+  --ifm-font-weight-light: 300;
+  --ifm-font-weight-normal: 400;
+  --ifm-font-weight-semibold: 500;
+  --ifm-font-weight-bold: 600;
+
+  --ifm-heading-line-height: 1.25;
+  --ifm-h1-font-size: 2.5rem; /* 40px */
+  --ifm-h2-font-size: 2rem; /* 32px */
+  --ifm-h3-font-size: 1.5rem; /* 24px */
+  --ifm-h4-font-size: 1.25rem; /* 20px */
+  --ifm-h5-font-size: 1rem; /* 16px */
+  --ifm-h6-font-size: 0.875rem; /* 14px */
+  --ifm-small-font-size: 0.75rem; /* 12px */
+
+  --ifm-heading-font-weight: var(--ifm-font-weight-semibold);
+
+  --ifm-footer-padding-vertical: 3rem;
+}
+
+/* Dark Mode Styles */
+html[data-theme='dark'] {
+  --ifm-link-color: #48ADF6;
+  --ifm-heading-color: var(--color-gray-12);
+  --ifm-navbar-background-color: var(--color-gray-82);
+  --ifm-background-color: var(--color-gray-90);
+  --ifm-hero-background-color: var(--ifm-background-color);
+  --ifm-table-stripe-background: var(--color-gray-86-alpha-04);
+  --ifm-pre-background: var(--color-gray-86);
+  --ifm-code-background: var(--color-gray-86);
+  --ifm-dropdown-background-color: var(--color-gray-78);
+  --ifm-card-background-color: var(--color-gray-82);
+  --ifm-footer-background-color: var(--color-gray-82);
+  --collapse-button-bg-color-dark: var(--color-gray-86);
+  --docsearch-searchbox-background: var(--color-gray-90) !important;
+  --docsearch-searchbox-focus-background: var(--color-gray-86) !important;
+}

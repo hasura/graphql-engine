@@ -1,19 +1,22 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (spec) where
+module Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
+  ( spec,
+    genUpdateColumnOperatorName,
+  )
+where
 
-import Data.Aeson (Value (..))
 import Data.Aeson.QQ.Simple (aesonQQ)
-import Data.Text.RawString (raw)
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0.Capabilities
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema
+import Hasura.Backends.DataConnector.API.V0.Scalar (ScalarType (..))
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Generator.Common
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Language.GraphQL.Draft.Generator (genTypeDefinition)
-import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Utils
 import Test.Hspec
@@ -21,98 +24,111 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "Capabilities" $ do
-    testToFromJSONToSchema emptyCapabilities [aesonQQ|{}|]
+    testToFromJSONToSchema defaultCapabilities [aesonQQ|{}|]
     jsonOpenApiProperties genCapabilities
   describe "CapabilitiesResponse" $ do
     testToFromJSON
-      (CapabilitiesResponse (emptyCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse)
+      (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse Nothing Nothing)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
-  describe "ScalarTypeCapabilities" $ do
-    testToFromJSONToSchema (ScalarTypeCapabilities $ Just [G.name|DateTimeComparisons|]) [aesonQQ|{"comparison_type": "DateTimeComparisons"}|]
-  describe "GraphQLTypeDefinitions" $ do
-    testToFromJSONToSchema sampleGraphQLTypeDefinitions sampleGraphQLTypeDefinitionsJSON
+  describe "ScalarTypesCapabilities" $ do
+    describe "Minimal" $
+      testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton (ScalarType "string") (ScalarTypeCapabilities mempty mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
+    describe "Maximal" $ do
+      let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], ScalarType "DateTime")]
+      let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], ScalarType "DateTime")]
+      let updateColumnOperators = UpdateColumnOperators $ HashMap.fromList [(UpdateColumnOperatorName [G.name|set_year|], UpdateColumnOperatorDefinition (ScalarType "Number"))]
+      let graphQLType = Just GraphQLString
+      let json =
+            [aesonQQ|{
+              "comparison_operators": {
+                "same_day_as": "DateTime"
+              },
+              "aggregate_functions": {
+                "max": "DateTime"
+              },
+              "update_column_operators": {
+                "set_year": {
+                  "argument_type": "Number"
+                }
+              },
+              "graphql_type": "String"
+            }|]
+      testToFromJSONToSchema (ScalarTypeCapabilities comparisonOperators aggregateFunctions updateColumnOperators graphQLType) json
+    jsonOpenApiProperties genScalarTypesCapabilities
 
-sampleGraphQLTypeDefinitions :: GraphQLTypeDefinitions
-sampleGraphQLTypeDefinitions =
-  mkGraphQLTypeDefinitions
-    [ G.TypeDefinitionScalar $ G.ScalarTypeDefinition Nothing [G.name|DateTime|] [],
-      G.TypeDefinitionInputObject $
-        G.InputObjectTypeDefinition
-          Nothing
-          [G.name|DateTimeComparisons|]
-          []
-          [ G.InputValueDefinition Nothing [G.name|after|] (G.TypeNamed (G.Nullability True) [G.name|DateTime|]) Nothing [],
-            G.InputValueDefinition Nothing [G.name|before|] (G.TypeNamed (G.Nullability True) [G.name|DateTime|]) Nothing [],
-            G.InputValueDefinition Nothing [G.name|in_year|] (G.TypeNamed (G.Nullability True) [G.name|Int|]) Nothing []
-          ]
-    ]
+genDataSchemaCapabilities :: MonadGen m => m DataSchemaCapabilities
+genDataSchemaCapabilities =
+  DataSchemaCapabilities
+    <$> Gen.bool
+    <*> Gen.bool
+    <*> genColumnNullability
 
-sampleGraphQLTypeDefinitionsJSON :: Value
-sampleGraphQLTypeDefinitionsJSON =
-  [raw|scalar DateTime
-
-input DateTimeComparisons {after: DateTime
-  before: DateTime
-  in_year: Int
-}|]
+genColumnNullability :: MonadGen m => m ColumnNullability
+genColumnNullability =
+  Gen.element [NullableAndNonNullableColumns, OnlyNullableColumns]
 
 genQueryCapabilities :: MonadGen m => m QueryCapabilities
-genQueryCapabilities = QueryCapabilities <$> Gen.bool
+genQueryCapabilities = pure QueryCapabilities
 
 genMutationCapabilities :: MonadGen m => m MutationCapabilities
-genMutationCapabilities = pure MutationCapabilities {}
+genMutationCapabilities =
+  MutationCapabilities
+    <$> Gen.maybe genInsertCapabilities
+    <*> Gen.maybe genUpdateCapabilities
+    <*> Gen.maybe genDeleteCapabilities
+    <*> Gen.maybe genAtomicitySupportLevel
+    <*> Gen.maybe genReturningCapabilities
+
+genInsertCapabilities :: MonadGen m => m InsertCapabilities
+genInsertCapabilities = InsertCapabilities <$> Gen.bool
+
+genUpdateCapabilities :: MonadGen m => m UpdateCapabilities
+genUpdateCapabilities = pure UpdateCapabilities
+
+genDeleteCapabilities :: MonadGen m => m DeleteCapabilities
+genDeleteCapabilities = pure DeleteCapabilities
+
+genAtomicitySupportLevel :: MonadGen m => m AtomicitySupportLevel
+genAtomicitySupportLevel = Gen.enumBounded
+
+genReturningCapabilities :: MonadGen m => m ReturningCapabilities
+genReturningCapabilities = pure ReturningCapabilities
 
 genSubscriptionCapabilities :: MonadGen m => m SubscriptionCapabilities
 genSubscriptionCapabilities = pure SubscriptionCapabilities {}
 
-genScalarTypeCapabilities :: MonadGen m => m ScalarTypeCapabilities
-genScalarTypeCapabilities = ScalarTypeCapabilities <$> Gen.maybe (genGName defaultRange)
+genComparisonOperators :: (MonadGen m, GenBase m ~ Identity) => m ComparisonOperators
+genComparisonOperators =
+  ComparisonOperators <$> genHashMap (genGName defaultRange) genScalarType defaultRange
 
-genScalarTypesCapabilities :: MonadGen m => m ScalarTypesCapabilities
+genAggregateFunctions :: (MonadGen m, GenBase m ~ Identity) => m AggregateFunctions
+genAggregateFunctions =
+  AggregateFunctions <$> genHashMap (genGName defaultRange) genScalarType defaultRange
+
+genGraphQLType :: MonadGen m => m GraphQLType
+genGraphQLType = Gen.enumBounded
+
+genScalarTypeCapabilities :: (MonadGen m, GenBase m ~ Identity) => m ScalarTypeCapabilities
+genScalarTypeCapabilities =
+  ScalarTypeCapabilities
+    <$> genComparisonOperators
+    <*> genAggregateFunctions
+    <*> genUpdateColumnOperators
+    <*> Gen.maybe genGraphQLType
+
+genScalarTypesCapabilities :: (MonadGen m, GenBase m ~ Identity) => m ScalarTypesCapabilities
 genScalarTypesCapabilities =
-  ScalarTypesCapabilities <$> genHashMap (genGName defaultRange) genScalarTypeCapabilities defaultRange
+  ScalarTypesCapabilities <$> genHashMap genScalarType genScalarTypeCapabilities defaultRange
 
--- | 'genTypeDefinition' generates invalid type definitions so we need to filter them out.
--- The printers also sort various lists upon printing, so we need to pre-sort them for round-tripping to work.
--- The printer for 'ObjectTypeDefinition' prints directives in the wrong place so we only allow
--- definitions with no directives.
--- TODO: fix this in `graphql-parser-hs`.
-isValidTypeDefinition :: Ord inputType => G.TypeDefinition possibleTypes inputType -> Maybe (G.TypeDefinition possibleTypes inputType)
-isValidTypeDefinition = \case
-  t@(G.TypeDefinitionScalar G.ScalarTypeDefinition {}) -> Just t
-  G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> do
-    guard $ not $ null _otdFieldsDefinition
-    Just $
-      G.TypeDefinitionObject
-        G.ObjectTypeDefinition
-          { _otdFieldsDefinition = sort _otdFieldsDefinition,
-            _otdDirectives = [],
-            ..
-          }
-  G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} -> do
-    guard $ not $ null _itdFieldsDefinition
-    Just $
-      G.TypeDefinitionInterface
-        G.InterfaceTypeDefinition {_itdFieldsDefinition = sort _itdFieldsDefinition, ..}
-  G.TypeDefinitionUnion G.UnionTypeDefinition {..} -> do
-    guard $ not $ null _utdMemberTypes
-    Just $
-      G.TypeDefinitionUnion
-        G.UnionTypeDefinition {_utdMemberTypes = sort _utdMemberTypes, ..}
-  G.TypeDefinitionEnum G.EnumTypeDefinition {..} -> do
-    guard $ not $ null _etdValueDefinitions
-    Just $
-      G.TypeDefinitionEnum
-        G.EnumTypeDefinition {_etdValueDefinitions = sort _etdValueDefinitions, ..}
-  G.TypeDefinitionInputObject G.InputObjectTypeDefinition {..} -> do
-    guard $ not $ null _iotdValueDefinitions
-    Just $
-      G.TypeDefinitionInputObject
-        G.InputObjectTypeDefinition {_iotdValueDefinitions = sort _iotdValueDefinitions, ..}
+genUpdateColumnOperators :: (MonadGen m, GenBase m ~ Identity) => m UpdateColumnOperators
+genUpdateColumnOperators =
+  UpdateColumnOperators <$> genHashMap genUpdateColumnOperatorName genUpdateColumnOperatorDefinition defaultRange
 
-genGraphQLTypeDefinitions :: Gen GraphQLTypeDefinitions
-genGraphQLTypeDefinitions =
-  mkGraphQLTypeDefinitions <$> Gen.nonEmpty defaultRange (Gen.mapMaybe isValidTypeDefinition genTypeDefinition)
+genUpdateColumnOperatorName :: MonadGen m => m UpdateColumnOperatorName
+genUpdateColumnOperatorName = UpdateColumnOperatorName <$> genGName defaultRange
+
+genUpdateColumnOperatorDefinition :: (MonadGen m, GenBase m ~ Identity) => m UpdateColumnOperatorDefinition
+genUpdateColumnOperatorDefinition = UpdateColumnOperatorDefinition <$> genScalarType
 
 genRelationshipCapabilities :: MonadGen m => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}
@@ -136,19 +152,23 @@ genExplainCapabilities = pure ExplainCapabilities {}
 genRawCapabilities :: MonadGen m => m RawCapabilities
 genRawCapabilities = pure RawCapabilities {}
 
+genDatasetCapabilities :: MonadGen m => m DatasetCapabilities
+genDatasetCapabilities = pure DatasetCapabilities {}
+
 genCapabilities :: Gen Capabilities
 genCapabilities =
   Capabilities
-    <$> Gen.maybe genQueryCapabilities
+    <$> genDataSchemaCapabilities
+    <*> Gen.maybe genQueryCapabilities
     <*> Gen.maybe genMutationCapabilities
     <*> Gen.maybe genSubscriptionCapabilities
-    <*> Gen.maybe genScalarTypesCapabilities
-    <*> Gen.maybe genGraphQLTypeDefinitions
+    <*> genScalarTypesCapabilities
     <*> Gen.maybe genRelationshipCapabilities
     <*> Gen.maybe genComparisonCapabilities
     <*> Gen.maybe genMetricsCapabilities
     <*> Gen.maybe genExplainCapabilities
     <*> Gen.maybe genRawCapabilities
+    <*> Gen.maybe genDatasetCapabilities
 
 emptyConfigSchemaResponse :: ConfigSchemaResponse
 emptyConfigSchemaResponse = ConfigSchemaResponse mempty mempty

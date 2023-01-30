@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "metrics_config": {
+    "analyze_query_variables": true,
+    "analyze_response_body": false
+  }
+}

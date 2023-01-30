@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Webhook.Transform.Headers
   ( -- * Header Transformations
     Headers (..),
     TransformFn (..),
+    TransformCtx (..),
     HeadersTransformFn (..),
     AddReplaceOrRemoveFields (..),
   )
@@ -13,6 +14,8 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec
+import Autodocodec.Extended (caseInsensitiveHashMapCodec, caseInsensitiveTextCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
@@ -20,14 +23,15 @@ import Data.HashMap.Strict qualified as M
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation)
 import Data.Validation qualified as V
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    TemplatingEngine,
+  ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
+  )
+import Hasura.RQL.DDL.Webhook.Transform.Request
+  ( RequestTransformCtx,
     runUnescapedRequestTemplateTransform',
     validateRequestUnescapedTemplateTransform',
   )
@@ -47,12 +51,14 @@ instance Transform Headers where
   -- wrapper.
   newtype TransformFn Headers = HeadersTransformFn_ HeadersTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+    deriving newtype (NFData, FromJSON, ToJSON)
+
+  newtype TransformCtx Headers = TransformCtx RequestTransformCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyHeadersTransformFn' is defined
   -- separately.
-  transform (HeadersTransformFn_ fn) = applyHeadersTransformFn fn
+  transform (HeadersTransformFn_ fn) (TransformCtx reqCtx) = applyHeadersTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateHeadersTransformFn' is defined
@@ -65,7 +71,10 @@ newtype HeadersTransformFn
   = -- | Add or replace matching 'HTTP.Types.Header's.
     AddReplaceOrRemove AddReplaceOrRemoveFields
   deriving stock (Eq, Generic, Show)
-  deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+  deriving newtype (NFData, FromJSON, ToJSON)
+
+instance HasCodec HeadersTransformFn where
+  codec = dimapCodec AddReplaceOrRemove coerce codec
 
 -- | The user can supply a set of header keys to be filtered from the
 -- request and a set of headers to be added to the request.
@@ -79,7 +88,7 @@ data AddReplaceOrRemoveFields = AddReplaceOrRemoveFields
     removeHeaders :: [CI.CI Text]
   }
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
 
 -- | Provide an implementation for the transformations defined by
 -- 'HeadersTransformFn'.
@@ -128,6 +137,16 @@ validateHeadersTransformFn engine = \case
     let templates = fields & addOrReplaceHeaders & map snd
     traverse_ (validateRequestUnescapedTemplateTransform' engine) templates
 
+instance HasCodec AddReplaceOrRemoveFields where
+  codec =
+    object "AddReplaceOrRemoveFields" $
+      AddReplaceOrRemoveFields
+        <$> optionalFieldWithDefaultWith' "add_headers" addCodec mempty .= addOrReplaceHeaders
+        <*> optionalFieldWithDefaultWith' "remove_headers" removeCodec mempty .= removeHeaders
+    where
+      addCodec = dimapCodec M.toList M.fromList $ caseInsensitiveHashMapCodec codec
+      removeCodec = listCodec caseInsensitiveTextCodec
+
 instance FromJSON AddReplaceOrRemoveFields where
   parseJSON = J.withObject "AddReplaceRemoveFields" $ \o -> do
     addOrReplaceHeadersTxt <- o J..:? "add_headers" J..!= mempty
@@ -150,7 +169,7 @@ instance ToJSON AddReplaceOrRemoveFields where
 -- eliminated in the `TransformHeaders` `FromJSON` instance.
 newtype HeaderKey = HeaderKey {unHeaderKey :: CI.CI Text}
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (NFData, Cacheable)
+  deriving anyclass (NFData)
 
 instance FromJSON HeaderKey where
   parseJSON = J.withText "HeaderKey" \txt -> case CI.mk txt of

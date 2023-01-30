@@ -23,7 +23,7 @@ const cleanOptions = {
   dry: false,
 };
 
-module.exports = {
+const webpackConfiguration = {
   externals: [nodeExternals()],
   mode: 'production',
   context: path.resolve(__dirname, '..'),
@@ -105,6 +105,12 @@ module.exports = {
       ...commonConfig.assetsRules,
     ],
   },
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   resolve: {
     modules: ['src', 'node_modules'],
     extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
@@ -185,3 +191,24 @@ module.exports = {
     }),
   ],
 };
+
+if (process.env.CONSOLE_BUILD_GENERATE_SOURCE_MAPS === 'enabled') {
+  // Until NX is a thing (that simplify the dependency graph of the Pro/Cloud Console) generating
+  // source maps is a resource-intensive task that must be enabled only for the production-oriented
+  // CI pipelines (not the PR-oriented pipelines, for instance).
+  webpackConfiguration.devtool = 'source-map';
+
+  // source-map-loader allows exporting the source maps of the dependencies to the final bundle.
+  // This is theoretically needed only for the Pro Console (whose depends on the OSS Console) but in
+  // order to work properly, it must be enabled for both the OSS and the Pro Console.
+  webpackConfiguration.module.rules = [
+    {
+      test: /\.(j|t)sx?$/,
+      enforce: 'pre',
+      use: ['source-map-loader'],
+    },
+    ...webpackConfiguration.module.rules,
+  ];
+}
+
+module.exports = webpackConfiguration;

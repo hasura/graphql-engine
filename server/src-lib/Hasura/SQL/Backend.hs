@@ -14,16 +14,15 @@ module Hasura.SQL.Backend
   )
 where
 
-import Autodocodec (HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, literalTextCodec, parseAlternatives)
-import Data.Aeson
+import Autodocodec (Codec (StringCodec), HasCodec (codec), JSONCodec, bimapCodec, literalTextCodec, parseAlternatives, (<?>))
+import Data.Aeson hiding ((<?>))
 import Data.Aeson.Types (Parser)
-import Data.Proxy
 import Data.Text (unpack)
 import Data.Text.Extended
-import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, nonEmptyTextCodec, nonEmptyTextQQ)
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
-import Hasura.Incremental
+import Data.Text.NonEmpty (NonEmptyText, nonEmptyTextQQ)
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..), mkDataConnectorName)
 import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax qualified as GQL
 import Witch qualified
 
 -- | Argument to Postgres; we represent backends which are variations on Postgres as sub-types of
@@ -33,7 +32,7 @@ data PostgresKind
   | Citus
   | Cockroach
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (Hashable, Cacheable)
+  deriving anyclass (Hashable)
 
 -- | An enum that represents each backend we support.
 data BackendType
@@ -43,7 +42,7 @@ data BackendType
   | MySQL
   | DataConnector
   deriving stock (Show, Eq, Ord, Generic)
-  deriving anyclass (Hashable, Cacheable)
+  deriving anyclass (Hashable)
 
 -- | The name of the backend, as we expect it to appear in our metadata and API.
 instance Witch.From BackendType NonEmptyText where
@@ -63,8 +62,6 @@ instance FromJSON BackendType where
 
 instance ToJSON BackendType where
   toJSON = String . toTxt
-
-instance Cacheable (Proxy (b :: BackendType))
 
 -- | Similar to 'BackendType', however, in the case of 'DataConnectorKind' we need to be able
 -- capture the name of the data connector that should be used by the DataConnector backend.
@@ -89,9 +86,6 @@ deriving instance Show (BackendSourceKind b)
 deriving instance Eq (BackendSourceKind b)
 
 deriving instance Ord (BackendSourceKind b)
-
-instance Cacheable (BackendSourceKind b) where
-  unchanged _ = (==)
 
 instance Witch.From (BackendSourceKind b) NonEmptyText where
   -- All cases are specified explicitly here to ensure compiler warnings highlight
@@ -133,9 +127,7 @@ instance FromJSON (BackendSourceKind ('MySQL)) where
   parseJSON = mkParseStaticBackendSourceKind MySQLKind
 
 instance FromJSON (BackendSourceKind ('DataConnector)) where
-  parseJSON = withText "BackendSourceKind" $ \text ->
-    DataConnectorKind . DataConnectorName <$> mkNonEmptyText text
-      `onNothing` fail "Cannot be empty string"
+  parseJSON v = DataConnectorKind <$> parseJSON v
 
 mkParseStaticBackendSourceKind :: BackendSourceKind b -> (Value -> Parser (BackendSourceKind b))
 mkParseStaticBackendSourceKind backendSourceKind =
@@ -165,10 +157,23 @@ instance HasCodec (BackendSourceKind ('MySQL)) where
   codec = mkCodecStaticBackendSourceKind MySQLKind
 
 instance HasCodec (BackendSourceKind ('DataConnector)) where
-  codec = dimapCodec dec enc nonEmptyTextCodec
+  codec = bimapCodec dec enc gqlNameCodec
     where
-      dec = DataConnectorKind . DataConnectorName
-      enc = Witch.into
+      dec :: GQL.Name -> Either String (BackendSourceKind 'DataConnector)
+      dec n = DataConnectorKind <$> mkDataConnectorName n
+
+      enc :: BackendSourceKind ('DataConnector) -> GQL.Name
+      enc (DataConnectorKind dcName) = unDataConnectorName dcName
+
+      gqlNameCodec :: JSONCodec GQL.Name
+      gqlNameCodec =
+        bimapCodec
+          parseName
+          GQL.unName
+          (StringCodec (Just "GraphQLName"))
+          <?> "A valid GraphQL name"
+
+      parseName text = GQL.mkName text `onNothing` Left (unpack text <> " is not a valid GraphQL name")
 
 mkCodecStaticBackendSourceKind :: BackendSourceKind b -> JSONCodec (BackendSourceKind b)
 mkCodecStaticBackendSourceKind backendSourceKind =

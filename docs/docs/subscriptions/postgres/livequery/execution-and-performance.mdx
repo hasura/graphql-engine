@@ -12,7 +12,7 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Subscriptions execution and performance
+# Subscriptions Execution and Performance
 
 ## Introduction
 
@@ -21,7 +21,7 @@ from the database.
 
 ## Execution
 
-The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
+The Hasura GraphQL Engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
 of the query being made and not the individual events leading up to the result.
 
 Subscriptions, on start, will emit the result of the underlying query. Subsequently, results will be emitted only if the
@@ -41,6 +41,20 @@ flag. By default this value is set to `100`.
 For example, with the default value, if there are 1000 subscription clients with similar queries, Hasura multiplexes 100
 subscriptions into 1 batch and make a single SQL query to the DB for that batch. So, in total there will be only 10 SQL
 queries to the DB for the 1000 subscriptions.
+
+:::info Limitation
+
+**Subscriptions that rely on SQL functions, such as through [custom root fields](/schema/postgres/custom-functions.mdx)
+or [computed fields](/schema/postgres/computed-fields.mdx), may be at risk of multiplexing errors if they throw
+"dynamic" exceptions based on data in the underlying tables.**
+
+For example, if the SQL function throws an exception by reading rows and checking an aggregate then it may be prone to
+such multiplexing errors. On the other hand, if it throws exception based on static values (e.g. input arguments to the
+function), then it is safe from multiplexing errors. To avoid potential issues, it is important to carefully evaluate
+the use of subscriptions with such functions. You can set the env variable
+`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE: 1` to avoid multiplexing errors.
+
+:::
 
 ### Example
 
@@ -67,7 +81,7 @@ there is an update in the location, the appropriate client gets sent the updated
 
 ### Analyze
 
-Subscriptions can be 'Analyzed' (from the Analyze button in GraphiQl window of Hasura console) to see the generated
+Subscriptions can be 'Analyzed' (from the Analyze button in GraphiQl window of Hasura Console) to see the generated
 multiplexed SQL and its query plan. The query plan can reveal the bottlenecks in query execution and appropriate indexes
 can be added to improve performance.
 

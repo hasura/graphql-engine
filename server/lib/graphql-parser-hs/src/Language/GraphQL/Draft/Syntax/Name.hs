@@ -1,5 +1,6 @@
 {-# HLINT ignore "Use onNothing" #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 -- | Internal functionality for Name values.
 --
@@ -23,12 +24,12 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), bimapCodec)
 import Control.DeepSeq (NFData)
 import Data.Aeson qualified as J
 import Data.Char qualified as C
 import Data.Coerce (coerce)
 import Data.Hashable (Hashable)
-import Data.Kind (Type)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Instances.TH.Lift ()
@@ -40,15 +41,16 @@ import Prelude
 -------------------------------------------------------------------------------
 
 -- Defined here and re-exported in the public module to avoid exporting `unName`.`
-type Name :: Type
 newtype Name = Name {unName :: Text}
   deriving stock (Eq, Lift, Ord, Show)
   deriving newtype (Semigroup, Hashable, NFData, Pretty, J.ToJSONKey, J.ToJSON)
 
+instance HasCodec Name where
+  codec = bimapCodec (\text -> maybe (Left $ T.unpack text <> " is not valid GraphQL name") Right $ mkName text) unName codec
+
 -- | @NameSuffix@ is essentially a GQL identifier that can be used as Suffix
 --  It is slightely different from @Name@ as it relaxes the criteria that a
 --  @Name@ cannot start with a digit.
-type NameSuffix :: Type
 newtype NameSuffix = Suffix {unNameSuffix :: Text}
   deriving stock (Eq, Lift, Ord, Show)
   deriving newtype (Semigroup, Hashable, NFData, Pretty, J.ToJSONKey, J.ToJSON)

@@ -21,4 +21,5 @@ mutableView ::
   m ()
 mutableView qt f mVI operation =
   unless (isMutable f mVI) $
-    throw400 NotSupported $ "view " <> qt <<> " is not " <> operation
+    throw400 NotSupported $
+      "view " <> qt <<> " is not " <> operation

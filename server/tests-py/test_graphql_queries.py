@@ -1,4 +1,5 @@
 import json
+import os
 import pytest
 import ruamel.yaml as yaml
 import textwrap
@@ -207,43 +208,6 @@ class TestGraphQLQueryBasicPostgres:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.backend('citus')
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBasicCitus:
-    def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter_citus.yaml", transport)
-
-    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
-    def test_select_query_user_col_change(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_citus.yaml")
-
-    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1224")
-    def test_select_query_person_citext(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_person_citext.yaml", transport)
-
-    # relationships test cases described at
-    # https://github.com/hasura/graphql-engine-mono/blob/vamshi/rfc/citus-support/rfcs/citus-support.md
-    def test_select_relationships_distributed(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_distributed.yaml", transport)
-
-    def test_select_relationships_reference(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_relationships_reference.yaml", transport)
-
-    def test_select_functions(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/select_query_disaster_functions.yaml", transport)
-
-    def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
-        resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
-        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/citus'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.backend('citus', 'postgres')
@@ -863,67 +827,6 @@ class TestGraphQLQueryOrderBy:
     def dir(cls):
         return 'queries/graphql_query/order_by'
 
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryFunctions:
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_search_posts(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_search_posts.yaml")
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_search_posts_aggregate(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_search_posts_aggregate.yaml")
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_users(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_get_users.yaml", transport)
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_users_arguments_error(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_get_users_arguments_error.yaml", transport)
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_users_default_arguments_error(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/query_get_users_default_arguments_error.yaml", transport)
-
-    def test_alter_function_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/alter_function_error.yaml')
-
-    def test_overloading_function_error(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/overloading_function_error.yaml')
-
-    def test_query_get_test_uuid(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_get_test_uuid.yaml')
-
-    def test_query_my_add(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_session_var(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/query_get_session_var.yaml', transport)
-
-    def test_track_function_v2_errors(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_get_test_session_id(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
-
-    @pytest.mark.parametrize("transport", ['http', 'websocket'])
-    def test_query_search_author_mview(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
-
-    def test_tracking_function_with_composite_type_argument(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
-
-    @pytest.mark.skip(reason="FIXME: https://github.com/hasura/graphql-engine-mono/issues/2595")
-    def test_tracking_function_with_customized_names(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/track_customised_names.yaml')
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/functions'
-
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCustomSchema:
@@ -1030,12 +933,10 @@ class TestGraphQLQueryCaching:
     def test_introspection(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-unauthorized-role"),
-    reason="--test-unauthorized-role missing"
-)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestUnauthorizedRolePermission:
     @classmethod
     def dir(cls):
@@ -1044,12 +945,10 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-unauthorized-role"),
-    reason="--test-unauthorized-role missing"
-)
 @pytest.mark.parametrize('transport', ['http'])
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestFallbackUnauthorizedRoleCookie:
     @classmethod
     def dir(cls):

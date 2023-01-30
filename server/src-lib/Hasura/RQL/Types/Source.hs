@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -12,14 +13,17 @@ module Hasura.RQL.Types.Source
     unsafeSourceName,
     unsafeSourceTables,
     siConfiguration,
+    siCustomSQL,
     siFunctions,
     siName,
     siQueryTagsConfig,
     siTables,
     siCustomization,
+    NativeQueryCache,
+    _siNativeQueries,
 
     -- * Schema cache
-    ResolvedSource (..),
+    DBObjectsIntrospection (..),
     ScalarMap (..),
 
     -- * Source resolver
@@ -31,20 +35,33 @@ module Hasura.RQL.Types.Source
     SourceHealthCheckInfo (..),
     BackendSourceHealthCheckInfo,
     SourceHealthCheckCache,
+
+    -- * Source pings
+    SourcePingInfo (..),
+    BackendSourcePingInfo,
+    SourcePingCache,
   )
 where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
+import Data.HashMap.Strict qualified as Map
+import Data.Maybe (fromJust)
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Encoding qualified as BS
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
+import Hasura.CustomSQL (CustomSQLParameter (..), CustomSQLParameterName (..), CustomSQLParameterType (..))
 import Hasura.Logging qualified as L
+import Hasura.NativeQuery.Metadata (NativeQueryArgumentName (..), NativeQueryInfoImpl (..))
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Metadata.Common (CustomSQLFields, CustomSQLMetadata (..))
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
@@ -53,18 +70,59 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Unsafe.Coerce (unsafeCoerce)
 
 --------------------------------------------------------------------------------
--- Metadata
+-- Metadata (FIXME: this grouping is inaccurate)
 
 data SourceInfo b = SourceInfo
   { _siName :: SourceName,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
+    _siCustomSQL :: CustomSQLFields b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
     _siCustomization :: ResolvedSourceCustomization
   }
+
+-- This function is a temporary integration between metadata and schema of the Native Queries MVP.
+-- It is **not** representative of the code quality we strive for, and will be properly dealt with.
+_siNativeQueries :: forall b. Backend b => CustomSQLFields b -> NativeQueryCache b
+_siNativeQueries = foldMap toItem
+  where
+    toItem :: CustomSQLMetadata b -> HashMap NativeQueryName (NativeQueryInfo b)
+    toItem csm = Map.fromList [(toNativeQueryName (_csmRootFieldName csm), toInfo csm)]
+
+    toNativeQueryName :: G.Name -> NativeQueryName
+    toNativeQueryName = NativeQueryName . G.unName
+
+    toInfo :: CustomSQLMetadata b -> NativeQueryInfo b
+    toInfo CustomSQLMetadata {..} =
+      -- '_siNativeQueries' would have to be defined in some type class over
+      -- 'b' in order to avoid this unsafeCoerce.
+      -- But since this is a temporary stop-gap which we won't release it's fine.
+      unsafeCoerce $ (NativeQueryInfoImpl {..} :: NativeQueryInfoImpl b)
+      where
+        nqiiName = toNativeQueryName _csmRootFieldName
+        nqiiCode = _csmSql
+        nqiiReturns = _csmReturns
+        nqiiArgs = toArgs _csmParameters
+        nqiiComment = "TBD"
+
+    toArgs :: NonEmpty CustomSQLParameter -> HashMap NativeQueryArgumentName (ScalarType b)
+    toArgs = foldMap toArg
+
+    toArg :: CustomSQLParameter -> HashMap NativeQueryArgumentName (ScalarType b)
+    toArg CustomSQLParameter {..} = Map.fromList [(toArgName cspName, toScalarType cspType)]
+
+    toArgName :: CustomSQLParameterName -> NativeQueryArgumentName
+    toArgName CustomSQLParameterName {..} = NativeQueryArgumentName cspnName
+
+    -- This mismatch is the worst part.
+    toScalarType :: CustomSQLParameterType -> ScalarType b
+    toScalarType CustomSQLParameterType {..} = fromJust $ decode (BS.encodeUtf8 $ TL.fromStrict cspnType)
+
+type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 
 $(makeLenses ''SourceInfo)
 
@@ -72,7 +130,6 @@ instance
   ( Backend b,
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
-    ToJSON (SourceConfig b),
     ToJSON (QueryTagsConfig),
     ToJSON (SourceCustomization)
   ) =>
@@ -104,7 +161,7 @@ unsafeSourceInfo = AB.unpackAnyBackend
 unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go (SourceInfo name _ _ _ _ _) = name
+    go (SourceInfo name _ _ _ _ _ _) = name
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
@@ -118,17 +175,27 @@ unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 --------------------------------------------------------------------------------
 -- Schema cache
 
--- | Contains Postgres connection configuration and essential metadata from the
--- database to build schema cache for tables and function.
-data ResolvedSource b = ResolvedSource
-  { _rsConfig :: SourceConfig b,
-    _rsCustomization :: SourceTypeCustomization,
-    _rsTables :: DBTablesMetadata b,
+-- | Contains metadata (introspection) from the database, used to build the
+-- schema cache.  This type only contains results of introspecting DB objects,
+-- i.e. the DB types specified by tables, functions, and scalars.  Notably, it
+-- does not include the additional introspection that takes place on Postgres,
+-- namely reading the contents of tables used as Enum Values -- see
+-- @fetchAndValidateEnumValues@.
+data DBObjectsIntrospection b = DBObjectsIntrospection
+  { _rsTables :: DBTablesMetadata b,
     _rsFunctions :: DBFunctionsMetadata b,
     _rsScalars :: ScalarMap b
   }
+  deriving (Eq, Generic)
 
-instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
+instance Backend b => FromJSON (DBObjectsIntrospection b) where
+  parseJSON = withObject "DBObjectsIntrospection" \o -> do
+    tables <- o .: "tables"
+    functions <- o .: "functions"
+    scalars <- o .: "scalars"
+    pure $ DBObjectsIntrospection (Map.fromList tables) (Map.fromList functions) (ScalarMap (Map.fromList scalars))
+
+instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
     where
       rsLog =
@@ -138,14 +205,10 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
           ]
 
 -- | A map from GraphQL name to equivalent scalar type for a given backend.
-data ScalarMap b where
-  ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
+newtype ScalarMap b = ScalarMap (HashMap G.Name (ScalarType b))
+  deriving newtype (Semigroup, Monoid)
 
-instance Backend b => Semigroup (ScalarMap b) where
-  ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2
-
-instance Backend b => Monoid (ScalarMap b) where
-  mempty = ScalarMap mempty
+deriving stock instance Backend b => Eq (ScalarMap b)
 
 --------------------------------------------------------------------------------
 -- Source resolver
@@ -197,3 +260,15 @@ data SourceHealthCheckInfo b = SourceHealthCheckInfo
 type BackendSourceHealthCheckInfo = AB.AnyBackend SourceHealthCheckInfo
 
 type SourceHealthCheckCache = HashMap SourceName BackendSourceHealthCheckInfo
+
+-------------------------------------------------------------------------------
+-- Source pings
+
+data SourcePingInfo b = SourcePingInfo
+  { _spiName :: SourceName,
+    _spiConnection :: SourceConnConfiguration b
+  }
+
+type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
+
+type SourcePingCache = HashMap SourceName BackendSourcePingInfo

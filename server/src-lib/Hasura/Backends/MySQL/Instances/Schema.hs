@@ -32,20 +32,19 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend as RQL
 import Hasura.RQL.Types.Column as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
-import Hasura.RQL.Types.Source as RQL
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 instance BackendSchema 'MySQL where
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  buildTableRelayQueryFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
-  buildFunctionQueryFields _ _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ = pure []
   relayExtension = Nothing
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
@@ -54,7 +53,7 @@ instance BackendSchema 'MySQL where
   possiblyNullable = possiblyNullable'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = orderByOperators'
-  comparisonExps = const comparisonExps'
+  comparisonExps = comparisonExps'
   countTypeInput = mysqlCountTypeInput
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
@@ -68,12 +67,11 @@ instance BackendTableSelectSchema 'MySQL where
 mysqlTableArgs ::
   forall r m n.
   MonadBuildSchema 'MySQL r m n =>
-  RQL.SourceInfo 'MySQL ->
   TableInfo 'MySQL ->
   SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-mysqlTableArgs sourceInfo tableInfo = do
-  whereParser <- tableWhereArg sourceInfo tableInfo
-  orderByParser <- tableOrderByArg sourceInfo tableInfo
+mysqlTableArgs tableInfo = do
+  whereParser <- tableWhereArg tableInfo
+  orderByParser <- tableOrderByArg tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser
@@ -96,40 +94,44 @@ columnParser' ::
   ColumnType 'MySQL ->
   GQL.Nullability ->
   SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
-columnParser' columnType nullability =
-  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> case scalarType of
-      MySQL.Decimal -> pure $ possiblyNullable' scalarType nullability $ MySQL.DecimalValue <$> P.float
-      MySQL.Tiny -> pure $ possiblyNullable' scalarType nullability $ MySQL.TinyValue <$> P.int
-      MySQL.Short -> pure $ possiblyNullable' scalarType nullability $ MySQL.SmallValue <$> P.int
-      MySQL.Long -> pure $ possiblyNullable' scalarType nullability $ MySQL.IntValue <$> P.int
-      MySQL.Float -> pure $ possiblyNullable' scalarType nullability $ MySQL.FloatValue <$> P.float
-      MySQL.Double -> pure $ possiblyNullable' scalarType nullability $ MySQL.DoubleValue <$> P.float
-      MySQL.Null -> pure $ possiblyNullable' scalarType nullability $ MySQL.NullValue <$ P.string
-      MySQL.LongLong -> pure $ possiblyNullable' scalarType nullability $ MySQL.BigValue <$> P.int
-      MySQL.Int24 -> pure $ possiblyNullable' scalarType nullability $ MySQL.MediumValue <$> P.int
-      MySQL.Date -> pure $ possiblyNullable' scalarType nullability $ MySQL.DateValue <$> P.string
-      MySQL.Year -> pure $ possiblyNullable' scalarType nullability $ MySQL.YearValue <$> P.string
-      MySQL.Bit -> pure $ possiblyNullable' scalarType nullability $ MySQL.BitValue <$> P.boolean
-      MySQL.String -> pure $ possiblyNullable' scalarType nullability $ MySQL.VarcharValue <$> P.string
-      MySQL.VarChar -> pure $ possiblyNullable' scalarType nullability $ MySQL.VarcharValue <$> P.string
-      MySQL.DateTime -> pure $ possiblyNullable' scalarType nullability $ MySQL.DatetimeValue <$> P.string
-      MySQL.Blob -> pure $ possiblyNullable' scalarType nullability $ MySQL.BlobValue <$> bsParser
-      MySQL.Timestamp -> pure $ possiblyNullable' scalarType nullability $ MySQL.TimestampValue <$> P.string
-      _ -> do
-        name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
-        pure $
-          P.Parser
-            { pType = schemaType,
-              pParser =
-                P.valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
-            }
-    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-      case nonEmpty (HM.toList enumValues) of
-        Just enumValuesList -> enumParser' tableName enumValuesList customTableName nullability
-        Nothing -> throw400 ValidationFailed "empty enum values"
+columnParser' columnType nullability = case columnType of
+  ColumnScalar scalarType ->
+    P.memoizeOn 'columnParser' (scalarType, nullability) $
+      peelWithOrigin . fmap (ColumnValue columnType) . possiblyNullable' scalarType nullability
+        <$> case scalarType of
+          MySQL.Decimal -> pure $ MySQL.DecimalValue <$> P.float
+          MySQL.Tiny -> pure $ MySQL.TinyValue <$> P.int
+          MySQL.Short -> pure $ MySQL.SmallValue <$> P.int
+          MySQL.Long -> pure $ MySQL.IntValue <$> P.int
+          MySQL.Float -> pure $ MySQL.FloatValue <$> P.float
+          MySQL.Double -> pure $ MySQL.DoubleValue <$> P.float
+          MySQL.Null -> pure $ MySQL.NullValue <$ P.string
+          MySQL.LongLong -> pure $ MySQL.BigValue <$> P.int
+          MySQL.Int24 -> pure $ MySQL.MediumValue <$> P.int
+          MySQL.Date -> pure $ MySQL.DateValue <$> P.string
+          MySQL.Year -> pure $ MySQL.YearValue <$> P.string
+          MySQL.Bit -> pure $ MySQL.BitValue <$> P.boolean
+          MySQL.String -> pure $ MySQL.VarcharValue <$> P.string
+          MySQL.VarChar -> pure $ MySQL.VarcharValue <$> P.string
+          MySQL.DateTime -> pure $ MySQL.DatetimeValue <$> P.string
+          MySQL.Blob -> pure $ MySQL.BlobValue <$> bsParser
+          MySQL.Timestamp -> pure $ MySQL.TimestampValue <$> P.string
+          _ -> do
+            name <- MySQL.mkMySQLScalarTypeName scalarType
+            let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
+            pure $
+              P.Parser
+                { pType = schemaType,
+                  pParser =
+                    P.valueToJSON (P.toGraphQLType schemaType)
+                      >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
+                }
+  ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
+    case nonEmpty (HM.toList enumValues) of
+      Just enumValuesList ->
+        peelWithOrigin . fmap (ColumnValue columnType)
+          <$> enumParser' tableName enumValuesList customTableName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
 
 enumParser' ::
   MonadBuildSchema 'MySQL r m n =>
@@ -199,7 +201,7 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
   pure $
     P.object name (Just desc) $
       catMaybes

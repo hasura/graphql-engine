@@ -67,6 +67,9 @@ spec = describe "WebhookTransform" do
           (WithOptional (Just (QueryParamsTransformFn_ (QueryParams.AddOrReplace qs)))) =
             WithOptional . Just . QueryParamsTransformFn_ . QueryParams.AddOrReplace $
               sortOn fst qs
+        sortQ
+          (WithOptional (Just (QueryParamsTransformFn_ (QueryParams.ParamTemplate qs)))) =
+            WithOptional . Just . QueryParamsTransformFn_ . QueryParams.ParamTemplate $ qs
     let sortRF rf@RequestFields {requestHeaders, queryParams} =
           rf {requestHeaders = sortH requestHeaders, queryParams = sortQ queryParams}
     let reqFieldsMaybe = eitherDecode $ encode reqFields

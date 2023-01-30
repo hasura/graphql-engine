@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
@@ -22,10 +23,11 @@ func TestPrintContextRichDiffBetweenProjectDirectories(t *testing.T) {
 		opts PrintContextRichDiffBetweenProjectDirectoriesOpts
 	}
 	tests := []struct {
-		name    string
-		args    args
-		out     *bytes.Buffer
-		wantErr bool
+		name      string
+		args      args
+		out       *bytes.Buffer
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -54,16 +56,16 @@ func TestPrintContextRichDiffBetweenProjectDirectories(t *testing.T) {
 			},
 			new(bytes.Buffer),
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.args.opts.Writer = tt.out
 			err := PrintContextRichDiffBetweenProjectDirectories(tt.args.opts)
+			tt.assertErr(t, err)
 			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+				return
 			}
 			goldenFile := filepath.Join("testdata/diff", tt.name, "want")
 			// uncomment to update test snapshot file

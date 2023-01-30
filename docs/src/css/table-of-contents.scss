@@ -1,0 +1,36 @@
+.table-of-contents {
+  margin-left: 0;
+  padding-left: var(--ifm-toc-padding-horizontal);
+
+  &.table-of-contents__left-border {
+    border-left: 1px solid var(--color-gray-16);
+  }
+
+  .table-of-contents__link {
+    display: block;
+    font-size: 0.75rem;
+  }
+
+  .table-of-contents__link--active {
+    font-weight: var(--ifm-font-weight-bold);
+    border-left: 0.125rem solid var(--color-gray-82);
+    color: var(--ifm-font-color-base);
+    margin-left: -1rem;
+    padding-left: 0.75rem;
+  }
+}
+
+
+/* Dark Mode Styles */
+html[data-theme='dark'] {
+
+  .table-of-contents {
+    &.table-of-contents__left-border {
+      border-left: 1px solid var(--color-gray-74);
+    }
+
+    .table-of-contents__link--active {
+      border-left: 0.125rem solid var(--color-gray-16);
+    }
+  }
+}

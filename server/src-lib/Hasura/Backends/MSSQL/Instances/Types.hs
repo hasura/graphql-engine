@@ -5,6 +5,7 @@
 -- Defines a 'Hasura.RQL.Types.Backend.Backend' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Types () where
 
+import Autodocodec (codec)
 import Data.Aeson
 import Data.Text.Casing (GQLNameIdentifier)
 import Database.ODBC.SQLServer qualified as ODBC
@@ -12,13 +13,15 @@ import Hasura.Backends.MSSQL.Connection qualified as MSSQL
 import Hasura.Backends.MSSQL.ToQuery ()
 import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
-import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
+import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (UpdateOperator)
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
+import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common (TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -45,8 +48,6 @@ instance Backend 'MSSQL where
   type SQLExpression 'MSSQL = MSSQL.Expression
   type ScalarSelectionArguments 'MSSQL = Void
 
-  type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
-
   type ComputedFieldDefinition 'MSSQL = Void
   type FunctionArgumentExp 'MSSQL = Const Void
   type ComputedFieldImplicitArguments 'MSSQL = Void
@@ -54,10 +55,12 @@ instance Backend 'MSSQL where
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
   type BackendInsert 'MSSQL = MSSQL.BackendInsert
+  type UpdateVariant 'MSSQL = UpdateBatch 'MSSQL MSSQL.UpdateOperator
 
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
+  type XEventTriggers 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
   type XStreamingSubscription 'MSSQL = XDisable
 
@@ -66,7 +69,7 @@ instance Backend 'MSSQL where
     Just $
       HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
-          _hciTestCodec = placeholderCodecViaJSON
+          _hciTestCodec = codec
         }
 
   isComparableType :: ScalarType 'MSSQL -> Bool
@@ -114,3 +117,9 @@ instance Backend 'MSSQL where
 
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MSSQL -> [FunctionArgumentExp 'MSSQL v]
   fromComputedFieldImplicitArguments _ = absurd
+
+  resizeSourcePools :: SourceConfig 'MSSQL -> ServerReplicas -> IO ()
+  resizeSourcePools sourceConfig =
+    MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
+
+  defaultTriggerOnReplication = Just ((), TOREnableTrigger)

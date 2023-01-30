@@ -1,3 +1,0 @@
-type: mssql_drop_source
-args:
-  name: mssql1

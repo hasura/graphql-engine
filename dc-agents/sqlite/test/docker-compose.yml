@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+  sqlite_agent:
+    container_name: 'sqlite_agent'
+    image: 'sqlite-agent'
+    network_mode: 'bridge'
+    ports:
+      - '8100:8100'
+    volumes:
+      - ./chinook.db:/chinook.db

@@ -86,10 +86,10 @@ resolveVariables definitions jsonValues directives selSet = do
         Nothing
           | isOptional -> pure $ GraphQLValue $ absurd <$> defaultValue
           | otherwise ->
-            throw400 ValidationFailed $
-              "expecting a value for non-nullable variable: " <>> _vdName
-      pure
-        $! Variable
+              throw400 ValidationFailed $
+                "expecting a value for non-nullable variable: " <>> _vdName
+      pure $!
+        Variable
           { vInfo =
               if isOptional
                 then VIOptional _vdName defaultValue

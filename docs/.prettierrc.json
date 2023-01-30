@@ -1,0 +1,26 @@
+{
+  "arrowParens": "avoid",
+  "bracketSpacing": true,
+  "embeddedLanguageFormatting": "auto",
+  "htmlWhitespaceSensitivity": "css",
+  "insertPragma": false,
+  "jsxSingleQuote": false,
+  "proseWrap": "preserve",
+  "quoteProps": "as-needed",
+  "requirePragma": false,
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "useTabs": false,
+  "vueIndentScriptAndStyle": false,
+  "printWidth": 120,
+  "overrides": [
+    {
+      "files": "*.graphql",
+      "options": {
+        "parser": "graphql"
+      }
+    }
+  ]
+}

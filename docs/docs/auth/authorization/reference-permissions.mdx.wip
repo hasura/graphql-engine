@@ -31,7 +31,7 @@ Let's say you want to make the following simple query:
       }
     }
 
-If you make this query as an admin in the Graphiql section of the console and click on the **Analyze** button, you will see following generated SQL:
+If you make this query as an admin in the Graphiql section of the Console and click on the **Analyze** button, you will see following generated SQL:
 
 .. code-block:: SQL
    
@@ -128,7 +128,7 @@ Configuring permissions
 -----------------------
 Permissions are essentially a combination of **boolean expressions** and **column selections** that impose constraints on the data being returned or modified.
 
-Let's take a look at the different configuration options available to define a permission rule. Permission rules are defined for each role, table, operation (*insert, select, update, delete*) by using the console or the :doc:`metadata APIs for permissions <../../api-reference/schema-metadata-api/permission>`.
+Let's take a look at the different configuration options available to define a permission rule. Permission rules are defined for each role, table, operation (*insert, select, update, delete*) by using the Console or the :doc:`Metadata APIs for permissions <../../api-reference/schema-metadata-api/permission>`.
 
 We'll list the different configuration operations available for defining permission rules and then take a look at how they're applicable to different operations. 
 

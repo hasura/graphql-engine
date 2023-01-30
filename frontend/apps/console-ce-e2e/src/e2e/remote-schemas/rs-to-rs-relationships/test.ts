@@ -55,9 +55,7 @@ describe.skip('check if remote schema to db relationships are created properly',
   });
 
   it('should create a new rs-to-rs relationship from source field', () => {
-    cy.visit(
-      'http://localhost:3000/remote-schemas/manage/source_rs/relationships'
-    );
+    cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.get(getElementFromAlias('add-a-new-rs-relationship')).click();
     cy.get(getElementFromAlias('radio-select-remoteSchema')).click();
     cy.get(getElementFromAlias('rs-to-rs-rel-name')).type('RelationshipName');
@@ -81,9 +79,7 @@ describe.skip('check if remote schema to db relationships are created properly',
     );
   });
   it('should create a new reverse rs-to-rs relationship with static fill value', () => {
-    cy.visit(
-      'http://localhost:3000/remote-schemas/manage/ref_rs/relationships'
-    );
+    cy.visit('/remote-schemas/manage/ref_rs/relationships');
     cy.get(getElementFromAlias('add-a-new-rs-relationship')).click();
     cy.get(getElementFromAlias('radio-select-remoteSchema')).click();
     cy.get(getElementFromAlias('rs-to-rs-rel-name')).type(

@@ -1,0 +1,103 @@
+---
+sidebar_label: Page Structure
+sidebar_position: 0
+---
+
+# Docs Page Structure
+
+## Meta information
+
+The following meta information should be added at the beginning of each docs page: `description` and `keywords`.
+
+An example:
+
+```markdown
+---
+description: Data validations in Hasura
+keywords:
+  - hasura
+  - docs
+  - schema
+  - data validation
+---
+```
+
+## React component imports
+
+Please add any React component imports right below the frontmatter and before starting the main doc content.
+
+```jsx
+import Thumbnail from '@site/src/components/Thumbnail';
+```
+
+Note: When importing components from `src/` directory, please do not use relative paths. Docusaurus provides a global
+variable `@site` which is resolved to the root of the app - absolute import. So, doing
+`@site/src/components/Thumbnail` is the same as `../../../src/components/Thumbnail`.
+
+## Page title
+
+Add the main title for each docs page.
+
+An example:
+
+```
+# Data validations
+```
+
+You can also add `title` frontmatter.
+
+```markdown
+---
+title: Data validations
+---
+```
+
+By default the title will be the label for sidebar item. So, to use a shorten/different label for sidebar use the
+`sidebar_label` frontmatter to override.
+
+## Table of contents
+
+This is auto generated on the right sidebar. And the depth can be controlled via `toc_max_heading_level`,
+`toc_min_heading_level` frontmatter.
+
+Please refer to the [Table of Contents](/docusaurus-mdx-guide/table-of-contents.mdx) section to understand more about
+hwo to render this manually in between content and filtering items etc.,
+
+## Markdown Variables
+
+Add the markdown variables at very end of file for easier reference and maintainability. These variables are mostly for
+links. To avoid repetition of adding full path for each link, we could take advantage of
+[reference-style-links](https://daringfireball.net/projects/markdown/syntax#link) syntax in markdown.
+
+For Example:
+
+```markdown
+## Section one
+
+.....
+
+REST ... [create_action][metadata-create-action] or [update_action][metadata-update-action] Metadata APIs ...
+[request_transform][requesttransformation] field ...:
+
+....
+
+## Section two
+
+.....
+
+REST ... [create_action][metadata-create-action] or [update_action][metadata-update-action] Metadata APIs ...
+[request_transform][requesttransformation] field ...:
+
+....
+
+<!-- Shared Link Variables -->
+
+[metadata-create-action]: /api-reference/metadata-api/actions.mdx#metadata-create-action
+[metadata-update-action]: /api-reference/metadata-api/actions.mdx#metadata-update-action
+[requesttransformation]: /api-reference/syntax-defs.mdx#requesttransformation
+```
+
+## Run docs build
+
+Run the docs build in the end again with `yarn build` and make sure there are no errors/warnings because of any
+inconsistencies.

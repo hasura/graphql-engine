@@ -43,7 +43,8 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Source (SourceInfo)
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -54,14 +55,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
-  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  buildTableRelayQueryFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
-  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
-  buildFunctionQueryFields _ _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -74,7 +75,7 @@ instance BackendSchema 'BigQuery where
   possiblyNullable = const bqPossiblyNullable
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
-  comparisonExps = const bqComparisonExps
+  comparisonExps = bqComparisonExps
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
@@ -93,16 +94,16 @@ bqColumnParser ::
   ColumnType 'BigQuery ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
-bqColumnParser columnType nullability = do
-  Options.SchemaOptions {soBigQueryStringNumericInput} <- asks getter
-  let numericInputParser :: forall a. a -> a -> a
-      numericInputParser builtin custom =
-        case soBigQueryStringNumericInput of
-          Options.EnableBigQueryStringNumericInput -> custom
-          Options.DisableBigQueryStringNumericInput -> builtin
-  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> do
-      p <- case scalarType of
+bqColumnParser columnType nullability = case columnType of
+  ColumnScalar scalarType -> P.memoizeOn 'bqColumnParser (columnType, nullability) do
+    Options.SchemaOptions {soBigQueryStringNumericInput} <- asks getter
+    let numericInputParser :: forall a. a -> a -> a
+        numericInputParser builtin custom =
+          case soBigQueryStringNumericInput of
+            Options.EnableBigQueryStringNumericInput -> custom
+            Options.DisableBigQueryStringNumericInput -> builtin
+    peelWithOrigin . fmap (ColumnValue columnType) . bqPossiblyNullable nullability
+      <$> case scalarType of
         -- bytestrings
         -- we only accept string literals
         BigQuery.BytesScalarType -> pure $ BigQuery.StringValue <$> stringBased _Bytes
@@ -140,11 +141,12 @@ bqColumnParser columnType nullability = do
         BigQuery.TimestampScalarType ->
           pure $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
         ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
-      return $ bqPossiblyNullable nullability p
-    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-      case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> bqEnumParser tableName enumValuesList customTableName nullability
-        Nothing -> throw400 ValidationFailed "empty enum values"
+  ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
+    case nonEmpty (Map.toList enumValues) of
+      Just enumValuesList ->
+        peelWithOrigin . fmap (ColumnValue columnType) . bqPossiblyNullable nullability
+          <$> bqEnumParser tableName enumValuesList customTableName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
   where
     throughJSON scalarName =
       let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar
@@ -227,7 +229,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
   dWithinGeogOpParser <- geographyWithinDistanceInput
-  tCase <- asks getter
+  tCase <- retrieve $ _rscNamingConvention . _siCustomization @'BigQuery
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
@@ -236,7 +238,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
         G.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
       -- textListParser = fmap openValueOrigin <$> P.list textParser
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
       mkListLiteral :: [ColumnValue 'BigQuery] -> IR.UnpreparedValue 'BigQuery
@@ -359,7 +361,8 @@ geographyWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
   pure $
     P.object Name._st_dwithin_input Nothing $
-      DWithinGeogOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+      DWithinGeogOp
+        <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
         <*> (IR.mkParameter <$> P.field Name._from Nothing geographyParser)
         <*> (IR.mkParameter <$> P.fieldWithDefault Name._use_spheroid Nothing (G.VBoolean False) booleanParser)
 
@@ -367,22 +370,24 @@ geographyWithinDistanceInput = do
 bqComputedField ::
   forall r m n.
   MonadBuildSchema 'BigQuery r m n =>
-  SourceInfo 'BigQuery ->
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   SchemaT r m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
+bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
+  sourceInfo :: SourceInfo 'BigQuery <- asks getter
+  let customization = _siCustomization sourceInfo
+      mkTypename = runMkTypename $ _rscTypeNames customization
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
-  functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
+  functionArgsParser <- lift $ computedFieldFunctionArgs mkTypename _cfiFunction
   case _cfiReturnType of
     BigQuery.ReturnExistingTable returnTable -> do
-      returnTableInfo <- lift $ askTableInfo sourceName returnTable
+      returnTableInfo <- lift $ askTableInfo returnTable
       returnTablePermissions <- hoistMaybe $ tableSelectPermissions roleName returnTableInfo
-      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet sourceName returnTableInfo)
-      selectArgsParser <- lift $ tableArguments sourceName returnTableInfo
+      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet returnTableInfo)
+      selectArgsParser <- lift $ tableArguments returnTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $
         P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
@@ -402,7 +407,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ Map.member _cfiName $ spiComputedFields selectPermissions
       objectTypeName <-
-        mkTypename =<< do
+        mkTypename <$> do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           pure $ computedFieldGQLName <> Name.__ <> Name.__fields
       selectionSetParser <- do
@@ -438,11 +443,12 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
           $> IR.mkAnnColumnField columnName (ColumnScalar columnType) Nothing Nothing
 
     computedFieldFunctionArgs ::
+      (G.Name -> G.Name) ->
       ComputedFieldFunction 'BigQuery ->
       SchemaT r m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
-    computedFieldFunctionArgs ComputedFieldFunction {..} = do
+    computedFieldFunctionArgs mkTypename ComputedFieldFunction {..} = do
       objectName <-
-        mkTypename =<< do
+        mkTypename <$> do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           tableGQLName <- getTableGQLName @'BigQuery tableInfo
           pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args

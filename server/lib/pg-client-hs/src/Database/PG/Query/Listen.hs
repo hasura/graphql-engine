@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use onLeft" #-}
 {-# HLINT ignore "Use onNothing" #-}
@@ -27,7 +28,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
-import Data.Kind (Type)
+import Data.Foldable
 import Data.String (IsString)
 import Data.Text qualified as T
 import Database.PG.Query.Connection
@@ -38,18 +39,15 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-type PGChannel :: Type
 newtype PGChannel = PGChannel {getChannelTxt :: T.Text}
   deriving stock (Eq, Show)
   deriving newtype (IsString)
 
-type PGNotifyEvent :: Type
 data PGNotifyEvent
   = PNEOnStart
   | PNEPQNotify !PQ.Notify
   deriving stock (Show)
 
-type NotifyHandler :: Type
 type NotifyHandler = PGNotifyEvent -> IO ()
 
 -- | listen on given channel
@@ -72,7 +70,9 @@ listen pool channel handler = catchConnErr $
     eRes <-
       liftIO $
         runExceptT $
-          execMulti pgConn (mkTemplate listenCmd) $ const $ return ()
+          execMulti pgConn (mkTemplate listenCmd) $
+            const $
+              return ()
     either throwTxErr return eRes
     -- Emit onStart event
     liftIO $ handler PNEOnStart
@@ -95,7 +95,7 @@ listen pool channel handler = catchConnErr $
     processNotifs conn = do
       -- Collect notification
       mNotify <- PQ.notifies conn
-      onJust mNotify $ \n -> do
+      for_ mNotify $ \n -> do
         -- Apply notify handler on arrived notification
         handler $ PNEPQNotify n
         -- Process remaining notifications if any
@@ -112,7 +112,3 @@ waitForReadReadiness conn = do
   where
     ioErrorToPGConnErr :: IOError -> PGConnErr
     ioErrorToPGConnErr = PGConnErr . T.pack . displayException
-
-onJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
-onJust Nothing _ = return ()
-onJust (Just v) act = act v

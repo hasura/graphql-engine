@@ -6,9 +6,14 @@ module Hasura.Eventing.ScheduledTrigger.Types
     ScheduledEventOp (..),
     ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime, sewpRequestTransform, sewpResponseTransform),
     ScheduledTriggerInternalErr (ScheduledTriggerInternalErr),
+    CronEventsCount (..),
+    OneOffScheduledEventsCount (..),
+    FetchedScheduledEventsStats (..),
+    FetchedScheduledEventsStatsLogger,
   )
 where
 
+import Control.FoldDebounce qualified as FDebounce
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Time.Clock
@@ -65,3 +70,32 @@ data ScheduledEventOp
   = SEOpRetry !UTCTime
   | SEOpStatus !ScheduledEventStatus
   deriving (Show, Eq)
+
+newtype CronEventsCount = CronEventsCount {unCronEventsCount :: Int}
+  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
+
+newtype OneOffScheduledEventsCount = OneOffScheduledEventsCount {unOneOffScheduledEventsCount :: Int}
+  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
+
+-- | Statistics of scheduled events fetched within a timeframe
+data FetchedScheduledEventsStats = FetchedScheduledEventsStats
+  { _fsesNumCronEventsFetched :: CronEventsCount,
+    _fsesNumOneOffScheduledEventsFetched :: OneOffScheduledEventsCount,
+    _fsesNumFetches :: Int
+  }
+  deriving (Eq, Show)
+
+$(J.deriveToJSON hasuraJSON ''FetchedScheduledEventsStats)
+
+instance L.ToEngineLog FetchedScheduledEventsStats L.Hasura where
+  toEngineLog stats =
+    (L.LevelInfo, L.scheduledTriggerProcessLogType, J.toJSON stats)
+
+instance Semigroup FetchedScheduledEventsStats where
+  (FetchedScheduledEventsStats lCron lOneOff lFetches) <> (FetchedScheduledEventsStats rCron rOneOff rFetches) =
+    FetchedScheduledEventsStats (lCron + rCron) (lOneOff + rOneOff) (lFetches + rFetches)
+
+instance Monoid FetchedScheduledEventsStats where
+  mempty = FetchedScheduledEventsStats (CronEventsCount 0) (OneOffScheduledEventsCount 0) 0
+
+type FetchedScheduledEventsStatsLogger = FDebounce.Trigger FetchedScheduledEventsStats FetchedScheduledEventsStats

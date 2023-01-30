@@ -1,6 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Database.PG.Query.PTI where
+-- | OIDs of postgres types
+--
+-- See https://github.com/postgres/postgres/blob/master/src/include/catalog/pg_type.dat
+module Database.PG.Query.PTI
+  ( module Database.PG.Query.PTI,
+  )
+where
 
 -------------------------------------------------------------------------------
 
@@ -12,6 +18,9 @@ import Prelude
 
 mkOid :: Word32 -> PQ.Oid
 mkOid = PQ.Oid . fromIntegral
+
+unOid :: Integral n => PQ.Oid -> n
+unOid (PQ.Oid oid') = fromIntegral oid'
 
 -- * Constants
 
@@ -159,3 +168,5 @@ xml = mkOid 142
 -- Array Types
 
 text_arr = mkOid 1009
+
+jsonb_array = mkOid 3807

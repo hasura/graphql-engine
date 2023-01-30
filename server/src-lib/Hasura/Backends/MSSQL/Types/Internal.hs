@@ -108,7 +108,6 @@ import Data.Text.Casing qualified as C
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.SQL.Backend
@@ -469,7 +468,7 @@ data Aliased a = Aliased
   }
 
 newtype SchemaName = SchemaName {_unSchemaName :: Text}
-  deriving (Show, Eq, Ord, Data, J.ToJSON, J.FromJSON, NFData, Generic, Cacheable, IsString, Hashable, Lift)
+  deriving (Show, Eq, Ord, Data, J.ToJSON, J.FromJSON, NFData, Generic, IsString, Hashable, Lift)
 
 data TableName = TableName
   { tableName :: Text,
@@ -599,7 +598,9 @@ mkMSSQLScalarTypeName = \case
     G.mkName (scalarTypeDBName DataLengthUnspecified scalarType)
       `onNothing` throw400
         ValidationFailed
-        ( "cannot use SQL type " <> scalarTypeDBName DataLengthUnspecified scalarType <> " in the GraphQL schema because its name is not a "
+        ( "cannot use SQL type "
+            <> scalarTypeDBName DataLengthUnspecified scalarType
+            <> " in the GraphQL schema because its name is not a "
             <> "valid GraphQL identifier"
         )
 

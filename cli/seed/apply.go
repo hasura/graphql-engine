@@ -5,16 +5,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-
-	"github.com/pkg/errors"
 
 	"github.com/spf13/afero"
 )
 
 func hasAllowedSeedFileExtensions(filename string) error {
+	var op errors.Op = "seed.hasAllowedSeedFileExtensions"
 	extension := filepath.Ext(filename)
 	allowedExtensions := []string{".sql", ".SQL"}
 	for _, allowedExtension := range allowedExtensions {
@@ -22,12 +22,13 @@ func hasAllowedSeedFileExtensions(filename string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("expected extension to be one of %v but got %s on file %s", allowedExtensions, extension, filename)
+	return errors.E(op, fmt.Errorf("expected extension to be one of %v but got %s on file %s", allowedExtensions, extension, filename))
 }
 
 // ApplySeedsToDatabase will read all .sql files in the given
 // directory and apply it to hasura
 func (d *Driver) ApplySeedsToDatabase(fs afero.Fs, rootSeedsDirectory string, filenames []string, source cli.Source) error {
+	var op errors.Op = "seed.Driver.ApplySeedsToDatabase"
 	seedsDirectory := rootSeedsDirectory
 	if len(source.Name) > 0 {
 		seedsDirectory = filepath.Join(rootSeedsDirectory, source.Name)
@@ -43,30 +44,30 @@ func (d *Driver) ApplySeedsToDatabase(fs afero.Fs, rootSeedsDirectory string, fi
 		for _, filename := range filenames {
 			absFilename := filepath.Join(seedsDirectory, filename)
 			if err := hasAllowedSeedFileExtensions(absFilename); err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			b, err := afero.ReadFile(fs, absFilename)
 			if err != nil {
-				return errors.Wrap(err, "error opening file")
+				return errors.E(op, fmt.Errorf("error opening file: %w", err))
 			}
 			sqlAsBytes = append(sqlAsBytes, b)
 		}
 	} else {
 		err := afero.Walk(fs, seedsDirectory, func(path string, file os.FileInfo, err error) error {
 			if file == nil || err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			if err := hasAllowedSeedFileExtensions(file.Name()); err == nil && !file.IsDir() {
 				b, err := afero.ReadFile(fs, path)
 				if err != nil {
-					return errors.Wrap(err, "error opening file")
+					return errors.E(op, fmt.Errorf("error opening file: %w", err))
 				}
 				sqlAsBytes = append(sqlAsBytes, b)
 			}
 			return nil
 		})
 		if err != nil {
-			return errors.Wrap(err, "error walking the directory path")
+			return errors.E(op, fmt.Errorf("error walking the directory path: %w", err))
 		}
 	}
 	var args []hasura.RequestBody
@@ -106,15 +107,15 @@ func (d *Driver) ApplySeedsToDatabase(fs afero.Fs, rootSeedsDirectory string, fi
 			args = append(args, request)
 		}
 	default:
-		return fmt.Errorf("database %s of kind %s is not supported", source.Name, source.Kind)
+		return errors.E(op, fmt.Errorf("database %s of kind %s is not supported", source.Name, source.Kind))
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("no SQL files found in %s", seedsDirectory)
+		return errors.E(op, fmt.Errorf("no SQL files found in %s", seedsDirectory))
 	}
 	_, err := d.SendBulk(args)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }

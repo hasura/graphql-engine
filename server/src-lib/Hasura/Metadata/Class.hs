@@ -118,7 +118,7 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   -- Console API requirements
   getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (WithOptionalTotalCount [OneOffScheduledEvent])
   getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (WithOptionalTotalCount [CronEvent])
-  getInvocations :: GetEventInvocations -> m (WithOptionalTotalCount [ScheduledEventInvocation])
+  getScheduledEventInvocations :: GetScheduledEventInvocations -> m (WithOptionalTotalCount [ScheduledEventInvocation])
   deleteScheduledEvent :: ScheduledEventId -> ScheduledEventType -> m ()
 
   -- Async actions
@@ -157,7 +157,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   clearFutureCronEvents = lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = lift $ getCronEvents a b c d
-  getInvocations a = lift $ getInvocations a
+  getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
@@ -190,7 +190,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   clearFutureCronEvents = lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = lift $ getCronEvents a b c d
-  getInvocations a = lift $ getInvocations a
+  getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
@@ -223,7 +223,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   clearFutureCronEvents = lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = lift $ getCronEvents a b c d
-  getInvocations a = lift $ getInvocations a
+  getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
@@ -256,7 +256,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   clearFutureCronEvents = lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = lift $ getCronEvents a b c d
-  getInvocations a = lift $ getInvocations a
+  getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
@@ -289,7 +289,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   clearFutureCronEvents = lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = lift $ getCronEvents a b c d
-  getInvocations a = lift $ getInvocations a
+  getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
@@ -322,7 +322,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (PG.TxET QErr m) where
   clearFutureCronEvents = lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = lift $ getCronEvents a b c d
-  getInvocations a = lift $ getInvocations a
+  getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
@@ -432,7 +432,7 @@ instance
   clearFutureCronEvents = hoist lift . clearFutureCronEvents
   getOneOffScheduledEvents a b c = hoist lift $ getOneOffScheduledEvents a b c
   getCronEvents a b c d = hoist lift $ getCronEvents a b c d
-  getInvocations a = hoist lift $ getInvocations a
+  getScheduledEventInvocations a = hoist lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = hoist lift $ deleteScheduledEvent a b
 
   insertAction a b c d = hoist lift $ insertAction a b c d
@@ -461,10 +461,10 @@ class (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI m where
   deleteActionData = clearActionData
 
   -- | Fetch cron/oneoff scheduled event invocations
-  fetchInvocations ::
-    GetEventInvocations ->
+  fetchScheduledEventInvocations ::
+    GetScheduledEventInvocations ->
     m (WithOptionalTotalCount [ScheduledEventInvocation])
-  fetchInvocations = getInvocations
+  fetchScheduledEventInvocations = getScheduledEventInvocations
 
   -- | Fetch cron/oneoff scheduled events
   fetchScheduledEvents :: GetScheduledEvents -> m Value

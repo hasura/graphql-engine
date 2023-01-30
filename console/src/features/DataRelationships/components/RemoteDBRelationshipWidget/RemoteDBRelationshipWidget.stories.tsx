@@ -1,7 +1,7 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { within, userEvent } from '@storybook/testing-library';
+import { within, userEvent, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import {
   RemoteDBRelationshipWidget,
@@ -37,20 +37,23 @@ WithExistingRelationship.args = {
   existingRelationshipName: 'AlbumToResident',
 };
 
-let callbackResponse = {};
+let callbackResponsePrimaryWithTest = {};
 
 export const PrimaryWithTest: Story<RemoteDBRelationshipWidgetProps> = args => (
   <RemoteDBRelationshipWidget
     {...args}
     onComplete={d => {
-      callbackResponse = d;
+      callbackResponsePrimaryWithTest = d;
     }}
   />
 );
 PrimaryWithTest.args = { ...Primary.args };
+PrimaryWithTest.parameters = {
+  chromatic: { disableSnapshot: true },
+};
 
 PrimaryWithTest.play = async ({ canvasElement }) => {
-  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+  callbackResponsePrimaryWithTest = {};
   const canvas = within(canvasElement);
 
   const submitButton = await canvas.findByText('Save Relationship');
@@ -83,20 +86,28 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   userEvent.selectOptions(schemaLabel, 'public');
   userEvent.selectOptions(tableLabel, 'resident');
   userEvent.click(submitButton);
+  await waitFor(() => {
+    expect(canvas.queryByText('Saving relationship')).toBeInTheDocument();
+  });
 
-  await delay(1000);
-  expect(JSON.stringify(callbackResponse)).toContain('Success');
-  expect(JSON.stringify(callbackResponse)).toContain(
-    'Relationship saved successfully'
-  );
+  await waitFor(() => {
+    expect(JSON.stringify(callbackResponsePrimaryWithTest)).toContain(
+      'Success'
+    );
+    expect(JSON.stringify(callbackResponsePrimaryWithTest)).toContain(
+      'Relationship saved successfully'
+    );
+  });
 };
+
+let callbackResponseExistingRelationshipWithTest = {};
 
 export const ExistingRelationshipWithTest: Story<RemoteDBRelationshipWidgetProps> =
   args => (
     <RemoteDBRelationshipWidget
       {...args}
       onComplete={d => {
-        callbackResponse = d;
+        callbackResponseExistingRelationshipWithTest = d;
       }}
     />
   );
@@ -104,20 +115,28 @@ ExistingRelationshipWithTest.args = {
   ...Primary.args,
   existingRelationshipName: 'AlbumToResident',
 };
+ExistingRelationshipWithTest.parameters = {
+  chromatic: { disableSnapshot: true },
+};
 
 ExistingRelationshipWithTest.play = async ({ canvasElement }) => {
-  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
+  callbackResponseExistingRelationshipWithTest = {};
   const canvas = within(canvasElement);
   const submitButton = await canvas.findByText('Save Relationship');
 
   const relationshipType = await canvas.findByLabelText('Type');
   userEvent.selectOptions(relationshipType, 'Array Relationship');
   userEvent.click(submitButton);
+  await waitFor(() => {
+    expect(canvas.queryByText('Saving relationship')).toBeInTheDocument();
+  });
 
-  await delay(1000);
-  expect(JSON.stringify(callbackResponse)).toContain('Success');
-  expect(JSON.stringify(callbackResponse)).toContain(
-    'Relationship saved successfully'
-  );
+  await waitFor(() => {
+    expect(
+      JSON.stringify(callbackResponseExistingRelationshipWithTest)
+    ).toContain('Success');
+    expect(
+      JSON.stringify(callbackResponseExistingRelationshipWithTest)
+    ).toContain('Relationship saved successfully');
+  });
 };

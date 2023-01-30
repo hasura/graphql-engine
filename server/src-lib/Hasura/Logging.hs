@@ -22,7 +22,9 @@ module Hasura.Logging
     mkLoggerCtx,
     cleanLoggerCtx,
     eventTriggerLogType,
+    eventTriggerProcessLogType,
     scheduledTriggerLogType,
+    scheduledTriggerProcessLogType,
     sourceCatalogMigrationLogType,
     EnabledLogTypes (..),
     defaultEnabledEngineLogTypes,
@@ -77,6 +79,7 @@ data instance EngineLogType Hasura
   | ELTLivequeryPollerLog
   | ELTActionHandler
   | ELTDataConnectorLog
+  | ELTJwkRefreshLog
   | -- internal log types
     ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -93,6 +96,7 @@ instance Witch.From (EngineLogType Hasura) Text where
     ELTLivequeryPollerLog -> "livequery-poller-log"
     ELTActionHandler -> "action-handler-log"
     ELTDataConnectorLog -> "data-connector-log"
+    ELTJwkRefreshLog -> "jwk-refresh-log"
     ELTInternal t -> Witch.from t
 
 instance J.ToJSON (EngineLogType Hasura) where
@@ -116,15 +120,16 @@ data InternalLogTypes
   = -- | mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
     ILTUnstructured
   | ILTEventTrigger
+  | ILTEventTriggerProcess
   | ILTScheduledTrigger
+  | ILTScheduledTriggerProcess
   | -- | internal logs for the websocket server
     ILTWsServer
   | ILTPgClient
   | -- | log type for logging metadata related actions; currently used in logging inconsistent metadata
     ILTMetadata
-  | ILTJwkRefreshLog
   | ILTTelemetry
-  | ILTSchemaSyncThread
+  | ILTSchemaSync
   | ILTSourceCatalogMigration
   deriving (Show, Eq, Generic)
 
@@ -134,13 +139,14 @@ instance Witch.From InternalLogTypes Text where
   from = \case
     ILTUnstructured -> "unstructured"
     ILTEventTrigger -> "event-trigger"
+    ILTEventTriggerProcess -> "event-trigger-process"
     ILTScheduledTrigger -> "scheduled-trigger"
+    ILTScheduledTriggerProcess -> "scheduled-trigger-process"
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
-    ILTJwkRefreshLog -> "jwk-refresh-log"
     ILTTelemetry -> "telemetry-log"
-    ILTSchemaSyncThread -> "schema-sync-thread"
+    ILTSchemaSync -> "schema-sync"
     ILTSourceCatalogMigration -> "source-catalog-migration"
 
 instance J.ToJSON InternalLogTypes where
@@ -149,7 +155,7 @@ instance J.ToJSON InternalLogTypes where
 -- the default enabled log-types
 defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType Hasura)
 defaultEnabledEngineLogTypes =
-  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog, ELTJwkRefreshLog]
 
 isEngineLogTypeEnabled :: Set.HashSet (EngineLogType Hasura) -> EngineLogType Hasura -> Bool
 isEngineLogTypeEnabled enabledTypes logTy = case logTy of
@@ -176,7 +182,8 @@ userAllowedLogTypes =
     ELTQueryLog,
     ELTLivequeryPollerLog,
     ELTActionHandler,
-    ELTDataConnectorLog
+    ELTDataConnectorLog,
+    ELTJwkRefreshLog
   ]
 
 data LogLevel
@@ -298,7 +305,9 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
-    liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
+    liftIO $
+      FL.pushLogStrLn loggerSet $
+        FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
 
 nullLogger :: Logger Hasura
 nullLogger = Logger \_ -> pure ()
@@ -306,8 +315,14 @@ nullLogger = Logger \_ -> pure ()
 eventTriggerLogType :: EngineLogType Hasura
 eventTriggerLogType = ELTInternal ILTEventTrigger
 
+eventTriggerProcessLogType :: EngineLogType Hasura
+eventTriggerProcessLogType = ELTInternal ILTEventTriggerProcess
+
 scheduledTriggerLogType :: EngineLogType Hasura
 scheduledTriggerLogType = ELTInternal ILTScheduledTrigger
+
+scheduledTriggerProcessLogType :: EngineLogType Hasura
+scheduledTriggerProcessLogType = ELTInternal ILTScheduledTriggerProcess
 
 sourceCatalogMigrationLogType :: EngineLogType Hasura
 sourceCatalogMigrationLogType = ELTInternal ILTSourceCatalogMigration

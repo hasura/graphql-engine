@@ -1,5 +1,6 @@
 ---
 description: Manage subscriptions on your database with Hasura
+title: Subscriptions
 keywords:
   - hasura
   - docs
@@ -7,7 +8,9 @@ keywords:
 slug: index
 ---
 
-# Subscriptions
+import Subscriptions from '@site/static/icons/features/subscriptions.svg';
+
+# <Subscriptions /> Subscriptions
 
 ## Introduction
 
@@ -17,19 +20,25 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of [queries](/queries/index.mdx) hold true for
 subscriptions as well.
 
-:::info Caveat
+:::info One root field in a subscription
 
 Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field) which allows
 for only one root field in a subscription.
 
 :::
 
-## Authentication
+Subscriptions are not currently supported for [remote schemas](/remote-schemas/index.mdx).
 
-For information about authenticating your subscriptions see the [authentication section](/auth/authentication/index.mdx)
-here.
 
 ## Explore subscriptions
 
 - [Explore subscriptions with Postgres / Citus / Hyperscale](/subscriptions/postgres/index.mdx)
 - [Explore subscriptions with MS SQL Server](/subscriptions/ms-sql-server/index.mdx)
+
+:::info Additional Resources
+
+- Learn how to use subscriptions with front-end applications -
+  [Learn Tutorials](https://hasura.io/learn/#front-end-tutorials)
+- Build a full-stack application with Next.js - [Learn Tutorials](https://hasura.io/learn/#front-end-tutorials)
+
+:::

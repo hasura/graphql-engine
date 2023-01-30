@@ -1,0 +1,55 @@
+---
+sidebar_position: 7
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Tabs
+
+Should be a straightforward syntax replacement:
+
+```jsx
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs className="api-tabs">
+  <TabItem value="console" label="Console">
+    Click the `Reload` button in the `Remote Schema` section on the Hasura Console.
+  </TabItem>
+  <TabItem value="api" label="API">
+    Make a request to the [reload_remote_schema](#) API.
+  </TabItem>
+</Tabs>;
+```
+
+Which should render like below:
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click the `Reload` button in the `Remote Schema` section on the Hasura Console.
+
+</TabItem>
+<TabItem value="api" label="API">
+
+Make a request to the [reload_remote_schema](#) API.
+
+</TabItem>
+</Tabs>
+
+:::caution Adding Markdown as React Component Children
+
+For Docusaurus to parse markdown correctly when added as children of react components (provided by docusaurus).
+There should be an empty line before and after the content itself. AT instances parser still fails due to indentation.
+
+So, always start the markdown content at beginning of line and always leave an empty line before and after.
+Do not worry about the indentation for Components - the extra lines would make it good enough for readability.
+
+:::
+
+:::info
+
+Please read more about Tabs usage and syntax in docusaurus [Tabs docs](https://docusaurus.io/docs/markdown-features/tabs).
+
+:::

@@ -12,6 +12,8 @@
         // TODO: restore it to "error". At the beginning of the Nx migration, we must keep it as is because
         // of the huge number of cy.wait() around the legacy tests
         "cypress/no-unnecessary-waiting": "warn",
+        "@typescript-eslint/no-var-requires": "warn",
+        "@typescript-eslint/no-empty-function": "warn",
 
         "no-underscore-dangle": "off",
         "@typescript-eslint/no-unused-expressions": "off",

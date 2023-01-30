@@ -27,6 +27,8 @@ import (
 	"syscall"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -35,25 +37,22 @@ var validPluginFilenamePrefixes = []string{"hasura"}
 // NewPluginsCmd returns the plugins command
 func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsCmd := &cobra.Command{
-		Use:     "plugins",
-		Aliases: []string{"plugin"},
-		Short:   "Manage plugins for the CLI",
-		Long: `Plugins can be installed to extend the functionality of Hasura CLI
-An index for all available plugins can be found at 
-https://github.com/hasura/cli-plugins-index
-
-Please open pull requests against this repo to add new plugins`,
+		Use:          "plugins",
+		Aliases:      []string{"plugin"},
+		Short:        "Manage plugins for the CLI",
+		Long:         "The functionality of the CLI can be extended by using plugins. For a list of all available plugins, run ``hasura plugins list``, or visit this repository: https://github.com/hasura/cli-plugins-index.\n\nIf you're interested in contributing, please open a PR against this repo to add new plugin.",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
 			// setup plugins path
 			err := ec.SetupPlugins()
 			if err != nil {
-				return fmt.Errorf("setting up plugins path failed: %w", err)
+				return errors.E(op, fmt.Errorf("setting up plugins path failed: %w", err))
 			}
 
 			if err := ec.PluginsConfig.Repo.EnsureCloned(); err != nil {
-				return fmt.Errorf("pulling latest plugins list from internet failed: %w", err)
+				return errors.E(op, fmt.Errorf("pulling latest plugins list from internet failed: %w", err))
 			}
 			return nil
 		},
@@ -113,7 +112,7 @@ func (h *DefaultPluginHandler) Lookup(filename string) (string, bool) {
 
 // Execute implements PluginHandler
 func (h *DefaultPluginHandler) Execute(executablePath string, cmdArgs, environment []string) error {
-
+	var op errors.Op = "commands.DefaultPluginHandler.Execute"
 	// Windows does not support exec syscall.
 	if runtime.GOOS == "windows" {
 		cmd := exec.Command(executablePath, cmdArgs...)
@@ -125,17 +124,21 @@ func (h *DefaultPluginHandler) Execute(executablePath string, cmdArgs, environme
 		if err == nil {
 			os.Exit(0)
 		}
-		return err
+		return errors.E(op, err)
 	}
 
 	// invoke cmd binary relaying the environment and args given
 	// append executablePath to cmdArgs, as execve will make first argument the "binary name".
-	return syscall.Exec(executablePath, append([]string{executablePath}, cmdArgs...), environment)
+	if err := syscall.Exec(executablePath, append([]string{executablePath}, cmdArgs...), environment); err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 // HandlePluginCommand receives a pluginHandler and command-line arguments and attempts to find
 // a plugin executable on the PATH that satisfies the given arguments.
 func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
+	var op errors.Op = "commands.HandlePluginCommand"
 	remainingArgs := []string{} // all "non-flag" arguments
 
 	for idx := range cmdArgs {
@@ -165,7 +168,7 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 
 	// invoke cmd binary relaying the current environment and args given
 	if err := pluginHandler.Execute(foundBinaryPath, cmdArgs[len(remainingArgs):], os.Environ()); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	return nil

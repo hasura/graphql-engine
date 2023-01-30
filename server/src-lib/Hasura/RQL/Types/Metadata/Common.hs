@@ -14,6 +14,8 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     ComputedFields,
     CronTriggers,
+    CustomSQLFields,
+    CustomSQLMetadata (..),
     Endpoints,
     EventTriggers,
     FunctionMetadata (..),
@@ -23,11 +25,8 @@ module Hasura.RQL.Types.Metadata.Common
     Permissions,
     QueryCollections,
     Relationships,
-    SchemaRemoteRelationships,
-    RemoteSchemaMetadata (..),
-    RemoteSchemaPermissionMetadata (..),
+    RemoteSchemaMetadata,
     RemoteSchemas,
-    RemoteSchemaTypeRelationships (..),
     SetCatalogState (..),
     SourceMetadata (..),
     Sources,
@@ -42,16 +41,6 @@ module Hasura.RQL.Types.Metadata.Common
     mkSourceMetadata,
     mkTableMeta,
     parseNonSourcesMetadata,
-    rsmComment,
-    rsmDefinition,
-    rsmName,
-    rsmPermissions,
-    rsmRemoteRelationships,
-    rspmComment,
-    rspmDefinition,
-    rspmRole,
-    rstrsName,
-    rstrsRelationships,
     smConfiguration,
     smFunctions,
     smKind,
@@ -59,6 +48,7 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    smCustomSQL,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -74,6 +64,11 @@ module Hasura.RQL.Types.Metadata.Common
     tmSelectPermissions,
     tmTable,
     tmUpdatePermissions,
+    csmParameters,
+    csmReturns,
+    csmRootFieldName,
+    csmSql,
+    csmType,
     toSourceMetadata,
   )
 where
@@ -87,13 +82,12 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec, sortedElemsCodecWith)
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.Incremental (Cacheable)
+import Hasura.CustomSQL (CustomSQLParameter)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
@@ -114,11 +108,11 @@ import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag (BackendTag, HasTag (backendTag))
@@ -128,7 +122,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.
 parseListAsMap ::
-  (Hashable k, Eq k, T.ToTxt k) =>
+  (Hashable k, T.ToTxt k) =>
   Text ->
   (a -> k) ->
   Parser [a] ->
@@ -139,7 +133,9 @@ parseListAsMap things mapFn listP = do
   unless (null duplicates) $
     fail $
       T.unpack $
-        "multiple declarations exist for the following " <> things <> ": "
+        "multiple declarations exist for the following "
+          <> things
+          <> ": "
           <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
@@ -154,11 +150,17 @@ deriving instance (Backend b) => Show (ComputedFieldMetadata b)
 
 deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
-instance (Backend b) => Cacheable (ComputedFieldMetadata b)
+instance Backend b => HasCodec (ComputedFieldMetadata b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
+      ComputedFieldMetadata
+        <$> requiredField' "name" AC..= _cfmName
+        <*> requiredFieldWith' "definition" placeholderCodecViaJSON AC..= _cfmDefinition
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _cfmComment
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
   toJSON ComputedFieldMetadata {..} =
-    object
+    object $
       [ "name" .= _cfmName,
         "definition" .= _cfmDefinition,
         "comment" .= _cfmComment
@@ -171,83 +173,15 @@ instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
       <*> obj .: "definition"
       <*> obj .:? "comment" .!= Automatic
 
-data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
-  { _rspmRole :: RoleName,
-    _rspmDefinition :: RemoteSchemaPermissionDefinition,
-    _rspmComment :: Maybe Text
-  }
-  deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteSchemaPermissionMetadata
-
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''RemoteSchemaPermissionMetadata)
-$(makeLenses ''RemoteSchemaPermissionMetadata)
-
 type Relationships a = InsOrdHashMap RelName a
 
 type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
 
 type RemoteRelationships = InsOrdHashMap RelName RemoteRelationship
 
-type SchemaRemoteRelationships = InsOrdHashMap G.Name RemoteSchemaTypeRelationships
-
 type Permissions a = InsOrdHashMap RoleName a
 
 type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
-
-data RemoteSchemaTypeRelationships = RemoteSchemaTypeRelationships
-  { _rstrsName :: G.Name,
-    _rstrsRelationships :: RemoteRelationships
-  }
-  deriving (Show, Eq, Generic)
-
-instance FromJSON RemoteSchemaTypeRelationships where
-  parseJSON = withObject "RemoteSchemaMetadata" \obj ->
-    RemoteSchemaTypeRelationships
-      <$> obj .: "type_name"
-      <*> (oMapFromL _rrName <$> obj .:? "relationships" .!= [])
-
-instance ToJSON RemoteSchemaTypeRelationships where
-  toJSON RemoteSchemaTypeRelationships {..} =
-    object
-      [ "type_name" .= _rstrsName,
-        "relationships" .= OM.elems _rstrsRelationships
-      ]
-
-instance Cacheable RemoteSchemaTypeRelationships
-
-data RemoteSchemaMetadata = RemoteSchemaMetadata
-  { _rsmName :: RemoteSchemaName,
-    _rsmDefinition :: RemoteSchemaDef,
-    _rsmComment :: Maybe Text,
-    _rsmPermissions :: [RemoteSchemaPermissionMetadata],
-    _rsmRemoteRelationships :: SchemaRemoteRelationships
-  }
-  deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteSchemaMetadata
-
-instance FromJSON RemoteSchemaMetadata where
-  parseJSON = withObject "RemoteSchemaMetadata" \obj ->
-    RemoteSchemaMetadata
-      <$> obj .: "name"
-      <*> obj .: "definition"
-      <*> obj .:? "comment"
-      <*> obj .:? "permissions" .!= mempty
-      <*> (oMapFromL _rstrsName <$> obj .:? "remote_relationships" .!= [])
-
-instance ToJSON RemoteSchemaMetadata where
-  toJSON RemoteSchemaMetadata {..} =
-    object
-      [ "name" .= _rsmName,
-        "definition" .= _rsmDefinition,
-        "comment" .= _rsmComment,
-        "permissions" .= _rsmPermissions,
-        "remote_relationships" .= OM.elems _rsmRemoteRelationships
-      ]
-
-$(makeLenses ''RemoteSchemaTypeRelationships)
-$(makeLenses ''RemoteSchemaMetadata)
 
 data TableMetadata b = TableMetadata
   { _tmTable :: TableName b,
@@ -270,38 +204,33 @@ deriving instance (Backend b) => Show (TableMetadata b)
 
 deriving instance (Backend b) => Eq (TableMetadata b)
 
-instance (Backend b) => Cacheable (TableMetadata b)
-
 instance (Backend b) => ToJSON (TableMetadata b) where
   toJSON = genericToJSON hasuraJSON
 
--- TODO: Replace uses of placeholderCodecViaJSON with proper codecs
 instance (Backend b) => HasCodec (TableMetadata b) where
   codec =
     CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
       AC.object (codecNamePrefix @b <> "TableMetadata") $
         TableMetadata
-          <$> requiredFieldWith' "table" placeholderCodecViaJSON .== _tmTable
+          <$> requiredField' "table" .== _tmTable
           <*> optionalFieldWithOmittedDefault' "is_enum" False .== _tmIsEnum
-          <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyTableConfig configDoc .== _tmConfiguration
-          <*> optSortedListViaJSON "object_relationships" _rdName .== _tmObjectRelationships
-          <*> optSortedListViaJSON "array_relationships" _rdName .== _tmArrayRelationships
-          <*> optSortedListViaJSON "computed_fields" _cfmName .== _tmComputedFields
-          <*> optSortedListViaJSON "remote_relationships" _rrName .== _tmRemoteRelationships
+          <*> optionalFieldWithOmittedDefault "configuration" emptyTableConfig configDoc .== _tmConfiguration
+          <*> optSortedList "object_relationships" _rdName .== _tmObjectRelationships
+          <*> optSortedList "array_relationships" _rdName .== _tmArrayRelationships
+          <*> optSortedList "computed_fields" _cfmName .== _tmComputedFields
+          <*> optSortedList "remote_relationships" _rrName .== _tmRemoteRelationships
           <*> optSortedList "insert_permissions" _pdRole .== _tmInsertPermissions
           <*> optSortedList "select_permissions" _pdRole .== _tmSelectPermissions
           <*> optSortedList "update_permissions" _pdRole .== _tmUpdatePermissions
           <*> optSortedList "delete_permissions" _pdRole .== _tmDeletePermissions
-          <*> optSortedListViaJSON "event_triggers" etcName .== _tmEventTriggers
-          <*> optionalFieldOrNullWith' "apollo_federation_config" placeholderCodecViaJSON .== _tmApolloFederationConfig
+          <*> eventTriggers
+          <*> optionalFieldOrNull' "apollo_federation_config" .== _tmApolloFederationConfig
     where
-      optSortedListViaJSON ::
-        (Eq a, FromJSON a, ToJSON a, Hashable k, Ord k, T.ToTxt k) =>
-        Text ->
-        (a -> k) ->
-        ObjectCodec (InsOrdHashMap k a) (InsOrdHashMap k a)
-      optSortedListViaJSON name keyForElem =
-        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodecWith placeholderCodecViaJSON keyForElem) mempty
+      -- Some backends do not implement event triggers. In those cases we tailor
+      -- the codec to omit the @"event_triggers"@ field from the API.
+      eventTriggers = case defaultTriggerOnReplication @b of
+        Just _ -> optSortedList "event_triggers" etcName .== _tmEventTriggers
+        Nothing -> pure mempty
 
       optSortedList ::
         (HasCodec a, Eq a, Hashable k, Ord k, T.ToTxt k) =>
@@ -408,8 +337,6 @@ deriving instance (Backend b) => Show (FunctionMetadata b)
 
 deriving instance (Backend b) => Eq (FunctionMetadata b)
 
-instance (Backend b) => Cacheable (FunctionMetadata b)
-
 instance (Backend b) => ToJSON (FunctionMetadata b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -423,7 +350,6 @@ instance (Backend b) => FromJSON (FunctionMetadata b) where
       <*> o .:? "permissions" .!= []
       <*> o .:? "comment"
 
--- TODO: Replace uses of placeholderCodecViaJSON with proper codecs
 instance (Backend b) => HasCodec (FunctionMetadata b) where
   codec =
     CommentCodec
@@ -433,23 +359,78 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
             "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
           ]
       )
-      $ AC.object (codecNamePrefix @b <> "FunctionMetadata") $
-        FunctionMetadata
-          <$> requiredFieldWith "function" placeholderCodecViaJSON nameDoc .== _fmFunction
-          <*> optionalFieldOrNullWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
-          <*> optionalFieldOrNullWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
-          <*> optionalFieldOrNull' "comment" .== _fmComment
+      $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
+      $ FunctionMetadata
+        <$> requiredField "function" nameDoc AC..= _fmFunction
+        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc AC..= _fmConfiguration
+        <*> optionalFieldWithOmittedDefault' "permissions" [] AC..= _fmPermissions
+        <*> optionalField' "comment" AC..= _fmComment
     where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"
 
-      (.==) = (AC..=)
+-- | This is everything we are passed from the metadata call currently,
+-- there is probably some sort of checking/refinement that needs to happen
+-- before we store it, but for now, YOLO.
+data CustomSQLMetadata b = CustomSQLMetadata
+  { _csmType :: Text,
+    _csmRootFieldName :: G.Name,
+    _csmSql :: Text,
+    _csmParameters :: NonEmpty CustomSQLParameter,
+    _csmReturns :: TableName b
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (CustomSQLMetadata b)
+
+deriving instance (Backend b) => Eq (CustomSQLMetadata b)
+
+instance (Backend b) => ToJSON (CustomSQLMetadata b) where
+  toJSON = genericToJSON hasuraJSON
+
+$(makeLenses ''CustomSQLMetadata)
+
+instance (Backend b) => FromJSON (CustomSQLMetadata b) where
+  parseJSON = withObject "CustomSQLMetadata" $ \o ->
+    CustomSQLMetadata
+      <$> o .: "type"
+      <*> o .: "root_field_name"
+      <*> o .: "sql"
+      <*> o .: "parameters"
+      <*> o .: "returns"
+
+instance (Backend b) => HasCodec (CustomSQLMetadata b) where
+  codec =
+    CommentCodec
+      ( T.unlines
+          [ "A custom SQL function to add to the GraphQL schema with configuration.",
+            "",
+            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
+          ]
+      )
+      $ AC.object (codecNamePrefix @b <> "CustomSQLMetadata")
+      $ CustomSQLMetadata
+        <$> requiredField "type" typeDoc AC..= _csmType
+        <*> requiredField "root_field_name" fieldNameDoc AC..= _csmRootFieldName
+        <*> requiredField "sql" sqlDoc AC..= _csmSql
+        <*> requiredField "parameters" paramDoc AC..= _csmParameters
+        <*> requiredField "returns" returnsDoc AC..= _csmReturns
+    where
+      typeDoc = "Type of SQL statement to run"
+      fieldNameDoc = "Field name for custom SQL"
+      sqlDoc = "SQL to run"
+      paramDoc = "Function parameters and their types"
+      returnsDoc = "Return type of function"
+
+type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
+
+type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
-type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
+type CustomSQLFields b = InsOrdHashMap G.Name (CustomSQLMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -465,6 +446,7 @@ data SourceMetadata b = SourceMetadata
     _smKind :: BackendSourceKind b,
     _smTables :: Tables b,
     _smFunctions :: Functions b,
+    _smCustomSQL :: CustomSQLFields b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -478,13 +460,12 @@ deriving instance (Backend b) => Show (SourceMetadata b)
 
 deriving instance (Backend b) => Eq (SourceMetadata b)
 
-instance (Backend b) => Cacheable (SourceMetadata b)
-
 instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadata b) where
   parseJSONWithContext _smKind = withObject "Object" $ \o -> do
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
+    _smCustomSQL <- oMapFromL _csmRootFieldName <$> o .:? "custom_sql" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -539,9 +520,10 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <*> requiredField' "kind" .== _smKind
         <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable) .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty .== _smFunctions
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_sql" (sortedElemsCodec _csmRootFieldName) mempty .== _smCustomSQL
         <*> requiredField' "configuration" .== _smConfiguration
-        <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
-        <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
+        <*> optionalFieldOrNull' "query_tags" .== _smQueryTags
+        <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
         <*> healthCheckField
     where
       healthCheckField = case healthCheckImplementation @b of
@@ -569,6 +551,7 @@ mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
         @b
         name
         backendSourceKind
+        mempty
         mempty
         mempty
         config

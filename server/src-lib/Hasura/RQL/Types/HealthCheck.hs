@@ -14,18 +14,21 @@ import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
 import Data.Aeson.Extended
 import Data.Aeson.Types (parseFail)
-import Data.Text qualified as T
-import Data.Text.Extended qualified as T
-import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (HealthCheckImplementation, _hciDefaultTest, _hciTestCodec))
-import Hasura.SQL.Tag (HasTag (backendTag), reify)
 
 newtype HealthCheckTestSql = HealthCheckTestSql
   { _hctSql :: Text
   }
-  deriving (Eq, Generic, Show, Cacheable, Hashable, NFData)
+  deriving (Eq, Generic, Show, Hashable, NFData)
+
+instance HasCodec HealthCheckTestSql where
+  codec =
+    AC.object "HealthCheckTestSql" $
+      HealthCheckTestSql
+        <$> optionalFieldWithDefault' "sql" defaultTestSql AC..= _hctSql
 
 instance ToJSON HealthCheckTestSql where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -41,28 +44,28 @@ defaultTestSql :: Text
 defaultTestSql = "SELECT 1"
 
 newtype HealthCheckInterval = HealthCheckInterval {unHealthCheckInterval :: Seconds}
-  deriving (Eq, Generic, Show, Cacheable, ToJSON, FromJSON)
+  deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance HasCodec HealthCheckInterval where
-  codec = AC.codecViaAeson "HealthCheckInterval"
+  codec = dimapCodec HealthCheckInterval unHealthCheckInterval codec
 
 newtype HealthCheckRetries = HealthCheckRetries {unHealthCheckRetries :: Int}
-  deriving (Eq, Generic, Show, Cacheable, FromJSON, ToJSON)
+  deriving (Eq, Generic, Show, FromJSON, ToJSON)
 
 instance HasCodec HealthCheckRetries where
   codec = dimapCodec HealthCheckRetries unHealthCheckRetries codec
 
 newtype HealthCheckRetryInterval = HealthCheckRetryInterval {unHealthCheckRetryInterval :: Seconds}
-  deriving (Eq, Generic, Show, Cacheable, ToJSON, FromJSON)
+  deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance HasCodec HealthCheckRetryInterval where
-  codec = AC.codecViaAeson "HealthCheckRetryInterval"
+  codec = dimapCodec HealthCheckRetryInterval unHealthCheckRetryInterval codec
 
 newtype HealthCheckTimeout = HealthCheckTimeout {unHealthCheckTimeout :: Seconds}
-  deriving (Eq, Generic, Show, Cacheable, FromJSON, ToJSON)
+  deriving (Eq, Generic, Show, FromJSON, ToJSON)
 
 instance HasCodec HealthCheckTimeout where
-  codec = AC.codecViaAeson "HealthCheckTimeout"
+  codec = dimapCodec HealthCheckTimeout unHealthCheckTimeout codec
 
 data HealthCheckConfig b = HealthCheckConfig
   { _hccTest :: HealthCheckTest b,
@@ -76,8 +79,6 @@ data HealthCheckConfig b = HealthCheckConfig
 deriving instance (Backend b) => Eq (HealthCheckConfig b)
 
 deriving instance (Backend b) => Show (HealthCheckConfig b)
-
-instance (Backend b) => Cacheable (HealthCheckConfig b)
 
 instance (Backend b) => ToJSON (HealthCheckConfig b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -118,6 +119,3 @@ defaultRetryInterval = HealthCheckRetryInterval 10
 
 defaultTimeout :: HealthCheckTimeout
 defaultTimeout = HealthCheckTimeout 10
-
-codecNamePrefix :: forall b. (HasTag b) => Text
-codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b

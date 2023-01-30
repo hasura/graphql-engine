@@ -40,7 +40,7 @@ export const GraphQLFieldCustomizationContainer: React.FC<GraphQLFieldCustomizat
   }) => {
     const onChange = (
       fieldName: CustomizationFieldName,
-      fieldValue: string
+      fieldValue: string | null | undefined
     ) => {
       const actionType = getActionType(fieldName);
       if (actionType) {

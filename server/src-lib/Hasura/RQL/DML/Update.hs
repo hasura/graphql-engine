@@ -25,6 +25,7 @@ import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Update
+import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
@@ -96,7 +97,8 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     throwNotUpdErr c = do
       roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $
-        "column " <> c <<> " is not updatable"
+        "column "
+          <> c <<> " is not updatable"
           <> " for role "
           <> roleName <<> "; its value is predefined in permission"
 
@@ -137,15 +139,18 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   -- convert the object to SQL set expression
   setItems <-
     withPathK "$set" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $
+        convSet prepValBldr
 
   incItems <-
     withPathK "$inc" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $
+        convInc prepValBldr
 
   mulItems <-
     withPathK "$mul" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $
+        convMul prepValBldr
 
   defItems <-
     withPathK "$default" $
@@ -186,9 +191,13 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   return $
     AnnotatedUpdateG
       tableName
-      (resolvedUpdFltr, annSQLBoolExp)
+      resolvedUpdFltr
       resolvedUpdCheck
-      (BackendUpdate $ Map.fromList $ fmap UpdateSet <$> setExpItems)
+      ( SingleBatch $
+          UpdateBatch
+            (Map.fromList $ fmap UpdateSet <$> setExpItems)
+            annSQLBoolExp
+      )
       (mkDefaultMutFlds mAnnRetCols)
       allCols
       Nothing
@@ -206,7 +215,7 @@ validateUpdateQuery ::
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT (source, tableCache) $
+  flip runTableCacheRT tableCache $
     runDMLP1T $
       validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
@@ -228,6 +237,6 @@ runUpdate q = do
   userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateUpdateQuery q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
       . flip runReaderT emptyQueryTagsComment
       . execUpdateQuery strfyNum Nothing userInfo

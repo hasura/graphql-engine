@@ -1,0 +1,35 @@
+---
+description: Hasura Pro CLI authentication
+keywords:
+  - hasura
+  - docs
+  - command line interface
+  - cli
+  - authentication
+sidebar_label: Authentication
+sidebar_position: 3
+---
+
+# Authentication with the Hasura Pro CLI
+
+All interactions from the CLI to Hasura's APIs are authenticated using a personal access token generated for your
+user account.
+
+To set up a token, execute the following command on the CLI:
+
+```bash
+hasura pro login
+```
+
+This command will show a prompt for entering the personal access token.
+
+Head to your [Hasura Cloud account settings](https://cloud.hasura.io) to create a new token. You can name it
+something like "cli". Note that the token will be shown only once and as soon as you copy the token, paste it in
+your terminal prompt.
+
+:::warning Keep this token secure!
+
+This token can be used to authenticate against Hasura Pro APIs and your Hasura Cloud projects. Make sure you keep it
+secure. This is a one-time operation. The token will be valid until you delete it.
+
+:::

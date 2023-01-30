@@ -66,7 +66,6 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
       MonadTrans,
       MonadState (DS.Seq PG.PrepArg),
       MonadError e,
-      SourceM,
       TableCoreInfoRM b,
       TableInfoRM b,
       CacheRM,
@@ -167,12 +166,13 @@ checkPermOnCol ::
 checkPermOnCol pt allowedCols col = do
   role <- askCurRole
   unless (HS.member col allowedCols) $
-    throw400 PermissionDenied $ permErrMsg role
+    throw400 PermissionDenied $
+      permErrMsg role
   where
     permErrMsg role
       | role == adminRoleName = "no such column exists: " <>> col
       | otherwise =
-        "role " <> role <<> " does not have permission to " <> permTypeToCode pt <> " column " <>> col
+          "role " <> role <<> " does not have permission to " <> permTypeToCode pt <> " column " <>> col
 
 checkSelectPermOnScalarComputedField ::
   (UserInfoM m, QErrM m) =>
@@ -182,12 +182,13 @@ checkSelectPermOnScalarComputedField ::
 checkSelectPermOnScalarComputedField selPermInfo computedField = do
   role <- askCurRole
   unless (M.member computedField $ spiComputedFields selPermInfo) $
-    throw400 PermissionDenied $ permErrMsg role
+    throw400 PermissionDenied $
+      permErrMsg role
   where
     permErrMsg role
       | role == adminRoleName = "no such computed field exists: " <>> computedField
       | otherwise =
-        "role " <> role <<> " does not have permission to select computed field" <>> computedField
+          "role " <> role <<> " does not have permission to select computed field" <>> computedField
 
 valueParserWithCollectableType ::
   (MonadError QErr m) =>
@@ -232,7 +233,8 @@ askTableInfoSource ::
   m (TableInfo ('Postgres 'Vanilla))
 askTableInfoSource tableName = do
   onNothingM (lookupTableInfo tableName) $
-    throw400 NotExists $ "table " <> tableName <<> " does not exist"
+    throw400 NotExists $
+      "table " <> tableName <<> " does not exist"
 
 data SessionVariableBuilder m = SessionVariableBuilder
   { _svbCurrentSession :: SQLExpression ('Postgres 'Vanilla),
@@ -256,9 +258,12 @@ fetchRelDet relName refTabName = do
   return (_tciFieldInfoMap $ _tiCoreInfo refTabInfo, refSelPerm)
   where
     relPermErr rTable roleName _ =
-      "role " <> roleName
-        <<> " does not have permission to read relationship " <> relName
-        <<> "; no permission on table " <>> rTable
+      "role "
+        <> roleName
+          <<> " does not have permission to read relationship "
+        <> relName
+          <<> "; no permission on table "
+          <>> rTable
 
 checkOnColExp ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
@@ -286,7 +291,8 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
       CFBETable table nesBoolExp -> do
         tableInfo <- modifyErrAndSet500 ("function " <>) $ askTableInfoSource table
         let errMsg _ =
-              "role " <> roleName <<> " does not have permission to read "
+              "role "
+                <> roleName <<> " does not have permission to read "
                 <> " computed field "
                 <> fieldName <<> "; no permission on table " <>> table
         tableSPI <- modifyErr errMsg $ askSelPermInfo tableInfo
@@ -373,7 +379,8 @@ validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->
     unless (hdr `elem` map T.toLower headers) $
-      throw400 NotFound $ hdr <<> " header is expected but not found"
+      throw400 NotFound $
+        hdr <<> " header is expected but not found"
 
 -- validate limit and offset int values
 onlyPositiveInt :: MonadError QErr m => Int -> m ()

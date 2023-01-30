@@ -97,7 +97,8 @@ metadataAllowlistInsert entry@(AllowlistEntry coll _) al =
       Nothing -> Right (Just entry)
       Just _ ->
         Left $
-          "collection " <> coll <<> " already exists in the allowlist, scope ignored;"
+          "collection "
+            <> coll <<> " already exists in the allowlist, scope ignored;"
             <> " to change scope, use update_scope_of_collection_in_allowlist"
 
 metadataAllowlistUpdateScope ::
@@ -187,7 +188,7 @@ inlineAllowlist collections allowlist = InlinedAllowlist global perRole
           | AllowlistEntry coll (AllowlistScopeRoles roles) <- OM.elems allowlist
         ]
 
-    inverseMap :: (Eq b, Hashable b) => [(a, [b])] -> HashMap b [a]
+    inverseMap :: Hashable b => [(a, [b])] -> HashMap b [a]
     inverseMap = M.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
 
     global = inlineQueries globalCollections

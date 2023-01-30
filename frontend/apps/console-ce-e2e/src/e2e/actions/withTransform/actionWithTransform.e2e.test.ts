@@ -1,7 +1,10 @@
 import { testMode } from '../../../helpers/common';
 
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
+import { readMetadata } from './utils/services/readMetadata';
 import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
+import { Metadata } from '../../../../src/features/hasura-metadata-types';
+import { checkMetadataPayload } from '../../utils/checkMetadataPayload';
 
 if (testMode !== 'cli') {
   describe('Actions with Transform', () => {
@@ -173,7 +176,46 @@ if (testMode !== 'cli') {
 
         cy.log('**--- Type in the Payload Transform Request Body textarea**');
         cy.get('@payloadTransformRequestBody')
+          .wait(500)
           .clearConsoleTextarea()
+          .wait(1000) // Work around the fact that this test fails in CI but not locally
+          .clearConsoleTextarea()
+          .wait(1000) // Work around the fact that this test fails in CI but not locally
+          .type(
+            `{
+            "userInfo": {
+              "name": {{$body.input.username}},
+              "password": {{$body.input.password}},
+              "type": {{$body.action.name}}
+            `,
+            // delay is set to 1 because setting it to 0 causes the test to fail because writes
+            // something like
+            // "name": {{$body.input.username}}name
+            // in the textarea (the closing "name" is a mistake)
+            { force: true, delay: 1, parseSpecialCharSequences: false }
+          );
+      });
+
+      cy.log('**------------------------------**');
+      cy.log('**--- Step 1.5: Add Response Transform**');
+      cy.log('**------------------------------**');
+
+      // --------------------
+      cy.log('**--- Click the Add Response Transform button**');
+      cy.contains('Add Response Transform').click({ force: true });
+
+      // --------------------
+      cy.get('[data-cy="Change Response"]').within(() => {
+        // Assign an alias to the most unclear selectors for future references
+        cy.get('textarea').eq(0).as('responseTransformResponseBody');
+
+        cy.log('**--- Type in the Response Transform Response Body textarea**');
+        cy.get('@responseTransformResponseBody')
+          .wait(500)
+          .clearConsoleTextarea()
+          .wait(500)
+          .clearConsoleTextarea()
+          .wait(500)
           .type(
             `{
             "userInfo": {
@@ -191,7 +233,28 @@ if (testMode !== 'cli') {
 
       // --------------------
       cy.log('**--- Click the Create button**');
+      // cy.wait(1000) because of debounce
+
+      cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+        if (JSON.stringify(req.body).includes('create_action')) {
+          req.alias = 'createAction';
+        }
+        req.continue();
+      });
+
+      cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+        if (JSON.stringify(req.body).includes('create_action')) {
+          req.alias = 'createAction';
+        }
+      });
+
+      cy.wait(1000);
+
       cy.getBySel('create-action-btn').click();
+
+      cy.wait('@createAction').then(interception => {
+        checkMetadataPayload(interception, { name: 'Action payload' });
+      });
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -211,9 +274,16 @@ if (testMode !== 'cli') {
       // cy.log('**------------------------------**');
       // cy.log('**------------------------------**');
 
+      readMetadata().then((md: { body: Metadata['metadata'] }) => {
+        cy.wrap(
+          (md.body.actions || []).find(action => action.name === 'login')
+        ).snapshot({
+          name: 'Action metadata',
+        });
+      });
+
       // // --------------------
-      // cy.log('**--- Wait all the requests to be settled**');
-      // waitForPostCreationRequests();
+      cy.log('**--- Wait all the requests to be settled**');
 
       // cy.get('[data-cy="Change Request Options"]').within(() => {
       //   // --------------------

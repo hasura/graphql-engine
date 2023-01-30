@@ -30,6 +30,7 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 
@@ -188,7 +189,7 @@ Relay query could look like this (assuming that there are corresponding tables
     }
 
 What that means is that the parser for the 'Node' interface needs to delegate to
-*every table parser*, to deal with all possible cases. In practice, we use the
+\*every table parser*, to deal with all possible cases. In practice, we use the
 'selectionSetInterface' combinator (from Hasura.GraphQL.Parser.Internal.Parser):
 we give it a list of all the parsers, and it in turn applies all of them, and
 gives us the result for each possible table:
@@ -236,7 +237,7 @@ type NodeMap = HashMap SourceName (AB.AnyBackend TableMap)
 -- | All the information required to craft a query to a row pointed to by a
 -- 'NodeId'.
 data NodeInfo b = NodeInfo
-  { nvSourceConfig :: SourceConfig b,
+  { nvSourceInfo :: SourceInfo b,
     nvSelectPermissions :: SelPermInfo b,
     nvPrimaryKeys :: PrimaryKeyColumns b,
     nvAnnotatedFields :: IR.AnnFieldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)

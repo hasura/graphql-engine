@@ -42,3 +42,6 @@ Thumbs.db
 
 # Env
 .env
+
+# This is a snapshot generated during npm install, but not needed
+/snapshots.js

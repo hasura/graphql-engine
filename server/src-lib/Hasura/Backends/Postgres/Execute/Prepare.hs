@@ -116,8 +116,8 @@ prepareWithoutPlan userInfo = \case
     sessionVariableValue <-
       fmap S.SELit
         <$> onNothing maybeSessionVariableValue
-        $ throw400 NotFound $
-          "missing session variable: " <>> sessionVariableToText sessVar
+        $ throw400 NotFound
+        $ "missing session variable: " <>> sessionVariableToText sessVar
     pure $ withTypeAnn ty sessionVariableValue
 
 -- | The map of user session variables is always given the number (1) as its

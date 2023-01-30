@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
@@ -25,10 +26,11 @@ func TestAllowListConfig_WriteDiff(t *testing.T) {
 		to metadataobject.Object
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   metadataobject.ErrParsingMetadataObject
+		name      string
+		fields    fields
+		args      args
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -41,7 +43,8 @@ func TestAllowListConfig_WriteDiff(t *testing.T) {
 					}
 				}(),
 			},
-			nil,
+			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -51,11 +54,13 @@ func TestAllowListConfig_WriteDiff(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			w := &bytes.Buffer{}
-			got := a.WriteDiff(metadataobject.WriteDiffOpts{
+			err := a.WriteDiff(metadataobject.WriteDiffOpts{
 				To:           tt.args.to,
 				W:            w,
 				DisableColor: true,
 			})
+			tt.assertErr(t, err)
+
 			wantGoldenFilePath := filepath.Join("testdata/write_diff", tt.name, "want.golden")
 
 			// uncomment to update test golden file
@@ -63,8 +68,9 @@ func TestAllowListConfig_WriteDiff(t *testing.T) {
 
 			want, err := ioutil.ReadFile(wantGoldenFilePath)
 			assert.NoError(t, err)
-			assert.Equal(t, string(want), w.String())
-			assert.Equal(t, tt.want, got)
+			if !tt.wantErr {
+				assert.Equal(t, string(want), w.String())
+			}
 		})
 	}
 }
@@ -78,11 +84,12 @@ func TestAllowListConfig_Export(t *testing.T) {
 		metadata map[string]yaml.Node
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    map[string][]byte
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		want      map[string][]byte
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can export allow list metadata (t1)",
@@ -103,6 +110,7 @@ func TestAllowListConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{"testdata/metadata/allow_list.yaml": []byte("- collection: allowed-queries\n")},
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -112,10 +120,8 @@ func TestAllowListConfig_Export(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := a.Export(tt.args.metadata)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				for k, v := range got {
 					assert.Equal(t, string(tt.want[k]), string(v))
 				}
@@ -134,6 +140,7 @@ func TestAllowListConfig_Build(t *testing.T) {
 		fields     fields
 		wantGolden string
 		wantErr    bool
+		assertErr  require.ErrorAssertionFunc
 	}{
 		{
 			"can build metadata from file (t1)",
@@ -143,6 +150,7 @@ func TestAllowListConfig_Build(t *testing.T) {
 			},
 			"testdata/build_test/t1/want.golden.json",
 			false,
+			require.NoError,
 		},
 		{
 			"can build metadata from empty file (t2)",
@@ -152,6 +160,7 @@ func TestAllowListConfig_Build(t *testing.T) {
 			},
 			"testdata/build_test/t2/want.golden.json",
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -161,9 +170,8 @@ func TestAllowListConfig_Build(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := a.Build()
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				yamlbs, err := yaml.Marshal(got)
 				assert.NoError(t, err)
 				// uncomment to update golden file

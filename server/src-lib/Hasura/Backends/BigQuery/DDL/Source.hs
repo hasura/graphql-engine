@@ -26,8 +26,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function (FunctionOverloads (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
@@ -55,7 +55,7 @@ resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _ba
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
     Right serviceAccount -> do
-      projectId <- resolveConfigurationInput env _cscProjectId
+      projectId <- BigQueryProjectId <$> resolveConfigurationInput env _cscProjectId
       retryOptions <- do
         numRetries <-
           resolveConfigurationInput env `mapM` _cscRetryLimit >>= \case
@@ -71,7 +71,7 @@ resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _ba
                 Just v -> fromInteger <$> readNonNegative v "retry base delay"
             pure $ Just RetryOptions {..}
       _scConnection <- initConnection serviceAccount projectId retryOptions
-      _scDatasets <- resolveConfigurationInputs env _cscDatasets
+      _scDatasets <- fmap BigQueryDataset <$> resolveConfigurationInputs env _cscDatasets
       _scGlobalSelectLimit <-
         resolveConfigurationInput env `mapM` _cscGlobalSelectLimit >>= \case
           Nothing -> pure defaultGlobalSelectLimit
@@ -92,9 +92,8 @@ readNonNegative i paramName =
 resolveSource ::
   (MonadIO m) =>
   BigQuerySourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'BigQuery))
-resolveSource sourceConfig customization =
+  m (Either QErr (DBObjectsIntrospection 'BigQuery))
+resolveSource sourceConfig =
   runExceptT $ do
     tables <- getTables sourceConfig
     routines <- getRoutines sourceConfig
@@ -105,12 +104,10 @@ resolveSource sourceConfig customization =
           "unexpected exception while connecting to database: " <> tshow err
       Right (restTables, restRoutines) -> do
         seconds <- liftIO $ fmap systemSeconds getSystemTime
-        let functions = HM.groupOn (routineReferenceToFunctionName . routineReference) restRoutines
+        let functions = FunctionOverloads <$> HM.groupOnNE (routineReferenceToFunctionName . routineReference) restRoutines
         pure
-          ( ResolvedSource
-              { _rsConfig = sourceConfig,
-                _rsCustomization = customization,
-                _rsTables =
+          ( DBObjectsIntrospection
+              { _rsTables =
                   HM.fromList
                     [ ( restTableReferenceToTableName tableReference,
                         DBTableMetadata

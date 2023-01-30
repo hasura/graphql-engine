@@ -2,7 +2,6 @@
 
 import pytest
 from validate import check_query, check_query_f
-from context import PytestConf
 
 pytestmark = [
     pytest.mark.usefixtures('auth_hook'),
@@ -18,6 +17,7 @@ def check_post_404(hge_ctx,url):
    })[0]
 
 @pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'graphql')
+@pytest.mark.default_source_disabled()
 class TestMetadataDisabled:
 
     def test_metadata_v1_query_disabled(self, hge_ctx):
@@ -39,6 +39,7 @@ class TestGraphQLDisabled:
         check_post_404(hge_ctx, '/v1/graphql')
 
 @pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'graphql')
+@pytest.mark.default_source_disabled()
 class TestGraphQLEnabled:
 
     def test_graphql_introspection(self, hge_ctx):

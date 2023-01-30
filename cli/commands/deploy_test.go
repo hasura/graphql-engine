@@ -197,7 +197,7 @@ var _ = Describe("fsm state transitions: config v2", func() {
 		// happy path
 		configV2FSM = newConfigV2DeployFSM()
 		Expect(configV2FSM.SendEvent(applyMigrations, ctx)).To(BeNil())
-		Expect(configV2FSM.Current).Should(Equal(reloadingMetadata))
+		Expect(configV2FSM.Current).Should(Equal(applyingSeeds))
 
 		// unreachable HGE
 		teardownHGE()
@@ -297,7 +297,7 @@ var _ = Describe("fsm state transitions: config v3", func() {
 		// happy path
 		configV3DeployFSM = newConfigV3DeployFSM()
 		Expect(configV3DeployFSM.SendEvent(applyInitialMetadata, ctx)).To(BeNil())
-		Expect(configV3DeployFSM.Current).Should(Equal(reloadingMetadata))
+		Expect(configV3DeployFSM.Current).Should(Equal(applyingSeeds))
 
 		// unreachable HGE
 		teardownHGE()

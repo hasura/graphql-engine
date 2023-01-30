@@ -4,6 +4,7 @@ import queue
 import sqlalchemy
 import time
 
+import fixtures.postgres
 from context import EvtsWebhookServer, HGECtx
 from utils import *
 from validate import check_query_f, check_event, check_event_transformed, check_events
@@ -129,14 +130,28 @@ class TestEventCreateAndDelete:
 @usefixtures("per_method_tests_db_state")
 class TestEventCreateAndResetNonDefaultSource:
 
-    def test_create_reset_non_default_source(self, hge_ctx):
+    @pytest.fixture(scope='class', autouse=True)
+    def another_source(self, owner_engine, add_source):
+        backend: fixtures.postgres.Backend = add_source('postgres')
+        backend_database = backend.engine.url.database
+        assert backend_database is not None
+
+        with fixtures.postgres.switch_schema(owner_engine, backend_database).connect() as connection:
+            connection.execute('DROP SCHEMA IF EXISTS hge_tests CASCADE')
+        with backend.engine.connect() as connection:
+            connection.execute('CREATE SCHEMA hge_tests')
+
+        yield backend
+
+        # TODO: remove once parallelization work is completed
+        #       cleanup will no longer be required
+        with backend.engine.connect() as connection:
+            connection.execute('DROP SCHEMA IF EXISTS hge_tests CASCADE')
+
+    def test_create_reset_non_default_source(self, hge_ctx, another_source):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset_non_default_source.yaml")
 
-        non_default_source_url = os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2')
-        assert non_default_source_url, 'HASURA_GRAPHQL_PG_SOURCE_URL_2 was not set'
-        non_default_source = sqlalchemy.create_engine(non_default_source_url)
-
-        with non_default_source.connect() as connection:
+        with another_source.engine.connect() as connection:
             # Check that the event log table exists.
             # This must be run against the source database.
             result = connection.execute("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')")
@@ -154,9 +169,6 @@ class TestEventCreateAndResetNonDefaultSource:
             result = connection.execute("SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')")
             row = result.first()
             assert row == (False,), f'Result: {row!r}'
-
-            # Cleanup; will not be required in the future.
-            connection.execute("DROP TABLE IF EXISTS hge_tests.test_t1")
 
     @classmethod
     def dir(cls):
@@ -450,23 +462,27 @@ class TestCreateEventQueryPostgresMSSQL(object):
 
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
+@pytest.mark.backend('postgres')
+@usefixtures("per_class_tests_db_state")
+class TestCreateEventQueryPostgres(object):
 
-    def test_partitioned_table_basic_insert(self, pg_version, hge_ctx, evts_webhook):
-        if hge_ctx.backend == "postgres":
-            if pg_version < 11:
-                pytest.skip('Event triggers on partioned tables are not supported in Postgres versions < 11')
-            hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
-            table = { "schema":"hge_tests", "name": "measurement"}
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/basic'
 
-            init_row = { "city_id": 1, "logdate": "2006-02-02", "peaktemp": 1, "unitsales": 1}
+    def test_partitioned_table_basic_insert(self, hge_ctx, evts_webhook):
+        hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
+        table = { "schema":"hge_tests", "name": "measurement"}
 
-            exp_ev_data = {
-                "old": None,
-                "new": init_row
-            }
-            insert(hge_ctx, table, init_row)
-            check_event(hge_ctx, evts_webhook, "measurement_all", table, "INSERT", exp_ev_data)
-            hge_ctx.v1q_f(self.dir() + '/partition_table_teardown.yaml')
+        init_row = { "city_id": 1, "logdate": "2006-02-02", "peaktemp": 1, "unitsales": 1}
+
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        insert(hge_ctx, table, init_row)
+        check_event(hge_ctx, evts_webhook, "measurement_all", table, "INSERT", exp_ev_data)
+        hge_ctx.v1q_f(self.dir() + '/partition_table_teardown.yaml')
 
 @pytest.mark.backend('mssql','postgres')
 @usefixtures('per_method_tests_db_state')

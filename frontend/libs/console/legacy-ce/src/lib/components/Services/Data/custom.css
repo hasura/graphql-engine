@@ -1,0 +1,17 @@
+.ant-tree-title {
+  /* color: grey; */
+  font-weight: normal;
+}
+
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  color: orange;
+  background-color: white !important;
+}
+
+.ant-tree-node-content-wrapper {
+  display: flex;
+}
+
+.ant-tree {
+  color: grey;
+}

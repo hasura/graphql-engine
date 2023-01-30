@@ -2,7 +2,9 @@
 
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema,
+    stitchRemoteSchema,
     execRemoteGQ,
+    FromIntrospection (..),
   )
 where
 
@@ -31,9 +33,8 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.SourceCustomization
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -57,22 +58,35 @@ fetchRemoteSchema ::
   HTTP.Manager ->
   RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
-  m RemoteSchemaCtx
-fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
-  (_, _, _rscRawIntrospectionResult) <-
+  m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
+fetchRemoteSchema env manager _rscName rsDef = do
+  (_, _, rawIntrospectionResult) <-
     execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
+  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult _rscName rsDef
+  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
+  -- the introspection result of the remote server. We store this in the
+  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
+  -- is called by simple encoding the result to JSON.
+  pure (ir, rawIntrospectionResult, rsi)
 
+-- | Parses the remote schema introspection result, and check whether it looks
+-- like it's a valid GraphQL endpoint even under the configured customization.
+stitchRemoteSchema ::
+  (MonadIO m, MonadError QErr m) =>
+  BL.ByteString ->
+  RemoteSchemaName ->
+  ValidatedRemoteSchemaDef ->
+  m (IntrospectionResult, RemoteSchemaInfo)
+stitchRemoteSchema rawIntrospectionResult _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   -- Parse the JSON into flat GraphQL type AST.
   FromIntrospection _rscIntroOriginal <-
-    J.eitherDecode _rscRawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
+    J.eitherDecode rawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
 
   -- Possibly transform type names from the remote schema, per the user's 'RemoteSchemaDef'.
   let rsCustomizer = getCustomizer (addDefaultRoots _rscIntroOriginal) _vrsdCustomization
   validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
 
-  -- At this point, we can't resolve remote relationships; we store an empty map.
-  let _rscRemoteRelationships = mempty
-      _rscInfo = RemoteSchemaInfo {..}
+  let remoteSchemaInfo = RemoteSchemaInfo {..}
 
   -- Check that the parsed GraphQL type info is valid by running the schema
   -- generation. The result is discarded, as the local schema will be built
@@ -83,18 +97,9 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
       runRemoteSchema minimumValidContext $
         buildRemoteParser @_ @_ @Parse
           _rscIntroOriginal
-          _rscRemoteRelationships
-          _rscInfo
-
-  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
-  -- the introspection result of the remote server. We store this in the
-  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
-  -- is called by simple encoding the result to JSON.
-  return
-    RemoteSchemaCtx
-      { _rscPermissions = mempty,
-        ..
-      }
+          mempty -- remote relationships
+          remoteSchemaInfo
+  return (_rscIntroOriginal, remoteSchemaInfo)
   where
     -- If there is no explicit mutation or subscription root type we need to check for
     -- objects type definitions with the default names "Mutation" and "Subscription".
@@ -152,7 +157,8 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
       finalHeaders = addDefaultHeaders headers
   initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp webhookEnvRecord)
   let req =
-        initReq & set HTTP.method "POST"
+        initReq
+          & set HTTP.method "POST"
           & set HTTP.headers finalHeaders
           & set HTTP.body (Just $ J.encode gqlReqUnparsed)
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
@@ -201,15 +207,15 @@ validateSchemaCustomizationsConsistent remoteSchemaCustomizer (RemoteSchemaIntro
               throwRemoteSchema $
                 "Remote schema customization inconsistency: field name mapping for field "
                   <> _fldName
-                  <<> " of interface "
+                    <<> " of interface "
                   <> _itdName
-                  <<> " is inconsistent with mapping for type "
+                    <<> " is inconsistent with mapping for type "
                   <> typeName
-                  <<> ". Interface field name maps to "
+                    <<> ". Interface field name maps to "
                   <> interfaceCustomizedFieldName
-                  <<> ". Type field name maps to "
+                    <<> ". Type field name maps to "
                   <> typeCustomizedFieldName
-                  <<> "."
+                    <<> "."
       _ -> pure ()
 
 validateSchemaCustomizationsDistinct ::
@@ -239,15 +245,17 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
         let dups = duplicates $ customizeFieldName _itdName . G._fldName <$> _itdFieldsDefinition
         unless (Set.null dups) $
           throwRemoteSchema $
-            "Field name mappings for interface type " <> _itdName
-              <<> " are not distinct; the following fields appear more than once: "
+            "Field name mappings for interface type "
+              <> _itdName
+                <<> " are not distinct; the following fields appear more than once: "
               <> dquoteList dups
       G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> do
         let dups = duplicates $ customizeFieldName _otdName . G._fldName <$> _otdFieldsDefinition
         unless (Set.null dups) $
           throwRemoteSchema $
-            "Field name mappings for object type " <> _otdName
-              <<> " are not distinct; the following fields appear more than once: "
+            "Field name mappings for object type "
+              <> _otdName
+                <<> " are not distinct; the following fields appear more than once: "
               <> dquoteList dups
       _ -> pure ()
 

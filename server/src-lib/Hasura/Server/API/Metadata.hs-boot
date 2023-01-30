@@ -5,13 +5,17 @@ where
 
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.ConnectionTemplate
+import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.EventTrigger
+import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
+import Hasura.RQL.DDL.Relationship.Suggest
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
@@ -26,10 +30,11 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend
 
 data RQLMetadataV1
@@ -48,7 +53,7 @@ data RQLMetadataV1
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
   | -- Tables (PG-specific)
-    RMPgSetTableIsEnum !SetTableIsEnum
+    RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
   | -- Tables permissions
     RMCreateInsertPermission !(AnyBackend (CreatePerm InsPerm))
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
@@ -65,6 +70,7 @@ data RQLMetadataV1
   | RMDropRelationship !(AnyBackend DropRel)
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
+  | RMSuggestRelationships !(AnyBackend SuggestRels)
   | -- Tables remote relationships
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
@@ -79,6 +85,12 @@ data RQLMetadataV1
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
+  | -- Connection template
+    RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
+  | -- Native access
+    RMGetCustomSQL !(AnyBackend CustomSQL.GetCustomSQL)
+  | RMTrackCustomSQL !(AnyBackend CustomSQL.TrackCustomSQL)
+  | RMUntrackCustomSQL !(AnyBackend CustomSQL.UntrackCustomSQL)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -106,7 +118,7 @@ data RQLMetadataV1
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
-  | RMGetEventInvocations !GetEventInvocations
+  | RMGetScheduledEventInvocations !GetScheduledEventInvocations
   | RMGetCronTriggers
   | -- Actions
     RMCreateAction !(Unvalidated CreateAction)
@@ -154,11 +166,16 @@ data RQLMetadataV1
   | RMDropHostFromTLSAllowlist !DropHostFromTLSAllowlist
   | -- QueryTags
     RMSetQueryTagsConfig !SetQueryTagsConfig
+  | -- OpenTelemetry
+    RMSetOpenTelemetryConfig !OpenTelemetryConfig
+  | RMSetOpenTelemetryStatus !OtelStatus
   | -- Debug
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
+  | -- Feature Flags
+    RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 

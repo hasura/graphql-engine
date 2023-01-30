@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,8 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataReloadCmd := &cobra.Command{
 		Use:   "reload",
-		Short: "Reload Hasura GraphQL engine metadata on the database",
+		Short: "Reload Hasura GraphQL Engine Metadata on the database",
+		Long:  "This will reload the Hasura GraphQL Engine Metadata on the database. When paired with the `--endpoint` flag, this will reload the Metadata on the specified Hasura instance.",
 		Example: `  # Reload all the metadata information from database:
   hasura metadata reload
 
@@ -27,7 +29,11 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.runWithInfo()
+			op := genOpName(cmd, "RunE")
+			if err := opts.runWithInfo(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
@@ -39,11 +45,12 @@ type MetadataReloadOptions struct {
 }
 
 func (o *MetadataReloadOptions) runWithInfo() error {
+	var op errors.Op = "commands.MetadataReloadOptions.runWithInfo"
 	o.EC.Spin("Reloading metadata...")
 	err := o.run()
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return fmt.Errorf("failed to reload metadata: %w", err)
+		return errors.E(op, fmt.Errorf("failed to reload metadata: %w", err))
 	}
 	o.EC.Logger.Info("Metadata reloaded")
 	icListOpts := &metadataInconsistencyListOptions{
@@ -51,7 +58,7 @@ func (o *MetadataReloadOptions) runWithInfo() error {
 	}
 	err = icListOpts.read(projectmetadata.NewHandlerFromEC(icListOpts.EC))
 	if err != nil {
-		return fmt.Errorf("failed to read metadata status: %w", err)
+		return errors.E(op, fmt.Errorf("failed to read metadata status: %w", err))
 	}
 	if icListOpts.isConsistent {
 		icListOpts.EC.Logger.Infoln("Metadata is consistent")
@@ -62,11 +69,12 @@ func (o *MetadataReloadOptions) runWithInfo() error {
 }
 
 func (o *MetadataReloadOptions) run() error {
+	var op errors.Op = "commands.MetadataReloadOptions.run"
 	var err error
 	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
-		return fmt.Errorf("cannot reload metadata: %w", err)
+		return errors.E(op, fmt.Errorf("cannot reload metadata: %w", err))
 	}
 	return nil
 }

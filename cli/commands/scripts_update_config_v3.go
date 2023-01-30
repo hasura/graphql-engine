@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/afero"
@@ -16,23 +17,26 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	var opts scripts.UpdateProjectV3Opts
 	cmd := &cobra.Command{
-		Use:   "update-project-v3",
-		Short: "Update the Hasura project from config v2 to v3",
-		Long: `
-Convenience script used to upgrade your CLI project to use config v3.
-Note that this process is completely independent from your Hasura Graphql Engine server update process`,
+		Use:          "update-project-v3",
+		Short:        "Update the Hasura Project from config v2 to v3",
+		Long:         "This helper script upgrades your CLI project to use config v3. This process is completely independent from your Hasura Graphql Engine server update process.",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			if opts.Force && len(opts.TargetDatabase) == 0 {
-				return fmt.Errorf("--database-name is required when --force is set")
+				return errors.E(op, fmt.Errorf("--database-name is required when --force is set"))
 			}
 			opts.Fs = afero.NewOsFs()
 			opts.ProjectDirectory = ec.ExecutionDirectory
@@ -40,7 +44,10 @@ Note that this process is completely independent from your Hasura Graphql Engine
 			opts.SeedsAbsDirectoryPath = ec.SeedsDirectory
 			opts.Logger = ec.Logger
 			opts.EC = ec
-			return scripts.UpdateProjectV3(opts)
+			if err := scripts.UpdateProjectV3(opts); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
@@ -49,9 +56,9 @@ Note that this process is completely independent from your Hasura Graphql Engine
 	f.BoolVar(&opts.Force, "force", false, "do not ask for confirmation")
 	f.BoolVar(&opts.MoveStateOnly, "move-state-only", false, "do only a state migration from old hdb_catalog.* table to catalog state and skip others")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

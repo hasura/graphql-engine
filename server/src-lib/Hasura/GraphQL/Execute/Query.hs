@@ -31,6 +31,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -63,6 +64,7 @@ convertQuerySelSet ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  PrometheusMetrics ->
   GQLContext ->
   UserInfo ->
   HTTP.Manager ->
@@ -79,6 +81,7 @@ convertQuerySelSet ::
 convertQuerySelSet
   env
   logger
+  prometheusMetrics
   gqlContext
   userInfo
   manager
@@ -111,7 +114,7 @@ convertQuerySelSet
                   let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote rf -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
@@ -120,7 +123,7 @@ convertQuerySelSet
             RFAction action -> do
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
               (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
-                AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders (_uiSession userInfo)) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
+                AQQuery s -> (AEPSync $ resolveActionExecution env logger prometheusMetrics userInfo s (ActionExecContext manager reqHeaders (_uiSession userInfo)) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
                 AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
               pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
             RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles

@@ -1,22 +1,25 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Use commaSeparated" #-}
+{-# HLINT ignore "Use tshow" #-}
 
 module Command
   ( Command (..),
-    TestConfig (..),
     TestOptions (..),
-    AgentCapabilities (..),
+    SensitiveOutputHandling (..),
+    SandwichArguments (..),
+    TestConfig (..),
+    AgentOptions (..),
+    NameCasing (..),
+    ExportDataConfig (..),
+    ExportFormat (..),
     parseCommandLine,
   )
 where
 
 import Control.Arrow (left)
-import Control.Lens (contains, modifying, use, (^.), _2)
-import Control.Lens.TH (makeLenses)
-import Control.Monad (when)
-import Control.Monad.State (State, runState)
 import Data.Aeson (FromJSON (..), eitherDecodeStrict')
-import Data.HashSet (HashSet)
-import Data.HashSet qualified as HashSet
+import Data.List (intercalate)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -28,34 +31,49 @@ import Servant.Client (BaseUrl, parseBaseUrl)
 import Prelude
 
 data Command
-  = Test TestOptions
+  = Test TestOptions SandwichArguments
   | ExportOpenAPISpec
-
-data TestConfig = TestConfig
-  {_tcTableNamePrefix :: [Text]}
+  | ExportData ExportDataConfig
 
 data TestOptions = TestOptions
-  { _toAgentBaseUrl :: BaseUrl,
-    _toAgentConfig :: API.Config,
-    _toAgentCapabilities :: AgentCapabilities,
+  { _toAgentOptions :: AgentOptions,
     _toTestConfig :: TestConfig,
-    _toParallelDegree :: Maybe Int,
-    _toMatch :: Maybe String,
-    _toSkip :: [String],
-    _toDryRun :: Bool,
-    _toExportMatchStrings :: Bool
+    _toSensitiveOutputHandling :: SensitiveOutputHandling
   }
 
-data AgentCapabilities
-  = AutoDetect
-  | Explicit API.Capabilities
+newtype SandwichArguments = SandwichArguments [String]
 
-data CapabilitiesState = CapabilitiesState
-  { _csRemainingCapabilities :: HashSet Text,
-    _csCapabilitiesEnquired :: HashSet Text
+data TestConfig = TestConfig
+  { _tcTableNamePrefix :: [Text],
+    _tcTableNameCasing :: NameCasing,
+    _tcColumnNameCasing :: NameCasing
   }
 
-$(makeLenses ''CapabilitiesState)
+data SensitiveOutputHandling
+  = AllowSensitiveOutput
+  | DisallowSensitiveOutput
+
+data AgentOptions = AgentOptions
+  { _aoAgentBaseUrl :: BaseUrl,
+    _aoAgentConfig :: Maybe API.Config
+  }
+
+data NameCasing
+  = PascalCase
+  | Lowercase
+  | Uppercase
+  deriving (Eq, Show, Read, Enum, Bounded)
+
+data ExportDataConfig = ExportDataConfig
+  { _edcDirectory :: FilePath,
+    _edcFormat :: ExportFormat,
+    _edcDateTimeFormat :: Maybe String
+  }
+
+data ExportFormat
+  = JSON
+  | JSONLines
+  deriving (Eq, Show, Read)
 
 parseCommandLine :: IO Command
 parseCommandLine =
@@ -81,7 +99,7 @@ version =
 commandParser :: Parser Command
 commandParser =
   subparser
-    (testCommand <> exportOpenApiSpecCommand)
+    (testCommand <> exportOpenApiSpecCommand <> exportData)
   where
     testCommand =
       command
@@ -97,6 +115,33 @@ commandParser =
             (helper <*> pure ExportOpenAPISpec)
             (progDesc "Exports the OpenAPI specification of the Data Connector API that agents must implement")
         )
+    exportData =
+      command
+        "export-data"
+        ( info
+            (helper <*> (ExportData <$> exportDataConfigParser))
+            (progDesc "Exports the Chinook dataset to files in the specified directory")
+        )
+
+testCommandParser :: Parser Command
+testCommandParser = Test <$> testOptionsParser <*> sandwichArgumentsParser
+
+testOptionsParser :: Parser TestOptions
+testOptionsParser =
+  TestOptions
+    <$> agentOptionsParser
+    <*> testConfigParser
+    <*> flag
+      DisallowSensitiveOutput
+      AllowSensitiveOutput
+      ( long "allow-sensitive-output"
+          <> help "Allows sensitive values (such as the X-Hasura-DataConnector-Config header) to appear in test debug output"
+      )
+
+sandwichArgumentsParser :: Parser SandwichArguments
+sandwichArgumentsParser =
+  subparser (command "sandwich" (info (SandwichArguments <$> many (strArgument mempty)) forwardOptions))
+    <|> pure (SandwichArguments [])
 
 testConfigParser :: Parser TestConfig
 testConfigParser =
@@ -109,10 +154,26 @@ testConfigParser =
           <> help "The prefix to use for all table names, as a JSON array of strings"
           <> value []
       )
+    <*> option
+      auto
+      ( long "table-name-casing"
+          <> metavar "CASING"
+          <> help ("The casing style to use for table names (" <> casingOptions <> "). Default: PascalCase")
+          <> value PascalCase
+      )
+    <*> option
+      auto
+      ( long "column-name-casing"
+          <> metavar "CASING"
+          <> help ("The casing style to use for column names (" <> casingOptions <> "). Default: PascalCase")
+          <> value PascalCase
+      )
+  where
+    casingOptions = intercalate ", " $ show <$> enumFromTo @NameCasing minBound maxBound
 
-testOptionsParser :: Parser TestOptions
-testOptionsParser =
-  TestOptions
+agentOptionsParser :: Parser AgentOptions
+agentOptionsParser =
+  AgentOptions
     <$> option
       baseUrl
       ( long "agent-base-url"
@@ -120,120 +181,45 @@ testOptionsParser =
           <> metavar "URL"
           <> help "The base URL of the Data Connector agent to be tested"
       )
-    <*> option
-      configValue
-      ( long "agent-config"
-          <> short 's'
-          <> metavar "JSON"
-          <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
-      )
-    <*> agentCapabilitiesParser
-    <*> testConfigParser
     <*> optional
       ( option
-          positiveNonZeroInt
-          ( long "jobs"
-              <> short 'j'
-              <> metavar "INT"
-              <> help "Run at most N parallelizable tests simultaneously (default: number of available processors)"
+          configValue
+          ( long "agent-config"
+              <> short 's'
+              <> metavar "JSON"
+              <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. If omitted, datasets will be used to load test data and provide this configuration dynamically"
           )
+      )
+
+exportDataConfigParser :: Parser ExportDataConfig
+exportDataConfigParser =
+  ExportDataConfig
+    <$> strOption
+      ( long "directory"
+          <> short 'd'
+          <> metavar "DIR"
+          <> help "The directory to export the data files into"
+      )
+    <*> option
+      auto
+      ( long "format"
+          <> short 'f'
+          <> metavar "FORMAT"
+          <> help "The format to export (JSON or JSONLines)"
       )
     <*> optional
       ( strOption
-          ( long "match"
-              <> short 'm'
-              <> metavar "PATTERN"
-              <> help "Only run tests that match given PATTERN"
+          ( long "datetime-format"
+              <> metavar "FORMAT"
+              <> help "Format string to use when formatting DateTime columns (use format syntax from https://hackage.haskell.org/package/time-1.12.2/docs/Data-Time-Format.html#v:formatTime)"
           )
       )
-    <*> many
-      ( strOption
-          ( long "skip"
-              <> short 's'
-              <> metavar "PATTERN"
-              <> help "Skip tests that match given PATTERN"
-          )
-      )
-    <*> switch
-      ( long "dry-run"
-          <> help "Skip execution of test bodies"
-      )
-    <*> switch
-      ( long "export-match-strings"
-          <> help "Exports the hspec match strings without running the tests"
-      )
-
-testCommandParser :: Parser Command
-testCommandParser = Test <$> testOptionsParser
 
 baseUrl :: ReadM BaseUrl
 baseUrl = eitherReader $ left show . parseBaseUrl
-
-positiveNonZeroInt :: ReadM Int
-positiveNonZeroInt =
-  auto >>= \int ->
-    if int <= 0 then readerError "Must be a positive, non-zero integer" else pure int
 
 configValue :: ReadM API.Config
 configValue = fmap API.Config jsonValue
 
 jsonValue :: FromJSON v => ReadM v
 jsonValue = eitherReader (eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)
-
-agentCapabilitiesParser :: Parser AgentCapabilities
-agentCapabilitiesParser =
-  option
-    agentCapabilities
-    ( long "capabilities"
-        <> short 'c'
-        <> metavar "CAPABILITIES"
-        <> value AutoDetect
-        <> help (Text.unpack helpText)
-    )
-  where
-    helpText =
-      "The capabilities that the agent has, to determine what tests to run. By default, they will be autodetected. The valid capabilities are: " <> allCapabilitiesText
-    allCapabilitiesText =
-      "[autodetect | none | " <> Text.intercalate "," (HashSet.toList allPossibleCapabilities) <> "]"
-
-agentCapabilities :: ReadM AgentCapabilities
-agentCapabilities =
-  str >>= \text -> do
-    let capabilities = HashSet.fromList $ Text.strip <$> Text.split (== ',') text
-    if HashSet.member "autodetect" capabilities
-      then
-        if HashSet.size capabilities == 1
-          then pure AutoDetect
-          else readerError "You can either autodetect capabilities or specify them manually, not both"
-      else
-        if HashSet.member "none" capabilities
-          then
-            if HashSet.size capabilities == 1
-              then pure . Explicit . fst $ readCapabilities mempty
-              else readerError "You cannot specify other capabilities when specifying none"
-          else Explicit <$> readExplicitCapabilities capabilities
-  where
-    readExplicitCapabilities :: HashSet Text -> ReadM API.Capabilities
-    readExplicitCapabilities providedCapabilities =
-      let (capabilities, CapabilitiesState {..}) = readCapabilities providedCapabilities
-       in if _csRemainingCapabilities /= mempty
-            then readerError . Text.unpack $ "Unknown capabilities: " <> Text.intercalate "," (HashSet.toList _csRemainingCapabilities)
-            else pure capabilities
-
-readCapabilities :: HashSet Text -> (API.Capabilities, CapabilitiesState)
-readCapabilities providedCapabilities =
-  flip runState (CapabilitiesState providedCapabilities mempty) $ do
-    supportsRelationships <- readCapability "relationships"
-    pure $ API.emptyCapabilities {API._cRelationships = if supportsRelationships then Just API.RelationshipCapabilities {} else Nothing}
-
-readCapability :: Text -> State CapabilitiesState Bool
-readCapability capability = do
-  modifying csCapabilitiesEnquired $ HashSet.insert capability
-  hasCapability <- use $ csRemainingCapabilities . contains capability
-  when hasCapability $
-    modifying csRemainingCapabilities $ HashSet.delete capability
-  pure hasCapability
-
-allPossibleCapabilities :: HashSet Text
-allPossibleCapabilities =
-  readCapabilities mempty ^. _2 . csCapabilitiesEnquired

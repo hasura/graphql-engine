@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/fsm"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/sirupsen/logrus"
@@ -18,10 +19,20 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	deployCmd := &cobra.Command{
 		Use:   "deploy",
-		Short: "(PREVIEW) Utility command to apply metadata & database migrations to graphql-engine",
+		Short: "(PREVIEW) Utility command to apply Hasura Metadata & database migrations to graphql-engine",
+		Long: `When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks (` + " ``hasura metadata apply``" + " and ``hasura migrate apply``" + `) in one command.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/index/#migrations-in-graphql-engine
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
+`,
 		Example: `  
-  # Apply metadata and migrations on Hasura GraphQL engine
+  # Apply metadata and migrations on Hasura GraphQL Engine
   hasura deploy
+
+  # Apply metadata, migrations and seeds on Hasura GraphQL Engine
+  hasura deploy --with-seeds
 
   # Use with admin secret:
   hasura deploy --admin-secret "<admin-secret>"
@@ -30,26 +41,34 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura deploy --endpoint "<endpoint>"`,
 		SilenceUsage: false,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			if err := ec.Validate(); err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.Run()
+			op := genOpName(cmd, "RunE")
+			if err := opts.Run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 
 	f := deployCmd.Flags()
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+
+	f.BoolVar(&opts.WithSeeds, "with-seeds", false, "apply available seeds data to databases")
+
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
@@ -74,34 +93,38 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type DeployOptions struct {
 	EC *cli.ExecutionContext
+
+	WithSeeds bool
 }
 
 func (opts *DeployOptions) Run() error {
+	var op errors.Op = "commands.DeployOptions.Run"
 	opts.EC.Config.DisableInteractive = true
 
 	context := &deployCtx{
-		ec:     opts.EC,
-		logger: opts.EC.Logger,
-		err:    nil,
+		ec:        opts.EC,
+		logger:    opts.EC.Logger,
+		err:       nil,
+		withSeeds: opts.WithSeeds,
 	}
 
 	if opts.EC.Config.Version <= cli.V2 {
 		configV2FSM := newConfigV2DeployFSM()
 		if err := configV2FSM.SendEvent(applyMigrations, context); err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		if configV2FSM.Current == failedOperation {
-			return fmt.Errorf("operation failed: %w", context.err)
+			return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 		}
 		return nil
 	}
 
 	configV3FSM := newConfigV3DeployFSM()
 	if err := configV3FSM.SendEvent(applyInitialMetadata, context); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	if configV3FSM.Current == failedOperation {
-		return fmt.Errorf("operation failed: %w", context.err)
+		return errors.E(op, fmt.Errorf("operation failed: %w", context.err))
 	}
 	return nil
 }
@@ -117,6 +140,8 @@ const (
 	applyingMigrationsFailed      stateType = "Applying Migrations Failed"
 	reloadingMetadata             stateType = "Reloading Metadata"
 	reloadingMetadataFailed       stateType = "Reloading Metadata Failed"
+	applyingSeeds                 stateType = "Applying Seeds"
+	applyingSeedsFailed           stateType = "Applying Seeds Failed"
 	failedOperation               stateType = "Operation Failed"
 )
 
@@ -131,13 +156,16 @@ const (
 	applyMigrationsFailed      eventType = "Apply Migrations Failed"
 	reloadMetadata             eventType = "Reload Metadata"
 	reloadMetadataFailed       eventType = "Reload Metadata Failed"
+	applySeeds                 eventType = "Apply Seeds"
+	applySeedsFailed           eventType = "Apply Seeds Failed"
 	failOperation              eventType = "Operation Failed"
 )
 
 type deployCtx struct {
-	ec     *cli.ExecutionContext
-	logger *logrus.Logger
-	err    error
+	ec        *cli.ExecutionContext
+	logger    *logrus.Logger
+	err       error
+	withSeeds bool
 }
 
 type applyingInitialMetadataAction struct{}
@@ -163,6 +191,7 @@ func (a *applyingInitialMetadataFailedAction) Execute(ctx fsm.EventContext) even
 	if context.err != nil {
 		context.logger.Errorf("applying metadata failed")
 		context.logger.Info("This can happen when metadata in your project metadata directory is malformed")
+		context.logger.Debug(context.err)
 	}
 	return failOperation
 }
@@ -194,6 +223,7 @@ func (a *applyingMigrationsFailedAction) Execute(ctx fsm.EventContext) eventType
 	context.logger.Debug(applyingMigrationsFailed)
 	if context.err != nil {
 		context.logger.Errorf("applying migrations failed")
+		context.logger.Debug(context.err)
 	}
 	return failOperation
 }
@@ -224,6 +254,7 @@ func (a *applyingMetadataFailedAction) Execute(ctx fsm.EventContext) eventType {
 	context.logger.Debug(applyingMetadataFailed)
 	if context.err != nil {
 		context.logger.Errorf("applying metadata failed")
+		context.logger.Debug(context.err)
 	}
 	return failOperation
 }
@@ -240,7 +271,7 @@ func (a *reloadingMetadataAction) Execute(ctx fsm.EventContext) eventType {
 		context.err = err
 		return reloadMetadataFailed
 	}
-	return fsm.NoOp
+	return applySeeds
 }
 
 type reloadingMetadataFailedAction struct{}
@@ -250,8 +281,40 @@ func (a *reloadingMetadataFailedAction) Execute(ctx fsm.EventContext) eventType 
 	context.logger.Debug(reloadingMetadataFailed)
 	if context.err != nil {
 		context.logger.Errorf("reloading metadata failed")
+		context.logger.Debug(context.err)
 	}
 	return failOperation
+}
+
+type applyingSeedsAction struct{}
+
+func (a *applyingSeedsAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*deployCtx)
+	if context.withSeeds {
+		context.logger.Debug(applyingSeeds)
+		opts := SeedApplyOptions{
+			EC:     context.ec,
+			Driver: getSeedDriver(context.ec, context.ec.Config.Version),
+		}
+		opts.EC.AllDatabases = true
+		if err := opts.Run(); err != nil {
+			context.err = err
+			return applySeedsFailed
+		}
+	}
+	return fsm.NoOp
+}
+
+type applyingSeedsFailedAction struct{}
+
+func (a *applyingSeedsFailedAction) Execute(ctx fsm.EventContext) eventType {
+	context := ctx.(*deployCtx)
+	context.logger.Debug(applyingSeedsFailed)
+	if context.err != nil {
+		context.logger.Errorf("applying seeds failed")
+		context.logger.Debug(context.err)
+	}
+	return fsm.NoOp
 }
 
 type failedOperationAction struct{}
@@ -316,6 +379,7 @@ func newConfigV3DeployFSM() *fsm.StateMachine {
 				Action: &reloadingMetadataAction{},
 				Events: Events{
 					reloadMetadataFailed: reloadingMetadataFailed,
+					applySeeds:           applyingSeeds,
 				},
 			},
 			reloadingMetadataFailed: State{
@@ -323,6 +387,15 @@ func newConfigV3DeployFSM() *fsm.StateMachine {
 				Events: Events{
 					failOperation: failedOperation,
 				},
+			},
+			applyingSeeds: State{
+				Action: &applyingSeedsAction{},
+				Events: Events{
+					applySeedsFailed: applyingSeedsFailed,
+				},
+			},
+			applyingSeedsFailed: State{
+				Action: &applyingSeedsFailedAction{},
 			},
 			failedOperation: State{
 				Action: &failedOperationAction{},
@@ -373,6 +446,7 @@ func newConfigV2DeployFSM() *fsm.StateMachine {
 				Action: &reloadingMetadataAction{},
 				Events: Events{
 					reloadMetadataFailed: reloadingMetadataFailed,
+					applySeeds:           applyingSeeds,
 				},
 			},
 			reloadingMetadataFailed: State{
@@ -380,6 +454,15 @@ func newConfigV2DeployFSM() *fsm.StateMachine {
 				Events: Events{
 					failOperation: failedOperation,
 				},
+			},
+			applyingSeeds: State{
+				Action: &applyingSeedsAction{},
+				Events: Events{
+					applySeedsFailed: applyingSeedsFailed,
+				},
+			},
+			applyingSeedsFailed: State{
+				Action: &applyingSeedsFailedAction{},
 			},
 			failedOperation: State{
 				Action: &failedOperationAction{},

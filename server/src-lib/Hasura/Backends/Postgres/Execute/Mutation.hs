@@ -16,6 +16,7 @@ module Hasura.Backends.Postgres.Execute.Mutation
   )
 where
 
+import Control.Monad.Writer (runWriter)
 import Data.Aeson
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
@@ -28,6 +29,7 @@ import Hasura.Backends.Postgres.Translate.Insert
 import Hasura.Backends.Postgres.Translate.Mutation
 import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Backends.Postgres.Translate.Select
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -45,7 +47,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
-import Hasura.SQL.Types
 import Hasura.Session
 
 data MutateResp (b :: BackendType) a = MutateResp
@@ -95,7 +96,8 @@ runMutation ::
   m EncJSON
 runMutation mut =
   bool (mutateAndReturn mut) (mutateAndSel mut) $
-    hasNestedFld $ _mOutput mut
+    hasNestedFld $
+      _mOutput mut
 
 mutateAndReturn ::
   ( MonadTx m,
@@ -236,7 +238,7 @@ executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase
   let queryTx :: PG.FromRes a => m a
       queryTx = do
         let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
-            query = PG.fromBuilder $ toSQL selectWith
+            query = toQuery selectWith
             queryWithQueryTags = query {PG.getQueryText = (PG.getQueryText query) <> (_unQueryTagsComment queryTags)}
         -- See Note [Prepared statements in Mutations]
         liftTx (PG.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
@@ -264,22 +266,30 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     then withCheckPermission $ (first PG.getViaJSON . PG.getRow) <$> mutationTx
     else (PG.getViaJSON . runIdentity . PG.getRow) <$> mutationTx
   where
-    rawAliasIdentifier = "mutres__" <> qualifiedObjectToText qt
-    aliasIdentifier = Identifier rawAliasIdentifier
-    tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
+    rawAlias = S.mkTableAlias $ "mutres__" <> qualifiedObjectToText qt
+    rawIdentifier = S.tableAliasToIdentifier rawAlias
+    tabFrom = FromIdentifier $ FIIdentifier (unTableIdentifier rawIdentifier)
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
       \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
-    sqlText = PG.fromBuilder $ toSQL selectWith
-    selectWith = S.SelectWith [(S.toTableAlias aliasIdentifier, getMutationCTE cte)] select
+    sqlText = toQuery selectWith
+
     select =
       S.mkSelect
         { S.selExtr =
-            S.Extractor extrExp Nothing :
-            bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
+            S.Extractor extrExp Nothing
+              : bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
         }
-    checkErrExp = mkCheckErrorExp aliasIdentifier
+
+    selectWith =
+      S.SelectWith
+        ( [(rawAlias, getMutationCTE cte)]
+            <> customSQLToTopLevelCTEs customSQLCTEs
+        )
+        select
+
+    checkErrExp = mkCheckErrorExp rawIdentifier
     extrExp =
       S.applyJsonBuildObj
         [ S.SELit "affected_rows",
@@ -292,9 +302,13 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
       S.SESelect $
         S.mkSelect
           { S.selExtr = [S.Extractor S.countStar Nothing],
-            S.selFrom = Just $ S.FromExp [S.FIIdentifier aliasIdentifier]
+            S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
           }
-    colSel =
-      S.SESelect $
-        mkSQLSelect JASMultipleRows $
-          AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+
+    (colSel, customSQLCTEs) =
+      runWriter $
+        S.SESelect
+          <$> mkSQLSelect
+            JASMultipleRows
+            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+            )

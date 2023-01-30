@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
@@ -40,21 +41,27 @@ func NewCLICatalogState(client hasura.CatalogStateOperations) *CLICatalogState {
 }
 
 func (c *CLICatalogState) Get() (*CLIState, error) {
+	var op errors.Op = "statestore.CLICatalogState.Get"
 	var state struct {
 		CLIState *CLIState `json:"cli_state"`
 	}
 	b, err := c.client.Get()
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	if err := json.NewDecoder(b).Decode(&state); err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	return state.CLIState, nil
 }
 
 func (c *CLICatalogState) Set(state CLIState) (io.Reader, error) {
-	return c.client.Set("cli", state)
+	var op errors.Op = "statestore.CLICatalogState.Set"
+	r, err := c.client.Set("cli", state)
+	if err != nil {
+		return r, errors.E(op, err)
+	}
+	return r, nil
 }
 
 //
@@ -122,29 +129,31 @@ func (c *CLIState) GetSettings() map[string]string {
 }
 
 func CopyMigrationState(src, dest MigrationsStateStore, srcdatabase, destdatabase string) error {
+	var op errors.Op = "statestore.CopyMigrationState"
 	versions, err := src.GetVersions(srcdatabase)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	var vs []Version
 	for v, dirty := range versions {
 		vs = append(vs, Version{int64(v), dirty})
 	}
 	if err := dest.SetVersions(destdatabase, vs); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
 func CopySettingsState(src, dest SettingsStateStore) error {
+	var op errors.Op = "statestore.CopySettingsState"
 	settings, err := src.GetAllSettings()
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	for k, v := range settings {
 		err := dest.UpdateSetting(k, v)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 	}
 	return nil

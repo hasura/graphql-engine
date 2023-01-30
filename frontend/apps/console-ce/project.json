@@ -2,7 +2,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ce/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
+    "build-server-assets": {
+      "executor": "@hasura/internal-plugin:build-server-assets",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
+      "outputs": ["dist/apps/server-assets-console-ce"],
+      "dependsOn": ["build"]
+    },
     "build": {
       "executor": "@nrwl/web:webpack",
       "outputs": ["{options.outputPath}"],
@@ -16,17 +23,22 @@
         "polyfills": "apps/console-ce/src/polyfills.ts",
         "tsConfig": "apps/console-ce/tsconfig.app.json",
         "assets": [
-          "apps/console-ce/src/favicon.ico",
-          "apps/console-ce/src/assets"
+          {
+            "glob": "**",
+            "input": "apps/console-ce/src/assets/common",
+            "output": "common"
+          }
         ],
-        "styles": ["apps/console-ce/src/css/tailwind.css", "apps/console-ce/src/css/legacy-boostrap.css"],
+        "styles": ["apps/console-ce/src/css/tailwind.css"],
         "scripts": [],
-        "webpackConfig": "apps/console-ce/custom-webpack.config.js",
+        "webpackConfig": "custom-webpack.config.js",
         "postcssConfig": "apps/console-ce/postcss.config.js"
       },
       "configurations": {
         "development": {
           "extractLicenses": false,
+          "outputHashing": "none",
+          "extractCss": false,
           "optimization": false,
           "sourceMap": true,
           "vendorChunk": true
@@ -42,10 +54,10 @@
           "outputHashing": "none",
           "extractCss": false,
           "sourceMap": true,
-          "namedChunks": false,
-          "generateIndexHtml": false,
-          "extractLicenses": true,
-          "vendorChunk": false
+          "namedChunks": true,
+          "generateIndexHtml": true,
+          "extractLicenses": false,
+          "vendorChunk": true
         }
       }
     },
@@ -81,6 +93,5 @@
         "passWithNoTests": true
       }
     }
-  },
-  "tags": []
+  }
 }

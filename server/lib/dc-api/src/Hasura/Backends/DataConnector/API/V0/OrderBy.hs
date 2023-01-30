@@ -33,7 +33,7 @@ data OrderBy = OrderBy
   { _obRelations :: HashMap API.V0.RelationshipName OrderByRelation,
     _obElements :: NonEmpty OrderByElement
   }
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec OrderBy
 
 instance HasCodec OrderBy where
@@ -47,7 +47,7 @@ data OrderByRelation = OrderByRelation
   { _obrWhere :: Maybe API.V0.Expression,
     _obrSubrelations :: HashMap API.V0.RelationshipName OrderByRelation
   }
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec OrderByRelation
 
@@ -64,7 +64,7 @@ data OrderByElement = OrderByElement
     _obeTarget :: OrderByTarget,
     _obeOrderDirection :: OrderDirection
   }
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec OrderByElement
 
 instance HasCodec OrderByElement where
@@ -79,7 +79,7 @@ data OrderByTarget
   = OrderByColumn API.V0.ColumnName
   | OrderByStarCountAggregate
   | OrderBySingleColumnAggregate API.V0.SingleColumnAggregate
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Generic, Ord, Show)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec OrderByTarget
 
 instance HasCodec OrderByTarget where

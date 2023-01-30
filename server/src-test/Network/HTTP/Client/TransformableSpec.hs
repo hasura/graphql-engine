@@ -1,8 +1,8 @@
 module Network.HTTP.Client.TransformableSpec (spec) where
 
---import           Data.Aeson                        (eitherDecodeStrict)
+-- import           Data.Aeson                        (eitherDecodeStrict)
 
---import           Test.QuickCheck
+-- import           Test.QuickCheck
 
 import Control.Exception (Exception (displayException))
 import Control.Lens

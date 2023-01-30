@@ -48,7 +48,7 @@ module Hasura.GraphQL.Schema.Build
     buildTableInsertMutationFields,
     buildTableQueryAndSubscriptionFields,
     buildTableStreamingSubscriptionFields,
-    buildTableUpdateMutationFields,
+    buildSingleBatchTableUpdateMutationFields,
     setFieldNameCase,
     buildFieldDescription,
   )
@@ -58,20 +58,20 @@ import Data.Has (getter)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.ApolloFederation
-import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), MonadBuildSchema)
+import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), BackendUpdateOperatorsSchema (..), MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
 import Hasura.GraphQL.Schema.Table (getTableIdentifierName, tableSelectPermissions)
-import Hasura.GraphQL.Schema.Typename (mkTypename)
-import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
+import Hasura.GraphQL.Schema.Typename
+import Hasura.GraphQL.Schema.Update.Batch (updateTable, updateTableByPk)
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Permission
@@ -80,23 +80,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
-
--- | Builds field name with proper case. Please note that this is a pure
---   function as all the validation has already been done while preparing
---   @GQLNameIdentifier@.
-setFieldNameCase ::
-  NamingCase ->
-  TableInfo b ->
-  CustomRootField ->
-  (C.GQLNameIdentifier -> C.GQLNameIdentifier) ->
-  C.GQLNameIdentifier ->
-  G.Name
-setFieldNameCase tCase tInfo crf getFieldName tableName =
-  (applyFieldNameCaseIdentifier tCase fieldIdentifier)
-  where
-    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
-    crfName = fmap C.fromCustomName (_crfName crf)
-    fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
 
 -- | buildTableQueryAndSubscriptionFields builds the field parsers of a table.
 --   It returns a tuple with array of field parsers that correspond to the field
@@ -108,7 +91,6 @@ buildTableQueryAndSubscriptionFields ::
     BackendTableSelectSchema b
   ) =>
   MkRootFieldName ->
-  SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
@@ -119,19 +101,22 @@ buildTableQueryAndSubscriptionFields ::
       [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
     )
-buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo gqlName = do
-  tCase <- asks getter
+buildTableQueryAndSubscriptionFields mkRootFieldName tableName tableInfo gqlName = do
+  sourceInfo :: SourceInfo b <- asks getter
   roleName <- retrieve scRole
-  let -- select table
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      mkTypename = runMkTypename $ _rscTypeNames customization
+      -- select table
       selectName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelect mkSelectField gqlName
       -- select table by pk
       selectPKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectByPk mkSelectByPkField gqlName
       -- select table aggregate
       selectAggName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectAggregate mkSelectAggregateField gqlName
 
-  selectTableParser <- optionalFieldParser QDBMultipleRows $ selectTable sourceInfo tableInfo selectName selectDesc
-  selectTableByPkParser <- optionalFieldParser QDBSingleRow $ selectTableByPk sourceInfo tableInfo selectPKName selectPKDesc
-  selectTableAggregateParser <- optionalFieldParser QDBAggregation $ selectTableAggregate sourceInfo tableInfo selectAggName selectAggDesc
+  selectTableParser <- optionalFieldParser QDBMultipleRows $ selectTable tableInfo selectName selectDesc
+  selectTableByPkParser <- optionalFieldParser QDBSingleRow $ selectTableByPk tableInfo selectPKName selectPKDesc
+  selectTableAggregateParser <- optionalFieldParser QDBAggregation $ selectTableAggregate tableInfo selectAggName selectAggDesc
 
   case tableSelectPermissions roleName tableInfo of
     -- No select permission found for the current role, so
@@ -141,7 +126,7 @@ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableI
     Just SelPermInfo {..} -> do
       selectStreamParser <-
         if (isRootFieldAllowed SRFTSelectStream spiAllowedSubscriptionRootFields)
-          then buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo gqlName
+          then buildTableStreamingSubscriptionFields mkRootFieldName tableName tableInfo gqlName
           else pure mempty
 
       let (querySelectTableParser, subscriptionSelectTableParser) =
@@ -170,13 +155,13 @@ buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableI
       -- This parser is for generating apollo federation field _entities
       apolloFedTableParser <- runMaybeT do
         guard $ isApolloFedV1enabled (_tciApolloFederationConfig (_tiCoreInfo tableInfo))
-        tableSelSet <- MaybeT $ tableSelectionSet sourceInfo tableInfo
+        tableSelSet <- MaybeT $ tableSelectionSet tableInfo
         selectPerm <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         stringifyNumbers <- retrieve Options.soStringifyNumbers
         primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
         let tableSelPerm = tablePermissionsInfo selectPerm
         tableGQLName <- getTableIdentifierName tableInfo
-        objectTypename <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableTypeName $ tableGQLName
+        let objectTypename = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableTypeName $ tableGQLName
         pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo tableSelPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
 
       pure (queryRootFields, subscriptionRootFields, apolloFedTableParser)
@@ -206,48 +191,56 @@ buildTableStreamingSubscriptionFields ::
     BackendTableSelectSchema b
   ) =>
   MkRootFieldName ->
-  SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo tableIdentifier = do
-  tCase <- asks getter
-  let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
-      selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
-      selectStreamName =
-        runMkRootFieldName mkRootFieldName $
-          setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
-  catMaybes
-    <$> sequenceA
-      [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceInfo tableInfo selectStreamName selectDesc
-      ]
+buildTableStreamingSubscriptionFields mkRootFieldName tableName tableInfo tableIdentifier = do
+  -- Check in schema options whether we should include streaming subscription
+  -- fields
+  include <- retrieve Options.soIncludeStreamFields
+  case include of
+    Options.Don'tIncludeStreamFields -> pure mempty
+    Options.IncludeStreamFields -> do
+      sourceInfo :: SourceInfo b <- asks getter
+      let customization = _siCustomization sourceInfo
+          tCase = _rscNamingConvention customization
+          customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+          selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
+          selectStreamName =
+            runMkRootFieldName mkRootFieldName $
+              setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
+      catMaybes
+        <$> sequenceA
+          [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable tableInfo selectStreamName selectDesc
+          ]
 
 buildTableInsertMutationFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b
   ) =>
-  (SourceInfo b -> TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
   MkRootFieldName ->
   Scenario ->
-  SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
-  tCase <- asks getter
-  let -- insert in table
+buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario tableName tableInfo gqlName = do
+  sourceInfo :: SourceInfo b <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      -- insert in table
       insertName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfInsert mkInsertField gqlName
       -- insert one in table
       insertOneName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfInsertOne mkInsertOneField gqlName
 
-  insert <- insertIntoTable backendInsertAction scenario sourceInfo tableInfo insertName insertDesc
+  insert <- insertIntoTable backendInsertAction scenario tableInfo insertName insertDesc
   -- Select permissions are required for insertOne: the selection set is the
   -- same as a select on that table, and it therefore can't be populated if the
   -- user doesn't have select permissions.
-  insertOne <- insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo insertOneName insertOneDesc
+  insertOne <- insertOneIntoTable backendInsertAction scenario tableInfo insertOneName insertOneDesc
   pure $ catMaybes [insert, insertOne]
   where
     insertDesc = buildFieldDescription defaultInsertDesc $ _crfComment _tcrfInsert
@@ -256,71 +249,33 @@ buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario sour
     defaultInsertOneDesc = "insert a single row into the table: " <>> tableName
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
--- | This function is the basic building block for update mutations. It
+-- | This function implements the parsers for the basic, single batch, update mutations. It
 -- implements the mutation schema in the general shape described in
 -- @https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html@.
+-- (ie. update_<table> and update_<table>_by_pk root fields)
 --
--- Something that varies between backends is the @update operators@ that they
--- support (i.e. the schema fields @_set@, @_inc@, etc., see
--- <src/Hasura.Backends.Postgres.Instances.Schema.html#updateOperators Hasura.Backends.Postgres.Instances.Schema.updateOperators> for an example
--- implementation). Therefore, this function is parameterised over a monadic
--- action that produces the operators that the backend supports in the context
--- of some table and associated update permissions.
---
--- Apart from this detail, the rest of the arguments are the same as those
--- of @BackendSchema.@'Hasura.GraphQL.Schema.Backend.buildTableUpdateMutationFields'.
---
--- The suggested way to use this is like:
---
--- > instance BackendSchema MyBackend where
--- >   ...
--- >   buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields myBackendUpdateOperators
--- >   ...
-buildTableUpdateMutationFields ::
+-- Different backends can have different update types (single batch, multiple batches, etc),
+-- and so the parsed UpdateBatch needs to be embedded in the custom UpdateVariant defined
+-- by the backend, which is done by passing a function to this function.
+buildSingleBatchTableUpdateMutationFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b,
-    BackendTableSelectSchema b
+    BackendTableSelectSchema b,
+    BackendUpdateOperatorsSchema b
   ) =>
-  -- | an action that builds @BackendUpdate@ with the
-  -- backend-specific data needed to perform an update mutation
-  ( TableInfo b ->
-    SchemaT
-      r
-      m
-      (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
-  ) ->
-  MkRootFieldName ->
+  -- | Embed the UpdateBack in the backend-specific UpdateVariant
+  (UpdateBatch b (UpdateOperators b) (UnpreparedValue b) -> UpdateVariant b (UnpreparedValue b)) ->
   Scenario ->
-  -- | The source that the table lives in
-  SourceInfo b ->
-  -- | The name of the table being acted on
-  TableName b ->
   -- | table info
   TableInfo b ->
   -- | field display name
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableUpdateMutationFields mkBackendUpdate mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
-  tCase <- asks getter
-  backendUpdate <- mkBackendUpdate tableInfo
-  let -- update table
-      updateName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdate mkUpdateField gqlName
-      -- update table by pk
-      updatePKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdateByPk mkUpdateByPkField gqlName
-
-  update <- updateTable backendUpdate scenario sourceInfo tableInfo updateName updateDesc
-  -- Primary keys can only be tested in the `where` clause if a primary key
-  -- exists on the table and if the user has select permissions on all columns
-  -- that make up the key.
-  updateByPk <- updateTableByPk backendUpdate scenario sourceInfo tableInfo updatePKName updatePKDesc
+buildSingleBatchTableUpdateMutationFields mkSingleBatchUpdateVariant scenario tableInfo gqlName = do
+  update <- updateTable mkSingleBatchUpdateVariant scenario tableInfo gqlName
+  updateByPk <- updateTableByPk mkSingleBatchUpdateVariant scenario tableInfo gqlName
   pure $ catMaybes [update, updateByPk]
-  where
-    updateDesc = buildFieldDescription defaultUpdateDesc $ _crfComment _tcrfUpdate
-    updatePKDesc = buildFieldDescription defaultUpdatePKDesc $ _crfComment _tcrfUpdateByPk
-    defaultUpdateDesc = "update data of the table: " <>> tableName
-    defaultUpdatePKDesc = "update single row of the table: " <>> tableName
-    TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
 buildTableDeleteMutationFields ::
   forall b r m n.
@@ -330,23 +285,24 @@ buildTableDeleteMutationFields ::
   ) =>
   MkRootFieldName ->
   Scenario ->
-  SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableDeleteMutationFields mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
-  tCase <- asks getter
-  let -- delete from table
+buildTableDeleteMutationFields mkRootFieldName scenario tableName tableInfo gqlName = do
+  sourceInfo :: SourceInfo b <- asks getter
+  let customization = _siCustomization sourceInfo
+      tCase = _rscNamingConvention customization
+      -- delete from table
       deleteName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDelete mkDeleteField gqlName
       -- delete from table by pk
       deletePKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDeleteByPk mkDeleteByPkField gqlName
 
-  delete <- deleteFromTable scenario sourceInfo tableInfo deleteName deleteDesc
+  delete <- deleteFromTable scenario tableInfo deleteName deleteDesc
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select
   -- permissions.
-  deleteByPk <- deleteFromTableByPk scenario sourceInfo tableInfo deletePKName deletePKDesc
+  deleteByPk <- deleteFromTableByPk scenario tableInfo deletePKName deletePKDesc
   pure $ catMaybes [delete, deleteByPk]
   where
     deleteDesc = buildFieldDescription defaultDeleteDesc $ _crfComment _tcrfDelete

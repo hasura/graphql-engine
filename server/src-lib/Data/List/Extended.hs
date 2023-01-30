@@ -10,29 +10,33 @@ module Data.List.Extended
   )
 where
 
+import Data.Containers.ListUtils (nubOrd)
 import Data.Function (on)
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as Set
 import Data.Hashable (Hashable)
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
-import Data.Set qualified as S
 import Prelude
 
-duplicates :: (Eq a, Hashable a) => [a] -> Set.HashSet a
+duplicates :: Hashable a => [a] -> Set.HashSet a
 duplicates =
-  Set.fromList . Map.keys . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
+  Map.keysSet . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
 
+-- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log(n))@
+--   time and requires 'Ord' instances.
+-- >>> uniques [1,3,2,9,4,1,5,7,3,3,1,2,5,4,3,2,1,0]
+-- [0,1,2,3,4,5,7,9]
 uniques :: (Ord a) => [a] -> [a]
-uniques = S.toList . S.fromList
+uniques = nubOrd
 
-getDifference :: (Eq a, Hashable a) => [a] -> [a] -> Set.HashSet a
+getDifference :: Hashable a => [a] -> [a] -> Set.HashSet a
 getDifference = Set.difference `on` Set.fromList
 
-getDifferenceOn :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [v]
+getDifferenceOn :: Hashable k => (v -> k) -> [v] -> [v] -> [v]
 getDifferenceOn f l = Map.elems . Map.differenceOn f l
 
-getOverlapWith :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
+getOverlapWith :: Hashable k => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlapWith getKey left right =
   Map.elems $ Map.intersectionWith (,) (mkMap left) (mkMap right)
   where

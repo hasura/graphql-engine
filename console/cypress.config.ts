@@ -2,7 +2,14 @@ import { defineConfig } from 'cypress';
 
 import * as customTasks from './cypress/support/tasks';
 
-export default defineConfig({
+type ConfigOptions = Parameters<typeof defineConfig>[0];
+interface MyConfigOptions extends ConfigOptions {
+  useRelativeSnapshots?: boolean;
+}
+
+const myDefineConfig = (config: MyConfigOptions) => defineConfig(config);
+
+export default myDefineConfig({
   env: {
     TEST_MODE: 'parallel',
     MIGRATE_URL: 'http://localhost:9693/apis/migrate',
@@ -29,4 +36,5 @@ export default defineConfig({
       'cypress/support/**/*unit.test.{js,ts}',
     ],
   },
+  useRelativeSnapshots: true,
 });

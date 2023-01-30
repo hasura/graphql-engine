@@ -1,6 +1,5 @@
 import {
   getElementFromAlias,
-  baseUrl,
   getCustomFunctionName,
   getSchema,
   dropTable,
@@ -15,6 +14,7 @@ import {
   createVolatileFunction,
   dropTableIfExists,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import {
   dataRequest,

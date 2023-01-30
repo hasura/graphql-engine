@@ -1,8 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Relationships.Remote
-  ( RemoteRelationship (..),
+  ( RemoteRelationship,
     RemoteRelationshipDefinition (..),
     parseRemoteRelationshipDefinition,
     RRFormat (..),
@@ -23,38 +24,31 @@ module Hasura.RQL.Types.Relationships.Remote
   )
 where
 
-import Control.Lens (makeLenses, makePrisms)
+import Autodocodec (HasCodec (codec), JSONCodec, dimapCodec, disjointEitherCodec, requiredField', requiredFieldWith')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (hashSetCodec)
+import Control.Lens (makePrisms)
 import Data.Aeson
-import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser)
 import Data.HashMap.Strict qualified as HM
+import Data.Text.Extended (ToTxt (toTxt))
 import GHC.TypeLits (ErrorMessage (..), TypeError)
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.Relationships.ToSource
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 
---------------------------------------------------------------------------------
--- metadata
+type RemoteRelationship = RemoteRelationshipG RemoteRelationshipDefinition
 
--- | Metadata representation of a generic remote relationship, regardless of the
--- source: all sources use this same agnostic definition. The internal
--- definition field is where we differentiate between different targets.
-data RemoteRelationship = RemoteRelationship
-  { _rrName :: RelName,
-    _rrDefinition :: RemoteRelationshipDefinition
-  }
-  deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteRelationship
+instance HasCodec RemoteRelationship where
+  codec = remoteRelationshipCodec $ remoteRelationshipDefinitionCodec RRPLenient
 
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "RemoteRelationship" $ \obj ->
@@ -73,8 +67,6 @@ data RRFormat
     RRFUnifiedFormat
   deriving (Show, Eq, Generic)
 
-instance Cacheable RRFormat
-
 -- | Metadata representation of the internal definition of a remote relationship.
 data RemoteRelationshipDefinition
   = -- | Remote relationship targetting a source.
@@ -82,8 +74,6 @@ data RemoteRelationshipDefinition
   | -- | Remote relationship targetting a remote schema.
     RelationshipToSchema RRFormat ToSchemaRelationshipDef
   deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteRelationshipDefinition
 
 -- See documentation for 'parseRemoteRelationshipDefinition' for why
 -- this is necessary.
@@ -106,6 +96,42 @@ data RRParseMode
   | -- | Reject legacy fields when parsing 'RemoteRelationshipDefinition'
     RRPStrict
   deriving (Show, Eq, Generic)
+
+remoteRelationshipDefinitionCodec :: RRParseMode -> JSONCodec RemoteRelationshipDefinition
+remoteRelationshipDefinitionCodec mode =
+  dimapCodec
+    (either RelationshipToSource (uncurry RelationshipToSchema))
+    ( \case
+        RelationshipToSource source -> Left source
+        RelationshipToSchema format schema -> Right (format, schema)
+    )
+    $ disjointEitherCodec toSource toSchema
+  where
+    toSource = AC.object "RelationshipToSource" $ requiredField' "to_source"
+
+    toSchema :: JSONCodec (RRFormat, ToSchemaRelationshipDef)
+    toSchema = case mode of
+      RRPLegacy -> dimapCodec (RRFOldDBToRemoteSchema,) snd toSchemaOldDBFormat
+      RRPStrict -> dimapCodec (RRFUnifiedFormat,) snd toSchemaUnified
+      RRPLenient ->
+        dimapCodec
+          (either (RRFUnifiedFormat,) (RRFOldDBToRemoteSchema,)) -- decoding
+          ( \case
+              (RRFUnifiedFormat, l) -> Left l
+              (RRFOldDBToRemoteSchema, r) -> Right r
+          )
+          $ disjointEitherCodec toSchemaUnified toSchemaOldDBFormat
+
+    toSchemaUnified :: JSONCodec ToSchemaRelationshipDef
+    toSchemaUnified = AC.object "RelationshipToSchema" $ requiredField' "to_remote_schema"
+
+    toSchemaOldDBFormat :: JSONCodec ToSchemaRelationshipDef
+    toSchemaOldDBFormat =
+      AC.object "ToSchemaRelationshipDefLegacyFormat" $
+        ToSchemaRelationshipDef
+          <$> requiredField' "remote_schema" AC..= _trrdRemoteSchema
+          <*> requiredFieldWith' "hasura_fields" hashSetCodec AC..= _trrdLhsFields
+          <*> requiredField' "remote_field" AC..= _trrdRemoteField
 
 -- | Parse 'RemoteRelationshipDefinition' letting the caller decide how lenient to be.
 --
@@ -223,8 +249,6 @@ data RemoteFieldInfo lhsJoinField = RemoteFieldInfo
   }
   deriving (Generic, Eq)
 
-instance (Cacheable lhsJoinField) => Cacheable (RemoteFieldInfo lhsJoinField)
-
 instance (ToJSON lhsJoinField) => ToJSON (RemoteFieldInfo lhsJoinField)
 
 -- | Resolved remote relationship's RHS
@@ -232,8 +256,6 @@ data RemoteFieldInfoRHS
   = RFISchema RemoteSchemaFieldInfo
   | RFISource (AnyBackend RemoteSourceFieldInfo)
   deriving (Generic, Eq)
-
-instance Cacheable RemoteFieldInfoRHS
 
 instance ToJSON RemoteFieldInfoRHS where
   toJSON =
@@ -250,8 +272,6 @@ data DBJoinField (b :: BackendType)
 deriving instance Backend b => Eq (DBJoinField b)
 
 deriving instance Backend b => Show (DBJoinField b)
-
-instance Backend b => Cacheable (DBJoinField b)
 
 instance Backend b => Hashable (DBJoinField b)
 
@@ -275,8 +295,6 @@ deriving instance Backend b => Eq (ScalarComputedField b)
 
 deriving instance Backend b => Show (ScalarComputedField b)
 
-instance Backend b => Cacheable (ScalarComputedField b)
-
 instance Backend b => Hashable (ScalarComputedField b)
 
 instance Backend b => ToJSON (ScalarComputedField b) where
@@ -288,9 +306,12 @@ instance Backend b => ToJSON (ScalarComputedField b) where
         "type" .= _scfType
       ]
 
+-- TODO: this will probably end up in a database module when we
+-- modularise databases related code
+tableNameToLHSIdentifier :: (Backend b) => TableName b -> LHSIdentifier
+tableNameToLHSIdentifier = LHSIdentifier . toTxt
+
 --------------------------------------------------------------------------------
 -- template haskell generation
 
-$(makeLenses ''RemoteRelationship)
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationship)
 $(makePrisms ''RemoteRelationshipDefinition)

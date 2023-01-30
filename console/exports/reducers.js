@@ -10,3 +10,4 @@ export { modalReducer } from '../src/store/modal/modal.reducer';
 
 export { metadataReducer } from '../src/metadata/reducer';
 export { default as mainReducer } from '../src/components/Main/Actions';
+export { notificationsReducer } from '../src/components/Services/Common/notifications.reducer';

@@ -30,6 +30,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
+import Hasura.SQL.Tag (backendTag, reify)
 import Hasura.Session
 import Refined (unrefine)
 
@@ -80,8 +82,9 @@ pollLiveQuery ::
   MultiplexedQuery b ->
   CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
+  ResolvedConnectionTemplate b ->
   IO ()
-pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook = do
+pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -96,7 +99,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
-      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query $ over (each . _2) C._csVariables cohorts
+      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
 
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
@@ -118,8 +121,16 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
                 _cedResponseSize = snd <$> respData,
                 _cedBatchId = batchId
               }
+
+      -- Note: We want to keep the '_bedPgExecutionTime' field for backwards
+      -- compatibility reason, which will be 'Nothing' for non-PG backends. See
+      -- https://hasurahq.atlassian.net/browse/GS-329
+      let pgExecutionTime = case reify (backendTag @b) of
+            Postgres Vanilla -> Just queryExecutionTime
+            _ -> Nothing
       pure $
         BatchExecutionDetails
+          pgExecutionTime
           queryExecutionTime
           pushTime
           batchId
@@ -131,6 +142,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
   let pollDetails =
         PollDetails
           { _pdPollerId = pollerId,
+            _pdKind = LiveQuery,
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
             _pdBatches = batchesDetails,

@@ -1,7 +1,7 @@
 ---
-sidebar_label: Creating an event trigger
+sidebar_label: Create an Event Trigger
 sidebar_position: 1
-description: Create an event trigger with Hasura
+description: Create an Event Trigger with Hasura
 keywords:
   - hasura
   - docs
@@ -12,25 +12,27 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
-import TOCInline from '@theme/TOCInline';
 
-# Creating an event trigger
+# Create an Event Trigger
 
 ## Introduction
 
-Event triggers can be created using the Hasura console, CLI or metadata APIs.
+Event Triggers can be created using the Hasura Console, Hasura CLI, or Metadata APIs. Currently, support for event
+triggers exists for Postgres and MSSQL databases.
 
-<Tabs className="api-tabs">
+## Creating triggers
+
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Hasura console, head to the `Events` tab and click on the `Create` button to open the page below:
+Open the Hasura Console, head to the `Events` tab and click on the `Create` button to open the page below:
 
-<Thumbnail src='/img/event-triggers/create-event-trigger.png' alt='Create an event trigger' />
+<Thumbnail src="/img/event-triggers/create-event-trigger.png" alt="Create an Event Trigger" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can add an event trigger for a table by updating the `databases > [source-name] > tables > [table-name].yaml` file
+You can add an Event Trigger for a table by updating the `databases > [source-name] > tables > [table-name].yaml` file
 inside the `metadata` directory:
 
 ```yaml {4-12}
@@ -48,7 +50,7 @@ event_triggers:
    webhook: https://httpbin.org/post
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -57,8 +59,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-Add an event trigger by using the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+You can create Event Triggers by using the appropriate Metadata API, either:
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+To create an Event Trigger via the the Metadata API, replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -66,7 +74,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type" : "pg_create_event_trigger",
+   "type" : "<db_type_create_event_trigger>",
    "args" : {
       "name": "author_trigger",
       "source": "<db_name>",
@@ -88,19 +96,25 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-## Parameters
+:::info Note
+
+UPDATE Event Trigger for MSSQL will only work on tables that have a primary key.
+
+:::
+
+### Parameters
 
 **Trigger Name**
 
-Unique name for event trigger.
+Unique name for Event Trigger.
 
 **Schema/Table**
 
-The postgres schema and table name on which the event trigger needs to be created.
+The postgres schema and table name on which the Event Trigger needs to be created.
 
 **Trigger Operations**
 
-The table operation on which the event trigger will be invoked.
+The table operation on which the Event Trigger will be invoked.
 
 **Webhook URL**
 
@@ -111,13 +125,11 @@ before using it for this configuration_).
 :::info Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the webhook. See
-[this page](/guides/docker-networking.mdx) for Docker networking.
+[this page](/deployment/deployment-guides/docker.mdx#docker-networking) for Docker networking.
 
 :::
 
 ## Advanced Settings
-
-<TOCInline toc={toc} filterTOC={'advanced-settings'} />
 
 ### Listen columns for update
 
@@ -126,20 +138,20 @@ Choose the columns here which you want the update operation to listen to.
 
 If a column is not selected here, then an update to that column will not trigger the webhook.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an Event Trigger:
 
 <Thumbnail
-  src='/img/event-triggers/create-event-trigger-listen-columns.png'
-  alt='Listen columns for update event triggers'
+  src="/img/event-triggers/create-event-trigger-listen-columns.png"
+  alt="Listen columns for update Event Triggers"
 />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for Event Triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {10-13}
 - table:
@@ -158,7 +170,7 @@ You can configure advanced settings for event triggers in the `tables.yaml` file
       webhook: https://httpbin.org/post
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -167,8 +179,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+You can configure advanced settings via the appropriate Metadata API using either
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+Replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http {18-20}
 POST /v1/metadata HTTP/1.1
@@ -176,7 +194,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_create_event_trigger",
+   "type" : "<db_type_create_event_trigger>",
    "args": {
       "name": "author_trigger",
       "source": "<db_name>",
@@ -222,19 +240,19 @@ Retry configuration is available in the "Advanced settings" when you create a tr
 2. `interval_sec`: Number of seconds after which a failed invocation is retried. Default value is **10**.
 3. `timeout_sec`: Number of seconds before which client closes the connection to the webhook. Default value is **60**.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an Event Trigger:
 
 <Thumbnail
    src="/img/event-triggers/create-event-trigger-retry.png"
-   alt="Retry settings for event triggers"
+   alt="Retry settings for Event Triggers"
 />
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for Event Triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {12-15}
 - table:
@@ -260,7 +278,7 @@ You can configure advanced settings for event triggers in the `tables.yaml` file
       webhook: https://httpbin.org/post
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -269,8 +287,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+Again, you can configure advanced settings via the appropriate Metadata API, either:
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+Replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http {21-25}
 POST /v1/metadata HTTP/1.1
@@ -278,7 +302,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_create_event_trigger",
+   "type": "<db_type_create_event_trigger>",
    "args": {
       "name": "author_trigger",
       "source": "<db_name>",
@@ -313,34 +337,44 @@ X-Hasura-Role: admin
 }
 ```
 
+:::info Note
+
+Event Triggers are supported for Postgres and MSSQL databases. To create an Event Trigger via the the Metadata API,
+replace `<db_type>` with the following:
+
+- **Postgres**: `pg`
+- **MSSQL**: `mssql`
+
+:::
+
 </TabItem>
 </Tabs>
 
 ### Headers
 
-Custom headers can be added to an event trigger. Each webhook request will have these headers added.
+Custom headers can be added to an Event Trigger. Each webhook request will have these headers added.
 
 Each header has 3 parameters:
 
 1. `Key`: Name of the header e.g. Authorization or X-My-Header.
 2. `Type`: One of `static` or `from env variable`. `static` means the value provided in the `Value` field is the raw
    value of the header. `from env variable` means the value provided in the `Value` field is the name of the environment
-   variable in the GraphQL engine which will be resolved before sending the header.
+   variable in the GraphQL Engine which will be resolved before sending the header.
 3. `Value`: The value of the header. Either a static value or the name of an environment variable.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an Event Trigger:
 
 <Thumbnail
    src="/img/event-triggers/create-event-trigger-headers.png"
-   alt="Headers for event triggers"
+   alt="Headers for Event Triggers"
 />
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for Event Triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {16-20}
 - table:
@@ -366,7 +400,7 @@ You can configure advanced settings for event triggers in the `tables.yaml` file
       webhook: https://httpbin.org/post
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -375,8 +409,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+You can configure advanced settings via the appropriate Metadata API, either:
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+Replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http {26-35}
 POST /v1/metadata HTTP/1.1
@@ -384,7 +424,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_create_event_trigger",
+   "type": "<db_type_create_event_trigger>",
    "args": {
       "name": "author_trigger",
       "source": "<db_name>",

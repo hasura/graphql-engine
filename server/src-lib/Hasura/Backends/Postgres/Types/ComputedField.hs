@@ -18,7 +18,6 @@ import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.Function
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Function
 
@@ -32,8 +31,6 @@ data ComputedFieldDefinition = ComputedFieldDefinition
 instance NFData ComputedFieldDefinition
 
 instance Hashable ComputedFieldDefinition
-
-instance Cacheable ComputedFieldDefinition
 
 instance ToJSON ComputedFieldDefinition where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -51,8 +48,6 @@ data FunctionTableArgument
       Int
       -- ^ argument index
   deriving (Show, Eq, Generic)
-
-instance Cacheable FunctionTableArgument
 
 instance NFData FunctionTableArgument
 
@@ -72,8 +67,6 @@ data FunctionSessionArgument
       -- ^ The ordinal position in the function input parameters
   deriving (Show, Eq, Generic)
 
-instance Cacheable FunctionSessionArgument
-
 instance NFData FunctionSessionArgument
 
 instance Hashable FunctionSessionArgument
@@ -91,8 +84,6 @@ instance NFData ComputedFieldImplicitArguments
 
 instance Hashable ComputedFieldImplicitArguments
 
-instance Cacheable ComputedFieldImplicitArguments
-
 instance ToJSON ComputedFieldImplicitArguments where
   toJSON = genericToJSON hasuraJSON
 
@@ -109,8 +100,6 @@ data ComputedFieldReturn
   = CFRScalar PGScalarType
   | CFRSetofTable QualifiedTable
   deriving (Show, Eq, Generic)
-
-instance Cacheable ComputedFieldReturn
 
 instance NFData ComputedFieldReturn
 

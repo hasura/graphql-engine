@@ -25,6 +25,8 @@ module Hasura.Session
     mkUserInfo,
     adminUserInfo,
     BackendOnlyFieldAccess (..),
+    ExtraUserInfo (..),
+    maybeRoleFromSessionVariables,
   )
 where
 
@@ -39,7 +41,6 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
-import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Server.Utils
 import Hasura.Tracing (TraceT)
@@ -59,8 +60,7 @@ newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
       PG.FromCol,
       PG.ToPrepArg,
       Generic,
-      NFData,
-      Cacheable
+      NFData
     )
 
 instance HasCodec RoleName where
@@ -82,7 +82,7 @@ adminRoleName :: RoleName
 adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
-  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData, Ord)
+  deriving (Show, Eq, Hashable, IsString, Data, NFData, Ord)
 
 instance ToJSON SessionVariable where
   toJSON = toJSON . CI.original . unSessionVariable
@@ -204,6 +204,10 @@ instance (UserInfoM m) => UserInfoM (StateT s m) where
 instance (UserInfoM m) => UserInfoM (TraceT m) where
   askUserInfo = lift askUserInfo
 
+-- | extra information used to identify a Hasura User
+data ExtraUserInfo = ExtraUserInfo {_euiUserId :: Maybe Text}
+  deriving (Show, Eq, Generic)
+
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo
 
@@ -229,7 +233,8 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables ->
       onNothing maybeSessionRole $
-        throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
+        throw400 InvalidParams $
+          userRoleHeader <> " not found in session variables"
     URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
     URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess

@@ -1,18 +1,3 @@
-- description: PG add source
-  url: /v1/metadata
-  status: 200
-  query:
-    type: pg_add_source
-    args:
-      name: postgres
-      configuration:
-        connection_info:
-          database_url:
-              from_env: HASURA_GRAPHQL_PG_SOURCE_URL_2
-          pool_settings:
-            max_connections: 50
-            idle_timeout: 180
-
 - description: Create the schema for database
   url: /v2/query
   status: 200
@@ -21,8 +6,6 @@
     args:
       source: postgres
       sql: |
-        drop schema if exists hge_tests cascade; create schema hge_tests;
-
         create table hge_tests.test_t1(
             c1 int,
             c2 text

@@ -3,6 +3,8 @@ package source
 import (
 	"fmt"
 	"sort"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 // Direction is either up or down.
@@ -52,8 +54,9 @@ func NewMigrations() *Migrations {
 }
 
 func (i *Migrations) Append(m *Migration) (err error) {
+	var op errors.Op = "source.Migrations.Append"
 	if m == nil {
-		return fmt.Errorf("migration cannot be nill")
+		return errors.E(op, fmt.Errorf("migration cannot be nill"))
 	}
 
 	if i.Migrations[m.Version] == nil {
@@ -62,7 +65,7 @@ func (i *Migrations) Append(m *Migration) (err error) {
 
 	// reject duplicate versions
 	if migration, dup := i.Migrations[m.Version][m.Direction]; dup {
-		return fmt.Errorf("found duplicate migrations for version %d\n- %s\n- %s", m.Version, m.Raw, migration.Raw)
+		return errors.E(op, fmt.Errorf("found duplicate migrations for version %d\n- %s\n- %s", m.Version, m.Raw, migration.Raw))
 	}
 
 	i.Migrations[m.Version][m.Direction] = m

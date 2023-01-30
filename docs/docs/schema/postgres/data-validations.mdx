@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Data validations
+# Postgres: Data Validations
 
 ## Introduction
 
@@ -48,12 +48,12 @@ author (id uuid, name text, rating integer)
 
 We can now add a check constraint to limit the `rating` values as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the `Modify` tab in the table page and add a check constraint in the `Check Constraints` section:
 
-<Thumbnail src='/img/schema/validation-add-check-constraint.png' alt='Add check constraint' />
+<Thumbnail src="/img/schema/validation-add-check-constraint.png" alt="Add check constraint" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -146,10 +146,10 @@ an article's content exceeds a certain number of words, and then add a
 [Postgres trigger](https://www.postgresql.org/docs/current/sql-createtrigger.html) that will call this function every
 time before an article is inserted or updated.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-- Head to the `Data -> SQL` section of the Hasura console
+- Head to the `Data -> SQL` section of the Hasura Console
 - Enter the SQL statement below to create a Postgres function and trigger
 - Hit the `Run` button
 
@@ -200,7 +200,7 @@ BEGIN
 
   -- throw an error if article content is too long
   IF content_length > 100 THEN
-      RAISE EXCEPTION 'Content can not have more than 100 words';
+      RAISE EXCEPTION USING ERRCODE= '22000', MESSAGE= 'Content can not have more than 100 words';
   END IF;
 
   -- return the article row if no error
@@ -232,16 +232,10 @@ Now, if we try to insert an article whose content has more than 100 words, we'll
     {
       "message": "postgres query error",
       "extensions": {
-        "internal": {
-          "error": {
-            "exec_status": "FatalError",
-            "message": "Content can not have more than 100 words",
-            "status_code": "P0001",
-          },
-        },
-        "path": "$.selectionSet.insert_article.args.objects",
-        "code": "unexpected"
-      }
+        "path": "$",
+        "code": "data-exception"
+      },
+      "message": "Content can not have more than 100 words"
     }
   ]
 }`}
@@ -265,10 +259,10 @@ article (id uuid, title text, content text, author_id uuid)
 
 Now, we can create a role `user` and add an insert validation rule as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src='/img/schema/validation-not-empty.png' alt='validation using permission: title cannot be empty' />
+<Thumbnail src="/img/schema/validation-not-empty.png" alt="validation using permission: title cannot be empty" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -287,7 +281,7 @@ You can add roles and permissions in the `tables.yaml` file inside the `metadata
             _ne: ''
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -369,12 +363,12 @@ article.author_id -> author.id
 
 Now, we can create a role `user` and add an insert validation rule as follows:
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 <Thumbnail
-  src='/img/schema/validation-author-isactive.png'
-  alt='validation using permissions: author should be active'
+  src="/img/schema/validation-author-isactive.png"
+  alt="validation using permissions: author should be active"
 />
 
 </TabItem>
@@ -395,7 +389,7 @@ You can add roles and permissions in the `tables.yaml` file inside the `metadata
               _eq: true
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -482,9 +476,9 @@ to check with this service if they are deny-listed or not.
 The validation process looks as follows:
 
 <Thumbnail
-  src='/img/schema/diagram-actions-data-validation.png'
-  alt='validation using actions: article not deny-listed'
-  width='60%'
+  src="/img/schema/diagram-actions-data-validation.png"
+  alt="validation using actions: article not deny-listed"
+  width="60%"
 />
 
 Actions allow us to define [custom types](/actions/types.mdx) in our GraphQL schema.

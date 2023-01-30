@@ -59,18 +59,18 @@ execPGDump b ci = do
 
     clean str
       | prbCleanOutput b =
-        unlines $ filter (not . shouldDropLine) (lines str)
+          unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 
     shouldDropLine line =
       -- delete empty lines
       all isSpace line
         -- delete comments
-        || "--" `L.isPrefixOf` line
+        || ("--" `L.isPrefixOf` line)
         -- delete front matter
-        || line `elem` preambleLines
+        || (line `elem` preambleLines)
         -- delete notify triggers
-        || eventTriggerRegex `TDFA.match` line
+        || (eventTriggerRegex `TDFA.match` line)
 
     preambleLines =
       [ "SET statement_timeout = 0;",

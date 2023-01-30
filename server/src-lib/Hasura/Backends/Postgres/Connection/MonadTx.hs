@@ -12,7 +12,6 @@
 -- information.
 module Hasura.Backends.Postgres.Connection.MonadTx
   ( MonadTx (..),
-    runTx,
     runTxWithCtx,
     runQueryTx,
     withUserInfo,
@@ -70,20 +69,6 @@ instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
 instance (MonadIO m) => MonadTx (PG.TxET QErr m) where
   liftTx = hoist liftIO
 
--- | Executes the given query in a transaction of the specified
--- mode, within the provided PGExecCtx.
-runTx ::
-  ( MonadIO m,
-    MonadBaseControl IO m
-  ) =>
-  PGExecCtx ->
-  PG.TxAccess ->
-  PG.TxET QErr m a ->
-  ExceptT QErr m a
-runTx pgExecCtx = \case
-  PG.ReadOnly -> _pecRunReadOnly pgExecCtx
-  PG.ReadWrite -> _pecRunReadWrite pgExecCtx
-
 runTxWithCtx ::
   ( MonadIO m,
     MonadBaseControl IO m,
@@ -92,15 +77,16 @@ runTxWithCtx ::
     UserInfoM m
   ) =>
   PGExecCtx ->
-  PG.TxAccess ->
+  PGExecTxType ->
+  PGExecFrom ->
   PG.TxET QErr m a ->
   m a
-runTxWithCtx pgExecCtx txAccess tx = do
+runTxWithCtx pgExecCtx pgExecTxType pgExecFrom tx = do
   traceCtx <- Tracing.currentContext
   userInfo <- askUserInfo
   liftEitherM $
     runExceptT $
-      runTx pgExecCtx txAccess $
+      (_pecRunTx pgExecCtx) (PGExecCtxInfo pgExecTxType pgExecFrom) $
         withTraceContext traceCtx $
           withUserInfo userInfo tx
 
@@ -111,10 +97,12 @@ runQueryTx ::
     MonadError QErr m
   ) =>
   PGExecCtx ->
+  PGExecFrom ->
   PG.TxET QErr IO a ->
   m a
-runQueryTx pgExecCtx tx =
-  liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
+runQueryTx pgExecCtx pgExecFrom tx = do
+  let pgExecCtxInfo = PGExecCtxInfo NoTxRead pgExecFrom
+  liftEither =<< liftIO (runExceptT $ (_pecRunTx pgExecCtx) pgExecCtxInfo tx)
 
 setHeadersTx :: (MonadIO m) => SessionVariables -> PG.TxET QErr m ()
 setHeadersTx session = do
@@ -217,13 +205,30 @@ enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
       where
         needsPGCryptoError e@(PG.PGTxErr _ _ _ err) =
           case err of
-            PG.PGIUnexpected _ -> requiredError
+            PG.PGIUnexpected _ -> requiredError e
             PG.PGIStatement pgErr -> case PG.edStatusCode pgErr of
               Just "42501" -> err500 PostgresError permissionsMessage
-              _ -> requiredError
+              Just "P0001" -> requiredError (addHintForExtensionError pgErr)
+              _ -> requiredError e
           where
-            requiredError =
-              (err500 PostgresError requiredMessage) {qeInternal = Just $ ExtraInternal $ toJSON e}
+            addHintForExtensionError pgErrDetail =
+              e
+                { PG.pgteError =
+                    PG.PGIStatement $
+                      PG.PGStmtErrDetail
+                        { PG.edExecStatus = PG.edExecStatus pgErrDetail,
+                          PG.edStatusCode = PG.edStatusCode pgErrDetail,
+                          PG.edMessage =
+                            liftA2
+                              (<>)
+                              (PG.edMessage pgErrDetail)
+                              (Just ". Hint: You can set \"extensions_schema\" to provide the schema to install the extensions. Refer to the documentation here: https://hasura.io/docs/latest/deployment/postgres-requirements/#pgcrypto-in-pg-search-path"),
+                          PG.edDescription = PG.edDescription pgErrDetail,
+                          PG.edHint = PG.edHint pgErrDetail
+                        }
+                }
+            requiredError pgTxErr =
+              (err500 PostgresError requiredMessage) {qeInternal = Just $ ExtraInternal $ toJSON pgTxErr}
             requiredMessage =
               "pgcrypto extension is required, but it could not be created;"
                 <> " encountered unknown postgres error"

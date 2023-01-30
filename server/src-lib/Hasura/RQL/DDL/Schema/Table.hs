@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Table
@@ -23,6 +24,7 @@ module Hasura.RQL.DDL.Schema.Table
 where
 
 import Control.Arrow.Extended
+import Control.Arrow.Interpret
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
@@ -32,6 +34,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
+import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
 import Data.These (These (..))
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
@@ -40,7 +43,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.GraphQL.Schema.Common (textToName)
+import Hasura.GraphQL.Schema.Common (textToGQLIdentifier)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -58,7 +61,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -87,14 +90,17 @@ instance (Backend b) => FromJSON (TrackTable b) where
           <*> o .:? "apollo_federation_config"
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing
 
-data SetTableIsEnum = SetTableIsEnum
+data SetTableIsEnum b = SetTableIsEnum
   { stieSource :: SourceName,
-    stieTable :: QualifiedTable,
+    stieTable :: TableName b,
     stieIsEnum :: Bool
   }
-  deriving (Show, Eq)
 
-instance FromJSON SetTableIsEnum where
+deriving instance Eq (TableName b) => Eq (SetTableIsEnum b)
+
+deriving instance Show (TableName b) => Show (SetTableIsEnum b)
+
+instance Backend b => FromJSON (SetTableIsEnum b) where
   parseJSON = withObject "SetTableIsEnum" $ \o ->
     SetTableIsEnum
       <$> o .:? "source" .!= defaultSource
@@ -134,10 +140,12 @@ trackExistingTableOrViewP1 ::
 trackExistingTableOrViewP1 source tableName = do
   sourceInfo <- askSourceInfo source
   when (isTableTracked @b sourceInfo tableName) $
-    throw400 AlreadyTracked $ "view/table already tracked: " <>> tableName
+    throw400 AlreadyTracked $
+      "view/table already tracked: " <>> tableName
   let functionName = tableToFunction @b tableName
   when (isJust $ Map.lookup functionName $ _siFunctions @b sourceInfo) $
-    throw400 NotSupported $ "function with name " <> tableName <<> " already exists"
+    throw400 NotSupported $
+      "function with name " <> tableName <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
 -- an internal introspection
@@ -206,7 +214,8 @@ checkConflictingNode sc tnGQL = do
             Just ns ->
               when (tnGQL `elem` ns) $
                 throw400 RemoteSchemaConflicts $
-                  "node " <> tnGQL
+                  "node "
+                    <> tnGQL
                     <> " already exists in current graphql schema"
         _ -> pure ()
 
@@ -236,8 +245,8 @@ trackExistingTableOrViewP2 source tableName isEnum config apolloFedConfig = do
         AB.mkAnyBackend $
           SMOTable @b tableName
     )
-    $ MetadataModifier $
-      metaSources . ix source . toSourceMetadata . smTables %~ OMap.insert tableName metadata
+    $ MetadataModifier
+    $ metaSources . ix source . toSourceMetadata . smTables %~ OMap.insert tableName metadata
   pure successMsg
 
 runTrackTableQ ::
@@ -270,13 +279,13 @@ runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum apolloFedConfig) con
   trackExistingTableOrViewP1 @b source qt
   trackExistingTableOrViewP2 @b source qt isEnum config apolloFedConfig
 
-runSetExistingTableIsEnumQ :: (MonadError QErr m, CacheRWM m, MetadataM m) => SetTableIsEnum -> m EncJSON
+runSetExistingTableIsEnumQ :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => SetTableIsEnum b -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
-  void $ askTableInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
+  void $ askTableInfo @b source tableName -- assert that table is tracked
   buildSchemaCacheFor
-    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
-    $ MetadataModifier $
-      tableMetadataSetter @('Postgres 'Vanilla) source tableName . tmIsEnum .~ isEnum
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b tableName)
+    $ MetadataModifier
+    $ tableMetadataSetter @b source tableName . tmIsEnum .~ isEnum
   return successMsg
 
 data SetTableCustomization b = SetTableCustomization
@@ -317,21 +326,21 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
   let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnConfig Nothing Automatic
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
-    $ MetadataModifier $
-      tableMetadataSetter source tableName . tmConfiguration .~ tableConfig
+    $ MetadataModifier
+    $ tableMetadataSetter source tableName . tmConfiguration .~ tableConfig
   return successMsg
 
 runSetTableCustomization ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetTableCustomization b ->
   m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
   void $ askTableInfo @b source table
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b table)
-    $ MetadataModifier $
-      tableMetadataSetter source table . tmConfiguration .~ config
+    $ MetadataModifier
+    $ tableMetadataSetter source table . tmConfiguration .~ config
   return successMsg
 
 unTrackExistingTableOrViewP1 ::
@@ -408,7 +417,7 @@ buildTableCache ::
   forall arr m b.
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq CollectedInfo) arr,
+    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
     MonadBaseControl IO m,
@@ -419,50 +428,46 @@ buildTableCache ::
     DBTablesMetadata b,
     [TableBuildInput b],
     Inc.Dependency Inc.InvalidationKey,
+    Maybe (BackendIntrospection b),
     NamingCase
   )
     `arr` Map.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase) -> do
+buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, sourceIntrospection, tCase) -> do
   rawTableInfos <-
     (|
       Inc.keyed
-        (|
-          withTable
-            ( \tables -> do
-                table <- noDuplicateTables -< tables
-                let maybeInfo = Map.lookup (_tbiName table) dbTablesMeta
-                buildRawTableInfo -< (table, maybeInfo, sourceConfig, reloadMetadataInvalidationKey)
-            )
-        |)
-      |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
-  let rawTableCache = removeSourceInKey $ catMaybes rawTableInfos
+        ( \tableName tables ->
+            (|
+              withRecordInconsistency
+                ( do
+                    table <- noDuplicateTables -< tables
+                    case Map.lookup (_tbiName table) dbTablesMeta of
+                      Nothing ->
+                        throwA
+                          -<
+                            err400 NotExists $ "no such table/view exists in source: " <>> _tbiName table
+                      Just metadataTable ->
+                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey, biEnumValues <$> sourceIntrospection)
+                )
+            |) (mkTableMetadataObject source tableName)
+        )
+      |) (Map.groupOnNE _tbiName tableBuildInputs)
+  let rawTableCache = catMaybes rawTableInfos
       enumTables = flip mapMaybe rawTableCache \rawTableInfo ->
         (,,) <$> _tciPrimaryKey rawTableInfo <*> pure (_tciCustomConfig rawTableInfo) <*> _tciEnumValues rawTableInfo
   tableInfos <-
-    (|
-      Inc.keyed
-        (| withTable (\table -> processTableInfo -< (enumTables, table, tCase)) |)
-      |) (withSourceInKey source rawTableCache)
-  returnA -< removeSourceInKey (catMaybes tableInfos)
+    interpretWriter
+      -< for rawTableCache \table -> withRecordInconsistencyM (mkTableMetadataObject source (_tciName table)) do
+        processTableInfo enumTables table tCase
+  returnA -< catMaybes tableInfos
   where
-    withSourceInKey :: (Eq k, Hashable k) => SourceName -> HashMap k v -> HashMap (SourceName, k) v
-    withSourceInKey source = mapKeys (source,)
-
-    removeSourceInKey :: (Eq k, Hashable k) => HashMap (SourceName, k) v -> HashMap k v
-    removeSourceInKey = mapKeys snd
-
-    withTable :: ErrorA QErr arr (e, s) a -> arr (e, ((SourceName, TableName b), s)) (Maybe a)
-    withTable f =
-      withRecordInconsistency f
-        <<< second
-          ( first $ arr \(source, name) ->
-              MetadataObject
-                ( MOSourceObjId source $
-                    AB.mkAnyBackend $
-                      SMOTable @b name
-                )
-                (toJSON name)
-          )
+    mkTableMetadataObject source name =
+      MetadataObject
+        ( MOSourceObjId source $
+            AB.mkAnyBackend $
+              SMOTable @b name
+        )
+        (toJSON name)
 
     noDuplicateTables = proc tables -> case tables of
       table :| [] -> returnA -< table
@@ -474,35 +479,30 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         QErr
         arr
         ( TableBuildInput b,
-          Maybe (DBTableMetadata b),
+          DBTableMetadata b,
           SourceConfig b,
-          Inc.Dependency Inc.InvalidationKey
+          Inc.Dependency Inc.InvalidationKey,
+          Maybe (HashMap (TableName b) EnumValues)
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, sourceConfig, reloadMetadataInvalidationKey) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey, sourceIntrospection) -> do
       let TableBuildInput name isEnum config apolloFedConfig = tableBuildInput
-      metadataTable <-
-        (|
-          onNothingA
-            ( throwA
-                -<
-                  err400 NotExists $ "no such table/view exists in source: " <>> name
-            )
-          |) maybeInfo
-
-      let columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
+          columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
           columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
           description = buildDescription name config metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
-      enumValues <-
+      enumValues <- do
         if isEnum
           then do
-            -- We want to make sure we reload enum values whenever someone explicitly calls
-            -- `reload_metadata`.
-            Inc.dependOn -< reloadMetadataInvalidationKey
-            eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
-            liftEitherA -< Just <$> eitherEnums
+            case HM.lookup name =<< sourceIntrospection of
+              Just enumValues -> returnA -< Just enumValues
+              _ -> do
+                -- We want to make sure we reload enum values whenever someone explicitly calls
+                -- `reload_metadata`.
+                Inc.dependOn -< reloadMetadataInvalidationKey
+                eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
+                liftEitherA -< Just <$> eitherEnums
           else returnA -< Nothing
 
       returnA
@@ -524,30 +524,25 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
     processTableInfo ::
-      ErrorA
-        QErr
-        arr
-        ( Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues),
-          TableCoreInfoG b (RawColumnInfo b) (Column b),
-          NamingCase
-        )
-        (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-    processTableInfo = proc (enumTables, rawInfo, tCase) ->
-      liftEitherA
-        -< do
-          let columns = _tciFieldInfoMap rawInfo
-              enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
-          columnInfoMap <-
-            collectColumnConfiguration columns (_tciCustomConfig rawInfo)
-              >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
-          assertNoDuplicateFieldNames (Map.elems columnInfoMap)
+      QErrM n =>
+      Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
+      TableCoreInfoG b (RawColumnInfo b) (Column b) ->
+      NamingCase ->
+      n (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+    processTableInfo enumTables rawInfo tCase = do
+      let columns = _tciFieldInfoMap rawInfo
+          enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
+      columnInfoMap <-
+        collectColumnConfiguration columns (_tciCustomConfig rawInfo)
+          >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
+      assertNoDuplicateFieldNames (Map.elems columnInfoMap)
 
-          primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
-          pure
-            rawInfo
-              { _tciFieldInfoMap = columnInfoMap,
-                _tciPrimaryKey = primaryKey
-              }
+      primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
+      pure
+        rawInfo
+          { _tciFieldInfoMap = columnInfoMap,
+            _tciPrimaryKey = primaryKey
+          }
 
     resolvePrimaryKeyColumns ::
       forall n a. (QErrM n) => HashMap FieldName a -> PrimaryKey b (Column b) -> n (PrimaryKey b a)
@@ -559,7 +554,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       (QErrM n) =>
       FieldInfoMap (RawColumnInfo b) ->
       TableConfig b ->
-      n (FieldInfoMap (RawColumnInfo b, G.Name, Maybe G.Description))
+      n (FieldInfoMap (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description))
     collectColumnConfiguration columns TableConfig {..} = do
       let configByFieldName = mapKeys (fromCol @b) _tcColumnConfig
       Map.traverseWithKey
@@ -582,9 +577,9 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       QErrM n =>
       FieldName ->
       (RawColumnInfo b, ColumnConfig) ->
-      n (RawColumnInfo b, G.Name, Maybe G.Description)
+      n (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description)
     extractColumnConfiguration fieldName (columnInfo, ColumnConfig {..}) = do
-      name <- _ccfgCustomName `onNothing` textToName (getFieldNameTxt fieldName)
+      name <- (fromCustomName <$> _ccfgCustomName) `onNothing` textToGQLIdentifier (getFieldNameTxt fieldName)
       pure (columnInfo, name, description)
       where
         description :: Maybe G.Description
@@ -597,14 +592,14 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       NamingCase ->
       Map.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
-      (RawColumnInfo b, G.Name, Maybe G.Description) ->
+      (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description) ->
       n (ColumnInfo b)
     processColumnInfo tCase tableEnumReferences tableName (rawInfo, name, description) = do
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
           { ciColumn = pgCol,
-            ciName = (applyFieldNameCaseCust tCase name),
+            ciName = (applyFieldNameCaseIdentifier tCase name),
             ciPosition = rciPosition rawInfo,
             ciType = resolvedType,
             ciIsNullable = rciIsNullable rawInfo,
@@ -622,8 +617,10 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
             -- multiple referenced enums? the schema is strange, so let’s reject it
             Just enumReferences ->
               throw400 ConstraintViolation $
-                "column " <> rciName rawInfo <<> " in table " <> tableName
-                  <<> " references multiple enum tables ("
+                "column "
+                  <> rciName rawInfo <<> " in table "
+                  <> tableName
+                    <<> " references multiple enum tables ("
                   <> commaSeparated (map (dquote . erTable) $ toList enumReferences)
                   <> ")"
 
@@ -663,7 +660,7 @@ instance (Backend b) => FromJSON (SetApolloFederationConfig b) where
 
 runSetApolloFederationConfig ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetApolloFederationConfig b ->
   m EncJSON
 runSetApolloFederationConfig (SetApolloFederationConfig source table apolloFedConfig) = do
@@ -674,6 +671,6 @@ runSetApolloFederationConfig (SetApolloFederationConfig source table apolloFedCo
     -- the `ApolloFederationConfig` is complex, we should probably reconsider
     -- this approach of replacing the configuration everytime the API is called
     -- and maybe throw some error if the configuration is already there.
-    $ MetadataModifier $
-      tableMetadataSetter @b source table . tmApolloFederationConfig .~ apolloFedConfig
+    $ MetadataModifier
+    $ tableMetadataSetter @b source table . tmApolloFederationConfig .~ apolloFedConfig
   return successMsg

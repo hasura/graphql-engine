@@ -83,6 +83,7 @@ export const TableTrackingCustomizationModalContainer: React.FC<TableTrackingCus
               update_by_pk: values.update_by_pk,
               delete: values.delete,
               delete_by_pk: values.delete_by_pk,
+              update_many: values.update_many,
             },
           },
         },

@@ -7,9 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/gin-gonic/contrib/renders/multitemplate"
+	errors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
@@ -75,17 +74,18 @@ func (p *DefaultTemplateProvider) DoTemplateExist(path string) bool {
 }
 
 func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error) {
+	var op errors.Op = "console.DefaultTemplateProvider.LoadTemplates"
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
 		templatePath := path + templateName
 		templateBytes, err := p.consoleFS.ReadFile(templatePath)
 		if err != nil {
-			return nil, errors.Wrap(err, "error reading from file "+templatePath)
+			return nil, errors.E(op, fmt.Errorf("error reading from file: path: %s :%w", templatePath, err))
 		}
 		theTemplate, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating template"+path+templateName)
+			return nil, errors.E(op, fmt.Errorf("error creating template: path: %s, name: %s: %w", path, templateName, err))
 		}
 		r.Add(templateName, theTemplate)
 	}
@@ -150,4 +150,40 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 
 func (p *DefaultTemplateProvider) GetAssetsCDN() string {
 	return "https://graphql-engine-cdn.hasura.io/console/assets"
+}
+
+type EELiteTemplateProvider struct {
+	*DefaultTemplateProvider
+}
+
+func NewEETemplateProvider(basePath string, templateFileName string, consoleFs embed.FS) *EELiteTemplateProvider {
+	return &EELiteTemplateProvider{
+		NewDefaultTemplateProvider(basePath, templateFileName, consoleFs),
+	}
+}
+
+func (p *EELiteTemplateProvider) GetAssetsVersion(v *version.Version) string {
+	return fmt.Sprintf("channel/versioned/%s", v.Server)
+}
+
+func (p *EELiteTemplateProvider) GetAssetsCDN() string {
+	return "https://graphql-engine-cdn.hasura.io/pro-console/assets"
+}
+
+type CloudTemplateProvider struct {
+	*DefaultTemplateProvider
+}
+
+func (p *CloudTemplateProvider) GetAssetsVersion(v *version.Version) string {
+	return fmt.Sprintf("channel/versioned/%s", v.Server)
+}
+
+func (p *CloudTemplateProvider) GetAssetsCDN() string {
+	return "https://graphql-engine-cdn.hasura.io/cloud-console/assets"
+}
+
+func NewCloudTemplateProvider(basePath string, templateFileName string, consoleFs embed.FS) *CloudTemplateProvider {
+	return &CloudTemplateProvider{
+		NewDefaultTemplateProvider(basePath, templateFileName, consoleFs),
+	}
 }

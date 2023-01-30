@@ -6,19 +6,20 @@ keywords:
   - authorization
   - access control
 sidebar_position: 2
+sidebar_label: Access control basics
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Access control basics
+# Access Control Basics
 
 ## Introduction
 
 To understand the basics of access control in Hasura, let's take a look at this analogy to a SQL query:
 
-<Thumbnail src='/img/auth/permissions-rule-analogy.png' alt='Understanding access control in Hasura' width='700px' />
+<Thumbnail src="/img/auth/permissions-rule-analogy.png" alt="Understanding access control in Hasura" width="700px" />
 
 This query returns the right set of results by defining the requirements for columns and rows in a given table. Hasura's
 rule-based access control works similarly - you define the following permissions for a combination of **role**,
@@ -49,7 +50,7 @@ Let's see access control in action using a simple example.
 
 ### Create a table
 
-Head to your console and [create a table](/schema/postgres/tables.mdx#pg-create-tables) called `authors` with the
+Head to your Console and [create a table](/schema/postgres/tables.mdx#pg-create-tables) called `authors` with the
 following schema:
 
 ```sql
@@ -63,7 +64,7 @@ Now, insert some sample data into the table using the `Insert Row` tab of the `a
 
 ### Run a query **without** access control
 
-Head to the `API` tab in your console and try out the below query:
+Head to the `API` tab in your Console and try out the below query:
 
 ```graphql
 query {
@@ -77,19 +78,19 @@ query {
 The response of the above query contains all the authors as, by default, the GraphQL query runs with **admin**
 permissions.
 
-<Thumbnail src='/img/auth/fetch-authors.png' alt='Run a query without access control' width='1200px' />
+<Thumbnail src="/img/auth/fetch-authors.png" alt="Run a query without access control" width="1200px" />
 
 ### Define access control rules
 
 Now let's define an access control rule for the `authors` table for a role `user`.
 
-<Tabs className="api-tabs">
+<Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Head to the **Permissions** section of the table (`Data -> [table] -> Permissions` tab) and define permissions as shown
 below:
 
-<Thumbnail src='/img/auth/permission-basics-simple-example.png' alt='Define access control rules' width='1100px' />
+<Thumbnail src="/img/auth/permission-basics-simple-example.png" alt="Define access control rules" width="1100px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -111,7 +112,7 @@ You can add permissions in the `tables.yaml` file inside the `metadata` director
             _eq: X-Hasura-User-Id
 ```
 
-Apply the metadata by running:
+Apply the Metadata by running:
 
 ```bash
 hasura metadata apply
@@ -121,7 +122,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add select permissions by using the
-[pg_create_select_permission metadata API](/api-reference/metadata-api/permission.mdx#metadata-pg-create-select-permission):
+[pg_create_select_permission Metadata API](/api-reference/metadata-api/permission.mdx#metadata-pg-create-select-permission):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -161,9 +162,9 @@ included to indicate role and user information. These session variables are pass
 `GraphiQL` as highlighted below:
 
 <Thumbnail
-  src='/img/auth/permission-basics-query-with-access-control.png'
-  alt='Run a query with access control'
-  width='1200px'
+  src="/img/auth/permission-basics-query-with-access-control.png"
+  alt="Run a query with access control"
+  width="1200px"
 />
 
 As you can see, the results are now filtered based on the access control rule for the role `user` (_since that is the

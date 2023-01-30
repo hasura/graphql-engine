@@ -34,6 +34,8 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
+import Hasura.SQL.Tag (backendTag, reify)
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -212,9 +214,13 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
     -- is because, unfortunately, the value returned by the above is
     -- {<rootFieldNameText>:[]} (notice the lack of spaces). So, instead
     -- we're templating according to the format postgres sends JSON responses.
-    emptyRespBS = txtToBs $ [st|{"#{rootFieldNameText}" : []}|]
+    emptyRespBS = Right $ txtToBs [st|{"#{rootFieldNameText}" : []}|]
+    -- Same as the above, but cockroach prefixes the responses with @\x1@ and does not
+    -- have a space between the key and the colon.
+    roachEmptyRespBS = Right $ "\x1" <> txtToBs [st|{"#{rootFieldNameText}": []}|]
 
-    isResponseEmpty = result == Right emptyRespBS
+    isResponseEmpty =
+      result == emptyRespBS || result == roachEmptyRespBS
 
     C.CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
 
@@ -222,7 +228,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
 
     pushResultToSubscribers subscribers =
       unless isResponseEmpty $
-        flip A.mapConcurrently_ subscribers $ \Subscriber {..} -> _sOnChangeCallback response
+        flip A.mapConcurrently_ subscribers $
+          \Subscriber {..} -> _sOnChangeCallback response
 
 -- | A single iteration of the streaming query polling loop. Invocations on the
 -- same mutable objects may race.
@@ -239,8 +246,9 @@ pollStreamingQuery ::
   G.Name ->
   SubscriptionPostPollHook ->
   Maybe (IO ()) -> -- Optional IO action to make this function (pollStreamingQuery) testable
+  ResolvedConnectionTemplate b ->
   IO ()
-pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe = do
+pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     -- This STM transaction is a read only transaction i.e. it doesn't mutate any state
@@ -254,14 +262,16 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
       -- associating every batch with their BatchId
       pure $ zip (BatchId <$> [1 ..]) cohortBatches
 
-    onJust testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
+    for_ testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
 
     -- concurrently process each batch and also get the processed cohort with the new updated cohort key
     batchesDetailsAndProcessedCohorts <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <-
-        runDBStreamingSubscription @b sourceConfig query $
-          over (each . _2) C._csVariables $
-            fmap (fmap fst) cohorts
+        runDBStreamingSubscription @b
+          sourceConfig
+          query
+          (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
+          resolvedConnectionTemplate
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
           -- batch response size is the sum of the response sizes of the cohorts
@@ -293,8 +303,17 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                   }
           pure (cohortExecutionDetails, (currentCohortKey, (cohort, updatedCohortKey, snapshottedNewSubs)))
       let processedCohortBatch = snd <$> cohortsExecutionDetails
+
+          -- Note: We want to keep the '_bedPgExecutionTime' field for backwards
+          -- compatibility reason, which will be 'Nothing' for non-PG backends.
+          -- See https://hasurahq.atlassian.net/browse/GS-329
+          pgExecutionTime = case reify (backendTag @b) of
+            Postgres Vanilla -> Just queryExecutionTime
+            _ -> Nothing
+
           batchExecDetails =
             BatchExecutionDetails
+              pgExecutionTime
               queryExecutionTime
               pushTime
               batchId
@@ -307,6 +326,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
   let pollDetails =
         PollDetails
           { _pdPollerId = pollerId,
+            _pdKind = Streaming,
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
             _pdBatches = fst <$> batchesDetailsAndProcessedCohorts,

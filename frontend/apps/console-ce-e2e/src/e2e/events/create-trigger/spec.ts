@@ -6,8 +6,8 @@ import {
   getNoOfRetries,
   getIntervalSeconds,
   getTimeoutSeconds,
-  baseUrl,
 } from '../../../helpers/eventHelpers';
+import { baseUrl } from '../../../helpers/common';
 import {
   getColName,
   tableColumnTypeSelector,

@@ -3,12 +3,13 @@ package commands
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
@@ -21,7 +22,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/source/file"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -32,8 +33,8 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	scriptsUpdateConfigV2Cmd := &cobra.Command{
 		Use:     "update-project-v2",
 		Aliases: []string{"update-config-v2"},
-		Short:   "Update the Hasura project from config v1 to v2",
-		Long: `Update the Hasura project from config v1 to v2 by executing the following actions:
+		Short:   "Update the Hasura Project from config v1 to v2",
+		Long: `Update the Hasura Project from config v1 to v2 by executing the following actions:
 
 1. Installs a plugin system for CLI
 2. Installs CLI Extensions plugins (primarily for actions)
@@ -44,35 +45,40 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 `,
 		Example: `  # Read more about v2 configuration for CLI at https://docs.hasura.io
 
-  # Update the Hasura project from config v1 to v2
+  # Update the Hasura Project from config v1 to v2
   hasura scripts update-project-v2
 
-  # Update the Hasura project from config v1 to v2 with a different metadata directory:
+  # Update the Hasura Project from config v1 to v2 with a different metadata directory:
   hasura scripts update-project-v2 --metadata-dir "metadata"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			if ec.Config.Version != cli.V1 {
-				return fmt.Errorf("this script can be executed only when the current config version is 1")
+				return errors.E(op, fmt.Errorf("this script can be executed only when the current config version is 1"))
 			}
 			ec.Spin("Setting up cli-ext")
 			defer ec.Spinner.Stop()
 			err := cliext.Setup(ec)
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			// Move copy migrations directory to migrations_backup
 			ec.Spin("Backing up migrations...")
 			err = util.CopyDir(ec.MigrationDir, filepath.Join(ec.ExecutionDirectory, "migrations_backup"))
 			if err != nil {
-				return errors.Wrap(err, "error in copying migrations to migrations_backup")
+				return errors.E(op, fmt.Errorf("error in copying migrations to migrations_backup: %w", err))
 			}
 			defer func() {
 				if err != nil {
@@ -83,11 +89,11 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Spin("Cleaning up migrations...")
 			fileCfg, err := file.New(migrate.GetFilePath(ec.MigrationDir).String(), ec.Logger)
 			if err != nil {
-				return errors.Wrap(err, "error in opening migrate file driver")
+				return errors.E(op, fmt.Errorf("error in opening migrate file driver: %w", err))
 			}
 			err = fileCfg.Scan()
 			if err != nil {
-				return errors.Wrap(err, "error in scanning migrate file driver")
+				return errors.E(op, fmt.Errorf("error in scanning migrate file driver: %w", err))
 			}
 			// Remove yaml from up migrations
 			upVersions := make([]uint64, 0)
@@ -101,17 +107,17 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				// Read the up.yaml file
 				bodyReader, _, _, err := fileCfg.ReadMetaUp(version)
 				if err != nil {
-					return errors.Wrapf(err, "error in reading %s file", upMetaMigration.Raw)
+					return errors.E(op, fmt.Errorf("error in reading %s file: %w", upMetaMigration.Raw, err))
 				}
 				buf := new(bytes.Buffer)
 				_, err = buf.ReadFrom(bodyReader)
 				if err != nil {
-					return errors.Wrapf(err, "unable to read bytes")
+					return errors.E(op, fmt.Errorf("unable to read bytes: %w", err))
 				}
 				var queries []hasuradb.HasuraInterfaceQuery
 				err = yaml.Unmarshal(buf.Bytes(), &queries)
 				if err != nil {
-					return errors.Wrapf(err, "unable to unmarhsal %s", upMetaMigration.Raw)
+					return errors.E(op, fmt.Errorf("unable to unmarshal %s: %w", upMetaMigration.Raw, err))
 				}
 				// for each query check if type is run_sql
 				// if yes, append to bytes buffer
@@ -119,12 +125,12 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 					if query.Type == "run_sql" {
 						argByt, err := yaml.Marshal(query.Args)
 						if err != nil {
-							return errors.Wrapf(err, "unable to marshal run_sql args in %s", upMetaMigration.Raw)
+							return errors.E(op, fmt.Errorf("unable to marshal run_sql args in %s: %w", upMetaMigration.Raw, err))
 						}
 						var to hasura.PGRunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
-							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", upMetaMigration.Raw)
+							return errors.E(op, fmt.Errorf("unable to unmarshal run_sql args in %s: %w", upMetaMigration.Raw, err))
 						}
 						sqlUp.WriteString("\n")
 						sqlUp.WriteString(to.SQL)
@@ -145,26 +151,26 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						}
 						err = ioutil.WriteFile(filePath, sqlUp.Bytes(), os.ModePerm)
 						if err != nil {
-							return errors.Wrap(err, "unable to create up migration")
+							return errors.E(op, fmt.Errorf("unable to create up migration: %w", err))
 						}
 						fileCfg.Migrations.Migrations[version][source.Up] = &source.Migration{}
 					} else {
 						filePath := filepath.Join(ec.MigrationDir, upMigration.Raw)
 						upByt, err := ioutil.ReadFile(filePath)
 						if err != nil {
-							return errors.Wrap(err, "error in reading up.sql")
+							return errors.E(op, fmt.Errorf("error in reading up.sql: %w", err))
 						}
 						upByt = append(upByt, sqlUp.Bytes()...)
 						err = ioutil.WriteFile(filePath, upByt, os.ModePerm)
 						if err != nil {
-							return errors.Wrap(err, "error in writing up.sql")
+							return errors.E(op, fmt.Errorf("error in writing up.sql: %w", err))
 						}
 					}
 				}
 				// delete the yaml file
 				err = os.Remove(filepath.Join(ec.MigrationDir, upMetaMigration.Raw))
 				if err != nil {
-					return errors.Wrap(err, "error in removing up.yaml")
+					return errors.E(op, fmt.Errorf("error in removing up.yaml: %w", err))
 				}
 				delete(fileCfg.Migrations.Migrations[version], source.MetaUp)
 			}
@@ -177,28 +183,28 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 				bodyReader, _, _, err := fileCfg.ReadMetaDown(version)
 				if err != nil {
-					return errors.Wrapf(err, "error in reading %s file", downMetaMigration.Raw)
+					return errors.E(op, fmt.Errorf("error in reading %s file: %w", downMetaMigration.Raw, err))
 				}
 				buf := new(bytes.Buffer)
 				_, err = buf.ReadFrom(bodyReader)
 				if err != nil {
-					return errors.Wrap(err, "unable to read bytes")
+					return errors.E(op, fmt.Errorf("unable to read bytes: %w", err))
 				}
 				var queries []hasuradb.HasuraInterfaceQuery
 				err = yaml.Unmarshal(buf.Bytes(), &queries)
 				if err != nil {
-					return errors.Wrapf(err, "unable to unmarhsal %s", downMetaMigration.Raw)
+					return errors.E(op, fmt.Errorf("unable to unmarshal %s: %w", downMetaMigration.Raw, err))
 				}
 				for _, query := range queries {
 					if query.Type == "run_sql" {
 						argByt, err := yaml.Marshal(query.Args)
 						if err != nil {
-							return errors.Wrapf(err, "unable to marshal run_sql args in %s", downMetaMigration.Raw)
+							return errors.E(op, fmt.Errorf("unable to marshal run_sql args in %s: %w", downMetaMigration.Raw, err))
 						}
 						var to hasura.PGRunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
-							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", downMetaMigration.Raw)
+							return errors.E(op, fmt.Errorf("unable to unmarshal run_sql args in %s: %w", downMetaMigration.Raw, err))
 						}
 						sqlDown.WriteString("\n")
 						sqlDown.WriteString(to.SQL)
@@ -219,26 +225,26 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						}
 						err = ioutil.WriteFile(filePath, sqlDown.Bytes(), os.ModePerm)
 						if err != nil {
-							return errors.Wrap(err, "unable to create up migration")
+							return errors.E(op, fmt.Errorf("unable to create up migration: %w", err))
 						}
 						fileCfg.Migrations.Migrations[version][source.Down] = &source.Migration{}
 					} else {
 						filePath := filepath.Join(ec.MigrationDir, downMigration.Raw)
 						downByt, err := ioutil.ReadFile(filePath)
 						if err != nil {
-							return errors.Wrap(err, "error in reading down.sql")
+							return errors.E(op, fmt.Errorf("error in reading down.sql: %w", err))
 						}
 						downByt = append(sqlDown.Bytes(), downByt...)
 						err = ioutil.WriteFile(filePath, downByt, os.ModePerm)
 						if err != nil {
-							return errors.Wrap(err, "error in writing down.sql")
+							return errors.E(op, fmt.Errorf("error in writing down.sql: %w", err))
 						}
 					}
 				}
 				// delete the yaml file
 				err = os.Remove(filepath.Join(ec.MigrationDir, downMetaMigration.Raw))
 				if err != nil {
-					return errors.Wrap(err, "error in removing down.yaml")
+					return errors.E(op, fmt.Errorf("error in removing down.yaml: %w", err))
 				}
 				delete(fileCfg.Migrations.Migrations[version], source.MetaDown)
 			}
@@ -248,21 +254,21 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				if !directions[source.Up] && !directions[source.MetaUp] && !directions[source.Down] && !directions[source.MetaDown] {
 					files, err := filepath.Glob(filepath.Join(ec.MigrationDir, fmt.Sprintf("%d_*", version)))
 					if err != nil {
-						return errors.Wrapf(err, "unable to filter files for %d", version)
+						return errors.E(op, fmt.Errorf("unable to filter files for %d: %w", version, err))
 					}
 					for _, file := range files {
 						info, err := os.Stat(file)
 						if err != nil {
-							return errors.Wrap(err, "error in stating file")
+							return errors.E(op, fmt.Errorf("error in stating file: %w", err))
 						}
 						if info.IsDir() {
 							err = os.RemoveAll(file)
 							if err != nil {
-								return errors.Wrap(err, "error in removing dir")
+								return errors.E(op, fmt.Errorf("error in removing dir: %w", err))
 							}
 						} else {
 							if err := os.Remove(file); err != nil {
-								return errors.Wrap(err, "error in removing file")
+								return errors.E(op, fmt.Errorf("error in removing file: %w", err))
 							}
 						}
 					}
@@ -272,11 +278,11 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Spin("Removing versions from database...")
 			migrateDrv, err := migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
 			if err != nil {
-				return errors.Wrap(err, "unable to initialize migrations driver")
+				return errors.E(op, fmt.Errorf("unable to initialize migrations driver: %w", err))
 			}
 			err = migrateDrv.RemoveVersions(upVersions)
 			if err != nil {
-				return errors.Wrap(err, "unable to remove versions from database")
+				return errors.E(op, fmt.Errorf("unable to remove versions from database: %w", err))
 			}
 			// update current config to v2
 			ec.Spin("Updating current config to 2")
@@ -294,7 +300,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Spin("Reloading config file...")
 			err = ec.Validate()
 			if err != nil {
-				return errors.Wrap(err, "cannot validate new config")
+				return errors.E(op, fmt.Errorf("cannot validate new config: %w", err))
 			}
 			defer func() {
 				if err != nil {
@@ -309,23 +315,23 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			mdHandler := projectmetadata.NewHandlerFromEC(ec)
 			files, err = mdHandler.ExportMetadata()
 			if err != nil {
-				return errors.Wrap(err, "cannot export metadata from server")
+				return errors.E(op, fmt.Errorf("cannot export metadata from server: %w", err))
 			}
 			ec.Spin("Writing metadata...")
 			err = mdHandler.WriteMetadata(files)
 			if err != nil {
-				return errors.Wrap(err, "cannot write metadata")
+				return errors.E(op, fmt.Errorf("cannot write metadata: %w", err))
 			}
 			ec.Spin("Writing new config file...")
 			// Read the config from config.yaml
 			cfgByt, err := ioutil.ReadFile(ec.ConfigFile)
 			if err != nil {
-				return errors.Wrap(err, "cannot read config file")
+				return errors.E(op, fmt.Errorf("cannot read config file: %w", err))
 			}
 			var cfg cli.Config
 			err = yaml.Unmarshal(cfgByt, &cfg)
 			if err != nil {
-				return errors.Wrap(err, "cannot parse config file")
+				return errors.E(op, fmt.Errorf("cannot parse config file: %w", err))
 			}
 			cfg.Version = cli.V2
 			cfg.MetadataDirectory = ec.Viper.GetString("metadata_directory")
@@ -335,7 +341,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			err = ec.WriteConfig(&cfg)
 			if err != nil {
-				return errors.Wrap(err, "cannot write config file")
+				return errors.E(op, fmt.Errorf("cannot write config file: %w", err))
 			}
 			ec.Spinner.Stop()
 			ec.Logger.Infoln("Updated config to version 2")
@@ -354,9 +360,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := scriptsUpdateConfigV2Cmd.Flags()
 
 	f.StringVar(&metadataDir, "metadata-dir", "metadata", "")
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

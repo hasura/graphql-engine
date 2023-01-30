@@ -1,5 +1,5 @@
 ---
-sidebar_label: Health check API
+sidebar_label: Health Check API
 sidebar_position: 8
 description: Hasura health API reference
 keywords:
@@ -9,7 +9,7 @@ keywords:
   - API reference
 ---
 
-# Health check API Reference
+# Health Check API Reference
 
 ## Introduction
 
@@ -36,15 +36,15 @@ Depending on the server health status any of the following responses can
 be returned:
 
 | Server condition                                                          | HTTP Status | Message                              |
-|---------------------------------------------------------------------------|-------------|--------------------------------------|
+| ------------------------------------------------------------------------- | ----------- | ------------------------------------ |
 | All healthy                                                               | 200         | OK                                   |
-| Serving requests but some metadata objects are inconsistent/not-available | 200         | WARN: inconsistent objects in schema |
+| Serving requests but some Metadata objects are inconsistent/not-available | 200         | WARN: inconsistent objects in schema |
 | Unhealthy                                                                 | 500         | ERROR                                |
 
 :::info Note
 
-If there are metadata inconsistencies, you should use the Hasura console
-or the [get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata) metadata API to find out
+If there are Metadata inconsistencies, you should use the Hasura Console
+or the [get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata) Metadata API to find out
 what the inconsistent objects are and resolve them.
 
 :::
@@ -55,6 +55,6 @@ what the inconsistent objects are and resolve them.
 HTTP/1.1 200 OK
 ```
 
-## Disabling Health check API
+## Disabling Health Check API
 
 The `healthz` API endpoint is public and cannot be disabled.

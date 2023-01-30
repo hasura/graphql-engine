@@ -14,7 +14,7 @@ module Hasura.Backends.Postgres.Execute.Subscription
     mkMultiplexedQuery,
     mkStreamingMultiplexedQuery,
     resolveMultiplexedValue,
-    validateVariables,
+    validateVariablesTx,
     executeMultiplexedQuery,
     executeStreamingMultiplexedQuery,
     executeQuery,
@@ -23,6 +23,7 @@ module Hasura.Backends.Postgres.Execute.Subscription
 where
 
 import Control.Lens
+import Control.Monad.Writer
 import Data.ByteString qualified as B
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -37,6 +38,8 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
+import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -55,6 +58,22 @@ import Language.GraphQL.Draft.Syntax qualified as G
 ----------------------------------------------------------------------------------------------------
 -- Variables
 
+subsAlias :: S.TableAlias
+subsAlias = S.mkTableAlias "_subs"
+
+subsIdentifier :: TableIdentifier
+subsIdentifier = S.tableAliasToIdentifier subsAlias
+
+resultIdAlias, resultVarsAlias :: S.ColumnAlias
+resultIdAlias = S.mkColumnAlias "result_id"
+resultVarsAlias = S.mkColumnAlias "result_vars"
+
+fldRespAlias :: S.TableAlias
+fldRespAlias = S.mkTableAlias "_fld_resp"
+
+fldRespIdentifier :: TableIdentifier
+fldRespIdentifier = S.tableAliasToIdentifier fldRespAlias
+
 -- | Internal: Used to collect information about various parameters
 -- of a subscription field's AST as we resolve them to SQL expressions.
 data QueryParametersInfo (b :: BackendType) = QueryParametersInfo
@@ -72,27 +91,22 @@ makeLenses ''QueryParametersInfo
 
 -- | Checks if the provided arguments are valid values for their corresponding types.
 -- | Generates SQL of the format "select 'v1'::t1, 'v2'::t2 ..."
-validateVariables ::
+validateVariablesTx ::
   forall pgKind f m.
-  (Traversable f, MonadError QErr m, MonadIO m) =>
-  PGExecCtx ->
+  (Traversable f, MonadTx m, MonadIO m) =>
   f (ColumnValue ('Postgres pgKind)) ->
   m (ValidatedVariables f)
-validateVariables pgExecCtx variableValues = do
-  let valSel = mkValidationSel $ toList variableValues
-  PG.Discard () <-
-    runQueryTx_ $
-      liftTx $
-        PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
+validateVariablesTx variableValues = do
+  -- no need to test the types when there are no variables to test.
+  unless (null variableValues) do
+    let valSel = mkValidationSel $ toList variableValues
+    PG.Discard () <- liftTx $ PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
+    pure ()
   pure . ValidatedVariables $ fmap (txtEncodedVal . cvValue) variableValues
   where
     mkExtr = flip S.Extractor Nothing . toTxtValue
     mkValidationSel vars =
       S.mkSelect {S.selExtr = map mkExtr vars}
-    runQueryTx_ tx = do
-      res <- liftIO $ runExceptT (runQueryTx pgExecCtx tx)
-      liftEither res
-
     -- Explicitly look for the class of errors raised when the format of a value
     -- provided for a type is incorrect.
     dataExnErrHandler = mkTxErrorHandler (has _PGDataException)
@@ -108,17 +122,18 @@ instance ToTxt MultiplexedQuery where
 
 toSQLFromItem ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind
+    DS.PostgresAnnotatedFieldJSON pgKind,
+    MonadWriter CustomSQLCTEs m
   ) =>
   S.TableAlias ->
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
-  S.FromItem
-toSQLFromItem = flip \case
-  QDBSingleRow s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
-  QDBMultipleRows s -> S.mkSelFromItem $ DS.mkSQLSelect JASMultipleRows s
-  QDBAggregation s -> S.mkSelFromItem $ DS.mkAggregateSelect s
-  QDBConnection s -> S.mkSelectWithFromItem $ DS.mkConnectionSelect s
-  QDBStreamMultipleRows s -> S.mkSelFromItem $ DS.mkStreamSQLSelect s
+  m S.FromItem
+toSQLFromItem tableAlias = \case
+  QDBSingleRow s -> S.mkSelFromItem <$> DS.mkSQLSelect JASSingleObject s <*> pure tableAlias
+  QDBMultipleRows s -> S.mkSelFromItem <$> DS.mkSQLSelect JASMultipleRows s <*> pure tableAlias
+  QDBAggregation s -> S.mkSelFromItem <$> DS.mkAggregateSelect s <*> pure tableAlias
+  QDBConnection s -> S.mkSelectWithFromItem <$> DS.mkConnectionSelect s <*> pure tableAlias
+  QDBStreamMultipleRows s -> S.mkSelFromItem <$> DS.mkStreamSQLSelect s <*> pure tableAlias
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
@@ -127,37 +142,47 @@ mkMultiplexedQuery ::
   OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   MultiplexedQuery
 mkMultiplexedQuery rootFields =
-  MultiplexedQuery . PG.fromBuilder . toSQL $
-    S.mkSelect
-      { S.selExtr =
-          -- SELECT _subs.result_id, _fld_resp.root AS result
-          [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
-          ],
-        S.selFrom =
-          Just $
-            S.FromExp
-              [ S.FIJoin $
-                  S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
-              ]
-      }
+  MultiplexedQuery . toQuery $ selectWith
   where
+    select =
+      S.mkSelect
+        { S.selExtr =
+            -- SELECT _subs.result_id, _fld_resp.root AS result
+            [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
+              S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
+            ],
+          S.selFrom =
+            Just $
+              S.FromExp
+                [ S.FIJoin $
+                    S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+                ]
+        }
+
+    selectWith = S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) select
+
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-        (S.toTableAlias $ Identifier "_subs")
+        subsAlias
         [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
 
+    (sqlFrom, customSQLCTEs) =
+      runWriter $
+        traverse
+          ( \(fieldAlias, resolvedAST) ->
+              toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
+          )
+          (OMap.toList rootFields)
+
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.toTableAlias $ Identifier "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
     selectRootFields =
       S.mkSelect
         { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")],
           S.selFrom =
-            Just . S.FromExp $
-              OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
-                toSQLFromItem (S.toTableAlias $ aliasToIdentifier fieldAlias) resolvedAST
+            Just $ S.FromExp sqlFrom
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
@@ -168,7 +193,7 @@ mkMultiplexedQuery rootFields =
       ]
 
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
-    aliasToIdentifier = Identifier . G.unName
+    aliasToIdentifier = TableIdentifier . G.unName
 
 mkStreamingMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
@@ -177,37 +202,43 @@ mkStreamingMultiplexedQuery ::
   (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
   MultiplexedQuery
 mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
-  MultiplexedQuery . PG.fromBuilder . toSQL $
-    S.mkSelect
-      { S.selExtr =
-          -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
-          [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
-          ],
-        S.selFrom =
-          Just $
-            S.FromExp
-              [ S.FIJoin $
-                  S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
-              ]
-      }
+  MultiplexedQuery . toQuery $ selectWith
   where
+    selectWith = S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) select
+
+    select =
+      S.mkSelect
+        { S.selExtr =
+            -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
+            [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
+              S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
+              S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
+            ],
+          S.selFrom =
+            Just $
+              S.FromExp
+                [ S.FIJoin $
+                    S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+                ]
+        }
+
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-        (S.toTableAlias $ Identifier "_subs")
-        [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
+        subsAlias
+        [resultIdAlias, resultVarsAlias]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.toTableAlias $ Identifier "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
+
+    (fromSQL, customSQLCTEs) = runWriter (toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST)
+
     selectRootFields =
       S.mkSelect
         { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")), cursorExtractor],
           S.selFrom =
-            Just . S.FromExp $
-              pure $ toSQLFromItem (S.toTableAlias $ aliasToIdentifier fieldAlias) resolvedAST
+            Just $ S.FromExp [fromSQL]
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
@@ -221,7 +252,7 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
     cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "cursor")] Nothing
     cursorExtractor = S.Extractor cursorSQLExp (Just $ S.toColumnAlias $ Identifier "cursor")
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
-    aliasToIdentifier = Identifier . G.unName
+    aliasToIdentifier = TableIdentifier . G.unName
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL
 -- expressions that refer to the @result_vars@ input object, collecting information
@@ -262,7 +293,7 @@ resolveMultiplexedValue allSessionVars = \case
       addTypeAnnotation pgType $
         S.SEOpApp
           (S.SQLOp "#>>")
-          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars"),
+          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier subsIdentifier Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath
           ]
     addTypeAnnotation pgType =
@@ -292,11 +323,11 @@ executeStreamingMultiplexedQuery (MultiplexedQuery query) cohorts = do
 -- | Internal; used by both 'executeMultiplexedQuery', 'executeStreamingMultiplexedQuery'
 -- and 'pgDBSubscriptionExplain'.
 executeQuery ::
-  (MonadTx m, PG.FromRow a) =>
+  (MonadTx m, PG.FromRes a) =>
   PG.Query ->
   [(CohortId, CohortVariables)] ->
-  m [a]
+  m a
 executeQuery query cohorts =
   let (cohortIds, cohortVars) = unzip cohorts
       preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)
-   in liftTx $ PG.listQE defaultTxErrorHandler query preparedArgs True
+   in liftTx $ PG.withQE defaultTxErrorHandler query preparedArgs True

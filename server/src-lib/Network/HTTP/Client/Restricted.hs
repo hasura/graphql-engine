@@ -95,9 +95,9 @@ wrapOurExceptions :: HTTP.ManagerSettings -> HTTP.Request -> IO a -> IO a
 wrapOurExceptions base req a =
   let wrapper se
         | Just (_ :: ConnectionRestricted) <- fromException se =
-          toException $
-            HTTP.HttpExceptionRequest req $
-              HTTP.InternalException se
+            toException $
+              HTTP.HttpExceptionRequest req $
+                HTTP.InternalException se
         | otherwise = se
    in HTTP.managerWrapException base req (handle (throwIO . wrapper) a)
 

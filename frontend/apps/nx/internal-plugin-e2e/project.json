@@ -1,0 +1,16 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/nx/internal-plugin-e2e/src",
+  "targets": {
+    "e2e": {
+      "executor": "@nrwl/nx-plugin:e2e",
+      "options": {
+        "target": "nx-internal-plugin:build",
+        "jestConfig": "apps/nx/internal-plugin-e2e/jest.config.ts"
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["nx-internal-plugin"]
+}

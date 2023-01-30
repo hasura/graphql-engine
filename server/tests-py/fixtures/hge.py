@@ -1,7 +1,6 @@
 import os
 import pytest
 import subprocess
-import threading
 from typing import Optional
 
 import ports
@@ -10,8 +9,15 @@ import ports
 # Other variables are ignored.
 _PASS_THROUGH_ENV_VARS = set([
     'PATH',  # required for basically anything to work
+
     'HASURA_GRAPHQL_PG_SOURCE_URL_1',
     'HASURA_GRAPHQL_PG_SOURCE_URL_2',
+    'HASURA_GRAPHQL_CITUS_SOURCE_URL',
+    'HASURA_GRAPHQL_MSSQL_SOURCE_URL',
+
+    # required for Nix-based ODBC driver configuration
+    'ODBCSYSINI',
+    'ODBCINSTINI',
 ])
 
 
@@ -26,7 +32,7 @@ def hge_server(
     hge_url: str,
     hge_key: Optional[str],
     hge_fixture_env: dict[str, str],
-    pg_url: str,
+    metadata_schema_url: str,
 ) -> Optional[str]:
     hge_env: dict[str, str] = {name: value for name, value in os.environ.items() if name in _PASS_THROUGH_ENV_VARS}
     hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env') if marker.args[1] is not None}
@@ -42,7 +48,7 @@ def hge_server(
     hge_process = subprocess.Popen(
         args = [
             hge_bin,
-            '--database-url', pg_url,
+            '--metadata-database-url', metadata_schema_url,
             'serve',
             '--server-port', str(hge_port),
             '--stringify-numeric-types',

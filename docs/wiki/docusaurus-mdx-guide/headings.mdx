@@ -1,0 +1,120 @@
+---
+description: Working with Heading and Heading Ids - also custom Heading Ids
+sidebar_position: 2
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Headings & Ids
+
+## Headings
+
+Please follow good old `h1(#) => h6(######)` hierarchy.
+
+```markdown
+# This is the Main Page Title
+
+## This is a H2 heading
+
+### This is a H3 heading
+
+#### This is a H4 heading
+
+##### This is a H5 heading
+
+###### This is a H6 heading
+```
+
+Which renders out as:
+
+# This is the Main Page Title
+
+## This is a H2 heading
+
+### This is a H3 heading
+
+#### This is a H4 heading
+
+##### This is a H5 heading
+
+###### This is a H6 heading
+
+:::info Note
+
+At any point of time there should only be one `h1` per doc. `h2 => h6` can be any number as required while ensuring
+correct hierarchy.
+
+:::
+
+## Heading Ids {#heading-ids}
+
+Docusaurus will by default generate an id for each heading to be able to link to individual sections.
+
+The generated id's are nothing but the `kebab-cased-heading-text-itself`.
+
+Ex:
+
+```markdown
+## Heading H2 example
+
+<!-- will have a generated id as below -->
+
+heading-h2-example
+```
+
+To link to this section, we can append the id as a `#hash-param` to url.
+
+```markdown
+[Link to Sub Section](/path/to/sub/section.mdx#heading-h2-example)`.
+
+<!-- or just the hash-param if its in the same document -->
+
+[Link to sub section in same document](#heading-ids)
+```
+
+:::caution Handling changes to heading
+
+This works as long as there is no change in the respective section heading. Updating the heading would require
+scanning all the links to this section and updating it every time.
+
+So, to avoid this manual effort and making the links independent, prefer adding a custom id while linking respective
+section.
+
+:::
+
+## Handling custom ids
+
+Custom Heading Ids are added as `{#kebab-cased-id}`
+
+Prefer `lowercased-kebab-case` for all the ids to maintain consistency.
+
+```markdown {1}
+## Step 1: Create a Hasura Cloud project {#create-hasura-project-aws-rds-aurora}
+
+On the Hasura Cloud dashboard, create a new project:
+```
+
+They can also be generated when required using the cli command
+[write-heading-ids](https://docusaurus.io/docs/cli#docusaurus-write-heading-ids-sitedir) - Please _DO NOT OVERRIDE_
+existing ones.
+
+Skip for `h1 (#)` as the top level heading is beginining of file the direct link without `#hash-param` would work fine.
+
+:::danger Please do not add id in frontmatter
+
+Docusaurus by default uses [file path (including folders) without the extension as the id](https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-docs#id)
+and the same will be slug.
+
+If an `id` is added in frontmatter the slug will by default be the id thus breaking the existing URL structure.
+
+This will result in setting up bunch of redirects and will have a impact on SEO and indexed page rankings.
+
+So, Please ignore the id in frontmatter, Let's leave this to docusaurus default behavior which is great.
+
+In case, if you are not sure of what to do in a different situation. Please let us know, we will help figure out
+
+:::
+
+Please refer to the Docusaurus docs on [Headings](https://docusaurus.io/docs/markdown-features/headings) for more
+insights into usage and customization.

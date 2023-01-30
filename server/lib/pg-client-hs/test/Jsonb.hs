@@ -13,7 +13,6 @@ import Control.Monad.Identity
 import Control.Monad.Reader
 import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
-import Data.Kind (Type)
 import Data.String
 import Database.PG.Query
 import Database.PG.Query.Connection
@@ -23,7 +22,6 @@ import System.Environment qualified as Env
 import Test.Hspec
 import Prelude
 
-type TestValue :: Type
 newtype TestValue = TestValue {hey :: Int}
   deriving stock (Show, Generic)
 

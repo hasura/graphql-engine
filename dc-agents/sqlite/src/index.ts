@@ -4,13 +4,13 @@ import { getSchema } from './schema';
 import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse } from '@hasura/dc-api-types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetTemplateName, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
-import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
-import * as fs from 'fs'
 import { runRawOperation } from './raw';
+import { DATASETS, DATASET_DELETE, LOG_LEVEL, METRICS, MUTATIONS, PERMISSIVE_CORS, PRETTY_PRINT_LOGS } from './environment';
+import { cloneDataset, deleteDataset, getDataset } from './datasets';
 
 const port = Number(process.env.PORT) || 8100;
 
@@ -21,18 +21,33 @@ const port = Number(process.env.PORT) || 8100;
 const server = Fastify({
   logger:
     {
-      level: envToString("LOG_LEVEL", "info"),
+      level: LOG_LEVEL,
       ...(
-        (envToBool('PRETTY_PRINT_LOGS'))
+        PRETTY_PRINT_LOGS
           ? { transport: { target: 'pino-pretty' } }
           : {}
       )
     }
 })
 
-const METRICS_ENABLED = envToBool('METRICS');
+server.setErrorHandler(function (error, _request, reply) {
+  // Log error
+  this.log.error(error)
 
-if(METRICS_ENABLED) {
+  const errorResponse: ErrorResponse = {
+    type: "uncaught-error",
+    message: "SQLite Agent: Uncaught Exception",
+    details: {
+      name: error.name,
+      message: error.message
+    }
+  };
+
+  // Send error response
+  reply.status(500).send(errorResponse);
+})
+
+if(METRICS) {
   // See: https://www.npmjs.com/package/fastify-metrics
   server.register(metrics, {
     endpoint: '/metrics',
@@ -43,7 +58,7 @@ if(METRICS_ENABLED) {
   });
 }
 
-if(envToBool('PERMISSIVE_CORS')) {
+if(PERMISSIVE_CORS) {
   // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
   server.register(FastifyCors, {
     origin: true,
@@ -55,7 +70,7 @@ if(envToBool('PERMISSIVE_CORS')) {
 // Register request-hook metrics.
 // This is done in a closure so that the metrics are scoped here.
 (() => {
-  if(! METRICS_ENABLED) {
+  if(! METRICS) {
     return;
   }
 
@@ -88,7 +103,12 @@ const sqlLogger = (sql: string): void => {
   server.log.debug({sql}, "Executed SQL");
 };
 
-server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
+// NOTE:
+//
+// While an ErrorResponse is available it is not currently used as there are no errors anticipated.
+// It is included here for illustrative purposes.
+//
+server.get<{ Reply: CapabilitiesResponse | ErrorResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
   return capabilitiesResponse;
 });
@@ -99,12 +119,15 @@ server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   return getSchema(config, sqlLogger);
 });
 
-server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
+server.post<{ Body: QueryRequest, Reply: QueryResponse | ErrorResponse }>("/query", async (request, response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  const result = queryData(config, sqlLogger, request.body);
+  const result : QueryResponse | ErrorResponse = await queryData(config, sqlLogger, request.body);
   end();
+  if("message" in result) {
+    response.statusCode = 500;
+  }
   return result;
 });
 
@@ -120,6 +143,13 @@ server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (re
   const config = getConfig(request);
   return explain(config, sqlLogger, request.body);
 });
+
+if(MUTATIONS) {
+  server.post<{ Body: MutationRequest, Reply: MutationResponse}>("/mutation", async (request, _response) => {
+    server.log.info({ headers: request.headers, query: request.body, }, "mutation.request");
+    throw Error("Mutations not yet implemented");
+  });
+}
 
 server.get("/health", async (request, response) => {
   const config = tryGetConfig(request);
@@ -141,12 +171,33 @@ server.get("/health", async (request, response) => {
   }
 });
 
-server.get("/swagger.json", async (request, response) => {
-  fs.readFile('src/types/agent.openapi.json', (err, fileBuffer) => {
-    response.type('application/json');
-    response.send(err || fileBuffer)
-  })
-})
+// Data-Set Features - Names must match files in the associated datasets directory.
+// If they exist then they are tracked for the purposes of this feature in SQLite.
+if(DATASETS) {
+  server.get<{ Params: { template_name: DatasetTemplateName, }, Reply: DatasetGetTemplateResponse }>("/datasets/templates/:template_name", async (request, _response) => {
+    server.log.info({ headers: request.headers, query: request.body, }, "datasets.templates.get");
+    const result = await getDataset(request.params.template_name);
+    if(! result.exists) {
+      _response.statusCode = 404;
+    }
+    return result;
+  });
+
+  // TODO: The name param here should be a DatasetCloneName, but this isn't being code-generated.
+  server.post<{ Params: { clone_name: string, }, Body: DatasetCreateCloneRequest, Reply: DatasetCreateCloneResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
+    server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.post");
+    return cloneDataset(sqlLogger, request.params.clone_name, request.body);
+  });
+
+  // Only allow deletion if this is explicitly supported by ENV configuration
+  if(DATASET_DELETE) {
+    // TODO: The name param here should be a DatasetCloneName, but this isn't being code-generated.
+    server.delete<{ Params: { clone_name: string, }, Reply: DatasetDeleteCloneResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
+      server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.delete");
+      return deleteDataset(request.params.clone_name);
+    });
+  }
+}
 
 server.get("/", async (request, response) => {
   response.type('text/html');
@@ -164,10 +215,13 @@ server.get("/", async (request, response) => {
           <li><a href="/capabilities">GET /capabilities - Capabilities Metadata</a>
           <li><a href="/schema">GET /schema - Agent Schema</a>
           <li><a href="/query">POST /query - Query Handler</a>
+          <li><a href="/mutation">POST /mutation - Mutation Handler</a>
           <li><a href="/raw">POST /raw - Raw Query Handler</a>
           <li><a href="/health">GET /health - Healthcheck</a>
-          <li><a href="/swagger.json">GET /swagger.json - Swagger JSON</a>
           <li><a href="/metrics">GET /metrics - Prometheus formatted metrics</a>
+          <li><a href="/datasets/NAME">GET /datasets/{NAME} - Information on Dataset</a>
+          <li><a href="/datasets/NAME">POST /datasets/{NAME} - Create a Dataset</a>
+          <li><a href="/datasets/NAME">DELETE /datasets/{NAME} - Delete a Dataset</a>
         </ul>
       </body>
     </html>

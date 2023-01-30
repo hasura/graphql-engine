@@ -1,6 +1,9 @@
 FROM node:16-alpine
 
+RUN apk update && apk add curl
+
 WORKDIR /app
+
 COPY package.json .
 COPY package-lock.json .
 COPY dc-api-types dc-api-types

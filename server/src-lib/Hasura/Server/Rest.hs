@@ -65,9 +65,9 @@ resolveVar varName (These expectedVar (Left l)) =
       | typeName == GName._Boolean && T.null l -> Right $ Just $ J.Bool True -- Booleans indicated true by a standalone key.
       | nullable && T.null l -> Right Nothing -- Missing value, but nullable variable sets value to null.
       | otherwise -> case J.decodeStrict (T.encodeUtf8 l) of -- We special case parsing of bools and numbers and pass the rest through as literal strings.
-        Just v@(J.Bool _) | typeName `elem` [Name._Bool, GName._Boolean] -> Right $ Just v
-        Just v@(J.Number _) | typeName `elem` [GName._Int, GName._Float, Name._Number, Name._Double, Name._float8, Name._numeric] -> Right $ Just v
-        _ -> Right $ Just $ J.String l
+          Just v@(J.Bool _) | typeName `elem` [Name._Bool, GName._Boolean] -> Right $ Just v
+          Just v@(J.Number _) | typeName `elem` [GName._Int, GName._Float, Name._Number, Name._Double, Name._float8, Name._numeric] -> Right $ Just v
+          _ -> Right $ Just $ J.String l
 
 mkPassthroughRequest :: EndpointMetadata GQLQueryWithText -> VariableValues -> GQLReq GQLQueryText
 mkPassthroughRequest queryx resolvedVariables =
@@ -99,7 +99,6 @@ runCustomEndpoint ::
     MonadQueryLog m,
     GH.MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
-    HttpLog m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -111,7 +110,7 @@ runCustomEndpoint ::
   Wai.IpAddress ->
   RestRequest EndpointMethod ->
   EndpointTrie GQLQueryWithText ->
-  m (HttpLogMetadata m, HttpResponse EncJSON)
+  m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
@@ -143,9 +142,8 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
               -- through to the /v1/graphql endpoint.
               (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
                 (gqlOperationLog, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-                let httpLogMetadata =
-                      buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)) RequestModeNonBatchable Nothing
-                return (httpLogMetadata, fst <$> resp)
+                let httpLoggingGQInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)))
+                return (httpLoggingGQInfo, fst <$> resp)
               case sequence handlerResp of
                 Just resp -> pure (httpLoggingMetadata, fmap encodeHTTPResp resp)
                 -- a Nothing value here indicates a failure to parse the cached request from redis.

@@ -6,6 +6,7 @@
 module Hasura.Backends.Postgres.Instances.API () where
 
 import Hasura.Prelude
+import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import {-# SOURCE #-} Hasura.Server.API.Metadata
@@ -22,9 +23,14 @@ instance BackendAPI ('Postgres 'Vanilla) where
         remoteRelationshipCommands @('Postgres 'Vanilla),
         eventTriggerCommands @('Postgres 'Vanilla),
         computedFieldCommands @('Postgres 'Vanilla),
-        -- postgres specific
-        [ commandParser "set_table_is_enum" RMPgSetTableIsEnum
-        ]
+        nativeAccessCommands @('Postgres 'Vanilla),
+        [ commandParser
+            "set_table_is_enum"
+            ( RMPgSetTableIsEnum
+                . mkAnyBackend @('Postgres 'Vanilla)
+            )
+        ],
+        connectionTemplateCommands @('Postgres 'Vanilla)
       ]
 
 instance BackendAPI ('Postgres 'Citus) where
@@ -36,7 +42,8 @@ instance BackendAPI ('Postgres 'Citus) where
         functionCommands @('Postgres 'Citus),
         functionPermissionsCommands @('Postgres 'Citus),
         relationshipCommands @('Postgres 'Citus),
-        remoteRelationshipCommands @('Postgres 'Citus)
+        remoteRelationshipCommands @('Postgres 'Citus),
+        connectionTemplateCommands @('Postgres 'Citus)
       ]
 
 instance BackendAPI ('Postgres 'Cockroach) where
@@ -45,8 +52,13 @@ instance BackendAPI ('Postgres 'Cockroach) where
       [ sourceCommands @('Postgres 'Cockroach),
         tableCommands @('Postgres 'Cockroach),
         tablePermissionsCommands @('Postgres 'Cockroach),
-        functionCommands @('Postgres 'Cockroach),
-        functionPermissionsCommands @('Postgres 'Cockroach),
         relationshipCommands @('Postgres 'Cockroach),
-        remoteRelationshipCommands @('Postgres 'Cockroach)
+        remoteRelationshipCommands @('Postgres 'Cockroach),
+        [ commandParser
+            "set_table_is_enum"
+            ( RMPgSetTableIsEnum
+                . mkAnyBackend @('Postgres 'Cockroach)
+            )
+        ],
+        connectionTemplateCommands @('Postgres 'Cockroach)
       ]

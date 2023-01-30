@@ -33,6 +33,7 @@ module Hasura.RQL.DDL.EventTrigger
     cetqRequestTransform,
     cetqResponseTrasnform,
     cteqCleanupConfig,
+    cteqTriggerOnReplication,
     runCleanupEventTriggerLog,
     runEventTriggerResumeCleanup,
     runEventTriggerPauseCleanup,
@@ -51,6 +52,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
+import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
@@ -97,7 +99,8 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqReplace :: Bool,
     _cetqRequestTransform :: Maybe RequestTransform,
     _cetqResponseTrasnform :: Maybe MetadataResponseTransform,
-    _cteqCleanupConfig :: Maybe AutoTriggerLogCleanupConfig
+    _cteqCleanupConfig :: Maybe AutoTriggerLogCleanupConfig,
+    _cteqTriggerOnReplication :: TriggerOnReplication
   }
 
 $(makeLenses ''CreateEventTriggerQuery)
@@ -134,7 +137,11 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig
+    defTOR <- case defaultTriggerOnReplication @b of
+      Just (_, dt) -> pure dt
+      Nothing -> fail "No default setting for trigger_on_replication is defined for backend type."
+    triggerOnReplication <- o .:? "trigger_on_replication" .!= defTOR
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig triggerOnReplication
     where
       checkEmptyCols spec =
         case spec of
@@ -208,7 +215,7 @@ resolveEventTriggerQuery ::
   (Backend b, UserInfoM m, QErrM m, CacheRM m) =>
   CreateEventTriggerQuery b ->
   m (Bool, EventTriggerConf b)
-resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform cleanupConfig) = do
+resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform cleanupConfig triggerOnReplication) = do
   ti <- askTableCoreInfo source qt
   -- can only replace for same table
   when replace $ do
@@ -220,10 +227,10 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig)
+  return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig triggerOnReplication)
   where
     assertCols :: TableCoreInfo b -> Maybe (SubscribeOpSpec b) -> m ()
-    assertCols ti opSpec = onJust opSpec \sos -> case sosColumns sos of
+    assertCols ti opSpec = for_ opSpec \sos -> case sosColumns sos of
       SubCStar -> return ()
       SubCArray columns -> forM_ columns (assertColumnExists @b (_tciFieldInfoMap ti) "")
 
@@ -278,13 +285,13 @@ createEventTriggerQueryMetadata q = do
       oldConfig <- etiCleanupConfig <$> askEventTriggerInfo @b source triggerName
       when (hasCleanupCronScheduleUpdated oldConfig newConfig) do
         deleteAllScheduledCleanups @b sourceConfig triggerName
-        onJust newConfig \cleanupConfig -> do
+        for_ newConfig \cleanupConfig -> do
           (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
     else do
       doesTriggerExists <- checkIfTriggerExists @b sourceConfig triggerName (Set.fromList [INSERT, UPDATE, DELETE])
       if doesTriggerExists
         then throw400 AlreadyExists ("Event trigger with name " <> triggerNameToTxt triggerName <<> " already exists")
-        else onJust newConfig \cleanupConfig -> do
+        else for_ newConfig \cleanupConfig -> do
           (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
   buildSchemaCacheFor metadataObj $
@@ -378,20 +385,20 @@ askTabInfoFromTrigger ::
   m (TableInfo b)
 askTabInfoFromTrigger sourceName triggerName = do
   schemaCache <- askSchemaCache
-  getTabInfoFromSchemaCache schemaCache sourceName triggerName
+  tableInfoMaybe <- getTabInfoFromSchemaCache schemaCache sourceName triggerName
+  tableInfoMaybe `onNothing` throw400 NotExists errMsg
+  where
+    errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 getTabInfoFromSchemaCache ::
   (Backend b, QErrM m) =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
-  m (TableInfo b)
+  m (Maybe (TableInfo b))
 getTabInfoFromSchemaCache schemaCache sourceName triggerName = do
   let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources schemaCache
-  find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
-    `onNothing` throw400 NotExists errMsg
-  where
-    errMsg = "event trigger " <> triggerName <<> " does not exist"
+  pure $ find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
 
 askEventTriggerInfo ::
   forall b m.
@@ -453,24 +460,49 @@ buildEventTriggerInfo ::
   SourceName ->
   TableName b ->
   EventTriggerConf b ->
-  m (EventTriggerInfo b, [SchemaDependency])
-buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig) = do
-  webhookConf <- case (webhook, webhookFromEnv) of
-    (Just w, Nothing) -> return $ WCValue w
-    (Nothing, Just wEnv) -> return $ WCEnv wEnv
-    _ -> throw500 "expected webhook or webhook_from_env"
-  let headerConfs = fromMaybe [] mheaders
-  webhookInfo <- getWebhookInfoFromConf env webhookConf
-  headerInfos <- getHeaderInfosFromConf env headerConfs
-  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos reqTransform respTransform cleanupConfig
-      tabDep =
-        SchemaDependency
-          ( SOSourceObj source $
-              AB.mkAnyBackend $
-                SOITable @b tableName
-          )
-          DRParent
-  pure (eTrigInfo, tabDep : getTrigDefDeps @b source tableName def)
+  m (EventTriggerInfo b, Seq SchemaDependency)
+buildEventTriggerInfo
+  env
+  source
+  tableName
+  ( EventTriggerConf
+      name
+      def
+      webhook
+      webhookFromEnv
+      rconf
+      mheaders
+      reqTransform
+      respTransform
+      cleanupConfig
+      triggerOnReplication
+    ) = do
+    webhookConf <- case (webhook, webhookFromEnv) of
+      (Just w, Nothing) -> return $ WCValue w
+      (Nothing, Just wEnv) -> return $ WCEnv wEnv
+      _ -> throw500 "expected webhook or webhook_from_env"
+    let headerConfs = fromMaybe [] mheaders
+    webhookInfo <- getWebhookInfoFromConf env webhookConf
+    headerInfos <- getHeaderInfosFromConf env headerConfs
+    let eTrigInfo =
+          EventTriggerInfo
+            name
+            def
+            rconf
+            webhookInfo
+            headerInfos
+            reqTransform
+            respTransform
+            cleanupConfig
+            triggerOnReplication
+        tabDep =
+          SchemaDependency
+            ( SOSourceObj source $
+                AB.mkAnyBackend $
+                  SOITable @b tableName
+            )
+            DRParent
+    pure (eTrigInfo, tabDep Seq.:<| getTrigDefDeps @b source tableName def)
 
 getTrigDefDeps ::
   forall b.
@@ -478,14 +510,15 @@ getTrigDefDeps ::
   SourceName ->
   TableName b ->
   TriggerOpsDef b ->
-  [SchemaDependency]
+  Seq SchemaDependency
 getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $
-    catMaybes
-      [ subsOpSpecDeps <$> mIns,
-        subsOpSpecDeps <$> mUpd,
-        subsOpSpecDeps <$> mDel
-      ]
+    Seq.fromList
+      <$> catMaybes
+        [ subsOpSpecDeps <$> mIns,
+          subsOpSpecDeps <$> mUpd,
+          subsOpSpecDeps <$> mDel
+        ]
   where
     subsOpSpecDeps :: SubscribeOpSpec b -> [SchemaDependency]
     subsOpSpecDeps os =
@@ -521,9 +554,12 @@ getTableNameFromTrigger ::
   SchemaCache ->
   SourceName ->
   TriggerName ->
-  m (TableName b)
-getTableNameFromTrigger schemaCache sourceName triggerName =
-  (_tciName . _tiCoreInfo) <$> getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  m (Maybe (TableName b))
+getTableNameFromTrigger schemaCache sourceName triggerName = do
+  tableInfoMaybe <- getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  case tableInfoMaybe of
+    Nothing -> pure Nothing
+    Just tableInfo -> pure $ Just $ (_tciName . _tiCoreInfo) $ tableInfo
 
 runCleanupEventTriggerLog ::
   (MonadEventLogCleanup m, MonadError QErr m) =>
@@ -569,7 +605,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       case tlcs of
         TriggerAllSource -> do
           ifor_ (scSources schemaCache) $ \sourceName backendSourceInfo -> do
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _customSQLCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
         TriggerSource sourceNameLst -> do
           forM_ sourceNameLst $ \sourceName -> do
@@ -577,7 +613,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
               HM.lookup sourceName (scSources schemaCache)
                 `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _customSQLCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
     TriggerQualifier qualifierLst -> do
       forM_ qualifierLst $ \qualifier -> do
@@ -591,11 +627,14 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {} :: SourceInfo b) -> do
           forM_ triggerNames $ \triggerName -> do
             eventTriggerInfo <- askEventTriggerInfo @b sourceName triggerName
-            tableName <- getTableNameFromTrigger @b schemaCache sourceName triggerName
-            cleanupConfig <-
-              (etiCleanupConfig eventTriggerInfo)
-                `onNothing` throw400 NotExists ("cleanup config does not exist for " <> triggerNameToTxt triggerName)
-            updateCleanupStatusInMetadata @b cleanupConfig cleanupSwitch sourceName tableName triggerName
+            tableNameMaybe <- getTableNameFromTrigger @b schemaCache sourceName triggerName
+            case tableNameMaybe of
+              Nothing -> throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
+              Just tableName -> do
+                cleanupConfig <-
+                  (etiCleanupConfig eventTriggerInfo)
+                    `onNothing` throw400 NotExists ("cleanup config does not exist for " <> triggerNameToTxt triggerName)
+                updateCleanupStatusInMetadata @b cleanupConfig cleanupSwitch sourceName tableName triggerName
   pure successMsg
   where
     traverseTableHelper ::
@@ -609,7 +648,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       let tableName = (_tciName . _tiCoreInfo) tableInfo
           eventTriggerInfoMap = _tiEventTriggerInfoMap tableInfo
       ifor_ eventTriggerInfoMap $ \triggerName eventTriggerInfo -> do
-        onJust (etiCleanupConfig eventTriggerInfo) $ \cleanupConfig ->
+        for_ (etiCleanupConfig eventTriggerInfo) $ \cleanupConfig ->
           updateCleanupStatusInMetadata @b cleanupConfig switch sourceName tableName triggerName
 
 runEventTriggerResumeCleanup ::
@@ -642,4 +681,5 @@ getAllETWithCleanupConfigInTableMetadata tMetadata =
         (triggerName,)
           <$> etcCleanupConfig triggerConf
     )
-    $ OMap.toList $ _tmEventTriggers tMetadata
+    $ OMap.toList
+    $ _tmEventTriggers tMetadata

@@ -45,6 +45,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Types.Function qualified as TF
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -60,7 +61,6 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
@@ -74,7 +74,7 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
-import Hasura.SQL.Types
+import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
@@ -84,6 +84,7 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq
+import System.Metrics.Prometheus.Counter as Prometheus.Counter
 
 fetchActionLogResponses ::
   (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t) =>
@@ -119,8 +120,8 @@ runActionExecution userInfo aep =
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
-          let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) PG.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
+          let querySQL = toQuery $ selectToSelectWith $ RS.mkSQLSelect jsonAggSelect selectResolved
+          liftEitherM $ runExceptT $ _pecRunTx (_pscExecCtx srcConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
 -- | This function is generally used on the result of 'selectQuerySQL',
@@ -138,12 +139,13 @@ asSingleRowJsonResp query args =
 resolveActionExecution ::
   Env.Environment ->
   L.Logger L.Hasura ->
+  PrometheusMetrics ->
   UserInfo ->
   IR.AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution env logger prometheusMetrics _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -156,6 +158,7 @@ resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExe
         callWebhook
           env
           _aecManager
+          prometheusMetrics
           _aaeOutputType
           _aaeOutputFields
           _aecHeaders
@@ -195,19 +198,23 @@ validateResponse webhookResponse' outputType outputF =
         unless (isNullableType outputType) $ throwUnexpected "got null for the action webhook response"
       (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
         unless (name == GName._Int || name == GName._Float) $
-          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got scalar String for the action webhook response, expecting " <> G.unName name
       (J.Bool _, (GraphQLType (G.TypeNamed _ name))) -> do
         unless (name == GName._Boolean) $
-          throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got scalar Boolean for the action webhook response, expecting " <> G.unName name
       (J.String _, (GraphQLType (G.TypeNamed _ name))) -> do
         unless (name == GName._String || name == GName._ID) $
-          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got scalar String for the action webhook response, expecting " <> G.unName name
       (J.Array _, (GraphQLType (G.TypeNamed _ name))) -> throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
       (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) -> do
         traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
       ((J.Object obj), (GraphQLType (G.TypeNamed _ name))) -> do
         when (isInBuiltScalar (G.unName name)) $
-          throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got object for the action webhook response, expecting " <> G.unName name
         validateResponseObject obj outputF
       (_, (GraphQLType (G.TypeList _ _))) ->
         throwUnexpected $ "expecting array for the action webhook response"
@@ -403,7 +410,10 @@ resolveAsyncActionQuery userInfo annAction =
           sessionVarValue =
             IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
-                PGValJSONB $ PG.JSONB $ J.toJSON $ _uiSession userInfo
+                PGValJSONB $
+                  PG.JSONB $
+                    J.toJSON $
+                      _uiSession userInfo
           sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
        in -- For non-admin roles, accessing an async action's response should be allowed only for the user
           -- who initiated the action through mutation. The action's response is accessible for a query/subscription
@@ -427,10 +437,11 @@ asyncActionsProcessor ::
   IO SchemaCache ->
   STM.TVar (Set LockedActionEventId) ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sleepTime gqlQueryText =
+asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager prometheusMetrics sleepTime gqlQueryText =
   return $
     Forever () $
       const $ do
@@ -455,7 +466,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sl
         liftIO $ sleep $ milliseconds sleepTime
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
-    callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
+    callHandler actionCache actionLogItem = Tracing.runTraceT Tracing.sampleAlways "async actions processor" do
       let ActionLogItem
             actionId
             actionName
@@ -481,6 +492,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sl
                 callWebhook
                   env
                   httpManager
+                  prometheusMetrics
                   outputType
                   outputFields
                   reqHeaders
@@ -508,6 +520,7 @@ callWebhook ::
   ) =>
   Env.Environment ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   GraphQLType ->
   IR.ActionOutputFields ->
   [HTTP.Header] ->
@@ -522,6 +535,7 @@ callWebhook ::
 callWebhook
   env
   manager
+  prometheusMetrics
   outputType
   outputFields
   reqHeaders
@@ -557,7 +571,7 @@ callWebhook
     (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
       Nothing -> pure (Nothing, Nothing, Nothing)
       Just RequestTransform {..} ->
-        let reqTransformCtx = mkReqTransformCtx webhookUrl sessionVars templateEngine
+        let reqTransformCtx = fmap mkRequestContext $ mkReqTransformCtx webhookUrl sessionVars templateEngine
          in case applyRequestTransform reqTransformCtx requestFields req of
               Left err -> do
                 -- Log The Transformation Error
@@ -571,6 +585,7 @@ callWebhook
                  in pure (Just transformedReq, Just transformedPayloadSize, Just reqTransformCtx)
 
     let actualReq = fromMaybe req transformedReq
+        actualSize = fromMaybe requestBodySize transformedReqSize
 
     httpResponse <-
       Tracing.tracedHttpRequest actualReq $ \request ->
@@ -581,7 +596,8 @@ callWebhook
     case httpResponse of
       Left e ->
         throw500WithDetail "http exception when calling webhook" $
-          J.toJSON $ ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
+          J.toJSON $
+            ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
         -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
@@ -590,7 +606,8 @@ callWebhook
             responseStatus = responseWreq ^. Wreq.responseStatus
             mkResponseInfo respBody =
               ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
-                toHeadersConf $ responseWreq ^. Wreq.responseHeaders
+                toHeadersConf $
+                  responseWreq ^. Wreq.responseHeaders
 
         transformedResponseBody <- case metadataResponseTransform of
           Nothing -> pure responseBody
@@ -607,6 +624,13 @@ callWebhook
                   throw500WithDetail "Response Transformation Failed" $ J.toJSON err
 
         -- log the request and response to/from the action handler
+        liftIO $ do
+          Prometheus.Counter.add
+            (pmActionBytesSent prometheusMetrics)
+            actualSize
+          Prometheus.Counter.add
+            (pmActionBytesReceived prometheusMetrics)
+            responseBodySize
         logger :: (L.Logger L.Hasura) <- asks getter
         L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
@@ -615,35 +639,38 @@ callWebhook
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
             throw500WithDetail "not a valid json response from webhook" $
               J.toJSON $
-                ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $ Just responseInfo
+                ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $
+                  Just responseInfo
           Right responseValue -> do
             let responseInfo = mkResponseInfo responseValue
                 addInternalToErr e =
                   let actionInternalError =
                         J.toJSON $
-                          ActionInternalError (J.String "unexpected response") requestInfo $ Just responseInfo
+                          ActionInternalError (J.String "unexpected response") requestInfo $
+                            Just responseInfo
                    in e {qeInternal = Just $ ExtraInternal actionInternalError}
 
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
-                  modifyQErr addInternalToErr $ do
-                    webhookResponse <- decodeValue responseValue
-                    validateResponse responseValue outputType outputFields
-                    pure (webhookResponse, mkSetCookieHeaders responseWreq)
+                    modifyQErr addInternalToErr $ do
+                      webhookResponse <- decodeValue responseValue
+                      validateResponse responseValue outputType outputFields
+                      pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
-                  ActionWebhookErrorResponse message maybeCode maybeExtensions <-
-                    modifyQErr addInternalToErr $ decodeValue responseValue
-                  let code = maybe Unexpected ActionWebhookCode maybeCode
-                      qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
-                  throwError qErr
+                    ActionWebhookErrorResponse message maybeCode maybeExtensions <-
+                      modifyQErr addInternalToErr $ decodeValue responseValue
+                    let code = maybe Unexpected ActionWebhookCode maybeCode
+                        qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
+                    throwError qErr
                 | otherwise -> do
-                  let err =
-                        J.toJSON $
-                          "expecting 2xx or 4xx status code, but found "
-                            ++ show (HTTP.statusCode responseStatus)
-                  throw500WithDetail "internal error" $
-                    J.toJSON $
-                      ActionInternalError err requestInfo $ Just responseInfo
+                    let err =
+                          J.toJSON $
+                            "expecting 2xx or 4xx status code, but found "
+                              ++ show (HTTP.statusCode responseStatus)
+                    throw500WithDetail "internal error" $
+                      J.toJSON $
+                        ActionInternalError err requestInfo $
+                          Just responseInfo
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->
@@ -706,7 +733,7 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
 fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
 fetchUndeliveredActionEventsTx =
   map mapEvent
-    <$> PG.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
     update hdb_catalog.hdb_action_log set status = 'processing'

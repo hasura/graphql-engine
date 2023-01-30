@@ -2,7 +2,7 @@ cabal-version: 3.0
 name: dc-api
 version: 1.0.0
 extra-source-files:
-  test/Test/Data/ChinookData.xml.gz
+  test/Test/Data/Chinook.xml.gz
   test/Test/Data/schema-tables.json
 
 flag profiling
@@ -11,6 +11,7 @@ flag profiling
   manual: True
 
 common common-all
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
   default-language: Haskell2010
   default-extensions:
     BlockArguments
@@ -31,6 +32,8 @@ common common-all
     RankNTypes
     RecordWildCards
     ScopedTypeVariables
+    StandaloneDeriving
+    StrictData
     TupleSections
     TypeApplications
     TypeFamilies
@@ -75,7 +78,9 @@ library
     Hasura.Backends.DataConnector.API.V0.Capabilities
     Hasura.Backends.DataConnector.API.V0.Column
     Hasura.Backends.DataConnector.API.V0.ConfigSchema
+    Hasura.Backends.DataConnector.API.V0.ErrorResponse
     Hasura.Backends.DataConnector.API.V0.Expression
+    Hasura.Backends.DataConnector.API.V0.Mutations
     Hasura.Backends.DataConnector.API.V0.OrderBy
     Hasura.Backends.DataConnector.API.V0.Query
     Hasura.Backends.DataConnector.API.V0.Explain
@@ -84,40 +89,55 @@ library
     Hasura.Backends.DataConnector.API.V0.Scalar
     Hasura.Backends.DataConnector.API.V0.Schema
     Hasura.Backends.DataConnector.API.V0.Table
+    Hasura.Backends.DataConnector.API.V0.Dataset
+  other-modules:
+    Hasura.Backends.DataConnector.API.V0.Name
 
 test-suite tests-dc-api
   import: common-all
   type: exitcode-stdio-1.0
+  build-tool-depends: hspec-discover:hspec-discover
   build-depends:
     Diff,
     aeson,
+    aeson-pretty,
     ansi-terminal,
     autodocodec,
     autodocodec-openapi3,
     base,
     bytestring,
     case-insensitive,
+    containers,
     data-fix,
     deepseq,
     dc-api,
+    directory,
+    exceptions,
     file-embed,
+    filepath,
+    free,
+    graphql-parser,
     hashable,
-    hspec,
-    hspec-core,
     http-client,
+    http-types,
     lens,
     lens-aeson,
+    lifted-base,
+    monad-control,
     mtl,
     network-uri,
     openapi3,
     optparse-applicative,
     scientific,
+    sandwich,
     servant,
     servant-client,
     servant-client-core,
     servant-openapi3,
     text,
+    time,
     unordered-containers,
+    uuid,
     vector,
     xml-conduit,
     xml-lens,
@@ -126,21 +146,30 @@ test-suite tests-dc-api
   hs-source-dirs: test
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
-  ghc-options: -Wall -O0 -threaded
+  ghc-options: -O0 -threaded
   main-is: Main.hs
   other-modules:
     Command
     Paths_dc_api
+    Test.AgentAPI
+    Test.AgentClient
+    Test.AgentDatasets
+    Test.AgentTestContext
     Test.Data
-    Test.CapabilitiesSpec
+    Test.DataExport
     Test.Expectations
-    Test.HealthSpec
-    Test.MetricsSpec
-    Test.ExplainSpec
-    Test.QuerySpec
-    Test.QuerySpec.AggregatesSpec
-    Test.QuerySpec.BasicSpec
-    Test.QuerySpec.FilteringSpec
-    Test.QuerySpec.OrderBySpec
-    Test.QuerySpec.RelationshipsSpec
-    Test.SchemaSpec
+    Test.HttpFile
+    Test.Specs.CapabilitiesSpec
+    Test.Specs.ErrorSpec
+    Test.Specs.ExplainSpec
+    Test.Specs.HealthSpec
+    Test.Specs.MetricsSpec
+    Test.Specs.QuerySpec
+    Test.Specs.QuerySpec.AggregatesSpec
+    Test.Specs.QuerySpec.BasicSpec
+    Test.Specs.QuerySpec.CustomOperatorsSpec
+    Test.Specs.QuerySpec.FilteringSpec
+    Test.Specs.QuerySpec.OrderBySpec
+    Test.Specs.QuerySpec.RelationshipsSpec
+    Test.Specs.SchemaSpec
+    Test.TestHelpers
