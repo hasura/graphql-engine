@@ -38,6 +38,7 @@ const cliEnvVars = `
   pro: ${process.env.IS_PRO},
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}',
   consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}',
+  consoleType: '${process.env.HASURA_CONSOLE_TYPE}',
   tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
 `;
 

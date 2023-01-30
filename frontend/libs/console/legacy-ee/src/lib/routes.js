@@ -264,13 +264,27 @@ const routes = store => {
     return composeOnEnterHooks(onEnterHooks)(...args);
   };
 
+  /**
+   * ## checkIfAdmin
+   * This function checks if the user is an admin or not and redirects to the access denied page if not.
+   * This is used to hide the security tab from non-admin users.
+   */
   const checkIfAdmin = (nextState, replaceState) => {
     const mainData = store.getState().main;
     // when console type is pro-lite only admin secret login is allowed, making this check unnecessary
-    if (globals.consoleType !== 'pro-lite') {
-      if (!mainData.project.privileges.includes('admin')) {
-        replaceState('api/security/access_denied');
-      }
+    // ie. admin privileges are already checked in the login process
+    if (globals.consoleType === 'pro-lite') return; // show security tab
+
+    // cloud cli doesn't have any privileges when `hasura console` command is executed, it will only have previleges when `hasura pro console` is executed.
+    // this will make sure that security tab is visible even when the users are running `hasura console` command with valid admin secret
+    if (globals.consoleType === 'cloud' && globals.consoleMode === 'cli') {
+      // this will be true when `hasura console` is executed with a valid admin secret -> through which security tab APIs are accessible
+      if (globals.adminSecret && globals.adminSecret !== '') return; // show security tab
+    }
+
+    // check privileges for all other cases
+    if (!mainData.project.privileges.includes('admin')) {
+      replaceState('api/security/access_denied'); // show access denied page
     }
   };
 

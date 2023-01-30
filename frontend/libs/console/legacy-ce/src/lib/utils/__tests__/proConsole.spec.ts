@@ -66,6 +66,46 @@ describe('isProConsole', () => {
       expect(isProConsole(env)).toBe(false);
     });
   });
+
+  describe('when consoleMode is cli and consoleType is cloud', () => {
+    it('returns true', () => {
+      const env: ProConsoleEnv = {
+        consoleMode: 'cli',
+        consoleType: 'cloud',
+      };
+      expect(isProConsole(env)).toBe(true);
+    });
+  });
+
+  describe('when consoleMode is cli and consoleType is pro', () => {
+    it('returns true', () => {
+      const env: ProConsoleEnv = {
+        consoleMode: 'cli',
+        consoleType: 'pro',
+      };
+      expect(isProConsole(env)).toBe(true);
+    });
+  });
+
+  describe('when consoleMode is cli and consoleType is pro-lite', () => {
+    it('returns true', () => {
+      const env: ProConsoleEnv = {
+        consoleMode: 'cli',
+        consoleType: 'pro-lite',
+      };
+      expect(isProConsole(env)).toBe(true);
+    });
+  });
+
+  describe('when consoleMode is cli and consoleType is oss', () => {
+    it('returns false', () => {
+      const env: ProConsoleEnv = {
+        consoleMode: 'cli',
+        consoleType: 'oss',
+      };
+      expect(isProConsole(env)).toBe(false);
+    });
+  });
 });
 
 describe('isMonitoringTabSupportedEnvironment', () => {

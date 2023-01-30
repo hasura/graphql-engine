@@ -151,3 +151,39 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 func (p *DefaultTemplateProvider) GetAssetsCDN() string {
 	return "https://graphql-engine-cdn.hasura.io/console/assets"
 }
+
+type EELiteTemplateProvider struct {
+	*DefaultTemplateProvider
+}
+
+func NewEETemplateProvider(basePath string, templateFileName string, consoleFs embed.FS) *EELiteTemplateProvider {
+	return &EELiteTemplateProvider{
+		NewDefaultTemplateProvider(basePath, templateFileName, consoleFs),
+	}
+}
+
+func (p *EELiteTemplateProvider) GetAssetsVersion(v *version.Version) string {
+	return fmt.Sprintf("channel/versioned/%s", v.Server)
+}
+
+func (p *EELiteTemplateProvider) GetAssetsCDN() string {
+	return "https://graphql-engine-cdn.hasura.io/pro-console/assets"
+}
+
+type CloudTemplateProvider struct {
+	*DefaultTemplateProvider
+}
+
+func (p *CloudTemplateProvider) GetAssetsVersion(v *version.Version) string {
+	return fmt.Sprintf("channel/versioned/%s", v.Server)
+}
+
+func (p *CloudTemplateProvider) GetAssetsCDN() string {
+	return "https://graphql-engine-cdn.hasura.io/cloud-console/assets"
+}
+
+func NewCloudTemplateProvider(basePath string, templateFileName string, consoleFs embed.FS) *CloudTemplateProvider {
+	return &CloudTemplateProvider{
+		NewDefaultTemplateProvider(basePath, templateFileName, consoleFs),
+	}
+}
