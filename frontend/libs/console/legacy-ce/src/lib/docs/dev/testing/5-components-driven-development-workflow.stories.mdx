@@ -1,4 +1,5 @@
 import { Meta } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
 
 <Meta title="Dev/Testing/5. Components-Driven Development - The WorkfLow" />
 
@@ -154,7 +155,7 @@ Let's fix this:
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import { UserInfo } from './UserInfo';
 
@@ -163,9 +164,9 @@ export default {
   component: UserInfo,
   decorators: [
     (S: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}}>
-        {() => <S />}
-      </Form>
+      <SimpleForm schema={z.any()} onSubmit={action('onSubmit')}>
+        <S />
+      </SimpleForm>
     ),
   ],
 } as Meta;
@@ -272,7 +273,7 @@ export const CompanyInfo = () => {
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { z } from 'zod';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 
 import { CompanyInfo } from './CompanyInfo';
 
@@ -281,9 +282,9 @@ export default {
   component: CompanyInfo,
   decorators: [
     (S: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}}>
-        {() => <S />}
-      </Form>
+      <SimpleForm schema={z.any()} onSubmit={action('onSubmit')}>
+        <S />
+      </SimpleForm>
     ),
   ],
 } as Meta;
@@ -305,7 +306,7 @@ The component will be responsible for its entire data lifecycle and we will use 
 import React from 'react';
 import { z } from 'zod';
 
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { CompanyInfo } from './CompanyInfo';
 import { UserInfo } from './UserInfo';
 
@@ -330,19 +331,17 @@ export const ExampleForm = () => {
   };
 
   return (
-    <Form schema={schema} onSubmit={handleSubmit}>
-      {() => (
-        <>
-          <p className="font-bold">User Info</p>
-          <UserInfo />
-          <p className="font-bold">Company Info</p>
-          <CompanyInfo />
-          <Button type="submit" mode="primary">
-            Submit
-          </Button>
-        </>
-      )}
-    </Form>
+    <SimpleForm schema={schema} onSubmit={handleSubmit}>
+      <>
+        <p className="font-bold">User Info</p>
+        <UserInfo />
+        <p className="font-bold">Company Info</p>
+        <CompanyInfo />
+        <Button type="submit" mode="primary">
+          Submit
+        </Button>
+      </>
+    </SimpleForm>
   );
 };
 ```
@@ -399,7 +398,7 @@ import { z } from 'zod';
 import { Api } from '@/hooks/apiUtils';
 
 import { Button } from '@/new-components/Button';
-import { Form } from '@/new-components/Form';
+import { SimpleForm } from '@/new-components/Form';
 import { CompanyInfo } from './CompanyInfo';
 import { UserInfo } from './UserInfo';
 
@@ -439,19 +438,17 @@ export const ExampleForm = () => {
   };
 
   return (
-    <Form schema={schema} onSubmit={handleSubmit}>
-      {() => (
-        <>
-          <p className="font-bold">User Info</p>
-          <UserInfo />
-          <p className="font-bold">Company Info</p>
-          <CompanyInfo />
-          <Button type="submit" mode="primary">
-            Submit
-          </Button>
-        </>
-      )}
-    </Form>
+    <SimpleForm schema={schema} onSubmit={handleSubmit}>
+      <>
+        <p className="font-bold">User Info</p>
+        <UserInfo />
+        <p className="font-bold">Company Info</p>
+        <CompanyInfo />
+        <Button type="submit" mode="primary">
+          Submit
+        </Button>
+      </>
+    </SimpleForm>
   );
 };
 ```

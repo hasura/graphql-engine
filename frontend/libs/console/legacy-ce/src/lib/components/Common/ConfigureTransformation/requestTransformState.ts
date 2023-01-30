@@ -2,6 +2,7 @@ import {
   RequestTransformMethod,
   RequestTransformContentType,
   RequestTransformBodyActions,
+  QueryParams,
 } from '../../../metadata/types';
 import {
   SET_ENV_VARS,
@@ -51,13 +52,13 @@ import {
   ResponseTransformStateBody,
   SET_RESPONSE_BODY,
   SetResponseBody,
-  SET_RESPONSE_BODY_ERROR,
-  SetResponseBodyError,
   ResponseTransformState,
   ResponseTransformEvents,
   SET_RESPONSE_TRANSFORM_STATE,
   defaultActionResponseBody,
   SetResponseTransformState,
+  defaultCronTriggerRequestBody,
+  defaultCronTriggerSampleInput,
 } from './stateDefaults';
 import { getSessionVarsFromLS, getEnvVarsFromLS } from './utils';
 
@@ -100,7 +101,7 @@ export const setRequestUrlPreview = (
 });
 
 export const setRequestQueryParams = (
-  requestQueryParams: KeyValuePair[]
+  requestQueryParams: QueryParams
 ): SetRequestQueryParams => ({
   type: SET_REQUEST_QUERY_PARAMS,
   requestQueryParams,
@@ -132,13 +133,6 @@ export const setRequestBodyError = (
 ): SetRequestBodyError => ({
   type: SET_REQUEST_BODY_ERROR,
   requestBodyError,
-});
-
-export const setResponseBodyError = (
-  responseBodyError: string
-): SetResponseBodyError => ({
-  type: SET_RESPONSE_BODY_ERROR,
-  responseBodyError,
 });
 
 export const setRequestSampleInput = (
@@ -233,9 +227,7 @@ export const requestTransformState: RequestTransformState = {
 export const responseTransformState: ResponseTransformState = {
   version: currentVersion,
   isResponsePayloadTransform: false,
-  responseSampleInput: '',
   responseBody: { action: responseBodyActionState.transformApplicationJson },
-  responseBodyError: '',
   templatingEngine: 'Kriti',
 };
 
@@ -265,7 +257,6 @@ export const getActionResponseTransformDefaultState =
         template: defaultActionResponseBody,
         form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
       },
-      responseSampleInput: defaultActionRequestSampleInput,
     };
   };
 
@@ -283,6 +274,23 @@ export const getEventRequestTransformDefaultState =
         form_template: [{ name: 'name', value: '{{$body.table.name}}' }],
       },
       requestSampleInput: defaultEventRequestSampleInput,
+    };
+  };
+
+export const getCronTriggerRequestTransformDefaultState =
+  (): RequestTransformState => {
+    return {
+      ...requestTransformState,
+      envVars: getEnvVarsFromLS(),
+      sessionVars: getSessionVarsFromLS(),
+      requestQueryParams: [{ name: '', value: '' }],
+      requestAddHeaders: [{ name: '', value: '' }],
+      requestBody: {
+        action: requestBodyActionState.transformApplicationJson,
+        template: defaultCronTriggerRequestBody,
+        form_template: [{ name: 'payload', value: '{{$body.payload}}' }],
+      },
+      requestSampleInput: defaultCronTriggerSampleInput,
     };
   };
 
@@ -387,11 +395,6 @@ export const responseTransformReducer = (
       return {
         ...state,
         responseBody: action.responseBody,
-      };
-    case SET_RESPONSE_BODY_ERROR:
-      return {
-        ...state,
-        responseBodyError: action.responseBodyError,
       };
     case SET_RESPONSE_PAYLOAD_TRANSFORM:
       return {

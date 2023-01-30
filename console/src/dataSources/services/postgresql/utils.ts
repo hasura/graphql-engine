@@ -81,7 +81,7 @@ const getTableRowRequestBody = ({
   const limit = isExport ? null : view.query.limit;
   const offset = isExport ? null : view.query.offset;
   const requestBody = {
-    type: 'bulk',
+    type: 'concurrent_bulk',
     source: currentDataSource,
     args: [
       getSelectQuery(

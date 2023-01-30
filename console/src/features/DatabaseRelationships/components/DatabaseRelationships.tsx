@@ -92,7 +92,7 @@ export const DatabaseRelationships = (props: DatabaseRelationshipsProps) => {
               });
             }}
           >
-            Create New Relationship
+            Add Relationship
           </Button>
         )}
       </div>

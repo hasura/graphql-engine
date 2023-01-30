@@ -176,7 +176,7 @@ common common-all
       -- Use O1 over O2, as (as of writing) it improves compile times a little, without
       -- hurting performance:
       -O1
-      -- This seems like a better default for us, lowering memory residency without 
+      -- This seems like a better default for us, lowering memory residency without
       -- impacting compile times too much, though it does increase binary size:
       -funfolding-use-threshold=640
   else
@@ -449,6 +449,9 @@ common lib-depends
                      , mysql-simple
                       -- dependency of vendored 'ip':
                      , wide-word
+
+                     -- debounce logs
+                     , fold-debounce
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -571,6 +574,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Source
                      , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
+                     , Hasura.Backends.Postgres.Execute.ConnectionTemplate
                      , Hasura.Backends.Postgres.Execute.Subscription
                      , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
@@ -651,9 +655,12 @@ library
                      , Hasura.Backends.DataConnector.Adapter.SchemaCache
                      , Hasura.Backends.DataConnector.Adapter.Transport
                      , Hasura.Backends.DataConnector.Adapter.Types
+                     , Hasura.Backends.DataConnector.Adapter.Types.Mutations
                      , Hasura.Backends.DataConnector.Agent.Client
                      , Hasura.Backends.DataConnector.Logging
-                     , Hasura.Backends.DataConnector.Plan
+                     , Hasura.Backends.DataConnector.Plan.Common
+                     , Hasura.Backends.DataConnector.Plan.MutationPlan
+                     , Hasura.Backends.DataConnector.Plan.QueryPlan
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -677,6 +684,7 @@ library
                      , Hasura.Server.Init.Arg.PrettyPrinter
                      , Hasura.Server.Init.Config
                      , Hasura.Server.Init.Env
+                     , Hasura.Server.Init.FeatureFlag
                      , Hasura.Server.Init.Logging
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
@@ -705,10 +713,15 @@ library
                      , Hasura.Server.Telemetry.Types
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
+                     , Hasura.CustomSQL
                      , Hasura.GC
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
+                     , Hasura.NativeQuery.IR
+                     , Hasura.NativeQuery.Metadata
+                     , Hasura.NativeQuery.Schema
+                     , Hasura.NativeQuery.Types
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -784,14 +797,17 @@ library
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
+                     , Hasura.RQL.DDL.ConnectionTemplate
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.DataConnector
                      , Hasura.RQL.DDL.Endpoint
+                     , Hasura.RQL.DDL.FeatureFlag
                      , Hasura.RQL.DDL.GraphqlSchemaIntrospection
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
+                     , Hasura.RQL.DDL.CustomSQL
                      , Hasura.RQL.DDL.OpenTelemetry
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal
@@ -799,6 +815,7 @@ library
                      , Hasura.RQL.DDL.QueryTags
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
+                     , Hasura.RQL.DDL.Relationship.Suggest
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.Webhook.Transform
                      , Hasura.RQL.DDL.Webhook.Transform.Body
@@ -842,12 +859,13 @@ library
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.OrderBy
-                     , Hasura.RQL.IR.Returning
-                     , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.RemoteSchema
-                     , Hasura.RQL.IR.Update
-                     , Hasura.RQL.IR.Value
+                     , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Root
+                     , Hasura.RQL.IR.Select
+                     , Hasura.RQL.IR.Update
+                     , Hasura.RQL.IR.Update.Batch
+                     , Hasura.RQL.IR.Value
                      , Hasura.RQL.IR
                      , Hasura.GraphQL.Analyse
                      , Hasura.GraphQL.ApolloFederation
@@ -907,6 +925,7 @@ library
                      , Hasura.GraphQL.Schema.Table
                      , Hasura.GraphQL.Schema.Typename
                      , Hasura.GraphQL.Schema.Update
+                     , Hasura.GraphQL.Schema.Update.Batch
                      , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
@@ -1025,6 +1044,7 @@ test-suite graphql-engine-tests
     , graphql-parser
     , data-has
     , hedgehog
+    , hedgehog-generic
     , hspec
     , hspec-core
     , hspec-expectations
@@ -1095,6 +1115,7 @@ test-suite graphql-engine-tests
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
     Hasura.Backends.BigQuery.SourceSpec
+    Hasura.Backends.BigQuery.TypesSpec
     Hasura.Backends.DataConnector.Adapter.TypesSpec
     Hasura.Backends.DataConnector.API.V0.AggregateSpec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
@@ -1135,6 +1156,7 @@ test-suite graphql-engine-tests
     Hasura.IncrementalSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
     Hasura.QuickCheck.Instances
+    Hasura.RQL.DDL.Webhook.TransformSpec
     Hasura.RQL.IR.Generator
     Hasura.RQL.IR.SelectSpec
     Hasura.RQL.MetadataSpec
@@ -1147,6 +1169,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
+    Hasura.Server.CompressionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
     Hasura.Server.Migrate.VersionSpec

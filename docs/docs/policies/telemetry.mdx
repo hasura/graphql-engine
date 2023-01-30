@@ -13,7 +13,7 @@ sidebar_label: Telemetry
 
 ## Introduction
 
-The Hasura GraphQL engine collects anonymous telemetry data that helps the Hasura team in understanding how the product
+The Hasura GraphQL Engine collects anonymous telemetry data that helps the Hasura team in understanding how the product
 is being used and in deciding what to focus on next.
 
 The data collected is minimal, statistical in nature and **cannot be used to uniquely identify a user**. Please see the
@@ -21,7 +21,7 @@ next section to see what data is collected and sent. Access to collected data is
 not shared with 3rd parties.
 
 As a growing community, we greatly appreciate the usage data users send to us, as it is very valuable in helping us make
-the Hasura GraphQL engine a better product for everyone! However, if you are concerned about sending usage stats, you
+the Hasura GraphQL Engine a better product for everyone! However, if you are concerned about sending usage stats, you
 can choose to disable telemetry as described [here](#telemetry-optout).
 
 ## What data is collected?
@@ -29,7 +29,7 @@ can choose to disable telemetry as described [here](#telemetry-optout).
 ### Server
 
 The server periodically sends the number of tables, views, relationships, permission rules, custom SQL functions, event
-triggers and remote schemas tracked by the GraphQL engine, along with randomly generated UUIDs per database and per
+triggers and Remote Schemas tracked by the GraphQL Engine, along with randomly generated UUIDs per database and per
 instance. The name of the current continuous integration environment (if any) and the server version is also sent.
 
 Here is a sample row from the telemetry database:
@@ -66,7 +66,7 @@ Here is a sample row from the telemetry database:
 ### Console
 
 The Console collects runtime errors along with anonymized route names are sent without any identifiable information or
-payload. The console also records the UUID of the server/CLI that it is connected to.
+payload. The Console also records the UUID of the server/CLI that it is connected to.
 
 Sample data:
 
@@ -119,12 +119,12 @@ The data is sent to Hasura's servers addressed by `telemetry.hasura.io`.
 
 ### Disable server telemetry
 
-You can turn off telemetry on **the server and on the console hosted by the server** by setting the env variable
+You can turn off telemetry on **the server and on the Console hosted by the server** by setting the env variable
 `HASURA_GRAPHQL_ENABLE_TELEMETRY=false` or the flag `--enable-telemetry=false` on the server.
 
 ### Disable CLI telemetry
 
-You can turn off telemetry on **the CLI and on the console served by the CLI** by setting the env variable
+You can turn off telemetry on **the CLI and on the Console served by the CLI** by setting the env variable
 `HASURA_GRAPHQL_ENABLE_TELEMETRY=false` on the machine running the CLI. You can also set `"enable_telemetry": false` in
 the JSON config file created by the CLI at `~/.hasura/config.json` to persist the setting.
 

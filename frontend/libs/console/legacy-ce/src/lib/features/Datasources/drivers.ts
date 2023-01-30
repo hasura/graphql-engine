@@ -7,6 +7,7 @@ import mssql, { MssqlDataTarget } from './mssql';
 import mysql, { MysqlDataTarget } from './mysql';
 import postgres, { PostgresDataTarget } from './postgres';
 import cockroach, { CockroachDataTarget } from './cockroach';
+import alloy, { AlloyDataTarget } from './alloy';
 import { RunSQLQueryOptions } from './types';
 
 export type DataTarget =
@@ -15,7 +16,8 @@ export type DataTarget =
   | MssqlDataTarget
   | BigQueryDataTarget
   | MysqlDataTarget
-  | CockroachDataTarget;
+  | CockroachDataTarget
+  | AlloyDataTarget;
 
 export type TableRelationshipsType = {
   from: {
@@ -48,4 +50,5 @@ export const drivers: TDriversMap = {
   bigquery,
   mysql,
   cockroach,
+  alloy,
 };

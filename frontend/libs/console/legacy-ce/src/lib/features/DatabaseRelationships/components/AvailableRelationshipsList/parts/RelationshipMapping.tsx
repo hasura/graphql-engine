@@ -1,4 +1,5 @@
 import { Tooltip } from '@/new-components/Tooltip';
+import { getRemoteFieldPath } from '@/features/RelationshipsTable';
 import React from 'react';
 import {
   FaArrowRight,
@@ -45,7 +46,11 @@ export const RelationshipMapping = ({
         <span>{getTableDisplayName(relationship.fromTable)}</span>
         /
         <FaColumns />{' '}
-        <Columns mapping={relationship.definition.mapping} type="from" />
+        {relationship.type === 'remoteSchemaRelationship' ? (
+          relationship.definition.lhs_fields.join(',')
+        ) : (
+          <Columns mapping={relationship.definition.mapping} type="from" />
+        )}
       </div>
       <FaArrowRight />
 
@@ -55,7 +60,7 @@ export const RelationshipMapping = ({
             <FaPlug />
             <div>{relationship.definition.toRemoteSchema}</div> /
             <FaFont />{' '}
-            <Columns mapping={relationship.definition.mapping} type="to" />
+            {getRemoteFieldPath(relationship.definition.remote_field)}
           </>
         ) : relationship.type === 'remoteDatabaseRelationship' ? (
           <>

@@ -284,30 +284,47 @@ data OtelExporterInfo = OtelExporterInfo
     _oteleiResourceAttributes :: [(Text, Text)]
   }
 
--- Smart constructor
+-- | Smart constructor for 'OtelExporterInfo'.
+--
+-- Returns a @Left qErr@ to signal a validation error. Returns @Right Nothing@
+-- to signal that the exporter should be disabled without raising an error.
+--
+-- Allows the trace endpoint to be unset if the entire OpenTelemetry system is
+-- disabled.
 parseOtelExporterConfig ::
-  Environment -> OtelExporterConfig -> Either QErr OtelExporterInfo
-parseOtelExporterConfig env OtelExporterConfig {..} = do
-  rawTracesEndpoint <-
-    maybeToEither
-      (err400 InvalidParams "Missing traces endpoint")
-      _oecTracesEndpoint
-  tracesUri <-
-    maybeToEither (err400 InvalidParams "Invalid URL") $
-      parseURI $
-        Text.unpack rawTracesEndpoint
-  uriRequest <-
-    first (err400 InvalidParams . tshow) $ requestFromURI tracesUri
+  OtelStatus ->
+  Environment ->
+  OtelExporterConfig ->
+  Either QErr (Maybe OtelExporterInfo)
+parseOtelExporterConfig otelStatus env OtelExporterConfig {..} = do
+  -- First validate everything but the trace endpoint
   headers <- makeHeadersFromConf env _oecHeaders
-  pure
-    OtelExporterInfo
-      { _oteleiTracesBaseRequest =
-          uriRequest {requestHeaders = headers ++ requestHeaders uriRequest},
-        _oteleiResourceAttributes =
-          map
-            (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
-            _oecResourceAttributes
-      }
+  -- Allow the trace endpoint to be unset when OpenTelemetry is disabled
+  case _oecTracesEndpoint of
+    Nothing ->
+      case otelStatus of
+        OtelDisabled ->
+          pure Nothing
+        OtelEnabled -> Left (err400 InvalidParams "Missing traces endpoint")
+    Just rawTracesEndpoint -> do
+      tracesUri <-
+        maybeToEither (err400 InvalidParams "Invalid URL") $
+          parseURI $
+            Text.unpack rawTracesEndpoint
+      uriRequest <-
+        first (err400 InvalidParams . tshow) $ requestFromURI tracesUri
+      pure $
+        Just $
+          OtelExporterInfo
+            { _oteleiTracesBaseRequest =
+                uriRequest
+                  { requestHeaders = headers ++ requestHeaders uriRequest
+                  },
+              _oteleiResourceAttributes =
+                map
+                  (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
+                  _oecResourceAttributes
+            }
 
 getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Request
 getOtelExporterTracesBaseRequest = _oteleiTracesBaseRequest

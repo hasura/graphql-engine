@@ -28,6 +28,7 @@ module Hasura.Prelude
     hoistEither,
     readJson,
     tshow,
+    applyWhen,
 
     -- * Trace debugging
     ltrace,
@@ -332,3 +333,9 @@ traceToFileM filepath x =
 nonEmptySeqToNonEmptyList :: NESeq a -> NonEmpty a
 nonEmptySeqToNonEmptyList (x NESeq.:<|| xs) =
   x M.:| toList xs
+
+-- | Conditionally apply a datatransformation. This is especially
+-- helpful for conditionally applying lenses.
+applyWhen :: Bool -> (a -> a) -> a -> a
+applyWhen True f x = f x
+applyWhen False _ x = x

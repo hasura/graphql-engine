@@ -14,7 +14,7 @@ export function useMigrationMode(
   queryOptions?: UseQueryOptions<{ migration_mode: boolean }, Error, boolean>
 ): UseQueryResult<boolean> {
   const headers = useAppSelector(s => s.tables.dataHeaders);
-  const migrationUrl = Endpoints.hasuractlMigrateSettings;
+  const migrationUrl = Endpoints.hasuraCliServerMigrateSettings;
   const { mode } = useConsoleConfig();
   return useQuery({
     queryKey: 'migrationMode',

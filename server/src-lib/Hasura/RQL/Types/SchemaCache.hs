@@ -14,7 +14,9 @@ module Hasura.RQL.Types.SchemaCache
     unsafeTableCache,
     unsafeTableInfo,
     askSourceInfo,
+    askSourceInfoMaybe,
     askSourceConfig,
+    askSourceConfigMaybe,
     askTableCache,
     askTableInfo,
     askTableCoreInfo,
@@ -294,6 +296,15 @@ askSourceInfo sourceName = do
           )
           (metadata ^. metaSources . at sourceName)
 
+askSourceInfoMaybe ::
+  forall b m.
+  (CacheRM m, Backend b) =>
+  SourceName ->
+  m (Maybe (SourceInfo b))
+askSourceInfoMaybe sourceName = do
+  sources <- scSources <$> askSchemaCache
+  pure (unsafeSourceInfo @b =<< M.lookup sourceName sources)
+
 -- | Retrieves the source config for a given source name.
 --
 -- This function relies on 'askSourceInfo' and similarly throws an error if the
@@ -304,6 +315,14 @@ askSourceConfig ::
   SourceName ->
   m (SourceConfig b)
 askSourceConfig = fmap _siConfiguration . askSourceInfo @b
+
+askSourceConfigMaybe ::
+  forall b m.
+  (CacheRM m, Backend b) =>
+  SourceName ->
+  m (Maybe (SourceConfig b))
+askSourceConfigMaybe =
+  fmap (fmap _siConfiguration) . askSourceInfoMaybe @b
 
 -- | Retrieves the table cache for a given source cache and source name.
 --

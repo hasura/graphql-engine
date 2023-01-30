@@ -1,7 +1,8 @@
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { useListAllTableColumns } from '../hooks';
+import { useListAllTableColumns } from '@/features/Data';
+import { TableColumn } from '@/features/DataSource';
 import { ModifyTableColumn } from '../types';
 import { EditTableColumnDialog } from './EditTableColumnDialog/EditTableColumnDialog';
 import { TableColumnDescription } from './TableColumnDescription';
@@ -10,11 +11,10 @@ import { ModifyTableProps } from '../ModifyTable';
 interface TableColumnProps extends ModifyTableProps {}
 export const TableColumns: React.VFC<TableColumnProps> = props => {
   const { dataSourceName, table } = props;
-  const {
-    data: columns,
-    isLoading,
-    isError,
-  } = useListAllTableColumns(dataSourceName, table);
+  const { columns, isLoading, isError } = useListAllTableColumns(
+    dataSourceName,
+    table
+  );
 
   const [isEditColumnFormActive, setIsEditColumnFormActive] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState<ModifyTableColumn>();
@@ -35,7 +35,7 @@ export const TableColumns: React.VFC<TableColumnProps> = props => {
 
   return (
     <>
-      {(columns ?? []).map(c => (
+      {(columns ?? []).map((c: TableColumn) => (
         <TableColumnDescription
           column={c}
           key={c.name}

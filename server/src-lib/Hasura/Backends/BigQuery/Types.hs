@@ -509,11 +509,6 @@ instance NFData a => NFData (Aliased a)
 
 deriving instance Ord a => Ord (Aliased a)
 
-newtype SchemaName = SchemaName
-  { schemaNameParts :: [Text]
-  }
-  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable)
-
 data TableName = TableName
   { tableName :: Text,
     tableNameSchema :: Text

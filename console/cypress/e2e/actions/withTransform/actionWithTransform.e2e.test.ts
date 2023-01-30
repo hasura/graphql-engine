@@ -213,9 +213,9 @@ if (testMode !== 'cli') {
         cy.get('@responseTransformResponseBody')
           .wait(500)
           .clearConsoleTextarea()
-          .wait(100)
+          .wait(500)
           .clearConsoleTextarea()
-          .wait(100)
+          .wait(500)
           .type(
             `{
             "userInfo": {

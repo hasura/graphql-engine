@@ -14,15 +14,22 @@ sidebar_position: 17
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Render Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to a Render Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Render Postgres database to a Hasura Cloud project. If you're
-exploring Render Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
-out their [docs](https://render.com/docs/migrate-from-heroku) before continuing below.
+This guide explains how to connect a new or existing [Render Postgres database](https://render.com/docs/databases) to a
+Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Render Postgres and are
+interested in migrating an existing Postgres database - such as from Heroku - check out their
+[docs](https://render.com/docs/migrate-from-heroku) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-render).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -33,27 +40,26 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
-
-## Step 3: Create a Postgres DB on Render ([skip if you have an existing DB](#get-db-url))
+## Step 3: Create a Postgres DB on Render {#create-pg-db-render}
 
 Log into [Render](https://dashboard.render.com/).
 
 From your dashboard, click `New PostrgeSQL`:
 
-<Thumbnail src='/img/cloud-dbs/render/render-new-pg.png' alt='Create a new PG db with Render' width='700px' />
+<Thumbnail src="/img/cloud-dbs/render/render-new-pg.png" alt="Create a new PG db with Render" width="700px" />
 
 Choose a name for your new database and fill in the required info. When ready, click `Create Database`:
 
-<Thumbnail src='/img/cloud-dbs/render/render-pg-details.png' alt='Fill in the db details' width='700px' />
+<Thumbnail src="/img/cloud-dbs/render/render-pg-details.png" alt="Fill in the db details" width="700px" />
 
 Render will redirect you to the database's dashboard. After a few minutes, you should see the status update to
 `Available`. Congratulations! You've now created a Postgres instance on Render which you can use with Hasura GraphQL
@@ -70,9 +76,9 @@ postgres://<user-name>:<password>@<host-server>/<database-name>
 From your database's dashboard, find the `Connections` card and copy the `External Database URL`:
 
 <Thumbnail
-  src='/img/cloud-dbs/render/render-connection-string.png'
-  alt='Grab the PG db connection string'
-  width='700px'
+  src="/img/cloud-dbs/render/render-connection-string.png"
+  alt="Grab the PG db connection string"
+  width="700px"
 />
 
 ## Step 5: Finish connecting the database
@@ -80,9 +86,9 @@ From your database's dashboard, find the `Connections` card and copy the `Extern
 Back on the Hasura Console, enter the database URL that we retrieved in the previous step:
 
 <Thumbnail
-  src='/img/cloud-dbs/render/render-connect-db.png'
-  alt='Connect the database on Hasura Console'
-  width='700px'
+  src="/img/cloud-dbs/render/render-connect-db.png"
+  alt="Connect the database on Hasura Console"
+  width="700px"
 />
 
 Then click `Connect Database`.
@@ -97,19 +103,19 @@ of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
-[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
-[custom domains](/projects/domains.mdx#manage-project-domains)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+  [env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+  [custom domains](/projects/domains.mdx#manage-project-domains)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

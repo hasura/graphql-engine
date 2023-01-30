@@ -18,7 +18,11 @@ import extendedGlobals from '../Globals';
 
 const persistFilteredGraphiQLHeaders = headers => {
   const filteredHeaders = headers.filter(header => {
-    if (extendedGlobals.isAdminSecretSet && extendedGlobals.adminSecret && extendedGlobals.consoleType === 'cloud') {
+    if (
+      extendedGlobals.isAdminSecretSet &&
+      extendedGlobals.adminSecret &&
+      extendedGlobals.consoleType === 'cloud'
+    ) {
       if (header.key.toLowerCase() === HASURA_COLLABORATOR_TOKEN) {
         return false;
       }

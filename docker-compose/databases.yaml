@@ -26,6 +26,7 @@ services:
 
   postgres:
     image: postgis/postgis:15-3.3-alpine
+    platform: linux/amd64
     command:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
@@ -38,7 +39,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 1 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -46,6 +47,7 @@ services:
 
   citus:
     image: citusdata/citus:11
+    platform: linux/amd64
     command:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
@@ -59,18 +61,19 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 1 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
       retries: 20
 
   cockroach:
-    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
+    image: cockroachdb/cockroach:latest-v22.2
     command:
       - start-single-node
       - --insecure
       - --accept-sql-without-tls
+    init: true # doesn't shut down properly without this
     ports:
       - 26257
     volumes:
@@ -78,7 +81,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - cockroach sql --insecure < /dev/null && sleep 1 && cockroach sql --insecure < /dev/null
+        - cockroach sql --insecure < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -106,6 +109,7 @@ services:
     # This uses an environment variable so it can be overridden by scripts to
     # provide that image instead.
     image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
+    init: true # azure-sql-edge doesn't shut down properly without this
     ports:
       - 1433
     environment:
@@ -124,6 +128,7 @@ services:
   # We can reconsider this once the MSSQL Server image can run on arm64.
   sqlserver-healthcheck:
     image: mcr.microsoft.com/mssql-tools
+    platform: linux/amd64
     command:
       - sleep
       - inf

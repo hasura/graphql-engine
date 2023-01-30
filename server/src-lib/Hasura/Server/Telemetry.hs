@@ -133,8 +133,9 @@ runTelemetry ::
   MetadataDbId ->
   InstanceId ->
   PGVersion ->
+  HashSet ExperimentalFeature ->
   IO void
-runTelemetry (Logger logger) manager getSchemaCache metadataDbUid instanceId pgVersion = do
+runTelemetry (Logger logger) manager getSchemaCache metadataDbUid instanceId pgVersion experimentalFeatures = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- getSchemaCache
@@ -153,6 +154,7 @@ runTelemetry (Logger logger) manager getSchemaCache metadataDbUid instanceId pgV
             serviceTimings
             (scRemoteSchemas schemaCache)
             (scActions schemaCache)
+            experimentalFeatures
         telemetries =
           map
             (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
@@ -195,9 +197,10 @@ mkTelemetryPayload ::
   ServiceTimingMetrics ->
   RemoteSchemaMap ->
   ActionCache ->
+  HashSet ExperimentalFeature ->
   SourceInfo b ->
   TelemetryPayload
-mkTelemetryPayload metadataDbId instanceId version pgVersion ci serviceTimings remoteSchemaMap actionCache sourceInfo =
+mkTelemetryPayload metadataDbId instanceId version pgVersion ci serviceTimings remoteSchemaMap actionCache experimentalFeatures sourceInfo =
   let topic = versionToTopic version
       sourceMetadata =
         SourceMetadata
@@ -220,7 +223,7 @@ mkTelemetryPayload metadataDbId instanceId version pgVersion ci serviceTimings r
           (forDefaultSource remoteSchemaMap)
           (forDefaultSource actionCache)
       telemetry =
-        HasuraTelemetry metadataDbId instanceId version ci sourceMetadata metrics
+        HasuraTelemetry metadataDbId instanceId version ci sourceMetadata metrics experimentalFeatures
    in TelemetryPayload topic telemetry
 
 -- | Compute the relevant metrics for a specific source.

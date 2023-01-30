@@ -180,7 +180,7 @@ const loadSchema = (configOptions = {}) => {
     }
 
     const body = {
-      type: 'bulk',
+      type: 'concurrent_bulk',
       source,
       args: [
         fetchTableListQuery(configOptions, source),
@@ -221,7 +221,11 @@ const loadSchema = (configOptions = {}) => {
 
     return dispatch(exportMetadata()).then(state => {
       const metadataTables = getTablesInfoSelector(state)({});
-      return dispatch(requestAction(url, options)).then(
+      const notifierPromise = new Promise(resolve =>
+        setTimeout(resolve, 10000, 'notify')
+      );
+
+      const actionPromise = dispatch(requestAction(url, options)).then(
         data => {
           if (!data || !data[0] || !data[0].result) return;
           let mergedData = [];
@@ -268,6 +272,23 @@ const loadSchema = (configOptions = {}) => {
           );
         }
       );
+
+      return Promise.race([notifierPromise, actionPromise]).then(value => {
+        if (value === 'notify') {
+          return dispatch(
+            showErrorNotification(
+              'The request is taking longer than expected',
+              '',
+              {
+                action: body.args,
+                message:
+                  'Click "Details" to see more information about the request',
+              }
+            )
+          );
+        }
+        return value;
+      });
     });
   };
 };
@@ -411,7 +432,7 @@ const fetchFunctionInit =
 
     if (!source || !dataSource.getFunctionDefinitionSql) return;
     const body = {
-      type: 'bulk',
+      type: 'concurrent_bulk',
       source,
       args: [
         getRunSqlQuery(
@@ -626,7 +647,7 @@ export const getDatabaseTableTypeInfoForAllSources =
         );
       }
     );
-    const query = { type: 'bulk', version: 1, args: bulkQueries };
+    const query = { type: 'concurrent_bulk', version: 1, args: bulkQueries };
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',

@@ -1,9 +1,6 @@
-import {
-  currentDriver,
-  dataSource,
-  Driver,
-  terminateSql,
-} from '../../../dataSources';
+import { NativeDrivers } from '@/features/hasura-metadata-types';
+import { isPostgres } from '@/metadata/dataSource.utils';
+import { currentDriver, dataSource, terminateSql } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
@@ -25,10 +22,14 @@ type AllowedRunSQLKeys =
   | 'run_sql'
   | 'cockroach_run_sql';
 
-export const getRunSqlType = (driver: Driver): AllowedRunSQLKeys => {
-  if (driver === 'postgres') return 'run_sql';
+type CustomSqlTypeDrivers = Exclude<NativeDrivers, 'postgres' | 'alloy'>;
 
-  return `${driver}_run_sql`;
+export const getRunSqlType = (driver: NativeDrivers): AllowedRunSQLKeys => {
+  if (isPostgres(driver)) {
+    return 'run_sql';
+  }
+
+  return `${driver as CustomSqlTypeDrivers}_run_sql`;
 };
 
 export const getRunSqlQuery = (

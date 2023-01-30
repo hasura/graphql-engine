@@ -7,7 +7,7 @@ import { FaFileExport } from 'react-icons/fa';
 import { FilterRows } from '../Filter';
 import { SortRows } from '../Sort';
 import { FiltersAndSortFormValues } from '../types';
-import { getUrlQueryParams } from './LegacyRunQueryContainer';
+import { getFiltersAndSortFromUrlQueryParams } from './LegacyRunQueryContainer';
 
 type LegacyRunQueryProps = {
   columns: TableColumn[];
@@ -17,34 +17,39 @@ type LegacyRunQueryProps = {
     formValues: FiltersAndSortFormValues
   ) => void;
   onSubmit: (values: FiltersAndSortFormValues) => void;
-  initialUserQuery?: FiltersAndSortFormValues;
+  initialFiltersAndSort?: FiltersAndSortFormValues;
   uniqueTableName?: string;
 };
-const defaultQueryValues: FiltersAndSortFormValues = {
-  filter: [],
-  sort: [],
+
+export const defaultFiltersAndSortFormValues: FiltersAndSortFormValues = {
+  filters: [],
+  sorts: [],
 };
+
 export const LegacyRunQuery = ({
   onExport,
   onSubmit,
   operators,
   columns,
-  initialUserQuery = defaultQueryValues,
+  initialFiltersAndSort = defaultFiltersAndSortFormValues,
   uniqueTableName = '',
 }: LegacyRunQueryProps) => {
   const methods = useForm<FiltersAndSortFormValues>({
-    defaultValues: initialUserQuery,
+    defaultValues: initialFiltersAndSort,
   });
 
   const { handleSubmit, reset } = methods;
 
   useEffect(() => {
-    const queryParams = getUrlQueryParams();
-    if (queryParams.filter.length > 0 || queryParams.sort.length > 0) {
+    const filtersAndSortFromUrl = getFiltersAndSortFromUrlQueryParams();
+    if (
+      filtersAndSortFromUrl.filters.length > 0 ||
+      filtersAndSortFromUrl.sorts.length > 0
+    ) {
       return;
     }
 
-    reset(defaultQueryValues);
+    reset(initialFiltersAndSort);
   }, [uniqueTableName]);
 
   const exportItems = [
@@ -61,15 +66,17 @@ export const LegacyRunQuery = ({
               <FilterRows
                 columns={columns}
                 operators={operators}
-                name="filter"
-                initialFilters={initialUserQuery.filter}
+                name="filters"
+                initialFilters={initialFiltersAndSort.filters}
+                onRemove={() => handleSubmit(onSubmit)()}
               />
             </div>
             <div className="flex-grow w-1/2 pr-4">
               <SortRows
                 columns={columns}
-                name="sort"
-                initialSorts={initialUserQuery.sort}
+                name="sorts"
+                initialSorts={initialFiltersAndSort.sorts}
+                onRemove={() => handleSubmit(onSubmit)()}
               />
             </div>
           </div>

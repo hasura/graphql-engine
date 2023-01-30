@@ -43,7 +43,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
     }[]
   >({
     sql: getSQL(schema, table),
-    queryKey: ['postgres', 'fk_relationships', database, schema, table],
+    queryKey: ['citus', 'fk_relationships', database, schema, table],
     transformFn: data => {
       const { result } = data;
 

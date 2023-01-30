@@ -65,16 +65,16 @@ In the `Data > Data Manager > Connect Existing Database` section on the Console,
 speaks the same protocol as Postgres, the connection string will start with `postgres://`, i.e, there is no difference
 between CockroachDB's connection strings and Postgres’s connection strings.
 
-<Thumbnail src='/img/databases/cockroachdb-postgres/1-add-source.png' alt='Add source' width='1100px' />
+<Thumbnail src="/img/databases/cockroachdb-postgres/1-add-source.png" alt="Add source" width="1100px" />
 
 If you're testing Hasura with CockroachDB running locally,
 [read this guide](/deployment/deployment-guides/docker.mdx#docker-networking) on Docker networking if you're not sure
 how to reach your CockroachDB database from the Hasura docker container on Linux, Mac or Windows.
 
 <Thumbnail
-  src='/img/databases/cockroachdb-postgres/2-add-source.png'
-  alt='Add source added with docker-compose'
-  width='1100px'
+  src="/img/databases/cockroachdb-postgres/2-add-source.png"
+  alt="Add source added with docker-compose"
+  width="1100px"
 />
 
 This example uses the DB url `postgresql://root@cockroach:26257/hasura`, with the service name `cockroach`, as both
@@ -157,28 +157,28 @@ list of tables.
 Track tables selectively or all of them so that Hasura can introspect the tables and create the corresponding GraphQL
 schema.
 
-<Thumbnail src='/img/databases/cockroachdb-postgres/4-track-tables.png' alt='Track tables' width='1100px' />
+<Thumbnail src="/img/databases/cockroachdb-postgres/4-track-tables.png" alt="Track tables" width="1100px" />
 
 If you have foreign keys, you'll also see suggested relationships. Again, you can choose to track them selectively or
 all at once.
 
 <Thumbnail
-  src='/img/databases/cockroachdb-postgres/5-track-rels.png'
-  alt='Track foreign-key relationships'
-  width='1100px'
+  src="/img/databases/cockroachdb-postgres/5-track-rels.png"
+  alt="Track foreign-key relationships"
+  width="1100px"
 />
 
 If you don't have existing tables, go ahead and add new tables and data and try out some queries, just like with a
 regular Postgres database.
 
-<Thumbnail src='/img/databases/cockroachdb-postgres/6-add-tables.png' alt='Add a new table' width='1100px' />
+<Thumbnail src="/img/databases/cockroachdb-postgres/6-add-tables.png" alt="Add a new table" width="1100px" />
 
 ### Step 6: Try out a GraphQL query
 
 Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.
 
-<Thumbnail src='/img/databases/cockroachdb-postgres/7-make-graphql-query.png' alt='Make GraphQL query' width='1100px' />
+<Thumbnail src="/img/databases/cockroachdb-postgres/7-make-graphql-query.png" alt="Make GraphQL query" width="1100px" />
 
 ## Keep up to date
 
@@ -187,7 +187,7 @@ Hasura currently supports [queries](/queries/postgres/index.mdx),
 CockroachDB.
 
 Please refer to the [Postgres docs](/queries/postgres/index.mdx) on how you can try these features out via the Console
-or by manipulating metadata in JSON/YAML directly.
+or by manipulating Metadata in JSON/YAML directly.
 
 If you'd like to stay informed about the status of CockroachDB support, subscribe to our newsletter and join our
 discord!

@@ -1021,43 +1021,7 @@ WHERE
   },
   // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
   // https://github.com/hasura/graphql-engine-mono/issues/4641
-  getDataTriggerLogsCountQuery: (
-    triggerName: string,
-    triggerOp: TriggerOperation
-  ): string => {
-    const triggerTypes = {
-      pending: 'pending',
-      processed: 'processed',
-      invocation: 'invocation',
-    };
-    const eventRelTable = `"hdb_catalog"."event_log"`;
-    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
 
-    let logsCountQuery = `SELECT
-    COUNT(*)
-    FROM ${eventRelTable} data_table
-    WHERE data_table.trigger_name = '${triggerName}' `;
-
-    switch (triggerOp) {
-      case triggerTypes.pending:
-        logsCountQuery += `AND delivered=0 AND error=0 AND archived=0;`;
-        break;
-
-      case triggerTypes.processed:
-        logsCountQuery += `AND (delivered=1 OR error=1) AND archived=0;`;
-        break;
-      case triggerTypes.invocation:
-        logsCountQuery = `SELECT
-          COUNT(*)
-          FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
-          ON original_table.event_id = data_table.id
-          WHERE data_table.trigger_name = '${triggerName}' `;
-        break;
-      default:
-        break;
-    }
-    return logsCountQuery;
-  },
   // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
   // https://github.com/hasura/graphql-engine-mono/issues/4641
   getDataTriggerLogsQuery: (
@@ -1095,15 +1059,13 @@ WHERE
         break;
 
       case triggerTypes.invocation:
-        sql = `SELECT CONVERT(varchar(MAX), original_table.id) AS "id", CONVERT(varchar(MAX), original_table.event_id) AS "event_id",  
-        original_table.status,  CONVERT(varchar(MAX), original_table.request) AS "request", CONVERT(varchar(MAX), original_table.response) AS "response", 
-        CONVERT(varchar(MAX), CAST(original_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", data_table.schema_name, 
-        data_table.table_name, data_table.trigger_name, CONVERT(varchar(MAX), data_table.payload) AS "payload", data_table.delivered, data_table.error,
-        data_table.tries, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.locked) AS "locked", 
-        CONVERT(varchar(MAX), data_table.next_retry_at) AS "next_retry_at", data_table.archived 
-        FROM ${eventInvTable} AS original_table JOIN ${eventRelTable} AS data_table ON original_table.event_id = data_table.id
+        sql = `SELECT CONVERT(varchar(MAX), data_table.id) AS "id", CONVERT(varchar(MAX), data_table.event_id) AS "event_id",  
+        data_table.status,  CONVERT(varchar(MAX), data_table.request) AS "request", CONVERT(varchar(MAX), data_table.response) AS "response", 
+        CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", 
+        data_table.trigger_name, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at"
+        FROM ${eventInvTable} AS data_table
         WHERE data_table.trigger_name = '${triggerName}' 
-        ORDER BY original_table.created_at DESC `;
+        ORDER BY data_table.created_at DESC `;
         break;
       default:
         break;

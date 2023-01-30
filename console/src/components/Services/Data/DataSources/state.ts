@@ -685,5 +685,8 @@ export const makeReadReplicaConnectionObject = (
   return {
     database_url,
     pool_settings,
+    use_prepared_statements: stateVal.preparedStatements,
+    ssl_configuration: stateVal.sslConfiguration,
+    isolation_level: stateVal.isolationLevel,
   };
 };

@@ -21,6 +21,9 @@ instance ToGraphqlString Bool where
   showGql True = "true"
   showGql False = "false"
 
+instance ToGraphqlString String where
+  showGql = id
+
 -- | Transforms GraphQL to its JSON representation. Does string interpolation.
 -- For every expression enclosed as #{expression}, this Quasi Quoter will
 -- evaluate 'expression' in the context it was written. For example:

@@ -1,6 +1,11 @@
-import { Nullable } from './../components/Common/utils/tsUtils';
-import { Driver } from '../dataSources';
-import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
+import type { Moment } from 'moment';
+
+import type { OpenTelemetry } from '@/features/hasura-metadata-types';
+import type { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+
+import type { Driver } from '../dataSources';
+import type { Nullable } from './../components/Common/utils/tsUtils';
+import type { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
 export type DataSource = {
   name: string;
@@ -538,6 +543,21 @@ export interface CronTrigger {
   request_transform?: RequestTransform;
 }
 
+export interface ScheduledTrigger {
+  /**	URL of the webhook */
+  webhook: WebhookURL;
+  /**	Scheduled time at which the trigger should be invoked. */
+  schedule_at: string | Moment;
+  /** Any JSON payload which will be sent when the webhook is invoked. */
+  payload?: Record<string, any>;
+  /** List of headers to be sent with the webhook */
+  headers: ServerHeader[];
+  /**	Retry configuration if scheduled invocation delivery fails */
+  retry_conf?: RetryConfST;
+  /**	Custom comment. */
+  comment?: string;
+}
+
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
  */
@@ -930,7 +950,7 @@ export type RequestTransformBodyActions =
 export type RequestTransformBody = {
   action: RequestTransformBodyActions;
   template?: string;
-  form_template?: Record<string, string>;
+  form_template?: Record<string, string> | string;
 };
 
 export type ResponseTransformBody = {
@@ -950,7 +970,7 @@ interface RequestTransformFields {
   url?: Nullable<string>;
   content_type?: Nullable<RequestTransformContentType>;
   request_headers?: Nullable<RequestTransformHeaders>;
-  query_params?: Nullable<Record<string, string>>;
+  query_params?: Nullable<Record<string, string>> | string;
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
 
@@ -1136,14 +1156,28 @@ type GraphQLCustomizationMetadata = {
   naming_convention: GraphQLFieldCustomization['namingConvention'];
 };
 
+// Used for Dynamic Connection Routing
+type ConnectionSet = {
+  connection_info: SourceConnectionInfo;
+  name: string;
+};
+
 export interface MetadataDataSource {
   name: string;
-  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus' | 'cockroach';
+  kind:
+    | 'postgres'
+    | 'mssql'
+    | 'mysql'
+    | 'bigquery'
+    | 'citus'
+    | 'cockroach'
+    | 'alloy';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     extensions_schema?: string;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
+    connection_set?: ConnectionSet[];
     service_account?: BigQueryServiceAccount;
     global_select_limit?: number;
     project_id?: string;
@@ -1208,6 +1242,14 @@ export interface HasuraMetadataV3 {
   graphql_schema_introspection?: {
     disabled_for_roles: string[];
   };
+
+  /**
+   * The EE Lite OpenTelemetry settings.
+   *
+   * ATTENTION: Both Lux and the EE Lite server allow configuring OpenTelemetry. Anyway, this only
+   * represents the EE Lite one since Lux stores the OpenTelemetry settings by itself.
+   */
+  opentelemetry?: OpenTelemetry;
 }
 
 // Inconsistent Objects
@@ -1247,3 +1289,5 @@ type InconsistentObjectDefinition = {
   url_from_env: string;
   forward_client_headers: boolean;
 };
+
+export type QueryParams = KeyValuePair[] | string;

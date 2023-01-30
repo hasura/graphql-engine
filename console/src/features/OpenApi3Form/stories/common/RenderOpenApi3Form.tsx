@@ -1,5 +1,5 @@
+import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
-import { Form } from '@/new-components/Form';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useState } from 'react';
 import ReactJson from 'react-json-view';
@@ -26,42 +26,43 @@ export const RenderOpenApi3Form = ({
     configSchema,
     otherSchemas,
   });
+  const {
+    methods: { formState },
+    Form,
+  } = useConsoleForm({
+    schema: z.object(schema ? { [name]: schema } : {}),
+    options: {
+      defaultValues,
+    },
+  });
 
   if (!schema || isLoading) return <>Loading...</>;
 
   return (
     <Form
-      schema={z.object({ [name]: schema })}
-      options={{
-        defaultValues,
-      }}
       onSubmit={values => {
         setSubmittedValues(values as any);
       }}
     >
-      {options => {
-        return (
-          <>
-            <OpenApi3Form
-              schemaObject={configSchema}
-              references={otherSchemas}
-              name={name}
-            />
-            <Button type="submit" data-testid="submit-form-btn">
-              Submit
-            </Button>
-            <div>Submitted Values:</div>
-            <div data-testid="output">
-              {rawOutput ? (
-                JSON.stringify(submittedValues)
-              ) : (
-                <ReactJson src={submittedValues} name={false} />
-              )}
-            </div>
-            {console.log(options.formState.errors)}
-          </>
-        );
-      }}
+      <>
+        <OpenApi3Form
+          schemaObject={configSchema}
+          references={otherSchemas}
+          name={name}
+        />
+        <Button type="submit" data-testid="submit-form-btn">
+          Submit
+        </Button>
+        <div>Submitted Values:</div>
+        <div data-testid="output">
+          {rawOutput ? (
+            JSON.stringify(submittedValues)
+          ) : (
+            <ReactJson src={submittedValues} name={false} />
+          )}
+        </div>
+        {console.log(formState.errors)}
+      </>
     </Form>
   );
 };

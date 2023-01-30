@@ -35,6 +35,9 @@ singletonAliasMapping fieldName alias = AliasMapping $ \fieldName' ->
 newtype ResultCustomizer = ResultCustomizer {unResultCustomizer :: AliasMapping -> JO.Value -> JO.Value}
   deriving (Semigroup, Monoid) via (AliasMapping -> Endo JO.Value)
 
+instance Show ResultCustomizer where
+  show _ = "(ResultCustomizer <function>)"
+
 -- | Apply a ResultCustomizer to a JSON value
 applyResultCustomizer :: ResultCustomizer -> JO.Value -> JO.Value
 applyResultCustomizer = ($ mempty) . unResultCustomizer

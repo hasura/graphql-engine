@@ -25,8 +25,8 @@ export interface SelectPermissionDefinition {
   columns?: string[];
   filter?: Record<string, unknown>;
   allow_aggregations?: boolean;
-  query_root_fields?: string[];
-  subscription_root_fields?: string[];
+  query_root_fields?: string[] | null;
+  subscription_root_fields?: string[] | null;
   limit?: number;
 }
 

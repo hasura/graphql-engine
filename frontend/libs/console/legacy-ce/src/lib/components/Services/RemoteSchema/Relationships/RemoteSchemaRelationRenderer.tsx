@@ -5,6 +5,7 @@ import {
   allowedMetadataTypes,
   useGetAllRemoteSchemaRelationships,
   useMetadataMigration,
+  useInconsistentObject,
 } from '@/features/MetadataAPI';
 import {
   RemoteSchemaRelationshipTable,
@@ -19,6 +20,7 @@ import {
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { useFireNotification } from '@/new-components/Notifications';
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
+import { InconsistentBadge } from '../Common/GraphQLCustomization/InconsistentBadge';
 
 type RemoteSchemaRelationRendererProp = {
   remoteSchemaName: string;
@@ -41,6 +43,8 @@ export const RemoteSchemaRelationRenderer = ({
       rsType: '',
     });
   const [formState, setFormState] = useState<RemoteRelOption>('remoteSchema');
+
+  const inconsistentObjects = useInconsistentObject();
 
   const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
@@ -98,9 +102,19 @@ export const RemoteSchemaRelationRenderer = ({
     return <div>Error in fetching remote schema relationships.</div>;
   }
 
+  const inconsistencyDetails = inconsistentObjects.find(
+    inconObj =>
+      inconObj.type === 'remote_schema' &&
+      inconObj?.name === `remote_schema ${remoteSchemaName}`
+  );
+
   return (
     <>
       <FeatureFlagFloatingButton />
+
+      {inconsistencyDetails && (
+        <InconsistentBadge inconsistencyDetails={inconsistencyDetails} />
+      )}
 
       {remoteSchemaRels?.length ? (
         <RemoteSchemaRelationshipTable
@@ -113,12 +127,12 @@ export const RemoteSchemaRelationRenderer = ({
           remoteSchema={remoteSchemaName}
         />
       ) : (
-        <>
+        <div className="mt-6 w-full sm:w-9/12">
           <IndicatorCard status="info">
             No remote schema relationships found!
           </IndicatorCard>
           <br />
-        </>
+        </div>
       )}
       {isFormOpen ? (
         formState === 'remoteSchema' ? (
@@ -141,15 +155,17 @@ export const RemoteSchemaRelationRenderer = ({
           />
         )
       ) : (
-        <Button
-          icon={<RiAddCircleFill />}
-          onClick={() => {
-            openForm({});
-          }}
-          data-test="add-a-new-rs-relationship"
-        >
-          Add a new relationship
-        </Button>
+        !inconsistencyDetails && (
+          <Button
+            icon={<RiAddCircleFill />}
+            onClick={() => {
+              openForm({});
+            }}
+            data-test="add-a-new-rs-relationship"
+          >
+            Add a new relationship
+          </Button>
+        )
       )}
     </>
   );

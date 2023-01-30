@@ -106,6 +106,7 @@ export const createAction =
       headers: rawState.headers,
       comment: actionComment,
       timeout: parseInt(rawState.timeout, 10),
+      forwardClientHeaders: rawState.forwardClientHeaders,
     };
 
     const requestTransform = getRequestTransformObject(transformState);
@@ -149,7 +150,6 @@ export const createAction =
       reformCustomTypes(existingTypesList)
     );
     migration.add(customFieldsQueryUp, customFieldsQueryDown);
-
     const actionQueryUp = generateCreateActionQuery(
       state.name,
       generateActionDefinition(state, requestTransform, responseTransform),

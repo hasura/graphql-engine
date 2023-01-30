@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { expect } from '@storybook/jest';
-import { userEvent, within, waitFor } from '@storybook/testing-library';
+import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
 import {
@@ -10,7 +10,7 @@ import {
   requestHeadersSelectorSchema,
 } from '.';
 import { Button } from '../Button';
-import { Form } from '../Form';
+import { SimpleForm } from '../Form';
 
 export default {
   title: 'components/Request Headers Selector',
@@ -30,7 +30,7 @@ interface Props extends RequestHeadersSelectorProps {
 
 export const Primary: Story<Props> = args => {
   return (
-    <Form
+    <SimpleForm
       options={{
         defaultValues: {
           headers: [
@@ -42,15 +42,11 @@ export const Primary: Story<Props> = args => {
       onSubmit={args.onSubmit}
       schema={schema}
     >
-      {() => {
-        return (
-          <>
-            <RequestHeadersSelector name={args.name} />
-            <Button type="submit">Submit</Button>
-          </>
-        );
-      }}
-    </Form>
+      <>
+        <RequestHeadersSelector name={args.name} />
+        <Button type="submit">Submit</Button>
+      </>
+    </SimpleForm>
   );
 };
 

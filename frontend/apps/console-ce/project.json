@@ -5,20 +5,10 @@
   "tags": [],
   "targets": {
     "build-server-assets": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "@hasura/internal-plugin:build-server-assets",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
       "outputs": ["dist/apps/server-assets-console-ce"],
-      "dependsOn": ["build"],
-      "options": {
-        "commands": [
-          "rm -rf dist/apps/server-assets-console-ce",
-          "cp dist/apps/console-ce dist/apps/server-assets-console-ce -r",
-          "mkdir -p dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.{js,css} dist/apps/server-assets-console-ce/versioned",
-          "gzip -r -f dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.map dist/apps/server-assets-console-ce/versioned"
-        ],
-        "parallel": false
-      }
+      "dependsOn": ["build"]
     },
     "build": {
       "executor": "@nrwl/web:webpack",
@@ -33,20 +23,21 @@
         "polyfills": "apps/console-ce/src/polyfills.ts",
         "tsConfig": "apps/console-ce/tsconfig.app.json",
         "assets": [
-          "apps/console-ce/src/favicon.ico",
-          "apps/console-ce/src/assets"
+          {
+            "glob": "**",
+            "input": "apps/console-ce/src/assets/common",
+            "output": "common"
+          }
         ],
-        "styles": [
-          "apps/console-ce/src/css/tailwind.css",
-          "apps/console-ce/src/css/legacy-boostrap.css"
-        ],
+        "styles": ["apps/console-ce/src/css/tailwind.css"],
         "scripts": [],
-        "webpackConfig": "apps/console-ce/custom-webpack.config.js",
+        "webpackConfig": "custom-webpack.config.js",
         "postcssConfig": "apps/console-ce/postcss.config.js"
       },
       "configurations": {
         "development": {
           "extractLicenses": false,
+          "outputHashing": "none",
           "extractCss": false,
           "optimization": false,
           "sourceMap": true,
@@ -63,10 +54,10 @@
           "outputHashing": "none",
           "extractCss": false,
           "sourceMap": true,
-          "namedChunks": false,
-          "generateIndexHtml": false,
+          "namedChunks": true,
+          "generateIndexHtml": true,
           "extractLicenses": false,
-          "vendorChunk": false
+          "vendorChunk": true
         }
       }
     },

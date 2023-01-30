@@ -199,7 +199,7 @@ getTables BigQuerySourceConfig {..} =
 getTablesForDataSet ::
   MonadIO m =>
   BigQueryConnection ->
-  Text ->
+  BigQueryDataset ->
   m (Either RestProblem [RestTable])
 getTablesForDataSet conn dataSet = do
   result <-
@@ -235,12 +235,13 @@ getTablesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack (_bqProjectId conn)
-            <> "/datasets/"
-            <> T.unpack dataSet
-            <> "/tables?alt=json&"
-            <> T.unpack (encodeParams extraParameters)
+          T.unpack $
+            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+              <> getBigQueryProjectId (_bqProjectId conn)
+              <> "/datasets/"
+              <> getBigQueryDataset dataSet
+              <> "/tables?alt=json&"
+              <> encodeParams extraParameters
         extraParameters = pageTokenParam
           where
             pageTokenParam =
@@ -252,7 +253,7 @@ getTablesForDataSet conn dataSet = do
 getTable ::
   MonadIO m =>
   BigQueryConnection ->
-  Text ->
+  BigQueryDataset ->
   Text ->
   m (Either RestProblem RestTable)
 getTable conn dataSet tableId = do
@@ -274,14 +275,15 @@ getTable conn dataSet tableId = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack (_bqProjectId conn)
-            <> "/datasets/"
-            <> T.unpack dataSet
-            <> "/tables/"
-            <> T.unpack tableId
-            <> "?alt=json&"
-            <> T.unpack (encodeParams extraParameters)
+          T.unpack $
+            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+              <> getBigQueryProjectId (_bqProjectId conn)
+              <> "/datasets/"
+              <> getBigQueryDataset dataSet
+              <> "/tables/"
+              <> tableId
+              <> "?alt=json&"
+              <> encodeParams extraParameters
         extraParameters = []
 
 encodeParams :: [(Text, Text)] -> Text
@@ -422,7 +424,7 @@ getRoutines BigQuerySourceConfig {..} =
 getRoutinesForDataSet ::
   MonadIO m =>
   BigQueryConnection ->
-  Text ->
+  BigQueryDataset ->
   m (Either RestProblem [RestRoutine])
 getRoutinesForDataSet conn dataSet = do
   liftIO (catchAny (run Nothing mempty) (pure . Left . GetRoutineProblem))
@@ -446,12 +448,13 @@ getRoutinesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack (_bqProjectId conn)
-            <> "/datasets/"
-            <> T.unpack dataSet
-            <> "/routines?alt=json&"
-            <> T.unpack (encodeParams extraParameters)
+          T.unpack $
+            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+              <> getBigQueryProjectId (_bqProjectId conn)
+              <> "/datasets/"
+              <> getBigQueryDataset dataSet
+              <> "/routines?alt=json&"
+              <> encodeParams extraParameters
         extraParameters = pageTokenParam <> readMaskParam
           where
             pageTokenParam =

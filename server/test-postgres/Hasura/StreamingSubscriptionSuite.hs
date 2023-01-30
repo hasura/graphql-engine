@@ -68,7 +68,7 @@ buildStreamingSubscriptionSuite = do
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty Nothing
 
   pure $
     describe "Streaming subscriptions polling tests" $
@@ -123,11 +123,11 @@ streamingSubscriptionPollingSpec srcConfig = do
           False
 
   let setup = do
-        runPgSourceWriteTx srcConfig setupDDLTx >>= (`onLeft` (printErrExit . showQErr))
-        runPgSourceWriteTx srcConfig setupValueTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx srcConfig InternalRawQuery setupDDLTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx srcConfig InternalRawQuery setupValueTx >>= (`onLeft` (printErrExit . showQErr))
 
       teardown =
-        runPgSourceWriteTx srcConfig teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx srcConfig InternalRawQuery teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
 
   runIO setup
 
@@ -214,7 +214,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           TMap.reset cohortMap
           TMap.insert cohort1 cohortKey1 cohortMap
 
-      runIO $ pollingAction cohortMap Nothing
+      runIO $ pollingAction cohortMap Nothing Nothing
       currentCohortMap <- runIO $ STM.atomically $ TMap.getMap cohortMap
 
       it "the key of the cohort1 should have been moved from the cohortKey1 to cohortKey2, so it should not be found anymore at cohortKey1" $ do
@@ -237,7 +237,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.insert cohort2 cohortKey3 cohortMap
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction))
+          (pollingAction cohortMap (Just syncAction) Nothing)
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
@@ -260,7 +260,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.delete cohortKey1 cohortMap
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction))
+          (pollingAction cohortMap (Just syncAction) Nothing)
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
@@ -279,7 +279,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ addSubscriberToCohort newTemporarySubscriber cohort1
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction))
+          (pollingAction cohortMap (Just syncAction) Nothing)
           ( \pollAsync -> do
               -- concurrently inserting a new cohort to a key (cohortKey2) to which
               -- cohort1 is expected to be associated after the current poll
@@ -311,7 +311,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction))
+          (pollingAction cohortMap (Just syncAction) Nothing)
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
@@ -347,6 +347,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           requestId2 = RequestId "request-id2"
 
       dummyWSId <- runIO $ WS.mkUnsafeWSId <$> UUID.nextRandom
+      cohortId <- runIO newCohortId
 
       let parameterizedSubscriptionQueryPlan = ParameterizedSubscriptionQueryPlan (mkRoleNameE "user") $ MultiplexedQuery multiplexedQuery
           opID1 = unsafeMkOperationId "1"
@@ -359,6 +360,8 @@ streamingSubscriptionPollingSpec srcConfig = do
             SubscriptionQueryPlan
               parameterizedSubscriptionQueryPlan
               srcConfig
+              cohortId
+              Nothing
               cohortKey1
               Nothing
 

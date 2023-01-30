@@ -4,20 +4,10 @@
   "projectType": "application",
   "targets": {
     "build-server-assets": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "@hasura/internal-plugin:build-server-assets",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ee/**"],
       "outputs": ["dist/apps/server-assets-console-ee"],
-      "dependsOn": ["build"],
-      "options": {
-        "commands": [
-          "rm -rf dist/apps/server-assets-console-ee",
-          "cp dist/apps/console-ee dist/apps/server-assets-console-ee -r",
-          "mkdir -p dist/apps/server-assets-console-ee/versioned",
-          "mv dist/apps/server-assets-console-ee/*.{js,css} dist/apps/server-assets-console-ee/versioned",
-          "gzip -r -f dist/apps/server-assets-console-ee/versioned",
-          "mv dist/apps/server-assets-console-ee/*.map dist/apps/server-assets-console-ee/versioned"
-        ],
-        "parallel": false
-      }
+      "dependsOn": ["build"]
     },
     "build": {
       "executor": "@nrwl/web:webpack",
@@ -32,15 +22,15 @@
         "polyfills": "apps/console-ee/src/polyfills.ts",
         "tsConfig": "apps/console-ee/tsconfig.app.json",
         "assets": [
-          "apps/console-ee/src/favicon.ico",
-          "apps/console-ee/src/assets"
+          {
+            "glob": "**",
+            "input": "apps/console-ee/src/assets/common",
+            "output": "common"
+          }
         ],
-        "styles": [
-          "apps/console-ee/src/css/tailwind.css",
-          "apps/console-ee/src/css/legacy-boostrap.css"
-        ],
+        "styles": ["apps/console-ee/src/css/tailwind.css"],
         "scripts": [],
-        "webpackConfig": "apps/console-ee/custom-webpack.config.js",
+        "webpackConfig": "custom-webpack.config.js",
         "postcssConfig": "apps/console-ee/postcss.config.js"
       },
       "configurations": {
@@ -50,7 +40,7 @@
           "extractLicenses": false,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": false
+          "vendorChunk": true
         },
         "production": {
           "fileReplacements": [
@@ -63,10 +53,10 @@
           "outputHashing": "none",
           "extractCss": false,
           "sourceMap": true,
-          "namedChunks": false,
-          "generateIndexHtml": false,
+          "namedChunks": true,
+          "generateIndexHtml": true,
           "extractLicenses": true,
-          "vendorChunk": false
+          "vendorChunk": true
         }
       }
     },

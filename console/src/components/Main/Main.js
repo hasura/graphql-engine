@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Tooltip } from '@/new-components/Tooltip';
 import {
   FaCloud,
   FaCog,
@@ -50,7 +49,7 @@ import {
   setLoveConsentState,
   setProClickState,
 } from './utils';
-import { isBlockActive } from './Main.utils';
+import HeaderNavItem from './HeaderNavItem';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -87,46 +86,6 @@ const getSettingsSelectedMarker = pathname => {
   }
 
   return null;
-};
-
-const getSidebarItem = (
-  title,
-  icon,
-  tooltipText,
-  path,
-  appPrefix,
-  pathname,
-  isDefault = false
-) => {
-  const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
-  const block = getPathRoot(path);
-
-  const isCurrentBlockActive = isBlockActive({
-    blockPath: path,
-    isDefaultBlock: isDefault,
-    pathname,
-  });
-
-  const className = isCurrentBlockActive ? styles.navSideBarActive : '';
-
-  return (
-    <li>
-      <Tooltip side="right" tooltipContentChildren={itemTooltip}>
-        <Link
-          className={className}
-          to={appPrefix + path}
-          data-test={`${title.toLowerCase()}-tab-link`}
-        >
-          <div className={styles.iconCenter} data-test={block}>
-            {React.createElement(icon, {
-              'aria-hidden': true,
-            })}
-          </div>
-          <p className="uppercase">{title}</p>
-        </Link>
-      </Tooltip>
-    </li>
-  );
 };
 
 class Main extends React.Component {
@@ -312,6 +271,14 @@ class Main extends React.Component {
 
     const appPrefix = '';
 
+    const getDataPath = () => {
+      return currentSource
+        ? schemaList.length
+          ? getSchemaBaseRoute(currentSchema, currentSource)
+          : getDataSourceBaseRoute(currentSource)
+        : '/data';
+    };
+
     const getMainContent = () => {
       let mainContent = null;
 
@@ -330,11 +297,12 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <FaCog size="1.3rem" className={styles.question} />;
+        return <FaCog className={styles.question} />;
       }
+
       return (
         <div className={styles.question}>
-          <FaCog size="2rem" />
+          <FaCog />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
@@ -352,7 +320,7 @@ class Main extends React.Component {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a
-              href="https://hasura.io/docs/latest/graphql/core/deployment/securing-graphql-endpoint.html"
+              href="https://hasura.io/docs/latest/deployment/securing-graphql-endpoint/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -396,51 +364,47 @@ class Main extends React.Component {
             </div>
             <div className={styles.header_items}>
               <ul className={styles.sidebarItems}>
-                {getSidebarItem(
-                  'API',
-                  FaFlask,
-                  tooltips.apiExplorer,
-                  '/api/api-explorer',
-                  appPrefix,
-                  pathname,
-                  true
-                )}
-                {getSidebarItem(
-                  'Data',
-                  FaDatabase,
-                  tooltips.data,
-                  currentSource
-                    ? schemaList.length
-                      ? getSchemaBaseRoute(currentSchema, currentSource)
-                      : getDataSourceBaseRoute(currentSource)
-                    : '/data',
-                  appPrefix,
-                  pathname
-                )}
-                {getSidebarItem(
-                  'Actions',
-                  FaCogs,
-                  tooltips.actions,
-                  '/actions/manage/actions',
-                  appPrefix,
-                  pathname
-                )}
-                {getSidebarItem(
-                  'Remote Schemas',
-                  FaPlug,
-                  tooltips.remoteSchema,
-                  '/remote-schemas/manage/schemas',
-                  appPrefix,
-                  pathname
-                )}{' '}
-                {getSidebarItem(
-                  'Events',
-                  FaCloud,
-                  tooltips.events,
-                  '/events/data/manage',
-                  appPrefix,
-                  pathname
-                )}
+                <HeaderNavItem
+                  title="API"
+                  icon={FaFlask}
+                  tooltipText={tooltips.apiExplorer}
+                  path="/api/api-explorer"
+                  appPrefix={appPrefix}
+                  pathname={pathname}
+                  isDefault
+                />
+                <HeaderNavItem
+                  title="Data"
+                  icon={FaDatabase}
+                  tooltipText={tooltips.data}
+                  path={getDataPath()}
+                  appPrefix={appPrefix}
+                  pathname={pathname}
+                />
+                <HeaderNavItem
+                  title="Actions"
+                  icon={FaCogs}
+                  tooltipText={tooltips.actions}
+                  path="/actions/manage/actions"
+                  appPrefix={appPrefix}
+                  pathname={pathname}
+                />
+                <HeaderNavItem
+                  title="Remote Schemas"
+                  icon={FaPlug}
+                  tooltipText={tooltips.remoteSchema}
+                  path="/remote-schemas/manage/schemas"
+                  appPrefix={appPrefix}
+                  pathname={pathname}
+                />
+                <HeaderNavItem
+                  title="Events"
+                  icon={FaCloud}
+                  tooltipText={tooltips.events}
+                  path="/events/data/manage"
+                  appPrefix={appPrefix}
+                  pathname={pathname}
+                />
               </ul>
             </div>
             <div

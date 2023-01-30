@@ -19,12 +19,12 @@ const NumberedSidebar: React.FC<NumberedSidebarProps> = ({
   return (
     <>
       {number ? <div className={sidebarNumberStyles}>{number}</div> : null}
+      <label className="flex items-center block text-gray-600 font-medium">
+        {title}
+        {url ? <KnowMore url={url} /> : null}
+      </label>
       <div className="flex items-center mb-sm">
         <div>
-          <label className="flex items-center block text-gray-600 font-medium">
-            {title}
-            {url ? <KnowMore url={url} /> : null}
-          </label>
           {description ? (
             <p className="text-sm text-gray-600">{description}</p>
           ) : null}

@@ -218,7 +218,7 @@ func GetFilePath(dir string) *nurl.URL {
 
 func IsMigrationsSupported(kind hasura.SourceKind) bool {
 	switch kind {
-	case hasura.SourceKindMSSQL, hasura.SourceKindPG, hasura.SourceKindCitus:
+	case hasura.SourceKindMSSQL, hasura.SourceKindPG, hasura.SourceKindCitus, hasura.SourceKindCockroach:
 		return true
 	}
 	return false

@@ -1,7 +1,26 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Query Tests for Data Connector Backend
-module Test.DataConnector.QuerySpec (spec) where
+-- | Query Tests for Data Connector Backend.
+--
+-- NOTE: The test 'Spec' is broken up to support running subsets of
+-- the 'Spec' for specific backends.
+module Test.DataConnector.QuerySpec
+  ( -- | Full Spec
+    spec,
+    tests,
+    -- | Test Sets
+    queryTests,
+    primaryKeyTests,
+    paginationTests,
+    arrayRelatationshipsTests,
+    objectRelatationshipsTests,
+    whereClauseTests,
+    orderByTests,
+    orderByBasicTests,
+    orderByAdvancedTests,
+    customScalarTypesTests,
+  )
+where
 
 --------------------------------------------------------------------------------
 
@@ -12,6 +31,7 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
@@ -26,11 +46,11 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
             }
@@ -42,7 +62,18 @@ spec =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "Queries" $ do
-  describe "Basic Tests" $ do
+  queryTests opts
+  primaryKeyTests opts
+  paginationTests opts
+  arrayRelatationshipsTests opts
+  objectRelatationshipsTests opts
+  whereClauseTests opts
+  orderByTests opts
+  customScalarTypesTests opts
+
+queryTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+queryTests opts =
+  describe "Simple" $ do
     it "works with simple object query" $ \(testEnvironment, _) ->
       shouldReturnYaml
         opts
@@ -64,6 +95,9 @@ tests opts = describe "Queries" $ do
                 Title: For Those About To Rock We Salute You
         |]
 
+primaryKeyTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+primaryKeyTests opts =
+  describe "Primary Key" $ do
     it "works with a primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
         opts
@@ -131,6 +165,9 @@ tests opts = describe "Queries" $ do
                 Name: "Balls to the Wall"
         |]
 
+paginationTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+paginationTests opts =
+  describe "Pagination" $ do
     it "works with pagination" $ \(testEnvironment, _) -> do
       -- NOTE: We order by in this pagination test to ensure that the rows are ordered correctly (which they are not in db.chinook.sqlite)
       shouldReturnYaml
@@ -153,6 +190,8 @@ tests opts = describe "Queries" $ do
               - AlbumId: 5
         |]
 
+arrayRelatationshipsTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+arrayRelatationshipsTests opts =
   describe "Array Relationships" $ do
     describe "Manual" $ do
       it "joins on album id" $ \(testEnvironment, _) ->
@@ -208,6 +247,8 @@ tests opts = describe "Queries" $ do
                     - TrackId: 3501
           |]
 
+objectRelatationshipsTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+objectRelatationshipsTests opts =
   describe "Object Relationships" do
     describe "Manual" do
       it "joins on artist id" $ \(testEnvironment, _) ->
@@ -259,6 +300,8 @@ tests opts = describe "Queries" $ do
                     Name: "Music"
           |]
 
+whereClauseTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+whereClauseTests opts =
   describe "Where Clause Tests" $ do
     it "works with '_in' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -440,38 +483,47 @@ tests opts = describe "Queries" $ do
                 Name: Philip Glass Ensemble
         |]
 
+orderByTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+orderByTests opts =
   describe "Order By Tests" $ do
-    it "works with order_by id asc" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getAlbum {
-                Album(limit: 3, order_by: {AlbumId: asc}) {
-                  AlbumId
-                  Title
-                }
-              }
-            |]
-        )
-        [yaml|
-          data:
-            Album:
-              - AlbumId: 1
-                Title: For Those About To Rock We Salute You
-              - AlbumId: 2
-                Title: Balls to the Wall
-              - AlbumId: 3
-                Title: Restless and Wild
-        |]
+    orderByBasicTests opts
+    orderByAdvancedTests opts
 
-    it "works with order_by id desc" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+orderByBasicTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+orderByBasicTests opts = do
+  it "works with order_by id asc" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
+                query getAlbum {
+                  Album(limit: 3, order_by: {AlbumId: asc}) {
+                    AlbumId
+                    Title
+                  }
+                }
+              |]
+      )
+      [yaml|
+            data:
+              Album:
+                - AlbumId: 1
+                  Title: For Those About To Rock We Salute You
+                - AlbumId: 2
+                  Title: Balls to the Wall
+                - AlbumId: 3
+                  Title: Restless and Wild
+          |]
+
+orderByAdvancedTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+orderByAdvancedTests opts = do
+  it "works with order_by id desc" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album(limit: 3, order_by: {AlbumId: desc}) {
                   AlbumId
@@ -479,8 +531,8 @@ tests opts = describe "Queries" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album:
               - AlbumId: 347
@@ -491,12 +543,12 @@ tests opts = describe "Queries" $ do
                 Title: 'Monteverdi: L''Orfeo'
         |]
 
-    it "can order by an aggregate" $ \(testEnvironment, _) -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  it "can order by an aggregate" $ \(testEnvironment, _) -> do
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getArtists {
                 Artist(limit: 3, order_by: {Albums_aggregate: {count: desc}}) {
                   Name
@@ -508,8 +560,8 @@ tests opts = describe "Queries" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Artist:
               - Name: Iron Maiden
@@ -526,12 +578,12 @@ tests opts = describe "Queries" $ do
                     count: 11
         |]
 
-    it "can order by a related field" $ \(testEnvironment, _) -> do
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  it "can order by a related field" $ \(testEnvironment, _) -> do
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbums {
                 Album(limit: 4, order_by: [{Artist: {Name: asc}}, {Title: desc}]) {
                   Artist {
@@ -541,8 +593,8 @@ tests opts = describe "Queries" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album:
               - Artist:
@@ -558,9 +610,12 @@ tests opts = describe "Queries" $ do
                   Name: Aaron Goldberg
                 Title: Worlds
         |]
+
+customScalarTypesTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+customScalarTypesTests opts =
   describe "Custom scalar types and operators" $ do
     it "works with custom scalar types and comparison operators" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) do
+      when (fmap BackendType.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorSqlite) do
         pendingWith "TODO: Test currently broken for SQLite DataConnector"
       shouldReturnYaml
         opts

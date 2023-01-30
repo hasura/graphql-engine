@@ -69,6 +69,7 @@ let
     pkgs.nixpkgs-fmt
     pkgs.shellcheck
     pkgs.terraform
+    pkgs.gopls
   ];
 
   ciInputs = [

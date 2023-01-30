@@ -126,7 +126,7 @@ export const QuickAdd = (props: QuickAddProps) => {
   }, []);
 
   return (
-    <div className="max-w-xl flex justify-end">
+    <div className="flex justify-end">
       <DropdownMenu
         options={{
           content: {

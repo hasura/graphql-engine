@@ -33,19 +33,17 @@ const TestComponent = () => {
 const mockHTTPResponse = (status = 200, returnBody: any) => {
   global.fetch = jest.fn().mockImplementationOnce(() => {
     return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({
-          ok: true,
-          status,
-          json: () => {
-            return returnBody || {};
-          },
-          headers: {
-            get: (key: string) =>
-              key === 'Content-Type' ? 'application/json' : '',
-          },
-        });
-      }, 2000);
+      resolve({
+        ok: true,
+        status,
+        json: () => {
+          return returnBody || {};
+        },
+        headers: {
+          get: (key: string) =>
+            key === 'Content-Type' ? 'application/json' : '',
+        },
+      });
     });
   });
 };
@@ -82,6 +80,7 @@ describe('useNeonDatabase', () => {
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('loading');
     });
+    jest.setTimeout(1000);
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('success');
     });
@@ -98,7 +97,10 @@ describe('useNeonDatabase', () => {
       fireEvent.click(screen.getByTestId('start'));
     });
     await waitFor(() => {
-      expect(screen.getByTestId('status')).toHaveTextContent('error');
+      expect(screen.getByTestId('status')).toHaveTextContent('loading');
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('error'));
     });
     expect(screen.getByTestId('error')).toHaveTextContent('api error');
   });

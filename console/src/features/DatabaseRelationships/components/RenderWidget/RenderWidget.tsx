@@ -16,25 +16,44 @@ interface RenderWidgetProps {
 }
 
 export const RenderWidget = (props: RenderWidgetProps) => {
-  const { mode, relationship, table, dataSourceName, ...callbacks } = props;
+  const {
+    mode,
+    relationship,
+    table,
+    dataSourceName,
+    onSuccess,
+    onCancel,
+    onError,
+  } = props;
 
   if (mode === MODE.CREATE)
     return (
       <CreateRelationship
         dataSourceName={dataSourceName}
         table={table}
-        {...callbacks}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        onError={onError}
       />
     );
 
   if (mode === MODE.RENAME && relationship)
-    return <RenameRelationship relationship={relationship} {...callbacks} />;
+    return (
+      <RenameRelationship
+        relationship={relationship}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        onError={onError}
+      />
+    );
 
   if (mode === MODE.DELETE && relationship)
     return (
       <ConfirmDeleteRelationshipPopup
         relationship={relationship}
-        {...callbacks}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        onError={onError}
       />
     );
 

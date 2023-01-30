@@ -8,6 +8,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Quoter.Yaml (yaml)
+import Harness.Services.GraphqlEngine (HgeServerInstance, emptyHgeConfig, withHge)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), testLogTrace)
@@ -16,15 +17,20 @@ import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
-spec =
+spec = do
+  withHge emptyHgeConfig do
+    describe "An externally hosted HGE instance" do
+      it "runs" \(_server :: HgeServerInstance, _te) -> do
+        return @IO ()
+
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlite.setupTablesAction schema testEnvironment
                 ]

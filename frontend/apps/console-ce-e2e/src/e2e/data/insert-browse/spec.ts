@@ -1,5 +1,4 @@
 import {
-  baseUrl,
   getColName,
   getTableName,
   dataTypes,
@@ -8,6 +7,7 @@ import {
   tableColumnTypeSelector,
   getIndexRoute,
 } from '../../../helpers/dataHelpers';
+import { baseUrl } from '../../../helpers/common';
 
 import {
   validateInsert,
@@ -154,7 +154,7 @@ export const failBIWrongDataType = () => {
       // Click the Save/Insert Again button.
       clickSaveOrInsert(2, i);
       cy.get(getElementFromAlias(`typed-input-${i}`)).clear();
-      // Check the default radio of curret column
+      // Check the default radio of current column
       cy.get(getElementFromAlias(`typed-input-default-${i}`)).check();
     }
 

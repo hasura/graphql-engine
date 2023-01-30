@@ -1,5 +1,5 @@
 import { Dialog } from '@/new-components/Dialog';
-import { InputField, UpdatedForm } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React from 'react';
 import { z } from 'zod';
@@ -45,7 +45,7 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
       description="Rename your current relationship. "
       onClose={onCancel}
     >
-      <UpdatedForm
+      <SimpleForm
         schema={z.object({
           updatedName: z.string().min(1, 'Updated name cannot be empty!'),
         })}
@@ -53,25 +53,23 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
           renameRelationship(relationship, data.updatedName);
         }}
       >
-        {() => (
-          <>
-            <div className="m-4">
-              <InputField
-                name="updatedName"
-                label="New name"
-                placeholder="Enter a new name"
-                tooltip="New name of the relationship. Remember relationship names are unique."
-              />
-            </div>
-            <Dialog.Footer
-              callToDeny="Cancel"
-              callToAction="Rename"
-              onClose={onCancel}
-              isLoading={false}
+        <>
+          <div className="m-4">
+            <InputField
+              name="updatedName"
+              label="New name"
+              placeholder="Enter a new name"
+              tooltip="New name of the relationship. Remember relationship names are unique."
             />
-          </>
-        )}
-      </UpdatedForm>
+          </div>
+          <Dialog.Footer
+            callToDeny="Cancel"
+            callToAction="Rename"
+            onClose={onCancel}
+            isLoading={false}
+          />
+        </>
+      </SimpleForm>
     </Dialog>
   );
 };

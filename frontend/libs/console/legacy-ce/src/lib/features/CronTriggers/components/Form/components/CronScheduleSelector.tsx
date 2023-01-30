@@ -14,7 +14,7 @@ export const CronScheduleSelector = () => {
 
   return (
     <>
-      <div className="block flex items-center text-gray-600 font-semibold mb-xs">
+      <div className="block flex items-center text-gray-600 font-semibold">
         <label htmlFor="schedule">Cron Schedule</label>
         <IconTooltip message="Schedule for your cron (events are created based on the UTC timezone)" />
         <a
@@ -26,10 +26,12 @@ export const CronScheduleSelector = () => {
           (Build a cron expression)
         </a>
       </div>
-      <div className="relative w-full max-w-xl mb-xs">
+      <div className="relative w-full">
         <InputField name="schedule" type="text" placeholder={defaultCronExpr} />
+        <div className="-mt-xs mb-md">
+          <FrequentlyUsedCrons setCron={setCron} />
+        </div>
       </div>
-      <FrequentlyUsedCrons setCron={setCron} />
     </>
   );
 };

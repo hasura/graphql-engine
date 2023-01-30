@@ -94,9 +94,7 @@ mkColumnInfo ColumnInfoBuilder {..} =
 mkParser :: TableInfoBuilder -> SchemaTest [Parser]
 mkParser tib =
   buildTableUpdateMutationFields
-    mempty
     Frontend
-    (table tib)
     (buildTableInfo tib)
     name
   where

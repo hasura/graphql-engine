@@ -1,0 +1,20 @@
+{
+    "opentelemetry":{
+        "data_types": [
+          "traces"
+        ],
+        "exporter_otlp": {
+          "headers": {
+            "x-header-from-env": {
+              "from_env": "DATADOG_API_KEY"
+            },
+            "x-test-header": "testing"
+          },
+          "otlp_traces_endpoint": "http://host.docker.internal:4318/v1/traces",
+          "protocol": "http/protobuf"
+        },
+        "batch_span_processor": {
+          "max_export_batch_size": 512
+        }
+    }
+}

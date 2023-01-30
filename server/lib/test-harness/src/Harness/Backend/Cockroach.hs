@@ -3,7 +3,8 @@
 
 -- | Cockroach helpers.
 module Harness.Backend.Cockroach
-  ( livenessCheck,
+  ( backendTypeMetadata,
+    livenessCheck,
     run_,
     defaultSourceMetadata,
     defaultSourceConfiguration,
@@ -22,6 +23,8 @@ module Harness.Backend.Cockroach
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
@@ -30,7 +33,7 @@ import Data.String (fromString)
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
-import Data.Time (defaultTimeLocale, formatTime)
+import Data.Time (defaultTimeLocale, diffUTCTime, formatTime, getCurrentTime)
 import Database.PostgreSQL.Simple qualified as Postgres
 import Harness.Backend.Postgres qualified as Postgres
   ( createUniqueIndexSql,
@@ -43,7 +46,8 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.BackendType (BackendType (Cockroach), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
@@ -51,6 +55,22 @@ import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..), testLogMessage)
 import Hasura.Prelude
 import System.Process.Typed
+
+--------------------------------------------------------------------------------
+
+backendTypeMetadata :: BackendTypeConfig
+backendTypeMetadata =
+  BackendType.BackendTypeConfig
+    { backendType = BackendType.Cockroach,
+      backendSourceName = "cockroach",
+      backendCapabilities = Nothing,
+      backendTypeString = "cockroach",
+      backendDisplayNameString = "cockroach",
+      backendServerUrl = Nothing,
+      backendSchemaKeyword = "schema"
+    }
+
+--------------------------------------------------------------------------------
 
 -- | Check the cockroach server is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
@@ -61,7 +81,7 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
       catch
         ( bracket
             ( Postgres.connectPostgreSQL
-                (fromString Constants.defaultCockroachConnectionString)
+                (txtToBs Constants.defaultCockroachConnectionString)
             )
             Postgres.close
             (const (pure ()))
@@ -73,28 +93,28 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
-runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
+runWithInitialDb_ :: HasCallStack => TestEnvironment -> Text -> IO ()
 runWithInitialDb_ testEnvironment =
   runInternal testEnvironment Constants.defaultCockroachConnectionString
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ :: HasCallStack => TestEnvironment -> Text -> IO ()
 run_ testEnvironment =
   runInternal testEnvironment (Constants.cockroachConnectionString (uniqueTestId testEnvironment))
 
 --- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
+runInternal :: HasCallStack => TestEnvironment -> Text -> Text -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLogMessage testEnvironment $ LogDBQuery (T.pack connectionString) (T.pack query)
+  startTime <- getCurrentTime
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString connectionString)
+            (txtToBs connectionString)
         )
         Postgres.close
-        (\conn -> void (Postgres.execute_ conn (fromString query)))
+        (\conn -> void (Postgres.execute_ conn (fromString $ T.unpack query)))
     )
     ( \(e :: Postgres.SqlError) ->
         error
@@ -102,17 +122,19 @@ runInternal testEnvironment connectionString query = do
               [ "CockroachDB query error:",
                 S8.unpack (Postgres.sqlErrorMsg e),
                 "SQL was:",
-                query
+                T.unpack query
               ]
           )
     )
+  endTime <- getCurrentTime
+  testLogMessage testEnvironment $ LogDBQuery connectionString query (diffUTCTime endTime startTime)
 
 -- | Metadata source information for the default CockroachDB instance.
 defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnvironment =
   [interpolateYaml|
-    name: #{ defaultSource Cockroach }
-    kind: #{ defaultBackendTypeString Cockroach }
+    name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
     tables: []
     configuration: #{ defaultSourceConfiguration testEnvironment }
   |]
@@ -170,17 +192,16 @@ insertTable testEnvironment Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
       run_ testEnvironment $
-        T.unpack $
-          T.unwords
-            [ "INSERT INTO",
-              T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
-              "(",
-              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+        T.unwords
+          [ "INSERT INTO",
+            Constants.cockroachDb <> "." <> wrapIdentifier tableName,
+            "(",
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 -- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
 --
@@ -212,31 +233,29 @@ mkRow row =
 dropTable :: TestEnvironment -> Schema.Table -> IO ()
 dropTable testEnvironment Schema.Table {tableName} = do
   run_ testEnvironment $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.cockroachDb <> "." <> tableName,
-          ";"
-        ]
+    T.unwords
+      [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
+        Constants.cockroachDb <> "." <> tableName,
+        ";"
+      ]
 
 dropTableIfExists :: TestEnvironment -> Schema.Table -> IO ()
 dropTableIfExists testEnvironment Schema.Table {tableName} = do
   run_ testEnvironment $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE IF EXISTS",
-          T.pack Constants.cockroachDb <> "." <> tableName
-        ]
+    T.unwords
+      [ "DROP TABLE IF EXISTS",
+        Constants.cockroachDb <> "." <> tableName
+      ]
 
 -- | Post an http request to start tracking the table
 trackTable :: TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
-  Schema.trackTable Cockroach (defaultSource Cockroach) table testEnvironment
+  Schema.trackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
 untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
-  Schema.untrackTable Cockroach (defaultSource Cockroach) table testEnvironment
+  Schema.untrackTable (BackendType.backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | create a database to use and later drop for these tests
 -- note we use the 'initial' connection string here, ie, the one we started
@@ -256,7 +275,7 @@ dropDatabase testEnvironment = do
   runWithInitialDb_
     testEnvironment
     ("DROP DATABASE " <> dbName <> ";")
-    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning (T.pack dbName) ex)
+    `catch` \(ex :: SomeException) -> testLogMessage testEnvironment (LogDropDBFailedWarning dbName ex)
 
 -- Because the test harness sets the schema name we use for testing, we need
 -- to make sure it exists before we run the tests.
@@ -286,8 +305,8 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships Cockroach table testEnvironment
-    Schema.trackArrayRelationships Cockroach table testEnvironment
+    Schema.trackObjectRelationships table testEnvironment
+    Schema.trackArrayRelationships table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
@@ -311,8 +330,8 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup Cockroach permissions env
+setupPermissions permissions testEnvironment = Permissions.setup permissions testEnvironment
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown Cockroach permissions env
+teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env

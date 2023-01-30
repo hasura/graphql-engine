@@ -4,6 +4,7 @@
 module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Control.Arrow.Extended
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -20,11 +21,11 @@ import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
-import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig, validateConfiguration)
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
-import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw400WithDetail, throw500, withPathK)
+import Hasura.Base.Error (Code (..), QErr (..), decodeValue, throw400, throw400WithDetail, throw500, withPathK)
 import Hasura.Incremental qualified as Inc
 import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
@@ -38,8 +39,7 @@ import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Source (ResolvedSource (..))
-import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
@@ -47,7 +47,7 @@ import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
-import Hasura.Tracing (noReporter, runTraceTWithReporter)
+import Hasura.Tracing (ignoreTraceT)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Manager
@@ -64,7 +64,11 @@ instance BackendMetadata 'DataConnector where
   parseBoolExpOperations = parseBoolExpOperations'
   parseCollectableType = parseCollectableType'
   buildComputedFieldInfo = error "buildComputedFieldInfo: not implemented for the Data Connector backend."
+
+  -- If/when we implement enums for Data Connector backend, we will also need to fix columnTypeToScalarType function
+  -- in Hasura.Backends.DataConnector.Adapter.Backend. See note there for more information.
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
+
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
   postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
@@ -77,6 +81,7 @@ resolveBackendInfo' ::
     Inc.ArrowDistribute arr,
     ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
     MonadIO m,
+    MonadBaseControl IO m,
     HasHttpManagerM m
   ) =>
   Logger Hasura ->
@@ -97,6 +102,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
         MonadIO m,
+        MonadBaseControl IO m,
         HasHttpManagerM m
       ) =>
       (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
@@ -111,13 +117,13 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         |) metadataObj
 
     getDataConnectorCapabilities ::
-      MonadIO m =>
+      (MonadIO m, MonadBaseControl IO m) =>
       DC.DataConnectorOptions ->
       HTTP.Manager ->
       m (Either QErr DC.DataConnectorInfo)
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
       capabilitiesU <-
-        runTraceTWithReporter noReporter "capabilities"
+        ignoreTraceT
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
           $ genericClient // API._capabilities
 
@@ -127,7 +133,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 
 resolveSourceConfig' ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->
@@ -147,11 +153,10 @@ resolveSourceConfig'
     DC.DataConnectorInfo {..} <- getDataConnectorInfo dataConnectorName backendInfo
     let DC.DataConnectorOptions {_dcoUri} = _dciOptions
 
-    transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
-    validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
+    transformedConfig <- transformConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc [("$session", J.object []), ("$env", J.toJSON env)] env
 
     schemaResponseU <-
-      runTraceTWithReporter noReporter "resolve source"
+      ignoreTraceT
         . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
         $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 
@@ -180,43 +185,42 @@ resolveDatabaseMetadata' ::
   Applicative m =>
   SourceMetadata 'DataConnector ->
   DC.SourceConfig ->
-  SourceTypeCustomization ->
-  m (Either QErr (ResolvedSource 'DataConnector))
-resolveDatabaseMetadata' _ sc@DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} customization =
-  -- We need agents to provide the foreign key contraints inside 'API.SchemaResponse'
+  m (Either QErr (DBObjectsIntrospection 'DataConnector))
+resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
   let foreignKeys = fmap API._tiForeignKeys _srTables
       tables = Map.fromList $ do
         API.TableInfo {..} <- _srTables
         let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
-                { _ptmiOid = OID 0,
+                { _ptmiOid = OID 0, -- TODO: This is wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 0 for all tables is problematic.
                   _ptmiColumns = do
                     API.ColumnInfo {..} <- _tiColumns
                     pure $
                       RQL.T.C.RawColumnInfo
                         { rciName = Witch.from _ciName,
-                          rciPosition = 1,
+                          rciPosition = 1, -- TODO: This is very wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 1 for all columns is problematic.
                           rciType = DC.mkScalarType _scCapabilities _ciType,
                           rciIsNullable = _ciNullable,
                           rciDescription = fmap GQL.Description _ciDescription,
-                          -- TODO: Add Column Mutability to the 'TableInfo'
-                          rciMutability = RQL.T.C.ColumnMutability False False
+                          rciMutability = RQL.T.C.ColumnMutability _ciInsertable _ciUpdatable
                         },
                   _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = buildForeignKeySet foreignKeys,
-                  _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,
+                  _ptmiViewInfo =
+                    ( if _tiType == API.Table && _tiInsertable && _tiUpdatable && _tiDeletable
+                        then Nothing
+                        else Just $ RQL.T.T.ViewInfo _tiInsertable _tiUpdatable _tiDeletable
+                    ),
                   _ptmiDescription = fmap PGDescription _tiDescription,
                   _ptmiExtraTableMetadata = ()
                 }
         pure (coerce _tiName, meta)
    in pure $
         pure $
-          ResolvedSource
-            { _rsConfig = sc,
-              _rsCustomization = customization,
-              _rsTables = tables,
+          DBObjectsIntrospection
+            { _rsTables = tables,
               _rsFunctions = mempty,
               _rsScalars = mempty
             }

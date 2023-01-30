@@ -31,25 +31,31 @@ const formTabs = [
   },
 ];
 
-export const CreateRelationship = (props: CreateRelationshipProps) => {
-  const { dataSourceName, table, onCancel, onSuccess, onError } = props;
-
+export const CreateRelationship: React.VFC<CreateRelationshipProps> = ({
+  dataSourceName,
+  table,
+  onCancel,
+  onSuccess,
+  onError,
+}) => {
   const [relationshipType, setRelationshipType] = useState('local');
 
   return (
     <Dialog
       hasBackdrop
-      title="Create New Relationship"
+      title="Add Relationship"
       description="Create and track a new relationship to view it in your GraphQL schema."
       onClose={onCancel}
-      size="max"
+      size="xxl"
     >
-      <div className="mx-4">
-        <CardRadioGroup
-          items={formTabs}
-          onChange={setRelationshipType}
-          value={relationshipType}
-        />
+      <div>
+        <div className="px-7 pt-2">
+          <CardRadioGroup
+            items={formTabs}
+            onChange={setRelationshipType}
+            value={relationshipType}
+          />
+        </div>
         {relationshipType === 'local' && (
           <ManualLocalRelationship.Widget
             dataSourceName={dataSourceName}
@@ -61,7 +67,7 @@ export const CreateRelationship = (props: CreateRelationshipProps) => {
         )}
         {(relationshipType === 'remoteDatabase' ||
           relationshipType === 'remoteSchema') && (
-          <div className="mt-sm">
+          <div className="mt-sm mx-7">
             <IndicatorCard status="info" headline="Feature coming soon" />
           </div>
         )}

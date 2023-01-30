@@ -8,6 +8,7 @@ import type { RowUpdate } from './RowUpdate';
 import type { TableName } from './TableName';
 
 export type UpdateMutationOperation = {
+  post_update_check?: Expression;
   /**
    * The fields to return for the rows affected by this update operation
    */

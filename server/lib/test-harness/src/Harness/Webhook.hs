@@ -17,6 +17,7 @@ import Harness.TestEnvironment (Server (..), serverUrl)
 import Hasura.Base.Error (iResultToMaybe)
 import Hasura.Prelude
 import Hasura.Server.Utils (executeJSONPath)
+import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Socket qualified as Socket
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
@@ -31,6 +32,9 @@ newtype EventsQueue = EventsQueue (Chan.Chan Aeson.Value)
 --   - GET on @/@, which returns a simple 200 OK;
 --   - POST on @/echo@, which extracts the event data from the body
 --     of the request and inserts it into the `EventsQueue`.
+--   - POST on @/nextRetry@, which extracts the event data from the body
+--     of the request and inserts it into the `EventsQueue` and returns 503
+--     error code.
 --
 -- This function performs a health check, using a GET on /, to ensure that the
 -- server was started correctly, and will throw an exception if the health check
@@ -43,6 +47,18 @@ run = mkTestResource do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   eventsQueueChan <- Chan.newChan
   let eventsQueue = EventsQueue eventsQueueChan
+      extractEventDataInsertIntoEventQueue = do
+        req <- Spock.request
+        body <- liftIO $ Wai.strictRequestBody req
+        let jsonBody = Aeson.decode body
+        let eventDataPayload =
+              -- Only extract the data payload from the request body
+              let mkJSONPathE = either (error . T.unpack) id . parseJSONPath
+                  eventJSONPath = mkJSONPathE "$.event.data"
+               in iResultToMaybe =<< executeJSONPath eventJSONPath <$> jsonBody
+        liftIO $
+          Chan.writeChan eventsQueueChan $
+            fromMaybe (error "error in parsing the event data from the body") eventDataPayload
   thread <- Async.async $
     Spock.runSpockNoBanner port $
       Spock.spockT id $ do
@@ -53,19 +69,12 @@ run = mkTestResource do
           Spock.json $
             Aeson.String "world"
         Spock.post "/echo" $ do
-          req <- Spock.request
-          body <- liftIO $ Wai.strictRequestBody req
-          let jsonBody = Aeson.decode body
-          let eventDataPayload =
-                -- Only extract the data payload from the request body
-                let mkJSONPathE = either (error . T.unpack) id . parseJSONPath
-                    eventJSONPath = mkJSONPathE "$.event.data"
-                 in iResultToMaybe =<< executeJSONPath eventJSONPath <$> jsonBody
-          liftIO $
-            Chan.writeChan eventsQueueChan $
-              fromMaybe (error "error in parsing the event data from the body") eventDataPayload
-          Spock.setHeader "Content-Type" "application/json; charset=utf-8"
+          extractEventDataInsertIntoEventQueue
           Spock.json $ Aeson.object ["success" Aeson..= True]
+        Spock.post "/nextRetry" $ do
+          extractEventDataInsertIntoEventQueue
+          Spock.setStatus HTTP.status503
+
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   pure
     AcquiredResource

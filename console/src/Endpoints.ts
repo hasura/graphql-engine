@@ -1,35 +1,39 @@
-import globals from './Globals';
+import { getWebsocketProtocol } from '@/helpers/protocol';
+import consoleGlobals from './Globals';
 
-const baseUrl = globals.dataApiUrl;
-const hasuractlApiHost = globals.apiHost;
-const hasuractlApiPort = globals.apiPort;
+export const globalCookiePolicy = 'same-origin';
 
-const hasuractlUrl = `${hasuractlApiHost}:${hasuractlApiPort}`;
+export const baseUrl = consoleGlobals.dataApiUrl;
 
-const Endpoints = {
-  serverConfig: `${baseUrl}/v1alpha1/config`,
-  graphQLUrl: `${baseUrl}/v1/graphql`,
-  relayURL: `${baseUrl}/v1beta1/relay`,
-  query: `${baseUrl}/v2/query`,
-  metadata: `${baseUrl}/v1/metadata`,
-  // metadata: `${baseUrl}/v1/query`,
-  queryV2: `${baseUrl}/v2/query`,
-  version: `${baseUrl}/v1/version`,
-  updateCheck: 'https://releases.hasura.io/graphql-engine',
-  hasuractlMigrate: `${hasuractlUrl}/apis/migrate`,
-  hasuractlMetadata: `${hasuractlUrl}/apis/metadata`,
-  hasuractlMigrateSettings: `${hasuractlUrl}/apis/migrate/settings`,
-  telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
-  consoleNotificationsStg:
-    'https://notifications.hasura-stg.hasura-app.io/v1/graphql',
-  consoleNotificationsProd: 'https://notifications.hasura.io/v1/graphql',
-  luxDataGraphql: globals.luxDataHost
-    ? `${window.location.protocol}//${globals.luxDataHost}/v1/graphql`
-    : `${globals.cloudDataApiUrl}/v1/graphql`,
-  prometheusUrl: `${baseUrl}/v1/metrics`,
+export const getEndpoints = (globals: typeof consoleGlobals) => {
+  const hasuraCliServerUrl = `${globals.apiHost}:${globals.apiPort}`;
+
+  const endpoints = {
+    serverConfig: `${baseUrl}/v1alpha1/config`,
+    graphQLUrl: `${baseUrl}/v1/graphql`,
+    relayURL: `${baseUrl}/v1beta1/relay`,
+    query: `${baseUrl}/v2/query`,
+    metadata: `${baseUrl}/v1/metadata`,
+    // metadata: `${baseUrl}/v1/query`,
+    queryV2: `${baseUrl}/v2/query`,
+    version: `${baseUrl}/v1/version`,
+    updateCheck: 'https://releases.hasura.io/graphql-engine',
+    hasuraCliServerMigrate: `${hasuraCliServerUrl}/apis/migrate`,
+    hasuraCliServerMetadata: `${hasuraCliServerUrl}/apis/metadata`,
+    hasuraCliServerMigrateSettings: `${hasuraCliServerUrl}/apis/migrate/settings`,
+    telemetryServer: 'wss://telemetry.hasura.io/v1/ws',
+    consoleNotificationsStg:
+      'https://notifications.hasura-stg.hasura-app.io/v1/graphql',
+    consoleNotificationsProd: 'https://notifications.hasura.io/v1/graphql',
+    luxDataGraphql: `${window.location.protocol}//${globals.luxDataHost}/v1/graphql`,
+    luxDataGraphqlWs: `${getWebsocketProtocol(window.location.protocol)}//${
+      globals.luxDataHost
+    }/v1/graphql`,
+    prometheusUrl: `${baseUrl}/v1/metrics`,
+  };
+
+  return endpoints;
 };
 
-const globalCookiePolicy = 'same-origin';
-
-export default Endpoints;
-export { globalCookiePolicy, baseUrl, hasuractlUrl };
+const endpoints = getEndpoints(consoleGlobals);
+export default endpoints;

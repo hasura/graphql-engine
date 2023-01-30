@@ -12,6 +12,7 @@ where
 
 -------------------------------------------------------------------------------
 
+import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, hashMapCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as M
@@ -122,6 +123,18 @@ validateQueryParamsTransformFn engine = \case
     validateRequestUnescapedTemplateTransform' engine template
     pure ()
 {-# ANN validateQueryParamsTransformFn ("HLint: ignore Redundant pure" :: String) #-}
+
+instance HasCodec QueryParamsTransformFn where
+  codec = dimapCodec dec enc $ disjointEitherCodec addOrReplaceCodec templateCodec
+    where
+      addOrReplaceCodec = hashMapCodec (codec @(Maybe UnescapedTemplate))
+      templateCodec = codec @UnescapedTemplate
+
+      dec (Left qps) = AddOrReplace $ M.toList qps
+      dec (Right template) = ParamTemplate template
+
+      enc (AddOrReplace addOrReplace) = Left $ M.fromList addOrReplace
+      enc (ParamTemplate template) = Right template
 
 instance J.ToJSON QueryParamsTransformFn where
   toJSON (AddOrReplace addOrReplace) = J.toJSON $ M.fromList addOrReplace

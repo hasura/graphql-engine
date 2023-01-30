@@ -46,6 +46,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.CustomSQL (dropCustomSQLInMetadata)
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
@@ -80,6 +81,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.Server.Logging (MetadataLog (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -97,16 +99,30 @@ runClearMetadata ::
   m EncJSON
 runClearMetadata _ = do
   metadata <- getMetadata
+  logger :: (HL.Logger HL.Hasura) <- asks getter
   -- Clean up all sources, drop hdb_catalog schema from source
   for_ (OMap.toList $ _metaSources metadata) $ \(sourceName, backendSourceMetadata) ->
     AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata backendSourceMetadata) \(_sourceMetadata :: SourceMetadata b) -> do
-      sourceInfo <- askSourceInfo @b sourceName
-      -- We do not bother dropping all dependencies on the source, because the
-      -- metadata is going to be replaced with an empty metadata. And dropping the
-      -- depdencies would lead to rebuilding of schema cache which is of no use here
-      -- since we do not use the rebuilt schema cache. Hence, we only clean up the
-      -- 'hdb_catalog' tables from the source.
-      runPostDropSourceHook sourceName sourceInfo
+      sourceInfoMaybe <- askSourceInfoMaybe @b sourceName
+      case sourceInfoMaybe of
+        Nothing ->
+          HL.unLogger logger $
+            MetadataLog
+              HL.LevelWarn
+              ( "Could not cleanup the source '"
+                  <> sourceName
+                    <<> "' while dropping it from the graphql-engine as it is inconsistent."
+                  <> " Please consider cleaning the resources created by the graphql engine,"
+                  <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually "
+              )
+              J.Null
+        Just sourceInfo ->
+          -- We do not bother dropping all dependencies on the source, because the
+          -- metadata is going to be replaced with an empty metadata. And dropping the
+          -- depdencies would lead to rebuilding of schema cache which is of no use here
+          -- since we do not use the rebuilt schema cache. Hence, we only clean up the
+          -- 'hdb_catalog' tables from the source.
+          runPostDropSourceHook sourceName sourceInfo
 
   -- We can infer whether the server is started with `--database-url` option
   -- (or corresponding env variable) by checking the existence of @'defaultSource'
@@ -125,6 +141,7 @@ runClearMetadata _ = do
                         @b
                         defaultSource
                         (_smKind @b s)
+                        mempty
                         mempty
                         mempty
                         (_smConfiguration @b s)
@@ -248,8 +265,20 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
     -- clean that source.
     onNothing (OMap.lookup oldSource newSources) $ do
       AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata oldSourceBackendMetadata) \(_oldSourceMetadata :: SourceMetadata b) -> do
-        sourceInfo <- askSourceInfo @b oldSource
-        runPostDropSourceHook oldSource sourceInfo
+        sourceInfoMaybe <- askSourceInfoMaybe @b oldSource
+        case sourceInfoMaybe of
+          Nothing ->
+            HL.unLogger logger $
+              MetadataLog
+                HL.LevelWarn
+                ( "Could not cleanup the source '"
+                    <> oldSource
+                      <<> "' while dropping it from the graphql-engine as it is inconsistent."
+                    <> " Please consider cleaning the resources created by the graphql engine,"
+                    <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually "
+                )
+                J.Null
+          Just sourceInfo -> runPostDropSourceHook oldSource sourceInfo
         pure (BackendSourceMetadata (AB.mkAnyBackend _oldSourceMetadata))
 
   -- Check for duplicate trigger names in the new source metadata
@@ -260,7 +289,6 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
             duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (L.uniques newTriggerNames)
         unless (null duplicateTriggerNamesInNewMetadata) $ do
           throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
-
   let cacheInvalidations =
         CacheInvalidations
           { ciMetadata = False,
@@ -280,7 +308,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   -- See Note [Cleanup for dropped triggers]
   dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
 
-  generateSQLTriggerCleanupSchedules (_metaSources oldMetadata) (_metaSources metadata)
+  generateSQLTriggerCleanupSchedules logger (_metaSources oldMetadata) (_metaSources metadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
@@ -375,25 +403,61 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
               -- TODO: Determine if any errors should be thrown from askSourceConfig at all if the errors are just being discarded
               return $
                 flip catchError catcher do
-                  sourceConfig <- askSourceConfig @b source
-                  for_ droppedEventTriggers $
-                    \triggerName -> do
-                      tableName <- getTableNameFromTrigger @b oldSchemaCache source triggerName
-                      dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
-                  for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
-                    case OMap.lookup retainedNewTriggerName oldTriggersMap of
-                      Nothing -> pure ()
-                      Just oldTriggerConf -> do
-                        let newTriggerOps = etcDefinition retainedNewTriggerConf
-                            oldTriggerOps = etcDefinition oldTriggerConf
-                            isDroppedOp old new = isJust old && isNothing new
-                            droppedOps =
-                              [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldTriggerOps) (tdInsert newTriggerOps))),
-                                (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
-                                (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
-                              ]
-                        tableName <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
-                        dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (Set.fromList $ catMaybes droppedOps)
+                  sourceConfigMaybe <- askSourceConfigMaybe @b source
+                  case sourceConfigMaybe of
+                    Nothing ->
+                      -- TODO: Add user facing docs on how to drop triggers manually. Issue #7104
+                      logger $
+                        MetadataLog
+                          HL.LevelWarn
+                          ( "Could not drop SQL triggers present in the source '"
+                              <> source
+                                <<> "' as it is inconsistent."
+                              <> " While creating an event trigger, Hasura creates SQL triggers on the table."
+                              <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
+                              <> " to delete the sql triggers from the database manually."
+                              <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
+                          )
+                          J.Null
+                    Just sourceConfig -> do
+                      for_ droppedEventTriggers $
+                        \triggerName -> do
+                          tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source triggerName
+                          case tableNameMaybe of
+                            Nothing ->
+                              logger $
+                                MetadataLog
+                                  HL.LevelWarn
+                                  (sqlTriggerError triggerName)
+                                  J.Null
+                            Just tableName -> dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
+                      for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
+                        case OMap.lookup retainedNewTriggerName oldTriggersMap of
+                          Nothing ->
+                            logger $
+                              MetadataLog
+                                HL.LevelWarn
+                                (sqlTriggerError retainedNewTriggerName)
+                                J.Null
+                          Just oldTriggerConf -> do
+                            let newTriggerOps = etcDefinition retainedNewTriggerConf
+                                oldTriggerOps = etcDefinition oldTriggerConf
+                                isDroppedOp old new = isJust old && isNothing new
+                                droppedOps =
+                                  [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldTriggerOps) (tdInsert newTriggerOps))),
+                                    (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
+                                    (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
+                                  ]
+                            tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
+                            case tableNameMaybe of
+                              Nothing ->
+                                logger $
+                                  MetadataLog
+                                    HL.LevelWarn
+                                    (sqlTriggerError retainedNewTriggerName)
+                                    J.Null
+                              Just tableName -> do
+                                dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (Set.fromList $ catMaybes droppedOps)
       where
         compose ::
           SourceName ->
@@ -403,28 +467,66 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           m ()
         compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
+        sqlTriggerError :: TriggerName -> Text
+        sqlTriggerError triggerName =
+          ( "Could not drop SQL triggers associated with event trigger '"
+              <> triggerName
+                <<> "'. While creating an event trigger, Hasura creates SQL triggers on the table."
+              <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
+              <> " to delete the sql triggers from the database manually."
+              <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
+          )
+
+    -- \| `generateSQLTriggerCleanupSchedules` is primarily used to update the
+    --    cleanup schedules associated with an event trigger in case the cleanup
+    --    config has changed while replacing the metadata.
+    --
+    --    In case,
+    --    i. a source has been dropped -
+    --           We don't need to clear the cleanup schedules
+    --           because the event log cleanup table is dropped as part
+    --           of the post drop source hook.
+    --    ii. a table or an event trigger has been dropped/updated -
+    --           Older cleanup events will be deleted first and in case of
+    --           an update, new cleanup events will be generated and inserted
+    --           into the table.
+    --    iii. a new event trigger with cleanup config has been added -
+    --             Generate the cleanup events and insert it.
     generateSQLTriggerCleanupSchedules ::
+      HL.Logger HL.Hasura ->
       InsOrdHashMap SourceName BackendSourceMetadata ->
       InsOrdHashMap SourceName BackendSourceMetadata ->
       m ()
-    generateSQLTriggerCleanupSchedules oldSources newSources = do
-      -- If there are any event trigger cleanup configs with different cron then delete the older schedules
-      -- generate cleanup logs for new event trigger cleanup config
+    generateSQLTriggerCleanupSchedules (HL.Logger logger) oldSources newSources = do
+      -- If there are any event trigger cleanup configs with different cron schedule,
+      -- then delete the older schedules generate cleanup logs for new event trigger
+      -- cleanup config.
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
         for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
           AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
-              sourceInfo@(SourceInfo _ _ _ sourceConfig _ _) <- askSourceInfo @b source
-              let getEventMapWithCC sourceMeta = Map.fromList $ concatMap (getAllETWithCleanupConfigInTableMetadata . snd) $ OMap.toList $ _smTables sourceMeta
-                  oldEventTriggersWithCC = getEventMapWithCC oldSourceMetadata
-                  newEventTriggersWithCC = getEventMapWithCC newSourceMetadata
-                  -- event triggers with cleanup config that existed in old metadata but are missing in new metadata
-                  differenceMap = Map.difference oldEventTriggersWithCC newEventTriggersWithCC
-              for_ (Map.toList differenceMap) $ \(triggerName, cleanupConfig) -> do
-                deleteAllScheduledCleanups @b sourceConfig triggerName
-                pure cleanupConfig
-              for_ (Map.toList newEventTriggersWithCC) $ \(triggerName, cleanupConfig) -> do
-                (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
+              sourceInfoMaybe <- askSourceInfoMaybe @b source
+              case sourceInfoMaybe of
+                Nothing ->
+                  logger $
+                    MetadataLog
+                      HL.LevelWarn
+                      ( "Could not cleanup the scheduled autocleanup instances present in the source '"
+                          <> source
+                            <<> "' as it is inconsistent"
+                      )
+                      J.Null
+                Just sourceInfo@(SourceInfo _ _ _ _ sourceConfig _ _) -> do
+                  let getEventMapWithCC sourceMeta = Map.fromList $ concatMap (getAllETWithCleanupConfigInTableMetadata . snd) $ OMap.toList $ _smTables sourceMeta
+                      oldEventTriggersWithCC = getEventMapWithCC oldSourceMetadata
+                      newEventTriggersWithCC = getEventMapWithCC newSourceMetadata
+                      -- event triggers with cleanup config that existed in old metadata but are missing in new metadata
+                      differenceMap = Map.difference oldEventTriggersWithCC newEventTriggersWithCC
+                  for_ (Map.toList differenceMap) $ \(triggerName, cleanupConfig) -> do
+                    deleteAllScheduledCleanups @b sourceConfig triggerName
+                    pure cleanupConfig
+                  for_ (Map.toList newEventTriggersWithCC) $ \(triggerName, cleanupConfig) -> do
+                    (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
     dispatch (BackendSourceMetadata bs) = AB.dispatchAnyBackend @BackendEventTrigger bs
 
@@ -589,6 +691,7 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
+      SMOCustomSQL qc -> dropCustomSQLInMetadata @b source qc
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

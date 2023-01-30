@@ -6,6 +6,7 @@ export type Casing = "pascal_case" | "lowercase";
 export type Config = {
   tables: string[] | null
   schema: string | null
+  db: string | null
   table_name_casing: Casing
   column_name_casing: Casing
 }
@@ -17,6 +18,7 @@ export const getConfig = (request: FastifyRequest): Config => {
   return {
     tables: config.tables ?? null,
     schema: config.schema ?? null,
+    db: config.db ?? null,
     table_name_casing: config.table_name_casing ?? "pascal_case",
     column_name_casing: config.column_name_casing ?? "pascal_case",
   }
@@ -35,6 +37,11 @@ export const configSchema: ConfigSchemaResponse = {
       },
       schema: {
         description: "Name of the schema to place the tables in. Omit to have no schema for the tables",
+        type: "string",
+        nullable: true
+      },
+      db: {
+        description: "Name of the db. Omit to use the default db.",
         type: "string",
         nullable: true
       },

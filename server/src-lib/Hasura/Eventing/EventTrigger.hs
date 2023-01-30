@@ -30,6 +30,8 @@
 -- failed requests at a regular (user-configurable) interval.
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx,
+    createFetchedEventsStatsLogger,
+    closeFetchedEventsStatsLogger,
     processEventQueue,
     defaultMaxEventThreads,
     defaultFetchInterval,
@@ -45,11 +47,14 @@ where
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM.TVar
+import Control.FoldDebounce qualified as FDebounce
 import Control.Lens
 import Control.Monad.Catch (MonadMask, bracket_, finally, mask_)
 import Control.Monad.STM
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as Key
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as M
@@ -86,6 +91,7 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 import Refined (NonNegative, Positive, Refined, refineTH, unrefine)
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
+import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 
@@ -199,6 +205,67 @@ type BackendEventWithSource = AB.AnyBackend EventWithSource
 
 type FetchEventArguments = ([BackendEventWithSource], Int, Bool)
 
+newtype EventsCount = EventsCount {unEventsCount :: Int}
+  deriving (Eq, Show, J.ToJSON, J.FromJSON, Num)
+
+newtype NumEventsFetchedPerSource = NumEventsFetchedPerSource {unNumEventsFetchedPerSource :: HashMap SourceName EventsCount}
+  deriving (Eq, Show)
+
+instance J.ToJSON NumEventsFetchedPerSource where
+  toJSON (NumEventsFetchedPerSource m) =
+    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ M.toList m
+
+instance Semigroup NumEventsFetchedPerSource where
+  (NumEventsFetchedPerSource lMap) <> (NumEventsFetchedPerSource rMap) =
+    NumEventsFetchedPerSource $ M.unionWith (+) lMap rMap
+
+instance Monoid NumEventsFetchedPerSource where
+  mempty = NumEventsFetchedPerSource mempty
+
+data FetchedEventsStats = FetchedEventsStats
+  { _fesNumEventsFetched :: NumEventsFetchedPerSource,
+    _fesNumFetches :: Int
+  }
+  deriving (Eq, Show)
+
+$(deriveToJSON hasuraJSON ''FetchedEventsStats)
+
+instance L.ToEngineLog FetchedEventsStats L.Hasura where
+  toEngineLog stats =
+    (L.LevelInfo, L.eventTriggerProcessLogType, J.toJSON stats)
+
+instance Semigroup FetchedEventsStats where
+  (FetchedEventsStats lMap lFetches) <> (FetchedEventsStats rMap rFetches) =
+    FetchedEventsStats (lMap <> rMap) (lFetches + rFetches)
+
+instance Monoid FetchedEventsStats where
+  mempty = FetchedEventsStats mempty 0
+
+type FetchedEventsStatsLogger = FDebounce.Trigger FetchedEventsStats FetchedEventsStats
+
+-- | Logger to accumulate stats of fetched events over a period of time and log once using @'L.Logger L.Hasura'.
+-- See @'createStatsLogger' for more details.
+createFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedEventsStatsLogger
+createFetchedEventsStatsLogger = createStatsLogger
+
+-- | Close the fetched events stats logger.
+closeFetchedEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> FetchedEventsStatsLogger -> m ()
+closeFetchedEventsStatsLogger = closeStatsLogger L.eventTriggerProcessLogType
+
+-- | Log statistics of fetched events. See @'logStats' for more details.
+logFetchedEventsStatistics ::
+  (MonadIO m) =>
+  FetchedEventsStatsLogger ->
+  [BackendEventWithSource] ->
+  m ()
+logFetchedEventsStatistics logger backendEvents =
+  logStats logger (FetchedEventsStats numEventsFetchedPerSource 1)
+  where
+    numEventsFetchedPerSource =
+      let sourceNames = flip map backendEvents $
+            \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
+       in NumEventsFetchedPerSource $ M.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -217,6 +284,7 @@ processEventQueue ::
     MonadMask m
   ) =>
   L.Logger L.Hasura ->
+  FetchedEventsStatsLogger ->
   HTTP.Manager ->
   IO SchemaCache ->
   EventEngineCtx ->
@@ -225,7 +293,7 @@ processEventQueue ::
   EventTriggerMetrics ->
   MaintenanceMode () ->
   m (Forever m)
-processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
+processEventQueue logger statsLogger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -244,10 +312,10 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       allSources <- scSources <$> liftIO getSchemaCache
-      liftIO . fmap concat $
+      events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
-          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache _customSQLCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
             let tables = M.elems tableCache
                 triggerMap = _tiEventTriggerInfoMap <$> tables
                 eventTriggerCount = sum (M.size <$> triggerMap)
@@ -273,6 +341,10 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                     liftIO $ L.unLogger logger $ EventInternalErr err
                     pure []
               else pure []
+
+      -- Log the statistics of events fetched
+      logFetchedEventsStatistics statsLogger events
+      pure events
 
     -- !!! CAREFUL !!!
     --     The logic here in particular is subtle and has been fixed, broken,
@@ -352,6 +424,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
         Has (L.Logger L.Hasura) r,
         Tracing.HasReporter io,
         MonadMask io,
+        MonadBaseControl IO io,
         BackendEventTrigger b
       ) =>
       EventWithSource b ->
@@ -369,10 +442,8 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
       let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
           runTraceT =
-            maybe
-              Tracing.runTraceT
-              Tracing.runTraceTInContext
-              tracingCtx
+            (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
+              Tracing.sampleAlways
 
       maintenanceModeVersionEither :: Either QErr (MaintenanceMode MaintenanceModeVersion) <-
         case maintenanceMode of
@@ -411,7 +482,19 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                 runExceptT $
                   mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
                     let request = extractRequest reqDetails
-                        logger' res details = logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                        logger' res details = do
+                          logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                          liftIO $ do
+                            case res of
+                              Left _err -> pure ()
+                              Right response ->
+                                Prometheus.Counter.add
+                                  (eventTriggerBytesReceived eventTriggerMetrics)
+                                  (hrsSize response)
+                            let RequestDetails {_rdOriginalSize, _rdTransformedSize} = details
+                             in Prometheus.Counter.add
+                                  (eventTriggerBytesSent eventTriggerMetrics)
+                                  (fromMaybe _rdOriginalSize _rdTransformedSize)
                     -- Event Triggers have a configuration parameter called
                     -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
                     -- to control the concurrency of http delivery.
@@ -436,8 +519,18 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                   processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
                   eventExecutionFinishTime <- liftIO getCurrentTime
                   let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
-                  _ <- liftIO $ EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
-                  liftIO $ Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
+                      -- For event_processing_time, the start time is defined as the expected delivery time for an event, i.e.:
+                      --  - For event with no retries: created_at time
+                      --  - For event with retries: next_retry_at time
+                      eventStartTime = fromMaybe (eCreatedAt e) (eRetryAt e)
+                      -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
+                      -- `eventStartTime`) used here in calculation are all UTC time.
+                      eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
+                  liftIO $ do
+                    EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
+                    Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
+                    EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
+                    Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
                 Left (HTTPError reqBody err) ->
                   processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
                 Left (TransformationError _ err) -> do

@@ -58,7 +58,7 @@ instance BackendSchema 'BigQuery where
   buildTableRelayQueryFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ = pure []
   buildTableDeleteMutationFields _ _ _ _ _ = pure []
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []

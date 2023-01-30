@@ -44,6 +44,7 @@ instance Backend 'BigQuery where
   type XComputedField 'BigQuery = XEnable
   type XRelay 'BigQuery = XDisable
   type XNodesAgg 'BigQuery = XEnable
+  type XEventTriggers 'BigQuery = XDisable
   type XNestedInserts 'BigQuery = XDisable
   type XStreamingSubscription 'BigQuery = XDisable
 
@@ -113,4 +114,4 @@ instance Backend 'BigQuery where
     -- BigQuery does not posses connection pooling
     pure ()
 
-  defaultTriggerOnReplication = error "Event triggers are not supported for the BigQuery source."
+  defaultTriggerOnReplication = Nothing

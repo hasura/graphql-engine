@@ -60,6 +60,7 @@ import Hasura.RQL.Types.Metadata.Common
     BackendSourceMetadata (..),
     ComputedFieldMetadata (..),
     CronTriggers,
+    CustomSQLMetadata (..),
     Endpoints,
     FunctionMetadata (..),
     InheritedRoles,
@@ -114,11 +115,12 @@ sourcesToOrdJSONList sources =
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
-      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smCustomSQL _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
+            customSQLPair = listToMaybeOrdPairSort "custom_sql" customSQLMetaToOrdJSON _csmRootFieldName _smCustomSQL
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 
@@ -129,10 +131,14 @@ sourcesToOrdJSONList sources =
          in AO.object $
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
+                <> maybeToList customSQLPair
                 <> configurationPair
                 <> queryTagsConfigPair
                 <> customizationPair
                 <> healthCheckPair
+
+    customSQLMetaToOrdJSON :: (Backend b) => CustomSQLMetadata b -> AO.Value
+    customSQLMetaToOrdJSON = AO.toOrdered . toJSON
 
     tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
     tableMetaToOrdJSON
@@ -331,9 +337,9 @@ sourcesToOrdJSONList sources =
           eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
           eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform cleanupConfig triggerOnReplication) =
             let triggerOnReplicationMaybe =
-                  if triggerOnReplication == defaultTriggerOnReplication @b
-                    then Nothing
-                    else Just triggerOnReplication
+                  case defaultTriggerOnReplication @b of
+                    Just (_, defTOR) -> if triggerOnReplication == defTOR then Nothing else Just triggerOnReplication
+                    Nothing -> Just triggerOnReplication
              in AO.object $
                   [ ("name", AO.toOrdered name),
                     ("definition", AO.toOrdered definition),

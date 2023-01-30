@@ -1,4 +1,5 @@
 import { globals } from '@hasura/console-oss';
+import { isEmpty } from './utils/validation';
 
 const stripTrailingSlash = url => url.replace(/\/$/, '');
 
@@ -31,8 +32,12 @@ const extendedGlobals = {
   adminSecret: window.__env.adminSecret,
   isMetadataAPIEnabled: window.__env.isMetadataAPIEnabled,
   userRole: window.__env.userRole,
-  isAdminSecretSet: window.__env.isAdminSecretSet,
+  isAdminSecretSet:
+    window.__env?.isAdminSecretSet ||
+    !isEmpty(window.__env?.adminSecret) ||
+    false,
   consoleType: window.__env.consoleType,
+  ssoEnabled: window.__env.ssoEnabled === 'true',
 };
 
 export default extendedGlobals;

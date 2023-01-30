@@ -18,17 +18,22 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsCodegenCmd := &cobra.Command{
 		Use:   "codegen [action-name]",
-		Short: "Generate code for actions",
-		Example: `  # Generate code for all actions
+		Short: "Generate code for Actions",
+		Long: `Running this command will generate code for either specified or all Actions. The CLI allows you to select a framework and language for generating code. Further, you also have the option of cloning a starter kit of your chosen framework and choosing the output directory for the generated code.
+
+Further Reading:
+- https://hasura.io/docs/latest/actions/codegen/index/
+`,
+		Example: `  # Generate code for all Actions
   hasura actions codegen
 
-  # Generate code for an action
+  # Generate code for an Action
   hasura actions codegen [action-name]
 
-  # Generate code for two or more actions
+  # Generate code for two or more Actions
   hasura actions codegen [action-name] [action-name...]
 
-  # Derive an action from a hasura operation
+  # Derive an Action from a Hasura operation
   hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -53,7 +58,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := actionsCodegenCmd.Flags()
 
-	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a hasura operation")
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive Action from a Hasura operation")
 	return actionsCodegenCmd
 }
 

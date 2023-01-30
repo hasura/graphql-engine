@@ -16,7 +16,6 @@ import Hasura.App
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
-import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
@@ -31,6 +30,7 @@ import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
+import Hasura.Server.Init.FeatureFlag as FF
 import Hasura.Server.Migrate
 import Hasura.Server.MigrateSuite qualified as MigrateSuite
 import Hasura.Server.Types
@@ -58,7 +58,7 @@ main = do
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
-      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
   let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
@@ -87,8 +87,9 @@ main = do
                 mempty
                 EventingEnabled
                 readOnlyMode
-                Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
+                (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
+                (FF.checkFeatureFlag mempty)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 
@@ -104,7 +105,7 @@ main = do
         (metadata, schemaCache) <- run do
           metadata <-
             snd
-              <$> (liftEitherM . runExceptT . runTx pgContext PG.ReadWrite)
+              <$> (liftEitherM . runExceptT . _pecRunTx pgContext (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery))
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)

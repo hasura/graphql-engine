@@ -175,3 +175,22 @@ label {
   --highlight-color: #f1f5f9 !important;
   --animation-duration: 1.5s !important;
 }
+
+/* Customize code editor placeholder */
+.ace_placeholder {
+  background-color: white;
+  color: rgb(100 116 139) !important;
+  font-family: 'Gudea', 'ui-sans-serif', 'system-ui';
+  font-size: 14px;
+  font-style: normal !important;
+  margin: 0;
+  opacity: 1;
+  padding-top: 4px !important;
+  transform: none;
+  width: 100%;
+}
+
+/* Hide placeholder when input is focused to mitigate alignment issue between placeholder and text value */
+.ace_text-input:focus ~ .ace_scroller .ace_placeholder {
+  display: none;
+}

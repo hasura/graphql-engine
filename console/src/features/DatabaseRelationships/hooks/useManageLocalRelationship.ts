@@ -31,7 +31,7 @@ export const useManageLocalRelationship = ({
   const mutationOptions = useMemo(
     () => ({
       onSuccess: () => {
-        queryClient.refetchQueries(generateQueryKeys.metadata());
+        queryClient.invalidateQueries(generateQueryKeys.metadata());
         onSuccess?.();
       },
       onError: (err: Error) => {

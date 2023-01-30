@@ -28,7 +28,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runSingleSetup
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
                 ]
@@ -64,7 +64,7 @@ schema =
             Schema.column "time_id" Schema.TInt
           ],
         Schema.tablePrimaryKey = ["nickname"],
-        Schema.tableReferences = [Schema.Reference "time_id" "alldefaults" "id"]
+        Schema.tableReferences = [Schema.reference "time_id" "alldefaults" "id"]
       }
   ]
 

@@ -78,6 +78,10 @@ module Hasura.Eventing.ScheduledTrigger
     CronEventSeed (..),
     LockedEventsCtx (..),
 
+    -- * Scheduled events stats logger
+    createFetchedScheduledEventsStatsLogger,
+    closeFetchedScheduledEventsStatsLogger,
+
     -- * Database interactions
 
     -- Following function names are similar to those present in
@@ -116,6 +120,7 @@ where
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
 import Control.Lens (view)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -147,9 +152,11 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
+import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Refined (unrefine)
+import System.Metrics.Prometheus.Counter as Prometheus.Counter
 import Text.Builder qualified as TB
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
@@ -215,16 +222,18 @@ generateCronEventsFrom startTime CronTriggerInfo {..} =
 
 processCronEvents ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   [CronEvent] ->
   IO SchemaCache ->
   TVar (Set.Set CronEventId) ->
   m ()
-processCronEvents logger httpMgr cronEvents getSC lockedCronEvents = do
+processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEvents = do
   cronTriggersInfo <- scCronTriggers <$> liftIO getSC
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
@@ -252,6 +261,7 @@ processCronEvents logger httpMgr cronEvents getSC lockedCronEvents = do
           runMetadataStorageT $
             flip runReaderT (logger, httpMgr) $
               processScheduledEvent
+                prometheusMetrics
                 id'
                 ctiHeaders
                 retryCtx
@@ -265,12 +275,14 @@ processCronEvents logger httpMgr cronEvents getSC lockedCronEvents = do
 
 processOneOffScheduledEvents ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   [OneOffScheduledEvent] ->
   TVar (Set.Set OneOffScheduledEventId) ->
   m ()
@@ -278,6 +290,7 @@ processOneOffScheduledEvents
   env
   logger
   httpMgr
+  prometheusMetrics
   oneOffEvents
   lockedOneOffScheduledEvents = do
     -- save the locked one-off events that have been fetched from the
@@ -302,7 +315,7 @@ processOneOffScheduledEvents
             retryCtx = RetryContext _ooseTries _ooseRetryConf
             webhookEnvRecord = EnvRecord (getTemplateFromUrl _ooseWebhookConf) webhookInfo
         flip runReaderT (logger, httpMgr) $
-          processScheduledEvent _ooseId headerInfo retryCtx payload webhookEnvRecord OneOff
+          processScheduledEvent prometheusMetrics _ooseId headerInfo retryCtx payload webhookEnvRecord OneOff
         removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
     where
       logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -310,16 +323,19 @@ processOneOffScheduledEvents
 
 processScheduledTriggers ::
   ( MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  FetchedScheduledEventsStatsLogger ->
   HTTP.Manager ->
+  PrometheusMetrics ->
   IO SchemaCache ->
   LockedEventsCtx ->
   m (Forever m)
-processScheduledTriggers env logger httpMgr getSC LockedEventsCtx {..} = do
+processScheduledTriggers env logger statsLogger httpMgr prometheusMetrics getSC LockedEventsCtx {..} = do
   return $
     Forever () $
       const $ do
@@ -327,8 +343,9 @@ processScheduledTriggers env logger httpMgr getSC LockedEventsCtx {..} = do
         case result of
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
-            processCronEvents logger httpMgr cronEvents getSC leCronEvents
-            processOneOffScheduledEvents env logger httpMgr oneOffEvents leOneOffEvents
+            logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
+            processCronEvents logger httpMgr prometheusMetrics cronEvents getSC leCronEvents
+            processOneOffScheduledEvents env logger httpMgr prometheusMetrics oneOffEvents leOneOffEvents
         -- NOTE: cron events are scheduled at times with minute resolution (as on
         -- unix), while one-off events can be set for arbitrary times. The sleep
         -- time here determines how overdue a scheduled event (cron or one-off)
@@ -342,9 +359,11 @@ processScheduledEvent ::
     Has HTTP.Manager r,
     Has (L.Logger L.Hasura) r,
     MonadIO m,
+    MonadBaseControl IO m,
     Tracing.HasReporter m,
     MonadMetadataStorage m
   ) =>
+  PrometheusMetrics ->
   ScheduledEventId ->
   [EventHeaderInfo] ->
   RetryContext ->
@@ -352,8 +371,8 @@ processScheduledEvent ::
   EnvRecord ResolvedWebhook ->
   ScheduledEventType ->
   m ()
-processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
-  Tracing.runTraceT traceNote do
+processScheduledEvent prometheusMetrics eventId eventHeaders retryCtx payload webhookUrl type' =
+  Tracing.runTraceT Tracing.sampleAlways traceNote do
     currentTime <- liftIO getCurrentTime
     let retryConf = _rctxConf retryCtx
         scheduledTime = sewpScheduledTime payload
@@ -374,7 +393,19 @@ processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
           runExceptT $
             mkRequest headers httpTimeout webhookReqBody requestTransform (_envVarValue webhookUrl) >>= \reqDetails -> do
               let request = extractRequest reqDetails
-                  logger e d = logHTTPForST e extraLogCtx d (_envVarName webhookUrl) decodedHeaders
+                  logger e d = do
+                    logHTTPForST e extraLogCtx d (_envVarName webhookUrl) decodedHeaders
+                    liftIO $ do
+                      case e of
+                        Left _err -> pure ()
+                        Right response ->
+                          Prometheus.Counter.add
+                            (pmScheduledTriggerBytesReceived prometheusMetrics)
+                            (hrsSize response)
+                      let RequestDetails {_rdOriginalSize, _rdTransformedSize} = d
+                       in Prometheus.Counter.add
+                            (pmScheduledTriggerBytesSent prometheusMetrics)
+                            (fromMaybe _rdOriginalSize _rdTransformedSize)
                   sessionVars = _rdSessionVars reqDetails
               resp <- invokeRequest reqDetails responseTransform sessionVars logger
               pure (request, resp)
@@ -1057,3 +1088,23 @@ getScheduledEventsInvocationsQuery :: EventTables -> GetScheduledEventInvocation
 getScheduledEventsInvocationsQuery eventTables (GetScheduledEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
   let invocationsSelect = getScheduledEventsInvocationsQueryNoPagination eventTables invocationsBy
    in mkPaginationSelectExp invocationsSelect pagination shouldIncludeRowsCount
+
+-- | Logger to accumulate stats of fetched scheduled events over a period of time and log once using @'L.Logger L.Hasura'.
+-- See @'createStatsLogger' for more details.
+createFetchedScheduledEventsStatsLogger :: (MonadIO m) => L.Logger L.Hasura -> m FetchedScheduledEventsStatsLogger
+createFetchedScheduledEventsStatsLogger = createStatsLogger
+
+-- | Close the fetched scheduled events stats logger.
+closeFetchedScheduledEventsStatsLogger ::
+  (MonadIO m) => L.Logger L.Hasura -> FetchedScheduledEventsStatsLogger -> m ()
+closeFetchedScheduledEventsStatsLogger = closeStatsLogger L.scheduledTriggerProcessLogType
+
+-- | Log statistics of fetched scheduled events. See @'logStats' for more details.
+logFetchedScheduledEventsStats ::
+  (MonadIO m) =>
+  FetchedScheduledEventsStatsLogger ->
+  CronEventsCount ->
+  OneOffScheduledEventsCount ->
+  m ()
+logFetchedScheduledEventsStats logger cron oneOff =
+  logStats logger (FetchedScheduledEventsStats cron oneOff 1)

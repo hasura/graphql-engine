@@ -23,156 +23,158 @@ export default {
   ],
 } as ComponentMeta<typeof RenderOpenApi3Form>;
 
-export const ObjectInputWithFields: ComponentStory<typeof RenderOpenApi3Form> =
-  () => {
-    return (
-      <RenderOpenApi3Form
-        getSchema={() => [
-          {
-            nullable: false,
-            properties: {
-              jdbc_url: {
+export const ObjectInputWithFields: ComponentStory<
+  typeof RenderOpenApi3Form
+> = () => {
+  return (
+    <RenderOpenApi3Form
+      getSchema={() => [
+        {
+          nullable: false,
+          properties: {
+            jdbc_url: {
+              nullable: false,
+              type: 'string',
+            },
+            primary_keys: {
+              items: {
+                nullable: false,
+                properties: {
+                  columns: {
+                    items: {
+                      nullable: false,
+                      type: 'string',
+                    },
+                    nullable: false,
+                    type: 'array',
+                  },
+                  table: {
+                    items: {
+                      nullable: false,
+                      type: 'string',
+                    },
+                    nullable: false,
+                    type: 'array',
+                  },
+                },
+                type: 'object',
+              },
+              nullable: true,
+              type: 'array',
+            },
+            schema: {
+              nullable: true,
+              type: 'string',
+            },
+            tables: {
+              items: {
                 nullable: false,
                 type: 'string',
               },
-              primary_keys: {
-                items: {
-                  nullable: false,
-                  properties: {
-                    columns: {
-                      items: {
-                        nullable: false,
-                        type: 'string',
-                      },
-                      nullable: false,
-                      type: 'array',
-                    },
-                    table: {
-                      items: {
-                        nullable: false,
-                        type: 'string',
-                      },
-                      nullable: false,
-                      type: 'array',
-                    },
-                  },
-                  type: 'object',
-                },
-                nullable: true,
-                type: 'array',
-              },
-              schema: {
-                nullable: true,
-                type: 'string',
-              },
-              tables: {
-                items: {
-                  nullable: false,
-                  type: 'string',
-                },
-                nullable: true,
-                type: 'array',
-              },
-            },
-            type: 'object',
-          },
-          {},
-        ]}
-        defaultValues={{
-          ObjectProperty: {
-            jdbc_url: 'asdasd',
-            primary_keys: [
-              {
-                columns: ['test'],
-                table: ['test'],
-              },
-              {
-                columns: ['test'],
-                table: ['test'],
-              },
-            ],
-            schema: 'asdasd',
-            tables: ['asd', ' value'],
-          },
-        }}
-        name="ObjectProperty"
-      />
-    );
-  };
-
-export const ObjectInputArrayInput: ComponentStory<typeof RenderOpenApi3Form> =
-  () => {
-    return (
-      <RenderOpenApi3Form
-        getSchema={() => [
-          {
-            title: 'Available Connections',
-            type: 'array',
-            nullable: true,
-            items: {
-              $ref: '#/otherSchemas/ConnectionParams',
-            },
-          },
-          {
-            ConnectionParams: {
-              title: 'Connection Parameters',
-              type: 'object',
               nullable: true,
-              properties: {
-                username: {
-                  title: 'Username',
-                  type: 'string',
-                  nullable: true,
-                },
-                database: {
-                  title: 'Database',
-                  type: 'string',
-                  nullable: true,
-                },
-                host: {
-                  title: 'Host',
-                  type: 'string',
-                  // nullable: true,
-                },
-                port: {
-                  title: 'Port',
-                  type: 'number',
-                  nullable: true,
-                },
-                socket: {
-                  title: 'Socket',
-                  type: 'number',
-                  nullable: true,
-                },
-                uuid: {
-                  title: 'UUID',
-                  type: 'number',
-                  nullable: true,
-                },
-                disable_telemetry: {
-                  title: 'Telemetry',
-                  type: 'boolean',
-                  nullable: true,
-                },
-                disable_auto_update: {
-                  title: 'Auto updates',
-                  type: 'boolean',
-                  nullable: true,
-                },
-                enable_log: {
-                  title: 'Logging',
-                  type: 'boolean',
-                  nullable: true,
-                },
+              type: 'array',
+            },
+          },
+          type: 'object',
+        },
+        {},
+      ]}
+      defaultValues={{
+        ObjectProperty: {
+          jdbc_url: 'asdasd',
+          primary_keys: [
+            {
+              columns: ['test'],
+              table: ['test'],
+            },
+            {
+              columns: ['test'],
+              table: ['test'],
+            },
+          ],
+          schema: 'asdasd',
+          tables: ['asd', ' value'],
+        },
+      }}
+      name="ObjectProperty"
+    />
+  );
+};
+
+export const ObjectInputArrayInput: ComponentStory<
+  typeof RenderOpenApi3Form
+> = () => {
+  return (
+    <RenderOpenApi3Form
+      getSchema={() => [
+        {
+          title: 'Available Connections',
+          type: 'array',
+          nullable: true,
+          items: {
+            $ref: '#/otherSchemas/ConnectionParams',
+          },
+        },
+        {
+          ConnectionParams: {
+            title: 'Connection Parameters',
+            type: 'object',
+            nullable: true,
+            properties: {
+              username: {
+                title: 'Username',
+                type: 'string',
+                nullable: true,
+              },
+              database: {
+                title: 'Database',
+                type: 'string',
+                nullable: true,
+              },
+              host: {
+                title: 'Host',
+                type: 'string',
+                // nullable: true,
+              },
+              port: {
+                title: 'Port',
+                type: 'number',
+                nullable: true,
+              },
+              socket: {
+                title: 'Socket',
+                type: 'number',
+                nullable: true,
+              },
+              uuid: {
+                title: 'UUID',
+                type: 'number',
+                nullable: true,
+              },
+              disable_telemetry: {
+                title: 'Telemetry',
+                type: 'boolean',
+                nullable: true,
+              },
+              disable_auto_update: {
+                title: 'Auto updates',
+                type: 'boolean',
+                nullable: true,
+              },
+              enable_log: {
+                title: 'Logging',
+                type: 'boolean',
+                nullable: true,
               },
             },
           },
-        ]}
-        defaultValues={{}}
-        name="ObjectProperty"
-      />
-    );
-  };
+        },
+      ]}
+      defaultValues={{}}
+      name="ObjectProperty"
+    />
+  );
+};
 
 export const Test: ComponentStory<typeof RenderOpenApi3Form> = () => (
   <RenderOpenApi3Form

@@ -1,3 +1,4 @@
+import { isPostgres } from '@/metadata/dataSource.utils';
 import { currentDriver } from '../../../../dataSources';
 import { services } from '../../../../dataSources/services';
 
@@ -26,7 +27,7 @@ export const removeCommentsSQL = sql => {
 };
 
 const getDefaultSchema = driver => {
-  if (driver === 'postgres' || driver === 'citus') return 'public';
+  if (isPostgres(driver) || driver === 'citus') return 'public';
   if (driver === 'mssql') return 'dbo';
 };
 

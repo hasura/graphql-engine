@@ -21,7 +21,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, focusFixtureLeft, focusFixtureRight, stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -58,7 +58,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
             Fixture.customOptions = Nothing
           }
     lhsPostgres =
-      ( Fixture.Backend Fixture.Postgres,
+      ( Fixture.Backend Postgres.backendTypeMetadata,
         lhsPostgresMkLocalTestEnvironment,
         lhsPostgresSetup,
         lhsPostgresTeardown
@@ -70,7 +70,7 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
         lhsRemoteServerTeardown
       )
     rhsPostgres =
-      ( Fixture.Backend Fixture.Postgres,
+      ( Fixture.Backend Postgres.backendTypeMetadata,
         rhsPostgresMkLocalTestEnvironment,
         rhsPostgresSetup,
         rhsPostgresTeardown,
@@ -180,8 +180,9 @@ lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 lhsPostgresSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresSetup albumJoin artistJoin (testEnvironment, _) = do
-  let sourceName = "source"
+lhsPostgresSetup albumJoin artistJoin (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -196,7 +197,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment lhsTrack
   Postgres.insertTable testEnvironment lhsTrack
-  Schema.trackTable Fixture.Postgres sourceName lhsTrack testEnvironment
+  Schema.trackTable sourceName lhsTrack testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -230,8 +231,9 @@ rhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 rhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
 rhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
-rhsPostgresSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsPostgresSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -245,8 +247,8 @@ args:
   Postgres.createTable testEnvironment rhsArtist
   Postgres.insertTable testEnvironment rhsAlbum
   Postgres.insertTable testEnvironment rhsArtist
-  Schema.trackTable Fixture.Postgres sourceName rhsAlbum testEnvironment
-  Schema.trackTable Fixture.Postgres sourceName rhsArtist testEnvironment
+  Schema.trackTable sourceName rhsAlbum testEnvironment
+  Schema.trackTable sourceName rhsArtist testEnvironment
 
 rhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 rhsPostgresTeardown (_testEnvironment, _) =

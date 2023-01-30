@@ -17,6 +17,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.DDL.ConnectionTemplate (BackendResolvedConnectionTemplate (..))
 import Hasura.Server.Types (RequestId)
 import Hasura.Tracing (TraceT)
 
@@ -30,7 +31,7 @@ data QueryLog = QueryLog
   }
 
 data QueryLogKind
-  = QueryLogKindDatabase
+  = QueryLogKindDatabase (Maybe (BackendResolvedConnectionTemplate))
   | QueryLogKindAction
   | QueryLogKindRemoteSchema
   | QueryLogKindCached
@@ -38,7 +39,7 @@ data QueryLogKind
 
 instance J.ToJSON QueryLogKind where
   toJSON = \case
-    QueryLogKindDatabase -> "database"
+    QueryLogKindDatabase _ -> "database"
     QueryLogKindAction -> "action"
     QueryLogKindRemoteSchema -> "remote-schema"
     QueryLogKindCached -> "cached"
@@ -51,15 +52,19 @@ data GeneratedQuery = GeneratedQuery
 
 instance J.ToJSON QueryLog where
   toJSON (QueryLog gqlQuery generatedQuery reqId kind) =
-    J.object
+    J.object $
       [ "query" J..= gqlQuery,
         -- NOTE: this customizes the default JSON instance of a pair
         "generated_sql" J..= fmap fromPair generatedQuery,
         "request_id" J..= reqId,
         "kind" J..= kind
       ]
+        <> maybe [] (\val -> ["connection_template" J..= val]) (getResolvedConnectionTemplate kind)
     where
       fromPair p = Map.fromList [first toTxt p]
+      getResolvedConnectionTemplate :: QueryLogKind -> Maybe (BackendResolvedConnectionTemplate)
+      getResolvedConnectionTemplate (QueryLogKindDatabase x) = x
+      getResolvedConnectionTemplate _ = Nothing
 
 instance J.ToJSON GeneratedQuery where
   toJSON (GeneratedQuery queryString preparedArgs) =

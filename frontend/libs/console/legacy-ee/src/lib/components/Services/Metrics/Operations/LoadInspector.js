@@ -22,13 +22,9 @@ const LoadInspector = props => {
       requestId,
       ...(time
         ? {
-          fromTime: moment(time)
-            .subtract(5, 'minutes')
-            .toISOString(),
-          toTime: moment(time)
-            .add(5, 'minutes')
-            .toISOString(),
-        }
+            fromTime: moment(time).subtract(5, 'minutes').toISOString(),
+            toTime: moment(time).add(5, 'minutes').toISOString(),
+          }
         : {}),
     },
   });

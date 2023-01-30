@@ -20,6 +20,7 @@ import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission, withPermissions)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
@@ -31,27 +32,27 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ BigQuery.setupTablesAction schema testEnvironment
                 ],
@@ -61,14 +62,24 @@ spec = do
                     { Fixture.stringifyNumbers = True
                     }
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlite.setupTablesAction schema testEnvironment
                 ]
             }
         ]
     )
-    tests
+    ( withPermissions
+        ( NE.fromList
+            [ SelectPermission
+                selectPermission
+                  { selectPermissionTable = "authors",
+                    selectPermissionColumns = ["id", "name"]
+                  }
+            ]
+        )
+        . tests
+    )
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -141,34 +152,6 @@ tests opts = do
 
       actual `shouldBe` expected
 
-    it "Fails on unknown tables" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
-          actual :: IO Value
-          actual =
-            postGraphql
-              testEnvironment
-              [graphql|
-                query {
-                  #{schemaName}_unknown {
-                    id
-                  }
-                }
-              |]
-
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              errors:
-              - extensions:
-                  code: validation-failed
-                  path: $.selectionSet.#{schemaName}_unknown
-                message: 'field ''#{schemaName}_unknown'' not found in type: ''query_root'''
-            |]
-
-      actual `shouldBe` expected
-
     it "Fails on unknown fields" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
@@ -193,33 +176,6 @@ tests opts = do
                   code: validation-failed
                   path: $.selectionSet.#{schemaName}_authors.selectionSet.unknown
                 message: 'field ''unknown'' not found in type: ''#{schemaName}_authors'''
-            |]
-
-      actual `shouldBe` expected
-
-    it "Fails on empty query" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
-          actual :: IO Value
-          actual =
-            postGraphql
-              testEnvironment
-              [graphql|
-                query {
-                  #{schemaName}_authors {
-                  }
-                }
-              |]
-
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              errors:
-              - extensions:
-                  code: validation-failed
-                  path: $.query
-                message: not a valid graphql query
             |]
 
       actual `shouldBe` expected

@@ -14,6 +14,7 @@ import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
 import { postgres, PostgresTable } from './postgres';
+import { alloy, AlloyDbTable } from './alloydb';
 import type {
   DriverInfoResponse,
   GetFKRelationshipProps,
@@ -39,6 +40,9 @@ import {
   NetworkArgs,
   runIntrospectionQuery,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
@@ -53,6 +57,7 @@ export const nativeDrivers = [
   'mssql',
   'citus',
   'cockroach',
+  'alloy',
 ];
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
@@ -100,7 +105,11 @@ export type Database = {
       props: GetTableRowsProps
     ) => Promise<TableRow[] | Feature.NotImplemented>;
   };
-  modify?: null;
+  config: {
+    getDefaultQueryRoot: (
+      table: Table
+    ) => Promise<string | Feature.NotImplemented>;
+  };
 };
 
 const drivers: Record<SupportedDrivers, Database> = {
@@ -110,6 +119,7 @@ const drivers: Record<SupportedDrivers, Database> = {
   mssql,
   gdc,
   cockroach,
+  alloy,
 };
 
 const getDatabaseMethods = async ({
@@ -145,7 +155,13 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
     getAllSourceKinds: async () => {
       const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
-      const allDrivers = serverSupportedDrivers.map(async driver => {
+
+      const allSupportedDrivers = serverSupportedDrivers
+        // NOTE: AlloyDB is added here and not returned by the server because it's not a new data source (it's Postgres)
+        .concat([{ builtin: true, kind: 'alloy', display_name: 'AlloyDB' }])
+        .sort((a, b) => (a.kind > b.kind ? 1 : -1));
+
+      const allDrivers = allSupportedDrivers.map(async driver => {
         const driverInfo = await getDriverMethods(
           driver.kind
         ).introspection?.getDriverInfo();
@@ -160,7 +176,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
         return {
           name: driver.kind,
-          displayName: driver.kind,
+          displayName: driver.display_name,
           release: 'Beta',
           native: driver.builtin,
         };
@@ -405,16 +421,36 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     return operators;
   },
+  getDefaultQueryRoot: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    const result = await database.config.getDefaultQueryRoot(table);
+
+    if (result === Feature.NotImplemented) return Feature.NotImplemented;
+
+    return result;
+  },
 });
 
 export { GDCTable } from './gdc';
 export * from './guards';
 export * from './types';
+export * from './common/utils';
 export {
   PostgresTable,
   exportMetadata,
   getTableName,
   RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  runMetadataQuery,
   getDriverPrefix,
   runIntrospectionQuery,
+  AlloyDbTable,
 };

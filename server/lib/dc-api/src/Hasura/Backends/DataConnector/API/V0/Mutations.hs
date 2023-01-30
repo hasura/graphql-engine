@@ -24,7 +24,7 @@ module Hasura.Backends.DataConnector.API.V0.Mutations
     _ArrayRelationInsertFieldValue,
     UpdateMutationOperation (..),
     RowUpdate (..),
-    RowColumnValue (..),
+    RowColumnOperatorValue (..),
     DeleteMutationOperation (..),
     MutationResponse (..),
     MutationOperationResults (..),
@@ -33,7 +33,6 @@ where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
-import Control.Arrow (ArrowChoice (left))
 import Control.Lens (Lens', lens, prism')
 import Control.Lens.Combinators (Prism')
 import Data.Aeson (FromJSON, ToJSON)
@@ -41,10 +40,9 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.OpenApi (ToSchema)
-import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Text qualified as T
-import GHC.Show (appPrec, appPrec1)
+import Hasura.Backends.DataConnector.API.V0.Capabilities qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Query qualified as API.V0
@@ -214,6 +212,8 @@ instance HasCodec MutationOperation where
             .= _imoTable
           <*> requiredField "rows" "The rows to insert into the table"
             .= _imoRows
+          <*> optionalFieldOrNull "post_insert_check" "An expression that all inserted rows must match after they have been inserted, otherwise the changes must be reverted"
+            .= _imoPostInsertCheck
           <*> optionalFieldOrNullWithOmittedDefault "returning_fields" mempty "The fields to return for the rows affected by this insert operation"
             .= _imoReturningFields
 
@@ -226,6 +226,8 @@ instance HasCodec MutationOperation where
             .= _umoWhere
           <*> requiredField "updates" "The updates to make to the matched rows in the table"
             .= _umoUpdates
+          <*> optionalFieldOrNull "post_update_check" "An expression that all updated rows must match after they have been updated, otherwise the changes must be reverted"
+            .= _umoPostUpdateCheck
           <*> optionalFieldOrNullWithOmittedDefault "returning_fields" mempty "The fields to return for the rows affected by this update operation"
             .= _umoReturningFields
 
@@ -258,6 +260,9 @@ data InsertMutationOperation = InsertMutationOperation
     _imoTable :: API.V0.TableName,
     -- | The rows to insert into the table
     _imoRows :: [RowObject],
+    -- | An expression that all inserted rows must match after they have been inserted,
+    -- otherwise the changes must be reverted
+    _imoPostInsertCheck :: Maybe API.V0.Expression,
     -- | The fields to return that represent a projection over the set of rows inserted
     -- after they are inserted (after insertion they include calculated columns, relations etc)
     _imoReturningFields :: HashMap API.V0.FieldName API.V0.Field
@@ -370,6 +375,9 @@ data UpdateMutationOperation = UpdateMutationOperation
     _umoWhere :: Maybe API.V0.Expression,
     -- | The updates to perform against each row
     _umoUpdates :: [RowUpdate],
+    -- | An expression that all updated rows must match after they have been updated,
+    -- otherwise the changes must be reverted
+    _umoPostUpdateCheck :: Maybe API.V0.Expression,
     -- | The fields to return that represent a projection over the set of rows updated
     -- after they are updated (ie. with their updated values)
     _umoReturningFields :: HashMap API.V0.FieldName API.V0.Field
@@ -378,10 +386,10 @@ data UpdateMutationOperation = UpdateMutationOperation
 
 -- | Describes an update to be performed on a row
 data RowUpdate
-  = -- | A particular column in the row should have its value incremented
-    IncrementColumn RowColumnValue
-  | -- | A particular column in the row should have its value overwritten
-    SetColumn RowColumnValue
+  = -- | A particular column in the row should have its value overwritten
+    SetColumn RowColumnOperatorValue
+  | -- | A particular column in the row should have its value modified with the specified operator
+    CustomUpdateColumnOperator API.V0.UpdateColumnOperatorName RowColumnOperatorValue
   deriving stock (Eq, Ord, Show)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RowUpdate
 
@@ -391,37 +399,45 @@ instance HasCodec RowUpdate where
       object "RowUpdate" $
         discriminatedUnionCodec "type" enc dec
     where
+      customUpdateColumnOperatorObjectCodec :: ObjectCodec (API.V0.UpdateColumnOperatorName, RowColumnOperatorValue) (API.V0.UpdateColumnOperatorName, RowColumnOperatorValue)
+      customUpdateColumnOperatorObjectCodec =
+        (,)
+          <$> requiredField "operator_name" "The name of the custom update operator"
+            .= fst
+          <*> rowColumnOperatorValueObjectCodec
+            .= snd
+
       enc = \case
-        IncrementColumn rowColumnValue -> ("increment", mapToEncoder rowColumnValue rowColumnValueObjectCodec)
-        SetColumn rowColumnValue -> ("set", mapToEncoder rowColumnValue rowColumnValueObjectCodec)
+        SetColumn rowColumnValue -> ("set", mapToEncoder rowColumnValue rowColumnOperatorValueObjectCodec)
+        CustomUpdateColumnOperator operatorName rowColumnValue -> ("custom_operator", mapToEncoder (operatorName, rowColumnValue) customUpdateColumnOperatorObjectCodec)
       dec =
         HashMap.fromList
-          [ ("increment", ("IncrementColumnRowUpdate", mapToDecoder IncrementColumn rowColumnValueObjectCodec)),
-            ("set", ("SetColumnRowUpdate", mapToDecoder SetColumn rowColumnValueObjectCodec))
+          [ ("set", ("SetColumnRowUpdate", mapToDecoder SetColumn rowColumnOperatorValueObjectCodec)),
+            ("custom_operator", ("CustomUpdateColumnOperatorRowUpdate", mapToDecoder (uncurry CustomUpdateColumnOperator) customUpdateColumnOperatorObjectCodec))
           ]
 
--- | The value of a particular column
-data RowColumnValue = RowColumnValue
-  { _rcvColumn :: API.V0.ColumnName,
-    _rcvValue :: J.Value,
-    _rcvValueType :: API.V0.ScalarType
+-- | The value applied to a column using an operator
+data RowColumnOperatorValue = RowColumnOperatorValue
+  { _rcovColumn :: API.V0.ColumnName,
+    _rcovValue :: J.Value,
+    _rcovValueType :: API.V0.ScalarType
   }
   deriving stock (Eq, Ord, Show)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RowColumnValue
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RowColumnOperatorValue
 
-instance HasCodec RowColumnValue where
+instance HasCodec RowColumnOperatorValue where
   codec =
-    object "RowColumnValue" rowColumnValueObjectCodec
+    object "RowColumnOperatorValue" rowColumnOperatorValueObjectCodec
 
-rowColumnValueObjectCodec :: ObjectCodec RowColumnValue RowColumnValue
-rowColumnValueObjectCodec =
-  RowColumnValue
+rowColumnOperatorValueObjectCodec :: ObjectCodec RowColumnOperatorValue RowColumnOperatorValue
+rowColumnOperatorValueObjectCodec =
+  RowColumnOperatorValue
     <$> requiredField "column" "The name of the column in the row"
-      .= _rcvColumn
-    <*> requiredField "value" "The value to use for the column"
-      .= _rcvValue
+      .= _rcovColumn
+    <*> requiredField "value" "The value to use with the column operator"
+      .= _rcovValue
     <*> requiredField "value_type" "The scalar type of the value"
-      .= _rcvValueType
+      .= _rcovValueType
 
 -- | Describes a set of rows to be deleted from a table
 data DeleteMutationOperation = DeleteMutationOperation

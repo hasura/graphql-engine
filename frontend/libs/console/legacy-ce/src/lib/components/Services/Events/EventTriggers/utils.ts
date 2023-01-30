@@ -237,3 +237,16 @@ export const getEventRequestSampleInput = (
   const value = JSON.stringify(obj, null, 2);
   return value;
 };
+
+export const getCronTriggerRequestSampleInput = () => {
+  const obj = {
+    comment: 'comment',
+    id: '06af0430-e4d8-4335-8659-c27225e8edfd',
+    name: 'name',
+    payload: {},
+    scheduled_time: new Date().toISOString(),
+  };
+
+  const value = JSON.stringify(obj, null, 2);
+  return value;
+};

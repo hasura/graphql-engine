@@ -68,15 +68,15 @@ const JsonInput = props => {
     const val = e.target.value;
     updateState(currentState => updateData(val, currentState));
     if (onChange) {
-      onChange(e);
+      onChange({ target: { value: val } });
     }
   };
 
-  const handleTextAreaChangeAndPropagate = (value, e) => {
+  const handleTextAreaChangeAndPropagate = value => {
     const val = value;
     updateState(currentState => updateData(val, currentState));
     if (onChange) {
-      onChange(e, value);
+      onChange({ target: { value: val } });
     }
   };
 

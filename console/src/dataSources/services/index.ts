@@ -1,4 +1,5 @@
 import { postgres } from './postgresql';
+import { alloy } from './alloydb';
 import { mysql } from './mysql';
 import { mssql } from './mssql';
 import { bigquery } from './bigquery';
@@ -12,4 +13,5 @@ export const services = {
   bigquery,
   citus,
   cockroach,
+  alloy,
 };

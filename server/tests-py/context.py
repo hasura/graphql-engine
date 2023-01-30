@@ -736,7 +736,7 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
     @property
     def url(self):
-        return f'http://{self.server_address[0]}:{self.server_address[1]}'
+        return f'http://{self.server_name}:{self.server_port}'
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):

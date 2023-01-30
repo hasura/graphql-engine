@@ -21,6 +21,7 @@ import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
+import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
@@ -87,6 +88,7 @@ class
     Representable (ComputedFieldReturn b),
     Representable (HealthCheckTest b),
     Eq (RawFunctionInfo b),
+    Representable (ResolvedConnectionTemplate b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
@@ -104,6 +106,8 @@ class
     FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
     FromJSON (HealthCheckTest b),
+    FromJSON (RawFunctionInfo b),
+    FromJSON (ConnectionTemplateRequestContext b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
@@ -126,6 +130,7 @@ class
     ToJSON (ComputedFieldImplicitArguments b),
     ToJSON (ComputedFieldReturn b),
     ToJSON (HealthCheckTest b),
+    ToJSON (ResolvedConnectionTemplate b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -170,15 +175,18 @@ class
     Show (XStreamingSubscription b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
-    Functor (BackendUpdate b),
-    Foldable (BackendUpdate b),
-    Traversable (BackendUpdate b),
+    Functor (UpdateVariant b),
+    Foldable (UpdateVariant b),
+    Traversable (UpdateVariant b),
     Functor (BackendInsert b),
     Foldable (BackendInsert b),
     Traversable (BackendInsert b),
     Functor (AggregationPredicates b),
     Foldable (AggregationPredicates b),
-    Traversable (AggregationPredicates b)
+    Traversable (AggregationPredicates b),
+    Functor (NativeQuery b),
+    Foldable (NativeQuery b),
+    Traversable (NativeQuery b)
   ) =>
   Backend (b :: BackendType)
   where
@@ -288,14 +296,17 @@ class
 
   type AggregationPredicates b = Const Void
 
-  -- | Intermediate Representation of Update Mutations.
+  -- | The different variants of update supported by a backend for their
+  -- intermediate representation. For example, a backend could use a sum type
+  -- encapsulating either a single batch update or multiple batch updates.
+  --
   -- The default implementation makes update expressions uninstantiable.
   --
   -- It is parameterised over the type of fields, which changes during the IR
   -- translation phases.
-  type BackendUpdate b :: Type -> Type
+  type UpdateVariant b :: Type -> Type
 
-  type BackendUpdate b = Const Void
+  type UpdateVariant b = Const Void
 
   -- | Intermediate Representation of Insert Mutations.
   -- The default implementation makes insert expressions uninstantiable.
@@ -306,15 +317,45 @@ class
 
   type BackendInsert b = Const Void
 
+  -- | Intermediate representation of Native Queries
+  -- The default implementation makes native queries uninstantiable.
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type NativeQuery b :: Type -> Type
+
+  type NativeQuery b = Const Void
+
+  -- | Metadata representation of definitions of native queries.
+  -- The default implementation makes native queries uninstantiable.
+  type NativeQueryInfo b :: Type
+
+  type NativeQueryInfo b = Void
+
   -- extension types
   type XComputedField b :: Type
   type XRelay b :: Type
   type XNodesAgg b :: Type
 
+  -- | Flag the availability of event triggers.
+  type XEventTriggers b :: Type
+
   -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
   type XNestedInserts b :: Type
 
   type XStreamingSubscription b :: Type
+
+  -- The result of dynamic connection template resolution
+  type ResolvedConnectionTemplate b :: Type
+  type ResolvedConnectionTemplate b = () -- Uninmplemented value
+
+  -- The request context for dynamic connection template resolution. This is
+  -- defined for the `<backend>_test_connection_template` metadata API
+  type ConnectionTemplateRequestContext b :: Type
+  type ConnectionTemplateRequestContext b = () -- Uninmplemented value
+
+  resolveConnectionTemplate :: SourceConfig b -> ConnectionTemplateRequestContext b -> Either QErr EncJSON
+  resolveConnectionTemplate _ _ = Left (err400 (NotSupported) "connection template is not implemented")
 
   -- functions on types
   isComparableType :: ScalarType b -> Bool
@@ -355,8 +396,10 @@ class
   -- Resize source pools based on the count of server replicas
   resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
 
-  -- Default behaviour of SQL triggers on logically replicated database
-  defaultTriggerOnReplication :: TriggerOnReplication
+  -- | Default behaviour of SQL triggers on logically replicated database.
+  -- Setting this to @Nothing@ will disable event trigger configuration in the
+  -- metadata.
+  defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

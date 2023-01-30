@@ -5,7 +5,7 @@ import {
 } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { DataTarget } from '@/features/Datasources';
-import { InputField, Form } from '@/new-components/Form';
+import { InputField, SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
 import { FormElementDbToRs } from './FormElementDbToRs';
@@ -114,42 +114,40 @@ export const DbToRsForm = ({
   };
 
   return (
-    <Form
+    <SimpleForm
       schema={schema}
       onSubmit={submit}
       options={{ defaultValues }}
       className="p-4"
     >
-      {() => (
-        <div>
-          <div className="w-full sm:w-6/12 mb-md">
-            <div className="mb-md">
-              <InputField
-                id="relationshipName"
-                name="relationshipName"
-                label="Name"
-                placeholder="Relationship name"
-                dataTest="local-db-to-db-rel-name"
-                disabled={!!selectedRelationship}
-              />
-            </div>
+      <div>
+        <div className="w-full sm:w-6/12 mb-md">
+          <div className="mb-md">
+            <InputField
+              id="relationshipName"
+              name="relationshipName"
+              label="Name"
+              placeholder="Relationship name"
+              dataTest="local-db-to-db-rel-name"
+              disabled={!!selectedRelationship}
+            />
           </div>
-          <FormElementDbToRs
-            sourceTableInfo={sourceTableInfo}
-            selectedRelationship={selectedRelationship}
-          />
-
-          <Button
-            mode="primary"
-            type="submit"
-            isLoading={mutation.isLoading}
-            loadingText="Saving relationship"
-            data-test="add-local-db-relationship"
-          >
-            Save Relationship
-          </Button>
         </div>
-      )}
-    </Form>
+        <FormElementDbToRs
+          sourceTableInfo={sourceTableInfo}
+          selectedRelationship={selectedRelationship}
+        />
+
+        <Button
+          mode="primary"
+          type="submit"
+          isLoading={mutation.isLoading}
+          loadingText="Saving relationship"
+          data-test="add-local-db-relationship"
+        >
+          Save Relationship
+        </Button>
+      </div>
+    </SimpleForm>
   );
 };

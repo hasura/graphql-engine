@@ -13,9 +13,10 @@ import Hasura.Backends.MSSQL.Connection qualified as MSSQL
 import Hasura.Backends.MSSQL.ToQuery ()
 import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
-import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
+import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (UpdateOperator)
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
@@ -47,8 +48,6 @@ instance Backend 'MSSQL where
   type SQLExpression 'MSSQL = MSSQL.Expression
   type ScalarSelectionArguments 'MSSQL = Void
 
-  type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
-
   type ComputedFieldDefinition 'MSSQL = Void
   type FunctionArgumentExp 'MSSQL = Const Void
   type ComputedFieldImplicitArguments 'MSSQL = Void
@@ -56,10 +55,12 @@ instance Backend 'MSSQL where
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
   type BackendInsert 'MSSQL = MSSQL.BackendInsert
+  type UpdateVariant 'MSSQL = UpdateBatch 'MSSQL MSSQL.UpdateOperator
 
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
+  type XEventTriggers 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
   type XStreamingSubscription 'MSSQL = XDisable
 
@@ -121,4 +122,4 @@ instance Backend 'MSSQL where
   resizeSourcePools sourceConfig =
     MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
 
-  defaultTriggerOnReplication = TOREnableTrigger
+  defaultTriggerOnReplication = Just ((), TOREnableTrigger)

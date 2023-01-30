@@ -1,10 +1,10 @@
 import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
+import { getCurrTimeForFileName } from '@/components/Common/utils/jsUtils';
 import {
   downloadObjectAsCsvFile,
   downloadObjectAsJsonFile,
-  getCurrTimeForFileName,
-} from '@/components/Common/utils/jsUtils';
+} from '@/components/Common/utils/export.utils';
 import { Table } from '@/features/hasura-metadata-types';
 import { vMakeExportRequest } from '../../../../../components/Services/Data/TableBrowseRows/ViewActions';
 import { setOffset } from '../../../../../components/Services/Data/TableBrowseRows/FilterActions';
@@ -16,7 +16,7 @@ import {
 } from './LegacyRunQueryContainer.utils';
 import { LegacyRunQuery } from './LegacyRunQuery';
 import { FiltersAndSortFormValues, UserQuery } from '../types';
-import { useTableColumns } from '../hooks/useTableColumns';
+import { useLegacyTableColumns } from '../hooks/useLegacyTableColumns';
 import { useTableName } from '../hooks/useTableName';
 import { useDatabaseOperators } from '../hooks/useDatabaseOperators';
 import { useTableSchema } from '../hooks/useTableSchema';
@@ -69,7 +69,7 @@ export const LegacyRunQueryContainer = ({
   const curFilter = useAppSelector(state => state.tables.view.curFilter);
   const limit = curFilter.limit;
 
-  const tableColumns = useTableColumns({ dataSourceName, table });
+  const tableColumns = useLegacyTableColumns({ dataSourceName, table });
   const tableOperators = useDatabaseOperators({ dataSourceName });
   const tableSchema = useTableSchema(table);
 

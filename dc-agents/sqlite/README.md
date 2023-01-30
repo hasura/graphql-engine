@@ -68,6 +68,11 @@ Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `yes`, or omitted a
 | `LOG_LEVEL` | `fatal` \| `error` \| `info` \| `debug` \| `trace` \| `silent` | `info` | The minimum log level to output |
 | `METRICS` | `{FLAG}` | `false` | Enables a `/metrics` prometheus metrics endpoint.
 | `QUERY_LENGTH_LIMIT` | `INT` | `Infinity` | Puts a limit on the length of generated SQL before execution. |
+| `DATASETS` | `{FLAG}` | `false` | Enable dataset operations |
+| `DATASET_DELETE` | `{FLAG}` | `false` | Enable `DELETE /datasets/:name` |
+| `DATASET_TEMPLATES` | `DIRECTORY` | `./dataset_templates` | Directory to clone datasets from. |
+| `DATASET_CLONES` | `DIRECTORY` | `./dataset_clones` | Directory to clone datasets to. |
+
 
 ## Agent usage
 
@@ -94,6 +99,19 @@ The `explicit_main_schema` field can be set to opt into exposing tables by their
 The dataset used for testing the reference agent is sourced from:
 
 * https://raw.githubusercontent.com/lerocha/chinook-database/master/ChinookDatabase/DataSources/Chinook_Sqlite.sql
+
+### Datasets
+
+Datasets support is enabled via the ENV variables:
+
+* `DATASETS`
+* `DATASET_DELETE`
+* `DATASET_TEMPLATES`
+* `DATASET_CLONES`
+
+Templates will be looked up at `${DATASET_TEMPLATES}/${template_name}.db`.
+
+Clones will be copied to `${DATASET_CLONES}/${clone_name}.db`.
 
 ## Testing Changes to the Agent
 

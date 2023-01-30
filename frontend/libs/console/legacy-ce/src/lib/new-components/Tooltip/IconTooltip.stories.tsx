@@ -65,8 +65,9 @@ TestingHoveredStyle.parameters = {
   },
 };
 
-export const TestingHoveredInteraction: ComponentStory<typeof IconTooltip> =
-  () => <IconTooltip message="The tooltip message" />;
+export const TestingHoveredInteraction: ComponentStory<
+  typeof IconTooltip
+> = () => <IconTooltip message="The tooltip message" />;
 TestingHoveredInteraction.storyName = '🧪 Testing - Hovered interaction';
 TestingHoveredInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

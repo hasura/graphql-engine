@@ -22,7 +22,7 @@ const SET_LATEST_SERVER_VERSION_SUCCESS =
 const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
 const UPDATE_MIGRATION_STATUS_SUCCESS = 'Main/UPDATE_MIGRATION_STATUS_SUCCESS';
 const UPDATE_MIGRATION_STATUS_ERROR = 'Main/UPDATE_MIGRATION_STATUS_ERROR';
-const HASURACTL_URL_ENV = 'Main/HASURACTL_URL_ENV';
+const HASURA_CLI_SERVER_URL_ENV = 'Main/HASURA_CLI_SERVER_URL_ENV';
 const UPDATE_MIGRATION_MODE = 'Main/UPDATE_MIGRATION_MODE';
 const UPDATE_MIGRATION_MODE_PROGRESS = 'Main/UPDATE_MIGRATION_MODE_PROGRESS';
 const EXPORT_METADATA_SUCCESS = 'Main/EXPORT_METADATA_SUCCESS';
@@ -323,7 +323,7 @@ const featureCompatibilityInit = () => {
 };
 
 const loadMigrationStatus = () => dispatch => {
-  const url = Endpoints.hasuractlMigrateSettings;
+  const url = Endpoints.hasuraCliServerMigrateSettings;
   const options = {
     method: 'GET',
     credentials: globalCookiePolicy,
@@ -426,7 +426,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
 const updateMigrationModeStatus = () => (dispatch, getState) => {
   // make req to hasura cli to update migration mode
   dispatch({ type: UPDATE_MIGRATION_MODE_PROGRESS, data: true });
-  const url = Endpoints.hasuractlMigrateSettings;
+  const url = Endpoints.hasuraCliServerMigrateSettings;
   const putBody = {
     name: 'migration_mode',
     value: (!getState().main.migrationMode).toString(),
@@ -448,7 +448,7 @@ const updateMigrationModeStatus = () => (dispatch, getState) => {
           credentials: globalCookiePolicy,
           headers: { 'content-type': 'application/json' },
         };
-        const metadataUrl = `${Endpoints.hasuractlMetadata}?export=true`;
+        const metadataUrl = `${Endpoints.hasuraCliServerMetadata}?export=true`;
         return dispatch(
           requestAction(
             metadataUrl,
@@ -573,8 +573,8 @@ const mainReducer = (state = defaultState, action) => {
         readOnlyMode: action.data,
         migrationMode: !action.data, // HACK
       };
-    case HASURACTL_URL_ENV:
-      return { ...state, hasuractlEnv: action.data };
+    case HASURA_CLI_SERVER_URL_ENV:
+      return { ...state, hasuraCliServerEnv: action.data };
     case UPDATE_MIGRATION_MODE:
       const currentMode = state.migrationMode;
       return { ...state, migrationMode: !currentMode };
@@ -676,7 +676,7 @@ const mainReducer = (state = defaultState, action) => {
 
 export default mainReducer;
 export {
-  HASURACTL_URL_ENV,
+  HASURA_CLI_SERVER_URL_ENV,
   UPDATE_MIGRATION_STATUS_SUCCESS,
   UPDATE_MIGRATION_STATUS_ERROR,
   UPDATE_ADMIN_SECRET_INPUT,

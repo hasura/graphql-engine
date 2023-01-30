@@ -1,8 +1,10 @@
+import type { Metadata } from '@/features/hasura-metadata-types';
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { Metadata } from '@/features/hasura-metadata-types';
 
 import { metadataHandlers as allowListMetadataHandlers } from '@/features/AllowLists';
+import { metadataHandlers as adhocEventMetadataHandlers } from '@/features/AdhocEvents';
 import { metadataHandlers as queryCollectionMetadataHandlers } from '@/features/QueryCollections';
+import { metadataHandlers as openTelemetryMetadataHandlers } from '@/features/OpenTelemetry';
 
 import { TMigration } from '../features/MetadataAPI/hooks/useMetadataMigration';
 
@@ -28,10 +30,12 @@ const metadataHandlers: Partial<Record<allowedMetadataTypes, MetadataReducer>> =
     export_metadata: state => state,
     ...allowListMetadataHandlers,
     ...queryCollectionMetadataHandlers,
+    ...adhocEventMetadataHandlers,
+    ...openTelemetryMetadataHandlers,
   };
 
 export const metadataReducer: MetadataReducer = (state, action) => {
-  if (action.type === 'bulk') {
+  if (action.type === 'bulk' || action.type === 'concurrent_bulk') {
     let reduceFirstError: ResponseBodyMetadataTypeError;
     return action.args.reduce((currentState: Metadata, arg: MetadataAction) => {
       if (reduceFirstError) {

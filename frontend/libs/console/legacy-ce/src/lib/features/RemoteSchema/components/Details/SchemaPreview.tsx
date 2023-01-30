@@ -27,7 +27,7 @@ export const SchemaPreview = (props: { name: string }) => {
   }, [fetchSchema, name]);
 
   if (!data) {
-    return null;
+    return <>Error introspecting remote schema</>;
   }
 
   return data ? (

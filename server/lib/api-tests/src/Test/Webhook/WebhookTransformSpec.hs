@@ -17,8 +17,8 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-            { Fixture.setupTeardown = \(testEnvironment, _) -> []
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+            { Fixture.setupTeardown = \(_testEnvironment, _) -> []
             }
         ]
     )

@@ -15,9 +15,6 @@ export const schema = z.object({
   timeout_seconds: z.string(),
   include_in_metadata: z.boolean(),
   comment: z.string(),
-  url_template: z.string(),
-  request_method: z.enum(['POST', 'GET', 'PUT', 'DELETE', 'PATCH']).nullable(),
-  query_params: requestHeadersSelectorSchema,
 });
 
 export type Schema = z.infer<typeof schema>;

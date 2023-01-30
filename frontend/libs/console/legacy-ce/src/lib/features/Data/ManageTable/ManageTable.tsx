@@ -1,7 +1,7 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
 import { DatabaseRelationships } from '@/features/DatabaseRelationships';
 import { getTableName } from '@/features/DataSource';
-import { PermissionsTab } from '@/features/PermissionsTab';
+import { PermissionsTab } from '@/features/Permissions';
 import { Table } from '@/features/hasura-metadata-types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';

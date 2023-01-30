@@ -1,11 +1,12 @@
 import React from 'react';
 import * as z from 'zod';
-import { Story, Meta } from '@storybook/react';
+import { Meta, Story } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { Form } from '@/new-components/Form';
+import { action } from '@storybook/addon-actions';
+import { SimpleForm } from '@/new-components/Form';
 import {
-  handlers,
   customer_columns,
+  handlers,
   remote_rel_definition,
 } from '../../__mocks__';
 
@@ -30,14 +31,14 @@ export default {
   decorators: [
     ReactQueryDecorator(),
     StoryComponent => (
-      <Form
+      <SimpleForm
         schema={z.any()}
-        onSubmit={() => {}}
+        onSubmit={action('onSubmit')}
         options={{ defaultValues }}
         className="p-4"
       >
-        {() => <StoryComponent />}
-      </Form>
+        <StoryComponent />
+      </SimpleForm>
     ),
   ],
   parameters: {
@@ -59,8 +60,9 @@ Primary.parameters = {
   chromatic: { disableSnapshot: true },
 };
 
-export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidgetProps> =
-  args => <RemoteSchemaWidget {...args} />;
+export const RemoteSchemaWidgetWithExistingRelationship: Story<
+  RemoteSchemaWidgetProps
+> = args => <RemoteSchemaWidget {...args} />;
 RemoteSchemaWidgetWithExistingRelationship.args = {
   schemaName: 'remoteSchema1',
   fields: customer_columns,

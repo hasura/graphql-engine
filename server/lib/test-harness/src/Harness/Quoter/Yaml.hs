@@ -5,6 +5,7 @@
 -- | Templating yaml files.
 module Harness.Quoter.Yaml
   ( yaml,
+    fromYaml,
     interpolateYaml,
     ToYamlString (..),
   )
@@ -47,6 +48,25 @@ yaml =
       quoteType = \_ -> fail "invalid",
       quoteDec = \_ -> fail "invalid"
     }
+
+-- | Combines `yaml` with `fromJson` for convenience.
+fromYaml :: QuasiQuoter
+fromYaml =
+  QuasiQuoter
+    { quoteExp = templateFromYaml,
+      quotePat = \_ -> fail "invalid",
+      quoteType = \_ -> fail "invalid",
+      quoteDec = \_ -> fail "invalid"
+    }
+
+templateFromYaml :: String -> Q Exp
+templateFromYaml inputString = do
+  e <- templateYaml inputString
+  [|
+    case fromJSON ($(pure e)) of
+      Aeson.Error err -> error err
+      Aeson.Success s -> s
+    |]
 
 -- | Template a YAML file contents. Throws a bunch of exception types:
 --  'YamlTemplateException' or 'YamlException' or 'ParseException'.

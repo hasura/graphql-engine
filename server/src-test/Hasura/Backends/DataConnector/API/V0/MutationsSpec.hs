@@ -9,6 +9,7 @@ where
 import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
+import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (genUpdateColumnOperatorName)
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.QuerySpec (genField, genFieldMap, genFieldValue)
@@ -19,6 +20,7 @@ import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Utils (genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -46,7 +48,7 @@ spec = do
   describe "InsertFieldSchema" $ do
     describe "ColumnInsert" $ do
       testToFromJSONToSchema
-        (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") NumberTy))
+        (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number")))
         [aesonQQ|
           { "type": "column",
             "column": "my_column",
@@ -70,14 +72,15 @@ spec = do
     jsonOpenApiProperties genInsertFieldSchema
 
   describe "MutationOperation" $ do
-    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") StringTy)]
+    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string"))]
     describe "InsertOperation" $ do
       testToFromJSONToSchema
-        (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] returningFields))
+        (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] (Just $ And []) returningFields))
         [aesonQQ|
           { "type": "insert",
             "table": ["my_table"],
             "rows": [],
+            "post_insert_check": { "type": "and", "expressions": [] },
             "returning_fields": {
               "field": {
                 "type": "column",
@@ -89,12 +92,13 @@ spec = do
         |]
     describe "UpdateOperation" $ do
       testToFromJSONToSchema
-        (UpdateOperation (UpdateMutationOperation (TableName ["my_table"]) (Just $ And []) [] returningFields))
+        (UpdateOperation (UpdateMutationOperation (TableName ["my_table"]) (Just $ And []) [] (Just $ And []) returningFields))
         [aesonQQ|
           { "type": "update",
             "table": ["my_table"],
             "where": { "type": "and", "expressions": [] },
             "updates": [],
+            "post_update_check": { "type": "and", "expressions": [] },
             "returning_fields": {
               "field": {
                 "type": "column",
@@ -170,35 +174,36 @@ spec = do
     jsonOpenApiProperties genObjectRelationInsertionOrder
 
   describe "RowUpdate" $ do
-    describe "IncrementColumnRowUpdate" $
-      testToFromJSONToSchema
-        (IncrementColumn $ RowColumnValue (ColumnName "my_column") (Number 10) NumberTy)
-        [aesonQQ|
-            { "type": "increment",
-              "column": "my_column",
-              "value": 10,
-              "value_type": "number" }
-          |]
     describe "SetColumnRowUpdate" $
       testToFromJSONToSchema
-        (SetColumn $ RowColumnValue (ColumnName "my_column") (Number 10) NumberTy)
+        (SetColumn $ RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
         [aesonQQ|
             { "type": "set",
               "column": "my_column",
               "value": 10,
               "value_type": "number" }
           |]
+    describe "CustomUpdateColumnOperator" $
+      testToFromJSONToSchema
+        (CustomUpdateColumnOperator (UpdateColumnOperatorName [G.name|increment|]) (RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number")))
+        [aesonQQ|
+            { "type": "custom_operator",
+              "operator_name": "increment",
+              "column": "my_column",
+              "value": 10,
+              "value_type": "number" }
+          |]
     jsonOpenApiProperties genRowUpdate
 
-  describe "RowColumnValue" $ do
+  describe "RowColumnOperatorValue" $ do
     testToFromJSONToSchema
-      (RowColumnValue (ColumnName "my_column") (String "a value") StringTy)
+      (RowColumnOperatorValue (ColumnName "my_column") (String "a value") (ScalarType "string"))
       [aesonQQ|
         { "column": "my_column",
           "value": "a value",
           "value_type": "string" }
       |]
-    jsonOpenApiProperties genRowColumnValue
+    jsonOpenApiProperties genRowColumnOperatorValue
 
   describe "MutationResponse" $ do
     testToFromJSONToSchema
@@ -272,6 +277,7 @@ genInsertMutationOperation =
   InsertMutationOperation
     <$> genTableName
     <*> Gen.list defaultRange genRowObject
+    <*> Gen.maybe genExpression
     <*> genFieldMap genField
 
 genRowObject :: Gen RowObject
@@ -292,18 +298,19 @@ genUpdateMutationOperation =
     <$> genTableName
     <*> Gen.maybe genExpression
     <*> Gen.list defaultRange genRowUpdate
+    <*> Gen.maybe genExpression
     <*> genFieldMap genField
 
 genRowUpdate :: (MonadGen m, GenBase m ~ Identity) => m RowUpdate
 genRowUpdate =
   Gen.choice
-    [ IncrementColumn <$> genRowColumnValue,
-      SetColumn <$> genRowColumnValue
+    [ SetColumn <$> genRowColumnOperatorValue,
+      CustomUpdateColumnOperator <$> genUpdateColumnOperatorName <*> genRowColumnOperatorValue
     ]
 
-genRowColumnValue :: (MonadGen m, GenBase m ~ Identity) => m RowColumnValue
-genRowColumnValue =
-  RowColumnValue
+genRowColumnOperatorValue :: (MonadGen m, GenBase m ~ Identity) => m RowColumnOperatorValue
+genRowColumnOperatorValue =
+  RowColumnOperatorValue
     <$> genColumnName
     <*> genValue
     <*> genScalarType

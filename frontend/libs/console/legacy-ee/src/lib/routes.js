@@ -44,6 +44,7 @@ import {
   isMonitoringTabSupportedEnvironment,
   AllowListDetail,
   PrometheusSettings,
+  OpenTelemetryFeature,
 } from '@hasura/console-oss';
 import AccessDeniedComponent from './components/AccessDenied/AccessDenied';
 import { restrictedPathsMetadata } from './utils/redirectUtils';
@@ -242,8 +243,14 @@ const routes = store => {
   };
 
   const generateOnEnterHooks = (...args) => {
-    prefetchSurveysData();
-    prefetchOnboardingData();
+    if (
+      !!globals.hasuraCloudTenantId &&
+      globals.consoleType === 'cloud' &&
+      globals.userRole === 'owner'
+    ) {
+      prefetchSurveysData();
+      prefetchOnboardingData();
+    }
     const onEnterHooks = [validateAccessToRoute];
     const { shouldLoadOpts, shouldLoadServer } = shouldLoadAsyncGlobals(store);
     if (shouldLoadOpts || shouldLoadServer) {
@@ -349,6 +356,7 @@ const routes = store => {
             <Route path="inherited-roles" component={InheritedRolesContainer} />
             <Route path="insecure-domain" component={InsecureDomains} />
             <Route path="prometheus-settings" component={PrometheusSettings} />
+            <Route path="opentelemetry" component={OpenTelemetryFeature} />
             <Route path="feature-flags" component={FeatureFlags} />
           </Route>
           {dataRouter}

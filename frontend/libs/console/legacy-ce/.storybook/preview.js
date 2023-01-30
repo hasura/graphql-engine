@@ -13,7 +13,7 @@ import '../src/lib/components/Common/Common.module.scss';
 const channel = addons.getChannel();
 initialize();
 
-const DocsContainerElement = (props) => {
+const DocsContainerElement = props => {
   // Sync Docs dark mode with Storybook Manager
   const [isDark, setDark] = React.useState();
 
@@ -28,8 +28,8 @@ const DocsContainerElement = (props) => {
         {...props}
         context={{
           ...props.context,
-          storyById: (id) => {
-            return produce(props.context.storyById(id), (draft) => {
+          storyById: id => {
+            return produce(props.context.storyById(id), draft => {
               draft.parameters.docs.theme = isDark ? theme.dark : theme.light;
             });
           },
@@ -67,7 +67,7 @@ export const parameters = {
 export const decorators = [
   (fn, c) => <Provider store={store}>{fn(c)}</Provider>,
   mswDecorator,
-  (Story) => {
+  Story => {
     document.body.classList.add('hasura-tailwind-on');
     return <div className={'bg-legacybg'}>{Story()}</div>;
   },

@@ -13,9 +13,10 @@ export const toggleRequestTransformSection = () => {
 };
 
 export const clearRequestUrl = () => {
-  cy.get(
-    getElementFromAlias('transform-requestUrl')
-  ).type('{selectall}{backspace}', { force: true });
+  cy.get(getElementFromAlias('transform-requestUrl')).type(
+    '{selectall}{backspace}',
+    { force: true }
+  );
 };
 
 export const typeIntoRequestUrl = (content: string) => {

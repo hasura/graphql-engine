@@ -21,7 +21,7 @@ export default {
         component: `A utility component wrapping all needed elements to build form fields: **label**, **description** and **error message**.
 The wrapped field is added in a dedicated **slot** used to build form fields components usable in forms .
 
-Default CSS display is \`block\`, provided without padding and margin (displayed here with the \`<Form>\` padding).`,
+Default CSS display is \`block\`, provided without padding and margin (displayed here with the \`<SimpleForm>\` padding).`,
       },
       source: { type: 'code' },
     },
@@ -104,62 +104,6 @@ VariantWithDescriptionAndTooltip.parameters = {
   },
 };
 
-export const VariantHorizontalWithDescription: ComponentStory<
-  typeof FieldWrapper
-> = () => (
-  <FieldWrapper
-    label="The field wrapper label"
-    description="The field wrapper description"
-    horizontal
-  >
-    <ChildrenExample />
-  </FieldWrapper>
-);
-VariantHorizontalWithDescription.storyName =
-  '🎭 Variant - Horizontal with description';
-VariantHorizontalWithDescription.parameters = {
-  docs: {
-    source: { state: 'open' },
-  },
-};
-
-export const VariantHorizontalWithTooltip: ComponentStory<typeof FieldWrapper> =
-  () => (
-    <FieldWrapper
-      label="The field wrapper label"
-      tooltip="The field wrapper tooltip"
-      horizontal
-    >
-      <ChildrenExample />
-    </FieldWrapper>
-  );
-VariantHorizontalWithTooltip.storyName = '🎭 Variant - Horizontal with tooltip';
-VariantHorizontalWithTooltip.parameters = {
-  docs: {
-    source: { state: 'open' },
-  },
-};
-
-export const VariantHorizontalWithDescriptionAndTooltip: ComponentStory<
-  typeof FieldWrapper
-> = () => (
-  <FieldWrapper
-    label="The field wrapper label"
-    description="The field wrapper description"
-    tooltip="The field wrapper tooltip"
-    horizontal
-  >
-    <ChildrenExample />
-  </FieldWrapper>
-);
-VariantHorizontalWithDescriptionAndTooltip.storyName =
-  '🎭 Variant - Horizontal with description and tooltip';
-VariantHorizontalWithDescriptionAndTooltip.parameters = {
-  docs: {
-    source: { state: 'open' },
-  },
-};
-
 export const StateLoading: ComponentStory<typeof FieldWrapper> = () => (
   <FieldWrapper
     label="The field wrapper label"
@@ -192,30 +136,7 @@ StateWithErrorMessage.storyName = '🔁 State - With error message';
 StateWithErrorMessage.parameters = {
   docs: {
     description: {
-      story: `Incorrect value is set then \`<Form>\` validation is automatically triggered.`,
-    },
-    source: { state: 'open' },
-  },
-};
-
-export const StateHorizontalWithErrorMessage: ComponentStory<
-  typeof FieldWrapper
-> = () => (
-  <FieldWrapper
-    label="The field wrapper label"
-    description="The field wrapper description"
-    tooltip="The field wrapper tooltip"
-    error={{ message: 'The error message', type: 'error' }}
-  >
-    <ChildrenExample />
-  </FieldWrapper>
-);
-StateHorizontalWithErrorMessage.storyName =
-  '🔁 State - Horizontal with error message';
-StateHorizontalWithErrorMessage.parameters = {
-  docs: {
-    description: {
-      story: `Incorrect value is set then \`<Form>\` validation is automatically triggered.`,
+      story: `Incorrect value is set then \`<SimpleForm>\` validation is automatically triggered.`,
     },
     source: { state: 'open' },
   },

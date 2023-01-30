@@ -1,4 +1,4 @@
-/// <reference types="Cypress" />
+// / <reference types="Cypress" />
 
 describe(`cy.task('splitPath')`, () => {
   it('Should split the passed path', () => {

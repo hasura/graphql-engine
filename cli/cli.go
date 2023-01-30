@@ -224,7 +224,7 @@ func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error
 	url := c.getConfigEndpoint()
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFunc()
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := client.NewRequest("GET", url, nil)
 	if err != nil {
 		return errors.E(op, fmt.Errorf("error fetching config from server: %w", err))
 	}

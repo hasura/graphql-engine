@@ -30,6 +30,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List all available plugins from index, versions and installation status",
+		Long:    "To see a list of all the available plugins which extend the functionality of the CLI, their versions and installation status, run the list command.",
 		Example: `  # List all plugins
   hasura plugins list
 

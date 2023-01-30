@@ -26,3 +26,7 @@ yarn-error.log*
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+.tool-versions
+
+spell_check_results.txt

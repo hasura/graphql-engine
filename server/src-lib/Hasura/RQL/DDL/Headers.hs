@@ -6,6 +6,8 @@ module Hasura.RQL.DDL.Headers
   )
 where
 
+import Autodocodec (HasCodec (codec), bimapCodec, disjointEitherCodec, requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
@@ -30,6 +32,30 @@ data HeaderValue = HVValue Text | HVEnv Text
 instance NFData HeaderValue
 
 instance Hashable HeaderValue
+
+instance HasCodec HeaderConf where
+  codec = bimapCodec dec enc $ disjointEitherCodec valCodec fromEnvCodec
+    where
+      valCodec =
+        AC.object "HeaderConfValue" $
+          (,)
+            <$> requiredField' "name" AC..= fst
+            <*> requiredField' "value" AC..= snd
+
+      fromEnvCodec =
+        AC.object "HeaderConfFromEnv" $
+          (,)
+            <$> requiredField' "name" AC..= fst
+            <*> requiredField' "value_from_env" AC..= snd
+
+      dec (Left (name, value)) = Right $ HeaderConf name (HVValue value)
+      dec (Right (name, valueFromEnv)) =
+        if T.isPrefixOf "HASURA_GRAPHQL_" valueFromEnv
+          then Left $ "env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: " <> T.unpack valueFromEnv
+          else Right $ HeaderConf name (HVEnv valueFromEnv)
+
+      enc (HeaderConf name (HVValue val)) = Left (name, val)
+      enc (HeaderConf name (HVEnv val)) = Right (name, val)
 
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do

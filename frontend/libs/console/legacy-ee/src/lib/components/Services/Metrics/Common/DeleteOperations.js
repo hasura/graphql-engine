@@ -47,8 +47,8 @@ export const DeleteOperations = ({
   <div
     className={`
       ${styles.displayFlex} ${styles.minHeightIconWrapper} ${
-    styles.deleteImgMr
-  } ${operations.length ? styles.deleteImg : styles.disabledBtn}
+      styles.deleteImgMr
+    } ${operations.length ? styles.deleteImg : styles.disabledBtn}
       `}
   >
     <DeleteIcon

@@ -21,6 +21,8 @@ module Hasura.Server.API.Backend
     tableCommands,
     tablePermissionsCommands,
     computedFieldCommands,
+    connectionTemplateCommands,
+    nativeAccessCommands,
   )
 where
 
@@ -135,7 +137,8 @@ relationshipCommands =
     commandParser "create_array_relationship" $ RMCreateArrayRelationship . mkAnyBackend @b,
     commandParser "set_relationship_comment" $ RMSetRelationshipComment . mkAnyBackend @b,
     commandParser "rename_relationship" $ RMRenameRelationship . mkAnyBackend @b,
-    commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b
+    commandParser "drop_relationship" $ RMDropRelationship . mkAnyBackend @b,
+    commandParser "suggest_relationships" $ RMSuggestRelationships . mkAnyBackend @b
   ]
 
 remoteRelationshipCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
@@ -157,4 +160,16 @@ computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser 
 computedFieldCommands =
   [ commandParser "add_computed_field" $ RMAddComputedField . mkAnyBackend @b,
     commandParser "drop_computed_field" $ RMDropComputedField . mkAnyBackend @b
+  ]
+
+connectionTemplateCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+connectionTemplateCommands =
+  [ commandParser "test_connection_template" $ RMTestConnectionTemplate . mkAnyBackend @b
+  ]
+
+nativeAccessCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+nativeAccessCommands =
+  [ commandParser "get_custom_sql" $ RMGetCustomSQL . mkAnyBackend @b,
+    commandParser "track_custom_sql" $ RMTrackCustomSQL . mkAnyBackend @b,
+    commandParser "untrack_custom_sql" $ RMUntrackCustomSQL . mkAnyBackend @b
   ]

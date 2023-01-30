@@ -65,8 +65,8 @@ export const useShowNeonDashboardLink = () => {
   if (
     isCloudEnv &&
     data &&
-    isArray(data.data.neon_db_integration) &&
-    data.data.neon_db_integration.length > 0
+    isArray(data.data?.neon_db_integration) &&
+    data.data?.neon_db_integration.length > 0
   ) {
     return true;
   }

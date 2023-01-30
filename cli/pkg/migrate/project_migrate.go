@@ -53,6 +53,15 @@ func (p *ProjectMigrate) Apply(opts ...ProjectMigrationApplierOption) ([]ApplyRe
 	return r, nil
 }
 
+func (p *ProjectMigrate) Delete(opts ...ProjectMigrationDeleterOption) error {
+	var op errors.Op = "migrate.ProjectMigrate.Delete"
+	deleter := newProjectMigrationsDeleter(p.ec)
+	if err := deleter.delete(opts...); err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
+
 func NewProjectMigrate(projectDirectory string, opts ...ProjectMigrateOption) (*ProjectMigrate, error) {
 	var op errors.Op = "migrate.NewProjectMigrate"
 	p := &ProjectMigrate{}

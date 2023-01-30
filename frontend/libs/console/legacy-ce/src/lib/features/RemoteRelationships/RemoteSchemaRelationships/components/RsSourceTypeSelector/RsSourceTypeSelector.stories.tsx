@@ -1,12 +1,13 @@
 import React from 'react';
 import * as z from 'zod';
-import { Story, Meta } from '@storybook/react';
-import { Form } from '@/new-components/Form';
+import { action } from '@storybook/addon-actions';
+import { Meta, Story } from '@storybook/react';
+import { SimpleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import {
+  remoteSchemaSelectorKey,
   RsSourceTypeSelector,
   RsSourceTypeSelectorProps,
-  remoteSchemaSelectorKey,
 } from './RsSourceTypeSelector';
 
 const defaultValues = {
@@ -19,19 +20,17 @@ export default {
   component: RsSourceTypeSelector,
   decorators: [
     StoryComponent => (
-      <Form
+      <SimpleForm
         schema={z.any()}
-        onSubmit={o => console.log(o)}
+        onSubmit={action('onSubmit')}
         options={{ defaultValues }}
         className="p-4"
       >
-        {() => (
-          <div>
-            <StoryComponent />
-            <Button type="submit">Submit</Button>
-          </div>
-        )}
-      </Form>
+        <div>
+          <StoryComponent />
+          <Button type="submit">Submit</Button>
+        </div>
+      </SimpleForm>
     ),
   ],
 } as Meta;

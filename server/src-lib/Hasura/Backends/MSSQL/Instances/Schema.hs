@@ -11,14 +11,13 @@ import Data.Char qualified as Char
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Text.Casing qualified as C
 import Data.Text.Encoding as TE
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Schema.IfMatched
 import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
-import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
+import Hasura.Backends.MSSQL.Types.Update (UpdateOperator (..))
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Schema.Backend
@@ -28,8 +27,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
-  ( FieldParser,
-    InputFieldsParser,
+  ( InputFieldsParser,
     Kind (..),
     MonadParse,
     Parser,
@@ -46,7 +44,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -61,7 +58,7 @@ instance BackendSchema 'MSSQL where
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
-  buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
+  buildTableUpdateMutationFields = GSB.buildSingleBatchTableUpdateMutationFields id
 
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []
@@ -101,6 +98,11 @@ instance BackendTableSelectSchema 'MSSQL where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
+instance BackendUpdateOperatorsSchema 'MSSQL where
+  type UpdateOperators 'MSSQL = UpdateOperator
+
+  parseUpdateOperators = msParseUpdateOperators
+
 ----------------------------------------------------------------
 
 -- * Top level parsers
@@ -116,36 +118,6 @@ backendInsertParser tableInfo = do
   pure $ do
     _biIfMatched <- ifMatched
     pure $ BackendInsert {..}
-
-msBuildTableUpdateMutationFields ::
-  MonadBuildSchema 'MSSQL r m n =>
-  MkRootFieldName ->
-  Scenario ->
-  TableName 'MSSQL ->
-  TableInfo 'MSSQL ->
-  C.GQLNameIdentifier ->
-  SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableUpdateMutationFields mkRootFieldName scenario tableName tableInfo gqlName = do
-  roleName <- retrieve scRole
-  fieldParsers <- runMaybeT do
-    updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
-    let mkBackendUpdate backendUpdateTableInfo =
-          (fmap . fmap) BackendUpdate $
-            SU.buildUpdateOperators
-              (UpdateSet <$> SU.presetColumns updatePerms)
-              [ UpdateSet <$> SU.setOp,
-                UpdateInc <$> SU.incOp
-              ]
-              backendUpdateTableInfo
-    lift $
-      GSB.buildTableUpdateMutationFields
-        mkBackendUpdate
-        mkRootFieldName
-        scenario
-        tableName
-        tableInfo
-        gqlName
-  pure . fold @Maybe @[_] $ fieldParsers
 
 ----------------------------------------------------------------
 
@@ -415,3 +387,17 @@ msCountTypeInput = \case
     mkCountType _ Nothing = MSSQL.StarCountable
     mkCountType IR.SelectCountDistinct (Just col) = MSSQL.DistinctCountable col
     mkCountType IR.SelectCountNonDistinct (Just col) = MSSQL.NonNullFieldCountable col
+
+msParseUpdateOperators ::
+  forall m n r.
+  MonadBuildSchema 'MSSQL r m n =>
+  TableInfo 'MSSQL ->
+  UpdPermInfo 'MSSQL ->
+  SchemaT r m (InputFieldsParser n (HashMap (Column 'MSSQL) (UpdateOperators 'MSSQL (UnpreparedValue 'MSSQL))))
+msParseUpdateOperators tableInfo updatePermissions = do
+  SU.buildUpdateOperators
+    (UpdateSet <$> SU.presetColumns updatePermissions)
+    [ UpdateSet <$> SU.setOp,
+      UpdateInc <$> SU.incOp
+    ]
+    tableInfo

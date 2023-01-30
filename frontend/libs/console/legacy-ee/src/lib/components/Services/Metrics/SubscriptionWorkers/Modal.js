@@ -36,7 +36,6 @@ const Modal = props => {
     variables,
   } = websocketData;
 
-
   const renderWarningSymbol = () => {
     if (
       lastExecutionTime * 0.001 >=

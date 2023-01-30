@@ -217,17 +217,7 @@ function mssql_start() {
   if [ $MSSQL_RUNNING -eq 0 ]; then
     mssql_launch_container
     MSSQL_RUNNING=1
-    if [[ "$(uname -m)" == 'arm64' ]]; then
-      # mssql_wait uses the tool sqlcmd to wait for a database connection which unfortunately
-      # is not available for the azure-sql-edge docker image - which is the only image from microsoft
-      # that runs on M1 computers. So we sleep for 20 seconds, cross fingers and hope for the best
-      # see https://github.com/microsoft/mssql-docker/issues/668
-
-      echo "Sleeping for 20 sec while mssql comes up..."
-      sleep 20
-    else
-      mssql_wait
-    fi
+    mssql_wait
   fi
 }
 
@@ -327,7 +317,7 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   RUN_INVOCATION=(cabal new-run --project-file=cabal/dev-sh.project --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
-    --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
+    --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-ce"
     )
 
   echo_pretty 'About to do:'
@@ -358,8 +348,8 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty "    http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/console"
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
-    echo_pretty "      $ cd \"$PROJECT_ROOT/console\""
-    echo_pretty "      $ npm ci && make server-build "
+    echo_pretty "      $ cd \"$PROJECT_ROOT/frontend\""
+    echo_pretty "      $ npm ci && npm run server-build:ce"
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
@@ -408,12 +398,6 @@ elif [ "$MODE" = "mssql" ]; then
   mssql_start
   echo_pretty "MSSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
   echo_pretty "shutdown this container."
-  echo_pretty ""
-  echo_pretty "You can use the following to connect to the running instance:"
-  echo_pretty "    $ $MSSQL_DOCKER"
-  echo_pretty ""
-  echo_pretty "If you want to import a SQL file into MSSQL:"
-  echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
   echo_pretty "    $MSSQL_CONN_STR"
@@ -538,7 +522,7 @@ elif [ "$MODE" = "test" ]; then
         --metadata-database-url="$PG_DB_URL" serve \
         --stringify-numeric-types \
         --enable-console \
-        --console-assets-dir ../console/static/dist \
+        --console-assets-dir ../frontend/dist/apps/server-assets-console-ce \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"

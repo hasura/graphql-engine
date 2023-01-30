@@ -12,10 +12,11 @@ export default {
   ],
 } as ComponentMeta<typeof NonTrackableFunctions>;
 
-export const Playground: ComponentStory<typeof NonTrackableFunctions> =
-  args => {
-    return <NonTrackableFunctions {...args} />;
-  };
+export const Playground: ComponentStory<
+  typeof NonTrackableFunctions
+> = args => {
+  return <NonTrackableFunctions {...args} />;
+};
 
 Playground.args = {
   currentDatasource: 'default',

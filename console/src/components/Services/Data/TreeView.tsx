@@ -412,6 +412,10 @@ const TreeView: React.FC<TreeViewProps> = ({
     availableFeatureFlagIds.gdcId
   );
 
+  const { enabled: isBigQueryEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.enabledNewUIForBigQuery
+  );
+
   if (items.length === 0 && !isGDCTreeViewEnabled) {
     return preLoadState ? (
       <div className={styles.treeNav}>
@@ -456,7 +460,7 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
-      {isGDCTreeViewEnabled ? (
+      {isGDCTreeViewEnabled || isBigQueryEnabled ? (
         <div id="tree-container" className="inline-block">
           <GDCTree onSelect={gdcItemClick} />
         </div>

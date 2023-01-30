@@ -1,6 +1,6 @@
 import { CustomizationForm } from '@/features/ConnectDB';
 import { Button } from '@/new-components/Button';
-import { Forms, InputField } from '@/new-components/Form';
+import { useConsoleForm, InputField } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React from 'react';
 import { Configuration } from './components/Configuration';
@@ -25,6 +25,14 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
   });
 
   const { submit, isLoading: submitIsLoading } = useSubmit();
+
+  const {
+    methods: { formState },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: { defaultValues },
+  });
 
   if (isError) {
     return (
@@ -51,47 +59,39 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
   }
 
   return (
-    <Forms.New
+    <Form
       key={`${defaultValues.name}-${defaultValues.driver}` || 'new-connection'}
-      schema={schema}
       onSubmit={submit}
-      options={{
-        defaultValues,
-      }}
       className="pl-sm"
     >
-      {options => {
-        return (
-          <div>
-            <InputField type="text" name="name" label="Database Display Name" />
+      <div>
+        <InputField type="text" name="name" label="Database Display Name" />
 
-            <Driver onDriverChange={onDriverChange} />
+        <Driver onDriverChange={onDriverChange} />
 
-            <div className="max-w-xl">
-              <Configuration name="configuration" />
-            </div>
-            <div className="my-4">
-              <CustomizationForm />
-            </div>
-            <Button
-              type="submit"
-              className="mt-4"
-              mode="primary"
-              isLoading={submitIsLoading}
-            >
-              Connect Database
-            </Button>
-            {!!Object(options.formState.errors)?.keys?.length && (
-              <div className="mt-6 max-w-xl">
-                <IndicatorCard status="negative">
-                  Error submitting form, see error messages above
-                </IndicatorCard>
-              </div>
-            )}
+        <div className="max-w-xl">
+          <Configuration name="configuration" />
+        </div>
+        <div className="my-4">
+          <CustomizationForm />
+        </div>
+        <Button
+          type="submit"
+          className="mt-4"
+          mode="primary"
+          isLoading={submitIsLoading}
+        >
+          Connect Database
+        </Button>
+        {!!Object(formState.errors)?.keys?.length && (
+          <div className="mt-6 max-w-xl">
+            <IndicatorCard status="negative">
+              Error submitting form, see error messages above
+            </IndicatorCard>
           </div>
-        );
-      }}
-    </Forms.New>
+        )}
+      </div>
+    </Form>
   );
 };
 

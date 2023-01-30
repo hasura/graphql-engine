@@ -33,9 +33,12 @@ type metadata struct {
 	APILimits        v3yaml.Node `yaml:"api_limits,omitempty" mapstructure:"api_limits,omitempty"`
 	RestEndpoints    v3yaml.Node `yaml:"rest_endpoints,omitempty" mapstructure:"rest_endpoints,omitempty"`
 	InheritedRoles   v3yaml.Node `yaml:"inherited_roles,omitempty" mapstructure:"inherited_roles,omitempty"`
+	Opentelemetry    v3yaml.Node `yaml:"opentelemetry,omitempty" mapstructure:"opentelemetry,omitempty"`
+	BackendConfig    v3yaml.Node `yaml:"backend_configs,omitempty" mapstructure:"backend_configs,omitempty"`
 
 	// HGE Pro
 	GraphQLSchemaIntrospection v3yaml.Node `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`
+	MetricsConfig              v3yaml.Node `yaml:"metrics_config,omitempty" mapstructure:"metrics_config,omitempty"`
 
 	// note: update projectmetadata/handler.go.Metadata to reflect changes made here
 	// TODO: remove this note once the TODO item above (code reuse) is addressed

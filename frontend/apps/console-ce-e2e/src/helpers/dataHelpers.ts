@@ -1,8 +1,6 @@
 import { QueryType } from './../integration/validators/validators';
 import { ADMIN_SECRET_HEADER_KEY } from './constants';
 
-export const baseUrl = Cypress.config('baseUrl');
-
 export const getDbRoute = (sourceName = 'default') => `/data/${sourceName}`;
 
 export const getIndexRoute = (sourceName = 'default', schemaName = 'public') =>

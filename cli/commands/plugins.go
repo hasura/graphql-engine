@@ -37,14 +37,10 @@ var validPluginFilenamePrefixes = []string{"hasura"}
 // NewPluginsCmd returns the plugins command
 func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsCmd := &cobra.Command{
-		Use:     "plugins",
-		Aliases: []string{"plugin"},
-		Short:   "Manage plugins for the CLI",
-		Long: `Plugins can be installed to extend the functionality of Hasura CLI
-An index for all available plugins can be found at 
-https://github.com/hasura/cli-plugins-index
-
-Please open pull requests against this repo to add new plugins`,
+		Use:          "plugins",
+		Aliases:      []string{"plugin"},
+		Short:        "Manage plugins for the CLI",
+		Long:         "The functionality of the CLI can be extended by using plugins. For a list of all available plugins, run ``hasura plugins list``, or visit this repository: https://github.com/hasura/cli-plugins-index.\n\nIf you're interested in contributing, please open a PR against this repo to add new plugin.",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")
@@ -133,7 +129,7 @@ func (h *DefaultPluginHandler) Execute(executablePath string, cmdArgs, environme
 
 	// invoke cmd binary relaying the environment and args given
 	// append executablePath to cmdArgs, as execve will make first argument the "binary name".
-	if  err := syscall.Exec(executablePath, append([]string{executablePath}, cmdArgs...), environment); err != nil {
+	if err := syscall.Exec(executablePath, append([]string{executablePath}, cmdArgs...), environment); err != nil {
 		return errors.E(op, err)
 	}
 	return nil

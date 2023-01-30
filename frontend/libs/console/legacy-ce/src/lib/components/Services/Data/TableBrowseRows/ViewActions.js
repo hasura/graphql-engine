@@ -17,6 +17,7 @@ import {
 } from '../../../../dataSources';
 import { getTableConfiguration } from './utils';
 import { reloadDataSource } from '@/metadata/actions';
+import { updateLimit } from './ViewAction.utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -25,6 +26,7 @@ const V_EXPAND_REL = 'ViewTable/V_EXPAND_REL';
 const V_CLOSE_REL = 'ViewTable/V_CLOSE_REL';
 const V_SET_ACTIVE = 'ViewTable/V_SET_ACTIVE';
 const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
+const V_SET_QUERY_LIMIT = 'ViewTable/V_SET_QUERY_LIMIT';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
@@ -48,6 +50,12 @@ const vCollapseRow = () => ({
 });
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
+
+const vSetLimit = (limit, curPath) => ({
+  type: V_SET_QUERY_LIMIT,
+  limit,
+  curPath,
+});
 
 const showError = (err, msg, dispatch) =>
   dispatch(showErrorNotification(msg, err.error, err));
@@ -401,11 +409,23 @@ const vCloseRel = (path, relname) => {
     return dispatch(vMakeTableRequests());
   };
 };
+
+const DEFAULT_PAGE_LIMIT = 5;
+
 /* ************ helpers ************************/
-const defaultSubQuery = (relname, tableSchema) => {
-  return {
+const defaultSubQuery = (relname, tableSchema, isObjRel) => {
+  const baseSubQuery = {
     name: relname,
     columns: tableSchema.columns.map(c => c.column_name),
+  };
+  if (isObjRel) {
+    return baseSubQuery;
+  }
+
+  return {
+    ...baseSubQuery,
+    limit: DEFAULT_PAGE_LIMIT,
+    offset: 0,
   };
 };
 
@@ -424,7 +444,7 @@ const expandQuery = (
 
     const newColumns = [
       ...curQuery.columns,
-      defaultSubQuery(relname, childTableSchema),
+      defaultSubQuery(relname, childTableSchema, rel.rel_type === 'object'),
     ];
     if (isObjRel) {
       return { ...curQuery, columns: newColumns };
@@ -442,7 +462,15 @@ const expandQuery = (
         oldStuff[k] = curQuery[k];
       }
     });
-    return { name: curQuery.name, where: pk, columns: newColumns, oldStuff };
+
+    return {
+      name: curQuery.name,
+      where: pk,
+      columns: newColumns,
+      oldStuff,
+      limit: curQuery.limit || DEFAULT_PAGE_LIMIT,
+      offset: curQuery.offset || 0,
+    };
   }
 
   const curRelName = curPath[0];
@@ -583,7 +611,11 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   }
 
   ['where', 'order_by', 'limit', 'offset'].map(k => {
-    delete curQuery[k];
+    try {
+      delete curQuery[k];
+    } catch (err) {
+      console.error('Error while deleting key', k, 'from', curQuery);
+    }
   });
 
   for (const k in queryStuff) {
@@ -635,6 +667,20 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
           viewState.query,
           action.queryStuff,
           viewState.activePath
+        ),
+      };
+    case V_SET_QUERY_LIMIT:
+      const updateQueryLimitState = updateLimit(
+        viewState,
+        action.limit,
+        action.curPath
+      );
+      return {
+        ...viewState,
+        query: addQueryOptsActivePath(
+          updateQueryLimitState.query,
+          updateQueryLimitState.query,
+          action.curPath
         ),
       };
     case V_EXPAND_REL:
@@ -736,6 +782,7 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
 export default viewReducer;
 export {
   vSetDefaults,
+  vSetLimit,
   vExpandRel,
   vCloseRel,
   vExpandRow,

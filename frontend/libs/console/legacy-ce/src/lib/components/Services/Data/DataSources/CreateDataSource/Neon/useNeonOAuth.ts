@@ -66,6 +66,9 @@ export const useNeonOAuth = (oauthString?: string) => {
   }, []);
 
   // generates a local oauth state to avoid forged callback
+  // FIXME we should not have conditional hooks
+  // Suggested fix : useMemo(() => oauthString ? oauthString : generateRandomString(), [oauthString])
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const oauth2State = oauthString ?? useMemo(generateRandomString, []);
 
   /*
@@ -218,7 +221,10 @@ function generateUrlSearchParams(
   searchParams.set('client_id', neonOAuthClientId);
   searchParams.set('redirect_uri', redirectURI);
   searchParams.set('response_type', 'code');
-  searchParams.set('scope', 'openid offline urn:neoncloud:projects:create');
+  searchParams.set(
+    'scope',
+    'openid offline urn:neoncloud:projects:create urn:neoncloud:projects:read urn:neoncloud:projects:update'
+  );
   searchParams.set('state', oauth2State);
 
   return searchParams;

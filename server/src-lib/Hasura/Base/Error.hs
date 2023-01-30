@@ -27,6 +27,7 @@ module Hasura.Base.Error
     throw429,
     throw500,
     throw500WithDetail,
+    throwConnectionError,
     throw401,
     iResultToMaybe,
     -- Aeson helpers
@@ -74,6 +75,7 @@ data Code
   | BigQueryError
   | Busy
   | ConcurrentUpdate
+  | ConnectionNotEstablished
   | CoercionError
   | Conflict
   | ConstraintError
@@ -108,6 +110,8 @@ data Code
   | Unexpected
   | UnexpectedPayload
   | ValidationFailed
+  | -- | Connection templates
+    TemplateResolutionFailed
   deriving (Show, Eq)
 
 instance ToJSON Code where
@@ -121,6 +125,7 @@ instance ToJSON Code where
     BigQueryError -> "bigquery-error"
     Busy -> "busy"
     ConcurrentUpdate -> "concurrent-update"
+    ConnectionNotEstablished -> "connection-not-established"
     CoercionError -> "coercion-error"
     Conflict -> "conflict"
     ConstraintError -> "constraint-error"
@@ -153,6 +158,7 @@ instance ToJSON Code where
     Unexpected -> "unexpected"
     UnexpectedPayload -> "unexpected-payload"
     ValidationFailed -> "validation-failed"
+    TemplateResolutionFailed -> "template-resolution-failed"
 
 data QErr = QErr
   { qePath :: JSONPath,
@@ -171,12 +177,14 @@ data QErr = QErr
 data QErrExtra
   = ExtraExtensions Value
   | ExtraInternal Value
+  | HideInconsistencies
   deriving (Eq)
 
 instance ToJSON QErrExtra where
   toJSON = \case
     ExtraExtensions v -> v
     ExtraInternal v -> v
+    HideInconsistencies -> Null
 
 instance ToJSON QErr where
   toJSON (QErr jPath _ msg code Nothing) =
@@ -189,6 +197,7 @@ instance ToJSON QErr where
     case extra of
       ExtraInternal e -> err ++ ["internal" .= e]
       ExtraExtensions {} -> err
+      HideInconsistencies -> []
     where
       err =
         [ "path" .= encodeJSONPath jPath,
@@ -233,6 +242,7 @@ encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
       Just (ExtraExtensions v) -> v
       Just (ExtraInternal v) ->
         object $ appendIf includeInternal codeAndPath ["internal" .= v]
+      Just HideInconsistencies -> Null
     codeAndPath =
       [ "path" .= encodeJSONPath jPath,
         "code" .= code
@@ -324,6 +334,14 @@ internalError = err500 Unexpected
 throw500WithDetail :: (QErrM m) => Text -> Value -> m a
 throw500WithDetail t detail =
   throwError $ (err500 Unexpected t) {qeInternal = Just $ ExtraInternal detail}
+
+throwConnectionError :: (QErrM m) => Text -> m a
+throwConnectionError t =
+  throwError $
+    (err500 Unexpected t)
+      { qeInternal = Just HideInconsistencies,
+        qeCode = ConnectionNotEstablished
+      }
 
 modifyQErr ::
   (QErrM m) =>

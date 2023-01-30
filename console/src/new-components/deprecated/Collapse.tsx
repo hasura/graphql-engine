@@ -119,6 +119,7 @@ export const Collapse = ({
   disabled = false,
   disabledMessage,
   rootClassName,
+  ...props
 }: CollapseProps): JSX.Element => {
   const [open, setOpen] = React.useState(defaultOpen);
 
@@ -131,6 +132,7 @@ export const Collapse = ({
       open={open}
       onOpenChange={onOpenChange}
       className={rootClassName}
+      {...props}
     >
       <CollapseCtx.Provider value={{ open }}>
         {!!title && (

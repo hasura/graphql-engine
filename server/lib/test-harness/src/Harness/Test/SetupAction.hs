@@ -3,6 +3,7 @@ module Harness.Test.SetupAction
   ( SetupAction (..),
     clearMetadata,
     permitTeardownFail,
+    noTeardown,
   )
 where
 
@@ -28,6 +29,14 @@ clearMetadata testEnv =
   SetupAction
     { setupAction = GraphqlEngine.clearMetadata testEnv,
       teardownAction = \_ -> GraphqlEngine.clearMetadata testEnv
+    }
+
+-- | a SetupAction with no teardown
+noTeardown :: IO a -> SetupAction
+noTeardown setup =
+  SetupAction
+    { setupAction = setup,
+      teardownAction = \_ -> pure ()
     }
 
 permitTeardownFail :: SetupAction -> SetupAction

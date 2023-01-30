@@ -10,6 +10,10 @@ library
   hs-source-dirs: src
   default-language: GHC2021
 
+  ghc-options:
+    -Wall
+    -Werror
+
   default-extensions:
     BlockArguments
     DataKinds
@@ -31,10 +35,14 @@ library
   build-depends:
     , HUnit
     , aeson
+    , aeson-pretty
     , base
     , bytestring
     , dc-api
+    , directory
     , fast-logger
+    , filepath
+    , graphql-engine
     , graphql-parser
     , hasura-prelude
     , hspec
@@ -46,12 +54,12 @@ library
     , managed
     , morpheus-graphql
     , pg-client
-    , postgresql-simple
     , postgres-options
+    , postgresql-simple
     , safe-exceptions
+    , sop-core
     , split
     , string-interpolate
-    , sop-core
     , test-harness
     , text
     , unordered-containers
@@ -61,9 +69,14 @@ library
   exposed-modules:
     Spec
     SpecHook
+    Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.Metadata.ComputedFieldsSpec
+    Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.TestConnectionTemplateSpec
+    Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.NativeAccessSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
@@ -88,15 +101,21 @@ library
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.CustomScalarsSpec
+    Test.DataConnector.MockAgent.DeleteMutationsSpec
     Test.DataConnector.MockAgent.ErrorSpec
+    Test.DataConnector.MockAgent.InsertMutationsSpec
     Test.DataConnector.MockAgent.MetadataApiSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
+    Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
+    Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTriggers.MSSQL.EventTriggerNextRetryAtTimezoneSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
+    Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec
     Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
     Test.EventTriggers.PG.EventTriggersForReplicationSpec
@@ -118,13 +137,18 @@ library
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Upsert.OnConflictSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
+    Test.PortedFromPytest.TestGraphQLQueryFunctions
     Test.Queries.AggregationSpec
+    Test.Queries.CustomFunctions.PortedSpec
     Test.Queries.DistinctSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
+    Test.Queries.NativeAccess.NativeAccessQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Simple.InvalidQuerySpec
+    Test.Queries.Simple.MissingTableSpec
     Test.Queries.Simple.NoQueriesAvailableSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
@@ -147,8 +171,10 @@ library
     Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.RemoteRelationshipStringifyNum8387Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
+    Test.Regression.MultiplexQuerySpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec
@@ -157,6 +183,7 @@ library
     Test.Schema.CustomFieldsSpec
     Test.Schema.DataValidations.Permissions.InsertSpec
     Test.Schema.DataValidations.Permissions.SelectSpec
+    Test.Schema.DataValidations.Permissions.UpdateSpec
     Test.Schema.DefaultValues.DefaultValuesSpec
     Test.Schema.DefaultValues.OnConflictSpec
     Test.Schema.EnumsSpec
@@ -169,6 +196,8 @@ library
     Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec
     Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
     Test.Schema.RemoteSchemaCustomizationSpec
+    Test.Schema.TableRelationships.CrossSchemaArrayRelationshipsSpec
+    Test.Schema.TableRelationships.CrossSchemaObjectRelationshipsSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.TableRelationships.PortedSpec
@@ -180,6 +209,7 @@ library
 
 executable api-tests
   build-depends:
+    , lens-aeson
     , api-tests
     , base
     , hspec
@@ -307,6 +337,6 @@ executable produce-feature-matrix
     -Wall
     -Werror
     -threaded
-    -rtsopts "-with-rtsopts=-N"
+    -rtsopts "-with-rtsopts=-N4"
 
   main-is: Main.hs

@@ -1,6 +1,5 @@
 const colors = require('tailwindcss/colors');
 
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   safelist: {
     standard: /background$/,
@@ -9,10 +8,7 @@ module.exports = {
   theme: {
     fontFamily: {
       sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
-    },
-    flex: {
-      grow220px: '1 0 220px',
-      grow320px: '1 0 320px',
+      mono: ['"Overpass Mono"', 'ui-monospace', 'monospace'],
     },
     extend: {
       colors: {
@@ -39,7 +35,8 @@ module.exports = {
           DEFAULT: '#f8fafb',
         },
         muted: {
-          DEFAULT: '#475569',
+          DEFAULT: '#64748B',
+          dark: '#64748B',
         },
       },
       spacing: {
@@ -95,10 +92,79 @@ module.exports = {
             height: '0',
           },
         },
+        slideUpAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateY(2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+        },
+        slideRightAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(-2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        slideDownAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateY(-2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+        },
+        slideLeftAndFade: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(2px)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        notificationOpen: {
+          from: {
+            opacity: `0`,
+            transform: `translateX(100%)`,
+          },
+          to: {
+            opacity: `1`,
+            transform: `translateX(0)`,
+          },
+        },
+        notificationClose: {
+          from: {
+            opacity: `1`,
+            transform: `translateY(0)`,
+          },
+          to: {
+            opacity: `0`,
+            transform: `translateY(-100%)`,
+          },
+        },
       },
       animation: {
         collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
         collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
+        slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideRightAndFade:
+          'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideDownAndFade:
+          'slideDownAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        slideLeftAndFade:
+          'slideLeftAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        notificationOpen: 'notificationOpen 300ms ease-in-out',
+        notificationClose: 'notificationClose 300ms ease-in-out',
       },
     },
   },

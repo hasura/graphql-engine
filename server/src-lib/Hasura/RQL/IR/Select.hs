@@ -381,6 +381,7 @@ data SelectFromG (b :: BackendType) v
       (FunctionArgsExp b v)
       -- a definition list
       (Maybe [(Column b, ScalarType b)])
+  | FromNativeQuery (NativeQuery b v)
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Functor (SelectFromG b)
@@ -389,11 +390,29 @@ deriving stock instance (Backend b) => Foldable (SelectFromG b)
 
 deriving stock instance (Backend b) => Traversable (SelectFromG b)
 
-deriving stock instance (Backend b, Eq v, Eq (FunctionArgumentExp b v)) => Eq (SelectFromG b v)
+deriving stock instance
+  ( Backend b,
+    Eq v,
+    Eq (FunctionArgumentExp b v),
+    Eq (NativeQuery b v)
+  ) =>
+  Eq (SelectFromG b v)
 
-deriving stock instance (Backend b, Show v, Show (FunctionArgumentExp b v)) => Show (SelectFromG b v)
+deriving stock instance
+  ( Backend b,
+    Show v,
+    Show (FunctionArgumentExp b v),
+    Show (NativeQuery b v)
+  ) =>
+  Show (SelectFromG b v)
 
-instance (Backend b, Hashable v, Hashable (FunctionArgumentExp b v)) => Hashable (SelectFromG b v)
+instance
+  ( Backend b,
+    Hashable v,
+    Hashable (FunctionArgumentExp b v),
+    Hashable (NativeQuery b v)
+  ) =>
+  Hashable (SelectFromG b v)
 
 type SelectFrom b = SelectFromG b (SQLExpression b)
 
@@ -1020,7 +1039,8 @@ data
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt))
+    _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt)),
+    _rssStringifyNums :: StringifyNumbers
   }
 
 deriving stock instance
@@ -1028,6 +1048,13 @@ deriving stock instance
     Eq (SourceRelationshipSelection tgt r vf)
   ) =>
   Eq (RemoteSourceSelect r vf tgt)
+
+deriving stock instance
+  ( Backend tgt,
+    Show (SourceRelationshipSelection tgt r vf),
+    Show (SourceConfig tgt)
+  ) =>
+  Show (RemoteSourceSelect r vf tgt)
 
 -- Permissions
 

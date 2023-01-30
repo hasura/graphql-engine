@@ -1,6 +1,8 @@
+import { getEntries } from '@/components/Services/Data/Common/tsUtils';
 import { DataNode } from 'antd/lib/tree';
 import React from 'react';
 import { FaTable, FaFolder } from 'react-icons/fa';
+import { TableColumn } from '../../types';
 
 export function convertToTreeData(
   tables: string[][],
@@ -51,4 +53,24 @@ export function convertToTreeData(
   }, acc);
 
   return values;
+}
+
+export function adaptAgentDataType(
+  sqlDataType: string
+): TableColumn['dataType'] {
+  const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
+    bool: ['bool'],
+    string: ['string'],
+    number: ['number'],
+    datetime: [],
+    timestamp: [],
+    xml: [],
+    json: [],
+  };
+
+  const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
+    value.includes(sqlDataType)
+  ) ?? ['string', []];
+
+  return dataType;
 }

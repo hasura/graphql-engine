@@ -9,17 +9,17 @@ module Harness.Test.Fixture
     runSingleSetup,
     runWithLocalTestEnvironment,
     runWithLocalTestEnvironmentSingleSetup,
+    runWithLocalTestEnvironmentInternal,
+    hgeWithEnv,
+    createDatabases,
     Fixture (..),
     fixture,
     FixtureName (..),
     BackendType (..),
+    BackendTypeConfig (..),
     pattern DataConnectorMock,
     pattern DataConnectorReference,
     pattern DataConnectorSqlite,
-    defaultSource,
-    defaultBackendDisplayNameString,
-    defaultBackendTypeString,
-    schemaKeyword,
     noLocalTestEnvironment,
     SetupAction (..),
     Options (..),
@@ -32,8 +32,10 @@ module Harness.Test.Fixture
   )
 where
 
+import Control.Concurrent.Async qualified as Async
 import Control.Monad.Managed (Managed, runManaged, with)
 import Data.Aeson (Value)
+import Data.Has (getter)
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
@@ -43,13 +45,15 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
 import Harness.Logging
+import Harness.Services.GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
+import Harness.Test.FixtureName
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment
   ( GlobalTestEnvironment (..),
-    Server,
+    Server (..),
     TestEnvironment (..),
     TestingMode (..),
     UniqueTestId (..),
@@ -86,7 +90,34 @@ import Test.Hspec
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
 run = runSingleSetup
 
--- runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+-- given a fresh HgeServerInstance, add it in our `TestEnvironment`
+useHgeInTestEnvironment :: GlobalTestEnvironment -> HgeServerInstance -> IO GlobalTestEnvironment
+useHgeInTestEnvironment globalTestEnvironment (HgeServerInstance {hgeServerHost, hgeServerPort}) = do
+  serverThreadIrrelevant <- Async.async (return ())
+  let server =
+        Server
+          { port = fromIntegral hgeServerPort,
+            urlPrefix = "http://" <> T.unpack hgeServerHost,
+            thread = serverThreadIrrelevant
+          }
+  pure $ globalTestEnvironment {server = server}
+
+-- | Start an instance of HGE which has certain environment variables defined
+-- and pass it around inside the `GlobalTestEnvironment`
+hgeWithEnv :: [(String, String)] -> SpecWith GlobalTestEnvironment -> SpecWith GlobalTestEnvironment
+hgeWithEnv env = do
+  let hgeConfig = emptyHgeConfig {hgeConfigEnvironmentVars = env}
+
+  aroundAllWith
+    ( \specs globalTestEnvironment -> runManaged $ do
+        hgeServerInstance <-
+          spawnServer
+            (getter globalTestEnvironment)
+            (getter globalTestEnvironment)
+            (getter globalTestEnvironment)
+            hgeConfig
+        liftIO $ useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
+    )
 
 {-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
 runSingleSetup :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
@@ -158,7 +189,10 @@ runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of
 -- @bracket@.
-fixtureBracket :: Fixture b -> (ActionWith (TestEnvironment, b)) -> ActionWith GlobalTestEnvironment
+fixtureBracket ::
+  Fixture b ->
+  (ActionWith (TestEnvironment, b)) ->
+  ActionWith GlobalTestEnvironment
 fixtureBracket
   Fixture
     { name,
@@ -231,11 +265,10 @@ setupTestEnvironment name globalTestEnvironment = do
 
   let testEnvironment =
         TestEnvironment
-          { backendType = case name of
-              Backend db -> Just db
-              _ -> Nothing,
+          { fixtureName = name,
             uniqueTestId = uniqueTestId,
-            globalEnvironment = globalTestEnvironment
+            globalEnvironment = globalTestEnvironment,
+            testingRole = Nothing
           }
 
   -- create source databases
@@ -271,10 +304,6 @@ runSetupActions logger acts = go acts []
       [] -> return (rethrowAll cleanupAcc)
       SetupAction {setupAction, teardownAction} : rest -> do
         a <- try setupAction
-        -- It would be nice to be able to log the execution of setup actions
-        -- into a logfile or similar.  Using `putStrLn` interferes with the
-        -- default Hspec test runner's output, so the lines below have been left
-        -- commented out.
         case a of
           Left (exn :: SomeException) -> do
             log $ LogFixtureSetupFailed (length cleanupAcc)
@@ -340,23 +369,6 @@ fixture name = Fixture {..}
     setupTeardown = const []
     mkLocalTestEnvironment = noLocalTestEnvironment
     customOptions = Nothing
-
--- | A name describing the given context.
-data FixtureName
-  = Backend BackendType
-  | RemoteGraphQLServer
-  | Combine FixtureName FixtureName
-
-backendTypesForFixture :: FixtureName -> S.Set BackendType
-backendTypesForFixture (Backend be) = S.singleton be
-backendTypesForFixture RemoteGraphQLServer = mempty
-backendTypesForFixture (Combine a b) =
-  backendTypesForFixture a <> backendTypesForFixture b
-
-instance Show FixtureName where
-  show (Backend backend) = show backend
-  show RemoteGraphQLServer = "RemoteGraphQLServer"
-  show (Combine name1 name2) = show name1 ++ "-" ++ show name2
 
 -- | Default function for 'mkLocalTestEnvironment' when there's no local testEnvironment.
 noLocalTestEnvironment :: TestEnvironment -> Managed ()

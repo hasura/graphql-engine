@@ -2,11 +2,11 @@ import React from 'react';
 import ActualDocItem from '@theme/DocItem';
 import HasuraConBanner from '@site/src/components/HasuraConBanner';
 import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanner';
-import PageHelpful from '@site/src/components/PageHelpful';
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
+import {ScrollToFeedbackButton} from "@site/src/components/Feedback/ScrollToFeedbackButton";
 
-const CustomDocItem = (props) => {
+const CustomDocItem = props => {
   return (
     <div
       className={
@@ -17,7 +17,8 @@ const CustomDocItem = (props) => {
     >
       <ActualDocItem {...props} />
       <div className={styles['custom_doc_item_footer']}>
-        <PageHelpful />
+        {/*<PageHelpful />*/}
+        <ScrollToFeedbackButton/>
         <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <CustomFooter />

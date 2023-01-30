@@ -452,5 +452,15 @@
                 "host": "scriptonist.dev"
             }
         ]
+    },
+    "backend_configs": {
+        "dataconnector": {
+            "sqlite_a": {
+                "uri": "http://localhost:8100"
+            },
+            "sqlite_b": {
+                "uri": "http://localhost:8101"
+            }
+        }
     }
 }

@@ -17,6 +17,7 @@ const serverEnvVars = `
   consoleType: '${process.env.HASURA_CONSOLE_TYPE}',
   consoleSentryDsn: '${process.env.HASURA_CONSOLE_SENTRY_DSN}',
   tenantID: '${process.env.HASURA_CLOUD_TENANT_ID || ''}',
+  ssoEnabled: '${process.env.SSO_ENABLED || ''}',
 `;
 
 const cliEnvVars = `

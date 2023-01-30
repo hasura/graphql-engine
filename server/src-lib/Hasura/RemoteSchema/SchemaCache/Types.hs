@@ -206,7 +206,7 @@ validateRemoteSchemaCustomization (Just RemoteSchemaCustomization {..}) =
     isReservedName = ("__" `T.isPrefixOf`) . G.unName
 
 validateRemoteSchemaDef ::
-  (MonadError QErr m, MonadIO m) =>
+  (MonadError QErr m) =>
   Env.Environment ->
   RemoteSchemaDef ->
   m ValidatedRemoteSchemaDef

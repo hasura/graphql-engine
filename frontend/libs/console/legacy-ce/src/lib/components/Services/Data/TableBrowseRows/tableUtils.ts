@@ -76,10 +76,9 @@ export const getPersistedColumnsOrder = (
   return orderData ? orderData[`${schemaName}.${tableName}`] : [];
 };
 
-export const persistPageSizeChange = (pageSize: number) => {
+export const setPersistedPageSize = (pageSize: number) => {
   setLSItem(LS_KEYS.dataPageSizeKey, JSON.stringify(pageSize));
 };
 
-export const getPersistedPageSize = () => {
-  return getParsedLSItem(LS_KEYS.dataPageSizeKey);
-};
+export const getPersistedPageSize = () =>
+  getParsedLSItem(LS_KEYS.dataPageSizeKey);

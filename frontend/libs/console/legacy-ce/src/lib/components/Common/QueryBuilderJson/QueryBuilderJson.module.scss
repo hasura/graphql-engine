@@ -1,4 +1,4 @@
-@import "../Common.module";
+@import '../Common.module';
 
 .qb_nested {
   margin-top: 5px;
@@ -23,11 +23,10 @@
   color: #999;
 
   select option {
-    color: #555
+    color: #555;
   }
 }
 
 .qb_unselected_key {
   color: #999;
 }
-

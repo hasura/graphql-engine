@@ -460,6 +460,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       E.getResolvedExecPlan
         env
         logger
+        prometheusMetrics
         userInfo
         sqlGenCtx
         readOnlyMode
@@ -513,7 +514,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                         (telemTimeIO_DT, resp) <-
                           AB.dispatchAnyBackend @BackendTransport
                             exists
-                            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
                               runDBQuery @b
                                 requestId
                                 q
@@ -523,6 +524,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                                 sourceConfig
                                 tx
                                 genSql
+                                resolvedConnectionTemplate
                         finalResponse <-
                           RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
@@ -560,12 +562,12 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       -- See Note [Backwards-compatible transaction optimisation]
       case coalescePostgresMutations mutationPlan of
         -- we are in the aforementioned case; we circumvent the normal process
-        Just (sourceConfig, pgMutations) -> do
+        Just (sourceConfig, resolvedConnectionTemplate, pgMutations) -> do
           resp <-
             runExceptT $
               runLimits $
                 doQErr $
-                  runPGMutationTransaction requestId q userInfo logger sourceConfig pgMutations
+                  runPGMutationTransaction requestId q userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
           -- we do not construct result fragments since we have only one result
           handleResult requestId gqlOpType resp \(telemTimeIO_DT, results) -> do
             let telemQueryType = Telem.Query
@@ -590,7 +592,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                         (telemTimeIO_DT, resp) <-
                           AB.dispatchAnyBackend @BackendTransport
                             exists
-                            \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                            \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
                               runDBMutation @b
                                 requestId
                                 q
@@ -600,6 +602,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
                                 sourceConfig
                                 tx
                                 genSql
+                                resolvedConnectionTemplate
                         finalResponse <-
                           RJ.processRemoteJoins requestId logger env httpMgr reqHdrs userInfo resp remoteJoins q
                         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
@@ -670,7 +673,7 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
             Nothing -> do
-              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindDatabase
+              logQueryLog logger $ QueryLog q Nothing requestId (QueryLogKindDatabase Nothing)
               -- No async action query fields present, do nothing.
               pure ()
             Just nonEmptyActionIds -> do
@@ -794,7 +797,8 @@ onStart env enabledLogTypes serverEnv wsConn shouldCaptureVariables (StartMsg op
       enableAL
       _keepAliveDelay
       _serverMetrics
-      prometheusMetrics = serverEnv
+      prometheusMetrics
+      _ = serverEnv
 
     gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
@@ -1010,7 +1014,7 @@ onMessage ::
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   m ()
-onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT "websocket" do
+onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions = Tracing.runTraceT (_wseTraceSamplingPolicy serverEnv) "websocket" do
   case J.eitherDecode msgRaw of
     Left e -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
@@ -1125,7 +1129,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
           logWSEvent logger wsConn $ EConnErr connErr
           liftIO $ onConnInitErrAction wsConn connErr WS.ConnInitFailed
         -- we're ignoring the auth headers as headers are irrelevant in websockets
-        Right (userInfo, expTimeM, _authHeaders) -> do
+        Right (userInfo, expTimeM, _authHeaders, _) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
             $assertNFHere csInit -- so we don't write thunks to mutable vars

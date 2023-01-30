@@ -36,7 +36,9 @@ export const TableColumnDescription: React.VFC<{
         )}
       </div>
       <div>
-        <Badge color="gray">{column.dataType}</Badge>
+        <Badge color="gray">
+          {column.consoleDataType || column.dataType || 'unknown type'}
+        </Badge>
       </div>
 
       {column.nullable && <Badge color="yellow">nullable</Badge>}

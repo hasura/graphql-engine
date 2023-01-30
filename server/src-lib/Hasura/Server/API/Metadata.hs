@@ -26,10 +26,13 @@ import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
+import Hasura.RQL.DDL.ConnectionTemplate
+import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
+import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata
@@ -40,6 +43,7 @@ import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
+import Hasura.RQL.DDL.Relationship.Suggest
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
@@ -111,6 +115,7 @@ data RQLMetadataV1
   | RMDropRelationship !(AnyBackend DropRel)
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
+  | RMSuggestRelationships !(AnyBackend SuggestRels)
   | -- Tables remote relationships
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
@@ -125,6 +130,12 @@ data RQLMetadataV1
   | -- Computed fields
     RMAddComputedField !(AnyBackend AddComputedField)
   | RMDropComputedField !(AnyBackend DropComputedField)
+  | -- Connection template
+    RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
+  | -- Native access
+    RMGetCustomSQL !(AnyBackend CustomSQL.GetCustomSQL)
+  | RMTrackCustomSQL !(AnyBackend CustomSQL.TrackCustomSQL)
+  | RMUntrackCustomSQL !(AnyBackend CustomSQL.UntrackCustomSQL)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -208,6 +219,8 @@ data RQLMetadataV1
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
   | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
+  | -- Feature Flags
+    RMGetFeatureFlag !GetFeatureFlag
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
   deriving (Generic)
@@ -287,6 +300,7 @@ instance FromJSON RQLMetadataV1 where
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "set_opentelemetry_config" -> RMSetOpenTelemetryConfig <$> args
       "set_opentelemetry_status" -> RMSetOpenTelemetryStatus <$> args
+      "get_feature_flag" -> RMGetFeatureFlag <$> args
       "bulk" -> RMBulk <$> args
       -- Backend prefixed metadata actions:
       _ -> do
@@ -385,7 +399,22 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
         RMV2 (RMV2ExportMetadata _) -> True
         _ -> False
       metadataDefaults =
-        if (exportsMetadata _rqlMetadata)
+        -- Note: The following check is performed to determine if the metadata defaults can
+        --       be safely merged into the reader at this point.
+        --
+        -- We want to prevent scenarios:
+        -- \* Exporting defaults - Contradicting the "roundtrip" principle of metadata operations
+        -- \* Serializing defaults into the metadata storage - Putting data into the users hdb_catalog
+        --
+        -- While this check does have the desired effect it relies on the fact that the only
+        -- operations that need access to the defaults here do not export or modify metadata.
+        -- If at some point in future an operation needs access to the defaults and also needs to
+        -- export/modify metadata, then another approach will need to be taken.
+        --
+        -- Luckily, most actual need for defaults access exists within the schema cache build phase,
+        -- so metadata operations don't need "smarts" that require defaults access.
+        --
+        if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else _sccMetadataDefaults serverConfigCtx
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
@@ -460,6 +489,11 @@ queryModifiesMetadata = \case
       RMListSourceKinds _ -> False
       RMGetSourceTables _ -> False
       RMGetTableInfo _ -> False
+      RMTestConnectionTemplate _ -> False
+      RMSuggestRelationships _ -> False
+      RMGetCustomSQL _ -> False
+      RMTrackCustomSQL _ -> True
+      RMUntrackCustomSQL _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -546,6 +580,7 @@ queryModifiesMetadata = \case
       RMSetQueryTagsConfig _ -> True
       RMSetOpenTelemetryConfig _ -> True
       RMSetOpenTelemetryStatus _ -> True
+      RMGetFeatureFlag _ -> False
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -607,7 +642,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
   RMGetSourceTables q -> runGetSourceTables env q
-  RMGetTableInfo q -> runGetTableInfo q
+  RMGetTableInfo q -> runGetTableInfo env q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
@@ -628,6 +663,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropRelationship q -> dispatchMetadata runDropRel q
   RMSetRelationshipComment q -> dispatchMetadata runSetRelComment q
   RMRenameRelationship q -> dispatchMetadata runRenameRel q
+  RMSuggestRelationships q -> dispatchMetadata runSuggestRels q
   RMCreateRemoteRelationship q -> dispatchMetadata runCreateRemoteRelationship q
   RMUpdateRemoteRelationship q -> dispatchMetadata runUpdateRemoteRelationship q
   RMDeleteRemoteRelationship q -> dispatchMetadata runDeleteRemoteRelationship q
@@ -637,6 +673,10 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
+  RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
+  RMGetCustomSQL q -> dispatchMetadata CustomSQL.runGetCustomSQL q
+  RMTrackCustomSQL q -> dispatchMetadata CustomSQL.runTrackCustomSQL q
+  RMUntrackCustomSQL q -> dispatchMetadata CustomSQL.runUntrackCustomSQL q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms
@@ -728,6 +768,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
+  RMGetFeatureFlag q -> runGetFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
     dispatchMetadata ::

@@ -13,20 +13,22 @@ module Hasura.Backends.Postgres.Translate.Select.Streaming
 where
 
 import Control.Monad.Writer.Strict (runWriter)
-import Database.PG.Query (Query, fromBuilder)
+import Database.PG.Query (Query)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiers)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (contextualizeBaseTableColumn)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
-  ( MultiRowSelectNode (MultiRowSelectNode),
+  ( CustomSQLCTEs,
+    MultiRowSelectNode (MultiRowSelectNode),
     PermissionLimitSubQuery (PLSQNotRequired),
     SelectNode (SelectNode),
+    SelectWriter (..),
     SourcePrefixes (SourcePrefixes),
     orderByForJsonAgg,
   )
@@ -56,7 +58,6 @@ import Hasura.RQL.Types.Subscription
 import Hasura.SQL.Backend (BackendType (Postgres))
 import Hasura.SQL.Types
   ( CollectableType (CollectableTypeArray, CollectableTypeScalar),
-    ToSQL (toSQL),
   )
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -65,17 +66,20 @@ selectStreamQuerySQL ::
   (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   Query
-selectStreamQuerySQL sel =
-  fromBuilder $ toSQL $ mkStreamSQLSelect sel
+selectStreamQuerySQL =
+  toQuery
+    . selectToSelectWith
+    . mkStreamSQLSelect
 
 mkStreamSQLSelect ::
-  forall pgKind.
+  forall pgKind m.
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadWriter CustomSQLCTEs m
   ) =>
   AnnSimpleStreamSelect ('Postgres pgKind) ->
-  S.Select
-mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
+  m S.Select
+mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
   let cursorArg = _ssaCursorArg args
       cursorColInfo = _sciColInfo cursorArg
       annOrderbyCol = AOCColumn cursorColInfo
@@ -100,7 +104,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
           }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum Nothing
       permLimitSubQuery = PLSQNotRequired
-      ((selectSource, nodeExtractors), joinTree) =
+      ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
         runWriter $
           flip runReaderT strfyNum $
             processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
@@ -131,9 +135,9 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             S.SEFnApp "json_build_object" colExp Nothing
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.toColumnAlias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
-   in renameIdentifiers $
-        generateSQLSelectFromArrayNode selectSource arrayNode $
-          S.BELit True
+  tell customSQLCTEs
+
+  pure $ generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
     rootFldIdentifier = TableIdentifier $ getFieldNameTxt rootFldName
     sourcePrefixes = SourcePrefixes (tableIdentifierToIdentifier rootFldIdentifier) (tableIdentifierToIdentifier rootFldIdentifier)

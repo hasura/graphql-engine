@@ -47,7 +47,6 @@ export const BrowseAllOperations = props => {
     refetch();
   }, [projectId]);
 
-
   const getCount = () => {
     return data.results_aggregate && data.results_aggregate.aggregate
       ? data.results_aggregate.aggregate.count

@@ -12,22 +12,10 @@ where
 
 import Autodocodec
 import Autodocodec.OpenAPI ()
-import Control.DeepSeq (NFData)
-import Control.Monad ((<=<))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.Text (encodeToLazyText)
-import Data.Bifunctor (first)
-import Data.Data (Data, Proxy (..))
-import Data.Foldable (toList)
-import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.Hashable (Hashable)
-import Data.List.NonEmpty (NonEmpty, nonEmpty)
-import Data.Maybe (mapMaybe)
-import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject, OpenApiString), Referenced (..), Schema (..), ToSchema (..), declareSchemaRef)
+import Data.OpenApi (ToSchema (..))
 import Data.Text (Text, pack)
 import Data.Text.Lazy (toStrict)
 import GHC.Generics (Generic)

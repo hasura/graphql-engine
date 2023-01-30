@@ -6,6 +6,8 @@ module Harness.Http
     postValue,
     postValueWithStatus,
     healthCheck,
+    healthCheck',
+    HealthCheckResult (..),
     Http.RequestHeaders,
   )
 where
@@ -16,7 +18,6 @@ import Data.Aeson
 import Data.ByteString.Lazy.Char8 qualified as L8
 import Data.String
 import GHC.Stack
-import Harness.Constants qualified as Constants
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import Network.HTTP.Types qualified as Http
@@ -92,19 +93,37 @@ postValueWithStatus statusCode url headers value = do
 
 -- | Wait for a service to become healthy.
 healthCheck :: HasCallStack => String -> IO ()
-healthCheck url = loop [] Constants.httpHealthCheckAttempts
-  where
-    loop failures 0 =
+healthCheck url = do
+  result <- healthCheck' url
+  case result of
+    Healthy -> return ()
+    Unhealthy failures ->
       error
         ( "Health check failed for URL: "
             ++ url
             ++ ", with failures: "
             ++ show failures
         )
+
+data HealthCheckResult = Healthy | Unhealthy [Http.HttpException]
+
+-- | Wait for a service to become healthy.
+healthCheck' :: HasCallStack => String -> IO HealthCheckResult
+healthCheck' url = loop [] httpHealthCheckAttempts
+  where
+    loop failures 0 = return $ Unhealthy failures
     loop failures attempts =
       catch
-        (getWithStatus [200, 204] url)
+        (getWithStatus [200, 204] url >> return Healthy)
         ( \(failure :: Http.HttpException) -> do
-            sleep Constants.httpHealthCheckIntervalSeconds
+            sleep httpHealthCheckIntervalSeconds
             loop (failure : failures) (attempts - 1)
         )
+
+-- * HTTP health checks
+
+httpHealthCheckAttempts :: Int
+httpHealthCheckAttempts = 5
+
+httpHealthCheckIntervalSeconds :: DiffTime
+httpHealthCheckIntervalSeconds = 1

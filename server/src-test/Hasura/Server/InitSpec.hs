@@ -1388,6 +1388,17 @@ mkServeOptionsSpec =
         fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingEnabled
 
     Hspec.describe "soDefaultNamingConvention" $ do
+      Hspec.it "Default = HasuraCase" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            -- When
+            env = []
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.HasuraCase
+
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
@@ -1397,7 +1408,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NamingCase.GraphqlCase)
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.GraphqlCase
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1407,7 +1418,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NamingCase.GraphqlCase)
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.GraphqlCase
 
     Hspec.describe "soExtensionsSchema" $ do
       Hspec.it "Default == 'public' " $ do

@@ -1,6 +1,16 @@
 {
   "extends": ["plugin:@nrwl/nx/react", "../../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
+  "globals": {
+    "__DEVELOPMENT__": true,
+    "__CLIENT__": true,
+    "__SERVER__": true,
+    "__DISABLE_SSR__": true,
+    "__DEVTOOLS__": true,
+    "socket": true,
+    "webpackIsomorphicTools": true,
+    "CONSOLE_ASSET_VERSION": true
+  },
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -50,16 +60,43 @@
               }
             ]
           }
-        ]
+        ],
+        "import/first": "warn",
+        "no-restricted-globals": "warn",
+        "no-case-declarations": "warn",
+        "@typescript-eslint/no-unused-expressions": "warn",
+        "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/no-empty-interface": "warn",
+        "no-prototype-builtins": "warn",
+        "react-hooks/rules-of-hooks": "warn"
       }
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        "import/first": "warn",
+        "no-restricted-globals": "warn",
+        "no-case-declarations": "warn",
+        "@typescript-eslint/no-unused-expressions": "warn",
+        "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/no-empty-interface": "warn",
+        "no-prototype-builtins": "warn",
+        "react-hooks/rules-of-hooks": "warn"
+      }
     },
     {
       "files": ["*.js", "*.jsx"],
-      "rules": {}
+      "parser": "@babel/eslint-parser",
+      "rules": {
+        "import/first": "warn",
+        "no-restricted-globals": "warn",
+        "no-case-declarations": "warn",
+        "@typescript-eslint/no-unused-expressions": "warn",
+        "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/no-empty-interface": "warn",
+        "no-prototype-builtins": "warn",
+        "react-hooks/rules-of-hooks": "warn"
+      }
     }
   ]
 }

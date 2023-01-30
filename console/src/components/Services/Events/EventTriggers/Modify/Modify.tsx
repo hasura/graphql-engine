@@ -2,6 +2,7 @@
 import React, { useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
 import {
   requestTransformReducer,
   setEnvVars,
@@ -23,6 +24,7 @@ import {
   getEventRequestTransformDefaultState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
+  QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
@@ -162,7 +164,7 @@ const Modify: React.FC<Props> = props => {
     transformDispatch(setRequestUrlPreview(requestUrlPreview));
   };
 
-  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+  const requestQueryParamsOnChange = (requestQueryParams: QueryParams) => {
     transformDispatch(setRequestQueryParams(requestQueryParams));
   };
 
@@ -326,9 +328,19 @@ const Modify: React.FC<Props> = props => {
         );
         return;
       }
+
+      const modifyTriggerState = { ...state };
+
+      if (
+        !currentTrigger?.configuration?.cleanup_config &&
+        state.cleanupConfig?.paused
+      ) {
+        delete modifyTriggerState?.cleanupConfig;
+      }
+
       dispatch(
         modifyEventTrigger(
-          state,
+          modifyTriggerState,
           transformState,
           currentTrigger,
           databaseInfo,
@@ -345,7 +357,10 @@ const Modify: React.FC<Props> = props => {
 
   return (
     <Analytics name="ModifyEventTriggers" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto bg-gray-50">
+      <div
+        key={currentTrigger.name}
+        className="w-full overflow-y-auto bg-gray-50"
+      >
         <div className="max-w-6xl">
           <TableHeader
             count={null}
@@ -392,7 +407,6 @@ const Modify: React.FC<Props> = props => {
                     state?.cleanupConfig || defaultState.cleanupConfig
                   }
                 />
-                <hr className="my-md" />
               </div>
             )}
             <HeadersEditor

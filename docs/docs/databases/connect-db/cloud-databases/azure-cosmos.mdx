@@ -15,15 +15,22 @@ sidebar_position: 6
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with an Azure Cosmos DB for PostgreSQL
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to an Azure Cosmos DB for PostgreSQL
 
 ## Introduction
 
-This guide explains how to connect a new Azure Cosmos DB for PostgreSQL to a Hasura Cloud project. If you're exploring
-Azure Cosmos DB for PostgreSQL, check out their [docs](https://azure.microsoft.com/en-us/products/cosmos-db/#overview)
-before continuing below.
+This guide explains how to connect a new
+[Azure Cosmos DB for PostgreSQL](https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/introduction) to a Hasura
+instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Azure Cosmos DB for PostgreSQL,
+check out their [docs](https://azure.microsoft.com/en-us/products/cosmos-db/#overview) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-azure).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -38,13 +45,12 @@ On the Hasura Cloud dashboard, create a new project:
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
-
-You will get prompted for a PostgreSQL Database URL. We will create this in the next step and then come back here.
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 3: Create a Cosmos DB on Azure
+## Step 3: Create a Cosmos DB on Azure {#create-pg-db-azure}
 
 You can start a free trial with [Azure Cosmos DB](https://cosmos.azure.com/try/). Select Azure Cosmos DB for PostgreSQL
 and click `Create`:
@@ -98,13 +104,13 @@ Voilà. You are ready to start developing.
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
-[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
-[custom domains](/projects/domains.mdx#manage-project-domains)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+  [env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+  [custom domains](/projects/domains.mdx#manage-project-domains)).
 
 <Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
 

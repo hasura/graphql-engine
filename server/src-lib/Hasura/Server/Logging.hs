@@ -30,6 +30,8 @@ module Hasura.Server.Logging
     LoggingSettings (..),
     SchemaSyncThreadType (..),
     SchemaSyncLog (..),
+    HttpLogGraphQLInfo,
+    emptyHttpLogGraphQLInfo,
   )
 where
 
@@ -204,6 +206,13 @@ data CommonHttpLogMetadata = CommonHttpLogMetadata
   }
   deriving (Eq)
 
+-- The information from the GraphQL layer that needs to be included in the http-log.
+-- This info is used to construct 'HttpLogMetadata m'
+type HttpLogGraphQLInfo = (CommonHttpLogMetadata, ParameterizedQueryHashList)
+
+emptyHttpLogGraphQLInfo :: HttpLogGraphQLInfo
+emptyHttpLogGraphQLInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, PQHSetEmpty)
+
 -- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
 -- common portion that is present regardless of 'm', and a monad-specific one defined in the
 -- 'HttpLog' instance.
@@ -215,12 +224,11 @@ type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
 buildHttpLogMetadata ::
   forall m.
   HttpLog m =>
-  ParameterizedQueryHashList ->
-  RequestMode ->
-  Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog) ->
+  HttpLogGraphQLInfo ->
+  ExtraUserInfo ->
   HttpLogMetadata m
-buildHttpLogMetadata paramQueryHashList requestMode batchQueryOperationLog =
-  (CommonHttpLogMetadata requestMode batchQueryOperationLog, buildExtraHttpLogMetadata @m paramQueryHashList)
+buildHttpLogMetadata (commonHttpLogMetadata, paramQueryHashList) extraUserInfo =
+  (commonHttpLogMetadata, buildExtraHttpLogMetadata @m paramQueryHashList extraUserInfo)
 
 -- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
 emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
@@ -276,7 +284,7 @@ class Monad m => HttpLog m where
 
   emptyExtraHttpLogMetadata :: ExtraHttpLogMetadata m
 
-  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraHttpLogMetadata m
+  buildExtraHttpLogMetadata :: ParameterizedQueryHashList -> ExtraUserInfo -> ExtraHttpLogMetadata m
 
   logHttpError ::
     -- | the logger
@@ -295,6 +303,7 @@ class Monad m => HttpLog m where
     QErr ->
     -- | list of request headers
     [HTTP.Header] ->
+    HttpLogMetadata m ->
     m ()
 
   logHttpSuccess ::
@@ -330,7 +339,7 @@ instance HttpLog m => HttpLog (TraceT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
+  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
 
   logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
@@ -340,7 +349,7 @@ instance HttpLog m => HttpLog (ReaderT r m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
+  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
 
   logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
@@ -350,7 +359,7 @@ instance HttpLog m => HttpLog (MetadataStorageT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h = lift $ logHttpError a b c d e f g h
+  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
 
   logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 

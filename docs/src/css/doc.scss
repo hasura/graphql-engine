@@ -37,7 +37,6 @@ pre code {
   background-color: var(--ifm-code-background);
 }
 
-
 .prism-code code {
   background-color: var(--color-gray-4);
   .theme-code-block-highlighted-line {
@@ -59,7 +58,6 @@ html[data-theme='dark'] {
     background-color: var(--color-gray-78);
   }
 }
-
 
 .theme-edit-this-page {
   display: flex;
@@ -181,8 +179,9 @@ html[data-theme='dark'] {
         }
       }
 
-      &:first-child .pagination-nav__label::before, &--next .pagination-nav__label::after {
-        background: url("/icons/arrow_right-light.svg") no-repeat;
+      &:first-child .pagination-nav__label::before,
+      &--next .pagination-nav__label::after {
+        background: url('/icons/arrow_right-light.svg') no-repeat;
       }
 
       .pagination-nav__label {
@@ -192,7 +191,8 @@ html[data-theme='dark'] {
   }
 
   .theme-edit-this-page {
-    &::before, &::after {
+    &::before,
+    &::after {
       filter: invert(1);
     }
 
@@ -202,4 +202,19 @@ html[data-theme='dark'] {
       color: var(--ifm-color-gray-0);
     }
   }
+
+  .tabs-container {
+    background: var(--color-gray-82);
+    code {
+      background: var(--color-gray-74);
+    }
+  }
+}
+
+// Tabs styling
+.tabs-container {
+  padding: 0 1rem;
+  padding-bottom: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: var(--ifm-global-shadow-lw);
 }

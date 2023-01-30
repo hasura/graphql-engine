@@ -1,6 +1,7 @@
 -- | Some helper functions for testing Aeson instances
 module Test.Aeson.Utils
-  ( testToFromJSON,
+  ( testFromJSON,
+    testToFromJSON,
     validateToJSONOpenApi,
     testToFromJSONToSchema,
     jsonRoundTrip,
@@ -18,6 +19,7 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types (parseEither)
 import Data.OpenApi
+import Data.Typeable (Proxy (..), Typeable, typeRep)
 import Data.Vector qualified as Vec
 import Hasura.Prelude
 import Hedgehog
@@ -26,10 +28,17 @@ import Hedgehog.Internal.Range
 import Test.Hspec
 import Test.Hspec.Hedgehog
 
-testToFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => a -> Value -> Spec
-testToFromJSON a v = do
+showType :: forall a. (Typeable a) => String
+showType = show $ typeRep (Proxy :: Proxy a)
+
+testFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a) => a -> Value -> Spec
+testFromJSON a v = do
   it "parses from JSON" $
     parseEither parseJSON v `shouldBe` Right a
+
+testToFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => a -> Value -> Spec
+testToFromJSON a v = do
+  testFromJSON a v
   it "encodes to JSON" $
     toJSON a `shouldBe` v
 
@@ -43,9 +52,9 @@ testToFromJSONToSchema a v = do
   testToFromJSON a v
   validateToJSONOpenApi a
 
-jsonRoundTrip :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
+jsonRoundTrip :: forall a. (HasCallStack, Typeable a, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
 jsonRoundTrip gen =
-  it "JSON roundtrips" $
+  it ("JSON roundtrips " <> showType @a) $
     hedgehog $ do
       a <- forAll gen
       tripping a toJSON (parseEither parseJSON)
@@ -59,7 +68,7 @@ jsonEncodingEqualsValue gen =
           decoded = decode encoded :: Maybe Value
       decoded === Just (toJSON a)
 
-jsonProperties :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
+jsonProperties :: (HasCallStack, Typeable a, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
 jsonProperties gen = do
   jsonRoundTrip gen
   jsonEncodingEqualsValue gen

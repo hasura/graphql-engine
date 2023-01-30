@@ -1485,11 +1485,11 @@
   border-radius: 3px;
   padding: 6px;
   font-size: 1em;
-  color: rgba(0,0,0,0.6);
-  background: rgba(0,0,0,0.1);
-  transition: all .1s ease;
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.1);
+  transition: all 0.1s ease;
   cursor: pointer;
-  height: 35px!important;
+  height: 35px !important;
   width: 162px !important;
   min-width: 65px;
   display: inline-block;
@@ -1499,7 +1499,7 @@
 }
 
 .paginationBtnDisabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed !important;
 }
 
@@ -1509,7 +1509,7 @@
   white-space: nowrap;
   text-align: center;
   font-family: 'Gudea';
-  color: #4D4D4D;
+  color: #4d4d4d;
   font-size: 14px;
   line-height: 1.42857;
 }
@@ -1518,7 +1518,7 @@
   display: inline-block;
   width: 70px;
   text-align: center;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 5px 7px;
   font-size: inherit;
   border-radius: 3px;
@@ -1580,5 +1580,5 @@
 }
 
 .muted {
-  color: #6B7280;
+  color: #6b7280;
 }

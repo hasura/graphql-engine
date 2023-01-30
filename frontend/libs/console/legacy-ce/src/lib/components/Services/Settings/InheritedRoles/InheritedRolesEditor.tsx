@@ -35,7 +35,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(props.isCollapsed);
 
   type Option = {
-    value: typeof allRoles[number];
+    value: (typeof allRoles)[number];
     isChecked: true | false;
   };
 

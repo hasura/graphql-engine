@@ -7,10 +7,9 @@ import (
 	"io/ioutil"
 
 	"github.com/buger/jsonparser"
+	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-
-	internalerrors "github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 func GetSourceKind(exportMetadata func() (io.Reader, error), sourceName string) (*hasura.SourceKind, error) {

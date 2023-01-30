@@ -1,6 +1,10 @@
 module Autodocodec.Extended
-  ( graphQLFieldNameCodec,
+  ( caseInsensitiveHashMapCodec,
+    caseInsensitiveTextCodec,
+    graphQLExecutableDocumentCodec,
+    graphQLFieldNameCodec,
     graphQLValueCodec,
+    graphQLSchemaDocumentCodec,
     hashSetCodec,
     hashSetCodecWith,
     integerCodec,
@@ -12,17 +16,48 @@ module Autodocodec.Extended
 where
 
 import Autodocodec
+import Data.Aeson (FromJSONKey, ToJSONKey)
+import Data.CaseInsensitive qualified as CI
+import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HashSet
 import Data.Scientific (Scientific (base10Exponent), floatingOrInteger)
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
+import Language.GraphQL.Draft.Parser qualified as G
+import Language.GraphQL.Draft.Parser qualified as GParser
+import Language.GraphQL.Draft.Printer qualified as G
+import Language.GraphQL.Draft.Printer qualified as GPrinter
 import Language.GraphQL.Draft.Syntax qualified as G
+import Text.Builder qualified as TB
+
+-- | Like 'hashMapCodec', but with case-insensitive keys.
+caseInsensitiveHashMapCodec ::
+  forall k a.
+  (CI.FoldCase k, Hashable k, FromJSONKey k, ToJSONKey k) =>
+  JSONCodec a ->
+  JSONCodec (M.HashMap (CI.CI k) a)
+caseInsensitiveHashMapCodec elemCodec =
+  dimapCodec
+    (mapKeys CI.mk)
+    (mapKeys CI.original)
+    $ hashMapCodec elemCodec
+
+-- | Codec for case-insensitive strings / text. The underlying value may be
+-- @Text@ or another type that implements @FoldCase@ and @HasCodec@.
+caseInsensitiveTextCodec :: forall a. (CI.FoldCase a, HasCodec a) => JSONCodec (CI.CI a)
+caseInsensitiveTextCodec = dimapCodec CI.mk CI.original codec
+
+graphQLExecutableDocumentCodec :: JSONCodec (G.ExecutableDocument G.Name)
+graphQLExecutableDocumentCodec = bimapCodec dec enc codec
+  where
+    dec = mapLeft T.unpack . G.parseExecutableDoc
+    enc = G.renderExecutableDoc
 
 -- | Codec for a GraphQL field name
 graphQLFieldNameCodec :: JSONCodec G.Name
-graphQLFieldNameCodec = bimapCodec dec enc codec
+graphQLFieldNameCodec = named "GraphQLName" $ bimapCodec dec enc codec
   where
     dec text =
       maybeToEither ("invalid GraphQL field name '" <> T.unpack text <> "'") $
@@ -69,6 +104,12 @@ graphQLValueCodec varCodec =
           dec _ = Left msg -- handle failure without exception when decoding
           enc _ = error msg -- encoding is supposed to be total so we need an exception here
        in bimapCodec dec enc nullCodec
+
+graphQLSchemaDocumentCodec :: JSONCodec G.SchemaDocument
+graphQLSchemaDocumentCodec = named "GraphQLSchema" $ bimapCodec dec enc $ codec @Text
+  where
+    dec = mapLeft T.unpack . GParser.parseSchemaDocument
+    enc = TB.run . GPrinter.schemaDocument
 
 -- | Serializes a hash set by converting it to a list. This matches the FromJSON
 -- and ToJSON instances in aeson.

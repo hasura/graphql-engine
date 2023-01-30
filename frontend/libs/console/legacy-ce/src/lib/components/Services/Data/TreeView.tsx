@@ -55,9 +55,9 @@ const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
   const caseSensitiveResults: SourceItem[] = [];
   const caseAgnosticResults: SourceItem[] = [];
   itemList.forEach(item => {
-    if (item.name.search(searchQuery) > -1) {
+    if (item.name.includes(searchQuery)) {
       caseSensitiveResults.push(item);
-    } else if (item.name.toLowerCase().search(searchQuery.toLowerCase()) > -1) {
+    } else if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       caseAgnosticResults.push(item);
     }
   });
@@ -412,6 +412,10 @@ const TreeView: React.FC<TreeViewProps> = ({
     availableFeatureFlagIds.gdcId
   );
 
+  const { enabled: isBigQueryEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.enabledNewUIForBigQuery
+  );
+
   if (items.length === 0 && !isGDCTreeViewEnabled) {
     return preLoadState ? (
       <div className={styles.treeNav}>
@@ -456,7 +460,7 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
-      {isGDCTreeViewEnabled ? (
+      {isGDCTreeViewEnabled || isBigQueryEnabled ? (
         <div id="tree-container" className="inline-block">
           <GDCTree onSelect={gdcItemClick} />
         </div>

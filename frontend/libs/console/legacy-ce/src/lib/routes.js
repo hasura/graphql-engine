@@ -37,12 +37,11 @@ import {
   INSECURE_TLS_ALLOW_LIST,
 } from './helpers/versionUtils';
 import AuthContainer from './components/Services/Auth/AuthContainer';
-import { PrometheusSettings } from './features/Prometheus';
 import { FeatureFlags } from './features/FeatureFlags';
 import { AllowListDetail } from './components/Services/AllowList';
 
 const routes = store => {
-  // load hasuractl migration status
+  // load hasuraCliServer migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
     const { dispatch } = store;
 
@@ -158,7 +157,6 @@ const routes = store => {
             {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
               <Route path="insecure-domain" component={InsecureDomains} />
             )}
-            <Route path="prometheus-settings" component={PrometheusSettings} />
             <Route path="feature-flags" component={FeatureFlags} />
           </Route>
           {dataRouter}

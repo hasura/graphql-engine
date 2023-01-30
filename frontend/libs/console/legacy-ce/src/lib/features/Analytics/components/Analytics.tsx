@@ -7,10 +7,12 @@ import { getOverrideHtmlAttributes } from '../core/getOverrideHtmlAttributes';
 import { programmaticallyTraceError } from '../core/programmaticallyTraceError';
 
 import { detectChildrenType } from './core/detectChildrenType';
-import { getHtmlAttributesInjectionMode } from './core/getHtmlAttributesInjectionMode';
 import { warnIfTitleElementIsPassed } from './core/warnIfTitleElementIsPassed';
-import { warnIfPassingHtmlAttributesToHtmlElements } from './core/warnIfPassingHtmlAttributesToHtmlElements';
+import { getHtmlAttributesInjectionMode } from './core/getHtmlAttributesInjectionMode';
 import { warnIfPassingHtmlAttributesToTexts } from './core/warnIfPassingHtmlAttributesToTexts';
+import { childrenAreKnownToAcceptHTMLAttributes } from './core/childrenAreKnownToAcceptHTMLAttributes';
+import { warnIfPassingHtmlAttributesToHtmlElements } from './core/warnIfPassingHtmlAttributesToHtmlElements';
+import { warnIfWrappingChildrenAcceptingHtmlAttributes } from './core/warnIfWrappingChildrenAcceptingHtmlAttributes';
 
 type AnalyticsProps = {
   /** It's called `name` instead of id because it does not have to be unique 😊 */
@@ -97,6 +99,12 @@ export function Analytics(props: AnalyticsProps) {
   if (passHtmlAttributesToChildren && isNotProduction) {
     if (type === 'text') warnIfPassingHtmlAttributesToTexts(name);
     if (type === 'htmlElement') warnIfPassingHtmlAttributesToHtmlElements(name);
+  }
+  if (
+    !passHtmlAttributesToChildren &&
+    childrenAreKnownToAcceptHTMLAttributes(typedChildren)
+  ) {
+    warnIfWrappingChildrenAcceptingHtmlAttributes(name);
   }
 
   //  --------------------------------------------------

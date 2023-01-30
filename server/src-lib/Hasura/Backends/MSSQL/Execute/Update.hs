@@ -22,7 +22,6 @@ import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -30,6 +29,7 @@ import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.IR.Update.Batch qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
 import Hasura.Session
@@ -46,7 +46,7 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
   queryTags <- ask
   let mssqlExecCtx = (_mscExecCtx sourceConfig)
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
-  if null $ updateOperations . _auBackend $ updateOperation
+  if IR.updateBatchIsEmpty $ _auUpdateVariant updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
     else pure $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
 

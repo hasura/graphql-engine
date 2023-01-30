@@ -137,7 +137,10 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    triggerOnReplication <- o .:? "trigger_on_replication" .!= defaultTriggerOnReplication @b
+    defTOR <- case defaultTriggerOnReplication @b of
+      Just (_, dt) -> pure dt
+      Nothing -> fail "No default setting for trigger_on_replication is defined for backend type."
+    triggerOnReplication <- o .:? "trigger_on_replication" .!= defTOR
     return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform cleanupConfig triggerOnReplication
     where
       checkEmptyCols spec =
@@ -382,20 +385,20 @@ askTabInfoFromTrigger ::
   m (TableInfo b)
 askTabInfoFromTrigger sourceName triggerName = do
   schemaCache <- askSchemaCache
-  getTabInfoFromSchemaCache schemaCache sourceName triggerName
+  tableInfoMaybe <- getTabInfoFromSchemaCache schemaCache sourceName triggerName
+  tableInfoMaybe `onNothing` throw400 NotExists errMsg
+  where
+    errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 getTabInfoFromSchemaCache ::
   (Backend b, QErrM m) =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
-  m (TableInfo b)
+  m (Maybe (TableInfo b))
 getTabInfoFromSchemaCache schemaCache sourceName triggerName = do
   let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources schemaCache
-  find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
-    `onNothing` throw400 NotExists errMsg
-  where
-    errMsg = "event trigger " <> triggerName <<> " does not exist"
+  pure $ find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
 
 askEventTriggerInfo ::
   forall b m.
@@ -551,9 +554,12 @@ getTableNameFromTrigger ::
   SchemaCache ->
   SourceName ->
   TriggerName ->
-  m (TableName b)
-getTableNameFromTrigger schemaCache sourceName triggerName =
-  (_tciName . _tiCoreInfo) <$> getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  m (Maybe (TableName b))
+getTableNameFromTrigger schemaCache sourceName triggerName = do
+  tableInfoMaybe <- getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  case tableInfoMaybe of
+    Nothing -> pure Nothing
+    Just tableInfo -> pure $ Just $ (_tciName . _tiCoreInfo) $ tableInfo
 
 runCleanupEventTriggerLog ::
   (MonadEventLogCleanup m, MonadError QErr m) =>
@@ -599,7 +605,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       case tlcs of
         TriggerAllSource -> do
           ifor_ (scSources schemaCache) $ \sourceName backendSourceInfo -> do
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _customSQLCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
         TriggerSource sourceNameLst -> do
           forM_ sourceNameLst $ \sourceName -> do
@@ -607,7 +613,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
               HM.lookup sourceName (scSources schemaCache)
                 `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _ _ _ :: SourceInfo b) -> do
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _customSQLCache _ _ _ :: SourceInfo b) -> do
               traverseTableHelper tableCache cleanupSwitch sourceName
     TriggerQualifier qualifierLst -> do
       forM_ qualifierLst $ \qualifier -> do
@@ -621,11 +627,14 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {} :: SourceInfo b) -> do
           forM_ triggerNames $ \triggerName -> do
             eventTriggerInfo <- askEventTriggerInfo @b sourceName triggerName
-            tableName <- getTableNameFromTrigger @b schemaCache sourceName triggerName
-            cleanupConfig <-
-              (etiCleanupConfig eventTriggerInfo)
-                `onNothing` throw400 NotExists ("cleanup config does not exist for " <> triggerNameToTxt triggerName)
-            updateCleanupStatusInMetadata @b cleanupConfig cleanupSwitch sourceName tableName triggerName
+            tableNameMaybe <- getTableNameFromTrigger @b schemaCache sourceName triggerName
+            case tableNameMaybe of
+              Nothing -> throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
+              Just tableName -> do
+                cleanupConfig <-
+                  (etiCleanupConfig eventTriggerInfo)
+                    `onNothing` throw400 NotExists ("cleanup config does not exist for " <> triggerNameToTxt triggerName)
+                updateCleanupStatusInMetadata @b cleanupConfig cleanupSwitch sourceName tableName triggerName
   pure successMsg
   where
     traverseTableHelper ::

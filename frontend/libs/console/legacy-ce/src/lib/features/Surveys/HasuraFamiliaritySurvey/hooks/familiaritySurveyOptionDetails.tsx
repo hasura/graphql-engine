@@ -10,7 +10,7 @@ export const familiaritySurveyOptionCode = [
 ] as const;
 
 export type FamiliaritySurveyOptionCode =
-  typeof familiaritySurveyOptionCode[number];
+  (typeof familiaritySurveyOptionCode)[number];
 
 const familiaritySurveyOptionDetails: Record<
   FamiliaritySurveyOptionCode,

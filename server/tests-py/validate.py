@@ -525,33 +525,32 @@ def get_conf_f(f):
     with open(f, 'r+') as c:
         return yaml.YAML().load(c)
 
-# https://yaml.readthedocs.io/en/latest/example.html#output-of-dump-as-a-string
-def dump_to_string(v):
-  import io
-  s = io.StringIO()
-  yaml.YAML().dump(v, stream=s)
-  return s.getvalue()
-
 def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
     hge_ctx.may_skip_test_teardown = False
     should_write_back = False
 
     def add_spec(file, conf):
         spec = None
-        if sconf.get('response') is None:
-          spec = PortToHaskell.CovertSetupSpec(
-            conf.get("description"),
-            file,
-            conf["url"],
-            dump_to_string(conf["query"])) # TODO: handle variables
-        else:
-          spec = PortToHaskell.PostSpec(
-            conf.get("description"),
-            file,
-            conf["url"],
-            conf["query"]["query"], # TODO: handle variables
-            conf["status"],
-            dump_to_string(conf["response"]))
+        response = conf.get('response')
+
+        status = conf.get('status')
+        if status is None:
+            status = 200
+
+        query = conf["query"]
+        if "query" in query:
+            query = query["query"]
+
+        headers = conf.get("headers")
+
+        spec = PortToHaskell.PostSpec(
+          conf.get("description"),
+          file,
+          conf["url"],
+          headers,
+          query, # TODO: handle variables
+          status,
+          response)
 
         PortToHaskell.with_test(hge_ctx.request.cls.__qualname__).add_spec(
             hge_ctx.request._pyfuncitem.originalname,

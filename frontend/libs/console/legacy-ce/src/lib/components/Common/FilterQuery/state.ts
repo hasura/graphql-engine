@@ -44,7 +44,6 @@ export const useFilterQuery = (
 ) => {
   const [state, setState] = React.useState(defaultState);
   const [rows, setRows] = React.useState<any[]>([]);
-  const [count, setCount] = React.useState<number>();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(false);
 
@@ -98,16 +97,6 @@ export const useFilterQuery = (
         query = {
           args: [
             getRunSqlQuery(
-              dataSource?.getDataTriggerLogsCountQuery?.(
-                triggerName,
-                triggerOp
-              ) ?? '',
-              currentSource ?? 'default',
-              false,
-              false,
-              currentDriver
-            ),
-            getRunSqlQuery(
               dataSource?.getDataTriggerLogsQuery?.(
                 triggerOp,
                 triggerName,
@@ -138,10 +127,9 @@ export const useFilterQuery = (
     ).then(
       (data: any) => {
         if (triggerType === 'data') {
-          setCount(Number(data?.[0].result?.[1]?.[0]));
           // formatting of the data
           const formattedData: Record<string, any>[] = parseEventsSQLResp(
-            data?.[1]?.result ?? []
+            data?.[0]?.result ?? []
           );
           setRows(formattedData);
         } else if (triggerOp !== 'invocation') {
@@ -162,9 +150,6 @@ export const useFilterQuery = (
             ...s,
             sorts: newSorts,
           }));
-        }
-        if (triggerType !== 'data') {
-          setCount(data?.count ?? 10);
         }
       },
       () => {
@@ -223,7 +208,6 @@ export const useFilterQuery = (
     error,
     runQuery,
     state,
-    count,
     setState: setter,
   };
 };

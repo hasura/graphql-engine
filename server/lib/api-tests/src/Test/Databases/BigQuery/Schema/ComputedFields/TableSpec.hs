@@ -9,18 +9,15 @@ module Test.Databases.BigQuery.Schema.ComputedFields.TableSpec (spec) where
 import Data.Aeson as Aeson
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
-import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
-import Harness.Test.BackendType (BackendType (..))
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (SchemaName (..), Table (..), table)
 import Harness.Test.Schema qualified as Schema
-import Harness.Test.SchemaName (SchemaName (..))
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -31,12 +28,12 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+        [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ]
                   <> setupFunction testEnv
-                  <> setupMetadata testEnv BackendType.BigQuery
+                  <> setupMetadata testEnv
             }
         ]
     )
@@ -127,21 +124,18 @@ setupFunction testEnv =
           }
       ]
 
-setupMetadata :: TestEnvironment -> BackendType -> [Fixture.SetupAction]
-setupMetadata testEnv backend =
-  let schemaName :: Schema.SchemaName
-      schemaName = Schema.getSchemaName testEnv
+setupMetadata :: TestEnvironment -> [Fixture.SetupAction]
+setupMetadata testEnvironment =
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      schemaName :: Schema.SchemaName
+      schemaName = Schema.getSchemaName testEnvironment
 
       source :: String
-      source = Fixture.defaultSource backend
-
-      backendPrefix :: String
-      backendPrefix = BackendType.defaultBackendTypeString backend
+      source = BackendType.backendSourceName backendTypeMetadata
    in -- Add computed fields
       [ Fixture.SetupAction
           { Fixture.setupAction =
               Schema.trackComputedField
-                backend
                 source
                 authorTable
                 "fetch_articles_implicit_return"
@@ -151,20 +145,19 @@ setupMetadata testEnv backend =
                   name: article
                   dataset: *schemaName
                 |]
-                testEnv,
+                testEnvironment,
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
           { Fixture.setupAction =
               Schema.trackComputedField
-                backend
                 source
                 authorTable
                 "fetch_articles_explicit_return"
                 "search_articles_explicit_return"
                 [yaml| a_id: id |]
                 Aeson.Null
-                testEnv,
+                testEnvironment,
             Fixture.teardownAction = \_ -> pure ()
           }
       ]

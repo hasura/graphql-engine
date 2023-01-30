@@ -80,8 +80,8 @@ const trackAllItems =
     if (isMigration) {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
         url = currMigrationMode
-          ? Endpoints.hasuractlMigrate
-          : Endpoints.hasuractlMetadata;
+          ? Endpoints.hasuraCliServerMigrate
+          : Endpoints.hasuraCliServerMetadata;
       }
       request = {
         name: migrationName,
@@ -157,7 +157,7 @@ const executeSQL =
       args: schemaChangesUp,
     };
 
-    // check if its a migration and send to hasuractl migrate
+    // check if its a migration and send to hasuraCliServer migrate
     if (isMigration) {
       url = migrateUrl;
       requestBody = {

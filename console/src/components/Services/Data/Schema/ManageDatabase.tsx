@@ -10,6 +10,8 @@ import {
   FaRedoAlt,
   FaExternalLinkAlt,
 } from 'react-icons/fa';
+import { browserHistory } from 'react-router';
+import produce from 'immer';
 import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
 import { useMetadataSource } from '@/features/MetadataAPI';
@@ -20,7 +22,11 @@ import {
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { nativeDrivers } from '@/features/DataSource';
 import { getProjectId } from '@/utils/cloudConsole';
-import { TaskEvent, useCheckDatabaseLatency } from '@/features/ConnectDB';
+import {
+  CheckDatabaseLatencyResponse,
+  useCheckDatabaseLatency,
+  useUpdateProjectRegionChangeStat,
+} from '@/features/ConnectDB';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { isCloudConsole } from '@/utils';
 import globals from '@/Globals';
@@ -177,7 +183,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </span>
         )}
       </td>
-      <td className="px-sm py-xs max-w-xs align-top">
+      <td className="px-sm py-xs max-w-xs align-center">
         <CollapsibleToggle
           dataSource={dataSource}
           dbVersion={dbVersion}
@@ -196,7 +202,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           </ToolTip>
         )}
       </td>
-      <td className="px-sm py-xs max-w-xs align-top break-all">
+      <td className="px-sm py-xs max-w-xs align-center break-all">
         {showUrl ? (
           typeof dataSource.url === 'string' ? (
             dataSource.url
@@ -345,11 +351,15 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
     setFireLatencyRequest(true);
   };
 
+  const insertProjectRegionChangeStatMutation =
+    useUpdateProjectRegionChangeStat();
+
   const openUpdateProjectRegionPage = () => {
     const projectId = getProjectId(globals);
     if (!projectId) {
       return;
     }
+    insertProjectRegionChangeStatMutation.mutate(queryResponse.data);
 
     const cloudDetailsPage = `${window.location.protocol}//${window.location.host}/project/${projectId}/details?open_update_region_drawer=true`;
 
@@ -357,11 +367,13 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   };
 
   const [showCheckLatencyButton, setLatencyButtonVisibility] = useState(
-    isPgMssqlSourceConnected && isCloudConsole(globals)
+    sourcesFromMetadata.length !== 0 &&
+      isPgMssqlSourceConnected &&
+      isCloudConsole(globals)
   );
 
   const [latencyCheckData, setLatencyCheckData] = useState<
-    TaskEvent | undefined
+    CheckDatabaseLatencyResponse | undefined
   >(undefined);
 
   const [showErrorIndicator, setShowErrorIndicator] = useState(false);
@@ -380,7 +392,25 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   const showAccelerateProjectSection =
     isCloudConsole(globals) &&
     !showCheckLatencyButton &&
-    !checkHighLatencySources(latencyCheckData);
+    !checkHighLatencySources(latencyCheckData) &&
+    (!queryResponse.isLoading || !queryResponse.isFetching);
+
+  useEffect(() => {
+    if (!location.search.includes('trigger_db_latency_check')) {
+      return;
+    }
+
+    setFireLatencyRequest(true);
+
+    const newLocation = produce(browserHistory.getCurrentLocation(), draft => {
+      // NOTE: the next few lines will help remove the query param once we trigger
+      // a request to check the db latency to avoid situations where might
+      // end up rendering the page in loops
+      delete draft.query.trigger_db_latency_check;
+    });
+
+    browserHistory.replace(newLocation);
+  }, []);
 
   return (
     <RightContainer>

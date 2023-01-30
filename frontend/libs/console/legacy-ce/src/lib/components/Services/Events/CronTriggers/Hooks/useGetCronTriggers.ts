@@ -4,6 +4,8 @@ import { useAppSelector } from '@/store';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { CronTriggerAPIResult, ScheduledTrigger } from '../../types';
 
+export const CRON_TRIGGERS_QUERY_KEY = 'cronTrigger';
+
 export function useGetCronTriggers(
   queryOptions?: Omit<
     UseQueryOptions<
@@ -30,7 +32,7 @@ export function useGetCronTriggers(
   };
 
   return useQuery({
-    queryKey: 'cronTrigger',
+    queryKey: CRON_TRIGGERS_QUERY_KEY,
     queryFn,
     ...queryOptions,
     select: data => {

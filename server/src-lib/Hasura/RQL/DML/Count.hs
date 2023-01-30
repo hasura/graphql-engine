@@ -147,6 +147,7 @@ countQToTx (u, p) = do
     encodeCount (PG.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
+-- TODO: What does this do?
 runCount ::
   ( QErrM m,
     UserInfoM m,
@@ -160,4 +161,4 @@ runCount ::
   m EncJSON
 runCount q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
-  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadOnly . countQToTx
+  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . countQToTx

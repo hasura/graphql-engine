@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "executors": {
+    "build-server-assets": {
+      "implementation": "./src/executors/build-server-assets/executor",
+      "schema": "./src/executors/build-server-assets/schema.json",
+      "description": "Used to build server complient assets from the existing build"
+    }
+  }
+}

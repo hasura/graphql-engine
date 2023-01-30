@@ -38,15 +38,17 @@ type CatalogStateOperations interface {
 type SourceKind string
 
 const (
-	SourceKindPG    SourceKind = "postgres"
-	SourceKindMSSQL SourceKind = "mssql"
-	SourceKindCitus SourceKind = "citus"
+	SourceKindPG        SourceKind = "postgres"
+	SourceKindMSSQL     SourceKind = "mssql"
+	SourceKindCitus     SourceKind = "citus"
+	SourceKindCockroach SourceKind = "cockroach"
 )
 
 type V2Query interface {
 	PGSourceOps
 	MSSQLSourceOps
 	CitusSourceOps
+	CockroachSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 	Bulk([]RequestBody) (io.Reader, error)
 }

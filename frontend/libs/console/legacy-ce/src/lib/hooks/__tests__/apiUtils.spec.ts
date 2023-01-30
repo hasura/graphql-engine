@@ -2,6 +2,7 @@ import 'whatwg-fetch';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Api } from '../apiUtils';
+import { APIError } from '../error';
 
 const server = setupServer();
 
@@ -118,7 +119,7 @@ describe('API functions', () => {
             );
             const response = Api.get({ url, headers });
             await expect(response).rejects.toStrictEqual(
-              new Error(MOCK_ERROR_RESPONSE_STANDARD.message)
+              new APIError(MOCK_ERROR_RESPONSE_STANDARD.message)
             );
           });
           it('should handle unexpected error object', async () => {
@@ -132,7 +133,7 @@ describe('API functions', () => {
             );
             const response = Api.get({ url, headers });
             await expect(response).rejects.toStrictEqual(
-              new Error(JSON.stringify(REST_BODY.object))
+              new APIError(JSON.stringify(REST_BODY.object))
             );
           });
           it('should not call transFrom function on Error', async () => {
@@ -149,7 +150,7 @@ describe('API functions', () => {
               d => d.invalid
             );
             await expect(response).rejects.toStrictEqual(
-              new Error(MOCK_ERROR_RESPONSE_STANDARD.message)
+              new APIError(MOCK_ERROR_RESPONSE_STANDARD.message)
             );
           });
         });
@@ -165,10 +166,27 @@ describe('API functions', () => {
             );
             const response = Api.get({ url, headers });
             await expect(response).rejects.toStrictEqual(
-              new Error(MOCK_ERROR_STRING)
+              new APIError(MOCK_ERROR_STRING)
             );
           });
         });
+      });
+    });
+
+    describe('errorTransform', () => {
+      it('when errorTransform is passed, should call the errorTransform function with the raw error', async () => {
+        server.use(
+          rest.get(url, (_req, res, context) => {
+            // Make every request failing with { foo: 'bar' }
+            return res(context.json({ foo: 'bar' }), context.status(400));
+          })
+        );
+
+        const errorTransform = jest.fn(error => error);
+        const promise = Api.get({ url, headers }, undefined, errorTransform);
+
+        await expect(promise).rejects.toEqual({ foo: 'bar' });
+        expect(errorTransform).toBeCalledWith({ foo: 'bar' });
       });
     });
   });

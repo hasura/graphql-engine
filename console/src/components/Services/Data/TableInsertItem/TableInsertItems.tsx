@@ -3,7 +3,6 @@ import { AppDispatch } from '@/store';
 import { Button } from '@/new-components/Button';
 import { RightContainer } from '@/components/Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';
-import { NotFoundError } from '../../../Error/PageNotFound';
 import {
   findTable,
   isFeatureSupported,
@@ -107,7 +106,7 @@ export const TableInsertItems = ({
   );
 
   if (!currentTable) {
-    throw new NotFoundError();
+    return null;
   }
 
   const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;

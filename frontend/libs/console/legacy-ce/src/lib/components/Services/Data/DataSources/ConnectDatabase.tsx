@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { canAccessReadReplica } from '@/utils/permissions';
+import { isPostgres } from '@/metadata/dataSource.utils';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
@@ -141,7 +142,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
 
       if (
         typeof databaseUrl === 'string' &&
-        currentSourceInfo.kind === 'postgres'
+        isPostgres(currentSourceInfo.kind)
       ) {
         const p = parsePgUrl(databaseUrl);
         connectDBDispatch({

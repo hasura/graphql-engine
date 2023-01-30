@@ -44,7 +44,7 @@ const FilterQuery: React.FC<Props> = props => {
     triggerType,
   } = props;
 
-  const { rows, count, runQuery, state, setState } = useFilterQuery(
+  const { rows, runQuery, state, setState } = useFilterQuery(
     generateTableDef(table.table_name, table.table_schema),
     dispatch,
     presets,
@@ -58,7 +58,7 @@ const FilterQuery: React.FC<Props> = props => {
   return (
     <Analytics name="EventFilterQuery" {...REDACT_EVERYTHING}>
       <div className={styles.add_mar_top}>
-        {render(rows, count, state, setState, runQuery)}
+        {render(rows, state, setState, runQuery)}
       </div>
     </Analytics>
   );

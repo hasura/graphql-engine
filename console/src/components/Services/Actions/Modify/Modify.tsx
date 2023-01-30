@@ -47,6 +47,7 @@ import {
   ResponseTransformStateBody,
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import {
+  QueryParams,
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
@@ -228,7 +229,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
     transformDispatch(setRequestUrlPreview(requestUrlPreview));
   };
 
-  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+  const requestQueryParamsOnChange = (requestQueryParams: QueryParams) => {
     transformDispatch(setRequestQueryParams(requestQueryParams));
   };
 
@@ -502,6 +503,7 @@ const Modify: React.FC<ModifyProps> = ({
     dispatch={dispatch}
   >
     <ModifyAction
+      key={params.actionName}
       allActions={allActions}
       allTypes={allTypes}
       dispatch={dispatch}

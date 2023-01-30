@@ -28,17 +28,14 @@ const preLoginHook = (nextState, replaceState, cb) => {
   }
   const parsed = parseQueryString(location.search);
 
-  const isAutoLogin = ('auto_login' in parsed &&
-    (
-      parsed.auto_login ||
-      parsed.auto_login === 'true'
-    )) || false;
+  const isAutoLogin =
+    ('auto_login' in parsed &&
+      (parsed.auto_login || parsed.auto_login === 'true')) ||
+    false;
 
   if (hasOauthLoggedIn) {
     initiateOAuthRequest(parsed, isAutoLogin);
-  } else if (
-    isAutoLogin
-  ) {
+  } else if (isAutoLogin) {
     initiateOAuthRequest(parsed, isAutoLogin);
     return;
   } else {

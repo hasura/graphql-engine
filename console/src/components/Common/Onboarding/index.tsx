@@ -146,11 +146,14 @@ const Onboarding: React.FC<OnboardingProps> = ({
 
   React.useEffect(() => {
     const show = getLSItem(LS_KEYS.showConsoleOnboarding) || 'true';
-    const isCloudEnv = !!isCloudConsole(globals);
 
-    // Only show onboarding popup on bottom right if environment is not cloud console
-    setVisible(show === 'true' && !isCloudEnv);
+    setVisible(show === 'true');
   }, []);
+
+  // Only show onboarding popup on bottom right if environment is not cloud console
+  if (isCloudConsole(globals)) {
+    return null;
+  }
 
   const togglePopup = () => {
     setVisible(pre => {

@@ -6,6 +6,7 @@ where
 
 import Control.Lens ((%~), (&))
 import Control.Monad (unless)
+import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson (ToJSON (..), Value)
 import Data.Algorithm.Diff (Diff, PolyDiff (..), getDiff)
@@ -18,7 +19,7 @@ import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API (FieldName, FieldValue, deserializeAsRelationshipFieldValue, mkRelationshipFieldValue, qrRows)
 import System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLayer (..), SGR (..), hSupportsANSIColor, setSGRCode)
 import System.IO (stdout)
-import Test.Hspec (Expectation, expectationFailure)
+import Test.Sandwich (expectationFailure)
 import Prelude
 
 newtype YamlShow = YamlShow {unYamlShow :: Value}
@@ -30,13 +31,13 @@ instance Show YamlShow where
 -- | Compares two JSON values for equality, but prints their diff upon failure
 -- as formatted YAML, which is a much nicer way to visualise the difference in
 -- expected vs actual.
-jsonShouldBe :: (HasCallStack, ToJSON value) => value -> value -> Expectation
+jsonShouldBe :: (HasCallStack, ToJSON value, MonadThrow m, MonadIO m) => value -> value -> m ()
 jsonShouldBe actual expected =
   shouldBeWithLineDiff (YamlShow $ toJSON actual) (YamlShow $ toJSON expected)
 
 -- | Compares two lists of response rows, but normalizes them first to remove
 -- immaterial differences that show up when diffing in JSON/YAML
-rowsShouldBe :: HasCallStack => [HashMap FieldName FieldValue] -> [HashMap FieldName FieldValue] -> Expectation
+rowsShouldBe :: (HasCallStack, MonadThrow m, MonadIO m) => [HashMap FieldName FieldValue] -> [HashMap FieldName FieldValue] -> m ()
 rowsShouldBe actual expected =
   (normalize <$> actual) `jsonShouldBe` (normalize <$> expected)
 
@@ -64,7 +65,7 @@ normalize =
               queryResponse & qrRows . traverse . traverse %~ normalize
     )
 
-shouldBeWithLineDiff :: (HasCallStack, Show value, Eq value) => value -> value -> Expectation
+shouldBeWithLineDiff :: (HasCallStack, Show value, Eq value, MonadThrow m, MonadIO m) => value -> value -> m ()
 shouldBeWithLineDiff actual expected =
   unless (actual == expected) $
     expectationFailure =<< renderDiffError actual expected

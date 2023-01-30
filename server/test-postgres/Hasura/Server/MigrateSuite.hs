@@ -200,4 +200,4 @@ runTx' ::
   PGExecCtx ->
   PG.TxET QErr m a ->
   m a
-runTx' pgExecCtx = liftEitherM . runExceptT . runTx pgExecCtx PG.ReadWrite
+runTx' pgExecCtx = liftEitherM . runExceptT . _pecRunTx pgExecCtx (PGExecCtxInfo (Tx PG.ReadWrite Nothing) InternalRawQuery)

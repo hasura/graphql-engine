@@ -22,17 +22,6 @@ module.exports = {
       config = await rootMain.webpackFinal(config, { configType });
     }
 
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        CONSOLE_ASSET_VERSION: Date.now().toString(),
-        // 'process.hrtime': () => null,
-        __CLIENT__: true,
-        __SERVER__: false,
-        __DEVELOPMENT__: true,
-        __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
-      })
-    );
-
     return config;
   },
 };

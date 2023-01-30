@@ -10,7 +10,7 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2019", "dom", "dom.iterable"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
@@ -33,7 +33,8 @@
       ],
       "@hasura/console-oss/lib/main": [
         "libs/console/legacy-ce/src/exports/main.js"
-      ]
+      ],
+      "@hasura/internal-plugin": ["libs/nx/internal-plugin/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

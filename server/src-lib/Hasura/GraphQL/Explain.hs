@@ -24,6 +24,7 @@ import Hasura.GraphQL.Execute.Resolve qualified as ER
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Transport.Backend
+import Hasura.GraphQL.Transport.HTTP.Protocol (_grOperationName, _unOperationName)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Metadata.Class
@@ -33,6 +34,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 data GQLExplain = GQLExplain
   { _gqeQuery :: !GH.GQLReqParsed,
@@ -53,10 +55,12 @@ explainQueryField ::
     MonadIO m
   ) =>
   UserInfo ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   RootFieldAlias ->
   QueryRootField UnpreparedValue ->
   m EncJSON
-explainQueryField userInfo fieldName rootField = do
+explainQueryField userInfo reqHeaders operationName fieldName rootField = do
   case rootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
@@ -69,7 +73,7 @@ explainQueryField userInfo fieldName rootField = do
           let (newDB, remoteJoins) = RJ.getRemoteJoinsQueryDB db
           unless (isNothing remoteJoins) $
             throw400 InvalidParams "queries with remote relationships cannot be explained"
-          mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB
+          mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB reqHeaders operationName
       AB.dispatchAnyBackend @BackendTransport step runDBQueryExplain
 
 explainGQLQuery ::
@@ -81,9 +85,10 @@ explainGQLQuery ::
     MonadQueryTags m
   ) =>
   SchemaCache ->
+  [HTTP.Header] ->
   GQLExplain ->
   m EncJSON
-explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery sc reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
@@ -99,7 +104,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList
-        <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
+        <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
@@ -114,7 +119,8 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
-      validSubscription <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash
+      -- RequestContext are not necessary for EXPLAIN API
+      validSubscription <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do

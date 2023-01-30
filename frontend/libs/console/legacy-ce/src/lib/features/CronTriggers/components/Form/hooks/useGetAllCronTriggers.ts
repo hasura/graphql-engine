@@ -8,6 +8,7 @@ interface GetCronTriggersResponse {
   cron_triggers: CronTrigger[];
 }
 
+export const ALL_CRON_TRIGGERS_QUERY_KEY = 'allCronTriggers';
 export const useGetAllCronTriggers = () => {
   const headers = useAppSelector(state => state.tables.dataHeaders);
 
@@ -17,7 +18,7 @@ export const useGetAllCronTriggers = () => {
     args: {},
   };
 
-  return useQuery(['allCronTriggers'], () =>
+  return useQuery([ALL_CRON_TRIGGERS_QUERY_KEY], () =>
     Api.post<GetCronTriggersResponse>({
       headers,
       body,

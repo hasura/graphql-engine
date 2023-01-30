@@ -7,6 +7,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec
@@ -14,7 +15,7 @@ import Test.Hspec
 spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
-    ( (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+    ( (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
         { Fixture.setupTeardown = \(testEnvironment, _) ->
             [ Postgres.setupTablesAction schema testEnvironment,
               functionSetup testEnvironment,
@@ -52,25 +53,22 @@ schema =
 
 functionSetup :: TestEnvironment -> Fixture.SetupAction
 functionSetup testEnvironment =
-  let schemaName = T.unpack $ unSchemaName (getSchemaName testEnvironment)
-   in Fixture.SetupAction
-        { setupAction =
-            Postgres.run_ testEnvironment $
-              "CREATE FUNCTION "
-                ++ schemaName
-                ++ ".authors(author_row "
-                ++ schemaName
-                ++ ".author) \
-                   \RETURNS SETOF "
-                ++ schemaName
-                ++ ".author AS $$ \
-                   \  SELECT * \
-                   \  FROM "
-                ++ schemaName
-                ++ ".author \
-                   \$$ LANGUAGE sql STABLE;",
-          teardownAction = \_ -> Postgres.run_ testEnvironment $ "DROP FUNCTION " ++ schemaName ++ ".authors;"
-        }
+  let schemaName = unSchemaName (getSchemaName testEnvironment)
+   in SetupAction.noTeardown $
+        Postgres.run_ testEnvironment $
+          "CREATE FUNCTION "
+            <> schemaName
+            <> ".authors(author_row "
+            <> schemaName
+            <> ".author) \
+               \RETURNS SETOF "
+            <> schemaName
+            <> ".author AS $$ \
+               \  SELECT * \
+               \  FROM "
+            <> schemaName
+            <> ".author \
+               \$$ LANGUAGE sql STABLE;"
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -88,5 +86,5 @@ tests _opts = do
       --   "path": "$"
       -- }
       Postgres.runSQL
-        ("alter table \"" ++ schemaName ++ "\".\"author\" add column \"iae\" integer\n null;")
+        ("alter table \"" <> schemaName <> "\".\"author\" add column \"iae\" integer\n null;")
         testEnvironment

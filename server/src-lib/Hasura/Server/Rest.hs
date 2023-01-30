@@ -99,7 +99,6 @@ runCustomEndpoint ::
     MonadQueryLog m,
     GH.MonadExecuteQuery m,
     MonadMetadataStorage (MetadataStorageT m),
-    HttpLog m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -111,7 +110,7 @@ runCustomEndpoint ::
   Wai.IpAddress ->
   RestRequest EndpointMethod ->
   EndpointTrie GQLQueryWithText ->
-  m (HttpLogMetadata m, HttpResponse EncJSON)
+  m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
@@ -143,9 +142,8 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
               -- through to the /v1/graphql endpoint.
               (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
                 (gqlOperationLog, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
-                let httpLogMetadata =
-                      buildHttpLogMetadata @m (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)) RequestModeNonBatchable Nothing
-                return (httpLogMetadata, fst <$> resp)
+                let httpLoggingGQInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)))
+                return (httpLoggingGQInfo, fst <$> resp)
               case sequence handlerResp of
                 Just resp -> pure (httpLoggingMetadata, fmap encodeHTTPResp resp)
                 -- a Nothing value here indicates a failure to parse the cached request from redis.

@@ -13,7 +13,7 @@ import {
   dataSource,
 } from '../../../../dataSources';
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
-import { isStringArray } from '../../../Common/utils/jsUtils';
+import { isArray, isStringArray } from '../../../Common/utils/jsUtils';
 import { generateTableDef } from '../../../../dataSources';
 import { getTableConfiguration } from '../TableBrowseRows/utils';
 
@@ -65,9 +65,9 @@ const editItem = (tableName, colValues) => {
         } else if (Reals.indexOf(colType) > 0) {
           _setObject[colName] = parseFloat(colValue);
         } else if (colType === 'boolean') {
-          if (colValue === 'true') {
+          if (colValue === 'true' || colValue === true) {
             _setObject[colName] = true;
-          } else if (colValue === 'false') {
+          } else if (colValue === 'false' || colValue === false) {
             _setObject[colName] = false;
           } else {
             _setObject[colName] = null;
@@ -77,7 +77,8 @@ const editItem = (tableName, colValues) => {
           colType === dataSource.columnDataTypes.JSONDTYPE
         ) {
           try {
-            _setObject[colName] = JSON.parse(colValue);
+            _setObject[colName] =
+              typeof colValue === 'string' ? JSON.parse(colValue) : colValue;
           } catch (e) {
             errorMessage =
               colName +
@@ -92,6 +93,16 @@ const editItem = (tableName, colValues) => {
           try {
             const arr = JSON.parse(colValue);
             _setObject[colName] = dataSource.arrayToPostgresArray(arr);
+          } catch {
+            errorMessage =
+              colName + ' :: could not read ' + colValue + ' as a valid array';
+          }
+        } else if (
+          colType === dataSource.columnDataTypes.ARRAY &&
+          isArray(colValue)
+        ) {
+          try {
+            _setObject[colName] = dataSource.arrayToPostgresArray(colValue);
           } catch {
             errorMessage =
               colName + ' :: could not read ' + colValue + ' as a valid array';

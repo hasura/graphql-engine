@@ -14,15 +14,22 @@ sidebar_position: 16
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Railway Postgres Database
-
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+# Connecting Hasura to a Railway Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing Railway Postgres database to a Hasura Cloud project. If you're
-exploring Railway Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
-out their [docs](https://railway.app/heroku) before continuing below.
+This guide explains how to connect a new or existing
+[Railway Postgres database](https://docs.railway.app/databases/postgresql) to a Hasura instance, either on
+[Hasura Cloud](https://cloud.hasura.io) or via one of our [self-hosted](/deployment/deployment-guides/index.mdx)
+solutions. If you're exploring Railway Postgres and are interested in migrating an existing Postgres database - such as
+from Heroku - check out their [docs](https://railway.app/heroku) before continuing below.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
+already have a project running, skip to [step 3](#create-pg-db-railway).
+
+:::
 
 ## Step 1: Sign up or log in to Hasura Cloud
 
@@ -33,27 +40,26 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+Postgres Database URL. We'll create this in the next step and then come back here.
 
-You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
-
-## Step 3: Create a Postgres DB on Railway ([skip if you have an existing DB](#get-db-url))
+## Step 3: Create a Postgres DB on Railway {#create-pg-db-railway}
 
 Log into [Railway](https://railway.app/dashboard).
 
 From your dashboard, click `New Project`:
 
-<Thumbnail src='/img/cloud-dbs/railway/railway-new-project.png' alt='Create a new project with Railway' width='700px' />
+<Thumbnail src="/img/cloud-dbs/railway/railway-new-project.png" alt="Create a new project with Railway" width="700px" />
 
 Select `Provision PostgreSQL`:
 
-<Thumbnail src='/img/cloud-dbs/railway/railway-new-pg.png' alt='Create a new PG db with Railway' width='700px' />
+<Thumbnail src="/img/cloud-dbs/railway/railway-new-pg.png" alt="Create a new PG db with Railway" width="700px" />
 
 Railway will redirect you to the project's dashboard. After a few seconds, you should see the `Activity` card update
 with information about your new instance. Congratulations! You've now created a Postgres instance on Railway which you
@@ -70,17 +76,17 @@ postgresql://<user-name>:<password>@<host-server>:<port>/<database-name>
 Click on the `PostgreSQL` card to see details related to this instance.
 
 <Thumbnail
-  src='/img/cloud-dbs/railway/railway-choose-pg.png'
-  alt='Access your the details of the db from the card'
-  width='700px'
+  src="/img/cloud-dbs/railway/railway-choose-pg.png"
+  alt="Access your the details of the db from the card"
+  width="700px"
 />
 
 Choose the `Connect` tab and copy the `Postgres Connection URL`:
 
 <Thumbnail
-  src='/img/cloud-dbs/railway/railway-connection-string.png'
-  alt='Go to the connect tab and grab the connection string'
-  width='700px'
+  src="/img/cloud-dbs/railway/railway-connection-string.png"
+  alt="Go to the connect tab and grab the connection string"
+  width="700px"
 />
 
 ## Step 5: Finish connecting the database
@@ -88,9 +94,9 @@ Choose the `Connect` tab and copy the `Postgres Connection URL`:
 Back on the Hasura Console, enter the database URL that we retrieved in the previous step:
 
 <Thumbnail
-  src='/img/cloud-dbs/render/render-connect-db.png'
-  alt='Connect the database on Hasura Console'
-  width='700px'
+  src="/img/cloud-dbs/render/render-connect-db.png"
+  alt="Connect the database on Hasura Console"
+  width="700px"
 />
 
 Then click `Connect Database`.
@@ -105,19 +111,19 @@ of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
 
 ## Next steps
 
-You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
-[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
 
-You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
-[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
-[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
-[custom domains](/projects/domains.mdx#manage-project-domains)).
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+  [env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+  [custom domains](/projects/domains.mdx#manage-project-domains)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

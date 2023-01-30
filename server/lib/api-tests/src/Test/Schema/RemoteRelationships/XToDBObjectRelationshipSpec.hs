@@ -29,11 +29,19 @@ import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction as SetupAction
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment
+  ( GlobalTestEnvironment,
+    Server,
+    TestEnvironment,
+    focusFixtureLeft,
+    focusFixtureRight,
+    stopServer,
+  )
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (HasCallStack, SpecWith, describe, it)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -94,50 +102,38 @@ type LHSFixture = Value -> Fixture.Fixture (Maybe Server)
 
 lhsPostgres :: LHSFixture
 lhsPostgres tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+  (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsPostgresSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsPostgresSetup tableName testEnv)
         ]
     }
 
 lhsCitus :: LHSFixture
 lhsCitus tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+  (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsCitusMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsCitusSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsCitusTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsCitusSetup tableName testEnv)
         ]
     }
 
 lhsCockroach :: LHSFixture
 lhsCockroach tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+  (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsCockroachSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsCockroachTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsCockroachSetup tableName testEnv)
         ],
       Fixture.customOptions = Nothing
     }
 
 lhsSQLServer :: LHSFixture
 lhsSQLServer tableName =
-  (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+  (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
     { Fixture.mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
       Fixture.setupTeardown = \testEnv ->
-        [ Fixture.SetupAction
-            { Fixture.setupAction = lhsSQLServerSetup tableName testEnv,
-              Fixture.teardownAction = \_ -> lhsSQLServerTeardown testEnv
-            }
+        [ SetupAction.noTeardown (lhsSQLServerSetup tableName testEnv)
         ]
     }
 
@@ -169,12 +165,9 @@ rhsPostgres =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsPostgresSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsPostgresSetup testEnv)
               ]
           }
    in (table, context)
@@ -187,12 +180,9 @@ rhsCitus =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+        (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsCitusSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsCitusTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsCitusSetup testEnv)
               ]
           }
    in (table, context)
@@ -205,12 +195,9 @@ rhsCockroach =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+        (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsCockroachSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsCockroachTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsCockroachSetup testEnv)
               ],
             Fixture.customOptions = Nothing
           }
@@ -224,12 +211,9 @@ rhsSQLServer =
       name: album
     |]
       context =
-        (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        (Fixture.fixture $ Fixture.Backend SQLServer.backendTypeMetadata)
           { Fixture.setupTeardown = \testEnv ->
-              [ Fixture.SetupAction
-                  { Fixture.setupAction = rhsSQLServerSetup testEnv,
-                    Fixture.teardownAction = \_ -> rhsSQLServerTeardown testEnv
-                  }
+              [ SetupAction.noTeardown (rhsSQLServerSetup testEnv)
               ]
           }
    in (table, context)
@@ -282,9 +266,10 @@ album =
 lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
-lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsPostgresSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -299,7 +284,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment track
   Postgres.insertTable testEnvironment track
-  Schema.trackTable Fixture.Postgres sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -341,19 +326,16 @@ args:
                 album_id: id
     |]
 
-lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (_testEnvironment, _) =
-  pure ()
-
 --------------------------------------------------------------------------------
 -- LHS Citus
 
 lhsCitusMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCitusMkLocalTestEnvironment _ = pure Nothing
 
-lhsCitusSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsCitusSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsCitusSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Citus.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -368,7 +350,7 @@ args:
   -- setup tables only
   Citus.createTable testEnvironment track
   Citus.insertTable testEnvironment track
-  Schema.trackTable Fixture.Citus sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -410,19 +392,16 @@ args:
                 album_id: id
     |]
 
-lhsCitusTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCitusTeardown (_testEnvironment, _) =
-  pure ()
-
 --------------------------------------------------------------------------------
 -- LHS Cockroach
 
 lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsCockroachMkLocalTestEnvironment _ = pure Nothing
 
-lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsCockroachSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
@@ -437,7 +416,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
   -- setup tables only
   Cockroach.createTable testEnvironment track
   Cockroach.insertTable testEnvironment track
-  Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -479,18 +458,16 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
                 album_id: id
     |]
 
-lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachTeardown _ = pure ()
-
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
 lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
-lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
-  let sourceName = "source"
+lhsSQLServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+      sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -506,7 +483,7 @@ args:
   -- setup tables only
   SQLServer.createTable testEnvironment track
   SQLServer.insertTable testEnvironment track
-  Schema.trackTable Fixture.SQLServer sourceName track testEnvironment
+  Schema.trackTable sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -547,9 +524,6 @@ args:
         field_mapping:
           album_id: id
   |]
-
-lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -717,7 +691,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           t_album_id = pure albumId
         }
 
-lhsRemoteServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
@@ -753,8 +727,9 @@ lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 -- RHS Postgres
 
 rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
-rhsPostgresSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsPostgresSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -770,7 +745,7 @@ args:
   -- setup tables only
   Postgres.createTable testEnvironment album
   Postgres.insertTable testEnvironment album
-  Schema.trackTable Fixture.Postgres sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -807,16 +782,13 @@ args:
       allow_aggregations: true
   |]
 
-rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
-rhsPostgresTeardown (_testEnvironment, _) =
-  pure ()
-
 --------------------------------------------------------------------------------
 -- RHS Citus
 
 rhsCitusSetup :: (TestEnvironment, ()) -> IO ()
-rhsCitusSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsCitusSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Citus.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -832,7 +804,7 @@ args:
   -- setup tables only
   Citus.createTable testEnvironment album
   Citus.insertTable testEnvironment album
-  Schema.trackTable Fixture.Citus sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -869,16 +841,13 @@ args:
       allow_aggregations: true
   |]
 
-rhsCitusTeardown :: (TestEnvironment, ()) -> IO ()
-rhsCitusTeardown (_testEnvironment, _) =
-  pure ()
-
 --------------------------------------------------------------------------------
 -- RHS Cockroach
 
 rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
-rhsCockroachSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsCockroachSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -894,7 +863,7 @@ rhsCockroachSetup (testEnvironment, _) = do
   -- setup tables only
   Cockroach.createTable testEnvironment album
   Cockroach.insertTable testEnvironment album
-  Schema.trackTable Fixture.Cockroach sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -931,15 +900,13 @@ rhsCockroachSetup (testEnvironment, _) = do
             allow_aggregations: true
     |]
 
-rhsCockroachTeardown :: (TestEnvironment, ()) -> IO ()
-rhsCockroachTeardown _ = pure ()
-
 --------------------------------------------------------------------------------
 -- RHS SQLServer
 
 rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerSetup (testEnvironment, _) = do
-  let sourceName = "target"
+rhsSQLServerSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+      sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
@@ -955,7 +922,7 @@ args:
   -- setup tables only
   SQLServer.createTable testEnvironment album
   SQLServer.insertTable testEnvironment album
-  Schema.trackTable Fixture.SQLServer sourceName album testEnvironment
+  Schema.trackTable sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -991,9 +958,6 @@ args:
       limit: 1
       allow_aggregations: true
   |]
-
-rhsSQLServerTeardown :: (TestEnvironment, ()) -> IO ()
-rhsSQLServerTeardown (testEnvironment, _) = SQLServer.dropTable testEnvironment album
 
 --------------------------------------------------------------------------------
 -- Tests

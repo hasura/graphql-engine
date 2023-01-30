@@ -14,6 +14,8 @@ import {
   FaChartLine,
 } from 'react-icons/fa';
 
+import HeaderNavItem from './HeaderNavItem';
+
 import Dropdown from 'react-bootstrap/lib/Dropdown';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
 
@@ -23,7 +25,7 @@ import { Spinner } from '@hasura/console-oss';
 import {
   NotificationSection,
   Onboarding,
-  OnboardingWizard,
+  CloudOnboarding,
   Tooltip,
   fetchConsoleNotifications,
   loadInconsistentObjects,
@@ -65,8 +67,7 @@ import styles from './Main.module.scss';
 import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
 import projectImg from './images/project.svg';
-
-const UpperCase = ({ children }) => <p className="uppercase">{children}</p>;
+import EELogo from './images/hasura-ee-mono-light.svg';
 
 class Main extends React.Component {
   constructor(props) {
@@ -179,12 +180,10 @@ class Main extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps) {
-    const {
-      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
-    } = this.props.featuresCompatibility;
-    const {
-      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
-    } = nextProps.featuresCompatibility;
+    const { [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility } =
+      this.props.featuresCompatibility;
+    const { [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility } =
+      nextProps.featuresCompatibility;
 
     const { accessState } = nextProps;
 
@@ -272,6 +271,19 @@ class Main extends React.Component {
     dispatch(clearCollaboratorSignInState());
   }
 
+  /**
+   * checks if current project is an enterprise project
+   * NOTE: an enterprise project is any non free plan project
+   * created by a Hasura enterprise user
+   */
+  isEnterpriseProject() {
+    return (
+      (this.props?.project?.is_enterprise_user &&
+        this.props?.project?.plan_name !== 'cloud_free') ||
+      globals.consoleType === 'pro-lite'
+    );
+  }
+
   render() {
     const {
       children,
@@ -317,11 +329,12 @@ class Main extends React.Component {
 
     const getMetadataIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <FaCog className={`${styles.question} text-lg`} />;
+        return <FaCog className={styles.question} />;
       }
+
       return (
         <div className={styles.question}>
-          <FaCog className="text-lg" />
+          <FaCog />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
@@ -343,7 +356,7 @@ class Main extends React.Component {
               tooltipContentChildren={`This graphql endpoint is public and you should add an ${globals.adminSecretLabel}`}
             >
               <a
-                href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+                href="https://hasura.io/docs/latest/deployment/securing-graphql-endpoint/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -367,31 +380,6 @@ class Main extends React.Component {
       return path;
     };
 
-    const renderGraphQLTab = () => {
-      return (
-        <Tooltip side="right" tooltipContentChildren="Test the GraphQL APIs">
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'api' || currentActiveBlock === ''
-                  ? styles.navSideBarActive
-                  : ''
-              }
-              to={
-                appPrefix +
-                getConsolidatedPath('/api/api-explorer', '/api', accessState)
-              }
-            >
-              <div className={styles.iconCenter} data-test="api-explorer">
-                <FaFlask title="API Explorer" aria-hidden="true" />
-              </div>
-              <UpperCase>API</UpperCase>
-            </Link>
-          </li>
-        </Tooltip>
-      );
-    };
-
     const getDataPath = () => {
       if (currentSource && currentSchema) {
         return `data/${currentSource}/schema/${currentSchema}`;
@@ -399,54 +387,27 @@ class Main extends React.Component {
       return 'data/';
     };
 
-    const renderDataTab = () => {
-      return (
-        <Tooltip side="right" tooltipContentChildren="Data & Schema management">
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'data' ? styles.navSideBarActive : ''
-              }
-              to={
-                appPrefix +
-                getConsolidatedPath(getDataPath(), '/data', accessState)
-              }
-            >
-              <div className={styles.iconCenter}>
-                <FaDatabase title="Data Service" aria-hidden="true" />
-              </div>
-              <UpperCase>Data</UpperCase>
-            </Link>
-          </li>
-        </Tooltip>
-      );
+    const renderMetricsTab = () => {
+      if (
+        'hasMetricAccess' in accessState &&
+        accessState.hasMetricAccess &&
+        isMonitoringTabSupportedEnvironment(globals)
+      ) {
+        return (
+          <HeaderNavItem
+            title="Monitoring"
+            icon={<FaChartLine aria-hidden="true" />}
+            tooltipText="Metrics"
+            itemPath={moduleName}
+            linkPath={relativeModulePath}
+            appPrefix={appPrefix}
+            currentActiveBlock={currentActiveBlock}
+          />
+        );
+      }
+      return null;
     };
-    const renderActionsTab = () => {
-      return (
-        <Tooltip side="right" tooltipContentChildren="Manage Actions">
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'actions' ? styles.navSideBarActive : ''
-              }
-              to={
-                appPrefix +
-                getConsolidatedPath(
-                  '/actions/manage/actions',
-                  '/actions',
-                  accessState
-                )
-              }
-            >
-              <div className={styles.iconCenter}>
-                <FaCogs title="Actions" aria-hidden="true" />
-              </div>
-              <UpperCase>Actions</UpperCase>
-            </Link>
-          </li>
-        </Tooltip>
-      );
-    };
+
     const renderLogout = () => {
       // userRole is only being set for team console
       return extendedGlobals.consoleType !== 'cloud' ? (
@@ -491,89 +452,12 @@ class Main extends React.Component {
       </Link>
     );
 
-    const renderEventsTab = () => {
-      return (
-        <Tooltip side="right" tooltipContentChildren="Manage Event Triggers">
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'events' ? styles.navSideBarActive : ''
-              }
-              to={
-                appPrefix +
-                getConsolidatedPath(
-                  '/events/data/manage',
-                  '/events',
-                  accessState
-                )
-              }
-            >
-              <div className={styles.iconCenter}>
-                <FaCloud title="Events" aria-hidden="true" />
-              </div>
-              <UpperCase>Events</UpperCase>
-            </Link>
-          </li>
-        </Tooltip>
-      );
-    };
-
-    const renderRemoteTab = () => {
-      return (
-        <Tooltip side="right" tooltipContentChildren="Manage Remote Schemas">
-          <li>
-            <Link
-              className={
-                currentActiveBlock === 'remote-schemas'
-                  ? styles.navSideBarActive
-                  : ''
-              }
-              to={
-                appPrefix +
-                getConsolidatedPath(
-                  '/remote-schemas/manage/schemas',
-                  '/remote-schemas',
-                  accessState
-                )
-              }
-            >
-              <div className={styles.iconCenter}>
-                <FaPlug title="Remote Schemas" aria-hidden="true" />
-              </div>
-              <UpperCase>Remote Schemas</UpperCase>
-            </Link>
-          </li>
-        </Tooltip>
-      );
-    };
-
-    const renderMetricsTab = () => {
-      if (
-        'hasMetricAccess' in accessState &&
-        accessState.hasMetricAccess &&
-        isMonitoringTabSupportedEnvironment(globals)
-      ) {
-        return (
-          <Tooltip side="right" tooltipContentChildren="Metrics">
-            <li>
-              <Link
-                className={
-                  currentActiveBlock === moduleName
-                    ? styles.navSideBarActive
-                    : ''
-                }
-                to={appPrefix + relativeModulePath}
-              >
-                <div className={styles.iconCenter}>
-                  <FaChartLine title="Monitoring" aria-hidden="true" />
-                </div>
-                <UpperCase>Monitoring</UpperCase>
-              </Link>
-            </li>
-          </Tooltip>
-        );
+    const getLogoSrc = () => {
+      if (this.isEnterpriseProject()) {
+        return EELogo;
       }
-      return null;
+
+      return logo;
     };
 
     return (
@@ -586,7 +470,7 @@ class Main extends React.Component {
                   <Link
                     to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
                   >
-                    <img className="img img-responsive" src={logo} />
+                    <img className="img img-responsive" src={getLogoSrc()} />
                   </Link>
                 </div>
                 <Link
@@ -598,11 +482,72 @@ class Main extends React.Component {
             </div>
             <div className={styles.header_items}>
               <ul className={styles.sidebarItems}>
-                {renderGraphQLTab()}
-                {renderDataTab()}
-                {renderActionsTab()}
-                {renderRemoteTab()}
-                {renderEventsTab()}
+                <HeaderNavItem
+                  title="API"
+                  icon={<FaFlask aria-hidden="true" />}
+                  tooltipText="Test the GraphQL APIs"
+                  itemPath="api"
+                  linkPath={getConsolidatedPath(
+                    '/api/api-explorer',
+                    '/api',
+                    accessState
+                  )}
+                  appPrefix={appPrefix}
+                  currentActiveBlock={currentActiveBlock}
+                  isDefault
+                />
+                <HeaderNavItem
+                  title="Data"
+                  icon={<FaDatabase aria-hidden="true" />}
+                  tooltipText="Data & Schema management"
+                  itemPath="data"
+                  linkPath={getConsolidatedPath(
+                    getDataPath(),
+                    '/data',
+                    accessState
+                  )}
+                  appPrefix={appPrefix}
+                  currentActiveBlock={currentActiveBlock}
+                />
+                <HeaderNavItem
+                  title="Actions"
+                  icon={<FaCogs aria-hidden="true" />}
+                  tooltipText="Manage Actions"
+                  itemPath="actions"
+                  linkPath={getConsolidatedPath(
+                    '/actions/manage/actions',
+                    '/actions',
+                    accessState
+                  )}
+                  appPrefix={appPrefix}
+                  currentActiveBlock={currentActiveBlock}
+                />
+                <HeaderNavItem
+                  title="Remote Schemas"
+                  icon={<FaPlug aria-hidden="true" />}
+                  tooltipText="Manage Remote Schemas"
+                  itemPath="remote-schemas"
+                  linkPath={getConsolidatedPath(
+                    '/remote-schemas/manage/schemas',
+                    '/remote-schemas',
+                    accessState
+                  )}
+                  appPrefix={appPrefix}
+                  currentActiveBlock={currentActiveBlock}
+                />
+                <HeaderNavItem
+                  title="Events"
+                  icon={<FaCloud aria-hidden="true" />}
+                  tooltipText="Manage Event and Scheduled Triggers"
+                  itemPath="events"
+                  linkPath={getConsolidatedPath(
+                    '/events/data/manage',
+                    '/events',
+                    accessState
+                  )}
+                  appPrefix={appPrefix}
+                  currentActiveBlock={currentActiveBlock}
+                />
                 {renderMetricsTab()}
               </ul>
             </div>
@@ -650,7 +595,7 @@ class Main extends React.Component {
               />
             ) : null}
           </div>
-          <OnboardingWizard />
+          <CloudOnboarding />
         </div>
       </div>
     );

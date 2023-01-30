@@ -85,12 +85,13 @@ StateOpen.parameters = {
   },
 };
 
-export const TestingClickedInteraction: ComponentStory<typeof Collapsible> =
-  () => (
-    <Collapsible triggerChildren={<ChildrenExample />}>
-      <ChildrenExample />
-    </Collapsible>
-  );
+export const TestingClickedInteraction: ComponentStory<
+  typeof Collapsible
+> = () => (
+  <Collapsible triggerChildren={<ChildrenExample />}>
+    <ChildrenExample />
+  </Collapsible>
+);
 TestingClickedInteraction.storyName = '🧪 Testing - Clicked interaction';
 TestingClickedInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

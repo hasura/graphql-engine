@@ -25,7 +25,7 @@ export interface GlobalWindowHeap {
      *
      * @see: https://developers.heap.io/reference/track
      *
-     * Consuming Heap is allowed only through the Analytics module, never directly.
+     * Use trackCustomEvent to track custom events in Heap.
      * @deprecated (when marked as deprecated, the IDE shows it as strikethrough'ed, helping the
      * developers realize that they should not use it)
      */

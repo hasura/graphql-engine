@@ -82,6 +82,9 @@ data SourceConfig = SourceConfig
     scConnectionPool :: Pool Connection
   }
 
+instance Show SourceConfig where
+  show _ = "(SourceConfig <details>)"
+
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving newtype (Show, Eq, ToTxt, J.FromJSON, J.ToJSON, Hashable, NFData)
 

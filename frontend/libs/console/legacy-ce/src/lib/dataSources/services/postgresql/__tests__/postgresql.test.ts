@@ -1,8 +1,18 @@
 import { postgres } from '../index';
 
+const {
+  getAlterPkSql,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterViewCommentSql,
+  getAlterFunctionCommentSql,
+  createIndexSql,
+  getDataTriggerLogsQuery,
+  getDataTriggerInvocations,
+} = postgres;
+
 describe('postgresql datasource tests', () => {
   describe('getAlterPkSql', () => {
-    const { getAlterPkSql } = postgres;
     it('should generate alter operation as a single transaction ', () => {
       const query = getAlterPkSql({
         schemaName: 'public',
@@ -32,7 +42,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterTableCommentSql', () => {
-    const { getAlterTableCommentSql } = postgres;
     it('should generate SQL for modifying table comment', () => {
       const query = getAlterTableCommentSql({
         tableName: 'users',
@@ -47,7 +56,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterColumnCommentSql', () => {
-    const { getAlterColumnCommentSql } = postgres;
     it('should generate SQL for modifying column comment', () => {
       const query = getAlterColumnCommentSql({
         tableName: 'users',
@@ -63,7 +71,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterViewCommentSql', () => {
-    const { getAlterViewCommentSql } = postgres;
     it('should generate SQL for modifying view comment', () => {
       const query = getAlterViewCommentSql({
         viewName: 'view_users',
@@ -78,7 +85,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getAlterFunctionCommentSql', () => {
-    const { getAlterFunctionCommentSql } = postgres;
     it('should generate SQL for modifying function comment', () => {
       const query = getAlterFunctionCommentSql({
         functionName: 'users',
@@ -93,7 +99,6 @@ describe('postgresql datasource tests', () => {
   });
 
   describe('getCreateIndexSQL', () => {
-    const { createIndexSql } = postgres;
     it('generates proper SQL for column names containing no spaces', () => {
       if (createIndexSql) {
         const query = createIndexSql({
@@ -167,58 +172,7 @@ describe('postgresql datasource tests', () => {
     });
   });
 
-  describe('getDataTriggerLogsCountQuery', () => {
-    const { getDataTriggerLogsCountQuery } = postgres;
-    if (getDataTriggerLogsCountQuery) {
-      it('should generate SQL query for pending event count ', () => {
-        const pendingCountQuery = getDataTriggerLogsCountQuery(
-          'new_user',
-          'pending'
-        );
-        expect(pendingCountQuery).toContain(
-          'delivered=false AND error=false AND archived=false'
-        );
-        expect(pendingCountQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(pendingCountQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(pendingCountQuery).toMatchSnapshot();
-      });
-
-      it('should generate SQL query for processed event count', () => {
-        const processedCountQuery = getDataTriggerLogsCountQuery(
-          'new_user',
-          'processed'
-        );
-        expect(processedCountQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(processedCountQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(processedCountQuery).toContain('FROM "hdb_catalog"."event_log"');
-
-        expect(processedCountQuery).toMatchSnapshot();
-      });
-
-      it('should generate SQL query for invocation event count', () => {
-        const invocationCountQuery = getDataTriggerLogsCountQuery(
-          'test_event',
-          'invocation'
-        );
-        expect(invocationCountQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(invocationCountQuery).toContain(
-          'FROM "hdb_catalog"."event_invocation_logs"'
-        );
-        expect(invocationCountQuery).toMatchSnapshot();
-      });
-    }
-  });
-
   describe('getDataTriggerLogsQuery', () => {
-    const { getDataTriggerLogsQuery } = postgres;
     if (getDataTriggerLogsQuery) {
       it('should generate SQL query for pending event logs', () => {
         // pending
@@ -280,7 +234,6 @@ describe('postgresql datasource tests', () => {
     }
   });
   describe('getDataTriggerInvocations', () => {
-    const { getDataTriggerInvocations } = postgres;
     if (getDataTriggerInvocations) {
       it('should generate SQL to fetch invocations for an event', () => {
         // pending

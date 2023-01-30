@@ -112,7 +112,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   // handle simple options
   if (isArray(options) && !isObject((options as unknown[])[0])) {
-    options = options.map((op: string) => {
+    options = options.map(op => {
       return { value: op, label: op };
     });
   }

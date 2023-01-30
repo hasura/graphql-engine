@@ -25,6 +25,8 @@ module Hasura.Session
     mkUserInfo,
     adminUserInfo,
     BackendOnlyFieldAccess (..),
+    ExtraUserInfo (..),
+    maybeRoleFromSessionVariables,
   )
 where
 
@@ -201,6 +203,10 @@ instance (UserInfoM m) => UserInfoM (StateT s m) where
 
 instance (UserInfoM m) => UserInfoM (TraceT m) where
   askUserInfo = lift askUserInfo
+
+-- | extra information used to identify a Hasura User
+data ExtraUserInfo = ExtraUserInfo {_euiUserId :: Maybe Text}
+  deriving (Show, Eq, Generic)
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = _uiRole <$> askUserInfo

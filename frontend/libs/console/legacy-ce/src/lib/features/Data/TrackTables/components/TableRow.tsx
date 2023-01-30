@@ -1,4 +1,4 @@
-import { TableTrackingCustomizationModal } from '@/components/Services/Data/Schema/tableTrackCustomization/TableTrackingCustomizationModal';
+import { CustomFieldNames } from '@/features/Data';
 import { MetadataTable } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
@@ -58,12 +58,22 @@ export const TableRow = React.memo(
         <CardedTable.TableBodyCell>{table.type}</CardedTable.TableBodyCell>
         <CardedTable.TableBodyCell>
           {table.is_tracked ? (
-            <Button size="sm" onClick={untrack} isLoading={loading}>
+            <Button
+              data-testid={`untrack-${table.name}`}
+              size="sm"
+              onClick={untrack}
+              isLoading={loading}
+            >
               Untrack
             </Button>
           ) : (
             <div className="flex flex-row">
-              <Button size="sm" onClick={() => track()} isLoading={loading}>
+              <Button
+                data-testid={`track-${table.name}`}
+                size="sm"
+                onClick={() => track()}
+                isLoading={loading}
+              >
                 Track
               </Button>
               {/* Hiding this customize button while loading as it looks odd to have two buttons in "loading mode" */}
@@ -78,7 +88,7 @@ export const TableRow = React.memo(
                 </Button>
               )}
 
-              <TableTrackingCustomizationModal
+              <CustomFieldNames.Modal
                 tableName={table.name}
                 onSubmit={(formValues, config) => {
                   track(config);
@@ -87,6 +97,7 @@ export const TableRow = React.memo(
                   setShowCustomModal(false);
                 }}
                 callToAction="Customize & Track"
+                callToDeny="Cancel"
                 callToActionLoadingText="Saving..."
                 isLoading={loading}
                 show={showCustomModal}

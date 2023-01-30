@@ -15,7 +15,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec
+import Test.Hspec (SpecWith, describe, it)
 
 -- original file: queries/graphql_query/citus/schema_setup_citus.yaml
 schema_setup_Citus :: Yaml.Value
@@ -288,12 +288,12 @@ setup_metadata_Citus =
 
 fixture_Citus :: Fixture.Fixture ()
 fixture_Citus =
-  (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+  (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
     { Fixture.setupTeardown = \(testEnvironment, _) ->
         [ Fixture.SetupAction
             { Fixture.setupAction = do
                 compatSetup testEnvironment Fixture.Citus
-                GraphqlEngine.postV2Query 200 testEnvironment schema_setup_Citus
+                void $ GraphqlEngine.postV2Query 200 testEnvironment schema_setup_Citus
                 GraphqlEngine.postMetadata_ testEnvironment setup_metadata_Citus,
               Fixture.teardownAction = \_ -> return ()
             }

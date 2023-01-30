@@ -27,17 +27,17 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runSingleSetup
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
                 ]
@@ -73,7 +73,7 @@ schema =
             Schema.column "time_id" Schema.TInt
           ],
         Schema.tablePrimaryKey = ["nickname"],
-        Schema.tableReferences = [Schema.Reference "time_id" "alldefaults" "id"]
+        Schema.tableReferences = [Schema.reference "time_id" "alldefaults" "id"]
       }
   ]
 

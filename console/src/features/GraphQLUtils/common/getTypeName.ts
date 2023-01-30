@@ -7,7 +7,7 @@ export const getTypeName = ({
   operation,
   sourceCustomization,
 }: {
-  defaultQueryRoot: string;
+  defaultQueryRoot: string | never[];
   configuration?: MetadataTable['configuration'];
   operation: AllowedQueryOperation;
   sourceCustomization?: Source['customization'];

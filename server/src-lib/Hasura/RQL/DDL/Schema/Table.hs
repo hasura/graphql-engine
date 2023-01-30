@@ -34,6 +34,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
+import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
 import Data.These (These (..))
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
@@ -42,7 +43,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.GraphQL.Schema.Common (textToName)
+import Hasura.GraphQL.Schema.Common (textToGQLIdentifier)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -60,7 +61,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -427,10 +428,11 @@ buildTableCache ::
     DBTablesMetadata b,
     [TableBuildInput b],
     Inc.Dependency Inc.InvalidationKey,
+    Maybe (BackendIntrospection b),
     NamingCase
   )
     `arr` Map.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase) -> do
+buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, sourceIntrospection, tCase) -> do
   rawTableInfos <-
     (|
       Inc.keyed
@@ -445,7 +447,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                           -<
                             err400 NotExists $ "no such table/view exists in source: " <>> _tbiName table
                       Just metadataTable ->
-                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey)
+                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey, biEnumValues <$> sourceIntrospection)
                 )
             |) (mkTableMetadataObject source tableName)
         )
@@ -479,24 +481,28 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         ( TableBuildInput b,
           DBTableMetadata b,
           SourceConfig b,
-          Inc.Dependency Inc.InvalidationKey
+          Inc.Dependency Inc.InvalidationKey,
+          Maybe (HashMap (TableName b) EnumValues)
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey, sourceIntrospection) -> do
       let TableBuildInput name isEnum config apolloFedConfig = tableBuildInput
           columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
           columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
           description = buildDescription name config metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
-      enumValues <-
+      enumValues <- do
         if isEnum
           then do
-            -- We want to make sure we reload enum values whenever someone explicitly calls
-            -- `reload_metadata`.
-            Inc.dependOn -< reloadMetadataInvalidationKey
-            eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
-            liftEitherA -< Just <$> eitherEnums
+            case HM.lookup name =<< sourceIntrospection of
+              Just enumValues -> returnA -< Just enumValues
+              _ -> do
+                -- We want to make sure we reload enum values whenever someone explicitly calls
+                -- `reload_metadata`.
+                Inc.dependOn -< reloadMetadataInvalidationKey
+                eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
+                liftEitherA -< Just <$> eitherEnums
           else returnA -< Nothing
 
       returnA
@@ -548,7 +554,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       (QErrM n) =>
       FieldInfoMap (RawColumnInfo b) ->
       TableConfig b ->
-      n (FieldInfoMap (RawColumnInfo b, G.Name, Maybe G.Description))
+      n (FieldInfoMap (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description))
     collectColumnConfiguration columns TableConfig {..} = do
       let configByFieldName = mapKeys (fromCol @b) _tcColumnConfig
       Map.traverseWithKey
@@ -571,9 +577,9 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       QErrM n =>
       FieldName ->
       (RawColumnInfo b, ColumnConfig) ->
-      n (RawColumnInfo b, G.Name, Maybe G.Description)
+      n (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description)
     extractColumnConfiguration fieldName (columnInfo, ColumnConfig {..}) = do
-      name <- _ccfgCustomName `onNothing` textToName (getFieldNameTxt fieldName)
+      name <- (fromCustomName <$> _ccfgCustomName) `onNothing` textToGQLIdentifier (getFieldNameTxt fieldName)
       pure (columnInfo, name, description)
       where
         description :: Maybe G.Description
@@ -586,14 +592,14 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       NamingCase ->
       Map.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
-      (RawColumnInfo b, G.Name, Maybe G.Description) ->
+      (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description) ->
       n (ColumnInfo b)
     processColumnInfo tCase tableEnumReferences tableName (rawInfo, name, description) = do
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
           { ciColumn = pgCol,
-            ciName = (applyFieldNameCaseCust tCase name),
+            ciName = (applyFieldNameCaseIdentifier tCase name),
             ciPosition = rciPosition rawInfo,
             ciType = resolvedType,
             ciIsNullable = rciIsNullable rawInfo,

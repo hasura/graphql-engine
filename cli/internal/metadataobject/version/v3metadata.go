@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,28 +33,30 @@ func NewV3MetadataVersion(ec *cli.ExecutionContext, baseDir string) *V3MetadataV
 }
 
 func (a *V3MetadataV2ConfigVersion) CreateFiles() error {
+	var op errors.Op = "version.V3MetadataV2ConfigVersion.CreateFiles"
 	v := Version{
 		Version: 2,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, a.Filename()), data, 0644)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
 func (a *V3MetadataV2ConfigVersion) Export(_ map[string]yaml.Node) (map[string][]byte, error) {
+	var op errors.Op = "version.V3MetadataV2ConfigVersion.Export"
 	v := Version{
 		// during a v3 metadata export forcefully write metadata v2
 		Version: 2,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return nil, a.error(err)
+		return nil, errors.E(op, a.error(err))
 	}
 	return map[string][]byte{
 		filepath.ToSlash(filepath.Join(a.MetadataDir, a.Filename())): data,

@@ -1,45 +1,58 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.DataConnector.AggregateQuerySpec (spec) where
+module Test.DataConnector.AggregateQuerySpec
+  ( spec,
+    tests,
+  )
+where
 
+--------------------------------------------------------------------------------
+
+import Control.Lens qualified as Lens
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Lens (key, _Array)
 import Data.List.NonEmpty qualified as NE
+import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
+import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
+
+--------------------------------------------------------------------------------
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Fixture.DataConnectorReference Reference.sourceConfiguration) Reference.agentConfig testEnvironment
+                [ Chinook.setupAction (sourceMetadata Reference.backendTypeMetadata Reference.sourceConfiguration) Reference.agentConfig testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Fixture.DataConnectorSqlite Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
+                [ Chinook.setupAction (sourceMetadata Sqlite.backendTypeMetadata Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
                 ]
             }
         ]
     )
     tests
 
-sourceMetadata :: BackendType -> Aeson.Value -> Aeson.Value
-sourceMetadata backendType config =
-  let source = defaultSource backendType
-      backendTypeString = defaultBackendTypeString backendType
+--------------------------------------------------------------------------------
+
+sourceMetadata :: BackendTypeConfig -> Aeson.Value -> Aeson.Value
+sourceMetadata backendTypeMetadata config =
+  let source = Fixture.backendSourceName backendTypeMetadata
+      backendTypeString = Fixture.backendTypeString backendTypeMetadata
    in [yaml|
         name : *source
         kind: *backendTypeString
@@ -83,13 +96,17 @@ sourceMetadata backendType config =
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "Aggregate Query Tests" $ do
-  describe "Nodes Tests" $ do
-    it "works with simple query" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  nodeTests opts
+  aggregateTests opts
+
+nodeTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+nodeTests opts = describe "Nodes Tests" $ do
+  it "works with simple query" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album_aggregate(limit: 2) {
                   nodes {
@@ -99,8 +116,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album_aggregate:
               nodes:
@@ -110,12 +127,12 @@ tests opts = describe "Aggregate Query Tests" $ do
                   Title: Balls to the Wall
         |]
 
-    it "works with multiple nodes fields" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  it "works with multiple nodes fields" $ \(testEnvironment, _) ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album_aggregate(limit: 2) {
                   AlbumIds: nodes {
@@ -127,8 +144,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album_aggregate:
               AlbumIds:
@@ -139,13 +156,13 @@ tests opts = describe "Aggregate Query Tests" $ do
                 - Title: Balls to the Wall
         |]
 
-    it "works with object relations" $ \(testEnvironment, _) -> do
-      -- NOTE: Ordering is required due to datasets non-matching orders
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
+  it "works with object relations" $ \(testEnvironment, _) -> do
+    -- NOTE: Ordering is required due to datasets non-matching orders
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
               query getAlbum {
                 Album_aggregate(order_by: {AlbumId: asc}, limit: 2) {
                   nodes {
@@ -157,8 +174,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 }
               }
             |]
-        )
-        [yaml|
+      )
+      [yaml|
           data:
             Album_aggregate:
               nodes:
@@ -170,27 +187,32 @@ tests opts = describe "Aggregate Query Tests" $ do
                     Name: Accept
         |]
 
-    it "works with array relations" $ \(testEnvironment, _) ->
-      shouldReturnYaml
-        opts
-        ( GraphqlEngine.postGraphql
-            testEnvironment
-            [graphql|
-              query getArtist {
-                Artist_aggregate(limit: 2) {
-                  nodes {
-                    ArtistId
-                    Albums: Albums_aggregate {
-                      nodes {
-                        Title
-                      }
+  it "works with array relations" $ \(testEnvironment, _) -> do
+    let sortYamlArray :: Aeson.Value -> IO Aeson.Value
+        sortYamlArray (Aeson.Array a) = pure $ Aeson.Array (Vector.fromList (sort (Vector.toList a)))
+        sortYamlArray _ = fail "Should return Array"
+
+    shouldReturnYamlF
+      (Lens.traverseOf (key "data" . key "Artist_aggregate" . key "nodes" . _Array . traverse . key "Albums" . key "nodes") sortYamlArray)
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
+            query getArtist {
+              Artist_aggregate(limit: 2) {
+                nodes {
+                  ArtistId
+                  Albums: Albums_aggregate {
+                    nodes {
+                      Title
                     }
                   }
                 }
               }
-            |]
-        )
-        [yaml|
+            }
+          |]
+      )
+      [yaml|
           data:
             Artist_aggregate:
               nodes:
@@ -206,6 +228,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                       - Title: Restless and Wild
         |]
 
+aggregateTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
+aggregateTests opts =
   describe "Aggregate Tests" $ do
     it "works with count queries" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -306,7 +330,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                   Total: 2328.6
         |]
 
-      if (TE.backendType testEnvironment == Just Fixture.DataConnectorReference)
+      if (fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorReference)
         then
           shouldReturnYaml
             opts
@@ -445,8 +469,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                       count: 14
         |]
     it "works for custom aggregate functions" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) do
-        pendingWith "SQLite DataConnector does not support 'longest' and 'shortest' custom aggregate functions"
+      when ((fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment)) /= Just Fixture.DataConnectorReference) do
+        pendingWith "Agent does not support 'longest' and 'shortest' custom aggregate functions"
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql

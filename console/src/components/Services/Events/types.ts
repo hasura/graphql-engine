@@ -87,8 +87,8 @@ export type EventTriggerAutoCleanup = {
   batch_size?: number;
   clear_older_than?: number;
   timeout?: number;
-  clean_invocation_logs: boolean;
-  paused: boolean;
+  clean_invocation_logs?: boolean;
+  paused?: boolean;
 };
 
 export type EventTriggerOperationDefinition = {

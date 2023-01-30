@@ -55,8 +55,18 @@ export type IntrospectedTable = {
 };
 
 export type TableColumn = {
+  /**
+   * Name of the column as defined in the DB
+   */
   name: string;
+  /**
+   * dataType of the column as defined in the DB
+   */
   dataType: string;
+  /**
+   * console data type: the dataType property is group into one of these types and console uses this internally
+   */
+  consoleDataType: 'string' | 'text' | 'json' | 'number' | 'boolean';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {
@@ -115,14 +125,17 @@ export type GetTableRowsProps = {
     order_by?: OrderBy[];
   };
 } & NetworkArgs;
-export type TableRow = Record<string, unknown>;
+export type TableRow = Record<string, string | number | boolean>;
 
 export type validOperators = string;
 type columnName = string;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 export type WhereClause = Record<
   columnName,
-  Record<validOperators, string | number | boolean>
+  Record<
+    validOperators,
+    string | number | boolean | string[] | number[] | boolean[]
+  >
 >;
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';

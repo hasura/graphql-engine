@@ -31,12 +31,13 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
-import Data.ByteString.Lazy qualified as BL
+import Data.ByteString.Lazy (fromStrict)
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as HashSet
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (ToTxt, commaSeparated, toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
@@ -61,9 +62,11 @@ import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey (..))
 import Hasura.SQL.Backend
+import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
 
 -- | creates a SQL Values list from haskell list  (('123-abc'), ('456-vgh'), ('234-asd'))
@@ -381,9 +384,9 @@ setErrorTx event = \case
           WHERE id = $eventId
         |]
 
--- See Note [UTCTIME not supported in SQL Server]
 setRetryTx :: Event 'MSSQL -> UTCTime -> MaintenanceMode MaintenanceModeVersion -> TxE QErr ()
 setRetryTx event utcTime maintenanceMode = do
+  -- since `convertUTCToDatetime2` uses utc as timezone, it will not affect the value
   time <- convertUTCToDatetime2 utcTime
   case maintenanceMode of
     (MaintenanceModeEnabled PreviousMMVersion) -> throw500 "unexpected: there is no previous maintenance mode version supported for MSSQL event triggers"
@@ -394,11 +397,13 @@ setRetryTx event utcTime maintenanceMode = do
     -- NOTE: Naveen: The following method to convert from Datetime to Datetimeoffset  was
     -- taken from https://stackoverflow.com/questions/17866311/how-to-cast-datetime-to-datetimeoffset
     latestVersionSetRetry time =
+      -- `time` is in UTC (without the timezone offset). The function TODATETIMEOFFSET adds the offset 00:00 (UTC) to
+      -- `time`, which collectively represents the value present in next_retry_at
       unitQueryE
         HGE.defaultMSSQLTxErrorHandler
         [ODBC.sql|
           UPDATE hdb_catalog.event_log
-          SET next_retry_at = TODATETIMEOFFSET ($time, DATEPART(TZOFFSET, SYSDATETIMEOFFSET())), locked = NULL
+          SET next_retry_at = TODATETIMEOFFSET ($time, 0), locked = NULL
           WHERE id = $eventId
         |]
 
@@ -442,9 +447,10 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- 'IN' MSSQL operator.
     triggerNamesTxt = "(" <> commaSeparated (map (\t -> "'" <> toTxt t <> "'") triggerNames) <> ")"
 
-    uncurryEvent (id', sn, tn, trn, payload' :: BL.ByteString, tries, created_at :: B.ByteString) = do
+    uncurryEvent (id', sn, tn, trn, payload' :: Text, tries, created_at :: B.ByteString, next_retry_at :: Maybe B.ByteString) = do
       payload <- encodePayload payload'
       createdAt <- convertTime created_at
+      retryAt <- traverse convertTime next_retry_at
 
       pure $
         Event
@@ -454,7 +460,8 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
             eTrigger = TriggerMetadata (TriggerName $ mkNonEmptyTextUnsafe trn),
             eEvent = payload,
             eTries = tries,
-            eCreatedAt = createdAt
+            eCreatedAt = createdAt,
+            eRetryAt = retryAt
           }
 
     -- Note: We do not have JSON datatype in SQL Server. But since in
@@ -465,10 +472,14 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- We ensure that the values in 'hd_catalog.event_log' is always a JSON is by
     -- using the 'FOR JSON PATH' MSSQL operand when inserting value into the
     -- 'hdb_catalog.event_log' table.
-    encodePayload :: (J.FromJSON a, QErrM m) => BL.ByteString -> m a
+    encodePayload :: (J.FromJSON a, QErrM m) => Text -> m a
     encodePayload payload =
       onLeft
-        (J.eitherDecode payload)
+        -- The NVARCHAR column has UTF-16 or UCS-2 encoding. Ref: https://learn.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16#nvarchar---n--max--
+        -- But JSON strings are expected to have UTF-8 encoding as per spec. Ref: https://www.rfc-editor.org/rfc/rfc8259#section-8.1
+        -- Hence it's important to encode the payload into UTF-8 else the decoding of
+        -- text to JSON will fail.
+        (J.eitherDecode $ fromStrict $ TE.encodeUtf8 payload)
         (\_ -> throw500 $ T.pack "payload decode failed while fetching MSSQL events")
 
     -- Note: The ODBC server does not have a FromJSON instance of UTCTime and only
@@ -501,7 +512,7 @@ dropTriggerOp triggerName schemaName triggerOp =
   where
     getDropTriggerSQL :: Ops -> Text
     getDropTriggerSQL op =
-      "DROP TRIGGER IF EXISTS " <> unQualifiedTriggerName (msssqlIdenTrigger op schemaName triggerName)
+      "DROP TRIGGER IF EXISTS " <> qualifiedTriggerNameToText (QualifiedTriggerName schemaName (mkSQLTriggerName triggerName op))
 
 archiveEvents :: TriggerName -> TxE QErr ()
 archiveEvents triggerName =
@@ -585,22 +596,9 @@ getMaintenanceModeVersionTx = do
               <> " but received "
               <> tshow catalogVersion
 
--- | Note: UTCTIME not supported in SQL Server
---
--- Refer 'ToSql UTCTIME' instance of odbc package:
--- https://github.com/fpco/odbc/blob/f4f04ea15d14e9a3ed455f7c728dc08734eef8ae/src/Database/ODBC/SQLServer.hs#L377
---
--- We use SYSDATETIMEOFFSET() to store time values along with it's time
--- zone offset in event_log table. Since ODBC server does not support time zones,
--- we use a workaround.
---
--- We wrap the time value in Datetime2, but before we insert it into the
--- event_log table we convert it into UTCTIME using the 'TODATETIMEOFFSET()'
--- sql function.
 convertUTCToDatetime2 :: MonadIO m => UTCTime -> m Datetime2
 convertUTCToDatetime2 utcTime = do
-  timezone <- liftIO $ getTimeZone utcTime
-  let localTime = utcToLocalTime timezone utcTime
+  let localTime = utcToLocalTime utc utcTime
   return $ Datetime2 localTime
 
 checkIfTriggerExistsQ ::
@@ -626,16 +624,43 @@ checkIfTriggerExistsQ triggerName op = do
 
 ---- MSSQL event trigger utility functions -----------------
 
-newtype QualifiedTriggerName = QualifiedTriggerName {unQualifiedTriggerName :: Text}
+-- | This will quote the object name (similar to the @QUOTENAME@ function in SQL
+-- server), i.e.
+--
+-- >>> mssqlFmtIdentifier "object_name" "[object_name]"
+--
+-- >>> mssqlFmtIdentifier "o]bject_nam[e" "[o]]bject_nam[e]"
+--
+-- TODO: Use some external tool for quoting, we should not quote the names by
+-- ourselves.
+mssqlFmtIdentifier :: Text -> Text
+mssqlFmtIdentifier x =
+  "[" <> T.replace "]" "]]" x <> "]"
+
+-- | A Representation of SQL Trigger name for an event trigger in MSSQL.
+newtype SQLTriggerName = SQLTriggerName {getSQLTriggerName :: Text}
+
+instance ToSQL SQLTriggerName where
+  toSQL = TB.text . mssqlFmtIdentifier . getSQLTriggerName
+
+mkSQLTriggerName :: TriggerName -> Ops -> SQLTriggerName
+mkSQLTriggerName triggerName op = SQLTriggerName $ "notify_hasura_" <> (triggerNameToTxt triggerName) <> "_" <> tshow op
+
+-- | A Representation of qualified SQL trigger object (`schema_name.SQL_trigger_name`).
+data QualifiedTriggerName = QualifiedTriggerName
+  { _qtnSchemaName :: SchemaName,
+    _qtnTriggerName :: SQLTriggerName
+  }
+
+instance ToSQL QualifiedTriggerName where
+  toSQL (QualifiedTriggerName (SchemaName schemaName) triggerName) =
+    TB.text (mssqlFmtIdentifier schemaName) <> "." <> toSQL triggerName
+
+qualifiedTriggerNameToText :: QualifiedTriggerName -> Text
+qualifiedTriggerNameToText = TB.run . toSQL
 
 -- | Store a fragment of SQL expression
 newtype SQLFragment = SQLFragment {unSQLFragment :: Text}
-
-msssqlIdenTrigger :: Ops -> SchemaName -> TriggerName -> QualifiedTriggerName
-msssqlIdenTrigger op (SchemaName schemaName) triggerName =
-  QualifiedTriggerName $ qualifyHasuraTriggerName op $ triggerNameToTxt triggerName
-  where
-    qualifyHasuraTriggerName op' triggerName' = schemaName <> "." <> "notify_hasura_" <> triggerName' <> "_" <> tshow op'
 
 mkAllTriggersQ ::
   MonadMSSQLTx m =>
@@ -761,7 +786,7 @@ qualifyTableName = toTxt . toQueryFlat . fromTableName
 
 mkInsertTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
 mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
-  let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger INSERT schema triggerName
+  let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName INSERT
       triggerNameText = triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
       operation = tshow INSERT
@@ -772,7 +797,7 @@ mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) 
 
 mkDeleteTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> TriggerOnReplication -> LT.Text
 mkDeleteTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns triggerOnReplication =
-  let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger DELETE schema triggerName
+  let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName DELETE
       triggerNameText = triggerNameToTxt triggerName
       qualifiedTableName = qualifyTableName table
       operation = tshow DELETE
@@ -863,7 +888,7 @@ mkUpdateTriggerQuery
   deliveryColumns
   primaryKey
   triggerOnReplication =
-    let QualifiedTriggerName qualifiedTriggerName = msssqlIdenTrigger UPDATE schema triggerName
+    let qualifiedTriggerName = qualifiedTriggerNameToText $ QualifiedTriggerName schema $ mkSQLTriggerName triggerName UPDATE
         triggerNameText = triggerNameToTxt triggerName
         qualifiedTableName = qualifyTableName table
         operation = tshow UPDATE
@@ -896,8 +921,7 @@ addCleanupSchedules ::
 addCleanupSchedules sourceConfig triggersWithcleanupConfig =
   unless (null triggersWithcleanupConfig) $ do
     currTimeUTC <- liftIO getCurrentTime
-    timeZone <- liftIO $ getTimeZone currTimeUTC
-    let currTime = utcToZonedTime timeZone currTimeUTC
+    let currTime = utcToZonedTime utc currTimeUTC
         triggerNames = map fst triggersWithcleanupConfig
     allScheduledCleanupsInDB <- liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
     let triggerMap = Map.fromList $ allScheduledCleanupsInDB
@@ -909,7 +933,7 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
                       Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
                  in fmap
                       ( \lastScheduledTimestamp ->
-                          (tName, map (Datetimeoffset . utcToZonedTime timeZone) $ generateScheduleTimes (zonedTimeToUTC lastScheduledTimestamp) cleanupSchedulesToBeGenerated (_atlccSchedule cConfig))
+                          (tName, map (Datetimeoffset . utcToZonedTime utc) $ generateScheduleTimes (zonedTimeToUTC lastScheduledTimestamp) cleanupSchedulesToBeGenerated (_atlccSchedule cConfig))
                       )
                       lastScheduledTime
             )
@@ -996,7 +1020,7 @@ getCleanupEventsForDeletionTx = do
               SELECT id, trigger_name, ROW_NUMBER()
               OVER(PARTITION BY trigger_name ORDER BY scheduled_at DESC) AS rn
               FROM hdb_catalog.hdb_event_log_cleanups
-              WHERE status = 'scheduled' AND scheduled_at < CURRENT_TIMESTAMP
+              WHERE status = 'scheduled' AND scheduled_at < SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'
           ) AS a
           WHERE rn = 1
         |]
@@ -1009,7 +1033,7 @@ getCleanupEventsForDeletionTx = do
         ( rawUnescapedText
             [ST.st|
             SELECT CAST(id AS nvarchar(36)) FROM hdb_catalog.hdb_event_log_cleanups
-            WHERE status = 'scheduled' AND scheduled_at < CURRENT_TIMESTAMP AND id NOT IN
+            WHERE status = 'scheduled' AND scheduled_at < SYSDATETIMEOFFSET() AT TIME ZONE 'UTC' AND id NOT IN
               (SELECT n from  (VALUES #{cleanupIDsSQLValue}) AS X(n));
           |]
         )
@@ -1109,7 +1133,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
         [ODBC.sql|
           SELECT TOP ($qBatchSize) CAST(id AS nvarchar(36)) FROM hdb_catalog.event_log WITH (UPDLOCK, READPAST)
           WHERE ((delivered = 1 OR error = 1) AND trigger_name = $qTriggerName  )
-          AND created_at < DATEADD(HOUR, - $qRetentionPeriod, CURRENT_TIMESTAMP)
+          AND created_at < DATEADD(HOUR, - $qRetentionPeriod, SYSDATETIMEOFFSET() AT TIME ZONE 'UTC')
           AND locked IS NULL
         |]
   if null deadEventIDs
@@ -1121,7 +1145,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
         rawUnescapedText $
           [ST.st|
           UPDATE hdb_catalog.event_log
-          SET locked = CURRENT_TIMESTAMP
+          SET locked = SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'
           WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id))
               AND locked IS NULL
           |]

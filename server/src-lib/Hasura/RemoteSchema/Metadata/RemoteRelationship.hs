@@ -18,7 +18,9 @@ module Hasura.RemoteSchema.Metadata.RemoteRelationship
 where
 
 import Autodocodec
-import Autodocodec.Extended (graphQLValueCodec, hashSetCodec)
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec, graphQLValueCodec, hashSetCodec)
+import Control.Exception.Safe (Typeable)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
@@ -27,9 +29,11 @@ import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (prependFailure)
 import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Scientific (floatingOrInteger)
 import Data.Text qualified as T
+import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.Metadata.Base
@@ -228,6 +232,17 @@ data RemoteSchemaTypeRelationships r = RemoteSchemaTypeRelationships
     _rstrsRelationships :: RemoteRelationships r
   }
   deriving (Show, Eq, Generic)
+
+instance (HasCodec (RemoteRelationshipG r), Typeable r) => HasCodec (RemoteSchemaTypeRelationships r) where
+  codec =
+    AC.object ("RemoteSchemaMetadata_" <> typeableName @r) $
+      RemoteSchemaTypeRelationships
+        <$> requiredFieldWith' "type_name" graphQLFieldNameCodec AC..= _rstrsName
+        <*> optionalFieldWithDefaultWith'
+          "relationships"
+          (insertionOrderedElemsCodec _rrName)
+          mempty
+          AC..= _rstrsRelationships
 
 instance J.FromJSON (RemoteRelationshipG r) => J.FromJSON (RemoteSchemaTypeRelationships r) where
   parseJSON = J.withObject "RemoteSchemaMetadata" \obj ->

@@ -86,8 +86,9 @@ export const BrowseTests = props => {
           newRow[elem] = (
             <div
               key={key}
-              className={`${styles.columnRow} ${elem === 'status' &&
-                styles.textCenter}`}
+              className={`${styles.columnRow} ${
+                elem === 'status' && styles.textCenter
+              }`}
               title={
                 (elem === 'status' && elem in row && row[elem]) ||
                 renderElement()

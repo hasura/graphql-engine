@@ -23,7 +23,10 @@ const withWasm = Component => {
   return props => {
     const go = new window.Go();
     const initWasmInstance = async () => {
-      const wasmURL = process.env.NODE_ENV !== 'production' ? '/rstatic/test-runner.wasm' : `${Globals.versionedAssetsPath}/test-runner.wasm.gz`;
+      const wasmURL =
+        process.env.NODE_ENV !== 'production'
+          ? '/rstatic/test-runner.wasm'
+          : `${Globals.versionedAssetsPath}/test-runner.wasm.gz`;
       const { instance, module } = await WebAssembly.instantiateStreaming(
         /* TODO: use versioned assets path to make sure console pulls the correct wasm file */
         fetch(wasmURL),
@@ -55,7 +58,7 @@ const RunTests = props => {
     initWasmInstance,
     goInstance,
     metricsUrl,
-    testProjectId
+    testProjectId,
   } = props;
 
   // const [testsRunning, setTestsRunning] = useState(false);
@@ -98,13 +101,12 @@ const RunTests = props => {
       return adminSecret;
     };
 
-    window.onSuccess = () => {
-    };
+    window.onSuccess = () => {};
     window.onError = err => {
       setWasmExecutionState({ running: false, err });
     };
-    window.getIDTokenFn = () => (idToken || '');
-    window.getAccessTokenFn = () => (accessToken || '');
+    window.getIDTokenFn = () => idToken || '';
+    window.getAccessTokenFn = () => accessToken || '';
     window.onCreated = d => {
       setWasmExecutionState({ running: false, success: d });
       // Set the data

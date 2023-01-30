@@ -8,23 +8,19 @@ import { RenderWidget } from './RenderWidget';
 import { MODE } from '../../types';
 
 export default {
-  /* 👇 The title prop is optional.
-   * See https://storybook.js.org/docs/react/configure/overview#configure-story-loading
-   * to learn how to generate automatic titles
-   */
-  title: 'GDC Console/Create Relationship',
   component: RenderWidget,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof RenderWidget>;
 
-export const WithManualConfiguration: ComponentStory<typeof RenderWidget> =
-  () => (
-    <RenderWidget
-      dataSourceName="bikes"
-      table={{ name: 'orders', schema: 'sales' }}
-      mode={MODE.CREATE}
-      onCancel={() => {}}
-      onSuccess={() => {}}
-      onError={() => {}}
-    />
-  );
+export const WithManualConfiguration: ComponentStory<
+  typeof RenderWidget
+> = () => (
+  <RenderWidget
+    dataSourceName="chinook"
+    table={{ name: 'Album', schema: 'public' }}
+    mode={MODE.CREATE}
+    onCancel={() => {}}
+    onSuccess={() => {}}
+    onError={() => {}}
+  />
+);

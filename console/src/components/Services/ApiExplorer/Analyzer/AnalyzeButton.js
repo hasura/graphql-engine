@@ -31,7 +31,7 @@ export default class AnalyzeButton extends React.Component {
       const validOperations = operations.filter(isValidGraphQLOperation);
       if (validOperations.length) {
         options = (
-          <ul>
+          <ul className="execute-options">
             {validOperations.map(operation => {
               return (
                 <li

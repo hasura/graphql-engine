@@ -77,6 +77,7 @@ module Data.Time.Clock.Units
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Control.Applicative ((<|>))
 import Control.Arrow (first)
 import Data.Aeson
@@ -94,6 +95,9 @@ newtype Seconds = Seconds {seconds :: DiffTime}
   -- though Read is custom.
   deriving (Duration, Show, Eq, Ord, ToJSON, FromJSON)
   deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit (SecondsP 1))
+
+instance HasCodec Seconds where
+  codec = dimapCodec Seconds seconds codec
 
 -- TODO if needed: deriving (ToJSON, FromJSON) via (TimeUnit ..) making sure
 --      to copy Aeson instances (with withBoundedScientific), and e.g.

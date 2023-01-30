@@ -1,6 +1,11 @@
 import React from 'react';
 import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
+import {
+  ColumnsInfoResult,
+  currentDriver,
+  DataSourcesAPI,
+} from '@/dataSources';
 
 import {
   Table,
@@ -14,7 +19,6 @@ import {
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
-import { DataSourcesAPI, ColumnsInfoResult, currentDriver } from '../..';
 import {
   generateTableRowRequest,
   generateInsertRequest,
@@ -77,8 +81,8 @@ import {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
+  getDatabaseTableNames,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
@@ -891,6 +895,6 @@ export const postgres: DataSourcesAPI = {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
+  getDatabaseTableNames,
 };

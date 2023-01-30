@@ -27,28 +27,28 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  setupRelationships Fixture.Postgres testEnv
+                  setupRelationships Postgres.backendTypeMetadata testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv,
-                  setupRelationships Fixture.Citus testEnv
+                  setupRelationships Citus.backendTypeMetadata testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv,
-                  setupRelationships Fixture.SQLServer testEnv
+                  setupRelationships Sqlserver.backendTypeMetadata testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv,
-                  setupRelationships Fixture.BigQuery testEnv
+                  setupRelationships BigQuery.backendTypeMetadata testEnv
                 ],
               Fixture.customOptions =
                 Just $
@@ -56,16 +56,16 @@ spec = do
                     { Fixture.stringifyNumbers = True
                     }
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv,
-                  setupRelationships Fixture.Cockroach testEnv
+                  setupRelationships Cockroach.backendTypeMetadata testEnv
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlite.setupTablesAction schema testEnv,
-                  setupRelationships Fixture.DataConnectorSqlite testEnv
+                  setupRelationships Sqlite.backendTypeMetadata testEnv
                 ]
             }
         ]
@@ -111,13 +111,13 @@ schema =
       }
   ]
 
-setupRelationships :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
-setupRelationships backendType testEnv =
-  let backend = T.pack $ Fixture.defaultBackendTypeString backendType
-      source = Fixture.defaultSource backendType
+setupRelationships :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupRelationships backendTypeConfig testEnv =
+  let backend = T.pack $ Fixture.backendTypeString backendTypeConfig
+      source = Fixture.backendSourceName backendTypeConfig
       schemaName = Schema.getSchemaName testEnv
-      quoteTable = Schema.mkTableField backendType schemaName "quote"
-      characterTable = Schema.mkTableField backendType schemaName "character"
+      quoteTable = Schema.mkTableField backendTypeConfig schemaName "quote"
+      characterTable = Schema.mkTableField backendTypeConfig schemaName "character"
       createRelationship = backend <> "_create_object_relationship"
       dropRelationship = backend <> "_drop_relationship"
    in Fixture.SetupAction

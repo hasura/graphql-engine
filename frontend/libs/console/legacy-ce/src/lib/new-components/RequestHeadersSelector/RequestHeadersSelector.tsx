@@ -33,6 +33,7 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
 
           {fields.map((field, index) => (
             <KeyValueHeader
+              key={field.id}
               fieldId={field.id}
               fieldName={name}
               rowIndex={index}

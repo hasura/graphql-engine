@@ -9,7 +9,6 @@ import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '../constants';
 import { handlers } from '../../../__mocks__/handlers.mock';
 
 export default {
-  title: 'Browse Rows/Data Table Options 🧬',
   component: DataTableOptions,
   decorators: [ReactQueryDecorator()],
   parameters: {
@@ -17,7 +16,7 @@ export default {
   },
 } as ComponentMeta<typeof DataTableOptions>;
 
-export const Basic: ComponentStory<typeof DataTableOptions> = () => {
+const ComponentWrapper = () => {
   const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>([
@@ -74,6 +73,15 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
           removeOrderByClause: id => {
             setOrderClauses(orderByClauses.filter((_, i) => i !== id));
           },
+          onExportRows: exportFileFormat => {
+            updateStatus(`export to ${exportFileFormat}`);
+            return Promise.resolve(new Error());
+          },
+          onExportSelectedRows: exportFileFormat => {
+            updateStatus(`export to ${exportFileFormat}`);
+            return Promise.resolve(new Error());
+          },
+          disableExportSelectedRows: false,
         }}
       />
       <div data-testid="status">{status}</div>
@@ -81,7 +89,17 @@ export const Basic: ComponentStory<typeof DataTableOptions> = () => {
   );
 };
 
-Basic.play = async ({ canvasElement }) => {
+export const Basic: ComponentStory<typeof DataTableOptions> = () => (
+  <ComponentWrapper />
+);
+
+export const Testing: ComponentStory<typeof DataTableOptions> = () => (
+  <ComponentWrapper />
+);
+
+Testing.storyName = '🧪 Testing - user interactions';
+
+Testing.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // the two where clauses should be present
@@ -93,7 +111,7 @@ Basic.play = async ({ canvasElement }) => {
   expect(await canvas.findByText('Last Name (desc)')).toBeVisible();
 
   // The query button should be updated with the number
-  expect(await canvas.findByText('(4)')).toBeVisible();
+  expect(await canvas.findByText('Query (4)')).toBeVisible();
 
   userEvent.click(await canvas.findByTestId('@runQueryBtn'));
 

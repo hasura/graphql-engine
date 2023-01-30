@@ -43,7 +43,7 @@ buildEventTriggerCleanupSuite = do
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty Nothing
 
   pure $ do
     describe "Event trigger log cleanup" $ eventTriggerLogCleanupSpec dbSourceConfig
@@ -144,17 +144,17 @@ eventTriggerLogCleanupSpec sourceConfig = do
           False
   let setup = do
         -- drop everything that might affect the test
-        runPgSourceWriteTx sourceConfig teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx sourceConfig InternalRawQuery teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
         -- add tables
-        runPgSourceWriteTx sourceConfig setupDDLTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx sourceConfig InternalRawQuery setupDDLTx >>= (`onLeft` (printErrExit . showQErr))
         -- insert some values in event log tables
-        runPgSourceWriteTx sourceConfig setupValues >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx sourceConfig InternalRawQuery setupValues >>= (`onLeft` (printErrExit . showQErr))
 
       teardown =
-        runPgSourceWriteTx sourceConfig teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx sourceConfig InternalRawQuery teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
 
       runSQLQuery :: PG.TxET QErr IO a -> IO a
-      runSQLQuery = runExceptQErr . liftEitherM . liftIO . runPgSourceWriteTx sourceConfig
+      runSQLQuery = runExceptQErr . liftEitherM . liftIO . runPgSourceWriteTx sourceConfig InternalRawQuery
 
   describe "testing generator thread core logic: add cleanup schedules" $ do
     it "adding cleanup schedule" $ do

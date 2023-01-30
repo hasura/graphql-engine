@@ -7,24 +7,28 @@ module SpecHook
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Char qualified as Char
 import Data.IORef
 import Data.List qualified as List
-import Data.Monoid (getLast)
-import Data.UUID.V4 (nextRandom)
 import Database.PostgreSQL.Simple.Options qualified as Options
-import Harness.Constants qualified as Constants
 import Harness.Exceptions (HasCallStack, bracket)
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
+import Harness.Services.Composed (mkTestServicesConfig)
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), TestingMode (..), stopServer)
 import Hasura.Prelude
-import System.Environment (getEnvironment, lookupEnv)
+import System.Directory
+import System.Environment (getEnvironment)
+import System.FilePath
 import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
 import Test.Hspec (Spec, SpecWith, aroundAllWith, runIO)
 import Test.Hspec.Core.Spec (Item (..), filterForestWithLabels, mapSpecForest, modifyConfig)
+
+--------------------------------------------------------------------------------
 
 -- | Establish the mode in which we're running the tests. Currently, there are
 -- four modes:
@@ -70,13 +74,8 @@ parseBackendType backendType =
 setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
 setupTestEnvironment testingMode logger = do
   server <- startServerThread
-
-  pure
-    GlobalTestEnvironment
-      { logger = logger,
-        testingMode = testingMode,
-        server = server
-      }
+  servicesConfig <- mkTestServicesConfig
+  pure GlobalTestEnvironment {..}
 
 -- | tear down the shared server
 teardownTestEnvironment :: GlobalTestEnvironment -> IO ()
@@ -86,14 +85,23 @@ teardownTestEnvironment (GlobalTestEnvironment {server}) = stopServer server
 setupLogType :: IO FL.LogType
 setupLogType = do
   env <- getEnvironment
-  let defaultLogType = FL.LogFileNoRotate "tests-hspec.log" 1024
-  pure case lookup "HASURA_TEST_LOGTYPE" env of
-    Nothing -> defaultLogType
-    Just str ->
+  fromMaybe
+    (pure $ FL.LogFileNoRotate "tests-hspec.log" 1024)
+    do
+      str <- lookup "HASURA_TEST_LOGTYPE" env
       case Char.toUpper <$> str of
-        "STDOUT" -> FL.LogStdout 64
-        "STDERR" -> FL.LogStderr 64
-        _ -> defaultLogType
+        "STDOUT" -> Just $ pure $ FL.LogStdout 64
+        "STDERR" -> Just $ pure $ FL.LogStderr 64
+        "FILE" -> Just $ pure $ FL.LogFileNoRotate "tests-hspec.log" 1024
+        _ | Just logfile <- "FILE=" `List.stripPrefix` str -> Just $ do
+          let dir = takeDirectory logfile
+          dirExists <- doesPathExist dir
+          fileExists <- doesFileExist logfile
+          unless
+            (dirExists || fileExists)
+            (error $ "(HASURA_TEST_LOGTYPE) Directory " ++ dir ++ " does not exist!")
+          pure $ FL.LogFileNoRotate logfile 1024
+        _ -> Nothing
 
 hook :: HasCallStack => SpecWith GlobalTestEnvironment -> Spec
 hook specs = do
@@ -116,7 +124,7 @@ hook specs = do
         TestEverything -> True
         TestBackend (DataConnector _) ->
           any (List.isInfixOf "DataConnector") labels
-        TestBackend backendType -> show backendType `elem` labels
+        TestBackend backendType -> any (List.isInfixOf (show backendType)) labels
         TestNoBackends -> True -- this is for catching "everything else"
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 

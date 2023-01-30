@@ -1,10 +1,7 @@
 import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
-import {
-  useMetadataSource,
-  useResourceVersion,
-} from '@/features/hasura-metadata-api';
+import { useMetadata } from '@/features/hasura-metadata-api';
 import { LocalRelationship } from '../types';
 import {
   generateCreateLocalRelationshipWithManualConfigurationRequest,
@@ -22,14 +19,19 @@ export const useManageLocalRelationship = ({
   onSuccess?: () => void;
   onError?: (err: Error) => void;
 }) => {
-  const { data: resource_version } = useResourceVersion();
-  const { data: metadataSource } = useMetadataSource(dataSourceName);
+  const { data } = useMetadata(m => {
+    return {
+      resource_version: m.resource_version,
+      source: m.metadata.sources.find(s => s.name === dataSourceName),
+    };
+  });
+
   const queryClient = useQueryClient();
   const { mutate, ...rest } = useMetadataMigration();
   const mutationOptions = useMemo(
     () => ({
       onSuccess: () => {
-        queryClient.refetchQueries(generateQueryKeys.metadata());
+        queryClient.invalidateQueries(generateQueryKeys.metadata());
         onSuccess?.();
       },
       onError: (err: Error) => {
@@ -39,6 +41,8 @@ export const useManageLocalRelationship = ({
     [onError, onSuccess, queryClient]
   );
 
+  const metadataSource = data?.source;
+  const resource_version = data?.resource_version;
   const driver = metadataSource?.kind;
 
   const renameRelationship = useCallback(

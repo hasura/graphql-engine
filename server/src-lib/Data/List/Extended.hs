@@ -21,7 +21,7 @@ import Prelude
 
 duplicates :: Hashable a => [a] -> Set.HashSet a
 duplicates =
-  Set.fromList . Map.keys . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
+  Map.keysSet . Map.filter (> 1) . Map.fromListWith (+) . map (,1 :: Int)
 
 -- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log(n))@
 --   time and requires 'Ord' instances.

@@ -26,7 +26,6 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
@@ -75,6 +74,7 @@ class
       Inc.ArrowDistribute arr,
       ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
       MonadIO m,
+      MonadBaseControl IO m,
       HasHttpManagerM m
     ) =>
     Logger Hasura ->
@@ -90,7 +90,7 @@ class
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
-    (MonadIO m, MonadResolveSource m) =>
+    (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
     Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->
@@ -105,8 +105,7 @@ class
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
     SourceMetadata b ->
     SourceConfig b ->
-    SourceTypeCustomization ->
-    m (Either QErr (ResolvedSource b))
+    m (Either QErr (DBObjectsIntrospection b))
 
   parseBoolExpOperations ::
     (MonadError QErr m, TableCoreInfoRM b m) =>

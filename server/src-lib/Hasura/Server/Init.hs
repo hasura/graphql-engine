@@ -21,6 +21,7 @@ module Hasura.Server.Init
     module Hasura.Server.Init.Env,
     module Hasura.Server.Init.Arg,
     module Hasura.Server.Init.Logging,
+    module Hasura.Server.Init.FeatureFlag,
   )
 where
 
@@ -41,6 +42,7 @@ import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg
 import Hasura.Server.Init.Config
 import Hasura.Server.Init.Env
+import Hasura.Server.Init.FeatureFlag
 import Hasura.Server.Init.Logging
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
@@ -202,7 +204,7 @@ mkServeOptions ServeOptionsRaw {..} = do
   soEnableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv of
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
-  soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
+  soDefaultNamingConvention <- withOptionDefault rsoDefaultNamingConvention defaultNamingConventionOption
   soMetadataDefaults <- withOptionDefault rsoMetadataDefaults metadataDefaultsOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
 

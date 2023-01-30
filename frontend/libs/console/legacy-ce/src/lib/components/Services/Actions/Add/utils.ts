@@ -23,8 +23,15 @@ const getArgObjFromDefinition = (
   type = getTrimmedType(type);
   const name = arg?.name;
   if (type === 'String' || type === 'ID') return { [name]: `${name}` };
-  if (type === 'Int' || type === 'Float') return { [name]: 10 };
+  if (type === 'Int' || type === 'Float' || type === 'BigInt')
+    return { [name]: 10 };
   if (type === 'Boolean') return { [name]: false };
+  if (type === '[String]' || type === '[ID]') {
+    return { [name]: ['foo', 'bar'] };
+  }
+  if (type === '[Int]' || type === '[Float]' || type === '[BigInt]') {
+    return { [name]: [10, 20] };
+  }
 
   const userDefType = typesdef?.types.find(
     (t: Record<string, any>) => t.name === type
@@ -38,6 +45,13 @@ const getArgObjFromDefinition = (
       [name]: obj,
     };
   }
+
+  if (userDefType?.kind === 'enum') {
+    return {
+      [name]: userDefType.values?.[0]?.value ?? '',
+    };
+  }
+
   return {};
 };
 

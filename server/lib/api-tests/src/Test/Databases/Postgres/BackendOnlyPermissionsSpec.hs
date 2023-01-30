@@ -26,7 +26,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   setupMetadata testEnvironment
@@ -60,7 +60,7 @@ schema =
             Schema.column "author_id" Schema.TInt
           ],
         tablePrimaryKey = ["id"],
-        tableReferences = [Schema.Reference "author_id" "author" "id"]
+        tableReferences = [Schema.reference "author_id" "author" "id"]
       }
   ]
 

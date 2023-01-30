@@ -7,7 +7,7 @@ import React from 'react';
 import { EventTriggerAutoCleanup } from '../../types';
 
 interface AutoCleanupFormProps {
-  cleanupConfig: EventTriggerAutoCleanup;
+  cleanupConfig?: EventTriggerAutoCleanup;
   onChange: (cleanupConfig: EventTriggerAutoCleanup) => void;
 }
 
@@ -32,11 +32,11 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
       >
         <div className="flex items-center mb-sm">
           <Switch
-            checked={!cleanupConfig.paused}
+            checked={!cleanupConfig?.paused}
             onCheckedChange={() => {
               onChange({
                 ...cleanupConfig,
-                paused: !cleanupConfig.paused,
+                paused: !cleanupConfig?.paused,
               });
             }}
           />
@@ -44,12 +44,12 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
         </div>
         <div className="flex items-center mb-sm">
           <Switch
-            checked={cleanupConfig.clean_invocation_logs}
-            disabled={cleanupConfig.paused}
+            checked={cleanupConfig?.clean_invocation_logs}
+            disabled={cleanupConfig?.paused}
             onCheckedChange={() => {
               onChange({
                 ...cleanupConfig,
-                clean_invocation_logs: !cleanupConfig.clean_invocation_logs,
+                clean_invocation_logs: !cleanupConfig?.clean_invocation_logs,
               });
             }}
           />
@@ -57,14 +57,15 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
             Clean invocation logs with event logs
           </span>
         </div>
+
         <InputSection
           label="Clear logs older than (hours)"
           tooltip="Clear event logs older than (in hours, default:168 hours or 7
             days)"
           placeholder={
-            defaultState.cleanupConfig.clear_older_than?.toString() || ''
+            defaultState?.cleanupConfig?.clear_older_than?.toString() ?? ''
           }
-          value={cleanupConfig.clear_older_than?.toString() || ''}
+          value={cleanupConfig?.clear_older_than?.toString() ?? ''}
           onChange={value => {
             onChange({
               ...cleanupConfig,
@@ -75,8 +76,8 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
         <InputSection
           label="Cleanup Frequency"
           tooltip="Cron expression at which the cleanup should be invoked."
-          placeholder={defaultState.cleanupConfig.timeout?.toString() || ''}
-          value={cleanupConfig.schedule?.toString() || ''}
+          placeholder={defaultState?.cleanupConfig?.timeout?.toString() ?? ''}
+          value={cleanupConfig?.schedule?.toString() ?? ''}
           onChange={value => {
             onChange({
               ...cleanupConfig,
@@ -120,8 +121,8 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
           <InputSection
             label="Timeout (seconds)"
             tooltip="Timeout for the query (in seconds, default: 60)"
-            placeholder={defaultState.cleanupConfig.timeout?.toString() || ''}
-            value={cleanupConfig.timeout?.toString() || ''}
+            placeholder={defaultState.cleanupConfig?.timeout?.toString() ?? ''}
+            value={cleanupConfig?.timeout?.toString() ?? ''}
             onChange={value => {
               onChange({
                 ...cleanupConfig,
@@ -134,9 +135,9 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
             label="Batch Size"
             tooltip="Number of event trigger logs to delete in a batch (default: 10,000)"
             placeholder={
-              defaultState.cleanupConfig.batch_size?.toString() || ''
+              defaultState.cleanupConfig?.batch_size?.toString() ?? ''
             }
-            value={cleanupConfig.batch_size?.toString() || ''}
+            value={cleanupConfig?.batch_size?.toString() ?? ''}
             onChange={value => {
               onChange({
                 ...cleanupConfig,

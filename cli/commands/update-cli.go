@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/Masterminds/semver"
 
@@ -36,6 +35,7 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 	updateCmd := &cobra.Command{
 		Use:          updateCLICmdUse,
 		Short:        "Update the CLI to latest or a specific version",
+		Long:         "You can use this command to update the CLI to the latest version or a specific version. Each time you run a CLI command, if a new version is available, you will be prompted to update the CLI.",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")
@@ -93,12 +93,8 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 		if showPrompt {
 			switch {
 			case hasUpdate:
-				ok := ask2confirm(latestVersion.String(), o.EC.Logger)
-				if !ok {
-					o.EC.Logger.Info("skipping update, run 'hasura update-cli' to update manually")
-					return nil
-				}
-				versionToBeInstalled = latestVersion
+                o.EC.Logger.Infof("A new version (v%s) is available for CLI, you can update it by running 'hasura update-cli'", latestVersion.String())
+                return nil
 			case hasPreReleaseUpdate:
 				o.EC.Logger.WithFields(logrus.Fields{
 					"version":   preReleaseVersion.Original(),
@@ -137,25 +133,6 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 
 	o.EC.Logger.WithField("version", "v"+versionToBeInstalled.String()).Info("Updated to latest version")
 	return nil
-}
-
-func ask2confirm(v string, log *logrus.Logger) bool {
-	var s string
-
-	log.Infof("A new version (v%s) is available for CLI, update? (y/N)", v)
-	_, err := fmt.Scan(&s)
-	if err != nil {
-		log.Error("unable to take input, skipping update")
-		return false
-	}
-
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-
-	if s == "y" || s == "yes" {
-		return true
-	}
-	return false
 }
 
 func getChangeLogLink(version *semver.Version) string {

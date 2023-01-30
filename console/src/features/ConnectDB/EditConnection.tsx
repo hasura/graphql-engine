@@ -1,9 +1,10 @@
 import { CustomizationForm } from '@/features/ConnectDB';
 import { Button } from '@/new-components/Button';
-import { Form, InputField, Select } from '@/new-components/Form';
+import { InputField, Select, useConsoleForm } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React from 'react';
 import { useQuery } from 'react-query';
+import { z } from 'zod';
 import { useTableDefinition } from '../Data';
 import { DataSource, exportMetadata } from '../DataSource';
 import { useHttpClient } from '../Network';
@@ -47,67 +48,68 @@ const useEditDataSourceConnectionInfo = () => {
 
 export const EditConnection = () => {
   const { data, isLoading } = useEditDataSourceConnectionInfo();
+  const {
+    schema = z.any(),
+    name,
+    driver,
+    configuration,
+    customization,
+  } = data || {};
   const { submit, isLoading: submitIsLoading } = useEditDataSourceConnection();
+  const {
+    methods: { formState },
+    Form,
+  } = useConsoleForm({
+    schema,
+    options: {
+      defaultValues: {
+        name,
+        driver,
+        configuration: (configuration as any)?.value,
+        replace_configuration: true,
+        customization,
+      },
+    },
+  });
 
   if (isLoading) return <>Loading...</>;
 
   if (!data) return <>Error</>;
 
-  const { schema, name, driver, configuration, customization } = data;
-
   if (!schema) return <>Could not find schema</>;
 
   return (
-    <Form
-      schema={schema}
-      onSubmit={values => {
-        submit(values);
-      }}
-      options={{
-        defaultValues: {
-          name,
-          driver,
-          configuration: (configuration as any).value,
-          replace_configuration: true,
-          customization,
-        },
-      }}
-      className="p-0 pl-sm"
-    >
-      {options => {
-        return (
-          <div className="max-w-5xl">
-            <InputField type="text" name="name" label="Database Display Name" />
+    <Form onSubmit={submit} className="p-0 pl-sm">
+      <div className="max-w-5xl">
+        <InputField type="text" name="name" label="Database Display Name" />
 
-            <Select
-              options={[{ label: driver, value: driver }]}
-              name="driver"
-              label="Data Source Driver"
-              disabled
-            />
+        <Select
+          options={[{ label: driver || '', value: driver }]}
+          name="driver"
+          label="Data Source Driver"
+          disabled
+        />
 
-            <div className="max-w-xl">
-              <Configuration name="configuration" />
-            </div>
-            <div className="mt-4">
-              <CustomizationForm />
-            </div>
-            <div className="mt-4">
-              <Button type="submit" mode="primary" isLoading={submitIsLoading}>
-                Edit Connection
-              </Button>
-            </div>
+        <div className="max-w-xl">
+          <Configuration name="configuration" />
+        </div>
+        <div className="mt-4">
+          <CustomizationForm />
+        </div>
+        <div className="mt-4">
+          <Button type="submit" mode="primary" isLoading={submitIsLoading}>
+            Edit Connection
+          </Button>
+        </div>
 
-            {!!Object(options.formState.errors)?.keys?.length && (
-              <div className="mt-6 max-w-xl">
-                <IndicatorCard status="negative">
-                  Error submitting form, see error messages above
-                </IndicatorCard>
-              </div>
-            )}
+        {!!Object(formState.errors)?.keys?.length && (
+          <div className="mt-6 max-w-xl">
+            <IndicatorCard status="negative">
+              Error submitting form, see error messages above
+            </IndicatorCard>
           </div>
-        );
-      }}
+        )}
+      </div>
     </Form>
   );
 };

@@ -2,10 +2,12 @@ package migrations
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 	"strconv"
 	"strings"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 )
@@ -27,18 +29,20 @@ func NewMigrationStateStoreHdbTable(client hasura.PGSourceOps, schema, table str
 }
 
 func (m *MigrationStateStoreHdbTable) InsertVersion(sourceName string, version int64) error {
+	var op errors.Op = "migrations.MigrationStateStoreHdbTable.InsertVersion"
 	query := hasura.PGRunSQLInput{
 		Source: sourceName,
 		SQL:    `INSERT INTO ` + fmt.Sprintf("%s.%s", m.schema, m.table) + ` (version, dirty) VALUES (` + strconv.FormatInt(version, 10) + `, ` + fmt.Sprintf("%t", false) + `)`,
 	}
 	_, err := m.client.PGRunSQL(query)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
 func (m *MigrationStateStoreHdbTable) SetVersion(sourceName string, version int64, dirty bool) error {
+	var op errors.Op = "migrations.MigrationStateStoreHdbTable.SetVersion"
 	if version >= 0 || (version == database.NilVersion && dirty) {
 		query := hasura.PGRunSQLInput{
 			Source: sourceName,
@@ -46,25 +50,27 @@ func (m *MigrationStateStoreHdbTable) SetVersion(sourceName string, version int6
 		}
 		_, err := m.client.PGRunSQL(query)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 	}
 	return nil
 }
 
 func (m *MigrationStateStoreHdbTable) RemoveVersion(sourceName string, version int64) error {
+	var op errors.Op = "migrations.MigrationStateStoreHdbTable.RemoveVersion"
 	query := hasura.PGRunSQLInput{
 		Source: sourceName,
 		SQL:    `DELETE FROM ` + fmt.Sprintf("%s.%s", m.schema, m.table) + ` WHERE version = ` + strconv.FormatInt(version, 10),
 	}
 	_, err := m.client.PGRunSQL(query)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
 func (m *MigrationStateStoreHdbTable) PrepareMigrationsStateStore(sourceName string) error {
+	var op errors.Op = "migrations.MigrationStateStoreHdbTable.PrepareMigrationsStateStore"
 	// check if migration table exists
 	query := hasura.PGRunSQLInput{
 		Source: sourceName,
@@ -73,11 +79,11 @@ func (m *MigrationStateStoreHdbTable) PrepareMigrationsStateStore(sourceName str
 
 	runsqlResp, err := m.client.PGRunSQL(query)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	if runsqlResp.ResultType != hasura.TuplesOK {
-		return fmt.Errorf("invalid result Type %s", runsqlResp.ResultType)
+		return errors.E(op, fmt.Errorf("invalid result Type %s", runsqlResp.ResultType))
 	}
 	result := runsqlResp.Result
 	if result[1][0] != "0" {
@@ -92,16 +98,17 @@ func (m *MigrationStateStoreHdbTable) PrepareMigrationsStateStore(sourceName str
 
 	runsqlResp, err = m.client.PGRunSQL(query)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	if runsqlResp.ResultType != hasura.CommandOK {
-		return fmt.Errorf("creating Version table failed %s", runsqlResp.ResultType)
+		return errors.E(op, fmt.Errorf("creating Version table failed %s", runsqlResp.ResultType))
 	}
 
 	return nil
 }
 
 func (m *MigrationStateStoreHdbTable) GetVersions(sourceName string) (map[uint64]bool, error) {
+	var op errors.Op = "migrations.MigrationStateStoreHdbTable.GetVersions"
 	query := hasura.PGRunSQLInput{
 		SQL:    `SELECT version, dirty FROM ` + fmt.Sprintf("%s.%s", m.schema, m.table),
 		Source: sourceName,
@@ -109,7 +116,7 @@ func (m *MigrationStateStoreHdbTable) GetVersions(sourceName string) (map[uint64
 
 	runsqlResp, err := m.client.PGRunSQL(query)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	if len(runsqlResp.Result) == 1 {
 		return nil, nil
@@ -123,11 +130,11 @@ func (m *MigrationStateStoreHdbTable) GetVersions(sourceName string) (map[uint64
 
 		version, err := strconv.ParseInt(val[0], 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.E(op, err)
 		}
 		dirty, err := strconv.ParseBool(val[1])
 		if err != nil {
-			return nil, err
+			return nil, errors.E(op, err)
 		}
 		versions[uint64(version)] = dirty
 		// check if we have to mimic this
@@ -138,6 +145,7 @@ func (m *MigrationStateStoreHdbTable) GetVersions(sourceName string) (map[uint64
 
 // SetVersions is similar to SetVersion defined above. with the only difference, this is adapted to accept multiple versions
 func (m *MigrationStateStoreHdbTable) SetVersions(sourceName string, versions []statestore.Version) error {
+	var op errors.Op = "migrations.MigrationStateStoreHdbTable.SetVersions"
 	var insertSql []string
 	for _, v := range versions {
 		if v.Version >= 0 || (v.Version == database.NilVersion && v.Dirty) {
@@ -152,7 +160,7 @@ func (m *MigrationStateStoreHdbTable) SetVersions(sourceName string, versions []
 		}
 		_, err := m.client.PGRunSQL(query)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 	}
 	return nil

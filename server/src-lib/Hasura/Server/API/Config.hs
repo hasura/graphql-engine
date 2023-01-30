@@ -43,7 +43,7 @@ data ServerConfig = ServerConfig
     scfgConsoleAssetsDir :: !(Maybe Text),
     scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature),
     scfgIsPrometheusMetricsEnabled :: !Bool,
-    scfgDefaultNamingConvention :: !(Maybe NamingCase)
+    scfgDefaultNamingConvention :: !NamingCase
   }
   deriving (Show, Eq)
 
@@ -59,7 +59,7 @@ runGetConfig ::
   Maybe Text ->
   Set.HashSet ExperimentalFeature ->
   Set.HashSet API ->
-  Maybe NamingCase ->
+  NamingCase ->
   ServerConfig
 runGetConfig
   functionPermsCtx

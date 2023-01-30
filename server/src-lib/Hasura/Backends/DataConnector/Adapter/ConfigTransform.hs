@@ -1,5 +1,6 @@
 module Hasura.Backends.DataConnector.Adapter.ConfigTransform
   ( transformSourceConfig,
+    transformConnSourceConfigUnsafe,
     transformConnSourceConfig,
     validateConfiguration,
     getConfigSchemaResponse,
@@ -14,6 +15,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as Text
 import Data.Text.Extended qualified as Text
+import Hasura.Backends.DataConnector.API (ConfigSchemaResponse)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (ConnSourceConfig, template, value), SourceConfig (..))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
@@ -41,8 +43,24 @@ transformSourceConfig sc@SourceConfig {_scConfig, _scTemplate} scope env = do
   transformedConfig <- transformConfig _scConfig _scTemplate scope env
   pure sc {_scConfig = transformedConfig}
 
-transformConnSourceConfig :: (MonadError QErr m) => ConnSourceConfig -> [(Text, J.Value)] -> Env.Environment -> m API.Config
-transformConnSourceConfig ConnSourceConfig {value, template} scope env = transformConfig value template scope env
+-- | Apply a transformation to a 'ConnSourceConfig' without validating the result.
+transformConnSourceConfigUnsafe :: (MonadError QErr m) => ConnSourceConfig -> [(Text, J.Value)] -> Env.Environment -> m API.Config
+transformConnSourceConfigUnsafe ConnSourceConfig {value, template} scope env = transformConfig value template scope env
+
+-- | Apply a transformation to a 'ConnSourceConfig' and validate the result.
+transformConnSourceConfig ::
+  (MonadError QErr m) =>
+  DC.DataConnectorName ->
+  Common.SourceName ->
+  ConfigSchemaResponse ->
+  ConnSourceConfig ->
+  [(Text, J.Value)] ->
+  Env.Environment ->
+  m API.Config
+transformConnSourceConfig dcName sourceName configSchemaResponse connSourceConfig scope env = do
+  transformedConfig <- transformConnSourceConfigUnsafe connSourceConfig scope env
+  validateConfiguration sourceName dcName configSchemaResponse transformedConfig
+  pure transformedConfig
 
 --------------------------------------------------------------------------------
 

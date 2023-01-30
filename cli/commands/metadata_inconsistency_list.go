@@ -21,7 +21,8 @@ func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataInconsistencyListCmd := &cobra.Command{
 		Use:          "list",
 		Aliases:      []string{"ls"},
-		Short:        "List all inconsistent objects from the metadata",
+		Short:        "List all inconsistent objects from the Hasura Metadata",
+		Long:         "At times, when developing, the Hasura Metadata can become inconsistent. This command can be used to list all inconsistent objects from the Hasura Metadata and allow you to understand why your project's Metadata is in an inconsistent state.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")

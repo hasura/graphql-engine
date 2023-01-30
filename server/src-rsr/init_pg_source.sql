@@ -25,6 +25,12 @@ CREATE TABLE hdb_catalog.hdb_source_catalog_version(
 CREATE UNIQUE INDEX hdb_source_catalog_version_one_row
 ON hdb_catalog.hdb_source_catalog_version((version IS NOT NULL));
 
+/* TODO: The columns `created_at` and `next_retry_at` does not contain timezone (TIMESTAMP type) while `locked` has a timezone
+offset (TIMESTAMPTZ). The time repesented by TIMESTAMP is in the timezone of the Postgres server. If the
+timezone of the PG server is changed, then the entries in the event_log table can be confusing since there is no
+timezone offset to highlight the difference. A possible solution to it is to change the type of the two columns to
+include the timezone offset and keep all the times in UTC. However, altering a column type is a time
+taking process, hence not migrating the source to add a timezone offset */
 CREATE TABLE hdb_catalog.event_log
 (
   id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,

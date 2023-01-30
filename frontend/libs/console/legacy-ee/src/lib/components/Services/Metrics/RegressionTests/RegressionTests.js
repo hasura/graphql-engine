@@ -32,26 +32,30 @@ export const RegressionTests = props => {
         >
           <TabList className={styles.tabListWrapper}>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 0 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 0 && styles.tabListActive
+              }`}
             >
               Test suite
             </Tab>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 1 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 1 && styles.tabListActive
+              }`}
             >
               New operations
             </Tab>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 2 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 2 && styles.tabListActive
+              }`}
             >
               Run tests
             </Tab>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 3 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 3 && styles.tabListActive
+              }`}
             >
               Past runs
             </Tab>

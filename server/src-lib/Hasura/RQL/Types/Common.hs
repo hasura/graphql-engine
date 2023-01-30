@@ -42,6 +42,7 @@ module Hasura.RQL.Types.Common
     ApolloFederationVersion (..),
     isApolloFedV1enabled,
     RemoteRelationshipG (..),
+    remoteRelationshipCodec,
     rrDefinition,
     rrName,
     TriggerOnReplication (..),
@@ -50,12 +51,14 @@ where
 
 import Autodocodec
   ( HasCodec (codec),
+    JSONCodec,
     bimapCodec,
     dimapCodec,
     disjointEitherCodec,
     optionalFieldOrNull',
     requiredField,
     requiredField',
+    requiredFieldWith',
     stringConstCodec,
   )
 import Autodocodec qualified as AC
@@ -64,13 +67,14 @@ import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.TH
-import Data.Aeson.Types (prependFailure, typeMismatch)
+import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Scientific (toBoundedInteger)
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.Typeable (Typeable)
 import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
@@ -78,7 +82,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Metadata.DTO.Utils (fromEnvCodec)
+import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -226,10 +230,15 @@ data SourceName
   | SNName NonEmptyText
   deriving (Show, Eq, Ord, Generic)
 
+sourceNameParser :: Text -> Parser SourceName
+sourceNameParser = \case
+  "default" -> pure SNDefault
+  t -> SNName <$> parseJSON (String t)
+
 instance FromJSON SourceName where
-  parseJSON = withText "String" $ \case
-    "default" -> pure SNDefault
-    t -> SNName <$> parseJSON (String t)
+  parseJSON = withText "String" sourceNameParser
+
+instance FromJSONKey SourceName
 
 instance HasCodec SourceName where
   codec = dimapCodec dec enc nonEmptyTextCodec
@@ -641,6 +650,9 @@ data TriggerOnReplication
 
 instance NFData TriggerOnReplication
 
+instance HasCodec TriggerOnReplication where
+  codec = boolConstCodec TOREnableTrigger TORDisableTrigger
+
 instance FromJSON TriggerOnReplication where
   parseJSON = withBool "TriggerOnReplication" $ \case
     True -> pure TOREnableTrigger
@@ -665,6 +677,17 @@ data RemoteRelationshipG definition = RemoteRelationship
     _rrDefinition :: definition
   }
   deriving (Show, Eq, Generic)
+
+remoteRelationshipCodec ::
+  forall definition.
+  (Typeable definition) =>
+  JSONCodec definition ->
+  JSONCodec (RemoteRelationshipG definition)
+remoteRelationshipCodec definitionCodec =
+  AC.object ("RemoteRelationship_" <> typeableName @definition) $
+    RemoteRelationship
+      <$> requiredField' "name" AC..= _rrName
+      <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
 
 $(makeLenses ''RemoteRelationshipG)
 $(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)

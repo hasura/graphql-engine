@@ -37,8 +37,8 @@ const defaultState = {
     time: 'desc',
   },
 };
-import failure  from '../images/failure.svg';
-import success  from '../images/success.svg';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const BrowserRows = props => {
   const [browseState, setState] = useState(defaultState);
@@ -340,8 +340,9 @@ const BrowserRows = props => {
             newRow[elem] = (
               <div
                 key={key}
-                className={`${styles.columnRow} ${elem === 'success' &&
-                  styles.textCenter}`}
+                className={`${styles.columnRow} ${
+                  elem === 'success' && styles.textCenter
+                }`}
                 title={getTitle()}
               >
                 {renderElement()}

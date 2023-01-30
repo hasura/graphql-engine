@@ -2,6 +2,7 @@ import {
   RequestTransformMethod,
   RequestTransformContentType,
   RequestTransformBodyActions,
+  QueryParams,
 } from '../../../metadata/types';
 import {
   SET_ENV_VARS,
@@ -56,6 +57,8 @@ import {
   SET_RESPONSE_TRANSFORM_STATE,
   defaultActionResponseBody,
   SetResponseTransformState,
+  defaultCronTriggerRequestBody,
+  defaultCronTriggerSampleInput,
 } from './stateDefaults';
 import { getSessionVarsFromLS, getEnvVarsFromLS } from './utils';
 
@@ -98,7 +101,7 @@ export const setRequestUrlPreview = (
 });
 
 export const setRequestQueryParams = (
-  requestQueryParams: KeyValuePair[]
+  requestQueryParams: QueryParams
 ): SetRequestQueryParams => ({
   type: SET_REQUEST_QUERY_PARAMS,
   requestQueryParams,
@@ -271,6 +274,23 @@ export const getEventRequestTransformDefaultState =
         form_template: [{ name: 'name', value: '{{$body.table.name}}' }],
       },
       requestSampleInput: defaultEventRequestSampleInput,
+    };
+  };
+
+export const getCronTriggerRequestTransformDefaultState =
+  (): RequestTransformState => {
+    return {
+      ...requestTransformState,
+      envVars: getEnvVarsFromLS(),
+      sessionVars: getSessionVarsFromLS(),
+      requestQueryParams: [{ name: '', value: '' }],
+      requestAddHeaders: [{ name: '', value: '' }],
+      requestBody: {
+        action: requestBodyActionState.transformApplicationJson,
+        template: defaultCronTriggerRequestBody,
+        form_template: [{ name: 'payload', value: '{{$body.payload}}' }],
+      },
+      requestSampleInput: defaultCronTriggerSampleInput,
     };
   };
 

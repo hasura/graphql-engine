@@ -92,6 +92,13 @@ data
       "event_webhook_processing_time"
       'DistributionType
       ()
+  -- | The time taken for an event to be delivered since it's been created (if
+  -- first attempt) or retried (after first attempt)
+  EventProcessingTime ::
+    ServerMetricsSpec
+      "event_processing_time"
+      'DistributionType
+      ()
 
 -- | Mutable references for the server metrics. See `ServerMetricsSpec` for a
 -- description of each metric.
@@ -106,7 +113,8 @@ data ServerMetrics = ServerMetrics
     smActiveLiveQueries :: !Gauge,
     smActiveStreamingSubscriptions :: !Gauge,
     smEventFetchTimePerBatch :: !Distribution,
-    smEventWebhookProcessingTime :: !Distribution
+    smEventWebhookProcessingTime :: !Distribution,
+    smEventProcessingTime :: !Distribution
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
@@ -122,4 +130,5 @@ createServerMetrics store = do
   smActiveStreamingSubscriptions <- createGauge ActiveStreaming () store
   smEventFetchTimePerBatch <- createDistribution EventFetchTimePerBatch () store
   smEventWebhookProcessingTime <- createDistribution EventWebhookProcessingTime () store
+  smEventProcessingTime <- createDistribution EventProcessingTime () store
   pure ServerMetrics {..}
