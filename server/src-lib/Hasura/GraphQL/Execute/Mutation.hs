@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
@@ -126,7 +127,12 @@ convertMutationSelectionSet
               AB.dispatchAnyBackend @BackendExecute
                 exists
                 \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
-                  let mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+                  let mReqId =
+                        case _qtcOmitRequestId <$> queryTagsConfig of
+                          -- we omit the request id only if a user explicitly wishes for it to be omitted.
+                          Just True -> Nothing
+                          _ -> Just reqId
+                      mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
                   dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo env stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
