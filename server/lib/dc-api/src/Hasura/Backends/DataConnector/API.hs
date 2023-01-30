@@ -20,6 +20,7 @@ module Hasura.Backends.DataConnector.API
     mutationCase,
     openApiSchema,
     Routes (..),
+    DatasetRoutes (..),
     apiClient,
   )
 where
@@ -148,26 +149,26 @@ type RawApi =
     :> ReqBody '[JSON] V0.RawRequest
     :> Post '[JSON] V0.RawResponse
 
-type DatasetGetApi =
+type DatasetGetTemplateApi =
   "datasets"
     :> "templates"
     :> Capture "template_name" DatasetTemplateName
-    :> Get '[JSON] V0.DatasetGetResponse
+    :> Get '[JSON] V0.DatasetGetTemplateResponse
 
-type DatasetPostApi =
+type DatasetCreateCloneApi =
   "datasets"
     :> "clones"
     :> Capture "clone_name" DatasetCloneName
-    :> ReqBody '[JSON] V0.DatasetPostRequest
-    :> Post '[JSON] V0.DatasetPostResponse
+    :> ReqBody '[JSON] V0.DatasetCreateCloneRequest
+    :> Post '[JSON] V0.DatasetCreateCloneResponse
 
-type DatasetDeleteApi =
+type DatasetDeleteCloneApi =
   "datasets"
     :> "clones"
     :> Capture "clone_name" DatasetCloneName
-    :> Delete '[JSON] V0.DatasetDeleteResponse
+    :> Delete '[JSON] V0.DatasetDeleteCloneResponse
 
-type DatasetApi = DatasetGetApi :<|> DatasetPostApi :<|> DatasetDeleteApi
+type DatasetApi = DatasetGetTemplateApi :<|> DatasetCreateCloneApi :<|> DatasetDeleteCloneApi
 
 data Prometheus
 
@@ -210,10 +211,18 @@ data Routes mode = Routes
     _metrics :: mode :- MetricsApi,
     -- | 'GET /raw'
     _raw :: mode :- RawApi,
-    -- | 'GET /datasets/:template_name'
-    --   'POST /datasets/:clone_name'
-    --   'DELETE /datasets/:clone_name'
-    _datasets :: mode :- DatasetApi
+    -- | '/datasets'
+    _datasets :: mode :- NamedRoutes DatasetRoutes
+  }
+  deriving stock (Generic)
+
+data DatasetRoutes mode = DatasetRoutes
+  { -- | 'GET /datasets/templates/:template_name'
+    _getTemplate :: mode :- DatasetGetTemplateApi,
+    -- | 'POST /datasets/clones/:clone_name'
+    _createClone :: mode :- DatasetCreateCloneApi,
+    -- | 'DELETE /datasets/clones/:clone_name'
+    _deleteClone :: mode :- DatasetDeleteCloneApi
   }
   deriving stock (Generic)
 

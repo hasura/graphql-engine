@@ -4,7 +4,7 @@
 
 import type { DatasetTemplateName } from './DatasetTemplateName';
 
-export type DatasetPostRequest = {
+export type DatasetCreateCloneRequest = {
   from: DatasetTemplateName;
 };
 

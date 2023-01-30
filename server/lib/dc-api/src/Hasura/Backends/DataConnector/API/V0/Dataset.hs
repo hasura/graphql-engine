@@ -3,20 +3,19 @@
 
 module Hasura.Backends.DataConnector.API.V0.Dataset
   ( DatasetTemplateName (..),
-    DatasetCloneName (..),
-    DatasetGetResponse (..),
-    DatasetPostRequest (..),
-    DatasetPostResponse (..),
-    DatasetDeleteResponse (..),
-    datasetGetSuccess,
-    datasetDeleteSuccess,
-    -- | Lenses
     unDatasetTemplateName,
+    DatasetCloneName (..),
     unDatasetCloneName,
-    dsExists,
-    dspFrom,
-    dspConfig,
-    dsdMessage,
+    DatasetGetTemplateResponse (..),
+    dgtrExists,
+    datasetGetTemplateSuccess,
+    DatasetCreateCloneRequest (..),
+    dccrFrom,
+    DatasetCreateCloneResponse (..),
+    dccrConfig,
+    DatasetDeleteCloneResponse (..),
+    ddcrMessage,
+    datasetDeleteCloneSuccess,
   )
 where
 
@@ -61,64 +60,64 @@ instance HasCodec DatasetCloneName where
 $(makeLenses ''DatasetCloneName)
 
 -- | Request Dataset Info
-data DatasetGetResponse = DatasetGetResponse
-  { _dsExists :: Bool
+data DatasetGetTemplateResponse = DatasetGetTemplateResponse
+  { _dgtrExists :: Bool
   }
   deriving stock (Eq, Ord, Show, Data)
-  deriving (ToJSON, FromJSON, ToSchema) via Autodocodec DatasetGetResponse
+  deriving (ToJSON, FromJSON, ToSchema) via Autodocodec DatasetGetTemplateResponse
 
-datasetGetSuccess :: DatasetGetResponse
-datasetGetSuccess = DatasetGetResponse True
+datasetGetTemplateSuccess :: DatasetGetTemplateResponse
+datasetGetTemplateSuccess = DatasetGetTemplateResponse True
 
-instance HasCodec DatasetGetResponse where
+instance HasCodec DatasetGetTemplateResponse where
   codec =
-    object "DatasetGetResponse" $
-      DatasetGetResponse
-        <$> requiredField "exists" "Message detailing if the dataset exists" .= _dsExists
+    object "DatasetGetTemplateResponse" $
+      DatasetGetTemplateResponse
+        <$> requiredField "exists" "Message detailing if the dataset exists" .= _dgtrExists
 
-$(makeLenses ''DatasetGetResponse)
+$(makeLenses ''DatasetGetTemplateResponse)
 
 -- | Create a new Dataset
-data DatasetPostRequest = DatasetPostRequest
-  {_dspFrom :: DatasetTemplateName}
+data DatasetCreateCloneRequest = DatasetCreateCloneRequest
+  {_dccrFrom :: DatasetTemplateName}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetPostRequest
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetCreateCloneRequest
 
-instance HasCodec DatasetPostRequest where
+instance HasCodec DatasetCreateCloneRequest where
   codec =
-    object "DatasetPostRequest" $
-      DatasetPostRequest
-        <$> requiredField "from" "The named dataset to clone from" .= _dspFrom
+    object "DatasetCreateCloneRequest" $
+      DatasetCreateCloneRequest
+        <$> requiredField "from" "The named dataset to clone from" .= _dccrFrom
 
-$(makeLenses ''DatasetPostRequest)
+$(makeLenses ''DatasetCreateCloneRequest)
 
-data DatasetPostResponse = DatasetPostResponse
-  {_dspConfig :: Config.Config}
+data DatasetCreateCloneResponse = DatasetCreateCloneResponse
+  {_dccrConfig :: Config.Config}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetPostResponse
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetCreateCloneResponse
 
-instance HasCodec DatasetPostResponse where
+instance HasCodec DatasetCreateCloneResponse where
   codec =
-    object "DatasetPostResponse" $
-      DatasetPostResponse
-        <$> requiredField "config" "A config to connect to the cloned dataset" .= _dspConfig
+    object "DatasetCreateCloneResponse" $
+      DatasetCreateCloneResponse
+        <$> requiredField "config" "A config to connect to the cloned dataset" .= _dccrConfig
 
-$(makeLenses ''DatasetPostResponse)
+$(makeLenses ''DatasetCreateCloneResponse)
 
 -- | Delete a Dataset
-data DatasetDeleteResponse = DatasetDeleteResponse
-  { _dsdMessage :: Text
+data DatasetDeleteCloneResponse = DatasetDeleteCloneResponse
+  { _ddcrMessage :: Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetDeleteResponse
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DatasetDeleteCloneResponse
 
-datasetDeleteSuccess :: DatasetDeleteResponse
-datasetDeleteSuccess = DatasetDeleteResponse "success"
+datasetDeleteCloneSuccess :: DatasetDeleteCloneResponse
+datasetDeleteCloneSuccess = DatasetDeleteCloneResponse "success"
 
-instance HasCodec DatasetDeleteResponse where
+instance HasCodec DatasetDeleteCloneResponse where
   codec =
-    object "DatasetDeleteResponse" $
-      DatasetDeleteResponse
-        <$> requiredField "message" "The named dataset to clone from" .= _dsdMessage
+    object "DatasetDeleteCloneResponse" $
+      DatasetDeleteCloneResponse
+        <$> requiredField "message" "The named dataset to clone from" .= _ddcrMessage
 
-$(makeLenses ''DatasetDeleteResponse)
+$(makeLenses ''DatasetDeleteCloneResponse)

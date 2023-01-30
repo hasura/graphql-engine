@@ -4,7 +4,7 @@
 
 import type { Config } from './Config';
 
-export type DatasetPostResponse = {
+export type DatasetCreateCloneResponse = {
   config: Config;
 };
 

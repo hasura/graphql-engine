@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type DatasetDeleteResponse = {
+export type DatasetDeleteCloneResponse = {
   /**
    * The named dataset to clone from
    */
