@@ -9,6 +9,7 @@
     "console-legacy-ce": "libs/console/legacy-ce",
     "console-legacy-ee": "libs/console/legacy-ee",
     "nx-internal-plugin": "libs/nx/internal-plugin",
-    "nx-internal-plugin-e2e": "apps/nx/internal-plugin-e2e"
+    "nx-internal-plugin-e2e": "apps/nx/internal-plugin-e2e",
+    "nx-unplugin-dynamic-asset-loader": "libs/nx/unplugin-dynamic-asset-loader"
   }
 }
