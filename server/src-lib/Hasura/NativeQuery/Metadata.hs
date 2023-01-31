@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | This module houses the types and functions associated with the default
@@ -7,6 +8,10 @@ module Hasura.NativeQuery.Metadata
     NativeQueryNameImpl (..),
     NativeQueryInfoImpl (..),
     TrackNativeQueryImpl (..),
+    RawQuery (..),
+    InterpolatedItem (..),
+    InterpolatedQuery (..),
+    parseInterpolatedQuery,
     defaultNativeQueryTrackToInfo,
     module Hasura.NativeQuery.Types,
   )
@@ -15,6 +20,7 @@ where
 import Autodocodec
 import Autodocodec qualified as AC
 import Data.Aeson
+import Data.Text qualified as T
 import Data.Text.Extended (ToTxt)
 import Data.Voidable
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
@@ -26,7 +32,8 @@ import Hasura.SQL.Backend
 
 -- The name of a native query. This appears as a root field name in the graphql schema.
 newtype NativeQueryNameImpl = NativeQueryNameImpl {getNativeQueryNameImpl :: Text}
-  deriving (Eq, Ord, Show, Generic, Hashable, NFData, ToJSON, FromJSON, ToTxt)
+  deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
+  deriving stock (Generic)
 
 instance FromJSONKey NativeQueryNameImpl
 
@@ -34,17 +41,62 @@ instance ToJSONKey NativeQueryNameImpl
 
 deriving instance Eq (Voidable NativeQueryNameImpl)
 
-deriving instance Hashable (Voidable NativeQueryNameImpl)
+deriving newtype instance Hashable (Voidable NativeQueryNameImpl)
 
-deriving instance FromJSON (Voidable NativeQueryNameImpl)
+deriving newtype instance FromJSON (Voidable NativeQueryNameImpl)
 
-deriving instance FromJSONKey (Voidable NativeQueryNameImpl)
+deriving newtype instance FromJSONKey (Voidable NativeQueryNameImpl)
 
 deriving instance Show (Voidable NativeQueryNameImpl)
 
-deriving instance ToJSON (Voidable NativeQueryNameImpl)
+deriving newtype instance ToJSON (Voidable NativeQueryNameImpl)
 
-deriving instance ToJSONKey (Voidable NativeQueryNameImpl)
+---------------------------------------
+
+newtype RawQuery = RawQuery {getRawQuery :: Text}
+  deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
+
+instance HasCodec RawQuery where
+  codec = dimapCodec RawQuery getRawQuery codec
+
+---------------------------------------
+
+data InterpolatedItem variable
+  = IIText Text
+  | IIVariable variable
+  deriving stock (Eq, Ord, Show, Functor, Foldable, Generic, Traversable)
+
+deriving instance (Hashable variable) => Hashable (InterpolatedItem variable)
+
+deriving instance (NFData variable) => NFData (InterpolatedItem variable)
+
+---------------------------------------
+
+newtype InterpolatedQuery variable = InterpolatedQuery {getInterpolatedQuery :: [InterpolatedItem variable]}
+  deriving newtype (Eq, Ord, Show, Generic)
+
+deriving newtype instance (Hashable variable) => Hashable (InterpolatedQuery variable)
+
+deriving newtype instance (NFData variable) => NFData (InterpolatedQuery variable)
+
+instance Functor InterpolatedQuery where
+  fmap f (InterpolatedQuery parts) = InterpolatedQuery ((fmap . fmap) f parts)
+
+instance Foldable InterpolatedQuery where
+  foldr f b (InterpolatedQuery parts) =
+    foldr f b (mapMaybe unwrap parts)
+    where
+      unwrap = \case
+        IIVariable var -> Just var
+        _ -> Nothing
+
+instance Traversable InterpolatedQuery where
+  traverse f (InterpolatedQuery parts) =
+    InterpolatedQuery <$> (traverse . traverse) f parts
+
+---------------------------------------
+
+deriving newtype instance ToJSONKey (Voidable NativeQueryNameImpl)
 
 instance HasCodec NativeQueryNameImpl where
   codec = coerceCodec @Text
@@ -120,7 +172,8 @@ deriving newtype instance (Backend b, HasCodec (ScalarType b)) => FromJSON (Void
 deriving newtype instance (Backend b, HasCodec (ScalarType b)) => ToJSON (Voidable (NativeQueryInfoImpl b))
 
 newtype NativeQueryArgumentName = NativeQueryArgumentName {getNativeQueryArgumentName :: Text}
-  deriving (Eq, Ord, Show, Generic, Hashable)
+  deriving newtype (Eq, Ord, Show, Hashable)
+  deriving stock (Generic)
 
 deriving newtype instance ToJSON NativeQueryArgumentName
 
@@ -144,18 +197,18 @@ data TrackNativeQueryImpl (b :: BackendType) = TrackNativeQueryImpl
 
 -- | Default implementation of the method 'nativeQueryTrackToInfo'.
 defaultNativeQueryTrackToInfo :: TrackNativeQueryImpl b -> NativeQueryInfoImpl b
-defaultNativeQueryTrackToInfo TrackNativeQueryImpl {..} =
+defaultNativeQueryTrackToInfo TrackNativeQueryImpl {..} = do
   NativeQueryInfoImpl {..}
   where
     nqiiRootFieldName = tnqRootFieldName
-    nqiiCode = tnqCode
     nqiiReturns = tnqReturns
     nqiiArguments = tnqArguments
     nqiiDescription = tnqDescription
+    nqiiCode = tnqCode
 
-deriving instance (Backend b, HasCodec (ScalarType b)) => FromJSON (Voidable (TrackNativeQueryImpl b))
+deriving newtype instance (Backend b, HasCodec (ScalarType b)) => FromJSON (Voidable (TrackNativeQueryImpl b))
 
-deriving instance (Backend b, HasCodec (ScalarType b)) => ToJSON (Voidable (TrackNativeQueryImpl b))
+deriving newtype instance (Backend b, HasCodec (ScalarType b)) => ToJSON (Voidable (TrackNativeQueryImpl b))
 
 instance (Backend b, HasCodec (ScalarType b)) => HasCodec (TrackNativeQueryImpl b) where
   codec =
@@ -192,3 +245,42 @@ deriving via
   (Autodocodec (TrackNativeQueryImpl b))
   instance
     (Backend b, HasCodec (ScalarType b)) => ToJSON (TrackNativeQueryImpl b)
+
+-- | extract all of the `{{ variable }}` inside our query string
+parseInterpolatedQuery ::
+  Text ->
+  Either Text (InterpolatedQuery NativeQueryArgumentName)
+parseInterpolatedQuery =
+  fmap
+    ( InterpolatedQuery
+        . mergeAdjacent
+        . trashEmpties
+    )
+    . consumeString
+    . T.unpack
+  where
+    trashEmpties = filter (/= IIText "")
+
+    mergeAdjacent = \case
+      (IIText a : IIText b : rest) ->
+        mergeAdjacent (IIText (a <> b) : rest)
+      (a : rest) -> a : mergeAdjacent rest
+      [] -> []
+
+    consumeString :: String -> Either Text [InterpolatedItem NativeQueryArgumentName]
+    consumeString str =
+      let (beforeCurly, fromCurly) = break (== '{') str
+       in case fromCurly of
+            ('{' : '{' : rest) ->
+              (IIText (T.pack beforeCurly) :) <$> consumeVar rest
+            ('{' : other) ->
+              (IIText (T.pack (beforeCurly <> "{")) :) <$> consumeString other
+            _other -> pure [IIText (T.pack beforeCurly)]
+
+    consumeVar :: String -> Either Text [InterpolatedItem NativeQueryArgumentName]
+    consumeVar str =
+      let (beforeCloseCurly, fromClosedCurly) = break (== '}') str
+       in case fromClosedCurly of
+            ('}' : '}' : rest) ->
+              (IIVariable (NativeQueryArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
+            _ -> Left "Found '{{' without a matching closing '}}'"

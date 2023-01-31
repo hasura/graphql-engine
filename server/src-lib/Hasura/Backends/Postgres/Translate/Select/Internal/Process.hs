@@ -176,7 +176,7 @@ processSelectParams
           tell $
             mempty
               { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HM.singleton cteName (S.RawSQL $ nqCode nq))
+                  CustomSQLCTEs (HM.singleton cteName (S.RawQuery $ nqCode nq))
               }
 
           pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing

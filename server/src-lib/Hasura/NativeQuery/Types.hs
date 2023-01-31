@@ -6,6 +6,7 @@
 -- are free to provide their own as needed.
 module Hasura.NativeQuery.Types
   ( NativeQueryMetadata (..),
+    NativeQueryParseError (..),
     BackendTrackNativeQuery (..),
   )
 where
@@ -82,3 +83,7 @@ class
 newtype BackendTrackNativeQuery b = BackendTrackNativeQuery {getBackendTrackNativeQuery :: Voidable (TrackNativeQuery b)}
 
 deriving newtype instance NativeQueryMetadata b => FromJSON (BackendTrackNativeQuery b)
+
+-- Things that might go wrong when converting a Native Query metadata request
+-- into a valid metadata item (such as failure to interpolate the query)
+newtype NativeQueryParseError = NativeQueryParseError Text
