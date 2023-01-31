@@ -41,7 +41,6 @@ export const showNotification = (
   noDismissNotifications?: boolean
 ): Thunk => {
   return () => {
-    console.log('showNotification', options, level, noDismissNotifications);
     const toastProps: ToastProps = {
       type: level,
     };
