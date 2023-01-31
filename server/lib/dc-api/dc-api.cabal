@@ -52,6 +52,9 @@ common common-all
     -Wno-missing-safe-haskell-mode
     -- We want these warnings, but the code doesn't satisfy them yet:
     -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-partial-fields
+    -Wno-implicit-prelude
 
 library
   import: common-all

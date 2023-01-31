@@ -44,3 +44,5 @@ library
       -Wno-missing-safe-haskell-mode
       -- We want these warnings, but the code doesn't satisfy them yet:
       -Wno-missing-deriving-strategies
+      -Wno-redundant-constraints
+      -Wno-unused-imports
