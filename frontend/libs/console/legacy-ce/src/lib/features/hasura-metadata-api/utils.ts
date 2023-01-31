@@ -1,17 +1,17 @@
-import { Metadata, Table } from '@/features/hasura-metadata-types';
+import { Metadata, Source, Table } from '@/features/hasura-metadata-types';
 import { areTablesEqual } from './areTablesEqual';
 
-/* 
+/*
 
-  These utility functions are meant to be the lowest level of re-usable metadata utility operations. 
-  
+  These utility functions are meant to be the lowest level of re-usable metadata utility operations.
+
   The flow of lowest level to higher level is:
 
     utility functions -> selectors -> useMetadata hook
 
-  These functions are separated from the selectors so that a developer may make use of them within a custom selector. 
-  
-  For example, if you are composing a custom selector to get table metadata comments, 
+  These functions are separated from the selectors so that a developer may make use of them within a custom selector.
+
+  For example, if you are composing a custom selector to get table metadata comments,
   you can leverage the findMetadataTable() utility function alongside useMetadata() like this:
 
   const { isLoading, data: savedComment } = useMetadata(
@@ -21,7 +21,7 @@ import { areTablesEqual } from './areTablesEqual';
   These utility functions are also used within selectors.ts
 
   Add utility functions only if it would be helpful for common/universally needed operations.
-  
+
 */
 
 export const findMetadataSource = (dataSourceName: string, m: Metadata) =>
@@ -35,3 +35,6 @@ export const findMetadataTable = (
   findMetadataSource(dataSourceName, m)?.tables.find(t =>
     areTablesEqual(t.table, table)
   );
+
+export const getSupportsForeignKeys = (source: Source | undefined) =>
+  source?.kind !== 'bigquery';

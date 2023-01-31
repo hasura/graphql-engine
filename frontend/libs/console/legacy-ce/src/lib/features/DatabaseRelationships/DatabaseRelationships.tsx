@@ -1,8 +1,10 @@
+import React, { useState } from 'react';
 import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { useFireNotification } from '@/new-components/Notifications';
-import React, { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
+import Legend from './components/Legend';
+import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
 import { MODE, Relationship } from './types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
 import { NOTIFICATIONS } from './components/constants';
@@ -13,9 +15,10 @@ export interface DatabaseRelationshipsProps {
   table: Table;
 }
 
-export const DatabaseRelationships = (props: DatabaseRelationshipsProps) => {
-  const { dataSourceName, table } = props;
-
+export const DatabaseRelationships = ({
+  dataSourceName,
+  table,
+}: DatabaseRelationshipsProps) => {
   const [{ mode, relationship }, setTabState] = useState<{
     mode?: MODE;
     relationship?: Relationship;
@@ -59,7 +62,8 @@ export const DatabaseRelationships = (props: DatabaseRelationshipsProps) => {
     <div className="my-2">
       <div>
         <AvailableRelationshipsList
-          {...props}
+          dataSourceName={dataSourceName}
+          table={table}
           onAction={(_relationship, _mode) => {
             setTabState({
               mode: _mode,
@@ -67,6 +71,10 @@ export const DatabaseRelationships = (props: DatabaseRelationshipsProps) => {
             });
           }}
         />
+
+        <SuggestedRelationships dataSourceName={dataSourceName} table={table} />
+
+        <Legend />
       </div>
       <div>
         {mode && (

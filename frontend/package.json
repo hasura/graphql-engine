@@ -245,6 +245,7 @@
     "@types/file-loader": "4.2.0",
     "@types/fork-ts-checker-webpack-plugin": "0.4.5",
     "@types/highlight.js": "9.12.4",
+    "@types/inflection": "^1.13.0",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jest": "27.4.1",
     "@types/jquery": "3.3.33",
