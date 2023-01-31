@@ -1,7 +1,7 @@
 ---
 description: Hasura Cloud Query tags
 sidebar_label: Query Tags
-title: 'Cloud Standard & EE: Query Tags'
+title: 'Cloud & Enterprise: Query Tags'
 keywords:
   - hasura
   - docs
@@ -15,7 +15,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # Query Tags
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Standard, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Standard, Professional, Enterprise</div>
 
 ## Introduction
 
@@ -110,15 +110,15 @@ In the above Metadata spec:
     tags is enabled for the source and the format used is <em>standard</em>.
 2.  To disable query tags for any source, set the value of <em>disabled</em> field to <em>true</em>.
 3.  To override the default format (<em>Standard</em>) for query tags, use the <em>format</em> field.
-4.  To omit the `request_id` part of the query tags for any source, set the value of <em>omit_request_id</em> field to <em>true</em>.
+4.  To omit the `request_id` part of the query tags for any source, set the value of <em>omit_request_id</em> field to
+    <em>true</em>.
 
 :::info
 
-When the `use_prepared_statements` flag for a Postgres source is enabled,
-omitting the `request_id` part of the query tags is recommended.
+When the `use_prepared_statements` flag for a Postgres source is enabled, omitting the `request_id` part of the query
+tags is recommended.
 
 :::
-
 
 ## Example Metadata Specification
 

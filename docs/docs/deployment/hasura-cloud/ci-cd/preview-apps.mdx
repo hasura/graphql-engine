@@ -15,11 +15,11 @@ sidebar_position: 10
 sidebar_class_name: cloud-and-enterprise-icon
 ---
 
-import Thumbnail from '@site/src/components/Thumbnail';
+import Thumbnail from "@site/src/components/Thumbnail";
 
 # Preview Apps
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud</div>
 
 ## TL;DR
 
@@ -213,7 +213,7 @@ more information.
 A sample file would look like this:
 
 ```yaml
-name: 'preview-apps'
+name: "preview-apps"
 on: # rebuild any PRs and main branch changes
   pull_request:
   push:
@@ -226,7 +226,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: hasura/hasura-cloud-preview-apps@v0.1.7
         with:
-          name: 'preview-repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}'
+          name: "preview-repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
           postgresDBConfig: |
             POSTGRES_SERVER_CONNECTION_URI=${{secrets.POSTGRES_SERVER_CONNECTION_URI}}
             PG_ENV_VARS_FOR_HASURA=PG_DB_URL_1,PG_DB_URL_2,PG_DB_URL3
@@ -270,7 +270,7 @@ jobs:
       - name: Hasura Cloud Preview Apps
         uses: hasura/hasura-cloud-preview-apps@v0.1.5
         with:
-          name: 'repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}'
+          name: "repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
           postgresDBConfig: |
             POSTGRES_SERVER_CONNECTION_URI=${{secrets.POSTGRES_SERVER_CONNECTION_URI}}
             PG_ENV_VARS_FOR_HASURA=PG_DB_URL_1,PG_DB_URL_2,PG_DB_URL3

@@ -20,6 +20,8 @@ keywords:
 
 # Metadata API Reference: Observability Options
 
+<div className="badge badge--primary heading-badge">Available on: Community, Cloud, Enterprise</div>
+
 ## Introduction
 
 The API to manage `Observability` related metadata configurations.
@@ -41,20 +43,19 @@ X-Hasura-Role: admin
 {
     "type": "set_metrics_config",
     "args": {
-        "analyze_query_variables": false    
+        "analyze_query_variables": false
     }
 }
 ```
 
 ### Args syntax {#set-metrics-config-syntax}
 
-| Key                     | Required | Schema    | Description                                                                                         |
-|-------------------------|----------|-----------|-----------------------------------------------------------------------------------------------------|
-| analyze_query_variables | false    | boolean   | Enables logging of the values of the query variables provided for each request. Default is `false`. |
+| Key                     | Required | Schema  | Description                                                                                         |
+| ----------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
+| analyze_query_variables | false    | boolean | Enables logging of the values of the query variables provided for each request. Default is `false`. |
 
 Please see the corresponding
 [feature documentation for the usage of these configurations](/observability/operations.mdx#capture-query-variables).
-
 
 ## remove_metrics_config {#metadata-remove-metrics-config}
 
