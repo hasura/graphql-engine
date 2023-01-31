@@ -1,4 +1,4 @@
-# DATE VERSION: 2023-01-23
+# DATE VERSION: 2023-01-31
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 FROM ubuntu:focal-20221130
 
@@ -40,8 +40,9 @@ RUN set -ex; \
     find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
 # Cleanup unwanted files and packages
+# Note: curl is not removed, it's required to support health checks
 RUN set -ex; \
-    apt-get -y remove curl gnupg2; \
+    apt-get -y remove gnupg2; \
     apt-get -y auto-remove; \
     apt-get -y clean; \
     rm -rf /var/lib/apt/lists/* /usr/share/doc/ /usr/share/man/ /usr/share/locale/
