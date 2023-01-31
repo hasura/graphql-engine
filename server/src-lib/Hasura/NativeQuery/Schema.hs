@@ -122,8 +122,12 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
         (HM.toList argsSignature)
 
   let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
+
   pure $
-    P.field
-      [G.name|args|]
-      desc
-      (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)
+    if null argsSignature
+      then mempty
+      else
+        P.field
+          [G.name|args|]
+          desc
+          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)

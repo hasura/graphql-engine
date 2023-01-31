@@ -79,7 +79,7 @@ instance (Backend b, HasCodec (ScalarType b)) => HasCodec (NativeQueryInfoImpl b
           AC..= nqiiCode
         <*> requiredField "returns" returnsDoc
           AC..= nqiiReturns
-        <*> requiredField "arguments" argumentDoc
+        <*> optionalFieldWithDefault "arguments" mempty argumentDoc
           AC..= nqiiArguments
         <*> optionalField "description" descriptionDoc
           AC..= nqiiDescription
@@ -169,7 +169,7 @@ instance (Backend b, HasCodec (ScalarType b)) => HasCodec (TrackNativeQueryImpl 
           AC..= tnqRootFieldName
         <*> requiredField "code" codeDoc
           AC..= tnqCode
-        <*> requiredField "arguments" argumentsDoc
+        <*> optionalFieldWithDefault "arguments" mempty argumentsDoc
           AC..= tnqArguments
         <*> optionalField "description" descriptionDoc
           AC..= tnqDescription
