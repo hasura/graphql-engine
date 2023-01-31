@@ -76,13 +76,44 @@ import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Source (SourceInfo (..))
+import Hasura.RQL.Types.Source (SourceInfo (..), unsafeSourceInfo)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
+
+-- | Helper function to run the post drop source hook
+postDropSourceHookHelper ::
+  ( MonadError QErr m,
+    MonadIO m,
+    MonadBaseControl IO m,
+    MonadReader r m,
+    Has (HL.Logger HL.Hasura) r
+  ) =>
+  SchemaCache ->
+  SourceName ->
+  AB.AnyBackend SourceMetadata ->
+  m ()
+postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
+  logger :: (HL.Logger HL.Hasura) <- asks getter
+
+  AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(_ :: SourceMetadata b) -> do
+    let sourceInfoMaybe = unsafeSourceInfo @b =<< Map.lookup sourceName (scSources oldSchemaCache)
+    case sourceInfoMaybe of
+      Nothing ->
+        HL.unLogger logger $
+          MetadataLog
+            HL.LevelWarn
+            ( "Could not cleanup the source '"
+                <> sourceName
+                  <<> "' while dropping it from the graphql-engine as it is inconsistent."
+                <> " Please consider cleaning the resources created by the graphql engine,"
+                <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually "
+            )
+            J.Null
+      Just sourceInfo -> runPostDropSourceHook defaultSource sourceInfo
 
 runClearMetadata ::
   forall m r.
@@ -99,30 +130,8 @@ runClearMetadata ::
   m EncJSON
 runClearMetadata _ = do
   metadata <- getMetadata
-  logger :: (HL.Logger HL.Hasura) <- asks getter
-  -- Clean up all sources, drop hdb_catalog schema from source
-  for_ (OMap.toList $ _metaSources metadata) $ \(sourceName, backendSourceMetadata) ->
-    AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata backendSourceMetadata) \(_sourceMetadata :: SourceMetadata b) -> do
-      sourceInfoMaybe <- askSourceInfoMaybe @b sourceName
-      case sourceInfoMaybe of
-        Nothing ->
-          HL.unLogger logger $
-            MetadataLog
-              HL.LevelWarn
-              ( "Could not cleanup the source '"
-                  <> sourceName
-                    <<> "' while dropping it from the graphql-engine as it is inconsistent."
-                  <> " Please consider cleaning the resources created by the graphql engine,"
-                  <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually "
-              )
-              J.Null
-        Just sourceInfo ->
-          -- We do not bother dropping all dependencies on the source, because the
-          -- metadata is going to be replaced with an empty metadata. And dropping the
-          -- depdencies would lead to rebuilding of schema cache which is of no use here
-          -- since we do not use the rebuilt schema cache. Hence, we only clean up the
-          -- 'hdb_catalog' tables from the source.
-          runPostDropSourceHook sourceName sourceInfo
+
+  oldSchemaCache <- askSchemaCache
 
   -- We can infer whether the server is started with `--database-url` option
   -- (or corresponding env variable) by checking the existence of @'defaultSource'
@@ -150,7 +159,17 @@ runClearMetadata _ = do
                         Nothing
            in emptyMetadata
                 & metaSources %~ OMap.insert defaultSource emptyDefaultSource
-  runReplaceMetadataV1 $ RMWithSources emptyMetadata'
+
+  resp <- runReplaceMetadataV1 $ RMWithSources emptyMetadata'
+
+  -- Cleanup the default source explicitly because in the `runReplaceMetadataV1`
+  -- call it won't be considered as a dropped source because we artificially add
+  -- a empty source metadata for the default source metadata. So, for `runReplaceMetadataV1`
+  -- the default source will not be a dropped source and hence there will not be
+  -- any post drop source action on it. So, here we expicitly do the post drop source
+  -- action for the default source, if it existed in the metadata.
+  for_ maybeDefaultSourceMetadata $ postDropSourceHookHelper oldSchemaCache defaultSource
+  pure resp
 
 {- Note [Cleanup for dropped triggers]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,32 +273,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           emptyNetwork
           mempty
           emptyOpenTelemetryConfig
-  putMetadata metadata
 
-  let oldSources = _metaSources oldMetadata
-  let newSources = _metaSources metadata
-
-  -- Clean up the sources that are not present in the new metadata
-  for_ (OMap.toList oldSources) $ \(oldSource, oldSourceBackendMetadata) -> do
-    -- If the source present in old metadata is not present in the new metadata,
-    -- clean that source.
-    onNothing (OMap.lookup oldSource newSources) $ do
-      AB.dispatchAnyBackend @BackendMetadata (unBackendSourceMetadata oldSourceBackendMetadata) \(_oldSourceMetadata :: SourceMetadata b) -> do
-        sourceInfoMaybe <- askSourceInfoMaybe @b oldSource
-        case sourceInfoMaybe of
-          Nothing ->
-            HL.unLogger logger $
-              MetadataLog
-                HL.LevelWarn
-                ( "Could not cleanup the source '"
-                    <> oldSource
-                      <<> "' while dropping it from the graphql-engine as it is inconsistent."
-                    <> " Please consider cleaning the resources created by the graphql engine,"
-                    <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually "
-                )
-                J.Null
-          Just sourceInfo -> runPostDropSourceHook oldSource sourceInfo
-        pure (BackendSourceMetadata (AB.mkAnyBackend _oldSourceMetadata))
+  let (oldSources, newSources) = (_metaSources oldMetadata, _metaSources metadata)
 
   -- Check for duplicate trigger names in the new source metadata
   for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
@@ -289,6 +284,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
             duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (L.uniques newTriggerNames)
         unless (null duplicateTriggerNamesInNewMetadata) $ do
           throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
+
   let cacheInvalidations =
         CacheInvalidations
           { ciMetadata = False,
@@ -296,7 +292,13 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
             ciSources = Set.fromList $ OMap.keys newSources,
             ciDataConnectors = mempty
           }
+
+  -- put the new metadata in the state managed by the `MetadataT`
+  putMetadata metadata
+
+  -- build the schema cache with the new metadata
   buildSchemaCacheWithInvalidations cacheInvalidations mempty
+
   case _rmv2AllowInconsistentMetadata of
     AllowInconsistentMetadata -> pure ()
     NoAllowInconsistentMetadata -> throwOnInconsistencies
@@ -309,6 +311,12 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
   dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
 
   generateSQLTriggerCleanupSchedules logger (_metaSources oldMetadata) (_metaSources metadata)
+
+  let droppedSources = OMap.difference oldSources newSources
+
+  -- Clean up the sources that are not present in the new metadata
+  for_ (OMap.toList droppedSources) $ \(oldSource, oldSourceBackendMetadata) ->
+    postDropSourceHookHelper oldSchemaCache oldSource (unBackendSourceMetadata oldSourceBackendMetadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
@@ -422,6 +430,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                     Just sourceConfig -> do
                       for_ droppedEventTriggers $
                         \triggerName -> do
+                          -- TODO: The `tableName` parameter could be computed while building
+                          -- the triggers map and avoid the cache lookup.
                           tableNameMaybe <- getTableNameFromTrigger @b oldSchemaCache source triggerName
                           case tableNameMaybe of
                             Nothing ->
@@ -430,7 +440,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                                   HL.LevelWarn
                                   (sqlTriggerError triggerName)
                                   J.Null
-                            Just tableName -> dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
+                            Just tableName ->
+                              dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
                       for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
                         case OMap.lookup retainedNewTriggerName oldTriggersMap of
                           Nothing ->
@@ -456,7 +467,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                                     HL.LevelWarn
                                     (sqlTriggerError retainedNewTriggerName)
                                     J.Null
-                              Just tableName -> do
+                              Just tableName ->
                                 dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (Set.fromList $ catMaybes droppedOps)
       where
         compose ::

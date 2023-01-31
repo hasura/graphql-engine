@@ -12,6 +12,7 @@ module Harness.Backend.Postgres
     runSQL,
     defaultConnectInfo,
     defaultSourceMetadata,
+    defaultNamedSourceMetadata,
     defaultSourceConfiguration,
     defaultPostgresConnectionString,
     createDatabase,
@@ -191,6 +192,16 @@ defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnv =
   [interpolateYaml|
     name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnv }
+  |]
+
+-- | Metadata source information for the "default" named Postgres instance.
+defaultNamedSourceMetadata :: TestEnvironment -> Value
+defaultNamedSourceMetadata testEnv =
+  [interpolateYaml|
+    name: default
     kind: #{ BackendType.backendTypeString backendTypeMetadata }
     tables: []
     configuration: #{ defaultSourceConfiguration testEnv }
