@@ -206,7 +206,7 @@ function useOpenTelemetryButton(): SectionData {
 
   const title = (
     <span>
-      OpenTelemetry Exporter{' '}
+      OpenTelemetry Exporter <sup>(Beta)</sup>{' '}
       {openTelemetryStatus === 'enabled' ? (
         <CheckIcon className="ml-sm" />
       ) : openTelemetryStatus === 'disabled' ? (
