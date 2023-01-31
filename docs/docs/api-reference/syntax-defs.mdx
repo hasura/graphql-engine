@@ -1678,3 +1678,23 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 |----------------|----------|---------------------------------|-------------------------------|
 | operation_type | true     | query | mutation | subscription | Type of the graphql operation |
 | operation_name | false    | String                          | Name of the graphql operation |
+
+## Attribute {#attribute}
+| Key   | required | Schema | Description            |
+|-------|----------|--------|------------------------|
+| name  | true     | String | Name of the attribute  |
+| value | true     | String | Value of the attribute |
+
+## OTLPExporter {#otlpexporter}
+| Key                   | required | Schema                                                                      | Description                                                                                         |
+|-----------------------|----------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| otlp_traces_endpoint  | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL                                                       |
+| protocol              | false    | `String`                                                                    | Protocol to be used for the communication with the receiver. Currently only supports `http/protobuf`|
+| headers               | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \] | List of defined headers to be sent to the receiver                                                  |
+| resource_attributes   | false    | \[[Attribute](#attribute)\]                                                 | List of resource attributes to be sent to the receiver                                              |
+
+## OpenTelemetryBatchSpanProcessor {#opentelemetrybatchspanprocessor}
+| Key                   | required | Schema                           | Description                                                               |
+|-----------------------|----------|----------------------------------|---------------------------------------------------------------------------|
+| max_export_batch_size | false    |  `Integer`                       | Maximum number of spans allowed per export request. Default value is 512  |
+
