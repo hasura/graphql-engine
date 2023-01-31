@@ -13,8 +13,8 @@ type CreateDatabaseResponse = {
 };
 
 const NEON_CREATE_DATABASE_QUERY = `
- mutation neonCreateDatabase ($projectId:uuid!) {
-    neonCreateDatabase (projectId: $projectId) {
+ mutation neonCreateDatabase ($projectId:uuid!, $projectName:String) {
+    neonCreateDatabase (projectId: $projectId, projectName: $projectName) {
       databaseUrl
       email
       envVar
@@ -56,6 +56,7 @@ export function useNeonDatabase() {
       query: NEON_CREATE_DATABASE_QUERY,
       variables: {
         projectId: globals.hasuraCloudProjectId || '',
+        projectName: globals.hasuraCloudProjectName || '',
       },
     });
   }, []);
