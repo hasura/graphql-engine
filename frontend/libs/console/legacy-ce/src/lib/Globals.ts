@@ -80,6 +80,7 @@ type CloudServerEnv = {
   isAdminSecretSet: boolean;
   luxDataHost: string; // e.g. "data.pro.hasura.io"
   projectID: UUID;
+  projectName: string;
   serverVersion: string;
   tenantID: UUID;
   urlPrefix: string;
@@ -145,6 +146,7 @@ export type EnvVars = {
   cliUUID?: string;
   tenantID?: UUID;
   projectID?: UUID;
+  projectName?: string;
   cloudRootDomain?: string;
   herokuOAuthClientId?: string;
   luxDataHost?: string;
@@ -209,6 +211,7 @@ const globals = {
   herokuOAuthClientId: window.__env?.herokuOAuthClientId,
   hasuraCloudTenantId: window.__env?.tenantID,
   hasuraCloudProjectId: window.__env?.projectID,
+  hasuraCloudProjectName: window.__env?.projectName,
   neonOAuthClientId: window.__env?.neonOAuthClientId,
   neonRootDomain: window.__env?.neonRootDomain,
   allowedLuxFeatures: window.__env?.allowedLuxFeatures || [],
