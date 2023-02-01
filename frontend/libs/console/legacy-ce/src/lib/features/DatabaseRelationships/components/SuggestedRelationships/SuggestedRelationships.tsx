@@ -93,7 +93,7 @@ export const SuggestedRelationships = ({
     );
   };
 
-  if (!isLoadingSuggestedRelationships)
+  if (isLoadingSuggestedRelationships)
     return <Skeleton count={4} height={30} />;
 
   return suggestedRelationships.length > 0 ? (

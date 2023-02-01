@@ -10,7 +10,6 @@ import { SourceSelectorItem } from './SourcePicker.types';
 import { mapItemsToSourceOptions } from './SourcePicker.utils';
 
 export default {
-  title: 'GDC Console/Relationships/components/Source Picker',
   component: SourcePicker,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof SourcePicker>;
@@ -43,13 +42,16 @@ export const Basic: ComponentStory<typeof SourcePicker> = () => (
 );
 
 const defaultValue = mapItemsToSourceOptions([items[0]])[0];
+console.log('!', defaultValue);
 export const Preselected: ComponentStory<typeof SourcePicker> = () => {
   return (
     <SimpleForm
       schema={validationSchema}
       onSubmit={action('onSubmit')}
       options={{
-        defaultValues: { fromSource: defaultValue },
+        defaultValues: {
+          fromSource: defaultValue,
+        },
       }}
     >
       <SourcePicker

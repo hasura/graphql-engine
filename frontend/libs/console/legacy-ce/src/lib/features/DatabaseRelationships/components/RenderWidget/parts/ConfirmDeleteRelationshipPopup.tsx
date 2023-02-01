@@ -2,6 +2,8 @@ import { Dialog } from '@/new-components/Dialog';
 import React from 'react';
 import { Relationship } from '../../../types';
 import { useManageLocalRelationship } from '../../../hooks/useManageLocalRelationship';
+import { useManageRemoteDatabaseRelationship } from '@/features/DatabaseRelationships/hooks/useManageRemoteDatabaseRelationship';
+import { useManageRemoteSchemaRelationship } from '@/features/DatabaseRelationships/hooks/useManageRemoteSchemaRelationship';
 
 interface ConfirmDeleteRelationshipPopupProps {
   relationship: Relationship;
@@ -15,7 +17,28 @@ export const ConfirmDeleteRelationshipPopup = (
 ) => {
   const { relationship, onCancel, onSuccess, onError } = props;
 
-  const { deleteRelationship } = useManageLocalRelationship({
+  const {
+    deleteRelationship: deleteLocalRelationship,
+    isLoading: isDeleteLocalRelationshipLoading,
+  } = useManageLocalRelationship({
+    dataSourceName: relationship.fromSource,
+    onSuccess,
+    onError,
+  });
+
+  const {
+    deleteRelationship: deleteRemoteDatabaseRelationship,
+    isLoading: isDeleteRemoteDatabaseRelationshipLoading,
+  } = useManageRemoteDatabaseRelationship({
+    dataSourceName: relationship.fromSource,
+    onSuccess,
+    onError,
+  });
+
+  const {
+    deleteRelationship: deleteRemoteSchemaRelationship,
+    isLoading: isDeleteRemoteSchemaRelationshipLoading,
+  } = useManageRemoteSchemaRelationship({
     dataSourceName: relationship.fromSource,
     onSuccess,
     onError,
@@ -31,14 +54,21 @@ export const ConfirmDeleteRelationshipPopup = (
       footer={
         <Dialog.Footer
           onSubmit={() => {
-            // Right now there is only support for local gdc relationship. We will add others as we release more features on the server
             if (relationship.type === 'localRelationship') {
-              deleteRelationship(relationship);
-            }
+              deleteLocalRelationship(relationship);
+            } else if (relationship.type === 'remoteDatabaseRelationship') {
+              deleteRemoteDatabaseRelationship(relationship);
+            } else if (relationship.type === 'remoteSchemaRelationship')
+              deleteRemoteSchemaRelationship(relationship);
           }}
           onClose={onCancel}
           callToDeny="Cancel"
           callToAction="Drop Relationship"
+          isLoading={
+            isDeleteLocalRelationshipLoading ||
+            isDeleteRemoteDatabaseRelationshipLoading ||
+            isDeleteRemoteSchemaRelationshipLoading
+          }
         />
       }
     >
