@@ -1,11 +1,16 @@
 # ghcid gets its own cache
 GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
-GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code
-GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0
+
+# `ghcid` breaks if this flag is on because it does it's qualified imports the
+# Traditional way
+GHC_OPTIONS=-Wno-prepositive-qualified-module
+
+GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code --ghc-options=$(GHC_OPTIONS)
+GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0 --ghc-options=$(GHC_OPTIONS)
 
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main"; \
 	else \
   	HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
@@ -15,7 +20,7 @@ endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--setup ":set args $(2)"; \
 	else \

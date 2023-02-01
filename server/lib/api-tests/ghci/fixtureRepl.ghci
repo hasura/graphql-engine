@@ -1,9 +1,9 @@
-import Data.List
+import Data.List qualified as List
 
 :{
 fixtureReplMacro :: String -> IO String
 fixtureReplMacro module_ = do
-  return $ unlines
+  return $ List.unlines
     [ "import Data.Aeson.Encode.Pretty (encodePretty)",
       "import Data.ByteString.Lazy.Char8 qualified as BS",
       "import Harness.Test.Fixture",
