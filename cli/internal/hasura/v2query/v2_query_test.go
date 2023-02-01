@@ -170,7 +170,7 @@ func TestClient_Bulk(t *testing.T) {
 				require.IsType(tt, &errors.Error{}, err)
 				require.Equal(tt, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
 				require.Equal(tt, errors.Op("v2query.Client.Bulk"), err.(*errors.Error).Op)
-				require.Equal(tt, err.(*errors.Error).Err.Error(), `{
+				require.JSONEq(tt, err.(*errors.Error).Err.Error(), `{
   "code": "not-exists",
   "error": "source with name \"default\" does not exist",
   "path": "$.args[0].args"

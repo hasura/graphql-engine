@@ -33,6 +33,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as J
+import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Char8 qualified as B8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
@@ -233,7 +234,7 @@ onlyAdmin = do
   unless (uRole == adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
-setHeader :: MonadIO m => HTTP.Header -> Spock.ActionT m ()
+setHeader :: MonadIO m => HTTP.Header -> Spock.ActionCtxT ctx m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
 
@@ -397,9 +398,12 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       Spock.ActionCtxT ctx m3 a3
     logErrorAndResp userInfo reqId waiReq req includeInternal headers extraUserInfo qErr = do
       let httpLogMetadata = buildHttpLogMetadata @m3 emptyHttpLogGraphQLInfo extraUserInfo
+          jsonResponse = J.encode $ qErrEncoder includeInternal qErr
+          contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
       lift $ logHttpError (_lsLogger scLoggers) scLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
+      setHeader contentLength
       Spock.setStatus $ qeStatus qErr
-      Spock.json $ qErrEncoder includeInternal qErr
+      Spock.lazyBytes jsonResponse
 
     logSuccessAndResp userInfo reqId waiReq req result qTime reqHeaders authHdrs httpLoggingMetadata = do
       let (respBytes, respHeaders) = case result of
@@ -408,7 +412,8 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
           (compressedResp, encodingType) = compressResponse (Wai.requestHeaders waiReq) respBytes
           encodingHeader = maybeToList (contentEncodingHeader <$> encodingType)
           reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
-          allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders <> authHdrs
+          contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length compressedResp)
+          allRespHeaders = [reqIdHeader, contentLength] <> encodingHeader <> respHeaders <> authHdrs
       lift $ logHttpSuccess (_lsLogger scLoggers) scLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp

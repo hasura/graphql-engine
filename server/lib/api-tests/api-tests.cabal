@@ -91,6 +91,7 @@ library
     SpecHook
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
+    Test.API.GraphQL.ContentLengthSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.NativeQuerySpec

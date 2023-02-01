@@ -46,7 +46,6 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
--- import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Data.Aeson (Value, fromJSON, object, (.=))
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
