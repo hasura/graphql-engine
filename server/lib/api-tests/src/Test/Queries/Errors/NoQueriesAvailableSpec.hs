@@ -2,7 +2,7 @@
 
 -- |
 -- Can we see @no_queries_available@ or not?
-module Test.Queries.Simple.NoQueriesAvailableSpec (spec) where
+module Test.Queries.Errors.NoQueriesAvailableSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

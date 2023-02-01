@@ -105,17 +105,6 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
-    Test.Databases.BigQuery.Queries.SpatialTypesSpec
-    Test.Databases.BigQuery.Queries.TypeInterpretationSpec
-    Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
-    Test.Databases.Postgres.BackendOnlyPermissionsSpec
-    Test.Databases.Postgres.DataValidation.PermissionSpec
-    Test.Databases.Postgres.JsonbSpec
-    Test.Databases.Postgres.TimestampSpec
-    Test.Databases.Postgres.UniqueConstraintsSpec
-    Test.Databases.SQLServer.DefaultValues.OnConflictSpec
-    Test.Databases.SQLServer.InsertVarcharColumnSpec
-    Test.Databases.SQLServer.VarcharLiteralsSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
@@ -130,12 +119,23 @@ library
     Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
+    Test.Databases.BigQuery.Queries.SpatialTypesSpec
+    Test.Databases.BigQuery.Queries.TypeInterpretationSpec
+    Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
+    Test.Databases.Postgres.BackendOnlyPermissionsSpec
+    Test.Databases.Postgres.DataValidation.PermissionSpec
+    Test.Databases.Postgres.JsonbSpec
+    Test.Databases.Postgres.TimestampSpec
+    Test.Databases.Postgres.UniqueConstraintsSpec
+    Test.Databases.SQLServer.DefaultValues.OnConflictSpec
+    Test.Databases.SQLServer.InsertVarcharColumnSpec
+    Test.Databases.SQLServer.VarcharLiteralsSpec
     Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTriggers.MSSQL.EventTriggerNextRetryAtTimezoneSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
-    Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec
+    Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
     Test.EventTriggers.PG.EventTriggersForReplicationSpec
@@ -162,15 +162,15 @@ library
     Test.Queries.AggregationSpec
     Test.Queries.CustomFunctions.PortedSpec
     Test.Queries.DistinctSpec
+    Test.Queries.Errors.InvalidQuerySpec
+    Test.Queries.Errors.MissingTableSpec
+    Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
     Test.Queries.NativeAccess.NativeAccessQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
-    Test.Queries.Simple.InvalidQuerySpec
-    Test.Queries.Simple.MissingTableSpec
-    Test.Queries.Simple.NoQueriesAvailableSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
@@ -189,13 +189,13 @@ library
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.LongIdentifiers3796Spec
     Test.Regression.MultiColumnObjectRelationshipsSpec
+    Test.Regression.MultiplexQuerySpec
     Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.Regression.MultiplexQuerySpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec
@@ -217,9 +217,9 @@ library
     Test.Schema.RemoteRelationships.XToDBObjectRelationshipSpec
     Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
     Test.Schema.RemoteSchemaCustomizationSpec
+    Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.CrossSchemaArrayRelationshipsSpec
     Test.Schema.TableRelationships.CrossSchemaObjectRelationshipsSpec
-    Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.TableRelationships.PortedSpec
     Test.Schema.ViewsSpec

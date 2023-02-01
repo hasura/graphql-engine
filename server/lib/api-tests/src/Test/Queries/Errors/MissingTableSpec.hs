@@ -1,12 +1,12 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- |
--- Errors shown on GraphQL queries with empty return blocks.
+-- Simple object queries on tables that don't exist.
 --
 -- https://hasura.io/docs/latest/queries/postgres/simple-object-queries/#fetch-list-of-objects
 -- https://hasura.io/docs/latest/queries/ms-sql-server/simple-object-queries/#fetch-list-of-objects
 -- https://hasura.io/docs/latest/queries/bigquery/simple-object-queries/#fetch-list-of-objects
-module Test.Queries.Simple.InvalidQuerySpec (spec) where
+module Test.Queries.Errors.MissingTableSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
@@ -106,8 +106,8 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
-  describe "Syntactically invalid queries" do
-    it "Fails on empty query" \testEnvironment -> do
+  describe "Missing table errors" do
+    it "Fails on unknown tables" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
 
@@ -117,7 +117,8 @@ tests opts = do
               testEnvironment
               [graphql|
                 query {
-                  #{schemaName}_authors {
+                  #{schemaName}_unknown {
+                    id
                   }
                 }
               |]
@@ -128,8 +129,8 @@ tests opts = do
               errors:
               - extensions:
                   code: validation-failed
-                  path: $.query
-                message: not a valid graphql query
+                  path: $.selectionSet.#{schemaName}_unknown
+                message: 'field ''#{schemaName}_unknown'' not found in type: ''query_root'''
             |]
 
       actual `shouldBe` expected
