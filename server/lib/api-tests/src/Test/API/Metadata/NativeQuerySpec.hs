@@ -52,8 +52,12 @@ schema =
 
 tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
+  let simpleQuery :: Text
+      simpleQuery = "SELECT thing / 2 AS divided FROM stuff"
+
   let query :: Text
       query = "SELECT thing / {{denominator}} AS divided FROM stuff WHERE date = {{target_date}}"
+
   it "Fails to track a Native Query without admin access" $
     \testEnv -> do
       let schemaName = Schema.getSchemaName testEnv
@@ -127,8 +131,9 @@ tests opts = do
           error: "restricted access : admin only"
           path: "$.args"
         |]
+
   describe "Implementation" $ do
-    it "Adds a native access function and returns a 200" $ \testEnv -> do
+    it "Adds a simple native access function with no arguments and returns a 200" $ \testEnv -> do
       let schemaName = Schema.getSchemaName testEnv
 
       shouldReturnYaml
@@ -141,7 +146,33 @@ tests opts = do
                 type: query
                 source: postgres
                 root_field_name: divided_stuff
-                code: *query
+                code: *simpleQuery
+                arguments:
+                  unused: int
+                returns:
+                  name: already_tracked_return_type
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+    it "Adding a native access function with broken SQL returns a 400" $ \testEnv -> do
+      let schemaName = Schema.getSchemaName testEnv
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadataWithStatus
+            400
+            testEnv
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: postgres
+                root_field_name: divided_stuff
+                code: "SELECT * FROM dogs WHERE name = {{name"
                 arguments:
                   denominator: int
                   target_date: date
@@ -151,7 +182,9 @@ tests opts = do
             |]
         )
         [yaml|
-          message: success
+          code: parse-failed
+          error: "Found '{{' without a matching closing '}}'"
+          path: "$.args"
         |]
 
     it "Checks for the native access function" $ \testEnv -> do

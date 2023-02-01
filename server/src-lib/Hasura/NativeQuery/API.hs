@@ -96,12 +96,16 @@ runTrackNativeQuery ::
 runTrackNativeQuery (BackendTrackNativeQuery (Voidable trackNativeQueryRequest)) = do
   throwIfFeatureDisabled
 
-  let metadataObj =
+  (metadata :: NativeQueryInfo b) <-
+    case nativeQueryTrackToInfo @b trackNativeQueryRequest of
+      Right nq -> pure nq
+      Left (NativeQueryParseError e) -> throw400 ParseFailed e
+
+  let fieldName = nativeQueryInfoName @b metadata
+      metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMONativeQuery @b fieldName
-      metadata :: NativeQueryInfo b = nativeQueryTrackToInfo @b trackNativeQueryRequest
-      fieldName = nativeQueryInfoName @b metadata
 
   buildSchemaCacheFor metadataObj $
     MetadataModifier $

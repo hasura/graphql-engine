@@ -5,6 +5,8 @@ module Test.Queries.NativeAccess.NativeAccessQueriesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
+import Data.Time.Calendar.OrdinalDate
+import Data.Time.Clock
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -47,6 +49,29 @@ schema =
       { tableColumns =
           [ Schema.column "one" Schema.TStr,
             Schema.column "two" Schema.TStr
+          ]
+      },
+    (table "article")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "title" Schema.TStr,
+            Schema.column "content" Schema.TStr,
+            Schema.column "date" Schema.TUTCTime
+          ],
+        tableData =
+          [ [ Schema.VInt 1,
+              Schema.VStr "Dogs",
+              Schema.VStr "I like to eat dog food I am a dogs I like to eat dog food I am a dogs I like to eat dog food I am a dogs",
+              Schema.VUTCTime (UTCTime (fromOrdinalDate 2000 1) 0)
+            ]
+          ]
+      },
+    (table "article_excerpt")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "title" Schema.TStr,
+            Schema.column "excerpt" Schema.TStr,
+            Schema.column "date" Schema.TUTCTime
           ]
       }
   ]

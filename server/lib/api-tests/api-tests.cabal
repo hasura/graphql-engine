@@ -84,6 +84,7 @@ library
     , unordered-containers
     , uuid
     , vector
+    , time
 
   exposed-modules:
     Spec

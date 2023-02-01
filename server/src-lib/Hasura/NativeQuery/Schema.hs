@@ -72,6 +72,9 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
   selectionSetParser <- MaybeT $ tableSelectionList @b @r @m @n tableInfo
   tableArgsParser <- lift $ tableArguments @b @r @m @n tableInfo
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+
+  -- for now, let's get the old queries working by flattening the SQL again
+  let interpolatedQuery = InterpolatedQuery [IIText (ppInterpolatedQuery nqiiCode)]
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
       P.subselection fieldName description ((,) <$> tableArgsParser <*> nativeQueryArgsParser) selectionSetParser
@@ -84,7 +87,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
                     NativeQueryImpl
                       { nqRootFieldName = nqiiRootFieldName,
                         nqArgs,
-                        nqCode = nqiiCode
+                        nqInterpolatedQuery = interpolatedQuery
                       },
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,

@@ -70,8 +70,8 @@ class
   nativeQueryInfoName = absurd
 
   -- | Projection function, producing a 'NativeQueryInfo b' from a 'TrackNativeQuery b'.
-  nativeQueryTrackToInfo :: TrackNativeQuery b -> NativeQueryInfo b
-  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => TrackNativeQuery b -> NativeQueryInfo b
+  nativeQueryTrackToInfo :: TrackNativeQuery b -> Either NativeQueryParseError (NativeQueryInfo b)
+  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => TrackNativeQuery b -> Either NativeQueryParseError (NativeQueryInfo b)
   nativeQueryTrackToInfo = absurd
 
 -- | Our API endpoint solution wraps all request payload types in 'AnyBackend'

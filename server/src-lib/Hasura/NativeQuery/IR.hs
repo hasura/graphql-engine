@@ -15,12 +15,12 @@ data NativeQueryImpl b field = NativeQueryImpl
   { -- | The defined name of the native query.
     nqRootFieldName :: NativeQueryNameImpl,
     -- | The raw sql to use in the query
-    nqCode :: Text,
+    nqInterpolatedQuery :: InterpolatedQuery field,
     -- | The arguments passed to the native query, if any.
     nqArgs :: HashMap NativeQueryArgumentName (ColumnValue b)
   }
   deriving (Functor, Foldable, Traversable)
 
-deriving instance (Backend b) => Eq (NativeQueryImpl b field)
+deriving instance (Backend b, Eq field) => Eq (NativeQueryImpl b field)
 
-deriving instance (Backend b) => Show (NativeQueryImpl b field)
+deriving instance (Backend b, Show field) => Show (NativeQueryImpl b field)
