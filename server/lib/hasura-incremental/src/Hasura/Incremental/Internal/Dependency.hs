@@ -17,7 +17,6 @@ module Hasura.Incremental.Internal.Dependency
 where
 
 import Data.Dependent.Map qualified as DM
-import "dependent-sum" Data.GADT.Compare
 import Data.Reflection
 import Hasura.Incremental.Select
 import Hasura.Prelude

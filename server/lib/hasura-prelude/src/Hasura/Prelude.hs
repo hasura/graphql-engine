@@ -102,7 +102,6 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet as M (HashSet)
-import Data.HashSet qualified as HSet
 import Data.Hashable as M (Hashable)
 import Data.List as M
   ( find,
@@ -239,10 +238,10 @@ findWithIndex p l = do
   pure (v, i)
 
 -- TODO (from main): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
-mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
+mapFromL :: (Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
-oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
+oMapFromL :: (Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 
 -- | Time an IO action, returning the time with microsecond precision. The

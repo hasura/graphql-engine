@@ -56,6 +56,7 @@ package Spock
 package hasql-pool
   library-vanilla: False
 
+-- Set common options to internal libraries
 package aeson-ordered
   ghc-options: -j -Werror
 
@@ -65,27 +66,29 @@ package api-tests
 package dc-api
   ghc-options: -j -Werror
 
-package error-message
+package graphql-parser
   ghc-options: -j -Werror
 
-package graphql-parser-hs
+package hasura-error-message
+  ghc-options: -j -Werror
+
+package hasura-incremental
   ghc-options: -j -Werror
 
 package hasura-prelude
   ghc-options: -j -Werror
 
-package pg-client-hs
+package hasura-schema-parsers
   ghc-options: -j -Werror
 
-package pool
+package pg-client
   ghc-options: -j -Werror
 
-package schema-parsers
+package resource-pool
   ghc-options: -j -Werror
 
 package test-harness
   ghc-options: -j -Werror
-
 
 package mysql
   extra-include-dirs:

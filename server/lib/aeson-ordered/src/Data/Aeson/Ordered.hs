@@ -44,7 +44,7 @@ import Data.Attoparsec.ByteString.Char8 qualified as A8
 import Data.Bifunctor (bimap, second)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as L
-import Data.Data (Data, Typeable)
+import Data.Data (Data)
 import Data.Functor (($>))
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -83,7 +83,7 @@ import GHC.Generics (Generic)
 -- | A JSON \"object\" (key\/value map). This is where this type
 -- differs to the aeson package.
 newtype Object = Object_ {unObject_ :: InsOrdHashMap Text Value}
-  deriving stock (Data, Eq, Generic, Read, Show, Typeable)
+  deriving stock (Data, Eq, Generic, Read, Show)
   deriving newtype (Hashable)
 
 -- | Union the keys, ordered, in two maps, erroring on duplicates.
@@ -152,7 +152,7 @@ data Value
   | Number !Scientific
   | Bool !Bool
   | Null
-  deriving stock (Data, Eq, Generic, Read, Show, Typeable)
+  deriving stock (Data, Eq, Generic, Read, Show)
 
 instance Hashable Value where
   -- Lifted from Aeson's implementation for 'Value'.

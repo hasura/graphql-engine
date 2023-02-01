@@ -95,3 +95,4 @@ test-suite hasura-incremental-tests
 
   default-extensions:
     BlockArguments
+    NoImplicitPrelude
