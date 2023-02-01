@@ -2,7 +2,7 @@ import { CustomizationForm } from '@/features/ConnectDB';
 import { Button } from '@/new-components/Button';
 import { InputField, Select, useConsoleForm } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { z } from 'zod';
 import { useTableDefinition } from '../Data';
@@ -47,7 +47,7 @@ const useEditDataSourceConnectionInfo = () => {
 };
 
 export const EditConnection = () => {
-  const { data, isLoading } = useEditDataSourceConnectionInfo();
+  const { data, isLoading, isSuccess } = useEditDataSourceConnectionInfo();
   const {
     schema = z.any(),
     name,
@@ -57,20 +57,23 @@ export const EditConnection = () => {
   } = data || {};
   const { submit, isLoading: submitIsLoading } = useEditDataSourceConnection();
   const {
-    methods: { formState },
+    methods: { formState, getValues, reset },
     Form,
   } = useConsoleForm({
     schema,
-    options: {
-      defaultValues: {
+  });
+
+  useEffect(() => {
+    if (data) {
+      reset({
         name,
         driver,
         configuration: (configuration as any)?.value,
         replace_configuration: true,
         customization,
-      },
-    },
-  });
+      });
+    }
+  }, [configuration, customization, data, driver, name, reset]);
 
   if (isLoading) return <>Loading...</>;
 
