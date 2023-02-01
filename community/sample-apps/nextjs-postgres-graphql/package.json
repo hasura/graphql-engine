@@ -14,17 +14,14 @@
     "graphql",
     "postgres"
   ],
-  "author": "Karthik V",
+  "author": "Amit Kumar Sharma",
   "license": "ISC",
   "dependencies": {
-    "apollo-boost": "^0.4.4",
-    "graphql": "^14.5.6",
-    "graphql-tag": "^2.10.1",
-    "next": "^9.0.5",
-    "next-apollo": "^3.1.2",
-    "next-server": "^9.0.5",
-    "react": "^16.9.0",
-    "react-apollo": "^3.1.1",
-    "react-dom": "^16.9.0"
+    "@apollo/client": "^3.6.9",
+    "graphql": "^16.6.0",
+    "next": "^12.3.1",
+    "next-with-apollo": "^5.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
