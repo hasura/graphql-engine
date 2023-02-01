@@ -8,7 +8,6 @@ module Hasura.Incremental.Internal.Cache
 where
 
 import Control.Arrow.Extended
-import Control.Monad.Unique
 import Data.Reflection
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Incremental.Internal.Rule
@@ -55,7 +54,7 @@ instance (Monoid w, ArrowCache m arr) => ArrowCache m (WriterA w arr) where
   dependOn = liftA dependOn
   {-# INLINE dependOn #-}
 
-instance (MonadUnique m) => ArrowCache m (Rule m) where
+instance MonadIO m => ArrowCache m (Rule m) where
   cache ::
     forall a b.
     (Given Accesses => Eq a) =>

@@ -19,13 +19,13 @@ module Hasura.Incremental.Select
   )
 where
 
-import Control.Monad.Unique
 import Data.Dependent.Map qualified as DM
 import "some" Data.GADT.Compare
 import Data.HashMap.Strict qualified as M
 import Data.Kind
 import Data.Proxy (Proxy (..))
 import Data.Type.Equality
+import Data.Unique (Unique, newUnique)
 import GHC.OverloadedLabels (IsLabel (..))
 import GHC.Records (HasField (..))
 import GHC.TypeLits (KnownSymbol, sameSymbol, symbolVal)
@@ -137,8 +137,8 @@ type role UniqueS nominal
 newtype UniqueS a = UniqueS Unique
   deriving (Eq)
 
-newUniqueS :: (MonadUnique m) => m (UniqueS a)
-newUniqueS = UniqueS <$> newUnique
+newUniqueS :: MonadIO m => m (UniqueS a)
+newUniqueS = UniqueS <$> liftIO newUnique
 {-# INLINE newUniqueS #-}
 
 instance GEq UniqueS where

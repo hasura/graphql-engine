@@ -32,7 +32,6 @@ library
     , dependent-map
     , dependent-sum
     , hasura-prelude
-    , monad-unique
     , profunctors
     , reflection
     , some
@@ -89,7 +88,6 @@ test-suite hasura-incremental-tests
     , hasura-incremental
     , hasura-prelude
     , hspec
-    , monad-unique
     , unordered-containers
 
   build-tool-depends:

@@ -297,7 +297,6 @@ common lib-depends
                      , lifted-base
                      , monad-control
                      , monad-loops
-                     , monad-unique
                      , monad-validate
                      , mtl
                      , nonempty-containers

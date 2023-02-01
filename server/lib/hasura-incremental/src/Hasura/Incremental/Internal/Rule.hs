@@ -296,7 +296,7 @@ class (Arrow arr) => ArrowDistribute arr where
   -- This is intended to be used as a control operator in @proc@ notation; see
   -- Note [Weird control operator types] in "Control.Arrow.Extended".
   keyed ::
-    (Eq k, Hashable k) =>
+    Hashable k =>
     arr (e, (k, (a, s))) b ->
     arr (e, (HashMap k a, s)) (HashMap k b)
 
