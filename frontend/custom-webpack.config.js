@@ -1,24 +1,107 @@
+const DomParser = require('dom-parser');
+
 const { merge } = require('webpack-merge');
 const util = require('util');
 const webpack = require('webpack');
+const { webpackPlugin } = require('unplugin-dynamic-asset-loader');
 
 // un comment this to test out the circular deps
 const CircularDependencyPlugin = require('circular-dependency-plugin');
+
 const log = value =>
   console.log(
     util.inspect(value, { showHidden: false, depth: null, colors: true })
   );
 
-const shouldLogEveryCircularDep = false;
-let numCyclesDetected = 0;
-let filteredCircleDeps = 0;
-const depCircleFilter = undefined;
+const createCircularDependencyPlugin = () => {
+  const shouldLogEveryCircularDep = false;
+  let numCyclesDetected = 0;
+  let filteredCircleDeps = 0;
+  const depCircleFilter = undefined;
 
-let storedPaths = [];
-const shouldLogMostCommonPaths = false;
+  let storedPaths = [];
+  const shouldLogMostCommonPaths = false;
+
+  return new CircularDependencyPlugin({
+    exclude: /node_modules/,
+    failOnError: false,
+    onStart({ compilation }) {
+      numCyclesDetected = 0;
+      filteredCircleDeps = 0;
+      storedPaths = [];
+    },
+    onDetected({
+      // `paths` will be an Array of the relative module paths that make up the cycle
+      paths: cyclePaths,
+      compilation,
+    }) {
+      numCyclesDetected++;
+      storedPaths = [...storedPaths, ...cyclePaths];
+      const err = new Error(
+        `Circular dependency detected!\n * ${cyclePaths.join('\n → ')}`
+      );
+      if (!shouldLogEveryCircularDep) {
+        return;
+      }
+
+      if (!depCircleFilter) {
+        compilation.warnings.push(err);
+        return;
+      }
+
+      if (cyclePaths.some(path => path.includes(depCircleFilter))) {
+        filteredCircleDeps++;
+        compilation.warnings.push(err);
+      }
+    },
+    onEnd({ compilation }) {
+      const warns = Array.from(
+        Array(Math.round(numCyclesDetected / 100)).keys()
+      )
+        .map(it => '!')
+        .join('');
+      compilation.warnings.push(
+        new Error(`Detected ${numCyclesDetected} circular dependency ` + warns)
+      );
+
+      if (depCircleFilter) {
+        const filterWarns = Array.from(
+          Array(Math.round(filteredCircleDeps / 100)).keys()
+        )
+          .map(it => '!')
+          .join('');
+        compilation.warnings.push(
+          new Error(
+            `Detected ${filteredCircleDeps} circular dependency only for the filter "${depCircleFilter}" ${filterWarns}`
+          )
+        );
+      }
+
+      if (shouldLogMostCommonPaths) {
+        const topTenPaths = storedPaths
+          .sort(
+            (a, b) =>
+              storedPaths.filter(v => v === a).length -
+              storedPaths.filter(v => v === b).length
+          )
+          .slice(0, 10);
+
+        compilation.warnings.push(
+          new Error(
+            `Here are the top 10 files in the loops :\n${topTenPaths.join(
+              '\n → '
+            )}`
+          )
+        );
+      }
+    },
+    cwd: process.cwd(),
+  });
+};
 
 module.exports = (config, context) => {
-  const output = merge(config, {
+  const isDevBuild = context.configuration === 'development';
+  let output = merge(config, {
     output: {
       publicPath: 'auto',
     },
@@ -31,84 +114,6 @@ module.exports = (config, context) => {
         CONSOLE_ASSET_VERSION: Date.now().toString(),
       }),
       // un comment this to test out the circular deps. Left here since it can be tricky to configure
-
-      new CircularDependencyPlugin({
-        exclude: /node_modules/,
-        failOnError: false,
-        onStart({ compilation }) {
-          numCyclesDetected = 0;
-          filteredCircleDeps = 0;
-          storedPaths = [];
-        },
-        onDetected({
-          // `paths` will be an Array of the relative module paths that make up the cycle
-          paths: cyclePaths,
-          compilation,
-        }) {
-          numCyclesDetected++;
-          storedPaths = [...storedPaths, ...cyclePaths];
-          const err = new Error(
-            `Circular dependency detected!\n * ${cyclePaths.join('\n → ')}`
-          );
-          if (!shouldLogEveryCircularDep) {
-            return;
-          }
-
-          if (!depCircleFilter) {
-            compilation.warnings.push(err);
-            return;
-          }
-
-          if (cyclePaths.some(path => path.includes(depCircleFilter))) {
-            filteredCircleDeps++;
-            compilation.warnings.push(err);
-          }
-        },
-        onEnd({ compilation }) {
-          const warns = Array.from(
-            Array(Math.round(numCyclesDetected / 100)).keys()
-          )
-            .map(it => '!')
-            .join('');
-          compilation.warnings.push(
-            new Error(
-              `Detected ${numCyclesDetected} circular dependency ` + warns
-            )
-          );
-
-          if (depCircleFilter) {
-            const filterWarns = Array.from(
-              Array(Math.round(filteredCircleDeps / 100)).keys()
-            )
-              .map(it => '!')
-              .join('');
-            compilation.warnings.push(
-              new Error(
-                `Detected ${filteredCircleDeps} circular dependency only for the filter "${depCircleFilter}" ${filterWarns}`
-              )
-            );
-          }
-
-          if (shouldLogMostCommonPaths) {
-            const topTenPaths = storedPaths
-              .sort(
-                (a, b) =>
-                  storedPaths.filter(v => v === a).length -
-                  storedPaths.filter(v => v === b).length
-              )
-              .slice(0, 10);
-
-            compilation.warnings.push(
-              new Error(
-                `Here are the top 10 files in the loops :\n${topTenPaths.join(
-                  '\n → '
-                )}`
-              )
-            );
-          }
-        },
-        cwd: process.cwd(),
-      }),
     ],
     module: {
       rules: [
@@ -174,5 +179,16 @@ module.exports = (config, context) => {
       },
     },
   });
+
+  if (isDevBuild) {
+    output = merge(output, {
+      plugins: [
+        // un comment this to test out the circular deps. Left here since it can be tricky to configure
+        // createCircularDependencyPlugin(),
+        webpackPlugin(),
+      ],
+    });
+  }
+  // log(output.plugins);
   return output;
 };

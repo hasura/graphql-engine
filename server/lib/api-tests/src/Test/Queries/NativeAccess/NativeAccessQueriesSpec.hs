@@ -5,6 +5,8 @@ module Test.Queries.NativeAccess.NativeAccessQueriesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
+import Data.Time.Calendar.OrdinalDate
+import Data.Time.Clock
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -48,13 +50,36 @@ schema =
           [ Schema.column "one" Schema.TStr,
             Schema.column "two" Schema.TStr
           ]
+      },
+    (table "article")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "title" Schema.TStr,
+            Schema.column "content" Schema.TStr,
+            Schema.column "date" Schema.TUTCTime
+          ],
+        tableData =
+          [ [ Schema.VInt 1,
+              Schema.VStr "Dogs",
+              Schema.VStr "I like to eat dog food I am a dogs I like to eat dog food I am a dogs I like to eat dog food I am a dogs",
+              Schema.VUTCTime (UTCTime (fromOrdinalDate 2000 1) 0)
+            ]
+          ]
+      },
+    (table "article_excerpt")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "title" Schema.TStr,
+            Schema.column "excerpt" Schema.TStr,
+            Schema.column "date" Schema.TUTCTime
+          ]
       }
   ]
 
 tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   let query :: Text
-      query = "SELECT 'hello' as \"one\", 'world' as \"two\""
+      query = "SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t(\"one\", \"two\")"
 
       shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
@@ -70,15 +95,12 @@ tests opts = do
         ( GraphqlEngine.postMetadata
             testEnvironment
             [yaml|
-              type: pg_track_custom_sql
+              type: pg_track_native_query
               args:
                 type: query
                 source: *source
                 root_field_name: hello_world_function
-                sql: *query
-                parameters:
-                  - name: ignored
-                    type: "\"varchar\""
+                code: *query
                 returns:
                   name: hello_world_table
                   schema: *schemaName
@@ -102,8 +124,57 @@ tests opts = do
               testEnvironment
               [graphql|
               query {
-                hello_world_function(args: { ignored: "hi" }) {
+                hello_world_function(where: {one: {_eq: "hello"}}) {
                   one
+                  two
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
+    it "Runs a simple query that takes one dummy parameter" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: hello_world_function_with_dummy
+                arguments:
+                  dummy: varchar
+                code: *query
+                returns:
+                  name: hello_world_table
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_world_function_with_dummy:
+                    - two: "world"
+                    - two: "friend"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                hello_world_function_with_dummy(args: {dummy: "ignored"}, order_by: {one: asc}) {
                   two
                 }
               }

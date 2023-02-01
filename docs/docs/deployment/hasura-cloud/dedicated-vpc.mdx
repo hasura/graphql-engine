@@ -1,6 +1,6 @@
 ---
 description: Dedicated VPC with VPC peering and private network access
-title: 'Cloud: Dedicated VPC'
+title: "Cloud: Dedicated VPC"
 keywords:
   - hasura
   - cloud
@@ -12,12 +12,12 @@ sidebar_position: 40
 sidebar_class_name: cloud-and-enterprise-icon
 ---
 
-import Thumbnail from '@site/src/components/Thumbnail';
-import HeadingIcon from '@site/src/components/HeadingIcon';
+import Thumbnail from "@site/src/components/Thumbnail";
+import HeadingIcon from "@site/src/components/HeadingIcon";
 
 # Dedicated VPC
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise (Cloud)</div>
 
 ## Introduction
 
@@ -45,8 +45,8 @@ Enter the following details:
 - **Region**: region where the VPC should be provisioned (note that projects will also be created in this region
 - **VPC Name**: A display name for Hasura Dashboard
 - **VPC CIDR**: A valid private IPV4 address range (/16) that should be used with this VPC. For example `172.16.0.0/16`,
-  `10.10.0.0/16` etc. (it cannot be `10.2.0.0/16`, also it cannot conflict with the VPCs that you intend to peer with this
-  VPC)
+  `10.10.0.0/16` etc. (it cannot be `10.2.0.0/16`, also it cannot conflict with the VPCs that you intend to peer with
+  this VPC)
 
 Once you submit the request, the VPC will appear as **Pending**. It will take about 10-20 minutes for your VPC to be
 provisioned. Once it is provisioned, you will be able to see the VPC's details and create peering and projects.
@@ -72,8 +72,8 @@ All projects within a VPC is listed under **Projects**.
 ### AWS
 
 Your Dedicated VPC can be peered with other networks that you own on AWS or managed services like Aiven or Timescale
-Cloud that run on AWS. It will enable private connectivity to your databases and other APIs from Hasura Cloud and
-you will not have to expose them publicly.
+Cloud that run on AWS. It will enable private connectivity to your databases and other APIs from Hasura Cloud and you
+will not have to expose them publicly.
 
 You can view all the requests and active peerings in the **Peerings** tab.
 
@@ -147,8 +147,8 @@ Hasura Cloud.
 
 :::
 
-Once you enter and initiate the peering request, you will see the peering as **Request Pending** on the dashboard.
-Once Hasura accepts the request, you will see that the peering is **Active**. It will take about 5-10 minutes.
+Once you enter and initiate the peering request, you will see the peering as **Request Pending** on the dashboard. Once
+Hasura accepts the request, you will see that the peering is **Active**. It will take about 5-10 minutes.
 
 Now you should be able to use private IP addresses and private DNS names as Database URLs or Webhook URLs.
 

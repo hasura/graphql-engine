@@ -486,6 +486,14 @@ pgScalarTypeToText = \case
   PGCompositeScalar t -> t
   PGEnumScalar t -> t
 
+instance HasCodec PGScalarType where
+  codec =
+    AC.bimapCodec
+      (Right . textToPGScalarType)
+      pgScalarTypeToText
+      AC.textCodec
+      AC.<?> "Postgres Scalar Types"
+
 instance ToSQL PGScalarType where
   toSQL =
     TB.text . \case

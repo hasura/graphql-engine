@@ -3,6 +3,10 @@ import { ExecutorContext } from '@nrwl/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 import { flushChanges, FsTree, printChanges } from 'nx/src/generators/tree';
 import * as DomParser from 'dom-parser';
+import {
+  extractAssets,
+  generateAssetLoaderFile,
+} from 'unplugin-dynamic-asset-loader';
 
 type Asset = {
   tag: string;
@@ -48,96 +52,11 @@ export const validateAllowedAssets = (assets: Assets): void => {
   }
 };
 
-export const extractAssets = (html: string): Assets => {
-  const assets: Assets = { js: [], css: [] };
-  const domParser = new DomParser();
-  const parsedDocument = domParser.parseFromString(html);
-  parsedDocument.getElementsByTagName('script')?.forEach(element => {
-    if (
-      element.getAttribute('src') &&
-      !element.getAttribute('src').startsWith('http')
-    ) {
-      assets.js.push({
-        tag: element.outerHTML,
-        url: element.getAttribute('src') || 'not_found',
-        jsModule: element.getAttribute('type') === 'module',
-        type: 'js',
-      });
-    }
-  });
-  parsedDocument
-    .getElementsByAttribute('rel', 'stylesheet')
-    ?.forEach(element => {
-      if (
-        element.getAttribute('href') &&
-        !element.getAttribute('href').startsWith('http')
-      ) {
-        assets.css.push({
-          tag: element.outerHTML,
-          url: element.getAttribute('href') || 'not_found',
-          type: 'css',
-        });
-      }
-    });
-
-  if (assets.css.length === 0) {
-    throw new Error(
-      'No css assets found, there is an issue with the provided html.'
-    );
-  }
-  if (assets.js.length === 0) {
-    throw new Error(
-      'No js assets found, there is an issue with the provided html.'
-    );
-  }
-  return assets;
-};
-
-export const generateDynamicLoadCalls = (assets: Assets): string => {
-  const cssMap = assets.css
-    .map(it => `loadCss(basePath + "${it.url}.gz");\n`)
-    .join('');
-
-  const jsMap = assets.js
-    .map(it => {
-      if (it.jsModule) {
-        return `loadJs(basePath + "${it.url}.gz", "module");\n`;
-      }
-      return `loadJs(basePath + "${it.url}.gz");\n`;
-    })
-    .join('');
-
-  return cssMap + jsMap;
-};
-
-export const generateAssetLoaderFile = (assets: Assets): string => {
-  const loadedAssets = generateDynamicLoadCalls(assets);
-
-  console.log('This will be the loaded assets from this build :');
-  console.log(loadedAssets);
-
-  return `// THIS FILE IS GENERATED; DO NOT MODIFY BY HAND.
-
-const loadCss = (url) => {
-  const linkElem = document.createElement("link");
-  linkElem.rel = "stylesheet";
-  linkElem.charset = "UTF-8";
-  linkElem.href = url;
-  document.body.append(linkElem);
-};
-const loadJs = (url, type) => {
-  const scriptElem = document.createElement("script");
-  scriptElem.charset = "UTF-8";
-  scriptElem.src = url;
-  if (type) {
-    scriptElem.type = type
-  }
-  document.body.append(scriptElem);
-};
-
-window.__loadConsoleAssetsFromBasePath = (root) => {
-const basePath = root.endsWith('/') ? root : root + '/';
-${loadedAssets}}`;
+export const gzAssetNames = (assets: Assets): Assets => {
+  return {
+    css: assets.css.map(asset => ({ ...asset, url: `${asset.url}.gz` })),
+    js: assets.js.map(asset => ({ ...asset, url: `${asset.url}.gz` })),
+  };
 };
 
 export const generatePolyfillLoaderFile = (
@@ -183,7 +102,12 @@ export default async function runMyExecutor(
 
   const htmlString = tree.read(distTarget + '/index.html').toString();
 
-  const extractedAssets = extractAssets(htmlString);
+  const extractedAssets = gzAssetNames(extractAssets(htmlString));
+
+  console.log('This will be the loaded assets from this build :');
+  console.log(extractedAssets.js.map(it => it.url));
+  console.log(extractedAssets.css.map(it => it.url));
+
   validateAllowedAssets(extractedAssets);
   const loaderFile = generateAssetLoaderFile(extractedAssets);
   tree.write(`${serverAssetBase}/versioned/assetLoader.js`, loaderFile);

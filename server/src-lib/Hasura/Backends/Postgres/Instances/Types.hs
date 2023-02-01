@@ -118,7 +118,6 @@ instance
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
   type BackendInsert ('Postgres pgKind) = Postgres.BackendInsert pgKind
 
-  type NativeQueryInfo ('Postgres pgKind) = NativeQueryInfoImpl ('Postgres pgKind)
   type NativeQuery ('Postgres pgKind) = NativeQueryImpl ('Postgres pgKind)
 
   type XComputedField ('Postgres pgKind) = XEnable
@@ -166,3 +165,19 @@ instance
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
 
   resolveConnectionTemplate = Postgres.pgResolveConnectionTemplate
+
+instance
+  ( HasTag ('Postgres pgKind),
+    Typeable ('Postgres pgKind),
+    PostgresBackend pgKind,
+    FromJSON (BackendSourceKind ('Postgres pgKind)),
+    HasCodec (BackendSourceKind ('Postgres pgKind))
+  ) =>
+  NativeQueryMetadata ('Postgres pgKind)
+  where
+  type NativeQueryInfo ('Postgres pgKind) = NativeQueryInfoImpl ('Postgres pgKind)
+  type NativeQueryName ('Postgres pgKind) = NativeQueryNameImpl
+  type TrackNativeQuery ('Postgres pgKind) = TrackNativeQueryImpl ('Postgres pgKind)
+  trackNativeQuerySource = tnqSource
+  nativeQueryInfoName = nqiiRootFieldName
+  nativeQueryTrackToInfo = defaultNativeQueryTrackToInfo

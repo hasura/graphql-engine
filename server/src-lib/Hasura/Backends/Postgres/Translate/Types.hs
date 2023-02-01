@@ -254,7 +254,7 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 ----
 
 newtype CustomSQLCTEs = CustomSQLCTEs
-  { getCustomSQLCTEs :: HM.HashMap Postgres.TableAlias Postgres.RawSQL
+  { getCustomSQLCTEs :: HM.HashMap Postgres.TableAlias Postgres.RawQuery
   }
   deriving newtype (Eq, Show, Semigroup, Monoid)
 

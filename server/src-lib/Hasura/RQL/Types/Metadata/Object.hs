@@ -43,6 +43,7 @@ import Data.Text.Extended
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -74,7 +75,7 @@ data SourceMetadataObjId b
   | SMOFunction (FunctionName b)
   | SMOFunctionPermission (FunctionName b) RoleName
   | SMOTableObj (TableName b) TableMetadataObjId
-  | SMOCustomSQL G.Name
+  | SMONativeQuery (NativeQueryName b)
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -135,7 +136,7 @@ moiTypeName = \case
     handleSourceObj = \case
       SMOTable _ -> "table"
       SMOFunction _ -> "function"
-      SMOCustomSQL _ -> "custom_sql"
+      SMONativeQuery _ -> "native_query"
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -187,7 +188,7 @@ moiName objectId =
           <> toTxt functionName
           <> " in source "
           <> toTxt source
-      SMOCustomSQL name -> toTxt name <> " in source " <> toTxt source
+      SMONativeQuery name -> toTxt name <> " in source " <> toTxt source
       SMOTableObj tableName tableObjectId ->
         let tableObjectName = case tableObjectId of
               MTORel name _ -> toTxt name

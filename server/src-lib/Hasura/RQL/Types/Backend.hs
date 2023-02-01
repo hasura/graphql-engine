@@ -22,6 +22,7 @@ import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
@@ -70,23 +71,23 @@ data SupportedNamingCase = OnlyHasuraCase | AllConventions
 -- type application or a 'Proxy' parameter to disambiguate between
 -- different backends at the call site.
 class
-  ( Representable (TableName b),
-    Representable (FunctionName b),
-    Representable (FunctionArgument b),
-    Representable (ConstraintName b),
-    Representable (BasicOrderType b),
-    Representable (NullsOrderType b),
+  ( Representable (BasicOrderType b),
     Representable (Column b),
-    Representable (ScalarType b),
-    Representable (SQLExpression b),
-    Representable (ScalarSelectionArguments b),
-    Representable (SourceConnConfiguration b),
-    Representable (ExtraTableMetadata b),
-    Representable (XComputedField b),
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
+    Representable (ConstraintName b),
+    Representable (ExtraTableMetadata b),
+    Representable (FunctionArgument b),
+    Representable (FunctionName b),
     Representable (HealthCheckTest b),
+    Representable (NullsOrderType b),
+    Representable (SQLExpression b),
+    Representable (ScalarSelectionArguments b),
+    Representable (ScalarType b),
+    Representable (SourceConnConfiguration b),
+    Representable (XComputedField b),
+    Representable (TableName b),
     Eq (RawFunctionInfo b),
     Representable (ResolvedConnectionTemplate b),
     Ord (TableName b),
@@ -96,18 +97,18 @@ class
     Data (TableName b),
     FromJSON (BackendConfig b),
     FromJSON (BackendInfo b),
-    FromJSON (Column b),
-    FromJSON (ConstraintName b),
-    FromJSON (FunctionName b),
-    FromJSON (ScalarType b),
-    FromJSON (TableName b),
-    FromJSON (SourceConnConfiguration b),
-    FromJSON (ExtraTableMetadata b),
-    FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
+    FromJSON (Column b),
+    FromJSON (ComputedFieldDefinition b),
+    FromJSON (ConnectionTemplateRequestContext b),
+    FromJSON (ConstraintName b),
+    FromJSON (ExtraTableMetadata b),
+    FromJSON (FunctionName b),
     FromJSON (HealthCheckTest b),
     FromJSON (RawFunctionInfo b),
-    FromJSON (ConnectionTemplateRequestContext b),
+    FromJSON (ScalarType b),
+    FromJSON (SourceConnConfiguration b),
+    FromJSON (TableName b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
@@ -186,7 +187,8 @@ class
     Traversable (AggregationPredicates b),
     Functor (NativeQuery b),
     Foldable (NativeQuery b),
-    Traversable (NativeQuery b)
+    Traversable (NativeQuery b),
+    NativeQueryMetadata b
   ) =>
   Backend (b :: BackendType)
   where
@@ -325,12 +327,6 @@ class
   type NativeQuery b :: Type -> Type
 
   type NativeQuery b = Const Void
-
-  -- | Metadata representation of definitions of native queries.
-  -- The default implementation makes native queries uninstantiable.
-  type NativeQueryInfo b :: Type
-
-  type NativeQueryInfo b = Void
 
   -- extension types
   type XComputedField b :: Type

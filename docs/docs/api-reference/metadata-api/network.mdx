@@ -10,6 +10,7 @@ keywords:
   - network options
   - TLS
   - allowlist
+  - TLS allow list
 ---
 
 # Metadata API Reference: Network Options (v2.0 and above)
@@ -19,9 +20,9 @@ keywords:
 Here's the API to modify any `Network` metadata. One of the options is
 to manage a `TLS allowlist`.
 
-## TLS Allowlist
+## TLS allow list
 
-The TLS Allowlist represents a set of services that are permitted to use
+The TLS allow list represents a set of services that are permitted to use
 self-signed certificates - primarily intended for use in development and
 staging environments, services can be whitelisted by a `host`, and
 optionally (service id) `port`.
@@ -58,7 +59,7 @@ X-Hasura-Role: admin
 
 ## drop_host_from_tls_allowlist {#metadata-drop-host-from-tls-allowlist}
 
-`drop_host_from_tls_allowlist` is used to drop an endpoint from the TLS allowlist.
+`drop_host_from_tls_allowlist` is used to drop an endpoint from the TLS allow list.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -77,4 +78,4 @@ X-Hasura-Role: admin
 
 | Key  | Required | Schema   | Description                                                                    |
 | ---- | -------- | -------- | ------------------------------------------------------------------------------ |
-| host | true     | `String` | The hostname/domain of the endpoint that was previously added to the allowlist |
+| host | true     | `String` | The hostname/domain of the endpoint that was previously added to the allow list |

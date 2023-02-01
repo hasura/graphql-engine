@@ -158,11 +158,31 @@ flag ghci-load-test-with-lib
 common common-all
   ghc-options:
     -foptimal-applicative-do
-    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
     -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
     -fmax-simplifier-iterations=2
-    -- Insisting on export lists might help with compile times, and help to document modules:
-    -Wmissing-export-lists
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-prepositive-qualified-module
+    -Wno-implicit-lift
+    -Wno-identities
+    -Wno-operator-whitespace
+    -Wno-partial-fields
+    -Wno-redundant-bang-patterns
+    -Wno-unused-type-patterns
 
   if flag(profiling)
     cpp-options: -DPROFILING
@@ -198,6 +218,7 @@ common common-all
     DeriveLift
     DeriveTraversable
     DerivingVia
+    EmptyCase
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
@@ -473,21 +494,22 @@ library
                      , Data.Aeson.Kriti.Functions
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
-                     , Data.HashMap.Strict.Multi
-                     , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Autodocodec
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.HashMap.Strict.Multi
+                     , Data.HashMap.Strict.NonEmpty
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
-                     , Data.SqlCommenter
                      , Data.SerializableBlob
+                     , Data.SqlCommenter
                      , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
                      , Data.Trie
                      , Data.URL.Template
+                     , Data.Voidable
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP
@@ -713,13 +735,13 @@ library
                      , Hasura.Server.Telemetry.Types
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
-                     , Hasura.CustomSQL
                      , Hasura.GC
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
                      , Hasura.NativeQuery.IR
                      , Hasura.NativeQuery.Metadata
+                     , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Schema
                      , Hasura.NativeQuery.Types
                      , Hasura.Server.Auth.WebHook
@@ -807,7 +829,6 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
-                     , Hasura.RQL.DDL.CustomSQL
                      , Hasura.RQL.DDL.OpenTelemetry
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Permission.Internal
@@ -1133,6 +1154,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.MySQL.TypesSpec
     Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
+    Hasura.Backends.Postgres.NativeQuery.NativeQuerySpec
     Hasura.Backends.Postgres.RQLGenerator
     Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
     Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes

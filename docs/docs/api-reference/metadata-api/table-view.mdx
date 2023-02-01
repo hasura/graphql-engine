@@ -274,7 +274,7 @@ Setting `apollo_federation_config` to `null` will disable Apollo Federation supp
 
 ## pg_test_connection_template {#metadata-pg-test-connection-template}
 
-<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
 
 `pg_test_connection_template` allows you to test the connection template set for a source.
 
@@ -308,14 +308,14 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-test-connection-template-syntax}
 
-| Key                      | Required | Schema                                                                          | Description                                                   |
-|--------------------------|----------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
-| source_name              | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
-| request_context          | true     | [RequestContext](/api-reference/syntax-defs.mdx#requestcontext)                 | Request context                                               |
+| Key             | Required | Schema                                                          | Description                                                   |
+| --------------- | -------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
+| source_name     | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)         | Name of the source database of the table (default: `default`) |
+| request_context | true     | [RequestContext](/api-reference/syntax-defs.mdx#requestcontext) | Request context                                               |
 
 :::info Enterprise only
 
-Connection template feature is an enterprise edition only feature. 
+Connection template feature is an enterprise edition only feature.
 
 :::
 
