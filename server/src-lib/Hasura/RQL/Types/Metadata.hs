@@ -253,7 +253,11 @@ overrideMetadataDefaults md (MetadataDefaults defs) =
   where
     overrideCustomTypesDefaults (CustomTypes a1 a2 a3 a4) (CustomTypes b1 b2 b3 b4) = CustomTypes (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4)
     overrideApiLimitsDefaults (ApiLimit a1 a2 a3 a4 a5 a6) (ApiLimit b1 b2 b3 b4 b5 b6) = ApiLimit (a1 <|> b1) (a2 <|> b2) (a3 <|> b3) (a4 <|> b4) (a5 <|> b5) (a6 || b6)
-    overrideMetricsConfigDefaults (MetricsConfig a1 a2) (MetricsConfig b1 b2) = MetricsConfig (a1 || b1) (a2 || b2)
+    overrideMetricsConfigDefaults mc1 mc2 =
+      MetricsConfig
+        { _mcAnalyzeQueryVariables = _mcAnalyzeQueryVariables mc1 && _mcAnalyzeQueryVariables mc2,
+          _mcAnalyzeResponseBody = _mcAnalyzeResponseBody mc2 || _mcAnalyzeResponseBody mc2
+        }
     overrideNetworkDefaults (Network a1) (Network b1) = Network (a1 <> b1)
 
 tableMetadataSetter ::
