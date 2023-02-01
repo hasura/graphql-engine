@@ -5,14 +5,33 @@ build-type: Simple
 copyright: Hasura Inc.
 extra-source-files: README.md
 
+common common-all
+  ghc-options:
+    -Werror
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-partial-fields
+    -Wno-missing-export-lists
+    -Wno-implicit-prelude
+
 library
+  import: common-all
   build-tool-depends: hspec-discover:hspec-discover
   hs-source-dirs: src
   default-language: GHC2021
-
-  ghc-options:
-    -Wall
-    -Werror
 
   default-extensions:
     BlockArguments
@@ -65,6 +84,7 @@ library
     , unordered-containers
     , uuid
     , vector
+    , time
 
   exposed-modules:
     Spec
@@ -72,11 +92,11 @@ library
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.Metadata.ComputedFieldsSpec
-    Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.NativeQuerySpec
+    Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TransparentDefaultsSpec
-    Test.API.Metadata.NativeAccessSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
@@ -121,6 +141,7 @@ library
     Test.EventTriggers.PG.EventTriggersForReplicationSpec
     Test.EventTriggers.PG.EventTriggersRecreationSpec
     Test.EventTriggers.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTriggers.PG.EventTriggersClearMetadataSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
@@ -208,6 +229,7 @@ library
     Test.Webhook.WebhookTransformSpec
 
 executable api-tests
+  import: common-all
   build-depends:
     , lens-aeson
     , api-tests
@@ -217,8 +239,6 @@ executable api-tests
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall
-    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
@@ -227,6 +247,7 @@ executable api-tests
   main-is: Main.hs
 
 library feature-matrix
+  import: common-all
   build-depends:
     , aeson
     , attoparsec
@@ -262,11 +283,8 @@ library feature-matrix
   exposed-modules:
       Hasura.FeatureMatrix
 
-  ghc-options:
-    -Wall
-    -Werror
-
 executable render-feature-matrix
+  import: common-all
   build-depends:
     , base
     , feature-matrix
@@ -295,14 +313,13 @@ executable render-feature-matrix
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall
-    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
   main-is: Main.hs
 
 executable produce-feature-matrix
+  import: common-all
   build-depends:
     , api-tests
     , base
@@ -334,8 +351,6 @@ executable produce-feature-matrix
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
     -O0
-    -Wall
-    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N4"
 

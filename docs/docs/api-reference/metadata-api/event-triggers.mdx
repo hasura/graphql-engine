@@ -14,20 +14,18 @@ keywords:
 
 ## Introduction
 
-Event Triggers are used to capture database changes and send them to a
-configured webhook.
+Event Triggers are used to capture database changes and send them to a configured webhook.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The Metadata API is supported for versions `v2.0.0` and above and replaces the older
+[schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
 ## pg_create_event_trigger {#metadata-pg-create-event-trigger}
 
-`pg_create_event_trigger` is used to create a new Event Trigger or
-replace an existing Event Trigger.
+`pg_create_event_trigger` is used to create a new Event Trigger or replace an existing Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -135,11 +133,9 @@ X-Hasura-Role: admin
 
 ## pg_redeliver_event {#metadata-pg-redeliver-event}
 
-`redeliver_event` is used to redeliver an existing event. For example,
-if an event is marked as error ( say it did not succeed after retries),
-you can redeliver it using this API. Note that this will reset the count
-of retries so far. If the event fails to deliver, it will be retried
-automatically according to its `retry_conf`.
+`redeliver_event` is used to redeliver an existing event. For example, if an event is marked as error ( say it did not
+succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far. If
+the event fails to deliver, it will be retried automatically according to its `retry_conf`.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -191,8 +187,7 @@ X-Hasura-Role: admin
 
 ## mssql_create_event_trigger {#metadata-mssql-create-event-trigger}
 
-`mssql_create_event_trigger` is used to create a new Event Trigger or
-replace an existing Event Trigger.
+`mssql_create_event_trigger` is used to create a new Event Trigger or replace an existing Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -293,18 +288,16 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-mssql-delete-event-trigger-syntax}
 
-| Key    | Required | Schema                                                    | Description                                                     |
-| ------ | -------- | --------------------------------------------------------- | --------------------------------------------------------------- |
-| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                       |
+| Key    | Required | Schema                                                    | Description                                                           |
+| ------ | -------- | --------------------------------------------------------- | --------------------------------------------------------------------- |
+| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                             |
 | source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the Event Trigger (default: `default`) |
 
 ## mssql_redeliver_event {#metadata-mssql-redeliver-event}
 
-`mssql_redeliver_event` is used to redeliver an existing event. For example,
-if an event is marked as error (say it did not succeed after retries),
-you can redeliver it using this API. Note that this will reset the count
-of retries so far. If the event fails to deliver, it will be retried
-automatically according to its `retry_conf`.
+`mssql_redeliver_event` is used to redeliver an existing event. For example, if an event is marked as error (say it did
+not succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far.
+If the event fails to deliver, it will be retried automatically according to its `retry_conf`.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -354,7 +347,7 @@ X-Hasura-Role: admin
 
 ## cleanup_event_trigger_logs {#metadata-cleanup-event-trigger-logs}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition/Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise</div>
 
 `cleanup_event_trigger_logs` is used to manually delete the event logs for a given Event Trigger.
 
@@ -388,7 +381,7 @@ X-Hasura-Role: admin
 
 ## resume_event_trigger_cleanups {#metadata-resume-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition/Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise</div>
 
 `resume_event_trigger_cleanups` is used to resume the paused log cleaner for Event Triggers.
 
@@ -418,10 +411,10 @@ X-Hasura-Role: admin
 
 ## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition/Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise</div>
 
-- `pause_event_trigger_cleanups` is used to pause the log cleaner for event
-  triggers which already have a cleaner installed.
+- `pause_event_trigger_cleanups` is used to pause the log cleaner for event triggers which already have a cleaner
+  installed.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -449,6 +442,7 @@ X-Hasura-Role: admin
 
 :::info Note
 
-The start and pause APIs for Event Trigger cleanup work only for Event Triggers that have a cleanup configuration defined.
+The start and pause APIs for Event Trigger cleanup work only for Event Triggers that have a cleanup configuration
+defined.
 
 :::

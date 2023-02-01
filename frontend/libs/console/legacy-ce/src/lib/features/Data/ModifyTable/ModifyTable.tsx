@@ -1,5 +1,6 @@
 import { useMetadata } from '@/features/hasura-metadata-api';
 import { MetadataSelectors } from '@/features/hasura-metadata-api/';
+import { getSupportsForeignKeys } from '@/features/hasura-metadata-api/utils';
 import { Table } from '@/features/hasura-metadata-types';
 import React from 'react';
 import {
@@ -21,7 +22,7 @@ export const ModifyTable: React.VFC<ModifyTableProps> = props => {
     MetadataSelectors.findSource(props.dataSourceName)
   );
 
-  const supportsForeignKeys = source?.kind !== 'bigquery';
+  const supportsForeignKeys = getSupportsForeignKeys(source);
 
   return (
     <div className="w-full bg-white p-4 rounded-sm border my-2">

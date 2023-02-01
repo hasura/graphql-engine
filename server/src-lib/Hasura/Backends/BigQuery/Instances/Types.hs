@@ -10,6 +10,7 @@ import Hasura.Backends.BigQuery.Source qualified as BigQuery
 import Hasura.Backends.BigQuery.ToQuery ()
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
@@ -115,3 +116,5 @@ instance Backend 'BigQuery where
     pure ()
 
   defaultTriggerOnReplication = Nothing
+
+instance NativeQueryMetadata 'BigQuery

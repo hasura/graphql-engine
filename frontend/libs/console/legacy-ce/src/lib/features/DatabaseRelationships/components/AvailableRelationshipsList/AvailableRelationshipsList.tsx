@@ -1,32 +1,32 @@
+import React from 'react';
 import { Table } from '@/features/hasura-metadata-types';
 import { CardedTable } from '@/new-components/CardedTable';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import React from 'react';
 import { FiRefreshCcw } from 'react-icons/fi';
 import Skeleton from 'react-loading-skeleton';
 import { QueryClient, useQueryClient } from 'react-query';
 import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
 import { MODE, Relationship } from '../../types';
 import { generateQueryKeys } from '../../utils/queryClientUtils';
-import Legends from './parts/Legend';
 import { RelationshipMapping } from './parts/RelationshipMapping';
 import { RowActions } from './parts/RowActions';
 import { TargetName } from './parts/TargetName';
 
 export interface AvailableRelationshipsListProps {
   dataSourceName: string;
-  table: Table;
   onAction: (relationship: Relationship, mode: MODE) => void;
+  table: Table;
 }
 
 const refreshMetadata = (client: QueryClient) => {
   client.invalidateQueries(generateQueryKeys.metadata());
 };
 
-export const AvailableRelationshipsList = (
-  props: AvailableRelationshipsListProps
-) => {
-  const { dataSourceName, table, onAction } = props;
+export const AvailableRelationshipsList = ({
+  dataSourceName,
+  onAction,
+  table,
+}: AvailableRelationshipsListProps) => {
   const { data: relationships } = useListAllDatabaseRelationships({
     dataSourceName,
     table,
@@ -91,7 +91,6 @@ export const AvailableRelationshipsList = (
           ))}
         </CardedTable.TableBody>
       </CardedTable.Table>
-      <Legends />
     </div>
   );
 };

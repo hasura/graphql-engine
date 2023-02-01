@@ -1,13 +1,14 @@
 # ghcid gets its own cache
+GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
 GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -fobject-code
 GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0
 
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main"; \
 	else \
-  	HASURA_TEST_BACKEND_TYPE="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+  	HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
   		--test "main"; \
 	fi
 endef
@@ -58,6 +59,12 @@ ghcid-api-tests-pro:
 ## ghcid-test-backends: run all api tests in ghcid
 ghcid-test-backends: start-backends remove-tix-file
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests)
+
+.PHONY: ghcid-test-postgres
+## ghcid-test-backends: run tests for Postgres backend in ghcid
+ghcid-test-postgres: remove-tix-file
+	docker compose up postgres -d --wait postgres
+	$(call run_ghcid_api_tests,api-tests:exe:api-tests,Postgres)
 
 .PHONY: ghcid-test-bigquery
 ## ghcid-test-bigquery: run tests for BigQuery backend in ghcid

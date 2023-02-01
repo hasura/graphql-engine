@@ -25,10 +25,6 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
 import Hasura.NativeQuery.IR (NativeQueryImpl (..))
 import Hasura.NativeQuery.Metadata
-  ( NativeQueryArgumentName (..),
-    NativeQueryInfoImpl (..),
-  )
-import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
@@ -63,19 +59,22 @@ defaultBuildNativeQueryRootFields ::
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
   tableInfo <- askTableInfo @b nqiiReturns
-  fieldName <- hoistMaybe (G.mkName $ getNativeQueryName nqiiName)
-  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiiArgs
+  fieldName <- hoistMaybe (G.mkName $ getNativeQueryNameImpl nqiiRootFieldName)
+  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiiArguments
   sourceInfo :: SourceInfo b <- asks getter
   let sourceName = _siName sourceInfo
       tableName = tableInfoName tableInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
-      description = Just $ G.Description $ "A native query called " <> getNativeQueryName nqiiName
+      description = G.Description <$> nqiiDescription
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
 
   selectionSetParser <- MaybeT $ tableSelectionList @b @r @m @n tableInfo
   tableArgsParser <- lift $ tableArguments @b @r @m @n tableInfo
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+
+  -- for now, let's get the old queries working by flattening the SQL again
+  let interpolatedQuery = InterpolatedQuery [IIText (ppInterpolatedQuery nqiiCode)]
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
       P.subselection fieldName description ((,) <$> tableArgsParser <*> nativeQueryArgsParser) selectionSetParser
@@ -86,9 +85,9 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
                 IR._asnFrom =
                   IR.FromNativeQuery
                     NativeQueryImpl
-                      { nqName = nqiiName,
+                      { nqRootFieldName = nqiiRootFieldName,
                         nqArgs,
-                        nqRawBody = nqiiCode
+                        nqInterpolatedQuery = interpolatedQuery
                       },
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,
@@ -126,8 +125,12 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
         (HM.toList argsSignature)
 
   let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
+
   pure $
-    P.field
-      [G.name|args|]
-      desc
-      (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)
+    if null argsSignature
+      then mempty
+      else
+        P.field
+          [G.name|args|]
+          desc
+          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)

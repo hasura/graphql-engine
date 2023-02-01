@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version:  3.6
 
 name:           aeson-ordered
 version:        0.1.0.0
@@ -11,7 +11,7 @@ author:         Anon Ray <anon@hasura.io>,
 maintainer:     Anon Ray <anon@hasura.io>,
                 Bryan O'Sullivan <bos@serpentine.com>,
                 MailRank, Inc.
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -39,7 +39,24 @@ library
       LambdaCase
       OverloadedStrings
       StrictData
-  ghc-options: -foptimal-applicative-do -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  ghc-options:
+    -foptimal-applicative-do
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-deriving-typeable
+    -Wno-implicit-prelude
   build-depends:
       aeson
     , attoparsec

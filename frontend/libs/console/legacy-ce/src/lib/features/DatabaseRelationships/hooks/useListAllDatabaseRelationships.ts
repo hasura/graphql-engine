@@ -11,6 +11,7 @@ import { useQuery } from 'react-query';
 import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
 import {
   LocalRelationship,
+  Relationship,
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
 } from '../types';
@@ -133,12 +134,14 @@ export const useListAllDatabaseRelationships = ({
     });
   });
 
+  const allRelationships: Relationship[] = [
+    ...localArrayRelationships,
+    ...localObjectRelationships,
+    ...remoteRelationships,
+  ];
+
   return {
-    data: [
-      ...localArrayRelationships,
-      ...localObjectRelationships,
-      ...remoteRelationships,
-    ],
+    data: allRelationships,
     isFetching: isMetadataPending || isDALIntrospectionPending,
     isLoading: isMetadataLoading || isDALIntrospectionLoading,
     error: [metadataError, dalError],

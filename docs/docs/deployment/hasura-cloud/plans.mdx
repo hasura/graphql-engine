@@ -1,0 +1,96 @@
+---
+description: Billing and pricing breakdown for Hasura Cloud
+keywords:
+  - hasura
+  - cloud
+  - tiers
+  - billing
+  - pricing
+sidebar_class_name: cloud-and-enterprise-icon
+sidebar_position: 2
+---
+
+# Plans and Pricing
+
+## Overview
+
+[Hasura Cloud](https://cloud.hasura.io) offers three plans: Hasura Cloud Free, Hasura Cloud Professional, and Hasura
+Cloud Enterprise.
+
+Hasura Cloud billing is based on the consumption of resources. For paid plans, you can either pay as you go monthly in
+arrears or make an annual commitment with an upfront payment for the usage. Below, you'll find an overview of each plan
+and details on how we calculate billing. Check out our [pricing FAQ](https://hasura.io/pricing#faq) for common
+questions.
+
+## Hasura Cloud Plans
+
+### Hasura Cloud Free
+
+The Hasura Cloud Free plan is - as it's named - free to use. You can create up to **three** Projects under the plan to
+try out the Hasura fully-managed GraphQL APIs.
+
+Each Project can use up to **two data connectors** with **100 MB of data passthrough per month**, and up to **1 million
+API requests per month**. You can get higher entitlements after upgrading to the Hasura Cloud Professional plan.
+
+### Hasura Cloud Professional
+
+Hasura Cloud Professional is a pay-as-you-go monthly subscription plan. You only pay for your consumption every month.
+We calculate billing, using the following categories, per Project:
+
+- Types of databases connected to the Project
+- Data passthrough
+
+Hasura Cloud Professional is billed for the number of hours each Project runs and the amount of data passthrough. The
+price depends on the type(s) of database(s) connected to the Project. If a Project uses a generic Postgres database and
+a premium database, **you are only billed for the premium database at $3.00 /hr**.
+
+| Database Type      | Rate     |
+| ------------------ | -------- |
+| Generic Postgres   | $1.50/hr |
+| Snowflake          | $3.00/hr |
+| BigQuery           | $3.00/hr |
+| Athena             | $3.00/hr |
+| MSSQL              | $3.00/hr |
+| CockroachDB        | $3.00/hr |
+| Google AlloyDB     | $3.00/hr |
+| Citus / Hyperscale | $3.00/hr |
+
+:::info Projects without databases
+
+A Project without a connected database is billed at $1.50/hr.
+
+:::
+
+#### Data passthrough
+
+Hasura Cloud meters data passing through it to external services, including request data that is sent to upstream
+services (e.g., databases) and response data sent to downstream services (e.g., web apps) at a rate of $0.13/GB.
+
+You will be billed based on this volume of data that passes through Hasura every month.
+
+#### Example Calculation
+
+Assuming thirty days in the month, you start with one Project with a Postgres data connector for the first twenty-one
+days of the Project:
+
+`21 days * 24 hrs/day * $1.50/hr = $756`
+
+On the twenty-second day, you decide to add the Snowflake data connector and leave it connected until the end of the
+month:
+
+`9 days * 24hrs/day * $3.00/hr = $648`
+
+Let's assume the data passthrough for the entire month is 1000 GB:
+
+`1000 GB * $0.13/GB = $130 Total`
+
+The total cost for the month is $1534.
+
+### Hasura Cloud Enterprise
+
+The Hasura Cloud Enterprise plan offers the ability to commit to a minimum spending amount over a minimum 12-month
+commitment period. You can view the total amount of accrued usage during the commitment term and the amount of committed
+spending left in your account. You can renew your commitment if your commitment is depleted before the expiry of the
+commitment period.
+
+Talk to a Hasura [sales representative](mailto:sales@hasura.io) to discuss your specific use case and the pricing.

@@ -46,3 +46,17 @@ export enum MODE {
   DELETE = 'delete',
   RENAME = 'rename',
 }
+
+export type SuggestedRelationship = {
+  type: 'object' | 'array';
+  from: {
+    table: Table;
+    columns: string[];
+    constraint_name?: string;
+  };
+  to: {
+    table: Table;
+    columns: string[];
+    constraint_name?: string;
+  };
+};

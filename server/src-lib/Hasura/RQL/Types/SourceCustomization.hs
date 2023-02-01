@@ -81,7 +81,6 @@ import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
-import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 

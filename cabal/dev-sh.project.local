@@ -35,32 +35,57 @@ package graphql-engine
   ghc-options: -Werror
   -- For compile-time performance (see cabal.project.ci.local):
   ghc-options: -j
-  -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
-  -- libraries. But, also by default, cabal links executables statically, which requires static
-  -- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
-  -- static and dynamic versions of all object files.
-  -- Setting executable-dynamic: True forces cabal to build a dynamic executable; but it's not
-  -- enough on its own: since library-vanilla defaults to True, cabal would still build a static
-  -- library. With those two flags together, we can finally only build one version of the library,
-  -- which substentially improves compilation time.
-  executable-dynamic: True
+
+-- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
+-- libraries. But, also by default, cabal links executables statically, which requires static
+-- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
+-- static and dynamic versions of all object files.
+-- Setting executable-dynamic: True forces cabal to build a dynamic executable; but it's not
+-- enough on its own: since library-vanilla defaults to True, cabal would still build a static
+-- library. With those two flags together, we can finally only build one version of the library,
+-- which substentially improves compilation time.
+executable-dynamic: True
+library-vanilla: False
+
+-- These packages link back into our fork of resource-pool, hence we need to
+-- disable a statically linked library build
+package hedis
+  library-vanilla: False
+package Spock
+  library-vanilla: False
+package hasql-pool
   library-vanilla: False
 
-package test-harness
-  coverage: true
-  ghc-options: -Werror
-  ghc-options: -j
-  -- See "package graphql-engine" for more information
-  executable-dynamic: True
-  library-vanilla: False
+package aeson-ordered
+  ghc-options: -j -Werror
 
 package api-tests
-  coverage: true
-  ghc-options: -Werror
-  ghc-options: -j
-  -- See "package graphql-engine" for more information
-  executable-dynamic: True
-  library-vanilla: False
+  ghc-options: -j -Werror
+
+package dc-api
+  ghc-options: -j -Werror
+
+package error-message
+  ghc-options: -j -Werror
+
+package graphql-parser-hs
+  ghc-options: -j -Werror
+
+package hasura-prelude
+  ghc-options: -j -Werror
+
+package pg-client-hs
+  ghc-options: -j -Werror
+
+package pool
+  ghc-options: -j -Werror
+
+package schema-parsers
+  ghc-options: -j -Werror
+
+package test-harness
+  ghc-options: -j -Werror
+
 
 package mysql
   extra-include-dirs:

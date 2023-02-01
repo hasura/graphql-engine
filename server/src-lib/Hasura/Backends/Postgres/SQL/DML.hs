@@ -31,7 +31,7 @@ module Hasura.Backends.Postgres.SQL.DML
     OrderType (OTAsc, OTDesc),
     QIdentifier (QIdentifier),
     Qual (QualTable, QualVar, QualifiedIdentifier),
-    RawSQL (..),
+    RawQuery (..),
     RetExp (RetExp),
     SQLConflict (..),
     SQLConflictTarget (SQLColumn, SQLConstraint),
@@ -114,6 +114,7 @@ import Data.String (fromString)
 import Data.Text (pack)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.SQL.Types
 import Text.Builder qualified as TB
@@ -1170,7 +1171,7 @@ data TopLevelCTE
   | CTEInsert SQLInsert
   | CTEUpdate SQLUpdate
   | CTEDelete SQLDelete
-  | CTEUnsafeRawSQL RawSQL
+  | CTEUnsafeRawSQL RawQuery
   deriving (Show, Eq)
 
 instance ToSQL TopLevelCTE where
@@ -1179,10 +1180,7 @@ instance ToSQL TopLevelCTE where
     CTEInsert q -> toSQL q
     CTEUpdate q -> toSQL q
     CTEDelete q -> toSQL q
-    CTEUnsafeRawSQL (RawSQL q) -> TB.text q
-
-newtype RawSQL = RawSQL Text
-  deriving newtype (Eq, Ord, Show)
+    CTEUnsafeRawSQL (RawQuery q) -> TB.text q
 
 -- | A @SELECT@ statement with Common Table Expressions.
 --   <https://www.postgresql.org/docs/current/queries-with.html>

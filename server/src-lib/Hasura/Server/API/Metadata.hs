@@ -22,12 +22,12 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
+import Hasura.NativeQuery.API qualified as NativeQuery
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate
-import Hasura.RQL.DDL.CustomSQL qualified as CustomSQL
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
@@ -133,9 +133,9 @@ data RQLMetadataV1
   | -- Connection template
     RMTestConnectionTemplate !(AnyBackend TestConnectionTemplate)
   | -- Native access
-    RMGetCustomSQL !(AnyBackend CustomSQL.GetCustomSQL)
-  | RMTrackCustomSQL !(AnyBackend CustomSQL.TrackCustomSQL)
-  | RMUntrackCustomSQL !(AnyBackend CustomSQL.UntrackCustomSQL)
+    RMGetNativeQuery !(AnyBackend NativeQuery.GetNativeQuery)
+  | RMTrackNativeQuery !(AnyBackend NativeQuery.BackendTrackNativeQuery)
+  | RMUntrackNativeQuery !(AnyBackend NativeQuery.UntrackNativeQuery)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -491,9 +491,9 @@ queryModifiesMetadata = \case
       RMGetTableInfo _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
-      RMGetCustomSQL _ -> False
-      RMTrackCustomSQL _ -> True
-      RMUntrackCustomSQL _ -> True
+      RMGetNativeQuery _ -> False
+      RMTrackNativeQuery _ -> True
+      RMUntrackNativeQuery _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
@@ -674,9 +674,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddComputedField q -> dispatchMetadata runAddComputedField q
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
-  RMGetCustomSQL q -> dispatchMetadata CustomSQL.runGetCustomSQL q
-  RMTrackCustomSQL q -> dispatchMetadata CustomSQL.runTrackCustomSQL q
-  RMUntrackCustomSQL q -> dispatchMetadata CustomSQL.runUntrackCustomSQL q
+  RMGetNativeQuery q -> dispatchMetadata NativeQuery.runGetNativeQuery q
+  RMTrackNativeQuery q -> dispatchMetadata NativeQuery.runTrackNativeQuery q
+  RMUntrackNativeQuery q -> dispatchMetadata NativeQuery.runUntrackNativeQuery q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms

@@ -139,6 +139,7 @@ pgDBQueryPlan ::
 pgDBQueryPlan userInfo _env sourceName sourceConfig qrf reqHeaders operationName = do
   (preparedQuery, PlanningSt _ _ planVals) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
+
   queryTagsComment <- ask
   resolvedConnectionTemplate <-
     applyConnectionTemplateResolverNonAdmin (_pscConnectionTemplateResolver sourceConfig) userInfo reqHeaders $
