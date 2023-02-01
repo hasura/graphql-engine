@@ -264,6 +264,7 @@ common lib-depends
                      , aeson
                      , aeson-casing
                      , aeson-ordered
+                     , arrows-extra
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
                      , autodocodec
@@ -284,6 +285,7 @@ common lib-depends
                      , free
                      , hashable
                      , hasura-error-message
+                     , hasura-incremental
                      , hasura-prelude
                      , hasura-schema-parsers
                      , http-client-tls
@@ -295,6 +297,7 @@ common lib-depends
                      , lifted-base
                      , monad-control
                      , monad-loops
+                     , monad-unique
                      , monad-validate
                      , mtl
                      , nonempty-containers
@@ -481,15 +484,11 @@ library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
   exposed-modules:     Autodocodec.Extended
-                     , Control.Arrow.Extended
-                     , Control.Arrow.Interpret
-                     , Control.Arrow.Trans
                      , Control.Concurrent.Extended
                      , Control.Monad.Circular
                      , Control.Monad.Memoize
                      , Control.Monad.Stateless
                      , Control.Monad.Trans.Managed
-                     , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Kriti.Functions
                      , Data.Environment
@@ -688,7 +687,6 @@ library
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
-                     , Hasura.Incremental
                      , Hasura.PingSources
                      , Hasura.Server.API.Backend
                      , Hasura.Server.API.Instances
@@ -723,7 +721,6 @@ library
                      , Hasura.EncJSON
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Logging
-                     , Hasura.Incremental.Select
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.Types.Run
                      , Hasura.Session
@@ -736,14 +733,13 @@ library
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
-                     , Hasura.Incremental.Internal.Cache
-                     , Hasura.Incremental.Internal.Dependency
-                     , Hasura.Incremental.Internal.Rule
+
                      , Hasura.NativeQuery.IR
                      , Hasura.NativeQuery.Metadata
                      , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Schema
                      , Hasura.NativeQuery.Types
+
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -1175,7 +1171,6 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.Introspection
     Hasura.GraphQL.Schema.RemoteTest
-    Hasura.IncrementalSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.DDL.Webhook.TransformSpec
