@@ -32,7 +32,7 @@ import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
-type Representable a = (Show a, Eq a, Hashable a, NFData a)
+type Representable a = (Show a, Hashable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -96,8 +96,6 @@ class
     Ord (Column b),
     Data (TableName b),
     FromJSON (BackendConfig b),
-    FromJSON (BackendInfo b),
-    FromJSON (BackendSourceKind b),
     FromJSON (Column b),
     FromJSON (ComputedFieldDefinition b),
     FromJSON (ConnectionTemplateRequestContext b),
@@ -116,7 +114,6 @@ class
     HasCodec (SourceConnConfiguration b),
     HasCodec (TableName b),
     ToJSON (BackendConfig b),
-    ToJSON (BackendInfo b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
     ToJSON (FunctionArgument b),
@@ -133,32 +130,22 @@ class
     ToJSON (HealthCheckTest b),
     ToJSON (ResolvedConnectionTemplate b),
     ToJSONKey (Column b),
-    ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
-    ToJSONKey (TableName b),
     ToTxt (Column b),
     ToTxt (FunctionName b),
     ToTxt (ScalarType b),
     ToTxt (TableName b),
     ToTxt (ConstraintName b),
     ToErrorValue (Column b),
-    ToErrorValue (FunctionName b),
-    ToErrorValue (ScalarType b),
     ToErrorValue (TableName b),
-    ToErrorValue (ConstraintName b),
-    Typeable (TableName b),
-    Typeable (ConstraintName b),
     Typeable (Column b),
     Typeable b,
     HasTag b,
     -- constraints of function argument
-    Functor (FunctionArgumentExp b),
-    Foldable (FunctionArgumentExp b),
     Traversable (FunctionArgumentExp b),
     -- Type constraints.
     Eq (BackendConfig b),
     Show (BackendConfig b),
-    Monoid (BackendConfig b),
     Eq (BackendInfo b),
     Show (BackendInfo b),
     Monoid (BackendInfo b),
@@ -176,17 +163,9 @@ class
     Show (XStreamingSubscription b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
-    Functor (UpdateVariant b),
-    Foldable (UpdateVariant b),
     Traversable (UpdateVariant b),
-    Functor (BackendInsert b),
-    Foldable (BackendInsert b),
     Traversable (BackendInsert b),
-    Functor (AggregationPredicates b),
-    Foldable (AggregationPredicates b),
     Traversable (AggregationPredicates b),
-    Functor (NativeQuery b),
-    Foldable (NativeQuery b),
     Traversable (NativeQuery b),
     NativeQueryMetadata b
   ) =>
