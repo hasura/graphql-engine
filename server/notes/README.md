@@ -1,7 +1,5 @@
 # Notes
 
-  - [Weird control operator types](weird-control-operator-types.md)
-  - [Arrow rewrite rules](arrow-rewrite-rules.md)
   - [Tying the knot](tying-the-knot.md)
   - [MemoizeT requires MonadIO](memoizet-requires-monadio.md)
   - [Update Event Trigger MSSQL Spec](update-event-trigger-mssql-spec.md)
@@ -29,8 +27,6 @@
   - [Querying remote schema interfaces](querying-remote-schema-interfaces.md)
   - [Selectability of tables](selectability-of-tables.md)
   - [Permission filter deduplication](permission-filter-deduplication.md)
-  - [Rule rewrite rules](rule-rewrite-rules.md)
-  - [Desugaring derived operations](desugaring-derived-operations.md)
   - [Todo: Common interface for eventing sub-system](todo-common-interface-for-eventing-subsystem.md)
   - [Generic MetadataStorageT transformer](generic-metadatastoraget-transformer.md)
   - [Postgres scalars in action input arguments](postgres-scalars-in-action-input-arguments.md)
