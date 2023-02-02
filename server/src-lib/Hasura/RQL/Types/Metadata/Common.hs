@@ -81,7 +81,6 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Data.Voidable
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
@@ -442,7 +441,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
-    _smNativeQueries <- getVoidable <$> (o .:? "native_queries" .!= (Voidable []))
+    _smNativeQueries <- o .:? "native_queries" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -501,7 +500,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
           .== _smFunctions
-        <*> voidableNativeQueryCodec (optionalFieldOrNullWithOmittedDefault' "native_queries" (Voidable []))
+        <*> optionalFieldOrNullWithOmittedDefault' "native_queries" []
           .== _smNativeQueries
         <*> requiredField' "configuration"
           .== _smConfiguration
@@ -511,11 +510,6 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smCustomization
         <*> healthCheckField
     where
-      voidableNativeQueryCodec ::
-        ObjectCodec (Voidable [NativeQueryInfo b]) (Voidable [NativeQueryInfo b]) ->
-        ObjectCodec [NativeQueryInfo b] [NativeQueryInfo b]
-      voidableNativeQueryCodec = coerceCodec'
-
       healthCheckField = case healthCheckImplementation @b of
         Just hci -> optionalFieldOrNullWith' "health_check" (healthCheckConfigCodec hci) .== _smHealthCheckConfig
         Nothing ->

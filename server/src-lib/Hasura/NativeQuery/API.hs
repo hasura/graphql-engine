@@ -20,9 +20,7 @@ module Hasura.NativeQuery.API
 where
 
 import Control.Lens ((^?))
-import Control.Lens.Getter
 import Data.Aeson
-import Data.Voidable
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.NativeQuery.Types
@@ -74,8 +72,8 @@ runGetNativeQuery q = do
 
   metadata <- getMetadata
 
-  let nativeQuery :: Maybe (Voidable (NativeQueries b))
-      nativeQuery = metadata ^? metaSources . ix (gnqSource q) . toSourceMetadata . smNativeQueries @b . to Voidable
+  let nativeQuery :: Maybe (NativeQueries b)
+      nativeQuery = metadata ^? metaSources . ix (gnqSource q) . toSourceMetadata . smNativeQueries @b
 
   pure (encJFromJValue nativeQuery)
 
@@ -93,7 +91,7 @@ runTrackNativeQuery ::
   ) =>
   BackendTrackNativeQuery b ->
   m EncJSON
-runTrackNativeQuery (BackendTrackNativeQuery (Voidable trackNativeQueryRequest)) = do
+runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
   throwIfFeatureDisabled
 
   (metadata :: NativeQueryInfo b) <-
@@ -129,14 +127,14 @@ deriving instance Backend b => Eq (UntrackNativeQuery b)
 instance Backend b => FromJSON (UntrackNativeQuery b) where
   parseJSON = withObject "UntrackNativeQuery" $ \o -> do
     utnqSource <- o .: "source"
-    utnqRootFieldName <- getVoidable <$> o .: "root_field_name"
+    utnqRootFieldName <- o .: "root_field_name"
     pure UntrackNativeQuery {..}
 
 instance Backend b => ToJSON (UntrackNativeQuery b) where
   toJSON UntrackNativeQuery {..} =
     object
       [ "source" .= utnqSource,
-        "root_field_name" .= Voidable utnqRootFieldName
+        "root_field_name" .= utnqRootFieldName
       ]
 
 -- | Handler for the 'untrack_native_query' endpoint.

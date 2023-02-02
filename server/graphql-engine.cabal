@@ -507,7 +507,6 @@ library
                      , Data.Text.NonEmpty
                      , Data.Trie
                      , Data.URL.Template
-                     , Data.Voidable
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP

@@ -25,7 +25,6 @@ import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
-import Data.Voidable
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
   ( ActionDefinition (..),
@@ -121,7 +120,7 @@ sourcesToOrdJSONList sources =
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
             nativeQueriesPair =
-              [ ("native_queries", AO.toOrdered (Voidable nativeQueries))
+              [ ("native_queries", AO.toOrdered nativeQueries)
                 | nativeQueries@(_ : _) <- pure _smNativeQueries
               ]
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]

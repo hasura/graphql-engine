@@ -15,7 +15,6 @@ import Autodocodec (HasCodec)
 import Data.Aeson
 import Data.Kind
 import Data.Text.Extended (ToTxt)
-import Data.Voidable
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
@@ -27,19 +26,15 @@ type APIType a = (ToJSON a, FromJSON a)
 -- | This type class models the types and functions necessary to talk about
 -- Native Queries.
 --
--- Uninstantiable defaults are given for types and methods. In order to work
--- gracefully with this approach, types require instances wrapped in the
--- 'Voidable' newtype, see module 'Data.Voidable' for more on this.
+-- Uninstantiable defaults are given for types and methods.
 class
-  ( APIType (Voidable (NativeQueryName b)),
-    APIType (Voidable (TrackNativeQuery b)),
-    FromJSON (Voidable [NativeQueryInfo b]),
+  ( APIType (NativeQueryName b),
+    APIType (TrackNativeQuery b),
+    APIType (NativeQueryInfo b),
     Ord (NativeQueryName b),
+    HasCodec (NativeQueryInfo b),
     Representable (NativeQueryInfo b),
     Representable (NativeQueryName b),
-    Eq (Voidable [NativeQueryInfo b]),
-    HasCodec (Voidable [NativeQueryInfo b]),
-    ToJSON (Voidable [NativeQueryInfo b]),
     ToTxt (NativeQueryName b)
   ) =>
   NativeQueryMetadata (b :: BackendType)
@@ -80,7 +75,7 @@ class
 --
 -- So in order to be usable as an API request payload data type,
 -- 'TrackNativeQuery b' needs to be wrapped in a newtype.
-newtype BackendTrackNativeQuery b = BackendTrackNativeQuery {getBackendTrackNativeQuery :: Voidable (TrackNativeQuery b)}
+newtype BackendTrackNativeQuery b = BackendTrackNativeQuery {getBackendTrackNativeQuery :: TrackNativeQuery b}
 
 deriving newtype instance NativeQueryMetadata b => FromJSON (BackendTrackNativeQuery b)
 

@@ -25,7 +25,6 @@ import Data.Aeson
 import Data.Bifunctor (first)
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt)
-import Data.Voidable
 import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
@@ -38,21 +37,12 @@ newtype NativeQueryNameImpl = NativeQueryNameImpl {getNativeQueryNameImpl :: Tex
   deriving newtype (Eq, Ord, Show, Hashable, NFData, ToJSON, FromJSON, ToTxt)
   deriving stock (Generic)
 
+instance HasCodec NativeQueryNameImpl where
+  codec = dimapCodec NativeQueryNameImpl getNativeQueryNameImpl codec
+
 instance FromJSONKey NativeQueryNameImpl
 
 instance ToJSONKey NativeQueryNameImpl
-
-deriving instance Eq (Voidable NativeQueryNameImpl)
-
-deriving newtype instance Hashable (Voidable NativeQueryNameImpl)
-
-deriving newtype instance FromJSON (Voidable NativeQueryNameImpl)
-
-deriving newtype instance FromJSONKey (Voidable NativeQueryNameImpl)
-
-deriving instance Show (Voidable NativeQueryNameImpl)
-
-deriving newtype instance ToJSON (Voidable NativeQueryNameImpl)
 
 ---------------------------------------
 
@@ -60,7 +50,7 @@ newtype RawQuery = RawQuery {getRawQuery :: Text}
   deriving newtype (Eq, Ord, Show, FromJSON, ToJSON)
 
 instance HasCodec RawQuery where
-  codec = dimapCodec RawQuery getRawQuery codec
+  codec = AC.dimapCodec RawQuery getRawQuery codec
 
 ---------------------------------------
 
@@ -121,11 +111,6 @@ instance HasCodec (InterpolatedQuery NativeQueryArgumentName) where
 
 ---------------------------------------
 
-deriving newtype instance ToJSONKey (Voidable NativeQueryNameImpl)
-
-instance HasCodec NativeQueryNameImpl where
-  codec = coerceCodec @Text
-
 -- | Default implementation of the Native Query metadata info object.
 data NativeQueryInfoImpl (b :: BackendType) = NativeQueryInfoImpl
   { nqiiRootFieldName :: NativeQueryNameImpl,
@@ -167,21 +152,6 @@ instance (Backend b, HasCodec (ScalarType b)) => HasCodec (NativeQueryInfoImpl b
       returnsDoc = "Return type (table) of the expression"
       descriptionDoc = "A description of the query which appears in the graphql schema"
 
-instance (Backend b, HasCodec (ScalarType b)) => HasCodec (Voidable [NativeQueryInfoImpl b]) where
-  codec = coerceCodec @([NativeQueryInfoImpl b])
-
-deriving instance (Backend b) => Eq (Voidable [NativeQueryInfoImpl b])
-
-deriving via
-  (Autodocodec (Voidable [NativeQueryInfoImpl b]))
-  instance
-    (Backend b, HasCodec (ScalarType b)) => (FromJSON (Voidable [NativeQueryInfoImpl b]))
-
-deriving via
-  (Autodocodec (Voidable [NativeQueryInfoImpl b]))
-  instance
-    (Backend b, HasCodec (ScalarType b)) => (ToJSON (Voidable [NativeQueryInfoImpl b]))
-
 deriving via
   (Autodocodec (NativeQueryInfoImpl b))
   instance
@@ -191,10 +161,6 @@ deriving via
   (Autodocodec (NativeQueryInfoImpl b))
   instance
     (Backend b, HasCodec (ScalarType b)) => (ToJSON (NativeQueryInfoImpl b))
-
-deriving newtype instance (Backend b, HasCodec (ScalarType b)) => FromJSON (Voidable (NativeQueryInfoImpl b))
-
-deriving newtype instance (Backend b, HasCodec (ScalarType b)) => ToJSON (Voidable (NativeQueryInfoImpl b))
 
 newtype NativeQueryArgumentName = NativeQueryArgumentName {getNativeQueryArgumentName :: Text}
   deriving newtype (Eq, Ord, Show, Hashable)
@@ -230,10 +196,6 @@ defaultNativeQueryTrackToInfo TrackNativeQueryImpl {..} = do
     nqiiReturns = tnqReturns
     nqiiArguments = tnqArguments
     nqiiDescription = tnqDescription
-
-deriving newtype instance (Backend b, HasCodec (ScalarType b)) => FromJSON (Voidable (TrackNativeQueryImpl b))
-
-deriving newtype instance (Backend b, HasCodec (ScalarType b)) => ToJSON (Voidable (TrackNativeQueryImpl b))
 
 instance (Backend b, HasCodec (ScalarType b)) => HasCodec (TrackNativeQueryImpl b) where
   codec =
