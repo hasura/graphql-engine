@@ -4,31 +4,35 @@
 
 module Hasura.Prelude
   ( module M,
-    alphabet,
-    alphaNumerics,
+
+    -- * Maybe
     catMaybes,
     onNothing,
     onNothingM,
     onJust,
     mapMaybe,
+    whenMaybe,
     maybeToEither,
     eitherToMaybe,
+    spanMaybeM,
+    hoistMaybe,
+
+    -- * Either
     onLeft,
     mapLeft,
-    whenMaybe,
+    liftEitherM,
+    hoistEither,
+
+    -- * Alternative
     choice,
     afold,
+
+    -- * Text
     bsToTxt,
     lbsToTxt,
     txtToBs,
     base64Decode,
-    spanMaybeM,
-    liftEitherM,
-    hoistMaybe,
-    hoistEither,
-    readJson,
     tshow,
-    applyWhen,
 
     -- * Trace debugging
     ltrace,
@@ -38,7 +42,6 @@ module Hasura.Prelude
 
     -- * Efficient coercions
     coerce,
-    findWithIndex,
 
     -- * Map-related utilities
     mapFromL,
@@ -48,16 +51,25 @@ module Hasura.Prelude
     withElapsedTime,
     startTimer,
 
-    -- * Aeson options
+    -- * JSON
     hasuraJSON,
+    readJson,
 
     -- * NonEmpty.Seq
     nonEmptySeqToNonEmptyList,
+
+    -- * Misc
+    applyWhen,
+    findWithIndex,
+    alphabet,
+    alphaNumerics,
 
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
   )
 where
+
+--------------------------------------------------------------------------------
 
 import Control.Applicative as M (Alternative (..), liftA2)
 import Control.Arrow as M (first, second, (&&&), (***), (<<<), (>>>))
@@ -77,6 +89,7 @@ import Control.Monad.Writer.Strict as M
   )
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Bifunctor (first)
 import Data.Bool as M (bool)
 import Data.ByteString qualified as B
 import Data.ByteString.Base64.Lazy qualified as Base64
@@ -152,24 +165,31 @@ import Text.Read as M (readEither, readMaybe)
 import Witherable (catMaybes, mapMaybe)
 import Prelude as M hiding (fail, init, lookup)
 
--- Don't inline, to avoid the risk of unreasonably long code being generated
-{-# NOINLINE alphabet #-}
-alphabet :: String
-alphabet = ['a' .. 'z'] ++ ['A' .. 'Z']
+--------------------------------------------------------------------------------
+-- Maybe
 
--- Don't inline, to avoid the risk of unreasonably long code being generated
-{-# NOINLINE alphaNumerics #-}
-alphaNumerics :: String
-alphaNumerics = alphabet ++ "0123456789"
-
+-- | Performs default 'Applicative' action if 'Nothing' is
+-- given. Otherwise returns content of 'Just' pured to 'Applicative'.
 onNothing :: Applicative m => Maybe a -> m a -> m a
 onNothing m act = maybe act pure m
 
+-- | Monadic version of 'onNothing'.
 onNothingM :: Monad m => m (Maybe a) -> m a -> m a
 onNothingM m act = m >>= (`onNothing` act)
 
+-- | Perform some operation on 'Just', given the field inside the
+-- 'Just'. Like most good things in life, this is a specialized 'for_'.
 onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 onJust = for_
+
+-- | Like 'when', but return either 'Nothing' if the predicate was 'False',
+--   of 'Just' with the result of the computation.
+--
+-- > whenMaybe True  (print 1) == fmap Just (print 1)
+-- > whenMaybe False (print 1) == pure Nothing
+whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
+whenMaybe True = fmap Just
+whenMaybe False = const $ pure Nothing
 
 -- | Transform a 'Maybe' into an 'Either' given a default value.
 maybeToEither :: a -> Maybe b -> Either a b
@@ -183,41 +203,7 @@ maybeToEither _def (Just b) = Right b
 eitherToMaybe :: Either a b -> Maybe b
 eitherToMaybe = either (const Nothing) Just
 
-onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
-onLeft e f = either f pure e
-
-mapLeft :: (e1 -> e2) -> Either e1 a -> Either e2 a
-mapLeft f (Left e1) = Left (f e1)
-mapLeft _ (Right a) = Right a
-
-whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
-whenMaybe True = fmap Just
-whenMaybe False = const $ pure Nothing
-
-choice :: Alternative f => [f a] -> f a
-choice = asum
-
-afold :: (Foldable t, Alternative f) => t a -> f a
-afold = getAlt . foldMap pure
-
-bsToTxt :: B.ByteString -> Text
-bsToTxt = TE.decodeUtf8With TE.lenientDecode
-
-lbsToTxt :: BL.ByteString -> Text
-lbsToTxt = bsToTxt . BL.toStrict
-
-txtToBs :: Text -> B.ByteString
-txtToBs = TE.encodeUtf8
-
-base64Decode :: Text -> BL.ByteString
-base64Decode =
-  Base64.decodeLenient . BL.fromStrict . txtToBs
-
--- Like `liftEither`, but accepts a monadic action
-liftEitherM :: MonadError e m => m (Either e a) -> m a
-liftEitherM action = action >>= liftEither
-
--- Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'
+-- | Like 'span', but monadic and with a function that produces 'Maybe' instead of 'Bool'.
 spanMaybeM ::
   (Foldable f, Monad m) =>
   (a -> m (Maybe b)) ->
@@ -228,21 +214,125 @@ spanMaybeM f = go . toList
     go [] = pure ([], [])
     go l@(x : xs) =
       f x >>= \case
-        Just y -> first (y :) <$> go xs
+        Just y -> M.first (y :) <$> go xs
         Nothing -> pure ([], l)
 
-findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
-findWithIndex p l = do
-  i <- findIndex p l
-  let v = l !! i
-  pure (v, i)
+-- | Upgrade a 'Maybe' to a 'MaybeT'.
+--
+-- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
+hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
+hoistMaybe = MaybeT . pure
 
--- TODO (from main): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
+--------------------------------------------------------------------------------
+-- Either
+
+-- | Eliminate an 'Either' by puring the 'Right' value and applying an
+-- applicative action to the 'Left' value.
+onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
+onLeft e f = either f pure e
+
+-- | Map over the 'Left' value of an 'Either'. This is a
+-- specialization of 'Data.Bifunctor.first'.
+mapLeft :: (e1 -> e2) -> Either e1 a -> Either e2 a
+mapLeft = Data.Bifunctor.first
+
+-- | Like 'liftEither', but accepts a monadic action.
+liftEitherM :: MonadError e m => m (Either e a) -> m a
+liftEitherM action = action >>= liftEither
+
+-- | Upgrade an 'Either' to an 'ExceptT'.
+--
+-- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistEither
+hoistEither :: Applicative m => Either e a -> ExceptT e m a
+hoistEither = ExceptT . pure
+
+--------------------------------------------------------------------------------
+-- Alternative
+
+-- | 'choice' ps tries to apply the actions in the list ps in order,
+-- until one of them succeeds. Returns the value of the succeeding
+-- action.
+choice :: Alternative f => [f a] -> f a
+choice = asum
+
+-- | Nondeterministically choose an element from a Foldable collection.
+afold :: (Foldable t, Alternative f) => t a -> f a
+afold = getAlt . foldMap pure
+
+--------------------------------------------------------------------------------
+-- Text
+
+-- | Convert a 'B.ByteString' to 'Text' using 'TE.lenientDecode'.
+bsToTxt :: B.ByteString -> Text
+bsToTxt = TE.decodeUtf8With TE.lenientDecode
+
+-- | Convert a 'BL.ByteString' to 'Text' using 'TE.lenientDecode'.
+lbsToTxt :: BL.ByteString -> Text
+lbsToTxt = bsToTxt . BL.toStrict
+
+-- | UTF8 encode a 'Text' to 'B.ByteString'.
+txtToBs :: Text -> B.ByteString
+txtToBs = TE.encodeUtf8
+
+-- | Base64 decode a 'Text' to 'B.ByteString'.
+base64Decode :: Text -> BL.ByteString
+base64Decode =
+  Base64.decodeLenient . BL.fromStrict . txtToBs
+
+-- | Given 'Show' @a@, convert @a@ into a 'Text'.
+tshow :: Show a => a -> Text
+tshow = T.pack . show
+
+--------------------------------------------------------------------------------
+-- Trace debugging
+
+-- | Labeled, prettified 'traceShowId'.
+ltrace :: Show a => String -> a -> a
+ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
+{-# WARNING ltrace "ltrace left in code" #-}
+
+-- | Labeled, prettified 'traceShowM'.
+ltraceM :: Applicative m => Show a => String -> a -> m ()
+ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
+{-# WARNING ltraceM "ltraceM left in code" #-}
+
+-- | Trace a prettified value to a file.
+traceToFile :: Show a => FilePath -> a -> a
+traceToFile filepath x =
+  Debug.trace
+    ("tracing to " <> filepath)
+    (unsafePerformIO (TLIO.writeFile filepath (PS.pShowNoColor x) $> x))
+{-# WARNING traceToFile "traceToFile left in code" #-}
+
+-- | Trace a prettified value to a file in an Applicative context.
+traceToFileM :: Applicative m => Show a => FilePath -> a -> m ()
+traceToFileM filepath x =
+  Debug.traceM $
+    unwords
+      [ "tracing to",
+        filepath,
+        show $ unsafePerformIO $ TLIO.writeFile filepath $ PS.pShowNoColor x
+      ]
+{-# WARNING traceToFileM "traceToFileM left in code" #-}
+
+--------------------------------------------------------------------------------
+-- Map-related utilities
+
+-- | Construct a 'Map.HashMap' from a '[]' given a key builder
+-- function @a -> k@.
+--
+-- TODO (from main): Move to 'Data.HashMap.Strict.Extended'; rename to
+-- fromListWith?
 mapFromL :: (Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
+-- | Construct an 'InsOrdHashMap' from a '[]' given a key builder
+-- function @a -> k@.
 oMapFromL :: (Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))
+
+--------------------------------------------------------------------------------
+-- Measuring and working with moments and durations
 
 -- | Time an IO action, returning the time with microsecond precision. The
 -- result of the input action will be evaluated to WHNF.
@@ -271,21 +361,10 @@ startTimer = do
     aft <- liftIO Clock.getMonotonicTimeNSec
     return $ nanoseconds $ fromIntegral (aft - bef)
 
--- | Upgrade a 'Maybe' to a 'MaybeT'.
---
--- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
-hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
-hoistMaybe = MaybeT . pure
+--------------------------------------------------------------------------------
+-- JSON
 
--- | Upgrade an 'Either' to an 'ExceptT'.
---
--- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistEither
-hoistEither :: Applicative m => Either e a -> ExceptT e m a
-hoistEither = ExceptT . pure
-
-tshow :: Show a => a -> Text
-tshow = T.pack . show
-
+-- | Deserialize JSON from a 'String'.
 readJson :: (J.FromJSON a) => String -> Either String a
 readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
@@ -297,44 +376,40 @@ readJson = J.eitherDecodeStrict . txtToBs . T.pack
 hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
 
--- Fancy trace debugging
-
--- | Labeled, prettified traceShowId
-ltrace :: Show a => String -> a -> a
-ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
-{-# WARNING ltrace "ltrace left in code" #-}
-
--- | Labeled, prettified traceShowM
-ltraceM :: Applicative m => Show a => String -> a -> m ()
-ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
-{-# WARNING ltraceM "ltraceM left in code" #-}
-
--- | Trace a prettified value to a file
-traceToFile :: Show a => FilePath -> a -> a
-traceToFile filepath x =
-  Debug.trace
-    ("tracing to " <> filepath)
-    (unsafePerformIO (TLIO.writeFile filepath (PS.pShowNoColor x) $> x))
-{-# WARNING traceToFile "traceToFile left in code" #-}
-
--- | Trace a prettified value to a file in an Applicative context
-traceToFileM :: Applicative m => Show a => FilePath -> a -> m ()
-traceToFileM filepath x =
-  Debug.traceM $
-    unwords
-      [ "tracing to",
-        filepath,
-        show $ unsafePerformIO $ TLIO.writeFile filepath $ PS.pShowNoColor x
-      ]
-{-# WARNING traceToFileM "traceToFileM left in code" #-}
+--------------------------------------------------------------------------------
+-- NonEmpty.Seq
 
 -- | Convert a non-empty sequence to a non-empty list.
 nonEmptySeqToNonEmptyList :: NESeq a -> NonEmpty a
 nonEmptySeqToNonEmptyList (x NESeq.:<|| xs) =
   x M.:| toList xs
 
+--------------------------------------------------------------------------------
+-- Misc
+
 -- | Conditionally apply a datatransformation. This is especially
 -- helpful for conditionally applying lenses.
 applyWhen :: Bool -> (a -> a) -> a -> a
 applyWhen True f x = f x
 applyWhen False _ x = x
+
+-- | Find an element satisfying a predicate and return it with its index.
+findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
+findWithIndex p l = do
+  i <- findIndex p l
+  let v = l !! i
+  pure (v, i)
+
+-- | A list containing the English alphabet in lower and upper case.
+--
+-- Don't inline, to avoid the risk of unreasonably long code being generated
+{-# NOINLINE alphabet #-}
+alphabet :: String
+alphabet = ['a' .. 'z'] ++ ['A' .. 'Z']
+
+-- | 'alphabet' with the digits 0-9 appended.
+--
+-- Don't inline, to avoid the risk of unreasonably long code being generated
+{-# NOINLINE alphaNumerics #-}
+alphaNumerics :: String
+alphaNumerics = alphabet ++ "0123456789"
