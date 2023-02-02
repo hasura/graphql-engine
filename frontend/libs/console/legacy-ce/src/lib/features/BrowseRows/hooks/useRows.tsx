@@ -47,6 +47,21 @@ export type UseRowsPropType = {
   };
 };
 
+export function getBrowseRowsQueryKey({
+  dataSourceName,
+  table,
+  columns,
+  options,
+}: UseRowsPropType) {
+  return [
+    'browse-rows',
+    dataSourceName,
+    table,
+    columns,
+    JSON.stringify(options),
+  ];
+}
+
 export const useRows = ({
   dataSourceName,
   table,
@@ -54,14 +69,16 @@ export const useRows = ({
   options,
 }: UseRowsPropType) => {
   const httpClient = useHttpClient();
+  const queryKey = getBrowseRowsQueryKey({
+    dataSourceName,
+    table,
+    columns,
+    options,
+  });
+  console.log({ queryKey });
+
   return useQuery({
-    queryKey: [
-      'browse-rows',
-      dataSourceName,
-      table,
-      columns,
-      JSON.stringify(options),
-    ],
+    queryKey,
     queryFn: async () => {
       try {
         return await fetchRows({

@@ -14,6 +14,9 @@ import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { ColumnSort } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { useDeleteRow } from '@/features/DeleteRow';
+import { useQueryClient } from 'react-query';
+import { useFireNotification } from '@/new-components/Notifications';
 import {
   DEFAULT_ORDER_BY_CLAUSES,
   DEFAULT_PAGE_INDEX,
@@ -30,6 +33,7 @@ import { useRows, useTableColumns } from '../../hooks';
 import { transformToOrderByClause } from './utils';
 import { useExportRows } from '../../hooks/useExportRows/useExportRows';
 import { adaptSelectedRowIdsToWhereClause } from './DataGrid.utils';
+import { getBrowseRowsQueryKey } from '../../hooks/useRows';
 
 export type DataGridOptions = {
   where?: WhereClause[];
@@ -115,6 +119,13 @@ export const DataGrid = (props: DataGridProps) => {
     });
   };
 
+  const rowOptions = {
+    limit: pageSize,
+    offset: pageIndex * pageSize,
+    order_by: [...orderByClauses, ...transformToOrderByClause(sorting)],
+    where: whereClauses,
+  };
+
   /**
    * React query hook wrapper to get the rows for
    * the current props.table and props.dataSourceName
@@ -126,17 +137,50 @@ export const DataGrid = (props: DataGridProps) => {
   } = useRows({
     table,
     dataSourceName,
-    options: {
-      limit: pageSize,
-      offset: pageIndex * pageSize,
-      order_by: [...orderByClauses, ...transformToOrderByClause(sorting)],
-      where: whereClauses,
-    },
+    options: rowOptions,
   });
 
   const { data: tableColumnQueryResult } = useTableColumns({
     table,
     dataSourceName,
+  });
+
+  const queryClient = useQueryClient();
+  const { fireNotification } = useFireNotification();
+
+  const { deleteRow } = useDeleteRow({
+    dataSourceName,
+    table,
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Successfully deleted row',
+        type: 'success',
+      });
+      console.log({
+        queryKeyBla: getBrowseRowsQueryKey({
+          dataSourceName,
+          table,
+          columns: undefined,
+          options,
+        }),
+      });
+      queryClient.invalidateQueries(
+        getBrowseRowsQueryKey({
+          dataSourceName,
+          table,
+          columns: undefined,
+          options,
+        })
+      );
+    },
+    onError: (err: Error) => {
+      fireNotification({
+        title: 'Error!',
+        message: err.message,
+        type: 'error',
+      });
+    },
   });
 
   const { data: relationships, isFetching } = useListAllDatabaseRelationships({
@@ -366,6 +410,7 @@ export const DataGrid = (props: DataGridProps) => {
             onClick: handleOnRelationshipClick,
           }}
           onRowsSelect={onRowsSelect}
+          onRowDelete={deleteRow}
           isRowsSelectionEnabled={primaryKeys.length > 0}
         />
       )}

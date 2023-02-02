@@ -42,6 +42,7 @@ import {
   RunSQLResponse,
   RunSQLSelectResponse,
   RunSQLCommandResponse,
+  runGraphQL,
   runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
@@ -256,8 +257,8 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     }
 
     const kind = getDriver(dataSource);
-    /* 
-      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
+    /*
+      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
 
@@ -445,6 +446,7 @@ export * from './common/utils';
 export {
   PostgresTable,
   exportMetadata,
+  runGraphQL,
   getTableName,
   RunSQLResponse,
   RunSQLSelectResponse,

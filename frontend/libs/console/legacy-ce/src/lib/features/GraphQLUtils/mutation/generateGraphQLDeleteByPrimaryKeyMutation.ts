@@ -1,23 +1,25 @@
-import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { formatSdl } from 'format-graphql';
+import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { getMutationRoot } from './getMutationRoot';
 
-export const generateGraphQLInsertMutation = async ({
+export const generateGraphQLDeleteByPrimaryKeyMutation = ({
   defaultQueryRoot,
   tableCustomization,
   sourceCustomization,
-  objects,
+  row,
   mutationName,
+  primaryKeys,
 }: {
   mutationName: string;
   defaultQueryRoot: string;
   tableCustomization?: MetadataTable['configuration'];
   sourceCustomization?: Source['customization'];
-  objects: Record<string, string | number | boolean>[];
+  row: Record<string, string | number | boolean>;
+  primaryKeys: string[];
 }) => {
   const queryRoot = getMutationRoot({
     defaultQueryRoot,
-    operation: 'insert',
+    operation: 'delete_by_pk',
     /**
      * Configuration contains the custom names for the following -
      * 1. Table Name
@@ -30,16 +32,14 @@ export const generateGraphQLInsertMutation = async ({
     sourceCustomization,
   });
 
-  const objectToInsert = objects
-    .map(object => {
-      return `{${Object.entries(object)
-        .map(
-          ([column, value]) =>
-            `${column}: ${typeof value === 'string' ? `"${value}"` : value}`
-        )
-        .join()}}`;
+  const whereClauses = primaryKeys
+    .map(primaryKey => {
+      const value = row[primaryKey];
+      return `${primaryKey}: ${
+        typeof value === 'string' ? `"${value}"` : value
+      }`;
     })
-    .join();
+    .join(',');
 
   /**
    * If the source has a GQL namespace set for it, then we query for our `queryRoot` under that namespace
@@ -48,8 +48,8 @@ export const generateGraphQLInsertMutation = async ({
     return {
       query: formatSdl(`mutation ${mutationName}  {
     ${sourceCustomization.root_fields.namespace}  {
-      ${queryRoot} (objects: [ ${objectToInsert} ]){
-        affected_rows
+      ${queryRoot} (${whereClauses}) {
+        ${primaryKeys.join('\n')}
       }
     }
   }`),
@@ -57,11 +57,13 @@ export const generateGraphQLInsertMutation = async ({
     };
 
   return {
-    query: formatSdl(`mutation ${mutationName} {
-    ${queryRoot} (objects: [ ${objectToInsert} ]) {
-      affected_rows
+    query: formatSdl(`
+    mutation ${mutationName} {
+      ${queryRoot} (${whereClauses}) {
+        ${primaryKeys.join('\n')}
+      }
     }
-  }`),
+  `),
     resultPath: queryRoot,
   };
 };
