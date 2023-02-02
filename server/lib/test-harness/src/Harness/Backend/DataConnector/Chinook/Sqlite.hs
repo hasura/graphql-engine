@@ -106,7 +106,7 @@ nameFormatting = NameFormatting id id formatForeignKeyName
 -- | Construct foreign key relationship names.
 formatForeignKeyName :: Text -> Text
 formatForeignKeyName = \case
-  "Artist" -> "ArtistId->Artist.ArtistId"
+  "Artist" -> "Album.ArtistId->Artist.ArtistId"
   x -> x
 
 chinookFixture :: Fixture ChinookTestEnv

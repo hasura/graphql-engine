@@ -187,8 +187,7 @@ resolveDatabaseMetadata' ::
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
 resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..}, ..} =
-  let foreignKeys = fmap API._tiForeignKeys _srTables
-      tables = Map.fromList $ do
+  let tables = Map.fromList $ do
         API.TableInfo {..} <- _srTables
         let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
         let meta =
@@ -207,7 +206,7 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
                         },
                   _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
-                  _ptmiForeignKeys = buildForeignKeySet foreignKeys,
+                  _ptmiForeignKeys = buildForeignKeySet _tiForeignKeys,
                   _ptmiViewInfo =
                     ( if _tiType == API.Table && _tiInsertable && _tiUpdatable && _tiDeletable
                         then Nothing
@@ -228,22 +227,20 @@ resolveDatabaseMetadata' _ DC.SourceConfig {_scSchema = API.SchemaResponse {..},
 -- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
 -- 'DataConnector' to build the foreign key constraints in the table
 -- metadata.
-buildForeignKeySet :: [API.ForeignKeys] -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
-buildForeignKeySet foreignKeys =
+buildForeignKeySet :: API.ForeignKeys -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
+buildForeignKeySet (API.ForeignKeys constraints) =
   HashSet.fromList $
-    join $
-      foreignKeys <&> \(API.ForeignKeys constraints) ->
-        constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
-          \constraintName API.Constraint {..} -> maybeToList do
-            let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
-            columnMapping <- NEHashMap.fromList columnMapAssocList
-            let foreignKey =
-                  RQL.T.T.ForeignKey
-                    { _fkConstraint = RQL.T.T.Constraint (Witch.from constraintName) (OID 1),
-                      _fkForeignTable = Witch.from _cForeignTable,
-                      _fkColumnMapping = columnMapping
-                    }
-            pure $ RQL.T.T.ForeignKeyMetadata foreignKey
+    constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
+      \constraintName API.Constraint {..} -> maybeToList do
+        let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
+        columnMapping <- NEHashMap.fromList columnMapAssocList
+        let foreignKey =
+              RQL.T.T.ForeignKey
+                { _fkConstraint = RQL.T.T.Constraint (Witch.from constraintName) (OID 1),
+                  _fkForeignTable = Witch.from _cForeignTable,
+                  _fkColumnMapping = columnMapping
+                }
+        pure $ RQL.T.T.ForeignKeyMetadata foreignKey
 
 -- | This is needed to get permissions to work
 parseBoolExpOperations' ::
