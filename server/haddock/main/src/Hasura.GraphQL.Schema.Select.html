@@ -40,9 +40,9 @@
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier">Hasura.Base.ErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier">toErrorMessage</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Class</span></a></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Internal.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/error-message-1.0.0/opt/doc/html/error-message/src"><span class="hs-identifier">Hasura.Base.ErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/error-message-1.0.0/opt/doc/html/error-message/src"><span class="hs-identifier">toErrorMessage</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Class</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Internal.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span>
 </span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html"><span class="hs-identifier">Hasura.GraphQL.Schema.BoolExp</span></a></span><span>
 </span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Common</span></a></span><span>
@@ -53,7 +53,7 @@
 </span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier">FieldParser</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier">InputFieldsParser</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier">Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
@@ -186,7 +186,7 @@ TableInfo b
 </span><span id="line-118"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-119"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 origin -&gt; FieldParser origin m a -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MOSourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690591390"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -203,7 +203,7 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Output m b
 -&gt; FieldParser origin m (a, b)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690591396"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690591395"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
 </span><a href="#local-6989586621690591371"><span class="hs-identifier hs-var">tableArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
@@ -324,7 +324,7 @@ RoleName -&gt; TableInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="#local-6989586621690591260"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">MaybeT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
@@ -380,7 +380,7 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Output m b
 -&gt; FieldParser origin m (a, b)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690591270"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690591269"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   n
@@ -611,7 +611,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.field</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.field</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690591104"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Maybe Description
 </span><a href="Hasura.RQL.Types.Column.html#ciDescription"><span class="hs-identifier hs-var">ciDescription</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
@@ -620,7 +620,7 @@ Name
 </span><span id="line-233"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-234"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 origin -&gt; FieldParser origin m a -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MOSourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690591125"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -637,7 +637,7 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Output m b
 -&gt; FieldParser origin m (a, b)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690591128"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690591127"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   MetadataObjId
@@ -844,7 +844,7 @@ TableInfo b -&gt; SchemaT r m (Parser 'Output n (AggregateFields b))
 </span><a href="#local-6989586621690590951"><span class="hs-identifier hs-var hs-var">aggregationParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-289"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-290"></span><span>            </span><span class="annot"><span class="annottext">forall a.
 (Text -&gt; a) -&gt; InsOrdHashMap Name (ParsedSelection a) -&gt; Fields a
@@ -857,7 +857,7 @@ Name
 -&gt; Maybe Description
 -&gt; [FieldParser origin m a]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span>
 </span><span id="line-292"></span><span>                </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590954"><span class="hs-identifier hs-var">selectionName</span></a></span><span>
 </span><span id="line-293"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
@@ -878,7 +878,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_nodes"><span class="hs-identifier hs-var">Name._nodes</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
 </span><a href="#local-6989586621690590960"><span class="hs-identifier hs-var">nodesParser</span></a></span><span class="hs-special">,</span><span>
@@ -891,7 +891,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_aggregate"><span class="hs-identifier hs-var">Name._aggregate</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AggregateFields b)
 </span><a href="#local-6989586621690590955"><span class="hs-identifier hs-var">aggregateParser</span></a></span><span>
@@ -899,7 +899,7 @@ Name
 </span><span id="line-297"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-298"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 origin -&gt; FieldParser origin m a -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MOSourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621690590972"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -916,7 +916,7 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Output m b
 -&gt; FieldParser origin m (a, b)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590975"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590974"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
 </span><a href="#local-6989586621690590956"><span class="hs-identifier hs-var">tableArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
@@ -1033,7 +1033,7 @@ cause errors on the client side, for the following reasons:
 </span><span id="line-377"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592020"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592018"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592017"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592016"><span class="hs-identifier hs-type">n</span></a></span><span>
 </span><span id="line-378"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-379"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592020"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-380"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592018"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592017"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592016"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592020"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-380"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592018"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592017"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592016"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592020"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-381"></span><span id="defaultTableSelectionSet"><span class="annot"><span class="annottext">defaultTableSelectionSet :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (AggregationPredicatesSchema b, BackendTableSelectSchema b,
  Eq (AnnBoolExp b (UnpreparedValue b)), MonadBuildSchema b r m n) =&gt;
@@ -1253,12 +1253,12 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_id"><span class="hs-identifier hs-var">Name._id</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.identifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.identifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 XRelay b
 -&gt; SourceName
@@ -1358,7 +1358,7 @@ Name
 </span><a href="#local-6989586621690590744"><span class="hs-identifier hs-var">directives</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-453"></span><span>      </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 [Directive Void] -&gt; Parser origin k m a -&gt; Parser origin k m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.setParserDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.setParserDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Void]
 </span><a href="#local-6989586621690590744"><span class="hs-identifier hs-var">directives</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-454"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
@@ -1368,7 +1368,7 @@ Name
 -&gt; [FieldParser origin m a]
 -&gt; [Parser origin 'Output m b]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSetObject</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSetObject</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590748"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590747"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser origin m a]
 </span><a href="#local-6989586621690590746"><span class="hs-identifier hs-var">parsers</span></a></span><span> </span><span class="annot"><span class="annottext">[Parser origin 'Output m b]
@@ -1380,7 +1380,7 @@ Name
 </span><span id="line-459"></span><span id="local-6989586621690592221"><span id="local-6989586621690592222"><span id="local-6989586621690592223"><span id="local-6989586621690592224"><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#tableSelectionList"><span class="hs-identifier hs-type">tableSelectionList</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-460"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592224"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592223"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592222"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592221"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendTableSelectSchema"><span class="hs-identifier hs-type">BackendTableSelectSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-461"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592224"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-462"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592223"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592222"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592221"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-462"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592223"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592222"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592221"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedFields"><span class="hs-identifier hs-type">AnnotatedFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-463"></span><span id="tableSelectionList"><span class="annot"><span class="annottext">tableSelectionList :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, BackendTableSelectSchema b) =&gt;
 TableInfo b
@@ -1398,18 +1398,18 @@ TableInfo b
 </span><a href="#local-6989586621690590729"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-465"></span><span>
 </span><span id="line-466"></span><span class="hs-comment">-- | Converts an output type parser from object_type to [object_type!]!</span><span>
-</span><span id="line-467"></span><span id="local-6989586621690591934"><span id="local-6989586621690591935"><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#nonNullableObjectList"><span class="hs-identifier hs-type">nonNullableObjectList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591935"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591934"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591935"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591934"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-467"></span><span id="local-6989586621690591934"><span id="local-6989586621690591935"><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#nonNullableObjectList"><span class="hs-identifier hs-type">nonNullableObjectList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591935"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591934"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591935"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591934"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-468"></span><span id="nonNullableObjectList"><span class="annot"><span class="annottext">nonNullableObjectList :: forall (m :: * -&gt; *) a. Parser 'Output m a -&gt; Parser 'Output m a
 </span><a href="Hasura.GraphQL.Schema.Select.html#nonNullableObjectList"><span class="hs-identifier hs-var hs-var">nonNullableObjectList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-469"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.multiple</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.multiple</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span>
 </span><span id="line-470"></span><span>
 </span><span id="line-471"></span><span class="hs-comment">-- | Connection fields of a table</span><span>
 </span><span id="line-472"></span><span class="hs-comment">--</span><span>
@@ -1433,7 +1433,7 @@ Parser origin 'Output m a -&gt; Parser origin 'Output m a
 </span><span id="line-490"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690592158"><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690592157"><span class="annot"><a href="#local-6989586621690592157"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690592156"><span class="annot"><a href="#local-6989586621690592156"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690592155"><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-491"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592157"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendTableSelectSchema"><span class="hs-identifier hs-type">BackendTableSelectSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-492"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-493"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592157"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#ConnectionFields"><span class="hs-identifier hs-type">ConnectionFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-493"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592157"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#ConnectionFields"><span class="hs-identifier hs-type">ConnectionFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-494"></span><span id="tableConnectionSelectionSet"><span class="annot"><span class="annottext">tableConnectionSelectionSet :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, BackendTableSelectSchema b) =&gt;
 TableInfo b
@@ -1536,7 +1536,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span>
 </span><span id="line-510"></span><span>            </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_pageInfo"><span class="hs-identifier hs-var">Name._pageInfo</span></a></span><span>
 </span><span id="line-511"></span><span>            </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1559,7 +1559,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span>
 </span><span id="line-516"></span><span>            </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_edges"><span class="hs-identifier hs-var">Name._edges</span></a></span><span>
 </span><span id="line-517"></span><span>            </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1582,7 +1582,7 @@ EdgeFields b r v -&gt; ConnectionField b r v
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-522"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-523"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
@@ -1590,7 +1590,7 @@ Name
 -&gt; Maybe Description
 -&gt; [FieldParser origin m a]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590619"><span class="hs-identifier hs-var">connectionTypeName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><a href="#local-6989586621690590610"><span class="hs-identifier hs-var">connectionDescription</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FieldParser
@@ -1610,7 +1610,7 @@ Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#parsedSelectionsToFields"><span class="hs-identifier hs-var">parsedSelectionsToFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v. Text -&gt; ConnectionField b r v
 </span><a href="Hasura.RQL.IR.Select.html#ConnectionTypename"><span class="hs-identifier hs-var">IR.ConnectionTypename</span></a></span><span>
 </span><span id="line-525"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-526"></span><span>    </span><span class="annot"><a href="#local-6989586621690590615"><span class="hs-identifier hs-type">pageInfoSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#PageInfoFields"><span class="hs-identifier hs-type">IR.PageInfoFields</span></a></span><span>
+</span><span id="line-526"></span><span>    </span><span class="annot"><a href="#local-6989586621690590615"><span class="hs-identifier hs-type">pageInfoSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#PageInfoFields"><span class="hs-identifier hs-type">IR.PageInfoFields</span></a></span><span>
 </span><span id="line-527"></span><span>    </span><span id="local-6989586621690590615"><span class="annot"><span class="annottext">pageInfoSelectionSet :: Parser 'Output n PageInfoFields
 </span><a href="#local-6989586621690590615"><span class="hs-identifier hs-var hs-var">pageInfoSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-528"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690590604"><span class="annot"><span class="annottext">startCursorField :: FieldParser origin n PageInfoField
@@ -1621,7 +1621,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-530"></span><span>              </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_startCursor"><span class="hs-identifier hs-var">Name._startCursor</span></a></span><span>
 </span><span id="line-531"></span><span>              </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1629,7 +1629,7 @@ Name
 </span><span id="line-532"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
 </span><span id="line-533"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">PageInfoField
 </span><a href="Hasura.RQL.IR.Select.html#PageInfoStartCursor"><span class="hs-identifier hs-var">IR.PageInfoStartCursor</span></a></span><span>
@@ -1641,7 +1641,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-536"></span><span>              </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_endCursor"><span class="hs-identifier hs-var">Name._endCursor</span></a></span><span>
 </span><span id="line-537"></span><span>              </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1649,7 +1649,7 @@ Name
 </span><span id="line-538"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
 </span><span id="line-539"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">PageInfoField
 </span><a href="Hasura.RQL.IR.Select.html#PageInfoEndCursor"><span class="hs-identifier hs-var">IR.PageInfoEndCursor</span></a></span><span>
@@ -1661,7 +1661,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-542"></span><span>              </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_hasNextPage"><span class="hs-identifier hs-var">Name._hasNextPage</span></a></span><span>
 </span><span id="line-543"></span><span>              </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1669,7 +1669,7 @@ Name
 </span><span id="line-544"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Bool
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.boolean</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.boolean</span></a></span><span>
 </span><span id="line-545"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">PageInfoField
 </span><a href="Hasura.RQL.IR.Select.html#PageInfoHasNextPage"><span class="hs-identifier hs-var">IR.PageInfoHasNextPage</span></a></span><span>
@@ -1681,7 +1681,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-548"></span><span>              </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_hasPreviousPage"><span class="hs-identifier hs-var">Name._hasPreviousPage</span></a></span><span>
 </span><span id="line-549"></span><span>              </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1689,7 +1689,7 @@ Name
 </span><span id="line-550"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Bool
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.boolean</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.boolean</span></a></span><span>
 </span><span id="line-551"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">PageInfoField
 </span><a href="Hasura.RQL.IR.Select.html#PageInfoHasPreviousPage"><span class="hs-identifier hs-var">IR.PageInfoHasPreviousPage</span></a></span><span>
@@ -1706,7 +1706,7 @@ Parser origin 'Both m Bool
 </span><span id="line-557"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-558"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-559"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
@@ -1714,7 +1714,7 @@ Name
 -&gt; Maybe Description
 -&gt; [FieldParser origin m a]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_PageInfo"><span class="hs-identifier hs-var">Name._PageInfo</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser MetadataObjId n PageInfoField]
 </span><a href="#local-6989586621690590578"><span class="hs-identifier hs-var">allFields</span></a></span><span>
@@ -1727,7 +1727,7 @@ Name
 </span><span id="line-562"></span><span>    </span><span class="annot"><a href="#local-6989586621690590620"><span class="hs-identifier hs-type">tableEdgesSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-563"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-564"></span><span>      </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-565"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592157"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#EdgeFields"><span class="hs-identifier hs-type">EdgeFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-565"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592157"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#EdgeFields"><span class="hs-identifier hs-type">EdgeFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592158"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-566"></span><span>    </span><span id="local-6989586621690590620"><span class="annot"><span class="annottext">tableEdgesSelectionSet :: (Name -&gt; Name)
 -&gt; Name -&gt; SchemaT r m (Maybe (Parser 'Output n (EdgeFields b)))
 </span><a href="#local-6989586621690590620"><span class="hs-identifier hs-var hs-var">tableEdgesSelectionSet</span></a></span></span><span> </span><span id="local-6989586621690590575"><span class="annot"><span class="annottext">Name -&gt; Name
@@ -1740,7 +1740,7 @@ Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 Parser origin 'Output m a -&gt; Parser origin 'Output m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (BackendTableSelectSchema b, MonadBuildSourceSchema b r m n) =&gt;
 TableInfo b
@@ -1762,7 +1762,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-571"></span><span>              </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_cursor"><span class="hs-identifier hs-var">Name._cursor</span></a></span><span>
 </span><span id="line-572"></span><span>              </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1770,7 +1770,7 @@ Name
 </span><span id="line-573"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
 </span><span id="line-574"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v. EdgeField b r v
 </span><a href="Hasura.RQL.IR.Select.html#EdgeCursor"><span class="hs-identifier hs-var">IR.EdgeCursor</span></a></span><span>
@@ -1786,7 +1786,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span>
 </span><span id="line-577"></span><span>              </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_node"><span class="hs-identifier hs-var">Name._node</span></a></span><span>
 </span><span id="line-578"></span><span>              </span><span class="annot"><span class="annottext">forall a. Maybe a
@@ -1808,7 +1808,7 @@ Name
 -&gt; Maybe Description
 -&gt; [FieldParser origin m a]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590572"><span class="hs-identifier hs-var">edgesType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall {origin} {b :: BackendType} {r} {v}.
 FieldParser origin n (EdgeField b r v)
@@ -1923,7 +1923,7 @@ InputFieldsParser n (Maybe Int64)
 Monad m =&gt;
 InputFieldsParser origin m a
 -&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690590497"><span class="annot"><span class="annottext">SelectArgs b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690590497"><span class="annot"><span class="annottext">SelectArgs b
 </span><a href="#local-6989586621690590497"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-623"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a.
 (Foldable t, Monad m) =&gt;
@@ -2008,7 +2008,7 @@ Filterable f =&gt;
 </span><a href="#local-6989586621690590459"><span class="hs-identifier hs-var">isValid</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-640"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span>
 </span><span id="line-641"></span><span>          </span><span class="annot"><span class="annottext">ErrorMessage
 </span><span class="hs-string">&quot;\&quot;distinct_on\&quot; columns must match initial \&quot;order_by\&quot; columns&quot;</span></span><span>
 </span><span id="line-642"></span><span>
@@ -2048,14 +2048,14 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590428"><span class="hs-identifier hs-var">whereName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590427"><span class="hs-identifier hs-var">whereDesc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-657"></span><span>        </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n (AnnBoolExp b (UnpreparedValue b))
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n (AnnBoolExp b (UnpreparedValue b))
 </span><a href="#local-6989586621690590431"><span class="hs-identifier hs-var">boolExpParser</span></a></span><span>
 </span><span id="line-658"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-659"></span><span>    </span><span id="local-6989586621690590428"><span class="annot"><span class="annottext">whereName :: Name
@@ -2129,19 +2129,19 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590388"><span class="hs-identifier hs-var">orderByName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590384"><span class="hs-identifier hs-var">orderByDesc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-678"></span><span>          </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-679"></span><span>            </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m [a]
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)]
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)]
 </span><a href="#local-6989586621690590390"><span class="hs-identifier hs-var">orderByParser</span></a></span><span>
 </span><span id="line-680"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Maybe [[AnnotatedOrderByItemG b (UnpreparedValue b)]]
 </span><a href="#local-6989586621690590383"><span class="hs-identifier hs-var">maybeOrderByExps</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
@@ -2211,17 +2211,17 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590343"><span class="hs-identifier hs-var">distinctOnName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590340"><span class="hs-identifier hs-var">distinctOnDesc</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m [a]
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span class="hs-special">)</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-700"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Maybe [Column b]
 </span><a href="#local-6989586621690590339"><span class="hs-identifier hs-var">maybeDistinctOnColumns</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
@@ -2231,7 +2231,7 @@ Parser origin k m a -&gt; Parser origin k m [a]
 </span><span id="line-703"></span><span class="hs-comment">-- &gt; limit: NonNegativeInt</span><span>
 </span><span id="line-704"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#tableLimitArg"><span class="hs-identifier hs-type">tableLimitArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-705"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690591883"><span class="annot"><a href="#local-6989586621690591883"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-706"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591883"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-706"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591883"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-707"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591883"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-708"></span><span id="tableLimitArg"><span class="annot"><span class="annottext">tableLimitArg :: forall (n :: * -&gt; *).
 MonadParse n =&gt;
@@ -2250,17 +2250,17 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590322"><span class="hs-identifier hs-var">limitName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590321"><span class="hs-identifier hs-var">limitDesc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-711"></span><span>      </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Int32
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
 </span><span id="line-712"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-713"></span><span>    </span><span id="local-6989586621690590322"><span class="annot"><span class="annottext">limitName :: Name
 </span><a href="#local-6989586621690590322"><span class="hs-identifier hs-var hs-var">limitName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
@@ -2276,7 +2276,7 @@ Parser origin 'Both m Int32
 </span><span id="line-717"></span><span class="hs-comment">-- &gt; offset: BigInt</span><span>
 </span><span id="line-718"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#tableOffsetArg"><span class="hs-identifier hs-type">tableOffsetArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-719"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690591882"><span class="annot"><a href="#local-6989586621690591882"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-720"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591882"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-720"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591882"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-721"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591882"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Int64</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-722"></span><span id="tableOffsetArg"><span class="annot"><span class="annottext">tableOffsetArg :: forall (n :: * -&gt; *).
 MonadParse n =&gt;
@@ -2292,17 +2292,17 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690590306"><span class="hs-identifier hs-var">offsetName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690590305"><span class="hs-identifier hs-var">offsetDesc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-725"></span><span>      </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Int64
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.bigInt</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.bigInt</span></a></span><span>
 </span><span id="line-726"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-727"></span><span>    </span><span id="local-6989586621690590306"><span class="annot"><span class="annottext">offsetName :: Name
 </span><a href="#local-6989586621690590306"><span class="hs-identifier hs-var hs-var">offsetName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
@@ -2400,16 +2400,16 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_first"><span class="hs-identifier hs-var">Name._first</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Int32
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
 </span><span id="line-759"></span><span>      </span><span id="local-6989586621690590172"><span class="annot"><span class="annottext">maybeLast :: InputFieldsParser origin n (Maybe Int32)
 </span><a href="#local-6989586621690590172"><span class="hs-identifier hs-var hs-var">maybeLast</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
@@ -2420,16 +2420,16 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_last"><span class="hs-identifier hs-var">Name._last</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Int32
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
 </span><span id="line-760"></span><span>      </span><span id="local-6989586621690590170"><span class="annot"><span class="annottext">maybeAfter :: InputFieldsParser MetadataObjId n (Maybe ByteString)
 </span><a href="#local-6989586621690590170"><span class="hs-identifier hs-var hs-var">maybeAfter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
@@ -2440,13 +2440,13 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_after"><span class="hs-identifier hs-var">Name._after</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall {origin}. Parser origin 'Both n ByteString
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall {origin}. Parser origin 'Both n ByteString
 </span><a href="#local-6989586621690590168"><span class="hs-identifier hs-var">base64Text</span></a></span><span>
 </span><span id="line-761"></span><span>      </span><span id="local-6989586621690590167"><span class="annot"><span class="annottext">maybeBefore :: InputFieldsParser MetadataObjId n (Maybe ByteString)
 </span><a href="#local-6989586621690590167"><span class="hs-identifier hs-var hs-var">maybeBefore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -2458,13 +2458,13 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_before"><span class="hs-identifier hs-var">Name._before</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall {origin}. Parser origin 'Both n ByteString
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall {origin}. Parser origin 'Both n ByteString
 </span><a href="#local-6989586621690590168"><span class="hs-identifier hs-var">base64Text</span></a></span><span>
 </span><span id="line-762"></span><span>      </span><span id="local-6989586621690590165"><span class="annot"><span class="annottext">firstAndLast :: InputFieldsParser MetadataObjId n (Maybe Int32, Maybe Int32)
 </span><a href="#local-6989586621690590165"><span class="hs-identifier hs-var hs-var">firstAndLast</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -2512,7 +2512,7 @@ Parser origin k m a -&gt; Parser origin k m (Maybe a)
 Monad m =&gt;
 InputFieldsParser origin m a
 -&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690590159"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690590159"><span class="annot"><span class="annottext">Maybe ByteString
 </span><a href="#local-6989586621690590159"><span class="hs-identifier hs-var">after</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690590158"><span class="annot"><span class="annottext">Maybe ByteString
 </span><a href="#local-6989586621690590158"><span class="hs-identifier hs-var">before</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690590157"><span class="annot"><span class="annottext">Maybe (NonEmpty (AnnotatedOrderByItemG b (UnpreparedValue b)))
 </span><a href="#local-6989586621690590157"><span class="hs-identifier hs-var">orderBy'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
@@ -2528,7 +2528,7 @@ InputFieldsParser origin m a
 </span><span id="line-773"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
 </span><span class="hs-string">&quot;\&quot;after\&quot; and \&quot;before\&quot; are not allowed at once&quot;</span></span><span>
 </span><span id="line-774"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690590155"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690590155"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
@@ -2565,7 +2565,7 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 Monad m =&gt;
 InputFieldsParser origin m a
 -&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-780"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Int32
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Int32
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -2574,7 +2574,7 @@ InputFieldsParser origin m a
 </span><span id="line-781"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Int32
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Int32
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
 </span><span class="hs-string">&quot;\&quot;first\&quot; and \&quot;last\&quot; are not allowed at once&quot;</span></span><span>
 </span><span id="line-782"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690590148"><span class="annot"><span class="annottext">Int32
 </span><a href="#local-6989586621690590148"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Int32
@@ -2625,7 +2625,7 @@ Maybe (AnnBoolExp b v)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
 </span><span id="line-792"></span><span>
 </span><span id="line-793"></span><span>    </span><span id="local-6989586621690591784"><span class="annot"><a href="#local-6989586621690590192"><span class="hs-identifier hs-type">appendPrimaryKeyOrderBy</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">IR.AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592151"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591784"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">IR.AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592151"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690591784"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-794"></span><span>    </span><span id="local-6989586621690590192"><span class="annot"><span class="annottext">appendPrimaryKeyOrderBy :: forall v.
@@ -2863,14 +2863,14 @@ Maybe (BasicOrderType b)
 </span><span id="line-835"></span><span>      </span><span class="hs-keyword">where</span><span>
 </span><span id="line-836"></span><span>        </span><span id="local-6989586621690590103"><span class="annot"><span class="annottext">throwInvalidCursor :: n a
 </span><a href="#local-6989586621690590103"><span class="hs-identifier hs-var hs-var">throwInvalidCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
 </span><span class="hs-string">&quot;the \&quot;after\&quot; or \&quot;before\&quot; cursor is invalid&quot;</span></span><span>
 </span><span id="line-837"></span><span>        </span><span id="local-6989586621690590090"><span class="annot"><span class="annottext">liftQErr :: Except QErr a -&gt; n a
 </span><a href="#local-6989586621690590090"><span class="hs-identifier hs-var hs-var">liftQErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/error-message-1.0.0/opt/doc/html/error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Text
 </span><a href="Hasura.Base.Error.html#qeError"><span class="hs-identifier hs-var">qeError</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -3026,7 +3026,7 @@ ComputedFieldOrderBy b v -&gt; ComputedFieldOrderByElement b v
 </span><span id="line-887"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690592039"><span class="annot"><a href="#local-6989586621690592039"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690592038"><span class="annot"><a href="#local-6989586621690592038"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690592037"><span class="annot"><a href="#local-6989586621690592037"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690592036"><span class="annot"><a href="#local-6989586621690592036"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-888"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592039"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592038"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592037"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592036"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-889"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592039"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-890"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592038"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592037"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592036"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AggregateFields"><span class="hs-identifier hs-type">IR.AggregateFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592039"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-890"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592038"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592037"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592036"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AggregateFields"><span class="hs-identifier hs-type">IR.AggregateFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690592039"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-891"></span><span id="tableAggregationFields"><span class="annot"><span class="annottext">tableAggregationFields :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 TableInfo b -&gt; SchemaT r m (Parser 'Output n (AggregateFields b))
@@ -3271,7 +3271,7 @@ Name
 -&gt; Maybe Description
 -&gt; [FieldParser origin m a]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690589854"><span class="hs-identifier hs-var">selectName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><a href="#local-6989586621690589855"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FieldParser n (AggregateField b)]
@@ -3382,7 +3382,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-970"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690589808"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
@@ -3392,10 +3392,10 @@ Name
 </span><span id="line-972"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Double
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.float</span></a></span><span class="hs-special">)</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.float</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-973"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ColFld b
 </span><a href="#local-6989586621690589806"><span class="hs-identifier hs-var">cfcol</span></a></span><span>
@@ -3434,7 +3434,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
 </span><span id="line-984"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690589801"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
@@ -3485,12 +3485,12 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690589795"><span class="hs-identifier hs-var">distinctName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Bool
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.boolean</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.boolean</span></a></span><span>
 </span><span id="line-999"></span><span>            </span><span id="local-6989586621690589791"><span class="annot"><span class="annottext">CountDistinct -&gt; CountType b
 </span><a href="#local-6989586621690589791"><span class="hs-identifier hs-var">mkCountType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (n :: * -&gt; *).
 (BackendSchema b, MonadParse n) =&gt;
@@ -3524,13 +3524,13 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Both m b
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_count"><span class="hs-identifier hs-var">Name._count</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n (CountType b)
 </span><a href="#local-6989586621690589793"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Int32
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.int</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.int</span></a></span><span>
 </span><span id="line-1008"></span><span>
 </span><span id="line-1009"></span><span>    </span><span class="annot"><a href="#local-6989586621690589829"><span class="hs-identifier hs-type">parseAggOperator</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-1010"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -3588,7 +3588,7 @@ Name
 -&gt; Maybe Description
 -&gt; [FieldParser origin m a]
 -&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690589774"><span class="hs-identifier hs-var">setName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690589772"><span class="hs-identifier hs-var">setDesc</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (ColFld b)]
 </span><a href="#local-6989586621690589776"><span class="hs-identifier hs-var">columns</span></a></span><span>
@@ -3603,7 +3603,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690589779"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (Fields (ColFld b))
 </span><a href="#local-6989586621690589771"><span class="hs-identifier hs-var">subselectionParser</span></a></span><span>
@@ -3773,7 +3773,7 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Both m b
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.selection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690589678"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Maybe Description
 </span><a href="Hasura.RQL.Types.Column.html#ciDescription"><span class="hs-identifier hs-var">ciDescription</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690589682"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (Maybe (ScalarSelectionArguments b))
@@ -4264,7 +4264,7 @@ TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">id</span></a></span><span class="hs-special">;</span><span> </span><span class="annot"><span class="annottext">Nullable
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#NotNullable"><span class="hs-identifier hs-var">NotNullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 FieldParser origin m a -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableField</span></a></span><span> </span><span class="hs-special">}</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.nonNullableField</span></a></span><span> </span><span class="hs-special">}</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-1278"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
@@ -4272,7 +4272,7 @@ Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Output m a
 -&gt; FieldParser origin m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690589486"><span class="hs-identifier hs-var">relFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621690589468"><span class="hs-identifier hs-var">desc</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
 </span><a href="#local-6989586621690589467"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span>

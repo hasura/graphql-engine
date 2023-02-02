@@ -11,7 +11,7 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HS</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GName</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GName</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">first</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
@@ -1260,7 +1260,7 @@ HashMap Name joinField
 </span><span id="line-414"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690508171"><span class="annot"><span class="annottext">intScalarGType :: GType
 </span><a href="#local-6989586621690508171"><span class="hs-identifier hs-var hs-var">intScalarGType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; GType
 </span><a href="#local-6989586621690508170"><span class="hs-identifier hs-var">mkGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">GName._Int</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">GName._Int</span></a></span><span>
 </span><span id="line-415"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError ValidationError m =&gt;
 GType -&gt; GType -&gt; m ()
@@ -1271,7 +1271,7 @@ GType -&gt; GType -&gt; m ()
 </span><span id="line-417"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690508167"><span class="annot"><span class="annottext">floatScalarGType :: GType
 </span><a href="#local-6989586621690508167"><span class="hs-identifier hs-var hs-var">floatScalarGType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; GType
 </span><a href="#local-6989586621690508170"><span class="hs-identifier hs-var">mkGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">GName._Float</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">GName._Float</span></a></span><span>
 </span><span id="line-418"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError ValidationError m =&gt;
 GType -&gt; GType -&gt; m ()
@@ -1282,7 +1282,7 @@ GType -&gt; GType -&gt; m ()
 </span><span id="line-420"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690508165"><span class="annot"><span class="annottext">boolScalarGType :: GType
 </span><a href="#local-6989586621690508165"><span class="hs-identifier hs-var hs-var">boolScalarGType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; GType
 </span><a href="#local-6989586621690508170"><span class="hs-identifier hs-var">mkGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">GName._Boolean</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">GName._Boolean</span></a></span><span>
 </span><span id="line-421"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError ValidationError m =&gt;
 GType -&gt; GType -&gt; m ()
@@ -1297,7 +1297,7 @@ GType -&gt; GType -&gt; m ()
 </span><span id="line-424"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690508163"><span class="annot"><span class="annottext">stringScalarGType :: GType
 </span><a href="#local-6989586621690508163"><span class="hs-identifier hs-var hs-var">stringScalarGType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; GType
 </span><a href="#local-6989586621690508170"><span class="hs-identifier hs-var">mkGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">GName._String</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">GName._String</span></a></span><span>
 </span><span id="line-425"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError ValidationError m =&gt;
 GType -&gt; GType -&gt; m ()
@@ -1460,7 +1460,7 @@ GType -&gt; GType -&gt; m ()
 </span><span id="line-475"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690508122"><span class="hs-identifier hs-var">expectedBaseType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">GName._ID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">GName._ID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-476"></span><span>              </span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span>
 </span><span id="line-477"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
