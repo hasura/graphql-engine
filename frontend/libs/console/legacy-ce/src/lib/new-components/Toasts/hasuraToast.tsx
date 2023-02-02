@@ -3,6 +3,7 @@ import { Toast, toast, ToastOptions } from 'react-hot-toast/headless';
 import { deepmerge } from 'deepmerge-ts';
 import clsx from 'clsx';
 import { FaTimesCircle } from 'react-icons/fa';
+import { HtmlAnalyticsAttributes } from '@/features/Analytics';
 
 export type ToastType = 'error' | 'success' | 'info' | 'warning';
 
@@ -13,7 +14,7 @@ const TOASTS_OPTIONS: ToastOptions = {
     borderTop: '2px solid',
     boxSizing: 'border-box',
     fontSize: '13px',
-    margin: '10px 0px 0px',
+    margin: '0px',
     minWidth: 'min(400px, 75vw)',
     maxWidth: '75vw',
     padding: '10px',
@@ -76,16 +77,14 @@ const TOASTS_TYPES_OPTIONS: Record<ToastType, ToastOptions> = {
   },
 };
 
-type HtmlDataKey = `data-${string}`;
-
 export type ToastProps = PropsWithChildren<{
   type?: ToastType;
   title?: string;
   message?: string;
   button?: {
-    label: string | ReactNode;
+    label: ReactNode;
     onClick: MouseEventHandler<HTMLButtonElement>;
-    dataAttributes?: Record<HtmlDataKey, string | number>;
+    dataAttributes?: HtmlAnalyticsAttributes;
   };
   onRemove?: () => void;
   toastOptions?: ToastOptions;
@@ -130,8 +129,8 @@ export const hasuraToast = ({
               {title}
             </div>
           ) : null}
-          <div className="w-full"> {message} </div>
-          <div className="w-full"> {children} </div>
+          <div className="w-full">{message}</div>
+          <div className="w-full">{children}</div>
           {button ? (
             <div>
               <button

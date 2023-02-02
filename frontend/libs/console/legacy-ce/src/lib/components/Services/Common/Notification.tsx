@@ -12,7 +12,7 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.module.scss';
-import { useGetAnalyticsAttributes } from '../../../features/Analytics';
+import { getAnalyticsAttributes } from '../../../features/Analytics';
 
 export interface Notification {
   title?: string | JSX.Element;
@@ -35,6 +35,9 @@ export interface Notification {
   onRemove?: () => void;
 }
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 export const showNotification = (
   options: Notification,
   level: ToastType,
@@ -57,7 +60,7 @@ export const showNotification = (
         onClick: options.alternateActionButtonProps.onClick,
       };
       if (options.alternateActionButtonProps.trackId) {
-        toastProps.button.dataAttributes = useGetAnalyticsAttributes(
+        toastProps.button.dataAttributes = getAnalyticsAttributes(
           options.alternateActionButtonProps.trackId
         );
       }
@@ -233,6 +236,9 @@ export const getErrorMessage = (
   return '';
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showErrorNotification = (
   title: string,
   message?: string | null,
@@ -350,6 +356,9 @@ const showErrorNotification = (
   };
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showSuccessNotification = (
   title: string,
   message?: string,
@@ -370,6 +379,9 @@ const showSuccessNotification = (
   };
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showInfoNotification = (title: string): Thunk => {
   return dispatch => {
     dispatch(
@@ -384,6 +396,9 @@ const showInfoNotification = (title: string): Thunk => {
   };
 };
 
+/**
+ * @deprecated Please use the new toast API /new-components/Toasts/hasuraToast.tsx
+ */
 const showWarningNotification = (
   title: string,
   message: string,

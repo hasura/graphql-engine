@@ -90,7 +90,7 @@ const App = ({
               />
             )}
             <div>{children}</div>
-            <ToastsHub className="mt-16" />
+            <ToastsHub />
           </div>
         </ErrorBoundary>
       </ThemeProvider>
