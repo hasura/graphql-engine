@@ -12,11 +12,14 @@ module Harness.Http
   )
 where
 
+import Conduit (foldMapC, runConduit, (.|))
 import Control.Concurrent.Extended (sleep)
 import Control.Exception
 import Data.Aeson
 import Data.ByteString.Lazy.Char8 qualified as L8
 import Data.String
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
 import GHC.Stack
 import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
@@ -28,18 +31,25 @@ import Network.HTTP.Types qualified as Http
 -- | Performs get, doesn't return the result. Simply throws if there's
 -- not a 200 response.
 get_ :: HasCallStack => String -> IO ()
-get_ url = do
-  response <- Http.httpNoBody (fromString url)
-  unless (Http.getResponseStatusCode response == 200) $
-    error ("Non-200 response code from HTTP request: " ++ url)
+get_ = getWithStatus [200]
 
 -- | Performs get, doesn't return the result. Simply throws if there's
 -- not an expected response status code.
 getWithStatus :: HasCallStack => [Int] -> String -> IO ()
-getWithStatus acceptableStatusCodes url = do
-  response <- Http.httpNoBody (fromString url)
-  unless (Http.getResponseStatusCode response `elem` acceptableStatusCodes) $
-    error ("Unexpected response code from HTTP request: " ++ url ++ ". Expected: " ++ show acceptableStatusCodes)
+getWithStatus acceptableStatusCodes url =
+  Http.withResponse @_ @IO (fromString url) \response -> do
+    let actualStatusCode = Http.getResponseStatusCode response
+    unless (actualStatusCode `elem` acceptableStatusCodes) $ do
+      body <- runConduit $ Http.getResponseBody response .| foldMapC id
+      fail $
+        unlines
+          [ "The HTTP response had an unexpected response code.",
+            "URL: " <> url,
+            "Expected status codes: " <> show acceptableStatusCodes,
+            "Actual status code: " <> show actualStatusCode,
+            "Body:",
+            T.unpack $ T.decodeUtf8 body
+          ]
 
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.
@@ -98,12 +108,12 @@ healthCheck url = do
   case result of
     Healthy -> return ()
     Unhealthy failures ->
-      error
-        ( "Health check failed for URL: "
-            ++ url
-            ++ ", with failures: "
-            ++ show failures
-        )
+      fail $
+        "Health check failed for URL: "
+          ++ url
+          ++ ", with failures: "
+          ++ show failures
+          ++ "\nIs graphql-engine starting up without errors outside of this test suite?"
 
 data HealthCheckResult = Healthy | Unhealthy [Http.HttpException]
 
