@@ -1,27 +1,28 @@
 ---
 description: Using Hasura with a DO Postgres database
-title: 'Cloud: Using Hasura Cloud with a Digital Ocean Postgres database'
+title: 'Cloud: Using Hasura Cloud with a DigitalOcean Postgres database'
 keywords:
   - hasura
   - docs
   - existing database
   - guide
   - digital ocean
-sidebar_label: Digital Ocean Postgres
+  - digitalocean
+sidebar_label: DigitalOcean Postgres
 sidebar_position: 10
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Connecting Hasura to a Digital Ocean Postgres Database
+# Connecting Hasura to a DigitalOcean Postgres Database
 
 ## Introduction
 
 This guide explains how to connect a new or existing
-[Digital Ocean Postgres](https://www.digitalocean.com/products/managed-databases-postgresql) database to a Hasura
+[DigitalOcean Postgres](https://www.digitalocean.com/products/managed-databases-postgresql) database to a Hasura
 instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
-[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Digital Ocean Postgres and are
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring DigitalOcean Postgres and are
 interested in migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://docs.digitalocean.com/products/databases/postgresql/how-to/migrate/) before continuing below.
 
@@ -50,20 +51,20 @@ Postgres Database URL. We'll create this in the next step and then come back her
 
 <Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
-## Step 3: Create a Postgres DB on Digital Ocean {#create-pg-db-do}
+## Step 3: Create a Postgres DB on DigitalOcean {#create-pg-db-do}
 
-Log into [Digital Ocean](https://cloud.digitalocean.com/).
+Log into [DigitalOcean](https://cloud.digitalocean.com/).
 
 On the top right, click the `Create` button. Then click on `Databases`:
 
-<Thumbnail src="/img/cloud-dbs/do/create-database.png" alt="Create database on Digital Ocean" />
+<Thumbnail src="/img/cloud-dbs/do/create-database.png" alt="Create database on DigitalOcean" />
 
 Scroll down and choose a `Cluster configuration`, as well as a `Datacenter` based on your requirements.
 
 Scroll to the bottom and choose a unique database cluster name. Also, select a project the new database will be
 associated with.
 
-<Thumbnail src="/img/cloud-dbs/do/cluster-name.png" alt="Select cluster name for database on Digital Ocean" />
+<Thumbnail src="/img/cloud-dbs/do/cluster-name.png" alt="Select cluster name for database on DigitalOcean" />
 
 Then click `Create a Database Cluster`.
 
@@ -71,11 +72,11 @@ Then click `Create a Database Cluster`.
 
 Navigate to the database cluster's `Overview` page:
 
-<Thumbnail src="/img/cloud-dbs/do/db-settings.png" alt="Navigate to database settings in Digital Ocean" />
+<Thumbnail src="/img/cloud-dbs/do/db-settings.png" alt="Navigate to database settings in DigitalOcean" />
 
 Scroll down to `Trusted sources` and click the `Edit` button:
 
-<Thumbnail src="/img/cloud-dbs/do/edit-trusted-sources.png" alt="Edit trusted sources for database in Digital Ocean" />
+<Thumbnail src="/img/cloud-dbs/do/edit-trusted-sources.png" alt="Edit trusted sources for database in DigitalOcean" />
 
 If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
 details view:
@@ -91,7 +92,7 @@ service.
 
 Enter the Hasura IP address that you copied:
 
-<Thumbnail src="/img/cloud-dbs/do/add-hasura-ip.png" alt="Add Hasura IP to database in Digital Ocean" width="700px" />
+<Thumbnail src="/img/cloud-dbs/do/add-hasura-ip.png" alt="Add Hasura IP to database in DigitalOcean" width="700px" />
 
 Then click `Save`.
 
@@ -112,13 +113,13 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>?sslmode=req
 
 To get it, navigate to the database cluster's `Overview` page:
 
-<Thumbnail src="/img/cloud-dbs/do/db-overview.png" alt="Navigate to database overview in Digital Ocean" />
+<Thumbnail src="/img/cloud-dbs/do/db-overview.png" alt="Navigate to database overview in DigitalOcean" />
 
 Scroll down to `Connection details`. Select `Public network` on the left and `Connection string` on the right.
 
 <Thumbnail
   src="/img/cloud-dbs/do/connection-string.png"
-  alt="Get the database connection string in Digital Ocean"
+  alt="Get the database connection string in DigitalOcean"
   width="600px"
 />
 
