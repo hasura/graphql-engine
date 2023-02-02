@@ -1,4 +1,4 @@
-# `hasura-incremental`
+# `incremental`
 
 A library for caching intermediate results in `Arrow` computations. Used by
 `graphql-engine` to optimise schema cache updates by avoiding redundant
@@ -14,7 +14,7 @@ data source configured to work with Hasura. When one of these dependencies is
 updated (perhaps the user makes a metadata change), we'd like to recompile the
 schema cache as quickly (and efficiently with regards to memory) as possible.
 
-For our specific uses of `hasura-incremental`, see the implementation of
+For our specific uses of `incremental`, see the implementation of
 [`buildSchemaCacheRule`](https://hasura.github.io/graphql-engine/server/haddock/main/src/Hasura.RQL.DDL.Schema.Cache.html#buildSchemaCacheRule)
 and its `Inc.cache` calls, as well as the note titled, [`Avoiding GraphQL schema
 rebuilds when changing irrelevant

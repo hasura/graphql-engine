@@ -2,8 +2,8 @@ cabal-version: 3.0
 name:          graphql-parser
 version:       0.2.0.0
 synopsis:      A native Haskell GraphQL parser.
-homepage:      https://github.com/hasura/graphql-parser-hs
-bug-reports:   https://github.com/hasura/graphql-parser-hs/issues
+homepage:      https://github.com/hasura/graphql-engine
+bug-reports:   https://github.com/hasura/graphql-engine/issues
 author:        Vamshi Surabhi
 maintainer:    vamshi@hasura.io
 copyright:     2018–2022 Hasura Inc., 2015 J. Daniel Navarro
@@ -14,7 +14,7 @@ tested-with:   GHC ==8.10.7 || ==9.0.2 || ==9.2.2
 
 source-repository head
   type:     git
-  location: https://github.com/hasura/graphql-parser-hs
+  location: https://github.com/hasura/graphql-engine
 
 common common-all
   ghc-options:
@@ -95,7 +95,7 @@ library
   other-modules:
     Language.GraphQL.Draft.Syntax.Name
 
-test-suite graphql-parser-test
+test-suite graphql-parser-tests
   import:         common-all
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
   type:           exitcode-stdio-1.0

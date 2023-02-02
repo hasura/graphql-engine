@@ -1,6 +1,6 @@
 cabal-version:  3.6
 
-name:           hasura-schema-parsers
+name:           schema-parsers
 version:        1.0.0
 description:    Parsers built from GraphQL schemas.
 homepage:       https://github.com/hasura/github-engine#readme
@@ -74,7 +74,7 @@ library
       Hasura.GraphQL.Parser.Schema.Definition
       Hasura.GraphQL.Parser.Variable
   other-modules:
-      Paths_hasura_schema_parsers
+      Paths_schema_parsers
   hs-source-dirs:
       src
   default-extensions:
@@ -118,7 +118,7 @@ library
     , dependent-sum
     , graphql-parser
     , hashable
-    , hasura-error-message
+    , error-message
     , insert-ordered-containers
     , lens
     , mtl
@@ -138,16 +138,16 @@ library
   else
     ghc-options: -O0
 
-test-suite tests
+test-suite schema-parsers-tests
   import: common-all
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Hasura.GraphQL.Parser.DirectivesTest
-      Hasura.GraphQL.Parser.MonadParseTest
+      Hasura.GraphQL.Parser.DirectivesSpec
+      Hasura.GraphQL.Parser.MonadParseSpec
       Hasura.GraphQL.Parser.TestInstances
       Hasura.GraphQL.Parser.TestUtils
-      Paths_hasura_schema_parsers
+      Paths_schema_parsers
   hs-source-dirs:
       test
   default-extensions:
@@ -186,7 +186,7 @@ test-suite tests
       TypeOperators
   build-tool-depends: hspec-discover:hspec-discover
   build-depends:
-      hasura-schema-parsers
+      schema-parsers
     , hspec
   if flag(profiling)
     cpp-options: -DPROFILING
@@ -200,9 +200,9 @@ test-suite tests
       , base
       , dependent-map
       , dependent-sum
+      , error-message
       , graphql-parser
       , hashable
-      , hasura-error-message
       , insert-ordered-containers
       , lens
       , mtl

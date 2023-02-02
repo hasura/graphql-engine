@@ -274,24 +274,23 @@ common lib-depends
                      , bytestring
                      , containers
                      , data-default
+                     , dc-api
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
                      , dependent-sum-template
                      , either
+                     , error-message
                      , exceptions
                      , fast-logger
-                     , dc-api
                      , free
                      , hashable
-                     , hasura-error-message
-                     , hasura-incremental
                      , hasura-prelude
-                     , hasura-schema-parsers
                      , http-client-tls
                      , http-conduit
                      , http-media
                      , http-types
+                     , incremental
                      , kan-extensions
                      , kriti-lang
                      , lifted-base
@@ -313,6 +312,7 @@ common lib-depends
                      , reflection
                      , retry
                      , safe-exceptions
+                     , schema-parsers
                      , scientific
                      , semialign
                      , servant

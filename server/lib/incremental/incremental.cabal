@@ -1,5 +1,5 @@
 cabal-version: 2.2
-name: hasura-incremental
+name: incremental
 version: 1.0.0
 build-type: Simple
 copyright: Hasura Inc.
@@ -56,7 +56,7 @@ library
     RoleAnnotations
     TypeFamilies
 
-test-suite hasura-incremental-tests
+test-suite incremental-tests
   type: exitcode-stdio-1.0
   hs-source-dirs: test
   main-is: Spec.hs
@@ -85,7 +85,7 @@ test-suite hasura-incremental-tests
   build-depends:
     , base
     , arrows-extra
-    , hasura-incremental
+    , incremental
     , hasura-prelude
     , hspec
     , unordered-containers

@@ -29,12 +29,12 @@ cradle:
       component: "aeson-ordered:lib:aeson-ordered"
 
     - path: "server/lib/error-message/src"
-      component: "hasura-error-message:lib:hasura-error-message"
+      component: "error-message:lib:error-message"
     - path: "server/lib/error-message/test"
-      component: "hasura-error-message:test:tests"
+      component: "error-message:test:error-message-tests"
 
     - path: "server/lib/schema-parsers/src"
-      component: "hasura-schema-parsers:lib:hasura-schema-parsers"
+      component: "schema-parsers:lib:schema-parsers"
     - path: "server/lib/schema-parsers/test"
-      component: "hasura-schema-parsers:test:tests"
+      component: "schema-parsers:test:schema-parser-tests"
 

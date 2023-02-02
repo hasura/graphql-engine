@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Parser.DirectivesTest (spec) where
+module Hasura.GraphQL.Parser.DirectivesSpec (spec) where
 
 import Control.Monad.Identity (Identity (..))
 import Data.Dependent.Map qualified as DM

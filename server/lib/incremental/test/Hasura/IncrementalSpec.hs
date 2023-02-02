@@ -3,7 +3,6 @@
 module Hasura.IncrementalSpec (spec) where
 
 import Control.Arrow.Extended
-import Control.Monad.Unique
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Hasura.Incremental qualified as Inc
@@ -30,7 +29,7 @@ spec = do
 
     it "tracks dependencies within nested uses of cache across multiple executions" do
       let rule ::
-            (MonadWriter String m, MonadUnique m) =>
+            (MonadWriter String m, MonadIO m) =>
             Inc.Rule m (Inc.InvalidationKey, Inc.InvalidationKey) ()
           rule = proc (key1, key2) -> do
             dep1 <- Inc.newDependency -< key2
@@ -63,7 +62,7 @@ spec = do
   describe "keyed" $ do
     it "preserves incrementalization when entries don’t change" $ do
       let rule ::
-            (MonadWriter (S.HashSet (String, Integer)) m, MonadUnique m) =>
+            (MonadWriter (S.HashSet (String, Integer)) m, MonadIO m) =>
             Inc.Rule m (M.HashMap String Integer) (M.HashMap String Integer)
           rule = proc m ->
             (|
