@@ -40,6 +40,7 @@ import Test.AgentClient (AgentClientT)
 import Test.AgentDatasets (DatasetCloneInfo (..), DatasetContext (..), HasDatasetContext, getDatasetContext)
 import Test.AgentTestContext (AgentTestContext (..), HasAgentTestContext, getAgentTestContext)
 import Test.Sandwich (HasBaseContext, expectationFailure)
+import Prelude
 
 getCapabilitiesGuarded :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m API.CapabilitiesResponse
 getCapabilitiesGuarded = guardCapabilitiesResponse =<< (genericClient // API._capabilities)

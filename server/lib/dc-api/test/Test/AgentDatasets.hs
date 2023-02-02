@@ -28,6 +28,7 @@ import Servant.Client.Generic (genericClient)
 import Test.AgentClient (HasAgentClient, runAgentClientT)
 import Test.AgentTestContext (AgentTestContext (..), HasAgentTestContext, getAgentTestContext)
 import Test.Sandwich (ExampleT, HasBaseContext, HasLabel, Label (..), LabelValue, SpecFree, expectationFailure, getContext, introduce, type (:>))
+import Prelude
 
 chinookTemplate :: API.DatasetTemplateName
 chinookTemplate = API.DatasetTemplateName "Chinook"

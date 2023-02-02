@@ -27,6 +27,7 @@ common common-all
     LambdaCase
     MultiParamTypeClasses
     NamedFieldPuns
+    NoImplicitPrelude
     OverloadedStrings
     RankNTypes
     RecordWildCards
@@ -50,11 +51,6 @@ common common-all
     -Wno-monomorphism-restriction
     -Wno-missing-kind-signatures
     -Wno-missing-safe-haskell-mode
-    -- We want these warnings, but the code doesn't satisfy them yet:
-    -Wno-missing-deriving-strategies
-    -Wno-unused-packages
-    -Wno-partial-fields
-    -Wno-implicit-prelude
 
 library
   import: common-all
@@ -74,18 +70,12 @@ library
     lens,
     lens-aeson,
     openapi3,
-    scientific,
     servant,
     servant-client,
-    servant-client-core,
     servant-openapi3,
     text,
     unordered-containers,
     http-media
-
-  if !flag(profiling)
-    -- ghc-heap-view can't be built with profiling
-    build-depends: ghc-heap-view
 
   exposed-modules:
     Autodocodec.Extended
@@ -119,14 +109,10 @@ test-suite tests-dc-api
     aeson,
     aeson-pretty,
     ansi-terminal,
-    autodocodec,
-    autodocodec-openapi3,
     base,
     bytestring,
     case-insensitive,
     containers,
-    data-fix,
-    deepseq,
     dc-api,
     directory,
     exceptions,
@@ -134,28 +120,21 @@ test-suite tests-dc-api
     filepath,
     free,
     graphql-parser,
-    hashable,
     http-client,
     http-types,
     lens,
     lens-aeson,
-    lifted-base,
-    monad-control,
     mtl,
-    network-uri,
-    openapi3,
     optparse-applicative,
     scientific,
     sandwich,
     servant,
     servant-client,
     servant-client-core,
-    servant-openapi3,
     text,
     time,
     unordered-containers,
     uuid,
-    vector,
     xml-conduit,
     xml-lens,
     yaml,

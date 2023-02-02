@@ -67,7 +67,7 @@ data NameCasing
   = PascalCase
   | Lowercase
   | Uppercase
-  deriving (Eq, Show, Read, Enum, Bounded)
+  deriving stock (Eq, Show, Read, Enum, Bounded)
 
 data ExportDataConfig = ExportDataConfig
   { _edcDirectory :: FilePath,
@@ -78,7 +78,7 @@ data ExportDataConfig = ExportDataConfig
 data ExportFormat
   = JSON
   | JSONLines
-  deriving (Eq, Show, Read)
+  deriving stock (Eq, Show, Read)
 
 parseCommandLine :: IO Command
 parseCommandLine =

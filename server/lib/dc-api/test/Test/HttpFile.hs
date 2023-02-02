@@ -25,6 +25,7 @@ import Network.HTTP.Client qualified as HttpClient
 import Network.HTTP.Types (Header, Status (..))
 import Servant.Client (BaseUrl, showBaseUrl)
 import System.FilePath ((</>))
+import Prelude
 
 writeRequest :: forall m. (MonadIO m, MonadThrow m) => BaseUrl -> HttpClient.Request -> String -> FilePath -> m ()
 writeRequest baseUrl request fileNamePrefix testFolder = do

@@ -8,6 +8,7 @@ import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Sandwich (describe, shouldBe)
 import Test.TestHelpers (AgentDatasetTestSpec, it)
+import Prelude
 
 spec :: TestData -> AgentDatasetTestSpec
 spec TestData {..} = describe "Error Protocol" do

@@ -62,7 +62,7 @@ data ConfigSchemaResponse = ConfigSchemaResponse
   { _csrConfigSchema :: Schema,
     _csrOtherSchemas :: Definitions Schema
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 instance FromJSON ConfigSchemaResponse where
   parseJSON = withObject "ConfigSchemaResponse" $ \obj -> do

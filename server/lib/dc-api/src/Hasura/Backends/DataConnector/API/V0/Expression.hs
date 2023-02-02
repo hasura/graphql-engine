@@ -40,7 +40,7 @@ data BinaryComparisonOperator
   | GreaterThan
   | GreaterThanOrEqual
   | Equal
-  | CustomBinaryComparisonOperator {getCustomBinaryComparisonOperator :: Text}
+  | CustomBinaryComparisonOperator Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec BinaryComparisonOperator
@@ -61,11 +61,15 @@ instance HasCodec BinaryComparisonOperator where
         \case
           op@CustomBinaryComparisonOperator {} -> Right op
           op -> Left op
+    where
+      getCustomBinaryComparisonOperator = \case
+        CustomBinaryComparisonOperator op -> op
+        _ -> error "Not a custom binary operator when expected"
 
 -- | A serializable representation of binary array comparison operators.
 data BinaryArrayComparisonOperator
   = In
-  | CustomBinaryArrayComparisonOperator {getCustomBinaryArrayComparisonOperator :: Text}
+  | CustomBinaryArrayComparisonOperator Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec BinaryArrayComparisonOperator
@@ -82,11 +86,15 @@ instance HasCodec BinaryArrayComparisonOperator where
         \case
           op@CustomBinaryArrayComparisonOperator {} -> Right op
           op -> Left op
+    where
+      getCustomBinaryArrayComparisonOperator = \case
+        CustomBinaryArrayComparisonOperator op -> op
+        _ -> error "Not a custom binary array operator when expected"
 
 -- | A serializable representation of unary comparison operators.
 data UnaryComparisonOperator
   = IsNull
-  | CustomUnaryComparisonOperator {getCustomUnaryComparisonOperator :: Text}
+  | CustomUnaryComparisonOperator Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UnaryComparisonOperator
@@ -103,6 +111,10 @@ instance HasCodec UnaryComparisonOperator where
         \case
           op@CustomUnaryComparisonOperator {} -> Right op
           op -> Left op
+    where
+      getCustomUnaryComparisonOperator = \case
+        CustomUnaryComparisonOperator op -> op
+        _ -> error "Not a custom unary operator when expected"
 
 -- | A serializable representation of query filter expressions.
 data Expression

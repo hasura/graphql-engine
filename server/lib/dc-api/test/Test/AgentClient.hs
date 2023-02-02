@@ -46,6 +46,7 @@ import Test.Sandwich.Contexts (getCurrentFolder)
 import Test.Sandwich.Misc (ExampleT)
 import Test.Sandwich.Nodes (introduce')
 import Text.Printf (printf)
+import Prelude
 
 -------------------------------------------------------------------------------
 

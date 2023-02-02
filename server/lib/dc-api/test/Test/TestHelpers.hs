@@ -14,6 +14,7 @@ import Test.AgentTestContext (HasAgentTestContext)
 import Test.Sandwich (ExampleT, HasBaseContext, SpecFree)
 import Test.Sandwich qualified as Sandwich
 import Test.Sandwich.Internal (SpecCommand)
+import Prelude
 
 type AgentTestSpec = forall context. (HasBaseContext context, HasAgentClient context, HasAgentTestContext context) => SpecFree context IO ()
 
