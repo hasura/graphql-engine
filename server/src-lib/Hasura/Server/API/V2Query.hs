@@ -86,7 +86,10 @@ instance FromJSON RQLQuery where
       "update" -> RQUpdate <$> args
       "delete" -> RQDelete <$> args
       "count" -> RQCount <$> args
+      -- Optionally, we can specify a `pg_` prefix. This primarily makes some
+      -- string interpolation easier in the cross-backend tests.
       "run_sql" -> RQRunSql <$> args
+      "pg_run_sql" -> RQRunSql <$> args
       "mssql_run_sql" -> RQMssqlRunSql <$> args
       "citus_run_sql" -> RQCitusRunSql <$> args
       "cockroach_run_sql" -> RQCockroachRunSql <$> args
