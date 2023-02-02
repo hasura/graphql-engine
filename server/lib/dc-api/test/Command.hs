@@ -10,6 +10,7 @@ module Command
     SandwichArguments (..),
     TestConfig (..),
     AgentOptions (..),
+    AgentConfig (..),
     NameCasing (..),
     ExportDataConfig (..),
     ExportFormat (..),
@@ -55,8 +56,12 @@ data SensitiveOutputHandling
 
 data AgentOptions = AgentOptions
   { _aoAgentBaseUrl :: BaseUrl,
-    _aoAgentConfig :: Maybe API.Config
+    _aoAgentConfig :: AgentConfig
   }
+
+data AgentConfig
+  = ManualConfig API.Config
+  | DatasetConfig (Maybe API.Config)
 
 data NameCasing
   = PascalCase
@@ -181,15 +186,23 @@ agentOptionsParser =
           <> metavar "URL"
           <> help "The base URL of the Data Connector agent to be tested"
       )
-    <*> optional
-      ( option
-          configValue
-          ( long "agent-config"
-              <> short 's'
-              <> metavar "JSON"
-              <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. If omitted, datasets will be used to load test data and provide this configuration dynamically"
-          )
-      )
+    <*> ( ManualConfig
+            <$> option
+              configValue
+              ( long "agent-config"
+                  <> metavar "JSON"
+                  <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. If omitted, datasets will be used to load test data and provide this configuration dynamically"
+              )
+            <|> DatasetConfig
+              <$> optional
+                ( option
+                    configValue
+                    ( long "merge-agent-config"
+                        <> metavar "JSON"
+                        <> help "Datasets will be used to load test data and provide configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. This config will be merged with the dataset-provided config before being sent to the agent."
+                    )
+                )
+        )
 
 exportDataConfigParser :: Parser ExportDataConfig
 exportDataConfigParser =

@@ -4,24 +4,27 @@
 --
 -- NOTE: This module is intended to be imported qualified.
 module Harness.Backend.DataConnector.Chinook.Sqlite
-  ( agentConfig,
-    sourceConfiguration,
-    backendTypeMetadata,
-    formatForeignKeyName,
+  ( backendTypeConfig,
+    mkChinookCloneTestEnvironment,
+    chinookFixture,
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Control.Monad.Managed (Managed)
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (Fixture (..), FixtureName (..))
+import Harness.TestEnvironment
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
-backendTypeMetadata :: BackendType.BackendTypeConfig
-backendTypeMetadata =
+backendTypeConfig :: BackendType.BackendTypeConfig
+backendTypeConfig =
   BackendType.BackendTypeConfig
     { backendType = BackendType.DataConnectorSqlite,
       backendSourceName = "chinook_sqlite",
@@ -94,28 +97,24 @@ backendTypeMetadata =
 
 --------------------------------------------------------------------------------
 
--- | Reference Agent @backend_configs@ field.
-agentConfig :: Aeson.Value
-agentConfig =
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-   in [yaml|
-dataconnector:
-  *backendType:
-    uri: "http://127.0.0.1:65007/"
-|]
+mkChinookCloneTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
+mkChinookCloneTestEnvironment = Chinook.mkChinookCloneTestEnvironment nameFormatting
 
--- | Sqlite Agent specific @sources@ entry @configuration@ field.
-sourceConfiguration :: Aeson.Value
-sourceConfiguration =
-  [yaml|
-value:
-  db: "/db.chinook.sqlite"
-template:
-timeout:
-|]
+nameFormatting :: NameFormatting
+nameFormatting = NameFormatting id id formatForeignKeyName
 
 -- | Construct foreign key relationship names.
 formatForeignKeyName :: Text -> Text
 formatForeignKeyName = \case
   "Artist" -> "ArtistId->Artist.ArtistId"
   x -> x
+
+chinookFixture :: Fixture ChinookTestEnv
+chinookFixture =
+  Fixture
+    { name = Backend backendTypeConfig,
+      mkLocalTestEnvironment = mkChinookCloneTestEnvironment,
+      setupTeardown = \testEnvs ->
+        [Chinook.setupChinookSourceAction testEnvs],
+      customOptions = Nothing
+    }

@@ -21,12 +21,15 @@ module Test.AgentAPI
     explain,
     getMetrics,
     getSourceNameAndConfig,
+    mergeAgentConfig,
   )
 where
 
+import Command (AgentConfig (..))
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader (MonadReader)
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Maybe (isJust)
 import Data.Text (Text)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -108,13 +111,20 @@ supportsDatasets = isJust . API._cDatasets . API._crCapabilities
 getSourceNameAndConfig :: (HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m) => m (API.SourceName, API.Config)
 getSourceNameAndConfig = do
   AgentTestContext {..} <- getAgentTestContext
-  case _atcManualConfig of
-    Just config -> pure (_atcSourceName, config)
-    Nothing ->
+  case _atcAgentConfig of
+    ManualConfig config -> pure (_atcSourceName, config)
+    DatasetConfig mergeConfig ->
       if supportsDatasets _atcCapabilitiesResponse
         then do
           cloneInfo <- _dcClone <$> getDatasetContext
           case cloneInfo of
-            Just DatasetCloneInfo {..} -> pure (_atcSourceName, _dciAgentConfig)
+            Just DatasetCloneInfo {..} ->
+              let mergedConfig = mergeAgentConfig _dciAgentConfig mergeConfig
+               in pure (_atcSourceName, mergedConfig)
             Nothing -> expectationFailure "Expected a dataset clone to have been created, because the agent supports datasets, but one wasn't"
         else expectationFailure "An agent configuration is required to be provided if the agent does not support datasets"
+
+mergeAgentConfig :: API.Config -> Maybe API.Config -> API.Config
+mergeAgentConfig (API.Config configA) mergeConfig =
+  let configB = maybe mempty API.unConfig mergeConfig
+   in API.Config $ KeyMap.union configA configB

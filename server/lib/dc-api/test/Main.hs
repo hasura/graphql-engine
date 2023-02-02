@@ -2,7 +2,7 @@ module Main (main) where
 
 --------------------------------------------------------------------------------
 
-import Command (AgentOptions (..), Command (..), SandwichArguments (..), TestOptions (..), parseCommandLine)
+import Command (AgentConfig (..), AgentOptions (..), Command (..), SandwichArguments (..), TestOptions (..), parseCommandLine)
 import Control.Exception (bracket)
 import Data.Aeson.Text (encodeToLazyText)
 import Data.Foldable (for_)
@@ -12,7 +12,7 @@ import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.Client ((//))
 import System.Environment (withArgs)
-import Test.AgentAPI (guardCapabilitiesResponse, guardSchemaResponse)
+import Test.AgentAPI (guardCapabilitiesResponse, guardSchemaResponse, mergeAgentConfig)
 import Test.AgentClient (AgentIOClient (..), introduceAgentClient, mkAgentClientConfig, mkAgentIOClient)
 import Test.AgentDatasets (DatasetCloneInfo (..), chinookTemplate, createClone, deleteClone, usesDataset)
 import Test.AgentTestContext (AgentTestContext (..), introduceAgentTestContext)
@@ -46,18 +46,18 @@ tests testData capabilitiesResponse@API.CapabilitiesResponse {..} = do
     for_ (API._cMetrics _crCapabilities) \m -> Test.Specs.MetricsSpec.spec m
     for_ (API._cExplain _crCapabilities) \_ -> Test.Specs.ExplainSpec.spec testData _crCapabilities
 
-getChinookSchema :: API.Capabilities -> Maybe API.Config -> AgentIOClient -> IO API.SchemaResponse
+getChinookSchema :: API.Capabilities -> AgentConfig -> AgentIOClient -> IO API.SchemaResponse
 getChinookSchema API.Capabilities {..} manuallyProvidedConfig (AgentIOClient agentClient) = do
   case manuallyProvidedConfig of
-    Just config -> (agentClient // API._schema) testSourceName config >>= guardSchemaResponse
-    Nothing ->
+    ManualConfig config -> (agentClient // API._schema) testSourceName config >>= guardSchemaResponse
+    DatasetConfig mergeConfig ->
       if isJust _cDatasets
         then
           bracket
             (createClone agentClient chinookTemplate)
             (deleteClone agentClient)
             ( \DatasetCloneInfo {..} ->
-                (agentClient // API._schema) testSourceName _dciAgentConfig >>= guardSchemaResponse
+                (agentClient // API._schema) testSourceName (mergeAgentConfig _dciAgentConfig mergeConfig) >>= guardSchemaResponse
             )
         else fail $ "The agent does not support datasets, therefore an agent configuration must be provided on the command line (--agent-config)"
 

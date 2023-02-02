@@ -66,7 +66,7 @@ function mkTemplatePath(name: string): string {
   if(name != safeName) {
     throw(Error(`Template name ${name} is not valid.`));
   }
-  return path.join(DATASET_TEMPLATES, safeName);
+  return path.join(DATASET_TEMPLATES, safeName + ".sqlite");
 }
 
 function mkClonePath(name: string): string {
@@ -75,5 +75,5 @@ function mkClonePath(name: string): string {
   if(name != safeName) {
     throw(Error(`Template name ${name} is not valid.`));
   }
-  return path.join(DATASET_CLONES, safeName);
+  return path.join(DATASET_CLONES, safeName + ".sqlite");
 }

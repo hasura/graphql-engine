@@ -13,13 +13,11 @@ import Data.Aeson qualified as Aeson
 import Data.Aeson.Lens (key, _Array)
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
-import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
@@ -33,64 +31,11 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Reference.backendTypeMetadata Reference.sourceConfiguration) Reference.agentConfig testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Sqlite.backendTypeMetadata Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
-                ]
-            }
+        [ Reference.chinookFixture,
+          Sqlite.chinookFixture
         ]
     )
     tests
-
---------------------------------------------------------------------------------
-
-sourceMetadata :: BackendTypeConfig -> Aeson.Value -> Aeson.Value
-sourceMetadata backendTypeMetadata config =
-  let source = Fixture.backendSourceName backendTypeMetadata
-      backendTypeString = Fixture.backendTypeString backendTypeMetadata
-   in [yaml|
-        name : *source
-        kind: *backendTypeString
-        tables:
-          - table: [Album]
-            object_relationships:
-              - name: Artist
-                using:
-                  manual_configuration:
-                    remote_table: [Artist]
-                    column_mapping:
-                      ArtistId: ArtistId
-          - table: [Artist]
-            array_relationships:
-              - name: Albums
-                using:
-                  manual_configuration:
-                    remote_table: [Album]
-                    column_mapping:
-                      ArtistId: ArtistId
-          - table: [Invoice]
-            array_relationships:
-              - name: InvoiceLines
-                using:
-                  manual_configuration:
-                    remote_table: [InvoiceLine]
-                    column_mapping:
-                      InvoiceId: InvoiceId
-          - table: [InvoiceLine]
-            object_relationships:
-              - name: Invoice
-                using:
-                  manual_configuration:
-                    remote_table: [Invoice]
-                    column_mapping:
-                      InvoiceId: InvoiceId
-        configuration: *config
-      |]
 
 --------------------------------------------------------------------------------
 

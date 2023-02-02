@@ -24,14 +24,8 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
-            }
+        [ Reference.chinookFixture,
+          Sqlite.chinookFixture
         ]
     )
     tests

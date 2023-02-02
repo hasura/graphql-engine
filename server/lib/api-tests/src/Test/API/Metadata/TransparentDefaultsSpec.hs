@@ -79,7 +79,7 @@ addSource =
       name: myfoobar
       replace_configuration: false
       configuration:
-        db: /db.chinook.sqlite
+        value: {}
   |]
 
 listSourceKinds :: Value

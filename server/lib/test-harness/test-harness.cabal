@@ -26,12 +26,14 @@ library
     , hedgehog
     , hspec
     , hspec-core
+    , http-client
     , http-conduit
     , http-types
     , insert-ordered-containers
     , lens
     , lens-aeson
     , libyaml
+    , lifted-base
     , managed
     , morpheus-graphql
     , mtl
@@ -51,6 +53,7 @@ library
     , safe
     , safe-exceptions
     , servant-server
+    , servant-client
     , sop-core
     , stm
     , string-interpolate
@@ -125,6 +128,7 @@ library
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver
     Harness.Constants
+    Harness.DataConnectorAgent
     Harness.Env
     Harness.Exceptions
     Harness.GraphqlEngine

@@ -290,7 +290,7 @@ startServerThread = do
           dataconnector:
             foobar:
               display_name: FOOBARDB
-              uri: "http://localhost:65007" |]
+              uri: "http://localhost:65005" |]
   thread <-
     Async.async
       ( runApp
