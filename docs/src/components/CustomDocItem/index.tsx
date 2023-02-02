@@ -1,12 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ActualDocItem from '@theme/DocItem';
 import HasuraConBanner from '@site/src/components/HasuraConBanner';
 import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanner';
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
-import {ScrollToFeedbackButton} from "@site/src/components/Feedback/ScrollToFeedbackButton";
+import { ScrollToFeedbackButton } from '@site/src/components/Feedback/ScrollToFeedbackButton';
 
 const CustomDocItem = props => {
+  useEffect(() => {
+    // This function is adds <wbr> tags to code blocks within a table
+    // wherever an _ or . is present. We do this since so many environment
+    // variables are incredibly long and the word breaks are not happening
+    // in a user-friendly way.
+    const tables = document.querySelectorAll('table');
+    tables.forEach(table => {
+      const cells = table.querySelectorAll('td');
+      cells.forEach(cell => {
+        const codeBlocks = cell.querySelectorAll('code');
+        codeBlocks.forEach(codeBlock => {
+          codeBlock.innerHTML = codeBlock.innerHTML.replace(/_/g, '_<wbr>');
+          codeBlock.innerHTML = codeBlock.innerHTML.replace(/\./g, '.<wbr>');
+          console.log(codeBlock.innerHTML);
+        });
+      });
+    });
+  }, []);
+
   return (
     <div
       className={
@@ -18,7 +37,7 @@ const CustomDocItem = props => {
       <ActualDocItem {...props} />
       <div className={styles['custom_doc_item_footer']}>
         {/*<PageHelpful />*/}
-        <ScrollToFeedbackButton/>
+        <ScrollToFeedbackButton />
         <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <CustomFooter />
