@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "chromatic": "npx chromatic",
     "test:unit": "nx run-many --target=test",
     "test:e2e": "nx run-many --target=e2e",
     "lint": "nx run-many --target=lint",
@@ -224,6 +225,7 @@
     "@storybook/jest": "^0.0.10",
     "@storybook/manager-webpack5": "~6.5.9",
     "@storybook/react": "~6.5.9",
+    "@storybook/test-runner": "0.6.4",
     "@storybook/testing-library": "^0.0.13",
     "@storybook/testing-react": "1.2.3",
     "@svgr/webpack": "^5.4.0",
@@ -349,6 +351,7 @@
     "redux-mock-store": "^1.5.4",
     "remark-external-links": "8.0.0",
     "remark-slug": "6.1.0",
+    "start-server-and-test": "^1.15.3",
     "storybook-dark-mode": "^1.1.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
