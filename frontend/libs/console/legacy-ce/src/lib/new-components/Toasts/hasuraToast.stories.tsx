@@ -1,7 +1,9 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import AceEditor from 'react-ace';
+import { within, userEvent } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
 
 import { hasuraToast } from '@/new-components/Toasts';
 import { Button } from '@/new-components/Button';
@@ -21,18 +23,16 @@ export default {
 
 export const Basic: ComponentStory<any> = () => {
   return (
-    <>
-      <Button
-        onClick={() =>
-          hasuraToast({
-            title: 'The toast title',
-            message: 'The toast message',
-          })
-        }
-      >
-        <span>Add toast!</span>
-      </Button>
-    </>
+    <Button
+      onClick={() =>
+        hasuraToast({
+          title: 'The toast title',
+          message: 'The toast message',
+        })
+      }
+    >
+      <span>Add toast!</span>
+    </Button>
   );
 };
 Basic.storyName = '🧰 Basic';
@@ -40,6 +40,11 @@ Basic.parameters = {
   docs: {
     source: { state: 'open' },
   },
+};
+Basic.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(canvas.getByRole('button'));
+  await expect(canvas.getByText('The toast title')).toBeInTheDocument();
 };
 
 export const VariantType: ComponentStory<any> = () => {

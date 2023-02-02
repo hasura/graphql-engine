@@ -10,8 +10,9 @@ export const ToastsHub = ({ className = '' }: { className?: string }) => {
       className={className}
       style={{
         position: 'fixed',
-        top: 10,
+        top: 12,
         right: 10,
+        zIndex: 9997,
       }}
       onMouseEnter={startPause}
       onMouseLeave={endPause}
