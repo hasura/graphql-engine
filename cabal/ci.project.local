@@ -4,7 +4,7 @@ reject-unconstrained-dependencies: all
 
 package *
   ghc-options:
-    -- We compile with package-level parallelism, so just use a small amount 
+    -- We compile with package-level parallelism, so just use a small amount
     -- of module-level parallelism for dependencies:
     -- TODO: tune me
     -j2
@@ -33,6 +33,9 @@ package aeson-ordered
   ghc-options: -j -Werror
 
 package api-tests
+  ghc-options: -j -Werror
+
+package arrows-extra
   ghc-options: -j -Werror
 
 package dc-api

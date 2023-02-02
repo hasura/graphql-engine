@@ -63,6 +63,9 @@ package aeson-ordered
 package api-tests
   ghc-options: -j -Werror
 
+package arrows-extra
+  ghc-options: -j -Werror
+
 package dc-api
   ghc-options: -j -Werror
 

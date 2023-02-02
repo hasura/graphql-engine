@@ -40,3 +40,4 @@ library
     BlockArguments
     FunctionalDependencies
     LambdaCase
+    NoImplicitPrelude
