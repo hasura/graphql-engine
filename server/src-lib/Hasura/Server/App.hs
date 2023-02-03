@@ -164,7 +164,7 @@ data HandlerCtx = HandlerCtx
     hcSourceIpAddress :: !Wai.IpAddress
   }
 
-type Handler m = ReaderT HandlerCtx (MetadataStorageT m)
+type Handler m = ReaderT HandlerCtx (ExceptT QErr m)
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
@@ -254,7 +254,7 @@ instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (Reade
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (MetadataStorageT m) where
+instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (ExceptT e m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
@@ -325,10 +325,10 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       runHandler ::
         MonadBaseControl IO m2 =>
         HandlerCtx ->
-        ReaderT HandlerCtx (MetadataStorageT m2) a2 ->
+        ReaderT HandlerCtx (ExceptT QErr m2) a2 ->
         m2 (Either QErr a2)
       runHandler handlerCtx handler =
-        runMetadataStorageT $ flip runReaderT handlerCtx $ runResourceLimits handlerLimit $ handler
+        runExceptT $ flip runReaderT handlerCtx $ runResourceLimits handlerLimit $ handler
 
       getInfo parsedRequest = do
         authenticationResp <- lift (resolveUserInfo (_lsLogger scLoggers) scManager headers scAuthMode parsedRequest)
@@ -420,11 +420,12 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
 
 v1QueryHandler ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
     Tracing.MonadTrace m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage m,
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m
@@ -479,10 +480,11 @@ v1QueryHandler query = do
 
 v1MetadataHandler ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     MonadReader HandlerCtx m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage m,
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadMetadataApiAuthorization m,
     MonadEventLogCleanup m
@@ -527,6 +529,7 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
 
 v2QueryHandler ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
     Tracing.MonadTrace m,
@@ -588,7 +591,7 @@ v1Alpha1GQHandler ::
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -634,7 +637,7 @@ v1GQHandler ::
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -651,7 +654,7 @@ v1GQRelayHandler ::
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -665,7 +668,7 @@ gqlExplainHandler ::
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m
   ) =>
   GE.GQLExplain ->
@@ -794,7 +797,7 @@ mkWaiApp ::
     Tracing.HasReporter m,
     GH.MonadExecuteQuery m,
     HasResourceLimits m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m
@@ -881,7 +884,7 @@ httpApp ::
     MonadQueryLog m,
     Tracing.HasReporter m,
     GH.MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorageQueryAPI m,
     HasResourceLimits m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
@@ -914,7 +917,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
   -- Health check endpoint with logs
   let healthzAction = do
         let errorMsg = "ERROR"
-        runMetadataStorageT checkMetadataStorageHealth >>= \case
+        lift checkMetadataStorageHealth >>= \case
           Left err -> do
             -- error running the health check
             logError err
@@ -947,7 +950,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
           E.MonadGQLExecutionCheck n,
           MonadQueryLog n,
           GH.MonadExecuteQuery n,
-          MonadMetadataStorage (MetadataStorageT n),
+          MonadMetadataStorage n,
           EB.MonadQueryTags n,
           HasResourceLimits n
         ) =>

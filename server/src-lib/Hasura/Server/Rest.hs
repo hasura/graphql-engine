@@ -98,7 +98,7 @@ runCustomEndpoint ::
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
     GH.MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>

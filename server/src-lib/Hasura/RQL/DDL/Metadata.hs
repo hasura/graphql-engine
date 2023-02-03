@@ -123,6 +123,7 @@ runClearMetadata ::
     MonadMetadataStorageQueryAPI m,
     MonadBaseControl IO m,
     MonadReader r m,
+    MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m
   ) =>
@@ -192,6 +193,7 @@ runReplaceMetadata ::
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
+    MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m
   ) =>
@@ -208,6 +210,7 @@ runReplaceMetadataV1 ::
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
+    MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m
   ) =>
@@ -224,6 +227,7 @@ runReplaceMetadataV2 ::
     MonadBaseControl IO m,
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
+    MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m
   ) =>
@@ -364,7 +368,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
               leftIfDifferent
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
               (OMap.toHashMap allNewCronTriggers)
-      dropFutureCronEvents $ MetadataCronTriggers $ Map.keys cronTriggersToBeDropped
+      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ Map.keys cronTriggersToBeDropped
       cronTriggers <- do
         -- traverse over the new cron triggers and check if any of them
         -- already exists as a cron trigger with "included_in_metadata: false"
@@ -749,14 +753,14 @@ purgeMetadataObj = \case
                 }
 
 runGetCatalogState ::
-  (MonadMetadataStorageQueryAPI m) => GetCatalogState -> m EncJSON
+  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => GetCatalogState -> m EncJSON
 runGetCatalogState _ =
-  encJFromJValue <$> fetchCatalogState
+  encJFromJValue <$> liftEitherM fetchCatalogState
 
 runSetCatalogState ::
-  (MonadMetadataStorageQueryAPI m) => SetCatalogState -> m EncJSON
+  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => SetCatalogState -> m EncJSON
 runSetCatalogState SetCatalogState {..} = do
-  updateCatalogState _scsType _scsState
+  liftEitherM $ updateCatalogState _scsType _scsState
   pure successMsg
 
 runSetMetricsConfig ::

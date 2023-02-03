@@ -163,7 +163,7 @@ import Text.Builder qualified as TB
 --   have an adequate buffer of cron events.
 runCronEventsGenerator ::
   ( MonadIO m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   L.Logger L.Hasura ->
   IO SchemaCache ->
@@ -179,8 +179,8 @@ runCronEventsGenerator logger getSC = do
       -- in the schema cache
       -- get cron trigger stats from db
       -- When shutdown is initiated, we stop generating new cron events
-      eitherRes <- runMetadataStorageT $ do
-        deprivedCronTriggerStats <- getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
+      eitherRes <- runExceptT $ do
+        deprivedCronTriggerStats <- liftEitherM $ getDeprivedCronTriggerStats $ Map.keys cronTriggersCache
         -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
         cronTriggersForHydrationWithStats <-
           catMaybes
@@ -204,7 +204,7 @@ runCronEventsGenerator logger getSC = do
             Just (cronTrigger, cronTriggerStat)
 
 insertCronEventsFor ::
-  (MonadMetadataStorage m) =>
+  (MonadMetadataStorage m, MonadError QErr m) =>
   [(CronTriggerInfo, CronTriggerStats)] ->
   m ()
 insertCronEventsFor cronTriggersWithStats = do
@@ -212,7 +212,7 @@ insertCronEventsFor cronTriggersWithStats = do
         generateCronEventsFrom (_ctsMaxScheduledTime stats) cti
   case scheduledEvents of
     [] -> pure ()
-    events -> insertCronEvents events
+    events -> liftEitherM $ insertCronEvents events
 
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo -> [CronEventSeed]
 generateCronEventsFrom startTime CronTriggerInfo {..} =
@@ -224,7 +224,7 @@ processCronEvents ::
   ( MonadIO m,
     MonadBaseControl IO m,
     Tracing.HasReporter m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
@@ -258,7 +258,7 @@ processCronEvents logger httpMgr prometheusMetrics cronEvents getSC lockedCronEv
                 ctiResponseTransform
             retryCtx = RetryContext tries ctiRetryConf
         finally <-
-          runMetadataStorageT $
+          runExceptT $
             flip runReaderT (logger, httpMgr) $
               processScheduledEvent
                 prometheusMetrics
@@ -277,7 +277,7 @@ processOneOffScheduledEvents ::
   ( MonadIO m,
     MonadBaseControl IO m,
     Tracing.HasReporter m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -298,7 +298,7 @@ processOneOffScheduledEvents
     -- graceful shutdown is initiated in midst of processing these events
     saveLockedEvents (map _ooseId oneOffEvents) lockedOneOffScheduledEvents
     for_ oneOffEvents $ \OneOffScheduledEvent {..} -> do
-      (either logInternalError pure) =<< runMetadataStorageT do
+      (either logInternalError pure) =<< runExceptT do
         webhookInfo <- resolveWebhook env _ooseWebhookConf
         headerInfo <- getHeaderInfosFromConf env _ooseHeaderConf
 
@@ -325,7 +325,7 @@ processScheduledTriggers ::
   ( MonadIO m,
     MonadBaseControl IO m,
     Tracing.HasReporter m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -338,9 +338,8 @@ processScheduledTriggers ::
 processScheduledTriggers env logger statsLogger httpMgr prometheusMetrics getSC LockedEventsCtx {..} = do
   return $
     Forever () $
-      const $ do
-        result <- runMetadataStorageT getScheduledEventsForDelivery
-        case result of
+      const do
+        getScheduledEventsForDelivery >>= \case
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
             logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
@@ -361,7 +360,8 @@ processScheduledEvent ::
     MonadIO m,
     MonadBaseControl IO m,
     Tracing.HasReporter m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    MonadError QErr m
   ) =>
   PrometheusMetrics ->
   ScheduledEventId ->
@@ -420,13 +420,14 @@ processScheduledEvent prometheusMetrics eventId eventHeaders retryCtx payload we
             L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode e)
 
             -- Set event state to Error
-            setScheduledEventOp eventId (SEOpStatus SESError) type'
+            liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESError) type'
   where
     traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) (sewpName payload)
 
 processError ::
   ( MonadIO m,
-    MonadMetadataStorage m
+    MonadMetadataStorage m,
+    MonadError QErr m
   ) =>
   ScheduledEventId ->
   RetryContext ->
@@ -448,11 +449,11 @@ processError eventId retryCtx decodedHeaders type' reqJson err = do
         HOther detail -> do
           let errMsg = (SB.fromLBS $ J.encode detail)
           mkInvocation eventId (Just 500) decodedHeaders errMsg [] reqJson
-  insertScheduledEventInvocation invocation type'
+  liftEitherM $ insertScheduledEventInvocation invocation type'
   retryOrMarkError eventId retryCtx err type'
 
 retryOrMarkError ::
-  (MonadIO m, MonadMetadataStorage m) =>
+  (MonadIO m, MonadMetadataStorage m, MonadError QErr m) =>
   ScheduledEventId ->
   RetryContext ->
   HTTPErr a ->
@@ -465,7 +466,7 @@ retryOrMarkError eventId retryCtx err type' = do
       triesExhausted = tries >= strcNumRetries retryConf
       noRetryHeader = isNothing mRetryHeaderSeconds
   if triesExhausted && noRetryHeader
-    then setScheduledEventOp eventId (SEOpStatus SESError) type'
+    then liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESError) type'
     else do
       currentTime <- liftIO getCurrentTime
       let delay =
@@ -475,7 +476,7 @@ retryOrMarkError eventId retryCtx err type' = do
               mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
-      setScheduledEventOp eventId (SEOpRetry retryTime) type'
+      liftEitherM $ setScheduledEventOp eventId (SEOpRetry retryTime) type'
 
 {- Note [Scheduled event lifecycle]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -510,7 +511,7 @@ and it can transition to other states in the following ways:
 -}
 
 processSuccess ::
-  (MonadMetadataStorage m) =>
+  (MonadMetadataStorage m, MonadError QErr m) =>
   ScheduledEventId ->
   [HeaderConf] ->
   ScheduledEventType ->
@@ -522,16 +523,16 @@ processSuccess eventId decodedHeaders type' reqBodyJson resp = do
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation eventId (Just respStatus) decodedHeaders respBody respHeaders reqBodyJson
-  insertScheduledEventInvocation invocation type'
-  setScheduledEventOp eventId (SEOpStatus SESDelivered) type'
+  liftEitherM $ insertScheduledEventInvocation invocation type'
+  liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESDelivered) type'
 
 processDead ::
-  (MonadMetadataStorage m) =>
+  (MonadMetadataStorage m, MonadError QErr m) =>
   ScheduledEventId ->
   ScheduledEventType ->
   m ()
 processDead eventId type' =
-  setScheduledEventOp eventId (SEOpStatus SESDead) type'
+  liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESDead) type'
 
 mkInvocation ::
   ScheduledEventId ->

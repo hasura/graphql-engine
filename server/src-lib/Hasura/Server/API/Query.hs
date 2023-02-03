@@ -176,9 +176,10 @@ $( concat
 
 runQuery ::
   ( MonadIO m,
+    MonadError QErr m,
     Tracing.MonadTrace m,
     MonadBaseControl IO m,
-    MonadMetadataStorage m,
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadQueryTags m,
     MonadEventLogCleanup m
@@ -204,7 +205,7 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
           then emptyMetadataDefaults
           else _sccMetadataDefaults serverConfigCtx
 
-  (metadata, currentResourceVersion) <- fetchMetadata
+  (metadata, currentResourceVersion) <- liftEitherM fetchMetadata
   result <-
     runReaderT (runQueryM env query) logger & \x -> do
       ((js, meta), rsc, ci) <-
@@ -212,8 +213,6 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
           & runMetadataT metadata metadataDefaults
           & runCacheRWT sc
           & peelRun runCtx
-          & runExceptT
-          & liftEitherM
       pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
@@ -224,9 +223,9 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
         case (_sccMaintenanceMode serverConfigCtx) of
           MaintenanceModeDisabled -> do
             -- set modified metadata in storage
-            newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
+            newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
-            notifySchemaCacheSync newResourceVersion instanceId invalidations
+            liftEitherM $ notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)
@@ -402,6 +401,7 @@ runQueryM ::
     MonadMetadataStorageQueryAPI m,
     MonadQueryTags m,
     MonadReader r m,
+    MonadError QErr m,
     Has (L.Logger L.Hasura) r,
     MonadEventLogCleanup m
   ) =>

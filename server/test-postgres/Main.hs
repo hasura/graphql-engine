@@ -18,10 +18,10 @@ import Hasura.App
   )
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
+import Hasura.Base.Error
 import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -93,9 +93,9 @@ main = do
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 
-            run :: MetadataStorageT (PGMetadataStorageAppT CacheBuild) a -> IO a
+            run :: ExceptT QErr (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
-              runMetadataStorageT
+              runExceptT
                 >>> flip runPGMetadataStorageAppT (pgPool, pgLogger)
                 >>> runCacheBuild cacheBuildParams
                 >>> runExceptT

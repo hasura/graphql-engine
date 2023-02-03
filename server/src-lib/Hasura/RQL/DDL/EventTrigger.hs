@@ -60,7 +60,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as L
-import Hasura.Metadata.Class (MetadataStorageT)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -198,11 +197,11 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ReaderT r m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
 
-instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataT m) where
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ExceptT e m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
 
-instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataStorageT m) where
+instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
 

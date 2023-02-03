@@ -7,7 +7,6 @@ import Data.Aeson.Ordered qualified as JO
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.SchemaCache
@@ -54,16 +53,6 @@ class Monad m => MonadGQLExecutionCheck m where
     SchemaCache ->
     m (Either QErr ())
 
-instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
-  checkGQLExecution ui det enableAL sc req requestId =
-    lift $ checkGQLExecution ui det enableAL sc req requestId
-
-  executeIntrospection userInfo introspectionQuery rolesDisabled =
-    lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
-
-  checkGQLBatchedReqs userInfo requestId reqs sc =
-    lift $ checkGQLBatchedReqs userInfo requestId reqs sc
-
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
@@ -74,7 +63,7 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
   checkGQLBatchedReqs userInfo requestId reqs sc =
     lift $ checkGQLBatchedReqs userInfo requestId reqs sc
 
-instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 
@@ -84,7 +73,7 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) w
   checkGQLBatchedReqs userInfo requestId reqs sc =
     lift $ checkGQLBatchedReqs userInfo requestId reqs sc
 
-instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m) where
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 

@@ -42,7 +42,7 @@ We can't support multiple async query fields of different kinds in a single subs
 -- See Note [Async action subscriptions]
 asyncActionSubscriptionsProcessor ::
   ( MonadIO m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   AsyncActionSubscriptionState ->
   m void

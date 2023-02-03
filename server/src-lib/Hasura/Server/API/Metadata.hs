@@ -377,9 +377,10 @@ instance FromJSON RQLMetadata where
 
 runMetadataQuery ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage m,
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     MonadEventLogCleanup m
   ) =>
@@ -393,7 +394,7 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
-  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
         RMV2 (RMV2ExportMetadata _) -> True
@@ -423,8 +424,6 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
       & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
       & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-      & runExceptT
-      & liftEitherM
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
     then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
@@ -436,7 +435,8 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
               "Attempting to put new metadata in storage"
         newResourceVersion <-
           Tracing.trace "setMetadata" $
-            setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+            liftEitherM $
+              setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
@@ -444,7 +444,8 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
 
         -- notify schema cache sync
         Tracing.trace "notifySchemaCacheSync" $
-          notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+          liftEitherM $
+            notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
         L.unLogger logger $
           SchemaSyncLog L.LevelInfo TTMetadataApi $
             String $
@@ -455,8 +456,6 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
             setMetadataResourceVersionInSchemaCache newResourceVersion
               & runCacheRWT modSchemaCache
               & peelRun (RunCtx userInfo httpManager serverConfigCtx)
-              & runExceptT
-              & liftEitherM
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -598,6 +597,7 @@ runMetadataQueryM ::
     HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
+    MonadError QErr m,
     MonadEventLogCleanup m
   ) =>
   Env.Environment ->
@@ -628,6 +628,7 @@ runMetadataQueryV1M ::
     HasServerConfigCtx m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
+    MonadError QErr m,
     MonadEventLogCleanup m
   ) =>
   Env.Environment ->
@@ -794,6 +795,7 @@ runMetadataQueryV2M ::
     MonadMetadataStorageQueryAPI m,
     MonadReader r m,
     Has (L.Logger L.Hasura) r,
+    MonadError QErr m,
     MonadEventLogCleanup m
   ) =>
   MetadataResourceVersion ->

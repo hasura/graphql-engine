@@ -43,7 +43,7 @@ import Network.HTTP.Types qualified as HTTP
 convertMutationAction ::
   ( MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -58,8 +58,7 @@ convertMutationAction env logger prometheusMetrics userInfo manager reqHeaders g
   AMSync s ->
     pure $ AEPSync $ resolveActionExecution env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
   AMAsync s ->
-    AEPAsyncMutation
-      <$> liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
+    AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
@@ -69,7 +68,7 @@ convertMutationSelectionSet ::
   ( Tracing.MonadTrace m,
     MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadGQLExecutionCheck m,
     MonadQueryTags m
   ) =>

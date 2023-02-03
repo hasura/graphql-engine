@@ -313,7 +313,7 @@ checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
 getResolvedExecPlan ::
   forall m.
   ( MonadError QErr m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadIO m,
     MonadBaseControl IO m,
     Tracing.MonadTrace m,

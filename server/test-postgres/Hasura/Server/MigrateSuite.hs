@@ -101,6 +101,7 @@ singleTransaction = id
 suite ::
   forall m.
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     HTTP.HasHttpManagerM m,
     HasServerConfigCtx m,

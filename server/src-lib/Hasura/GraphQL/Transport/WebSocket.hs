@@ -406,7 +406,7 @@ onStart ::
     Tracing.MonadTrace m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -1002,7 +1002,7 @@ onMessage ::
     Tracing.HasReporter m,
     MonadExecuteQuery m,
     MC.MonadBaseControl IO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>

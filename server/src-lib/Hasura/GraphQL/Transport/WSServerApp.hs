@@ -57,7 +57,7 @@ createWSServerApp ::
     MonadQueryLog m,
     Tracing.HasReporter m,
     MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>

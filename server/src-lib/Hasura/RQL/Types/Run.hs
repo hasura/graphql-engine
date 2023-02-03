@@ -8,7 +8,6 @@ module Hasura.RQL.Types.Run
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Hasura.Base.Error
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
@@ -24,21 +23,23 @@ data RunCtx = RunCtx
     _rcServerConfigCtx :: ServerConfigCtx
   }
 
-newtype RunT m a = RunT {unRunT :: ReaderT RunCtx (ExceptT QErr m) a}
+newtype RunT m a = RunT {unRunT :: ReaderT RunCtx m a}
   deriving
     ( Functor,
       Applicative,
       Monad,
-      MonadError QErr,
       MonadReader RunCtx,
+      MonadError e,
       MonadIO,
-      MonadMetadataStorage,
       Tracing.MonadTrace,
       MonadBase b,
-      MonadBaseControl b
+      MonadBaseControl b,
+      MonadMetadataStorage,
+      MonadMetadataStorageQueryAPI
     )
 
-instance (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI (RunT m)
+instance MonadTrans RunT where
+  lift = RunT . lift
 
 instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo
@@ -50,15 +51,15 @@ instance (Monad m) => HasServerConfigCtx (RunT m) where
   askServerConfigCtx = asks _rcServerConfigCtx
 
 instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
-  getPGSourceResolver = RunT . lift . lift $ getPGSourceResolver
-  getMSSQLSourceResolver = RunT . lift . lift $ getMSSQLSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (RunT m) where
-  runLogCleaner conf = RunT . lift . lift $ runLogCleaner conf
-  generateCleanupSchedules sInfo tName cConf = RunT . lift . lift $ generateCleanupSchedules sInfo tName cConf
+  runLogCleaner conf = lift $ runLogCleaner conf
+  generateCleanupSchedules sInfo tName cConf = lift $ generateCleanupSchedules sInfo tName cConf
 
 peelRun ::
   RunCtx ->
   RunT m a ->
-  ExceptT QErr m a
+  m a
 peelRun runCtx (RunT m) = runReaderT m runCtx

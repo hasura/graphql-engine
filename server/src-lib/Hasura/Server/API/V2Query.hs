@@ -104,6 +104,7 @@ instance FromJSON RQLQuery where
 runQuery ::
   ( MonadIO m,
     MonadBaseControl IO m,
+    MonadError QErr m,
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
@@ -121,7 +122,7 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+  (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" $ liftEitherM fetchMetadata
   result <-
     runQueryM env rqlQuery & \x -> do
       ((js, meta), rsc, ci) <-
@@ -130,8 +131,6 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
           & runMetadataT metadata (_sccMetadataDefaults serverConfigCtx)
           & runCacheRWT schemaCache
           & peelRun runCtx
-          & runExceptT
-          & liftEitherM
       pure (js, rsc, ci, meta)
   withReload currentResourceVersion result
   where
@@ -144,10 +143,12 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
             -- set modified metadata in storage
             newResourceVersion <-
               Tracing.trace "setMetadata" $
-                setMetadata currentResourceVersion updatedMetadata
+                liftEitherM $
+                  setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
             Tracing.trace "notifySchemaCacheSync" $
-              notifySchemaCacheSync newResourceVersion instanceId invalidations
+              liftEitherM $
+                notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)
