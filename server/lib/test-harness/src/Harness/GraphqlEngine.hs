@@ -300,7 +300,7 @@ startServerThread = do
             }
       )
   let server = Server {port = fromIntegral port, urlPrefix, thread}
-  Http.healthCheck (serverUrl server)
+  Http.healthCheck (serverUrl server <> "/healthz")
   pure server
 
 -------------------------------------------------------------------------------

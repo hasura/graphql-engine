@@ -147,6 +147,7 @@ library
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
     Test.Harness.Quoter.YamlSpec
+    Test.HealthCheckSpec
     Test.HelloWorldSpec
     Test.Mutations.Delete.AllSpec
     Test.Mutations.Delete.FieldSpec
