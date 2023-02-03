@@ -1140,6 +1140,7 @@ instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
 instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
   runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
   generateCleanupSchedules _ _ _ = pure $ Right ()
+  updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
 
 runInSeparateTx ::
   (MonadIO m) =>
