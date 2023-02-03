@@ -159,14 +159,10 @@ export function WorkflowProgress(props: WorkflowProgressProps) {
         );
       },
       error => {
-        programmaticallyTraceError(
-          new Error('failed subscribing to one click deployment status'),
-          {
-            errorMessage: error.message,
-            sourceError: error,
-          },
-          'error'
-        );
+        programmaticallyTraceError({
+          error: 'failed subscribing to one click deployment status',
+          cause: error,
+        });
       }
     );
     return () => {
