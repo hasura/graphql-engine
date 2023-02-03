@@ -28,7 +28,6 @@
   - [Selectability of tables](selectability-of-tables.md)
   - [Permission filter deduplication](permission-filter-deduplication.md)
   - [Todo: Common interface for eventing sub-system](todo-common-interface-for-eventing-subsystem.md)
-  - [Generic MetadataStorageT transformer](generic-metadatastoraget-transformer.md)
   - [Postgres scalars in action input arguments](postgres-scalars-in-action-input-arguments.md)
   - [Postgres scalars in custom types](postgres-scalars-in-custom-types.md)
   - [Cleanup for dropped triggers](cleanup-for-dropped-triggers.md)
