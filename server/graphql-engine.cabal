@@ -1168,7 +1168,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.Introspection
-    Hasura.GraphQL.Schema.RemoteTest
+    Hasura.GraphQL.Schema.RemoteSpec
     Hasura.Metadata.DTO.MetadataDTOSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.DDL.Webhook.TransformSpec

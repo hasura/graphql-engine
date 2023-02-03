@@ -27,8 +27,8 @@ spec = do
           expected = ParseError {pePath = [Key "dog", Key "log"], peMessage = errorMessage, peCode = ValidationFailed}
       runParse' parser `shouldBe` Left expected
 
-    xit "has multiple keys provisioned from a JSONPath" $ do
+    it "has multiple keys provisioned from a JSONPath" $ do
       let path :: JSONPath = [Key "hi", Index 1, Key "foo bar"]
           parser = withPath path (withKey (Key "first") (parseError errorMessage))
-          expected = ParseError {pePath = Key "first" : path, peMessage = errorMessage, peCode = ValidationFailed}
+          expected = ParseError {pePath = path <> [Key "first"], peMessage = errorMessage, peCode = ValidationFailed}
       runParse' parser `shouldBe` Left expected

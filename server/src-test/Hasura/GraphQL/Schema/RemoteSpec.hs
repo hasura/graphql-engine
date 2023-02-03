@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Hasura.GraphQL.Schema.RemoteTest (spec) where
+module Hasura.GraphQL.Schema.RemoteSpec (spec) where
 
 import Control.Lens (Prism', prism', to, (^..), _Right)
 import Control.Monad.Memoize
