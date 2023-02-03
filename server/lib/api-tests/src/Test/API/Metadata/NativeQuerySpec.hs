@@ -47,6 +47,12 @@ schema =
       { tableColumns =
           [ Schema.column "divided" Schema.TInt
           ]
+      },
+    (table "stuff")
+      { tableColumns =
+          [ Schema.column "thing" Schema.TInt,
+            Schema.column "date" Schema.TUTCTime
+          ]
       }
   ]
 
@@ -314,3 +320,86 @@ tests opts = do
         [yaml|
           []
         |]
+
+  describe "Validation fails on track a native query when query" do
+    it "has a syntax error" $
+      \testEnv -> do
+        let schemaName = Schema.getSchemaName testEnv
+        let spicyQuery :: Text
+            spicyQuery = "query bad"
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatus
+              400
+              testEnv
+              [yaml|
+                type: pg_track_native_query
+                args:
+                  type: query
+                  source: postgres
+                  root_field_name: divided_stuff
+                  code: *spicyQuery
+                  arguments:
+                    denominator: int
+                    target_date: date
+                  returns:
+                    name: already_tracked_return_type
+                    schema: *schemaName
+              |]
+          )
+          [yaml|
+              code: validation-failed
+              error: Failed to validate query
+              internal:
+                arguments: []
+                error:
+                  description: null
+                  exec_status: "FatalError"
+                  hint: null
+                  message: "syntax error at or near \"query\""
+                  status_code: "42601"
+                prepared: false
+                statement: "PREPARE _naqi_vali_divided_stuff AS query bad"
+              path: "$.args"
+          |]
+
+    it "refers to non existing table" $
+      \testEnv -> do
+        let schemaName = Schema.getSchemaName testEnv
+        let spicyQuery :: Text
+            spicyQuery = "SELECT thing / {{denominator}} AS divided FROM does_not_exist WHERE date = {{target_date}}"
+        shouldReturnYaml
+          opts
+          ( GraphqlEngine.postMetadataWithStatus
+              400
+              testEnv
+              [yaml|
+                type: pg_track_native_query
+                args:
+                  type: query
+                  source: postgres
+                  root_field_name: divided_stuff
+                  code: *spicyQuery
+                  arguments:
+                    denominator: int
+                    target_date: date
+                  returns:
+                    name: already_tracked_return_type
+                    schema: *schemaName
+              |]
+          )
+          [yaml|
+              code: validation-failed
+              error: Failed to validate query
+              internal:
+                arguments: []
+                error:
+                  description: null
+                  exec_status: "FatalError"
+                  hint: null
+                  message: "relation \"does_not_exist\" does not exist"
+                  status_code: "42P01"
+                prepared: false
+                statement: "PREPARE _naqi_vali_divided_stuff AS SELECT thing / $1 AS divided FROM does_not_exist WHERE date = $2"
+              path: "$.args"
+          |]

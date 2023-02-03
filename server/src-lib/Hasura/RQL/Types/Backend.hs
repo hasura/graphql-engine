@@ -2,13 +2,14 @@
 
 module Hasura.RQL.Types.Backend
   ( Backend (..),
-    Representable,
     SessionVarType,
     XDisable,
     XEnable,
     ComputedFieldReturnType (..),
     _ReturnsTable,
     SupportedNamingCase (..),
+    HasSourceConfiguration (..),
+    Representable,
   )
 where
 
@@ -27,12 +28,11 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
+import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
-
-type Representable a = (Show a, Hashable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -71,7 +71,8 @@ data SupportedNamingCase = OnlyHasuraCase | AllConventions
 -- type application or a 'Proxy' parameter to disambiguate between
 -- different backends at the call site.
 class
-  ( Representable (BasicOrderType b),
+  ( HasSourceConfiguration b,
+    Representable (BasicOrderType b),
     Representable (Column b),
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
@@ -85,7 +86,6 @@ class
     Representable (SQLExpression b),
     Representable (ScalarSelectionArguments b),
     Representable (ScalarType b),
-    Representable (SourceConnConfiguration b),
     Representable (XComputedField b),
     Representable (TableName b),
     Eq (RawFunctionInfo b),
@@ -105,13 +105,11 @@ class
     FromJSON (HealthCheckTest b),
     FromJSON (RawFunctionInfo b),
     FromJSON (ScalarType b),
-    FromJSON (SourceConnConfiguration b),
     FromJSON (TableName b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
     HasCodec (FunctionName b),
-    HasCodec (SourceConnConfiguration b),
     HasCodec (TableName b),
     ToJSON (BackendConfig b),
     ToJSON (Column b),
@@ -119,9 +117,7 @@ class
     ToJSON (FunctionArgument b),
     ToJSON (FunctionName b),
     ToJSON (ScalarType b),
-    ToJSON (SourceConfig b),
     ToJSON (TableName b),
-    ToJSON (SourceConnConfiguration b),
     ToJSON (ExtraTableMetadata b),
     ToJSON (SQLExpression b),
     ToJSON (ComputedFieldDefinition b),
@@ -153,7 +149,6 @@ class
     Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
-    Eq (SourceConfig b),
     -- Extension constraints.
     Eq (XNodesAgg b),
     Show (XNodesAgg b),
@@ -178,13 +173,6 @@ class
 
   -- | Runtime backend info derived from (possibly enriched) BackendConfig and stored in SchemaCache
   type BackendInfo b :: Type
-
-  -- | User facing connection configuration for a database.
-  type SourceConnConfiguration b :: Type
-
-  -- | Internal connection configuration for a database - connection string,
-  -- connection pool etc
-  type SourceConfig b :: Type
 
   -- Fully qualified name of a table
   type TableName b :: Type
@@ -298,7 +286,7 @@ class
 
   type BackendInsert b = Const Void
 
-  -- | Intermediate representation of Native Queries
+  -- | Intermediate representation of Native Queries.
   -- The default implementation makes native queries uninstantiable.
   --
   -- It is parameterised over the type of fields, which changes during the IR

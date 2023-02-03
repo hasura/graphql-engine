@@ -183,6 +183,59 @@ tests opts = do
 
       actual `shouldBe` expected
 
+    it "Runs a simple query that takes no parameters but ends with a comment" $ \testEnvironment -> do
+      let spicyQuery :: Text
+          spicyQuery = "SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t(\"one\", \"two\") -- my query"
+
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: hello_comment_function
+                code: *spicyQuery
+                returns:
+                  name: hello_world_table
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let expected =
+            [yaml|
+                data:
+                  hello_comment_function:
+                    - one: "hello"
+                      two: "world"
+                    - one: "welcome"
+                      two: "friend"
+              |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                hello_comment_function {
+                  one
+                  two
+                }
+              }
+           |]
+
+      actual `shouldBe` expected
+
     it "Runs a simple query that takes one parameter and uses it multiple times" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
@@ -387,7 +440,7 @@ tests opts = do
           expected =
             [yaml|
                 data:
-                  first: 
+                  first:
                     - excerpt: "I like to eat dog food I am a dogs..."
                   second:
                     - excerpt: "I like to eat..."

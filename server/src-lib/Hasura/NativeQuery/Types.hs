@@ -6,7 +6,7 @@
 -- are free to provide their own as needed.
 module Hasura.NativeQuery.Types
   ( NativeQueryMetadata (..),
-    NativeQueryParseError (..),
+    NativeQueryError (..),
     BackendTrackNativeQuery (..),
   )
 where
@@ -15,11 +15,11 @@ import Autodocodec
 import Data.Aeson
 import Data.Kind
 import Data.Text.Extended (ToTxt)
+import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Backend
-
-type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
 type APIType a = (ToJSON a, FromJSON a)
 
@@ -65,9 +65,14 @@ class
   nativeQueryInfoName = absurd
 
   -- | Projection function, producing a 'NativeQueryInfo b' from a 'TrackNativeQuery b'.
-  nativeQueryTrackToInfo :: TrackNativeQuery b -> Either NativeQueryParseError (NativeQueryInfo b)
-  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => TrackNativeQuery b -> Either NativeQueryParseError (NativeQueryInfo b)
-  nativeQueryTrackToInfo = absurd
+  nativeQueryTrackToInfo :: SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
+  default nativeQueryTrackToInfo :: (TrackNativeQuery b ~ Void) => SourceConnConfiguration b -> TrackNativeQuery b -> ExceptT NativeQueryError IO (NativeQueryInfo b)
+  nativeQueryTrackToInfo _ = absurd
+
+  -- | Validate the native query against the database.
+  validateNativeQueryAgainstSource :: (MonadIO m, MonadError NativeQueryError m) => SourceConnConfiguration b -> NativeQueryInfo b -> m ()
+  default validateNativeQueryAgainstSource :: (NativeQueryInfo b ~ Void) => SourceConnConfiguration b -> NativeQueryInfo b -> m ()
+  validateNativeQueryAgainstSource _ = absurd
 
 -- | Our API endpoint solution wraps all request payload types in 'AnyBackend'
 -- for its multi-backend support, but type families must be fully applied to
@@ -81,4 +86,6 @@ deriving newtype instance NativeQueryMetadata b => FromJSON (BackendTrackNativeQ
 
 -- Things that might go wrong when converting a Native Query metadata request
 -- into a valid metadata item (such as failure to interpolate the query)
-newtype NativeQueryParseError = NativeQueryParseError Text
+data NativeQueryError
+  = NativeQueryParseError Text
+  | NativeQueryValidationError QErr

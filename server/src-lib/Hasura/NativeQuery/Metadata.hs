@@ -182,16 +182,27 @@ data TrackNativeQueryImpl (b :: BackendType) = TrackNativeQueryImpl
   }
 
 -- | Default implementation of the method 'nativeQueryTrackToInfo'.
-defaultNativeQueryTrackToInfo :: TrackNativeQueryImpl b -> Either NativeQueryParseError (NativeQueryInfoImpl b)
-defaultNativeQueryTrackToInfo TrackNativeQueryImpl {..} = do
-  nqiiCode <- mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
+defaultNativeQueryTrackToInfo ::
+  forall b m.
+  ( MonadIO m,
+    MonadError NativeQueryError m,
+    NativeQueryMetadata b,
+    NativeQueryInfo b ~ NativeQueryInfoImpl b
+  ) =>
+  SourceConnConfiguration b ->
+  TrackNativeQueryImpl b ->
+  m (NativeQueryInfoImpl b)
+defaultNativeQueryTrackToInfo sourceConnConfig TrackNativeQueryImpl {..} = do
+  nqiiCode <- liftEither $ mapLeft NativeQueryParseError (parseInterpolatedQuery tnqCode)
+  let nqiiRootFieldName = tnqRootFieldName
+      nqiiReturns = tnqReturns
+      nqiiArguments = tnqArguments
+      nqiiDescription = tnqDescription
+      nqInfoImpl = NativeQueryInfoImpl {..}
 
-  pure $ NativeQueryInfoImpl {..}
-  where
-    nqiiRootFieldName = tnqRootFieldName
-    nqiiReturns = tnqReturns
-    nqiiArguments = tnqArguments
-    nqiiDescription = tnqDescription
+  validateNativeQueryAgainstSource @b sourceConnConfig nqInfoImpl
+
+  pure nqInfoImpl
 
 instance (Backend b, HasCodec (ScalarType b)) => HasCodec (TrackNativeQueryImpl b) where
   codec =

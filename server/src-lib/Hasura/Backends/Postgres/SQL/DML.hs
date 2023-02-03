@@ -1186,6 +1186,8 @@ instance ToSQL TopLevelCTE where
             IIVariable v -> toSQL v
         )
         parts
+        -- if the user has a comment on the last line, this will make sure it doesn't interrupt the rest of the query
+        <> "\n"
 
 -- | A @SELECT@ statement with Common Table Expressions.
 --   <https://www.postgresql.org/docs/current/queries-with.html>

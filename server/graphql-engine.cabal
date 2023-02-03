@@ -602,6 +602,7 @@ library
                      , Hasura.Backends.Postgres.Instances.API
                      , Hasura.Backends.Postgres.Instances.Execute
                      , Hasura.Backends.Postgres.Instances.Metadata
+                     , Hasura.Backends.Postgres.Instances.NativeQueries
                      , Hasura.Backends.Postgres.Instances.PingSource
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.SchemaCache
@@ -807,6 +808,7 @@ library
                      , Hasura.RQL.Types.SchemaCache.Instances
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
+                     , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
