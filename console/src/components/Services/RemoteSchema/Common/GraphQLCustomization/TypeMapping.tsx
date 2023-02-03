@@ -31,7 +31,7 @@ const SelectOne = ({
     <option value="" className="text-base">
       Select Type ...
     </option>
-    {options.map((op, i) => (
+    {[...options].sort().map((op, i) => (
       <option value={op} key={i}>
         {op}
       </option>
