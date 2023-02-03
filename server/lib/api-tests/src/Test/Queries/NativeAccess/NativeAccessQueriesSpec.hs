@@ -7,6 +7,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Calendar.OrdinalDate
 import Data.Time.Clock
+import Database.PG.Query qualified as PG
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -179,5 +180,281 @@ tests opts = do
                 }
               }
            |]
+
+      actual `shouldBe` expected
+
+    it "Runs a simple query that takes one parameter and uses it multiple times" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let spicyQuery :: Text
+          spicyQuery =
+            [PG.sql| select
+                            id,
+                            title,
+                            (substring(content, 1, {{length}}) || (case when length(content) < {{length}} then '' else '...' end)) as excerpt,
+                            date
+                          from article
+                      |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: article_with_excerpt
+                code: *spicyQuery
+                arguments:
+                  length: int
+                returns:
+                  name: article_excerpt
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                article_with_excerpt(args: { length: "34" }) {
+                  id
+                  title
+                  date
+                  excerpt
+                }
+              }
+           |]
+
+          expected =
+            [yaml|
+                data:
+                  article_with_excerpt:
+                    - id: 1
+                      title: "Dogs"
+                      date: "2000-01-01T00:00:00"
+                      excerpt: "I like to eat dog food I am a dogs..."
+              |]
+
+      actual `shouldBe` expected
+
+    it "Uses two queries with the same argument names and ensure they don't mess with one another" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let spicyQuery :: Text
+          spicyQuery =
+            [PG.sql| select
+                            id,
+                            title,
+                            (substring(content, 1, {{length}}) || (case when length(content) < {{length}} then '' else '...' end)) as excerpt,
+                            date
+                          from article
+                      |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: article_with_excerpt_1
+                code: *spicyQuery
+                arguments:
+                  length: int
+                returns:
+                  name: article_excerpt
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: article_with_excerpt_2
+                code: *spicyQuery
+                arguments:
+                  length: int
+                returns:
+                  name: article_excerpt
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                article_with_excerpt_1(args: { length: "34" }) {
+                  excerpt
+                }
+                article_with_excerpt_2(args: { length: "13" }) {
+                  excerpt
+                }
+              }
+           |]
+
+          expected =
+            [yaml|
+                data:
+                  article_with_excerpt_1: 
+                    - excerpt: "I like to eat dog food I am a dogs..."
+                  article_with_excerpt_2:
+                    - excerpt: "I like to eat..."
+              |]
+
+      actual `shouldBe` expected
+
+    it "Uses a one parameter query and uses it multiple times" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let spicyQuery :: Text
+          spicyQuery =
+            [PG.sql| select
+                            id,
+                            title,
+                            (substring(content, 1, {{length}}) || (case when length(content) < {{length}} then '' else '...' end)) as excerpt,
+                            date
+                          from article
+                      |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: article_with_excerpt
+                code: *spicyQuery
+                arguments:
+                  length: int
+                returns:
+                  name: article_excerpt
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphql
+              testEnvironment
+              [graphql|
+              query {
+                first: article_with_excerpt(args: { length: "34" }) {
+                  excerpt
+                }
+                second: article_with_excerpt(args: { length: "13" }) {
+                  excerpt
+                }
+              }
+           |]
+
+          expected =
+            [yaml|
+                data:
+                  first: 
+                    - excerpt: "I like to eat dog food I am a dogs..."
+                  second:
+                    - excerpt: "I like to eat..."
+              |]
+
+      actual `shouldBe` expected
+
+    it "Uses a one parameter query, passing it a GraphQL variable" $ \testEnvironment -> do
+      let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          source = BackendType.backendSourceName backendTypeMetadata
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let spicyQuery :: Text
+          spicyQuery =
+            [PG.sql| select
+                            id,
+                            title,
+                            (substring(content, 1, {{length}}) || (case when length(content) < {{length}} then '' else '...' end)) as excerpt,
+                            date
+                          from article
+                      |]
+
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postMetadata
+            testEnvironment
+            [yaml|
+              type: pg_track_native_query
+              args:
+                type: query
+                source: *source
+                root_field_name: article_with_excerpt
+                code: *spicyQuery
+                arguments:
+                  length: int
+                returns:
+                  name: article_excerpt
+                  schema: *schemaName
+            |]
+        )
+        [yaml|
+          message: success
+        |]
+
+      let variables =
+            [yaml|
+              length: "34"
+            |]
+
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithVariables
+              testEnvironment
+              [graphql|
+                query MyQuery($length: int!) {
+                  article_with_excerpt(args: { length: $length }) {
+                    excerpt
+                  }
+                }
+             |]
+              variables
+
+          expected =
+            [yaml|
+                data:
+                  article_with_excerpt:
+                    - excerpt: "I like to eat dog food I am a dogs..."
+              |]
 
       actual `shouldBe` expected

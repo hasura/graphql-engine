@@ -82,7 +82,6 @@ import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.NativeQuery.IR (NativeQueryImpl (..))
-import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
@@ -172,15 +171,12 @@ processSelectParams
         FromNativeQuery nq -> do
           -- we are going to cram our SQL in a CTE, and this is what we will call it
           let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
-              -- absolutely just smash a load of nonsense together to make the
-              -- types work
-              formattedQuery = showInterpolatedQuery (nqInterpolatedQuery nq)
 
           -- emit the query itself to the Writer
           tell $
             mempty
               { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HM.singleton cteName (S.RawQuery formattedQuery))
+                  CustomSQLCTEs (HM.singleton cteName (nqInterpolatedQuery nq))
               }
 
           pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing

@@ -29,7 +29,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value (UnpreparedValue, openValueOrigin)
+import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter), openValueOrigin)
 import Hasura.RQL.Types.Backend
   ( Backend (NativeQuery, ScalarType),
   )
@@ -73,8 +73,19 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
   tableArgsParser <- lift $ tableArguments @b @r @m @n tableInfo
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
 
-  -- for now, let's get the old queries working by flattening the SQL again
-  let interpolatedQuery = InterpolatedQuery [IIText (ppInterpolatedQuery nqiiCode)]
+  let interpolatedQuery nqArgs =
+        InterpolatedQuery $
+          (fmap . fmap)
+            ( \var -> case HM.lookup var nqArgs of
+                Just arg -> UVParameter Nothing arg
+                Nothing ->
+                  -- the `nativeQueryArgsParser` will already have checked
+                  -- we have all the args the query needs so this _should
+                  -- not_ happen
+                  error $ "No native query arg passed for " <> show var
+            )
+            (getInterpolatedQuery nqiiCode)
+
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
       P.subselection fieldName description ((,) <$> tableArgsParser <*> nativeQueryArgsParser) selectionSetParser
@@ -87,7 +98,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
                     NativeQueryImpl
                       { nqRootFieldName = nqiiRootFieldName,
                         nqArgs,
-                        nqInterpolatedQuery = interpolatedQuery
+                        nqInterpolatedQuery = interpolatedQuery nqArgs
                       },
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,

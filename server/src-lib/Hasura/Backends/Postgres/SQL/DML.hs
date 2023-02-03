@@ -31,7 +31,6 @@ module Hasura.Backends.Postgres.SQL.DML
     OrderType (OTAsc, OTDesc),
     QIdentifier (QIdentifier),
     Qual (QualTable, QualVar, QualifiedIdentifier),
-    RawQuery (..),
     RetExp (RetExp),
     SQLConflict (..),
     SQLConflictTarget (SQLColumn, SQLConstraint),
@@ -1171,7 +1170,7 @@ data TopLevelCTE
   | CTEInsert SQLInsert
   | CTEUpdate SQLUpdate
   | CTEDelete SQLDelete
-  | CTEUnsafeRawSQL RawQuery
+  | CTEUnsafeRawSQL (InterpolatedQuery SQLExp)
   deriving (Show, Eq)
 
 instance ToSQL TopLevelCTE where
@@ -1180,7 +1179,13 @@ instance ToSQL TopLevelCTE where
     CTEInsert q -> toSQL q
     CTEUpdate q -> toSQL q
     CTEDelete q -> toSQL q
-    CTEUnsafeRawSQL (RawQuery q) -> TB.text q
+    CTEUnsafeRawSQL (InterpolatedQuery parts) ->
+      foldMap
+        ( \case
+            IIText t -> TB.text t
+            IIVariable v -> toSQL v
+        )
+        parts
 
 -- | A @SELECT@ statement with Common Table Expressions.
 --   <https://www.postgresql.org/docs/current/queries-with.html>

@@ -137,7 +137,7 @@ pgDBQueryPlan ::
   Maybe G.Name ->
   m (DBStepInfo ('Postgres pgKind))
 pgDBQueryPlan userInfo _env sourceName sourceConfig qrf reqHeaders operationName = do
-  (preparedQuery, PlanningSt _ _ planVals) <-
+  (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
 
   queryTagsComment <- ask
@@ -279,7 +279,7 @@ convertFunction ::
 convertFunction userInfo jsonAggSelect unpreparedQuery = do
   queryTags <- ask
   -- Transform the RQL AST into a prepared SQL query
-  (preparedQuery, PlanningSt _ _ planVals) <-
+  (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
     flip runStateT initPlanningSt $
       traverse (prepareWithPlan userInfo) unpreparedQuery
   let queryResultFn =

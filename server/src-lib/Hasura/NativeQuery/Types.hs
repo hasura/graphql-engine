@@ -11,7 +11,7 @@ module Hasura.NativeQuery.Types
   )
 where
 
-import Autodocodec (HasCodec)
+import Autodocodec
 import Data.Aeson
 import Data.Kind
 import Data.Text.Extended (ToTxt)
