@@ -19,14 +19,14 @@ module Hasura.NativeQuery.API
   )
 where
 
-import Control.Lens ((^?))
+import Control.Lens (preview, (^?))
 import Data.Aeson
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.RQL.Types.Common (SourceName, successMsg)
+import Hasura.RQL.Types.Common (SourceName, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
@@ -94,10 +94,17 @@ runTrackNativeQuery ::
 runTrackNativeQuery (BackendTrackNativeQuery trackNativeQueryRequest) = do
   throwIfFeatureDisabled
 
-  (metadata :: NativeQueryInfo b) <-
-    case nativeQueryTrackToInfo @b trackNativeQueryRequest of
+  sourceConnConfig <-
+    maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
+      . preview (metaSources . ix source . toSourceMetadata @b . smConfiguration)
+      =<< getMetadata
+
+  (metadata :: NativeQueryInfo b) <- do
+    r <- liftIO $ runExceptT $ nativeQueryTrackToInfo @b sourceConnConfig trackNativeQueryRequest
+    case r of
       Right nq -> pure nq
       Left (NativeQueryParseError e) -> throw400 ParseFailed e
+      Left (NativeQueryValidationError e) -> throwError e
 
   let fieldName = nativeQueryInfoName @b metadata
       metadataObj =

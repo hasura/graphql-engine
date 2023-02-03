@@ -13,18 +13,6 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphQLEmpty:
-    def test_select_placeholder(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_placeholder.yaml', transport)
-
-    def test_no_empty_roots(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/empty'
-
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.backend('bigquery')

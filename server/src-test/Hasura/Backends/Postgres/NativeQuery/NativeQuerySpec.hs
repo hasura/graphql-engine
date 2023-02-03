@@ -13,7 +13,7 @@ import Prelude
 
 spec :: Spec
 spec = do
-  describe "Parses RawQuery into InterpolatedQuery" do
+  describe "Parses raw query into InterpolatedQuery" do
     it "Parses SQL with no parameters in it" $ do
       let rawSQL = "SELECT * FROM dogs"
       parseInterpolatedQuery rawSQL `shouldBe` Right (InterpolatedQuery [IIText "SELECT * FROM dogs"])

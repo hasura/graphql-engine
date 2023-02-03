@@ -20,8 +20,6 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'BigQuery where
   type BackendConfig 'BigQuery = ()
   type BackendInfo 'BigQuery = ()
-  type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
-  type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type TableName 'BigQuery = BigQuery.TableName
   type FunctionName 'BigQuery = BigQuery.FunctionName
   type RawFunctionInfo 'BigQuery = BigQuery.RestRoutine
@@ -116,5 +114,9 @@ instance Backend 'BigQuery where
     pure ()
 
   defaultTriggerOnReplication = Nothing
+
+instance HasSourceConfiguration 'BigQuery where
+  type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
+  type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
 
 instance NativeQueryMetadata 'BigQuery

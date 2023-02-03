@@ -193,21 +193,52 @@ class Monad m => MonadEventLogCleanup m where
   generateCleanupSchedules ::
     AB.AnyBackend SourceInfo -> TriggerName -> AutoTriggerLogCleanupConfig -> m (Either QErr ())
 
+  -- | `updateTriggerCleanupSchedules` is primarily used to update the
+  --    cleanup schedules associated with an event trigger in case the cleanup
+  --    config has changed while replacing the metadata.
+  --
+  --    In case,
+  --    i. a source has been dropped -
+  --           We don't need to clear the cleanup schedules
+  --           because the event log cleanup table is dropped as part
+  --           of the post drop source hook.
+  --    ii. a table or an event trigger has been dropped/updated -
+  --           Older cleanup events will be deleted first and in case of
+  --           an update, new cleanup events will be generated and inserted
+  --           into the table.
+  --    iii. a new event trigger with cleanup config has been added -
+  --             Generate the cleanup events and insert it.
+  --    iv. a new source has been added -
+  --           Generate the cleanup events and insert it.
+  --    v. the cron schedule for event trigger cleanup config has changed -
+  --           Delete cleanup events with older cron schedule and generate
+  --           cleanup events with new cron schedule.
+  updateTriggerCleanupSchedules ::
+    L.Logger L.Hasura ->
+    InsOrdHashMap SourceName BackendSourceMetadata ->
+    InsOrdHashMap SourceName BackendSourceMetadata ->
+    SchemaCache ->
+    m (Either QErr ())
+
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ReaderT r m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (ExceptT e m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (MetadataT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (TraceT m) where
   runLogCleaner conf = lift $ runLogCleaner conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
+  updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 resolveEventTriggerQuery ::
   forall b m.
