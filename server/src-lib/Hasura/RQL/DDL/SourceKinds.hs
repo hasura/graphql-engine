@@ -73,10 +73,11 @@ instance ToJSON SourceKindInfo where
         "builtin" .= _skiBuiltin,
         "available" .= _skiAvailable
       ]
-        ++ ["display_name" .= _skiDisplayName | not (nullishT _skiDisplayName)]
-        ++ ["release_name" .= _skiReleaseName | not (nullishT _skiReleaseName)]
+        ++ ["display_name" .= _skiDisplayName | has _skiDisplayName]
+        ++ ["release_name" .= _skiReleaseName | has _skiReleaseName]
     where
-      nullishT x = isNothing x || x == Just ""
+      has :: Maybe Text -> Bool
+      has x = not $ isNothing x || x == Just ""
 
 data SourceType = Builtin | Agent
 
