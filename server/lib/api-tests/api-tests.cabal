@@ -163,6 +163,7 @@ library
     Test.Queries.AggregationSpec
     Test.Queries.CustomFunctions.PortedSpec
     Test.Queries.DistinctSpec
+    Test.Queries.Errors.EmptyRootsAreNotAvailableSpec
     Test.Queries.Errors.InvalidQuerySpec
     Test.Queries.Errors.MissingTableSpec
     Test.Queries.Errors.NoQueriesAvailableSpec
