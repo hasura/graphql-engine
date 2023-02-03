@@ -14,7 +14,7 @@ class NodeGraphQL:
     def start(self):
         self.proc = subprocess.Popen(self.cmd, env={**os.environ, **self.env, 'PORT': str(self.port)})
         try:
-            ports.wait_for_port(self.port, timeout = 3)
+            ports.wait_for_port(self.port, timeout = 30)
         except:
             self.proc.kill()
             self.proc = None
