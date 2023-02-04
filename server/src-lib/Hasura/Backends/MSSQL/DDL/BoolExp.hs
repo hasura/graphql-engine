@@ -114,5 +114,5 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
               <> ty <<> "; this operator works only on columns of type "
               <> T.intercalate "/" (map dquote expTys)
 
-        parseVal :: (FromJSON a) => m a
+        parseVal :: (J.FromJSON a) => m a
         parseVal = decodeValue val
