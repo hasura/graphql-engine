@@ -1,4 +1,4 @@
-import type { ServerConfig } from '../../../../../../src/hooks/useServerConfig';
+import type { ServerConfig } from '@hasura/console-legacy-ce';
 
 export const config: ServerConfig = {
   version: 'v2.8.1',

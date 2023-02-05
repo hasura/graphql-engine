@@ -3,24 +3,41 @@ import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
 
 import * as customTasks from './src/support/tasks';
 
+type ConfigOptions = Parameters<typeof defineConfig>[0];
+
 const nxConfig = nxE2EPreset(__dirname);
 
-export default defineConfig({
-  env: {
-    TEST_MODE: 'parallel',
-    MIGRATE_URL: 'http://localhost:9693/apis/migrate',
-  },
-  viewportWidth: 1280,
-  viewportHeight: 720,
+interface MyConfigOptions extends ConfigOptions {
+  useRelativeSnapshots?: boolean;
+}
+
+const myDefineConfig = (config: MyConfigOptions) => defineConfig(config);
+export default myDefineConfig({
+  viewportWidth: 1440,
+  viewportHeight: 900,
+
   chromeWebSecurity: false,
-  video: false,
-  projectId: '5yiuic',
   numTestsKeptInMemory: 10,
+
+  retries: {
+    openMode: 0,
+    // Allows for one automatic retry per test
+    // see: https://docs.cypress.io/guides/guides/test-retries#How-It-Works
+    runMode: 1,
+  },
+
+  projectId: '5yiuic',
+
   e2e: {
     ...nxConfig,
 
-    // We've imported your old cypress plugins here.
-    // You may want to clean this up later by importing these.
+    video: false,
+    baseUrl: 'http://localhost:4200',
+    specPattern: [
+      'src/e2e/**/*test.{js,jsx,ts,tsx}',
+      'src/support/**/*unit.test.{js,ts}',
+    ],
+
     setupNodeEvents(on, config) {
       on('task', {
         ...customTasks,
@@ -28,10 +45,7 @@ export default defineConfig({
 
       return config;
     },
-    baseUrl: 'http://localhost:3000',
-    specPattern: [
-      'src/e2e/**/*test.{js,jsx,ts,tsx}',
-      'src/support/**/*unit.test.{js,ts}',
-    ],
   },
+
+  useRelativeSnapshots: true,
 });
