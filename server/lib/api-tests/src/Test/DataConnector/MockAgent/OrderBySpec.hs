@@ -1,13 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Query Tests for Data Connector Backend using a Mock Agent
-module Test.DataConnector.MockAgent.BasicQuerySpec (spec) where
+module Test.DataConnector.MockAgent.OrderBySpec (spec) where
 
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
-import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
@@ -20,6 +18,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
@@ -39,9 +38,6 @@ spec =
 
 --------------------------------------------------------------------------------
 
-testRoleName :: ByteString
-testRoleName = "test-role"
-
 sourceMetadata :: Aeson.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
@@ -51,76 +47,49 @@ sourceMetadata =
         kind: *backendType
         tables:
           - table: [Album]
-            configuration:
-              custom_root_fields:
-                select: albums
-                select_by_pk: albums_by_pk
-              column_config:
-                AlbumId:
-                  custom_name: id
-                Title:
-                  custom_name: title
-                ArtistId:
-                  custom_name: artist_id
             object_relationships:
-              - name: artist
+              - name: Artist
                 using:
                   manual_configuration:
                     remote_table: [Artist]
                     column_mapping:
                       ArtistId: ArtistId
           - table: [Artist]
-            configuration:
-              custom_root_fields:
-                select: artists
-                select_by_pk: artists_by_pk
-              column_config:
-                ArtistId:
-                  custom_name: id
-                Name:
-                  custom_name: name
             array_relationships:
-              - name: albums
+              - name: Albums
                 using:
                   manual_configuration:
                     remote_table: [Album]
                     column_mapping:
                       ArtistId: ArtistId
-          - table: [Employee]
-          - table: [Customer]
-            select_permissions:
-              - role: *testRoleName
-                permission:
-                  columns:
-                    - CustomerId
-                  filter:
-                    _exists:
-                      _table: [Employee]
-                      _where:
-                        EmployeeId:
-                          _eq: X-Hasura-EmployeeId
         configuration: {}
       |]
 
 --------------------------------------------------------------------------------
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Basic Tests" $ do
-  mockAgentGraphqlTest "works with simple object query" $ \performGraphqlRequest -> do
+tests _opts = describe "Order By Tests" $ do
+  mockAgentGraphqlTest "can order by column" $ \performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
             query getAlbum {
-              albums(limit: 1) {
-                id
-                title
+              Album(limit: 3, order_by: {AlbumId: asc}) {
+                AlbumId
+                Title
               }
             }
           |]
     let queryResponse =
           rowsResponse
-            [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+            [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
+                (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+              ],
+              [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
+                (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+              ],
+              [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
+                (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
               ]
             ]
     let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
@@ -130,9 +99,13 @@ tests _opts = describe "Basic Tests" $ do
     _mrrResponse
       `shouldBeYaml` [yaml|
         data:
-          albums:
-            - id: 1
-              title: For Those About To Rock We Salute You
+          Album:
+            - AlbumId: 1
+              Title: For Those About To Rock We Salute You
+            - AlbumId: 2
+              Title: Balls to the Wall
+            - AlbumId: 3
+              Title: Restless and Wild
       |]
 
     _mrrRecordedRequest
@@ -146,39 +119,32 @@ tests _opts = describe "Basic Tests" $ do
                     { _qFields =
                         Just $
                           HashMap.fromList
-                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
+                            [ (API.FieldName "AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                              (API.FieldName "Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                             ],
                       _qAggregates = Nothing,
-                      _qLimit = Just 1,
+                      _qLimit = Just 3,
                       _qOffset = Nothing,
                       _qWhere = Nothing,
-                      _qOrderBy = Nothing
+                      _qOrderBy = Just (API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| []))
                     }
               }
         )
 
-  mockAgentGraphqlTest "works with an exists-based permissions filter" $ \performGraphqlRequest -> do
-    let headers =
-          [ ("X-Hasura-Role", testRoleName),
-            ("X-Hasura-EmployeeId", "1")
-          ]
+  mockAgentGraphqlTest "can order by aggregates" $ \performGraphqlRequest -> do
+    let headers = []
     let graphqlRequest =
           [graphql|
-            query getCustomers {
-              Customer {
-                CustomerId
+            query getArtists {
+              Artist(order_by: {Albums_aggregate: {count: asc, max: {AlbumId: asc}}}, limit: 2) {
+                Name
               }
             }
           |]
     let queryResponse =
           rowsResponse
-            [ [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
-              ],
-              [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
-              ],
-              [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
-              ]
+            [ [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Milton Nascimento & Bebeto")],
+              [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Azymuth")]
             ]
     let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
 
@@ -187,36 +153,64 @@ tests _opts = describe "Basic Tests" $ do
     _mrrResponse
       `shouldBeYaml` [yaml|
         data:
-          Customer:
-            - CustomerId: 1
-            - CustomerId: 2
-            - CustomerId: 3
+          Artist:
+            - Name: Milton Nascimento & Bebeto
+            - Name: Azymuth
       |]
 
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
             API.QueryRequest
-              { _qrTable = API.TableName ("Customer" :| []),
-                _qrTableRelationships = [],
+              { _qrTable = API.TableName ("Artist" :| []),
+                _qrTableRelationships =
+                  [ API.TableRelationships
+                      { _trSourceTable = API.TableName ("Artist" :| []),
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "Albums",
+                                API.Relationship
+                                  { _rTargetTable = API.TableName ("Album" :| []),
+                                    _rRelationshipType = API.ArrayRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ],
                 _qrQuery =
                   API.Query
                     { _qFields =
                         Just $
                           HashMap.fromList
-                            [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") $ API.ScalarType "number")
+                            [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))
                             ],
                       _qAggregates = Nothing,
-                      _qLimit = Nothing,
+                      _qLimit = Just 2,
                       _qOffset = Nothing,
-                      _qWhere =
+                      _qWhere = Nothing,
+                      _qOrderBy =
                         Just $
-                          API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
-                            API.ApplyBinaryComparisonOperator
-                              API.Equal
-                              (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
-                              (API.ScalarValue (Aeson.Number 1) $ API.ScalarType "number"),
-                      _qOrderBy = Nothing
+                          API.OrderBy
+                            ( HashMap.fromList
+                                [ ( API.RelationshipName "Albums",
+                                    API.OrderByRelation Nothing mempty
+                                  )
+                                ]
+                            )
+                            ( NE.fromList
+                                [ API.OrderByElement [API.RelationshipName "Albums"] API.OrderByStarCountAggregate API.Ascending,
+                                  API.OrderByElement
+                                    [API.RelationshipName "Albums"]
+                                    ( API.OrderBySingleColumnAggregate $
+                                        API.SingleColumnAggregate
+                                          (API.SingleColumnAggregateFunction [G.name|max|])
+                                          (API.ColumnName "AlbumId")
+                                          (API.ScalarType "number")
+                                    )
+                                    API.Ascending
+                                ]
+                            )
                     }
               }
         )

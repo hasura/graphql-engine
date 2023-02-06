@@ -1195,7 +1195,8 @@ This would cause the following query request to be performed:
       "aggregate_max_ArtistId": {
         "type": "single_column",
         "function": "max",
-        "column": "ArtistId"
+        "column": "ArtistId",
+        "result_type": "number"
       }
     }
   }
@@ -1204,15 +1205,9 @@ This would cause the following query request to be performed:
 
 Notice the `Query` has an `aggregates` property; this property contains an object where the property name is the field name of the aggregate, and the value is a description of the aggregate. In the example above, we're using the `max` function on the `ArtistId` column. The `max` function is a function that operates on a single column, so the type of the aggregate is `single_column`.
 
-These are the supported `single_column` functions:
-- `avg`
-- `max`
-- `min`
-- `stddev_pop`
-- `stddev_samp`
-- `sum`
-- `var_pop`
-- `var_samp`
+The supported `single_column` functions are defined by the agent in [its capabilities](#scalar-type-capabilities). They are associated with the scalar types that the agent declares, and each scalar type declares the set of functions that can be used on columns of that scalar type (the `aggregate_functions` property in scalar type capabilities).
+
+Every aggregate function declared in capabilities has a result scalar type (ie. the type of the value returned by the aggregate function). This is usually, but not always, the same as the scalar type the aggregate function is for (ie. the type of the column the function is used with). This result scalar type is provided in the `result_type` property on `single_column` query aggregations.
 
 The aggregate function is to be run over all rows that match the `Query`. In this case, the query has no filters on it (ie. no `where`, `limit` or `offset` properties), so the query would be selecting all rows in the Artist table.
 
@@ -1458,7 +1453,7 @@ The order by element `target` is specified as an object, whose `type` property s
 |------|-------------------|-------------|
 | `column` | `column` | Sort by the `column` specified |
 | `star_count_aggregate` | - | Sort by the count of all rows on the related target table (a non-empty `target_path` will always be specified) |
-| `single_column_aggregate` | `function`, `column` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified) |
+| `single_column_aggregate` | `function`, `column`, `result_type` | Sort by the value of applying the specified aggregate function to the column values of the rows in the related target table (a non-empty `target_path` will always be specified). The aggregate function will return `result_type` scalar type |
 
 The `target_path` property is a list of relationships to navigate before finding the `target` to sort on. This is how sorting on columns or aggregates on related tables is expressed. Note that aggregate-typed targets will never be found on the current table (ie. a `target_path` of `[]`) and are always applied to a related table.
 

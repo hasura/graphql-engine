@@ -115,6 +115,7 @@ library
     Test.DataConnector.MockAgent.ErrorSpec
     Test.DataConnector.MockAgent.InsertMutationsSpec
     Test.DataConnector.MockAgent.MetadataApiSpec
+    Test.DataConnector.MockAgent.OrderBySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.MockAgent.UpdateMutationsSpec
