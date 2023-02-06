@@ -10,19 +10,19 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
 import Hasura.Backends.DataConnector.API
-import Test.AgentClient (queryGuarded)
+import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Sandwich (describe)
-import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers (AgentDatasetTestSpec, it)
 import Prelude
 
-spec :: TestData -> SourceName -> Config -> Maybe SubqueryComparisonCapabilities -> AgentTestSpec
-spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "Relationship Queries" $ do
+spec :: TestData -> Maybe SubqueryComparisonCapabilities -> AgentDatasetTestSpec
+spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queries" $ do
   it "perform an object relationship query by joining artist to albums" $ do
     let query = albumsWithArtistQuery id
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
     let joinInArtist (album :: HashMap FieldName FieldValue) =
           let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
@@ -36,7 +36,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
 
   it "perform an array relationship query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
     let joinInAlbums (artist :: HashMap FieldName FieldValue) =
           let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -52,7 +52,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
   it "perform an array relationship query by joining albums to artists with pagination of albums" $ do
     let albumsOrdering = OrderBy mempty $ NonEmpty.fromList [_tdOrderByColumn [] "AlbumId" Ascending]
     let query = artistsWithAlbumsQuery (qOffset ?~ 1 >>> qLimit ?~ 2 >>> qOrderBy ?~ albumsOrdering)
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
     let joinInAlbums (artist :: HashMap FieldName FieldValue) = do
           let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -69,7 +69,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
   it "can filter in object relationships" $ do
     let artistWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (String "H") artistNameScalarType)
     let query = albumsWithArtistQuery (qWhere ?~ artistWhere)
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
     let joinInArtist (album :: HashMap FieldName FieldValue) =
           let artist = do
@@ -87,7 +87,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
   it "can filter in array relationships" $ do
     let albumsWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (ScalarValue (String "O") albumTitleScalarType)
     let query = artistsWithAlbumsQuery (qWhere ?~ albumsWhere)
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
     let joinInAlbums (artist :: HashMap FieldName FieldValue) =
           let albums = fromMaybe [] $ do
@@ -117,7 +117,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                   (_tdCurrentComparisonColumn "Country" employeeCountryScalarType)
                   (AnotherColumn (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
         let query = customersWithSupportRepQuery id & qrQuery . qWhere ?~ where'
-        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded sourceName config query
+        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded query
 
         let joinInSupportRep (customer :: HashMap FieldName FieldValue) =
               let supportRep = (customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber) >>= \employeeId -> _tdEmployeesRowsById ^? ix employeeId
@@ -145,7 +145,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                   (_tdCurrentComparisonColumn "Country" employeeCountryScalarType)
                   (AnotherColumn (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
         let query = employeesWithCustomersQuery id & qrQuery . qWhere ?~ where'
-        receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> queryGuarded sourceName config query
+        receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> queryGuarded query
 
         let joinInCustomers (employee :: HashMap FieldName FieldValue) =
               let employeeId = employee ^? Data.field "EmployeeId" . Data._ColumnFieldNumber
@@ -186,7 +186,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                 (AnotherColumn (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
 
         let query = customersWithSupportRepQuery (\q -> q & qWhere ?~ employeesWhere) & qrQuery . qWhere ?~ customersWhere
-        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded sourceName config query
+        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded query
 
         let joinInSupportRep (customer :: HashMap FieldName FieldValue) =
               let supportRep = do

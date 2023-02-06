@@ -25,7 +25,6 @@ where
 --------------------------------------------------------------------------------
 
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -46,14 +45,8 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
-            }
+        [ Reference.chinookFixture,
+          Sqlite.chinookFixture
         ]
     )
     tests
@@ -169,7 +162,7 @@ paginationTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 paginationTests opts =
   describe "Pagination" $ do
     it "works with pagination" $ \(testEnvironment, _) -> do
-      -- NOTE: We order by in this pagination test to ensure that the rows are ordered correctly (which they are not in db.chinook.sqlite)
+      -- NOTE: We order by in this pagination test to ensure that the rows are ordered correctly (which they are not in Sqlite Chinook)
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql

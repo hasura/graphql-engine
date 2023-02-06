@@ -13,6 +13,10 @@
       "configurations": {
         "production": {
           "devServerTarget": "console-ce:serve:production"
+        },
+        "ci": {
+          "parallel": true,
+          "record": true
         }
       }
     },

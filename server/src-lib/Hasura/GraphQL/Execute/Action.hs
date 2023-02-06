@@ -45,6 +45,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Types.Function qualified as TF
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -73,7 +74,6 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
-import Hasura.SQL.Types
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
@@ -87,13 +87,13 @@ import Network.Wreq qualified as Wreq
 import System.Metrics.Prometheus.Counter as Prometheus.Counter
 
 fetchActionLogResponses ::
-  (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), Foldable t) =>
+  (MonadError QErr m, MonadMetadataStorage m, Foldable t) =>
   t ActionId ->
   m (ActionLogResponseMap, Bool)
 fetchActionLogResponses actionIds = do
   responses <- for (toList actionIds) $ \actionId ->
     (actionId,)
-      <$> liftEitherM (runMetadataStorageT $ fetchActionResponse actionId)
+      <$> liftEitherM (fetchActionResponse actionId)
   -- An action is said to be completed/processed iff response is captured from webhook or
   -- in case any exception occured in calling webhook.
   let isActionComplete ActionLogResponse {..} =
@@ -105,7 +105,7 @@ runActionExecution ::
     MonadBaseControl IO m,
     MonadError QErr m,
     Tracing.MonadTrace m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   UserInfo ->
   ActionExecutionPlan ->
@@ -114,13 +114,13 @@ runActionExecution userInfo aep =
   withElapsedTime $ case aep of
     AEPSync e -> second Just <$> unActionExecution e
     AEPAsyncQuery (AsyncActionQueryExecutionPlan actionId execution) -> do
-      actionLogResponse <- liftEitherM $ runMetadataStorageT $ fetchActionResponse actionId
+      actionLogResponse <- liftEitherM $ fetchActionResponse actionId
       (,Nothing) <$> case execution of
         AAQENoRelationships f -> liftEither $ f actionLogResponse
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
-          let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
+          let querySQL = toQuery $ selectToSelectWith $ RS.mkSQLSelect jsonAggSelect selectResolved
           liftEitherM $ runExceptT $ _pecRunTx (_pscExecCtx srcConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
@@ -282,13 +282,13 @@ metadata storage. See Note [Resolving async action query] below.
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync ::
-  (MonadMetadataStorage m) =>
+  (MonadMetadataStorage m, MonadError QErr m) =>
   IR.AnnActionMutationAsync ->
   [HTTP.Header] ->
   SessionVariables ->
   m ActionId
 resolveActionMutationAsync annAction reqHeaders sessionVariables =
-  insertAction actionName sessionVariables reqHeaders inputArgs
+  liftEitherM $ insertAction actionName sessionVariables reqHeaders inputArgs
   where
     IR.AnnActionMutationAsync actionName _ inputArgs = annAction
 
@@ -430,7 +430,7 @@ asyncActionsProcessor ::
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     Tracing.HasReporter m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -451,7 +451,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
         unless (Map.null asyncActions) $ do
           -- fetch undelivered action events only when there's at least
           -- one async action present in the schema cache
-          asyncInvocationsE <- runMetadataStorageT fetchUndeliveredActionEvents
+          asyncInvocationsE <- fetchUndeliveredActionEvents
           asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
           -- save the actions that are currently fetched from the DB to
           -- be processed in a TVar (Set LockedActionEventId) and when
@@ -503,7 +503,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager pr
                   timeout
                   metadataRequestTransform
                   metadataResponseTransform
-          resE <- runMetadataStorageT $
+          resE <-
             setActionStatus actionId $ case eitherRes of
               Left e -> AASError e
               Right (responsePayload, _) -> AASCompleted $ J.toJSON responsePayload

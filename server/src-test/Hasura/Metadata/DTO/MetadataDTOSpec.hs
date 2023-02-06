@@ -101,7 +101,7 @@ emptyMetadataV3 =
   MetadataV3
     { metaV3Sources = mempty,
       metaV3RemoteSchemas = mempty,
-      metaV3QueryCollections = Nothing,
+      metaV3QueryCollections = mempty,
       metaV3Allowlist = Nothing,
       metaV3Actions = Nothing,
       metaV3CustomTypes = Nothing,

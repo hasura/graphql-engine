@@ -127,9 +127,13 @@ html[data-theme='dark'] {
 }
 
 html[data-theme='dark'] {
-  input,
-  textarea {
-    background-color: white;
+  .feedback {
+
+    input,
+    textarea {
+      background-color: var(--color-gray-74);
+      color: white;
+    }
   }
 }
 

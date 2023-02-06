@@ -2,7 +2,7 @@ import { MetadataTable, Source } from '@/features/hasura-metadata-types';
 import { formatSdl } from 'format-graphql';
 import { getMutationRoot } from './getMutationRoot';
 
-export const generateGraphQLInsertMutation = ({
+export const generateGraphQLInsertMutation = async ({
   defaultQueryRoot,
   tableCustomization,
   sourceCustomization,

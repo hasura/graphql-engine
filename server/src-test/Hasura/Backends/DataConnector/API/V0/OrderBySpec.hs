@@ -42,11 +42,12 @@ spec = do
         |]
     describe "OrderBySingleColumnAggregate" $
       testToFromJSONToSchema
-        (OrderBySingleColumnAggregate (SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) (ColumnName "test_column")))
+        (OrderBySingleColumnAggregate (SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) (ColumnName "test_column") (ScalarType "number")))
         [aesonQQ|
           { "type": "single_column_aggregate",
             "function": "sum",
-            "column": "test_column"
+            "column": "test_column",
+            "result_type": "number"
           }
         |]
     jsonOpenApiProperties genOrderByTarget

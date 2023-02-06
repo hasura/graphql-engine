@@ -4,23 +4,28 @@
 --
 -- NOTE: This module is intended to be imported qualified.
 module Harness.Backend.DataConnector.Chinook.Reference
-  ( agentConfig,
-    sourceConfiguration,
-    backendTypeMetadata,
+  ( backendTypeConfig,
+    mkChinookStaticTestEnvironment,
+    chinookFixture,
   )
 where
 
 --------------------------------------------------------------------------------
 
+import Control.Monad.Managed (Managed)
 import Data.Aeson qualified as Aeson
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (Fixture (..), FixtureName (..))
+import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
-backendTypeMetadata :: BackendType.BackendTypeConfig
-backendTypeMetadata =
+backendTypeConfig :: BackendType.BackendTypeConfig
+backendTypeConfig =
   BackendType.BackendTypeConfig
     { backendType = BackendType.DataConnectorReference,
       backendSourceName = "chinook_reference",
@@ -75,21 +80,27 @@ backendTypeMetadata =
 
 --------------------------------------------------------------------------------
 
--- | Reference Agent @backend_configs@ field.
-agentConfig :: Aeson.Value
-agentConfig =
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-   in [yaml|
-dataconnector:
-  *backendType:
-    uri: "http://127.0.0.1:65005/"
-|]
+mkChinookStaticTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
+mkChinookStaticTestEnvironment = Chinook.mkChinookStaticTestEnvironment nameFormatting sourceConfiguration
+
+nameFormatting :: NameFormatting
+nameFormatting = NameFormatting id id id
 
 -- | Reference Agent specific @sources@ entry @configuration@ field.
 sourceConfiguration :: Aeson.Value
 sourceConfiguration =
   [yaml|
-value: {}
-template:
-timeout:
-|]
+    value: {}
+    template:
+    timeout:
+  |]
+
+chinookFixture :: Fixture ChinookTestEnv
+chinookFixture =
+  Fixture
+    { name = Backend backendTypeConfig,
+      mkLocalTestEnvironment = mkChinookStaticTestEnvironment,
+      setupTeardown = \testEnvs ->
+        [Chinook.setupChinookSourceAction testEnvs],
+      customOptions = Nothing
+    }

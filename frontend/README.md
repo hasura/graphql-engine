@@ -50,9 +50,11 @@ Run `nx affected:test` to execute the unit tests affected by a change.
 
 ## Running end-to-end tests
 
-Run `nx e2e my-app` to execute the end-to-end tests via [Cypress](https://www.cypress.io).
+Run `nx e2e console-ce-e2e --watch` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) to open the Cypress UI and locally working with it.
 
-Run `nx affected:e2e` to execute the end-to-end tests affected by a change.
+Run `nx e2e console-ce-e2e` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) to execute the end-to-end tests via [Cypress](https://www.cypress.io).
+
+Run `nx affected:e2e` (requires an [`.env` file](./docs/generic-info.md#set-up-env-file)) to execute the end-to-end tests affected by a change.
 
 ## Understand your workspace
 

@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
@@ -42,7 +43,7 @@ import Network.HTTP.Types qualified as HTTP
 convertMutationAction ::
   ( MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -57,8 +58,7 @@ convertMutationAction env logger prometheusMetrics userInfo manager reqHeaders g
   AMSync s ->
     pure $ AEPSync $ resolveActionExecution env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
   AMAsync s ->
-    AEPAsyncMutation
-      <$> liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
+    AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
@@ -68,7 +68,7 @@ convertMutationSelectionSet ::
   ( Tracing.MonadTrace m,
     MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadGQLExecutionCheck m,
     MonadQueryTags m
   ) =>
@@ -126,7 +126,12 @@ convertMutationSelectionSet
               AB.dispatchAnyBackend @BackendExecute
                 exists
                 \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
-                  let mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+                  let mReqId =
+                        case _qtcOmitRequestId <$> queryTagsConfig of
+                          -- we omit the request id only if a user explicitly wishes for it to be omitted.
+                          Just True -> Nothing
+                          _ -> Just reqId
+                      mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
                   dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo env stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName

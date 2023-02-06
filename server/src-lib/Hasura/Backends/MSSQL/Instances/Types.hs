@@ -15,6 +15,7 @@ import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (UpdateOperator)
 import Hasura.Base.Error
+import Hasura.NativeQuery.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend
@@ -28,8 +29,6 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'MSSQL where
   type BackendConfig 'MSSQL = ()
   type BackendInfo 'MSSQL = ()
-  type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
-  type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   type TableName 'MSSQL = MSSQL.TableName
   type RawFunctionInfo 'MSSQL = Void
 
@@ -123,3 +122,9 @@ instance Backend 'MSSQL where
     MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
 
   defaultTriggerOnReplication = Just ((), TOREnableTrigger)
+
+instance HasSourceConfiguration 'MSSQL where
+  type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
+  type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
+
+instance NativeQueryMetadata 'MSSQL

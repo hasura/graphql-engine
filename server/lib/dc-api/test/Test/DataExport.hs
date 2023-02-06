@@ -19,6 +19,7 @@ import Hasura.Backends.DataConnector.API
 import System.Directory qualified as Directory
 import System.FilePath ((<.>), (</>))
 import Test.Data qualified as Data
+import Prelude
 
 exportData :: ExportDataConfig -> IO ()
 exportData ExportDataConfig {..} = do

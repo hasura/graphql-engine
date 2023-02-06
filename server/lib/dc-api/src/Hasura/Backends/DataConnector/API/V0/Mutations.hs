@@ -50,6 +50,7 @@ import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
 import Servant.API (HasStatus (..))
+import Prelude
 
 -- | A request to perform a batch of 'MutationOperation's.
 --

@@ -1,0 +1,86 @@
+cabal-version:       3.6
+name:                resource-pool
+version:             0.2.3.2
+synopsis:            A high-performance striped resource pooling implementation
+description:
+  A high-performance striped pooling abstraction for managing
+  flexibly-sized collections of resources such as database
+  connections.
+
+homepage:            http://github.com/bos/pool
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              Bryan O'Sullivan <bos@serpentine.com>
+maintainer:          Bryan O'Sullivan <bos@serpentine.com>,
+                     Bas van Dijk <v.dijk.bas@gmail.com>
+copyright:           Copyright 2011 MailRank, Inc.
+category:            Data, Database, Network
+build-type:          Simple
+extra-source-files:
+  README.markdown
+
+
+flag developer
+  description: operate in developer mode
+  default: False
+  manual: True
+
+common common-all
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-implicit-prelude
+    -Wno-prepositive-qualified-module
+    -Wno-unused-imports
+    -Wno-unused-do-bind
+    -Wno-missing-signatures
+    -Wno-name-shadowing
+
+library
+  import: common-all
+  exposed-modules:
+    Data.Pool
+  default-language: Haskell2010
+
+  build-depends:
+    base >= 4.4 && < 5,
+    hashable,
+    monad-control >= 0.2.0.1,
+    transformers,
+    transformers-base >= 0.4,
+    stm >= 2.3,
+    time,
+    vector >= 0.7
+
+  if flag(developer)
+    ghc-options: -Werror
+    ghc-prof-options: -auto-all
+    cpp-options: -DASSERTS -DDEBUG
+
+test-suite resource-pool-tests
+  import: common-all
+  default-language: Haskell2010
+  ghc-options: -threaded -rtsopts
+  type: exitcode-stdio-1.0
+  build-depends:
+      base
+    , hspec
+    , async
+    , resource-pool
+    , time
+  hs-source-dirs: test
+  main-is: Main.hs

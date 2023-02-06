@@ -1,4 +1,4 @@
-import type { SchemaResponse } from '../../../../../../src/features/MetadataAPI/types';
+import type { SchemaResponse } from '@hasura/console-legacy-ce';
 
 /**
  * At the time of writing, the response that come from the server does not respect the SchemaResponse type...
@@ -6,9 +6,9 @@ import type { SchemaResponse } from '../../../../../../src/features/MetadataAPI/
 export const graphql: SchemaResponse = {
   data: {
     __schema: {
-      queryType: { name: 'query_root' },
-      mutationType: { name: 'mutation_root' },
-      subscriptionType: { name: 'subscription_root' },
+      queryType: { kind: 'OBJECT', name: 'query_root' },
+      mutationType: { kind: 'OBJECT', name: 'mutation_root' },
+      subscriptionType: { kind: 'OBJECT', name: 'subscription_root' },
       types: [
         {
           kind: 'SCALAR',

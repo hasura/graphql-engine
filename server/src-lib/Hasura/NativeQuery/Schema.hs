@@ -25,15 +25,11 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
 import Hasura.NativeQuery.IR (NativeQueryImpl (..))
 import Hasura.NativeQuery.Metadata
-  ( NativeQueryArgumentName (..),
-    NativeQueryInfoImpl (..),
-  )
-import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
-import Hasura.RQL.IR.Select (QueryDB (QDBSingleRow))
+import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value (UnpreparedValue, openValueOrigin)
+import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter), openValueOrigin)
 import Hasura.RQL.Types.Backend
   ( Backend (NativeQuery, ScalarType),
   )
@@ -63,31 +59,46 @@ defaultBuildNativeQueryRootFields ::
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 defaultBuildNativeQueryRootFields NativeQueryInfoImpl {..} = runMaybeT $ do
   tableInfo <- askTableInfo @b nqiiReturns
-  fieldName <- hoistMaybe (G.mkName $ getNativeQueryName nqiiName)
-  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiiArgs
+  fieldName <- hoistMaybe (G.mkName $ getNativeQueryNameImpl nqiiRootFieldName)
+  nativeQueryArgsParser <- nativeQueryArgumentsSchema @b @r @m @n fieldName nqiiArguments
   sourceInfo :: SourceInfo b <- asks getter
   let sourceName = _siName sourceInfo
       tableName = tableInfoName tableInfo
       tCase = _rscNamingConvention $ _siCustomization sourceInfo
-      description = Just $ G.Description $ "A native query called " <> getNativeQueryName nqiiName
+      description = G.Description <$> nqiiDescription
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   roleName <- retrieve scRole
 
   selectionSetParser <- MaybeT $ tableSelectionList @b @r @m @n tableInfo
   tableArgsParser <- lift $ tableArguments @b @r @m @n tableInfo
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+
+  let interpolatedQuery nqArgs =
+        InterpolatedQuery $
+          (fmap . fmap)
+            ( \var -> case HM.lookup var nqArgs of
+                Just arg -> UVParameter Nothing arg
+                Nothing ->
+                  -- the `nativeQueryArgsParser` will already have checked
+                  -- we have all the args the query needs so this _should
+                  -- not_ happen
+                  error $ "No native query arg passed for " <> show var
+            )
+            (getInterpolatedQuery nqiiCode)
+
   pure $
     P.setFieldParserOrigin (MO.MOSourceObjId sourceName (mkAnyBackend $ MO.SMOTable @b tableName)) $
       P.subselection fieldName description ((,) <$> tableArgsParser <*> nativeQueryArgsParser) selectionSetParser
         <&> \((args, nqArgs), fields) ->
-          QDBSingleRow $
+          QDBMultipleRows $
             IR.AnnSelectG
               { IR._asnFields = fields,
                 IR._asnFrom =
                   IR.FromNativeQuery
                     NativeQueryImpl
-                      { nqName = nqiiName,
-                        nqArgs
+                      { nqRootFieldName = nqiiRootFieldName,
+                        nqArgs,
+                        nqInterpolatedQuery = interpolatedQuery nqArgs
                       },
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,
@@ -125,8 +136,12 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
         (HM.toList argsSignature)
 
   let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
+
   pure $
-    P.field
-      [G.name|args|]
-      desc
-      (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)
+    if null argsSignature
+      then mempty
+      else
+        P.field
+          [G.name|args|]
+          desc
+          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)

@@ -46,7 +46,6 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
--- import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Data.Aeson (Value, fromJSON, object, (.=))
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
@@ -291,7 +290,7 @@ startServerThread = do
           dataconnector:
             foobar:
               display_name: FOOBARDB
-              uri: "http://localhost:65007" |]
+              uri: "http://localhost:65005" |]
   thread <-
     Async.async
       ( runApp
@@ -301,7 +300,7 @@ startServerThread = do
             }
       )
   let server = Server {port = fromIntegral port, urlPrefix, thread}
-  Http.healthCheck (serverUrl server)
+  Http.healthCheck (serverUrl server <> "/healthz")
   pure server
 
 -------------------------------------------------------------------------------
@@ -314,33 +313,28 @@ runApp serveOptions = do
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just $ Constants.postgresqlMetadataConnectionString
+      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci
-  do
-    (ekgStore, serverMetrics) <-
-      liftIO $ do
-        store <- EKG.newStore @TestMetricsSpec
-        serverMetrics <-
-          liftIO $ createServerMetrics $ EKG.subset ServerSubset store
-        pure (EKG.subset EKG.emptyOf store, serverMetrics)
-    prometheusMetrics <- makeDummyPrometheusMetrics
-    runManagedT (App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways FeatureFlag.defaultValueIO) $ \serverCtx@ServerCtx {..} ->
-      do
-        let Loggers _ _ pgLogger = scLoggers
-        flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger)
-          . lowerManagedT
-          $ do
-            App.runHGEServer
-              (const $ pure ())
-              env
-              serveOptions
-              serverCtx
-              initTime
-              Nothing
-              ekgStore
-              FeatureFlag.defaultValueIO
+  (ekgStore, serverMetrics) <- liftIO do
+    store <- EKG.newStore @TestMetricsSpec
+    serverMetrics <- liftIO . createServerMetrics $ EKG.subset ServerSubset store
+    pure (EKG.subset EKG.emptyOf store, serverMetrics)
+  prometheusMetrics <- makeDummyPrometheusMetrics
+  let managedServerCtx = App.initialiseServerCtx env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways (FeatureFlag.checkFeatureFlag env)
+  runManagedT managedServerCtx \serverCtx@ServerCtx {..} -> do
+    let Loggers _ _ pgLogger = scLoggers
+    flip App.runPGMetadataStorageAppT (scMetadataDbPool, pgLogger) . lowerManagedT $
+      App.runHGEServer
+        (const $ pure ())
+        env
+        serveOptions
+        serverCtx
+        initTime
+        Nothing
+        ekgStore
+        (FeatureFlag.checkFeatureFlag env)
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

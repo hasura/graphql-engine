@@ -35,6 +35,7 @@ import System.Cron.Types (CronSchedule)
 
 populateInitialCronTriggerEvents ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadMetadataStorageQueryAPI m
   ) =>
   CronSchedule ->
@@ -43,14 +44,14 @@ populateInitialCronTriggerEvents ::
 populateInitialCronTriggerEvents schedule triggerName = do
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 schedule
-  insertCronEvents $ map (CronEventSeed triggerName) scheduleTimes
-  pure ()
+  liftEitherM $ insertCronEvents $ map (CronEventSeed triggerName) scheduleTimes
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
 --   be created
 runCreateCronTrigger ::
-  ( CacheRWM m,
+  ( MonadError QErr m,
+    CacheRWM m,
     MonadIO m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m
@@ -123,7 +124,8 @@ resolveCronTrigger env CronTriggerMetadata {..} = do
       ctResponseTransform
 
 updateCronTrigger ::
-  ( CacheRWM m,
+  ( MonadError QErr m,
+    CacheRWM m,
     MonadIO m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m
@@ -136,14 +138,15 @@ updateCronTrigger cronTriggerMetadata = do
   buildSchemaCacheFor (MOCronTrigger triggerName) $
     MetadataModifier $
       metaCronTriggers %~ OMap.insert triggerName cronTriggerMetadata
-  dropFutureCronEvents $ SingleCronTrigger triggerName
+  liftEitherM $ dropFutureCronEvents $ SingleCronTrigger triggerName
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
-  insertCronEvents $ map (CronEventSeed triggerName) scheduleTimes
+  liftEitherM $ insertCronEvents $ map (CronEventSeed triggerName) scheduleTimes
   pure successMsg
 
 runDeleteCronTrigger ::
-  ( CacheRWM m,
+  ( MonadError QErr m,
+    CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m
   ) =>
@@ -154,7 +157,7 @@ runDeleteCronTrigger (ScheduledTriggerName stName) = do
   withNewInconsistentObjsCheck $
     buildSchemaCache $
       dropCronTriggerInMetadata stName
-  dropFutureCronEvents $ SingleCronTrigger stName
+  liftEitherM $ dropFutureCronEvents $ SingleCronTrigger stName
   return successMsg
 
 dropCronTriggerInMetadata :: TriggerName -> MetadataModifier
@@ -162,11 +165,11 @@ dropCronTriggerInMetadata name =
   MetadataModifier $ metaCronTriggers %~ OMap.delete name
 
 runCreateScheduledEvent ::
-  (MonadMetadataStorageQueryAPI m) =>
+  (MonadError QErr m, MonadMetadataStorageQueryAPI m) =>
   CreateScheduledEvent ->
   m EncJSON
 runCreateScheduledEvent scheduledEvent = do
-  eid <- createOneOffScheduledEvent scheduledEvent
+  eid <- liftEitherM $ createOneOffScheduledEvent scheduledEvent
   pure $ encJFromJValue $ J.object ["message" J..= J.String "success", "event_id" J..= eid]
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
@@ -178,13 +181,14 @@ checkExists name = do
         "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
 
 runDeleteScheduledEvent ::
-  (MonadMetadataStorageQueryAPI m) => DeleteScheduledEvent -> m EncJSON
+  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => DeleteScheduledEvent -> m EncJSON
 runDeleteScheduledEvent DeleteScheduledEvent {..} = do
-  dropEvent _dseEventId _dseType
+  liftEitherM $ dropEvent _dseEventId _dseType
   pure successMsg
 
 runGetScheduledEvents ::
-  ( CacheRM m,
+  ( MonadError QErr m,
+    CacheRM m,
     MonadMetadataStorageQueryAPI m
   ) =>
   GetScheduledEvents ->
@@ -193,10 +197,11 @@ runGetScheduledEvents gse = do
   case _gseScheduledEvent gse of
     SEOneOff -> pure ()
     SECron name -> checkExists name
-  encJFromJValue <$> fetchScheduledEvents gse
+  encJFromJValue <$> liftEitherM (fetchScheduledEvents gse)
 
 runGetScheduledEventInvocations ::
-  ( CacheRM m,
+  ( MonadError QErr m,
+    CacheRM m,
     MonadMetadataStorageQueryAPI m
   ) =>
   GetScheduledEventInvocations ->
@@ -207,7 +212,7 @@ runGetScheduledEventInvocations getEventInvocations@GetScheduledEventInvocations
     GIBEvent event -> case event of
       SEOneOff -> pure ()
       SECron name -> checkExists name
-  WithOptionalTotalCount countMaybe invocations <- fetchScheduledEventInvocations getEventInvocations
+  WithOptionalTotalCount countMaybe invocations <- liftEitherM $ fetchScheduledEventInvocations getEventInvocations
   pure $
     encJFromJValue $
       J.object $

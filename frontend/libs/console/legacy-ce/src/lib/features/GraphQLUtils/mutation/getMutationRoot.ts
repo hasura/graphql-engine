@@ -27,7 +27,6 @@ export const getMutationRoot = ({
    */
   const customRootName = configuration?.custom_root_fields?.[operation];
 
-  console.log('!', customRootName);
   if (customRootName)
     return `${sourceCustomization?.root_fields?.prefix ?? ''}${customRootName}${
       sourceCustomization?.root_fields?.suffix ?? ''

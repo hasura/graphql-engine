@@ -64,7 +64,6 @@ export const clickRunQueryButton = () => {
       'Could not find run query button in the DOM (.execute-button)'
     );
     programmaticallyTraceError(error);
-    console.warn(error);
   }
 };
 

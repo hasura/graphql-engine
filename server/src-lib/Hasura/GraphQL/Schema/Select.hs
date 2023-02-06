@@ -838,7 +838,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
 
         mkAggregateOrderByPath = \case
           IR.AAOCount -> ["count"]
-          IR.AAOOp t col -> [t, toTxt $ ciColumn col]
+          IR.AAOOp t _resultType col -> [t, toTxt $ ciColumn col]
 
         getPathFromOrderBy = \case
           IR.AOCColumn columnInfo ->
@@ -868,7 +868,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
           where
             aggregateOrderByColumnType = \case
               IR.AAOCount -> ColumnScalar (aggregateOrderByCountType @b)
-              IR.AAOOp _ colInfo -> ciType colInfo
+              IR.AAOOp _ resultType _colInfo -> resultType
 
 -- | Aggregation fields
 --

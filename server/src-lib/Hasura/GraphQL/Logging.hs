@@ -15,7 +15,6 @@ import Data.Text.Extended
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.Logging qualified as L
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.ConnectionTemplate (BackendResolvedConnectionTemplate (..))
 import Hasura.Server.Types (RequestId)
@@ -89,7 +88,4 @@ instance MonadQueryLog m => MonadQueryLog (ReaderT r m) where
   logQueryLog logger l = lift $ logQueryLog logger l
 
 instance MonadQueryLog m => MonadQueryLog (TraceT m) where
-  logQueryLog logger l = lift $ logQueryLog logger l
-
-instance MonadQueryLog m => MonadQueryLog (MetadataStorageT m) where
   logQueryLog logger l = lift $ logQueryLog logger l

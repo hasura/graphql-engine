@@ -653,10 +653,8 @@ untrackRelationships Table {tableName, tableReferences, tableManualRelationships
 runSQL :: HasCallStack => String -> String -> TestEnvironment -> IO ()
 runSQL source sql testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-      prefix = case BackendType.backendType backendTypeMetadata of
-        BackendType.Postgres -> ""
-        _ -> BackendType.backendTypeString backendTypeMetadata <> "_"
-      requestType = prefix <> "run_sql"
+      prefix = BackendType.backendTypeString backendTypeMetadata
+      requestType = prefix <> "_run_sql"
   GraphqlEngine.postV2Query_
     testEnvironment
     [yaml|

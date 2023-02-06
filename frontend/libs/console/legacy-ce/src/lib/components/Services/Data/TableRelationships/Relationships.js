@@ -7,7 +7,7 @@ import {
   useFeatureFlags,
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
-import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
+import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
 import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import {

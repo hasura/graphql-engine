@@ -6,7 +6,6 @@ import { RenameRelationship } from './RenameRelationship';
 import { LocalRelationship } from '../../types';
 
 export default {
-  title: 'GDC Console/Relationships/Rename Relationship',
   component: RenameRelationship,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof RenameRelationship>;

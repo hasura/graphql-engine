@@ -88,6 +88,8 @@ NX_HASURA_CONSOLE_TYPE=oss
 NX_IS_ADMIN_SECRET_SET=true
 ```
 
+The `.env` file can be placed both at the root of the `/frontend` directory or on a per-app basis. If you put the `.env` files on a per-app-basis, please remember that also the E2E tests apps (`console-ce-e2e`, for instance) need a dedicated `.env` file because they internally launch the web server of the frontend application before launching Cypress. FYI: [here is the order Nx follows](https://nx.dev/recipes/environment-variables/define-environment-variables#setting-environment-variables) to read the `.env` files.
+
 > The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL in production. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
 
 _If you're contributing to team-console i.e. console for Hasura Cloud or Hasura EE, refer to [this doc](https://github.com/hasura/lux/blob/main/docs/team-console.md)._

@@ -305,7 +305,7 @@ serveOptions =
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
-      soDefaultNamingConvention = Nothing,
+      soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
       soMetadataDefaults = emptyMetadataDefaults
     }

@@ -4,7 +4,7 @@ import { getSchema } from './schema';
 import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetGetResponse, DatasetPostResponse, DatasetDeleteResponse, DatasetPostRequest, DatasetTemplateName } from '@hasura/dc-api-types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetTemplateName, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
@@ -174,7 +174,7 @@ server.get("/health", async (request, response) => {
 // Data-Set Features - Names must match files in the associated datasets directory.
 // If they exist then they are tracked for the purposes of this feature in SQLite.
 if(DATASETS) {
-  server.get<{ Params: { template_name: DatasetTemplateName, }, Reply: DatasetGetResponse }>("/datasets/templates/:template_name", async (request, _response) => {
+  server.get<{ Params: { template_name: DatasetTemplateName, }, Reply: DatasetGetTemplateResponse }>("/datasets/templates/:template_name", async (request, _response) => {
     server.log.info({ headers: request.headers, query: request.body, }, "datasets.templates.get");
     const result = await getDataset(request.params.template_name);
     if(! result.exists) {
@@ -184,7 +184,7 @@ if(DATASETS) {
   });
 
   // TODO: The name param here should be a DatasetCloneName, but this isn't being code-generated.
-  server.post<{ Params: { clone_name: string, }, Body: DatasetPostRequest, Reply: DatasetPostResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
+  server.post<{ Params: { clone_name: string, }, Body: DatasetCreateCloneRequest, Reply: DatasetCreateCloneResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
     server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.post");
     return cloneDataset(sqlLogger, request.params.clone_name, request.body);
   });
@@ -192,7 +192,7 @@ if(DATASETS) {
   // Only allow deletion if this is explicitly supported by ENV configuration
   if(DATASET_DELETE) {
     // TODO: The name param here should be a DatasetCloneName, but this isn't being code-generated.
-    server.delete<{ Params: { clone_name: string, }, Reply: DatasetDeleteResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
+    server.delete<{ Params: { clone_name: string, }, Reply: DatasetDeleteCloneResponse }>("/datasets/clones/:clone_name", async (request, _response) => {
       server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.delete");
       return deleteDataset(request.params.clone_name);
     });

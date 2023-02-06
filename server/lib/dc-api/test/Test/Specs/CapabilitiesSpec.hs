@@ -7,16 +7,19 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as Text
 import Hasura.Backends.DataConnector.API
 import Language.GraphQL.Draft.Syntax qualified as G
-import Test.AgentClient (AgentClientT, HasAgentClient, getCapabilitiesGuarded)
+import Test.AgentAPI (getSourceNameAndConfig)
+import Test.AgentClient (AgentClientT, HasAgentClient)
+import Test.AgentDatasets (HasDatasetContext)
+import Test.AgentTestContext (HasAgentTestContext)
 import Test.Expectations (jsonShouldBe)
 import Test.Sandwich (ExampleT, HasBaseContext, describe, shouldNotContain)
-import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers (AgentDatasetTestSpec, it)
 import Prelude
 
-spec :: Config -> Capabilities -> AgentTestSpec
-spec config Capabilities {..} = describe "capabilities API" $ do
+spec :: CapabilitiesResponse -> AgentDatasetTestSpec
+spec CapabilitiesResponse {_crCapabilities = Capabilities {..}, ..} = describe "capabilities API" $ do
   it "returns a schema that can be used to validate the current config" $ do
-    CapabilitiesResponse {..} <- getCapabilitiesGuarded
+    (_sourceName, config) <- getSourceNameAndConfig
     validateConfigAgainstConfigSchema _crConfigSchemaResponse config `jsonShouldBe` []
 
   describe "Scalar Types" $ do
@@ -32,7 +35,21 @@ spec config Capabilities {..} = describe "capabilities API" $ do
       let names = fmap (G.unName . unUpdateColumnOperatorName) . HashMap.keys $ unUpdateColumnOperators _stcUpdateColumnOperators
       names `shouldNotContain` ["set"]
   where
-    testPerScalarType :: String -> (forall context m. (MonadThrow m, MonadIO m, HasBaseContext context, HasAgentClient context) => ScalarType -> ScalarTypeCapabilities -> AgentClientT (ExampleT context m) ()) -> AgentTestSpec
+    testPerScalarType ::
+      String ->
+      ( forall context m.
+        ( MonadThrow m,
+          MonadIO m,
+          HasBaseContext context,
+          HasAgentClient context,
+          HasAgentTestContext context,
+          HasDatasetContext context
+        ) =>
+        ScalarType ->
+        ScalarTypeCapabilities ->
+        AgentClientT (ExampleT context m) ()
+      ) ->
+      AgentDatasetTestSpec
     testPerScalarType description test =
       describe description $ do
         forM_ (HashMap.toList $ unScalarTypesCapabilities _cScalarTypes) $ \(scalarType, scalarTypeCapabilities) -> do

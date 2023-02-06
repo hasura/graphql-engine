@@ -1,6 +1,6 @@
 ---
 description: Managing connection pools in Hasura Cloud
-title: 'Cloud: Elastic connection pools'
+title: "Cloud: Elastic connection pools"
 keywords:
   - hasura
   - docs
@@ -14,13 +14,13 @@ sidebar_position: 2
 sidebar_class_name: cloud-icon
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail";
 
 # Elastic Connection Pools
 
-<div className="badge badge--primary heading-badge">Available on: Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Professional, Enterprise (Cloud)</div>
 
 ## Introduction
 
@@ -56,7 +56,8 @@ project can be calculated as `number of server instances * max_connections`
 <TabItem value="console" label="Console">
 
 While adding a new database, under `Connection Settings`, set the desired `Total Max Connections` for primary and read
-replica pools. To set or update `total_max_connections` for existing sources, head to the `Data > Databases > Manage > [database-name] > Edit` page and scroll down to the `Connection Settings` section.
+replica pools. To set or update `total_max_connections` for existing sources, head to the
+`Data > Databases > Manage > [database-name] > Edit` page and scroll down to the `Connection Settings` section.
 
 <Thumbnail src="/img/databases/total-max-connections.png" alt="Total max connections" max-width="543px" />
 
@@ -78,7 +79,7 @@ directory as per this example:
       isolation_level: read-committed
       pool_settings:
         total_max_connections: 60
-  tables: '!include default/tables/tables.yaml'
+  tables: "!include default/tables/tables.yaml"
 ```
 
 Apply the Metadata using the CLI by running:
@@ -158,13 +159,13 @@ X-Hasura-Role: admin
 
 ## How connection pooling works
 
-A connection pool starts off empty and as new requests arrive, a connection to the database is established. This connection
-stays warm in the pool to be reused by any other waiting request. This ensures that subsequent requests do not have to
-reestablish a database connection hence saving time and resources.
+A connection pool starts off empty and as new requests arrive, a connection to the database is established. This
+connection stays warm in the pool to be reused by any other waiting request. This ensures that subsequent requests do
+not have to reestablish a database connection hence saving time and resources.
 
 After a certain period of connection idleness (specified by `idle_timeout`) or connection lifetime (specified by
-`connection_lifetime`), the connection is released from the pool. This ensures that Hasura is not holding
-connections which are not required.
+`connection_lifetime`), the connection is released from the pool. This ensures that Hasura is not holding connections
+which are not required.
 
 If the connection pool is saturated, then any new request waits for the pool to provide a connection. This ensures that
 your database is not bombarded with more connections than it can handle. You can also specify a `pool_timeout` to

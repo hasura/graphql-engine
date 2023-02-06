@@ -21,9 +21,10 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
+import Hasura.NativeQuery.Types (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
 import Hasura.RQL.Types.Column (ColumnType (..))
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend (BackendType (DataConnector))
@@ -42,8 +43,6 @@ type Unimplemented = ()
 instance Backend 'DataConnector where
   type BackendConfig 'DataConnector = InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions
   type BackendInfo 'DataConnector = HashMap DC.DataConnectorName DC.DataConnectorInfo
-  type SourceConfig 'DataConnector = DC.SourceConfig
-  type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
 
   type TableName 'DataConnector = DC.TableName
   type FunctionName 'DataConnector = DC.FunctionName
@@ -157,6 +156,12 @@ instance Backend 'DataConnector where
     pure ()
 
   defaultTriggerOnReplication = Nothing
+
+instance HasSourceConfiguration 'DataConnector where
+  type SourceConfig 'DataConnector = DC.SourceConfig
+  type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
+
+instance NativeQueryMetadata 'DataConnector
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,

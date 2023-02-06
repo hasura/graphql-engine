@@ -2,7 +2,7 @@ cabal-version: 3.0
 name: dc-api
 version: 1.0.0
 extra-source-files:
-  test/Test/Data/ChinookData.xml.gz
+  test/Test/Data/Chinook.xml.gz
   test/Test/Data/schema-tables.json
 
 flag profiling
@@ -11,7 +11,6 @@ flag profiling
   manual: True
 
 common common-all
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
   default-language: Haskell2010
   default-extensions:
     BlockArguments
@@ -28,6 +27,7 @@ common common-all
     LambdaCase
     MultiParamTypeClasses
     NamedFieldPuns
+    NoImplicitPrelude
     OverloadedStrings
     RankNTypes
     RecordWildCards
@@ -38,6 +38,19 @@ common common-all
     TypeApplications
     TypeFamilies
     TypeOperators
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
 
 library
   import: common-all
@@ -57,18 +70,12 @@ library
     lens,
     lens-aeson,
     openapi3,
-    scientific,
     servant,
     servant-client,
-    servant-client-core,
     servant-openapi3,
     text,
     unordered-containers,
     http-media
-
-  if !flag(profiling)
-    -- ghc-heap-view can't be built with profiling
-    build-depends: ghc-heap-view
 
   exposed-modules:
     Autodocodec.Extended
@@ -96,19 +103,16 @@ library
 test-suite tests-dc-api
   import: common-all
   type: exitcode-stdio-1.0
+  build-tool-depends: hspec-discover:hspec-discover
   build-depends:
     Diff,
     aeson,
     aeson-pretty,
     ansi-terminal,
-    autodocodec,
-    autodocodec-openapi3,
     base,
     bytestring,
     case-insensitive,
     containers,
-    data-fix,
-    deepseq,
     dc-api,
     directory,
     exceptions,
@@ -116,27 +120,21 @@ test-suite tests-dc-api
     filepath,
     free,
     graphql-parser,
-    hashable,
     http-client,
     http-types,
     lens,
     lens-aeson,
-    lifted-base,
-    monad-control,
     mtl,
-    network-uri,
-    openapi3,
     optparse-applicative,
     scientific,
     sandwich,
     servant,
     servant-client,
     servant-client-core,
-    servant-openapi3,
     text,
     time,
     unordered-containers,
-    vector,
+    uuid,
     xml-conduit,
     xml-lens,
     yaml,
@@ -149,13 +147,15 @@ test-suite tests-dc-api
   other-modules:
     Command
     Paths_dc_api
+    Test.AgentAPI
     Test.AgentClient
+    Test.AgentDatasets
+    Test.AgentTestContext
     Test.Data
     Test.DataExport
     Test.Expectations
     Test.HttpFile
     Test.Specs.CapabilitiesSpec
-    Test.Specs.ConfigSpec
     Test.Specs.ErrorSpec
     Test.Specs.ExplainSpec
     Test.Specs.HealthSpec

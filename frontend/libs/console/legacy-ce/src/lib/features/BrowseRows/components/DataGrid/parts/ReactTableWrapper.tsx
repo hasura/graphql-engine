@@ -24,6 +24,7 @@ import { RowDialog } from './RowDialog';
 interface ReactTableWrapperProps {
   isRowsSelectionEnabled: boolean;
   onRowsSelect: (rows: Record<number, boolean>) => void;
+  onRowDelete: (row: Record<string, any>) => void;
   relationships?: {
     allRelationships: Relationship[];
     onClick: (props: { relationship: Relationship; rowData: TableRow }) => void;
@@ -40,6 +41,7 @@ interface ReactTableWrapperProps {
 export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
   isRowsSelectionEnabled,
   onRowsSelect,
+  onRowDelete,
   relationships,
   rows,
   sort,
@@ -149,6 +151,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
             <RowOptionsButton
               row={row.original}
               onOpen={(r: any) => setCurrentActiveRow(r)}
+              onDelete={onRowDelete}
             />
             <CheckboxItem
               {...{

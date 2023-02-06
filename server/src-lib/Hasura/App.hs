@@ -120,7 +120,7 @@ import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
 import Hasura.Server.Auth
 import Hasura.Server.CheckUpdates (checkForUpdates)
-import Hasura.Server.Init
+import Hasura.Server.Init hiding (checkFeatureFlag)
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))
@@ -544,7 +544,7 @@ migrateCatalogSchema
 --   type of shutdown action
 data ShutdownAction
   = EventTriggerShutdownAction (IO ())
-  | MetadataDBShutdownAction (MetadataStorageT IO ())
+  | MetadataDBShutdownAction (ExceptT QErr IO ())
 
 -- | If an exception is encountered , flush the log buffer and
 -- rethrow If we do not flush the log buffer on exception, then log lines
@@ -594,7 +594,7 @@ runHGEServer ::
     MonadExecuteQuery m,
     Tracing.HasReporter m,
     HasResourceLimits m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m
@@ -685,7 +685,7 @@ mkHGEServer ::
     MonadExecuteQuery m,
     Tracing.HasReporter m,
     HasResourceLimits m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorageQueryAPI m,
     MonadResolveSource m,
     EB.MonadQueryTags m,
     MonadEventLogCleanup m
@@ -819,11 +819,10 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
         lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
 
         dbUid <-
-          runMetadataStorageT getMetadataDbUid
-            >>= (`onLeft` throwErrJExit DatabaseMigrationError)
+          getMetadataDbUid `onLeftM` throwErrJExit DatabaseMigrationError
         pgVersion <-
           liftIO (runExceptT $ PG.runTx scMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
-            >>= (`onLeft` throwErrJExit DatabaseMigrationError)
+            `onLeftM` throwErrJExit DatabaseMigrationError
 
         telemetryThread <-
           C.forkManagedT "runTelemetry" logger $
@@ -845,7 +844,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
 
     prepareScheduledEvents (Logger logger) = do
       liftIO $ logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
-      res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ runMetadataStorageT unlockAllLockedScheduledEvents)
+      res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return unlockAllLockedScheduledEvents)
       onLeft res (\err -> logger $ mkGenericLog @String LevelError "scheduled_triggers" (show $ qeError err))
 
     getProcessingScheduledEventsCount :: LockedEventsCtx -> IO Int
@@ -883,10 +882,10 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
 
     shutdownAsyncActions ::
       LockedEventsCtx ->
-      MetadataStorageT m ()
+      ExceptT QErr m ()
     shutdownAsyncActions lockedEventsCtx = do
       lockedActionEvents <- liftIO $ readTVarIO $ leActionEvents lockedEventsCtx
-      setProcessingActionLogsToPending (LockedActionIdArray $ toList lockedActionEvents)
+      liftEitherM $ setProcessingActionLogsToPending (LockedActionIdArray $ toList lockedActionEvents)
 
     -- This function is a helper function to do couple of things:
     --
@@ -913,7 +912,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
           case shutdownAction of
             EventTriggerShutdownAction userDBShutdownAction -> userDBShutdownAction
             MetadataDBShutdownAction metadataDBShutdownAction ->
-              runMetadataStorageT metadataDBShutdownAction >>= \case
+              runExceptT metadataDBShutdownAction >>= \case
                 Left err ->
                   logger $
                     mkGenericLog LevelWarn (T.pack actionType) $
@@ -950,6 +949,13 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
                 (length <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
                 (unrefine soGracefulShutdownTimeout)
+
+        -- Create logger for logging the statistics of events fetched
+        fetchedEventsStatsLogger <-
+          allocate
+            (createFetchedEventsStatsLogger logger)
+            (closeFetchedEventsStatsLogger logger)
+
         unLogger logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
         void
           $ C.forkManagedTWithGracefulShutdown
@@ -958,6 +964,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
             (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
           $ processEventQueue
             logger
+            fetchedEventsStatsLogger
             scManager
             (getSchemaCache cacheRef)
             eventEngineCtx
@@ -1007,6 +1014,12 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
       -- prepare scheduled triggers
       lift $ prepareScheduledEvents logger
 
+      -- Create logger for logging the statistics of scheduled events fetched
+      scheduledEventsStatsLogger <-
+        allocate
+          (createFetchedScheduledEventsStatsLogger logger)
+          (closeFetchedScheduledEventsStatsLogger logger)
+
       -- start a background thread to deliver the scheduled events
       -- _scheduledEventsThread <- do
       let scheduledEventsGracefulShutdownAction =
@@ -1015,7 +1028,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
                     logger
                     "scheduled_events"
                     (getProcessingScheduledEventsCount lockedEventsCtx)
-                    (MetadataDBShutdownAction (hoist lowerIO unlockAllLockedScheduledEvents))
+                    (MetadataDBShutdownAction (liftEitherM $ hoist lowerIO unlockAllLockedScheduledEvents))
                     (unrefine soGracefulShutdownTimeout)
                 )
             )
@@ -1028,6 +1041,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
         $ processScheduledTriggers
           env
           logger
+          scheduledEventsStatsLogger
           scManager
           scPrometheusMetrics
           (getSchemaCache cacheRef)
@@ -1126,14 +1140,15 @@ instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
 instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
   runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
   generateCleanupSchedules _ _ _ = pure $ Right ()
+  updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
 
 runInSeparateTx ::
   (MonadIO m) =>
   PG.TxE QErr a ->
-  MetadataStorageT (PGMetadataStorageAppT m) a
+  PGMetadataStorageAppT m (Either QErr a)
 runInSeparateTx tx = do
-  pool <- lift $ asks fst
-  liftEitherM $ liftIO $ runExceptT $ PG.runTx pool (PG.RepeatableRead, Nothing) tx
+  pool <- asks fst
+  liftIO $ runExceptT $ PG.runTx pool (PG.RepeatableRead, Nothing) tx
 
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> PG.TxE QErr ()
 notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId invalidations = do
@@ -1190,9 +1205,7 @@ setCatalogStateTx stateTy stateValue =
         False
 
 -- | Each of the function in the type class is executed in a totally separate transaction.
---
--- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
-instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT (PGMetadataStorageAppT m)) where
+instance (MonadIO m) => MonadMetadataStorage (PGMetadataStorageAppT m) where
   fetchMetadataResourceVersion = runInSeparateTx fetchMetadataResourceVersionFromCatalog
   fetchMetadata = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
   fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
@@ -1225,7 +1238,7 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
   clearActionData = runInSeparateTx . clearActionDataTx
   setProcessingActionLogsToPending = runInSeparateTx . setProcessingActionLogsToPendingTx
 
-instance MonadMetadataStorageQueryAPI (MetadataStorageT (PGMetadataStorageAppT CacheBuild))
+instance MonadIO m => MonadMetadataStorageQueryAPI (PGMetadataStorageAppT m)
 
 --- helper functions ---
 

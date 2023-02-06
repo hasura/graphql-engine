@@ -12,6 +12,7 @@ module Harness.Backend.Postgres
     runSQL,
     defaultConnectInfo,
     defaultSourceMetadata,
+    defaultNamedSourceMetadata,
     defaultSourceConfiguration,
     defaultPostgresConnectionString,
     createDatabase,
@@ -44,7 +45,7 @@ import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Aeson qualified as Aeson
-import Data.Monoid (Last, getLast)
+import Data.Monoid (Last (..))
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
@@ -107,11 +108,12 @@ defaultConnectInfo globalTestEnvironment =
                     ]
               )
               . getLast
+          defaultPort = Last (Just (Postgres.connectPort Postgres.defaultConnectInfo))
        in Postgres.ConnectInfo
             { connectUser = getComponent "user" user,
               connectPassword = getComponent "password" password,
               connectHost = getComponent "host" $ hostaddr <> host,
-              connectPort = fromIntegral . getComponent "port" $ port,
+              connectPort = getComponent "port" $ defaultPort <> (fromIntegral <$> port),
               connectDatabase = getComponent "dbname" $ dbname
             }
     _otherTestingMode ->
@@ -190,6 +192,16 @@ defaultSourceMetadata :: TestEnvironment -> Value
 defaultSourceMetadata testEnv =
   [interpolateYaml|
     name: #{ BackendType.backendSourceName backendTypeMetadata }
+    kind: #{ BackendType.backendTypeString backendTypeMetadata }
+    tables: []
+    configuration: #{ defaultSourceConfiguration testEnv }
+  |]
+
+-- | Metadata source information for the "default" named Postgres instance.
+defaultNamedSourceMetadata :: TestEnvironment -> Value
+defaultNamedSourceMetadata testEnv =
+  [interpolateYaml|
+    name: default
     kind: #{ BackendType.backendTypeString backendTypeMetadata }
     tables: []
     configuration: #{ defaultSourceConfiguration testEnv }

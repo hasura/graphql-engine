@@ -1,7 +1,7 @@
 ---
 sidebar_label: Quickstart with Google Cloud Run
 description: Quickstart with Google Cloud Run for Hasura Enterprise Edition
-title: 'EE: Quickstart with Google Cloud Run'
+title: "EE: Quickstart with Google Cloud Run"
 keywords:
   - hasura
   - docs
@@ -9,11 +9,11 @@ keywords:
 sidebar_position: 4
 ---
 
-import LatestRelease from '@site/src/components/LatestRelease';
+import LatestRelease from "@site/src/components/LatestRelease";
 
 # Quickstart with Google Cloud Run
 
-<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+<div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
 
 ## Introduction
 
@@ -27,8 +27,8 @@ This tutorial will help you run Hasura Enterprise Edition as a Google Cloud Run 
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not already
-  have one.
+- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not
+  already have one.
 - The latest version of the `gcloud` CLI is installed and configured. For more information about installing or upgrading
   your gcloud CLI, see [Installing the gcloud CLI](https://cloud.google.com/sdk/docs/install).
 - Your `gcloud` user has the
@@ -54,10 +54,10 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 Edit `env.yaml` and set the right values:
 
 ```yaml
-HASURA_GRAPHQL_EE_LICENSE_KEY: '<license key>'
+HASURA_GRAPHQL_EE_LICENSE_KEY: "<license key>"
 HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
-HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
-HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
+HASURA_GRAPHQL_REDIS_URL: "redis://redis:6379"
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
 HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 ```
 

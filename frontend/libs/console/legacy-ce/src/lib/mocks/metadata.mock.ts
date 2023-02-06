@@ -4,7 +4,7 @@ import type { Metadata } from '@/features/hasura-metadata-types';
 
 import { allowListInitialData } from '@/features/AllowLists';
 import { queryCollectionInitialData } from '@/features/QueryCollections';
-import { openTelemetryConfigInitialData } from '@/features/OpenTelemetryConfig';
+import { openTelemetryInitialData } from '@/features/OpenTelemetry';
 
 import { rest } from 'msw';
 import { metadataReducer } from './actions';
@@ -17,7 +17,7 @@ export const createDefaultInitialData = (): Metadata => ({
     inherited_roles: [],
     ...allowListInitialData,
     ...queryCollectionInitialData,
-    ...openTelemetryConfigInitialData,
+    ...openTelemetryInitialData,
   },
 });
 

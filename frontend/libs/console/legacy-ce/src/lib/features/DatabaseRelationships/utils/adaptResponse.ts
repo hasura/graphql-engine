@@ -3,16 +3,23 @@ import {
   TableFkRelationships,
 } from '@/features/DataSource';
 import {
+  Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
   LocalTableObjectRelationship,
   ManualArrayRelationship,
   ManualObjectRelationship,
   SameTableObjectRelationship,
+  SourceToRemoteSchemaRelationship,
+  SourceToSourceRelationship,
   Table,
 } from '@/features/hasura-metadata-types';
 import { areTablesEqual } from '@/features/RelationshipsTable';
 import isEqual from 'lodash.isequal';
-import { LocalRelationship } from '../types';
+import {
+  LocalRelationship,
+  RemoteDatabaseRelationship,
+  RemoteSchemaRelationship,
+} from '../types';
 
 const getKeyValuePair = (arr1: string[], arr2: string[]) => {
   const result: Record<string, string> = {};
@@ -160,5 +167,77 @@ export const adaptLocalArrayRelationshipWithFkConstraint = ({
     relationshipType: 'Array',
     type: 'localRelationship',
     definition: getFkDefinition(table, relationship, fkConstraints),
+  };
+};
+
+export const adaptRemoteSchemaRelationship = ({
+  table,
+  dataSourceName,
+  relationship,
+}: {
+  table: Table;
+  dataSourceName: string;
+  relationship: SourceToRemoteSchemaRelationship;
+}): RemoteSchemaRelationship => {
+  return {
+    name: relationship.name,
+    fromSource: dataSourceName,
+    fromTable: table,
+    relationshipType: 'Remote',
+    type: 'remoteSchemaRelationship',
+    definition: {
+      toRemoteSchema: relationship.definition.to_remote_schema.remote_schema,
+      lhs_fields: relationship.definition.to_remote_schema.lhs_fields,
+      remote_field: relationship.definition.to_remote_schema.remote_field,
+    },
+  };
+};
+
+export const adaptLegacyRemoteSchemaRelationship = ({
+  table,
+  dataSourceName,
+  relationship,
+}: {
+  table: Table;
+  dataSourceName: string;
+  relationship: Legacy_SourceToRemoteSchemaRelationship;
+}): RemoteSchemaRelationship => {
+  return {
+    name: relationship.name,
+    fromSource: dataSourceName,
+    fromTable: table,
+    relationshipType: 'Remote',
+    type: 'remoteSchemaRelationship',
+    definition: {
+      toRemoteSchema: relationship.definition.remote_schema,
+      lhs_fields: relationship.definition.hasura_fields,
+      remote_field: relationship.definition.remote_field,
+    },
+  };
+};
+
+export const adaptRemoteDatabaseRelationship = ({
+  table,
+  dataSourceName,
+  relationship,
+}: {
+  table: Table;
+  dataSourceName: string;
+  relationship: SourceToSourceRelationship;
+}): RemoteDatabaseRelationship => {
+  return {
+    name: relationship.name,
+    fromSource: dataSourceName,
+    fromTable: table,
+    relationshipType:
+      relationship.definition.to_source.relationship_type === 'array'
+        ? 'Array'
+        : 'Object',
+    type: 'remoteDatabaseRelationship',
+    definition: {
+      toSource: relationship.definition.to_source.source,
+      toTable: relationship.definition.to_source.table,
+      mapping: relationship.definition.to_source.field_mapping,
+    },
   };
 };

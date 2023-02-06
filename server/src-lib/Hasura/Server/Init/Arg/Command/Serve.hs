@@ -73,7 +73,7 @@ import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
+import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
@@ -1061,7 +1061,7 @@ enableMetadataQueryLoggingOption =
 
 -- TODO(SOLOMON): The defaulting behavior for this occurs inside the Engine. In
 -- an isolated PR we should move that defaulting in the parsing stage.
-parseDefaultNamingConvention :: Opt.Parser (Maybe NamingCase)
+parseDefaultNamingConvention :: Opt.Parser (Maybe NC.NamingCase)
 parseDefaultNamingConvention =
   Opt.optional $
     Opt.option
@@ -1070,14 +1070,10 @@ parseDefaultNamingConvention =
           <> Opt.help (Config._helpMessage defaultNamingConventionOption)
       )
 
--- NOTE: This should be 'Config.Option NC.NamingCase' with a default
--- of 'NC.HasuraCase' but 'ServeOptions' expects a 'Maybe
--- NC.NamingCase' and HGE handles the defaulting explicitly. This
--- should be changed in a subsequent PR.
-defaultNamingConventionOption :: Config.Option ()
+defaultNamingConventionOption :: Config.Option NC.NamingCase
 defaultNamingConventionOption =
   Config.Option
-    { Config._default = (),
+    { Config._default = NC.HasuraCase,
       Config._envVar = "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION",
       Config._helpMessage =
         "Default naming convention for the auto generated graphql names. Possible values are"

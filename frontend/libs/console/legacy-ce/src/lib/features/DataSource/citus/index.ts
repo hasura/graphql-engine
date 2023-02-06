@@ -39,12 +39,12 @@ export const citus: Database = {
           JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
         ) as names
       )
-      SELECT info_schema.table_name, info_schema.table_schema, info_schema.table_type 
+      SELECT info_schema.table_name, info_schema.table_schema, info_schema.table_type
       FROM information_schema.tables as info_schema, partitions
-      WHERE 
+      WHERE
         info_schema.table_schema NOT IN ('pg_catalog', 'citus', 'information_schema', 'columnar', 'guest', 'INFORMATION_SCHEMA', 'sys', 'db_owner', 'db_securityadmin', 'db_accessadmin', 'db_backupoperator', 'db_ddladmin', 'db_datawriter', 'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog', '_timescaledb_internal')
-        AND NOT (info_schema.table_name = ANY (partitions.names)) 
-        AND info_schema.table_name NOT IN ('citus_tables')    
+        AND NOT (info_schema.table_name = ANY (partitions.names))
+        AND info_schema.table_name NOT IN ('citus_tables')
       `;
 
       const tables = await runSQL({

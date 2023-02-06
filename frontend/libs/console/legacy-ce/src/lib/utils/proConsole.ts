@@ -16,8 +16,16 @@ export const isProConsole = (env: ProConsoleEnv) => {
     return true;
   }
 
-  if (env.consoleMode === 'cli' && env.pro === true) {
-    return true;
+  if (env.consoleMode === 'cli') {
+    if (
+      env.consoleType === 'cloud' ||
+      env.consoleType === 'pro' ||
+      env.consoleType === 'pro-lite'
+    )
+      return true;
+
+    // to support old CLI logic, when consoleType is not provided by the CLI
+    if (env.pro === true) return true;
   }
 
   return false;

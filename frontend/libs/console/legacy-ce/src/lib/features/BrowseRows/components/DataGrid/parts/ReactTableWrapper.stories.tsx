@@ -39,6 +39,7 @@ export const Default: ComponentStory<typeof ReactTableWrapper> = () => {
       rows={mockDataForRows}
       isRowsSelectionEnabled
       onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
     />
   );
 };
@@ -49,6 +50,7 @@ export const Basic: ComponentStory<typeof ReactTableWrapper> = () => {
       rows={mockDataForRows}
       isRowsSelectionEnabled
       onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
     />
   );
 };
@@ -61,6 +63,7 @@ export const SelectionDisabled: ComponentStory<
       rows={mockDataForRows}
       isRowsSelectionEnabled={false}
       onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
     />
   );
 };
@@ -131,6 +134,7 @@ export const WithRelationships: ComponentStory<
       }}
       isRowsSelectionEnabled
       onRowsSelect={action('onRowsSelect')}
+      onRowDelete={action('onRowDelete')}
     />
   );
 };

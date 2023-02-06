@@ -33,6 +33,7 @@ export const Badge: React.FC<React.PropsWithChildren<BadgeProps>> = ({
 }) => {
   return (
     <span
+      data-testid="badge"
       {...rest}
       className={clsx(
         'inline-flex items-center px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold',

@@ -21,8 +21,8 @@ export type RemoteSchemaRelationship = BasicRelationshipDetails & {
   relationshipType: 'Remote';
   definition: {
     toRemoteSchema: string;
-    toTable: Table;
-    mapping: Record<string, string>;
+    lhs_fields: string[];
+    remote_field: Record<string, any>;
   };
 };
 
@@ -46,3 +46,17 @@ export enum MODE {
   DELETE = 'delete',
   RENAME = 'rename',
 }
+
+export type SuggestedRelationship = {
+  type: 'object' | 'array';
+  from: {
+    table: Table;
+    columns: string[];
+    constraint_name?: string;
+  };
+  to: {
+    table: Table;
+    columns: string[];
+    constraint_name?: string;
+  };
+};

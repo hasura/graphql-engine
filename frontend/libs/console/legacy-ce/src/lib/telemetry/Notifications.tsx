@@ -2,14 +2,7 @@ import React from 'react';
 import { AnyAction } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { showNotification } from '../components/Services/Common/Notification';
-import { setTelemetryNotificationShownInDB } from './Actions';
 import { ReduxState } from '../types';
-
-const onRemove = () => {
-  return (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => {
-    dispatch(setTelemetryNotificationShownInDB());
-  };
-};
 
 const showTelemetryNotification = () => {
   return (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => {
@@ -35,7 +28,6 @@ const showTelemetryNotification = () => {
               to read more or to opt-out.
             </div>
           ),
-          onRemove: () => dispatch(onRemove()),
         },
         'info'
       )

@@ -137,7 +137,7 @@ startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = d
 -- See Note [Schema Cache Sync]
 startSchemaSyncProcessorThread ::
   ( C.ForkableMonadIO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadResolveSource m
   ) =>
   Logger Hasura ->
@@ -250,7 +250,7 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
 processor ::
   forall m void.
   ( C.ForkableMonadIO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadResolveSource m
   ) =>
   Logger Hasura ->
@@ -271,7 +271,7 @@ processor
   logTVar = forever $ do
     metaVersion <- liftIO $ STM.atomically $ STM.takeTMVar metaVersionRef
     respErr <-
-      runMetadataStorageT $
+      runExceptT $
         refreshSchemaCache metaVersion instanceId logger httpMgr cacheRef TTProcessor serverConfigCtx logTVar
     onLeft respErr (logError logger TTProcessor . TEQueryError)
 
@@ -326,13 +326,13 @@ refreshSchemaCache
                         <> tshow engineResourceVersion
                         <> "."
 
-                  (metadata, latestResourceVersion) <- fetchMetadata
+                  (metadata, latestResourceVersion) <- liftEitherM fetchMetadata
                   logInfo logger threadType $
                     String $
                       "Fetched metadata with resource version "
                         <> tshow latestResourceVersion
 
-                  notifications <- fetchMetadataNotifications engineResourceVersion instanceId
+                  notifications <- liftEitherM $ fetchMetadataNotifications engineResourceVersion instanceId
 
                   case notifications of
                     [] -> do

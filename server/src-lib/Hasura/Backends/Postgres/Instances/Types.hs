@@ -17,6 +17,7 @@ import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate qualified as Postgres
+import Hasura.Backends.Postgres.Instances.NativeQueries (validateNativeQuery)
 import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
@@ -89,8 +90,6 @@ instance
   where
   type BackendConfig ('Postgres pgKind) = ()
   type BackendInfo ('Postgres pgKind) = ()
-  type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
-  type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = Postgres.QualifiedTable
   type FunctionName ('Postgres pgKind) = Postgres.QualifiedFunction
   type FunctionArgument ('Postgres pgKind) = Postgres.FunctionArg
@@ -118,7 +117,6 @@ instance
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
   type BackendInsert ('Postgres pgKind) = Postgres.BackendInsert pgKind
 
-  type NativeQueryInfo ('Postgres pgKind) = NativeQueryInfoImpl ('Postgres pgKind)
   type NativeQuery ('Postgres pgKind) = NativeQueryImpl ('Postgres pgKind)
 
   type XComputedField ('Postgres pgKind) = XEnable
@@ -166,3 +164,28 @@ instance
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
 
   resolveConnectionTemplate = Postgres.pgResolveConnectionTemplate
+
+instance
+  ( HasTag ('Postgres pgKind)
+  ) =>
+  HasSourceConfiguration ('Postgres pgKind)
+  where
+  type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
+  type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
+
+instance
+  ( HasTag ('Postgres pgKind),
+    Typeable ('Postgres pgKind),
+    PostgresBackend pgKind,
+    FromJSON (BackendSourceKind ('Postgres pgKind)),
+    HasCodec (BackendSourceKind ('Postgres pgKind))
+  ) =>
+  NativeQueryMetadata ('Postgres pgKind)
+  where
+  type NativeQueryInfo ('Postgres pgKind) = NativeQueryInfoImpl ('Postgres pgKind)
+  type NativeQueryName ('Postgres pgKind) = NativeQueryNameImpl
+  type TrackNativeQuery ('Postgres pgKind) = TrackNativeQueryImpl ('Postgres pgKind)
+  trackNativeQuerySource = tnqSource
+  nativeQueryInfoName = nqiiRootFieldName
+  nativeQueryTrackToInfo = defaultNativeQueryTrackToInfo
+  validateNativeQueryAgainstSource = validateNativeQuery

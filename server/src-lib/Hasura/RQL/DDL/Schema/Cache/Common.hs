@@ -48,7 +48,6 @@ import Control.Arrow.Extended
 import Control.Arrow.Interpret
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson.Extended
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -270,8 +269,7 @@ newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
       MonadReader CacheBuildParams,
       MonadIO,
       MonadBase IO,
-      MonadBaseControl IO,
-      MonadUnique
+      MonadBaseControl IO
     )
 
 instance HasHttpManagerM CacheBuild where

@@ -39,15 +39,26 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "dist/storybook/console-ce",
+        "outputPath": "dist/storybook/console/legacy-ce",
         "config": {
           "configFolder": "libs/console/legacy-ce/.storybook"
         }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
       }
     },
-    "configurations": {
-      "ci": {
-        "quiet": true
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "test-storybook -c libs/console/legacy-ce/.storybook --url=http://localhost:4400"
+      },
+      "configurations": {
+        "ci": {
+          "command": "start-server-and-test 'nx run console-legacy-ce:storybook' 4400 'nx run console-legacy-ce:test-storybook'"
+        }
       }
     }
   }

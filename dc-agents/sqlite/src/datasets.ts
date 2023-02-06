@@ -1,10 +1,10 @@
 import { connect, SqlLogger } from './db';
-import { DatasetDeleteResponse, DatasetGetResponse, DatasetPostRequest, DatasetPostResponse } from '@hasura/dc-api-types';
+import { DatasetDeleteCloneResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, } from '@hasura/dc-api-types';
 import { promises, existsSync } from 'fs';
 import { DATASET_CLONES, DATASET_DELETE, DATASET_TEMPLATES } from "./environment";
 import path from 'path';
 
-export async function getDataset(template_name: string): Promise<DatasetGetResponse> {
+export async function getDataset(template_name: string): Promise<DatasetGetTemplateResponse> {
   const path = mkTemplatePath(template_name);
   if(existsSync(path)) {
     const stats = await promises.stat(path);
@@ -18,7 +18,7 @@ export async function getDataset(template_name: string): Promise<DatasetGetRespo
   }
 }
 
-export async function cloneDataset(logger: SqlLogger, clone_name: string, body: DatasetPostRequest): Promise<DatasetPostResponse> {
+export async function cloneDataset(logger: SqlLogger, clone_name: string, body: DatasetCreateCloneRequest): Promise<DatasetCreateCloneResponse> {
   const fromPath = mkTemplatePath(body.from);
   const toPath = mkClonePath(clone_name);
   const fromStats = await promises.stat(fromPath);
@@ -40,7 +40,7 @@ export async function cloneDataset(logger: SqlLogger, clone_name: string, body: 
   }
 }
 
-export async function deleteDataset(clone_name: string): Promise<DatasetDeleteResponse> {
+export async function deleteDataset(clone_name: string): Promise<DatasetDeleteCloneResponse> {
   if(DATASET_DELETE) {
     const path = mkClonePath(clone_name);
     const exists = existsSync(path);
@@ -66,7 +66,7 @@ function mkTemplatePath(name: string): string {
   if(name != safeName) {
     throw(Error(`Template name ${name} is not valid.`));
   }
-  return path.join(DATASET_TEMPLATES, safeName);
+  return path.join(DATASET_TEMPLATES, safeName + ".sqlite");
 }
 
 function mkClonePath(name: string): string {
@@ -75,5 +75,5 @@ function mkClonePath(name: string): string {
   if(name != safeName) {
     throw(Error(`Template name ${name} is not valid.`));
   }
-  return path.join(DATASET_CLONES, safeName);
+  return path.join(DATASET_CLONES, safeName + ".sqlite");
 }

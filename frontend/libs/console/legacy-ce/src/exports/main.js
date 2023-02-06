@@ -85,6 +85,8 @@ export { ReactQueryProvider, reactQueryClient } from '../lib/lib/reactQuery';
 
 export { PrometheusSettings } from '../lib/features/Prometheus';
 
+export { OpenTelemetryFeature } from '../lib/features/OpenTelemetry';
+
 export { FeatureFlags } from '../lib/features/FeatureFlags';
 
 export {

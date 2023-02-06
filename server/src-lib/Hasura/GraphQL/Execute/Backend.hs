@@ -27,7 +27,6 @@ import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Schema.Cache (CacheRWT)
@@ -304,9 +303,6 @@ instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m) where
 
 instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (TraceT m) QueryTagsComment
-
-instance (MonadQueryTags m) => MonadQueryTags (MetadataStorageT m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (PG.TxET QErr m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (PG.TxET QErr m) QueryTagsComment

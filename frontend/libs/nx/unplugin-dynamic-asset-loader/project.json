@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/nx/unplugin-dynamic-asset-loader/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/nx/unplugin-dynamic-asset-loader",
+        "main": "libs/nx/unplugin-dynamic-asset-loader/src/index.ts",
+        "tsConfig": "libs/nx/unplugin-dynamic-asset-loader/tsconfig.lib.json",
+        "assets": ["libs/nx/unplugin-dynamic-asset-loader/*.md"],
+        "external": "none",
+        "buildableProjectDepsInPackageJsonType": "dependencies"
+      }
+    },
+    "publish": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs nx-unplugin-dynamic-asset-loader {args.ver} {args.tag}"
+      },
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "build"
+        }
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/nx/unplugin-dynamic-asset-loader/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/nx/unplugin-dynamic-asset-loader"],
+      "options": {
+        "jestConfig": "libs/nx/unplugin-dynamic-asset-loader/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

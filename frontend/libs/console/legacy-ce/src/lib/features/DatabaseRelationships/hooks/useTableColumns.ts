@@ -8,9 +8,11 @@ import { generateQueryKeys } from '../utils/queryClientUtils';
 export const useTableColumns = ({
   dataSourceName,
   table,
+  enabled = true,
 }: {
   dataSourceName: string;
   table: Table;
+  enabled?: boolean;
 }) => {
   const httpClient = useHttpClient();
   return useQuery<TableColumn[], AxiosError>({

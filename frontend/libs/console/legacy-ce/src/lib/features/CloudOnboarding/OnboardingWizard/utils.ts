@@ -118,7 +118,6 @@ export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
     variables,
     cloudHeaders
   ).catch(error => {
-    console.error(error);
     programmaticallyTraceError(error);
   });
 };

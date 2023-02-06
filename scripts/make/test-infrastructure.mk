@@ -14,17 +14,6 @@ export MSSQL_IMAGE
 TEST_MSSQL_CONNECTION_STRING = Driver={ODBC Driver 18 for SQL Server};Server=localhost,65003;Uid=sa;Pwd=Password!;Encrypt=optional
 TEST_POSTGRES_URL = postgres://hasura:hasura@localhost:65002/hasura
 
-define stop_after
-@ echo $1 >&2
-@ $1 || EXIT_STATUS=$$?; \
-if [[ -z "$${EXIT_STATUS:-}" ]]; then \
-	$(MAKE) stop-everything; \
-else \
-	$(MAKE) stop-everything; \
-	exit $$EXIT_STATUS; \
-fi
-endef
-
 .PHONY: build-backends
 ## build-backends: build Docker images for any backends that need them
 build-backends:

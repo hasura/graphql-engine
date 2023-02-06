@@ -26,12 +26,14 @@ library
     , hedgehog
     , hspec
     , hspec-core
+    , http-client
     , http-conduit
     , http-types
     , insert-ordered-containers
     , lens
     , lens-aeson
     , libyaml
+    , lifted-base
     , managed
     , morpheus-graphql
     , mtl
@@ -51,6 +53,7 @@ library
     , safe
     , safe-exceptions
     , servant-server
+    , servant-client
     , sop-core
     , stm
     , string-interpolate
@@ -93,7 +96,24 @@ library
     TypeApplications
     TypeSynonymInstances
 
-  ghc-options: -Wall -Werror
+  ghc-options:
+    -Werror
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-redundant-constraints
 
   exposed-modules:
     Harness.Backend.BigQuery
@@ -108,6 +128,7 @@ library
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver
     Harness.Constants
+    Harness.DataConnectorAgent
     Harness.Env
     Harness.Exceptions
     Harness.GraphqlEngine

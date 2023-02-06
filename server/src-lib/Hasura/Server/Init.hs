@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -O0 #-}
 
 -- | Arg and Env Parsing for initialisation of the engine along with
 -- corresponding logging and other helper functionality.
@@ -204,7 +203,7 @@ mkServeOptions ServeOptionsRaw {..} = do
   soEnableMetadataQueryLogging <- case rsoEnableMetadataQueryLoggingEnv of
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
-  soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
+  soDefaultNamingConvention <- withOptionDefault rsoDefaultNamingConvention defaultNamingConventionOption
   soMetadataDefaults <- withOptionDefault rsoMetadataDefaults metadataDefaultsOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
 

@@ -14,9 +14,11 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Text qualified as Text
 import Data.Text.Extended qualified as Text (commaSeparated)
 import Data.Time qualified as Time
+import Harness.DataConnectorAgent (createClone, deleteClone)
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
@@ -25,7 +27,8 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (SchemaName)
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment (..))
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
@@ -83,18 +86,18 @@ setupTablesAction ts env =
     (const $ teardown ts (env, ()))
 
 -- | Metadata source information for the default Sqlite instance.
-sourceMetadata :: Aeson.Value
-sourceMetadata =
+sourceMetadata :: API.Config -> Aeson.Value
+sourceMetadata (API.Config config) =
   let source = Fixture.backendSourceName backendTypeMetadata
       backendType = BackendType.backendTypeString backendTypeMetadata
+      explicitMainConfig = KeyMap.insert "explicit_main_schema" (Aeson.Bool True) config
    in [yaml|
-name: *source
-kind: *backendType
-tables: []
-configuration:
-  db: "/db.sqlite"
-  explicit_main_schema: true
-|]
+        name: *source
+        kind: *backendType
+        tables: []
+        configuration:
+          value: *explicitMainConfig
+      |]
 
 backendConfig :: Aeson.Value
 backendConfig =
@@ -102,15 +105,20 @@ backendConfig =
    in [yaml|
 dataconnector:
   *backendType:
-    uri: "http://127.0.0.1:65007/"
+    uri: *sqliteAgentUri
 |]
+
+sqliteAgentUri :: String
+sqliteAgentUri = "http://127.0.0.1:65007/"
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
+  -- Create the database clone
+  cloneConfig <- API._dccrConfig <$> createClone sqliteAgentUri testEnvironment (API.DatasetTemplateName "Empty")
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig)
+  GraphqlEngine.setSource testEnvironment (sourceMetadata cloneConfig) (Just backendConfig)
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable testEnvironment table
@@ -164,11 +172,15 @@ teardown (reverse -> tables) (testEnvironment, _) = do
     ( forFinally_ tables $ \table ->
         Schema.untrackRelationships table testEnvironment
     )
-    -- Then teardown tables
-    ( forFinally_ tables $ \table ->
-        finally
-          (untrackTable testEnvironment table)
-          (dropTable testEnvironment table)
+    ( finally
+        -- Then teardown tables
+        ( forFinally_ tables $ \table ->
+            finally
+              (untrackTable testEnvironment table)
+              (dropTable testEnvironment table)
+        )
+        -- Then delete the db clone
+        (deleteClone sqliteAgentUri testEnvironment)
     )
 
 -- | Call the Metadata API and pass in a Raw SQL statement to the

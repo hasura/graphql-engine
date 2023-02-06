@@ -62,13 +62,13 @@ function nullableCast(ds: any[]): boolean {
 }
 
 const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
+  const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
   const ast = sqliteParser(info.sql);
   const columnsDdl = getColumnsDdl(ast);
   const primaryKeys = ddlPKs(ast);
-  const foreignKeys = ddlFKs(config, ast);
+  const foreignKeys = ddlFKs(config, tableName, ast);
   const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
   const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
-  const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
   return {
     name: tableName,
@@ -146,7 +146,7 @@ function getColumnsDdl(ddl: any): any[] {
  * @param ddl
  * @returns [name, FK constraint definition][]
  */
-function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
+function ddlFKs(config: Config, tableName: Array<string>, ddl: any): [string, Constraint][]  {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
@@ -177,7 +177,7 @@ function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
       const destinationColumn = definition.references.columns[0];
       const foreignTable = config.explicit_main_schema ? ["main", definition.references.name] : [definition.references.name];
       return [[
-        `${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
+        `${tableName.join('.')}.${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
         { foreign_table: foreignTable,
           column_mapping: {
             [sourceColumn.name]: destinationColumn.name

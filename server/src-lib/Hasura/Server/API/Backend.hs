@@ -169,7 +169,7 @@ connectionTemplateCommands =
 
 nativeAccessCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
 nativeAccessCommands =
-  [ commandParser "get_custom_sql" $ RMGetCustomSQL . mkAnyBackend @b,
-    commandParser "track_custom_sql" $ RMTrackCustomSQL . mkAnyBackend @b,
-    commandParser "untrack_custom_sql" $ RMUntrackCustomSQL . mkAnyBackend @b
+  [ commandParser "get_native_query" $ RMGetNativeQuery . mkAnyBackend @b,
+    commandParser "track_native_query" $ RMTrackNativeQuery . mkAnyBackend @b,
+    commandParser "untrack_native_query" $ RMUntrackNativeQuery . mkAnyBackend @b
   ]

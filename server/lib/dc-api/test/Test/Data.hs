@@ -68,7 +68,7 @@ numericColumns :: [API.ColumnName]
 numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.ScalarType "number" then Just _ciName else Nothing))
 
 chinookXmlBS :: ByteString
-chinookXmlBS = $(makeRelativeToProject "test/Test/Data/ChinookData.xml.gz" >>= embedFile)
+chinookXmlBS = $(makeRelativeToProject "test/Test/Data/Chinook.xml.gz" >>= embedFile)
 
 chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS

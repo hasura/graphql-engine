@@ -177,8 +177,6 @@ instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m)
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m)
 
-instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m)
-
 -- | A partial response, e.g. from a remote schema call or postgres
 -- postgres query, which we'll assemble into the final response for
 -- the client. It is annotated with timing metadata.
@@ -307,7 +305,7 @@ runGQ ::
     MonadQueryLog m,
     MonadTrace m,
     MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>
@@ -736,7 +734,7 @@ runGQBatched ::
     MonadQueryLog m,
     MonadTrace m,
     MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     EB.MonadQueryTags m,
     HasResourceLimits m
   ) =>

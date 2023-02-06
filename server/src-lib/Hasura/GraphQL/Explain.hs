@@ -81,7 +81,7 @@ explainGQLQuery ::
   ( MonadError QErr m,
     MonadIO m,
     MonadBaseControl IO m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadQueryTags m
   ) =>
   SchemaCache ->
