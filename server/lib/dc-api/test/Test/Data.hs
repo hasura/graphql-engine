@@ -25,6 +25,7 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
+    _ColumnFieldNull,
     _RelationshipFieldRows,
     orderByColumn,
   )
@@ -36,7 +37,7 @@ import Control.Arrow (first, (>>>))
 import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
-import Data.Aeson.Lens (_Bool, _Number, _String)
+import Data.Aeson.Lens (_Bool, _Null, _Number, _String)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
@@ -517,6 +518,9 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
+
+_ColumnFieldNull :: Traversal' API.FieldValue ()
+_ColumnFieldNull = API._ColumnFieldValue . _Null
 
 _RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
 _RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
