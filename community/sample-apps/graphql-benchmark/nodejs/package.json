@@ -1,18 +1,17 @@
 {
   "devDependencies": {
-    "@graphql-codegen/cli": "2.16.4",
-    "@graphql-codegen/typescript": "2.8.7",
-    "@graphql-codegen/typescript-resolvers": "2.7.12",
+    "@graphql-codegen/cli": "^3.0.0",
+    "@graphql-codegen/typescript": "^3.0.0",
+    "@graphql-codegen/typescript-resolvers": "^3.0.0",
+    "@tsconfig/node18-strictest": "^1.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "@envelop/dataloader": "^4.0.4",
-    "@graphql-yoga/node": "^3.3.0",
-    "dataloader": "^2.1.0",
+    "dataloader": "^2.2.1",
     "graphql": "^16.6.0",
-    "graphql-yoga": "^3.3.0",
-    "lodash.keyby": "^4.6.0",
+    "graphql-yoga": "^3.4.1",
     "postgres": "^3.3.3"
   },
   "scripts": {

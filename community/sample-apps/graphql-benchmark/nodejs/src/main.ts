@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { join } from "node:path";
 import { createSchema, createYoga } from "graphql-yoga";
 import { GraphQLError } from "graphql";
 import DataLoader from "dataloader";
@@ -9,14 +10,14 @@ import sql from "./db";
 import { genericBatchFunction } from "./dataloader";
 import { keyByArray } from "./utils";
 
-const typeDefs = readFileSync("../schema.graphql", "utf8");
+const typeDefs = readFileSync(join(__dirname, "schema.graphql"), "utf8");
 
 const resolvers: Resolvers = {
     Query: {
-        Album: async (parent, args, context, info) => {
+        Album: async (_parent, args, context, _info) => {
             return (context.getAlbumsById as DataLoader<string, Album>).load(args.id.toString());
         },
-        Albums: async (parent, args, context, info) => {
+        Albums: async (_parent, _args, context, _info) => {
             const albums = await (
                 context.getAllAlbums as DataLoader<string, Album[]>
             ).load('1');
@@ -35,12 +36,12 @@ const resolvers: Resolvers = {
             }
             return albums;
         },
-        Artist: async (parent, args, context, info) => {
+        Artist: async (_parent, args, context, _info) => {
             return (context.getArtistsById as DataLoader<string, Artist>).load(
                 args.id.toString()
             );
         },
-        Artists: async (parent, args, context, info) => {
+        Artists: async (_parent, _args, context, _info) => {
             const artists = await (
                 context.getAllArtists as DataLoader<string, Artist[]>
             ).load('1');
@@ -55,10 +56,10 @@ const resolvers: Resolvers = {
             }
             return artists;
         },
-        Track: async (parent, args, context, info) => {
+        Track: async (_parent, args, context, _info) => {
             return (context.getTracksById as DataLoader<string, Track>).load(args.id.toString());
         },
-        Tracks: async (parent, args, context, info) => {
+        Tracks: async (_parent, _args, context, _info) => {
             const tracks = await (
                 context.getAllTracks as DataLoader<string, Track[]>
             ).load('1');
@@ -79,12 +80,12 @@ const resolvers: Resolvers = {
         },
     },
     Album: {
-        async Artist(parent, args, context, info) {
+        async Artist(parent, _args, context, _info) {
             return (context.getArtistsById as DataLoader<string, Artist>).load(
                 parent.ArtistId.toString()
             );
         },
-        async Tracks(parent, args, context, info) {
+        async Tracks(parent, _args, context, _info) {
             const tracks = await (context.getTracksByAlbumId as DataLoader<string, Track[]>).load(
                 parent.AlbumId.toString()
             );
@@ -98,7 +99,7 @@ const resolvers: Resolvers = {
         },
     },
     Artist: {
-        async Albums(parent, args, context, info) {
+        async Albums(parent, _args, context, _info) {
             const albums = await (context.getAlbumsByArtistId as DataLoader<string, Album[]>).load(
                 parent.ArtistId.toString()
             );
@@ -115,7 +116,7 @@ const resolvers: Resolvers = {
         },
     },
     Track: {
-        async Album(parent, args, context, info) {
+        async Album(parent, _args, context, _info) {
             return (context.getAlbumsById as DataLoader<string, Album>).load(
                 parent.AlbumId!.toString()
             );
@@ -129,72 +130,75 @@ export const schema = createSchema({
 });
 
 const server = createServer(
+    // @ts-ignore
     createYoga({
+        graphqlEndpoint: "/v1/graphql",
+        // @ts-ignore
         schema,
         plugins: [
             useDataLoader(
                 "getAlbumsById",
-                (context) =>
+                (_context) =>
                     new DataLoader((keys: Readonly<string[]>) =>
                         genericBatchFunction(keys, { name: "Album", id: "AlbumId" })
                     )
             ),
             useDataLoader(
                 "getAllAlbums",
-                (context) =>
+                (_context) =>
                     new DataLoader(async (keys: Readonly<string[]>) => {
                         const albums = await sql`SELECT * FROM ${sql("Album")}`;
-                        return keys.map((key) => albums);
+                        return keys.map((_key) => albums);
                     })
             ),
             useDataLoader(
                 "getAlbumsByArtistId",
-                (context) =>
+                (_context) =>
                     new DataLoader((keys: Readonly<string[]>) =>
                         genericBatchFunction(keys, { name: "Album", id: "ArtistId" }, true)
                     )
             ),
             useDataLoader(
                 "getArtistsById",
-                (context) =>
+                (_context) =>
                     new DataLoader((keys: Readonly<string[]>) =>
                         genericBatchFunction(keys, { name: "Artist", id: "ArtistId" })
                     )
             ),
             useDataLoader(
                 "getAllArtists",
-                (context) =>
+                (_context) =>
                     new DataLoader(async (keys: Readonly<string[]>) => {
                         const artists = await sql`SELECT * FROM ${sql("Artist")}`;
-                        return keys.map((key) => artists);
+                        return keys.map((_key) => artists);
                     })
             ),
             useDataLoader(
                 "getTracksById",
-                (context) =>
+                (_context) =>
                     new DataLoader((keys: Readonly<string[]>) =>
                         genericBatchFunction(keys, { name: "Track", id: "TrackId" })
                     )
             ),
             useDataLoader(
                 "getTracksByAlbumId",
-                (context) =>
+                (_context) =>
                     new DataLoader((keys: Readonly<string[]>) =>
                         genericBatchFunction(keys, { name: "Track", id: "AlbumId" }, true)
                     )
             ),
             useDataLoader(
                 "getAllTracks",
-                (context) =>
+                (_context) =>
                     new DataLoader(async (keys: Readonly<string[]>) => {
                         const tracks = await sql`SELECT * FROM ${sql("Track")}`;
-                        return keys.map((key) => tracks);
+                        return keys.map((_key) => tracks);
                     })
             ),
         ],
     })
 );
 
-server.listen(4000, () => {
-    console.info("Server is running on http://localhost:4000/graphql");
+server.listen(8080, () => {
+    console.info("Server is running on http://localhost:8080/v1/graphql");
 });

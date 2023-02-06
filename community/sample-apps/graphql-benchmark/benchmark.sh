@@ -1,0 +1,31 @@
+#!/bin/sh
+
+docker compose -f docker-compose.hasura.yml up -d
+
+echo "Running Hasura Benchmark"
+
+sleep 5
+
+docker run --net=host -v "$PWD":/app/tmp -it \
+ graphql-bench-local query \
+ --config="./tmp/config.query.yaml" \
+ --outfile="./tmp/report.hasura.json"
+
+docker compose -f docker-compose.hasura.yml down
+
+echo "Hasura Benchmark done"
+
+docker compose -f docker-compose.node.yml up -d
+
+echo "Running Nodejs Benchmark"
+
+sleep 5
+
+docker run --net=host -v "$PWD":/app/tmp -it \
+ graphql-bench-local query \
+ --config="./tmp/config.query.yaml" \
+ --outfile="./tmp/report.nodejs.json"
+
+docker compose -f docker-compose.node.yml down
+
+echo "Node.js Benchmark done"
