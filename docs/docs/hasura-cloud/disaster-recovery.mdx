@@ -11,7 +11,7 @@ sidebar_position: 70
 
 # Disaster Recovery and Passive Standby Config for Hasura Cloud
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise</div>
 
 ## Overview
 
@@ -41,9 +41,9 @@ with your secondary database.
 
 Depending on when and how you keep the secondary database schema and data synced with the primary database, you should
 also keep the Hasura Metadata on the secondary project up-to-date and in-sync with the primary project. You can use our
-[Github Integration](/hasura-cloud/ci-cd/github-integration.mdx) features to keep your secondary project
-in-sync by deploying each commit to both projects. Care should be taken in the config of databases and ENV variables in
-this regard.
+[Github Integration](/hasura-cloud/ci-cd/github-integration.mdx) features to keep your secondary project in-sync by
+deploying each commit to both projects. Care should be taken in the config of databases and ENV variables in this
+regard.
 
 ## Step 4: Redirect traffic on failover
 
