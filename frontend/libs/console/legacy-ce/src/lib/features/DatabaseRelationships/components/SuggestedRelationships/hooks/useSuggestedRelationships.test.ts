@@ -136,11 +136,11 @@ describe('addConstraintName', () => {
     const expected = [
       {
         ...relationships[0],
-        constraintName: 'ArtistId_Artist_ArtistId',
+        constraintName: 'Album_ArtistId_Artist_ArtistId',
       },
       {
         ...relationships[1],
-        constraintName: 'GenreId_Artists_GenreId',
+        constraintName: 'Genre_GenreId_Artists_GenreId',
       },
     ];
 

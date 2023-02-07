@@ -9,13 +9,16 @@ import {
   generateRenameLocalRelationshipRequest,
 } from '../utils/generateRequest';
 import { generateQueryKeys } from '../utils/queryClientUtils';
+import { Table } from '@/features/hasura-metadata-types';
 
 export const useManageLocalRelationship = ({
   dataSourceName,
+  table,
   onSuccess,
   onError,
 }: {
   dataSourceName: string;
+  table: Table;
   onSuccess?: () => void;
   onError?: (err: Error) => void;
 }) => {
@@ -32,6 +35,10 @@ export const useManageLocalRelationship = ({
     () => ({
       onSuccess: () => {
         queryClient.invalidateQueries(generateQueryKeys.metadata());
+
+        queryClient.invalidateQueries(
+          generateQueryKeys.suggestedRelationships({ dataSourceName, table })
+        );
         onSuccess?.();
       },
       onError: (err: Error) => {
