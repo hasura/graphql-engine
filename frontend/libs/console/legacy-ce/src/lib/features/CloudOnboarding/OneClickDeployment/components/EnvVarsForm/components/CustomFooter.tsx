@@ -10,7 +10,7 @@ export function CustomFooter(props: Props) {
 
   const buttonText = {
     default: 'Set Environment Variables',
-    loading: 'Setting...',
+    loading: 'Setting Environment Variables...',
     error: 'Retry Setting Environment Variables',
     hidden: '',
   };

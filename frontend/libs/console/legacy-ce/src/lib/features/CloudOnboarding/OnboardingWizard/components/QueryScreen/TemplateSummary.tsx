@@ -8,12 +8,8 @@ import {
   templateSummaryRunQuerySkipVariables,
 } from '../../constants';
 import { QueryScreen } from './QueryScreen';
-import {
-  fetchTemplateDataQueryFn,
-  runQueryInGraphiQL,
-  fillSampleQueryInGraphiQL,
-  emitOnboardingEvent,
-} from '../../utils';
+import { fetchTemplateDataQueryFn, emitOnboardingEvent } from '../../utils';
+import { runQueryInGraphiQL, fillSampleQueryInGraphiQL } from '../../../utils';
 
 type Props = {
   templateUrl: string;

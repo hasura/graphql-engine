@@ -3,11 +3,7 @@ import { Button } from '@/new-components/Button';
 import { FaCheckCircle, FaGithub, FaTimesCircle } from 'react-icons/fa';
 import { MdRefresh } from 'react-icons/md';
 
-const defaultSuccessMessage =
-  'Your project from the following GitHub repo has been installed successfully! Get started by composing your first query from the Explorer to the left of your code editor';
-
-const defaultErrorMessage =
-  'There was a problem loading your project. Please retry loading your sample';
+const defaultErrorMessage = 'There was a problem setting up your project.';
 
 type GraphiqlPopupProps = {
   status: 'success' | 'error';
@@ -25,12 +21,33 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
     status,
     gitRepoName,
     gitRepoFullLink,
-    successMessage = defaultSuccessMessage,
+    successMessage,
     errorMessage = defaultErrorMessage,
-    repoDescription,
+    // repoDescription,
     retryCb,
     dismissCb,
   } = props;
+
+  let successMsgSection;
+  if (successMessage) {
+    successMsgSection = <div>{successMessage}</div>;
+  } else {
+    successMsgSection = (
+      <div>
+        A new project from{' '}
+        <a
+          href={gitRepoFullLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#333] hover:text-[#333] hover:no-underline cursor-pointer font-semibold"
+        >
+          <FaGithub /> {gitRepoName}
+        </a>{' '}
+        has been set up successfully! Get started by trying your first query
+        from the API explorer.
+      </div>
+    );
+  }
 
   return (
     <div className="z-[103] fixed w-96 bottom-14 right-12 border border-slate-300">
@@ -44,7 +61,7 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
             <div>
               <FaCheckCircle className="text-emerald-600" />
             </div>
-            <div>{successMessage}</div>
+            {successMsgSection}
           </>
         ) : (
           <>
@@ -55,9 +72,10 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
           </>
         )}
       </div>
+      {/*
       <div className="p-sm bg-white flex space-x-1.5 border-t border-slate-300 ">
         <div>
-          <FaGithub className="text-lg" />
+          <FaGithub className="text-lg"/>
         </div>
         <div>
           <a
@@ -71,6 +89,7 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
           {repoDescription && <div>{repoDescription}</div>}
         </div>
       </div>
+      */}
       <div className="p-sm bg-slate-50 border-t border-slate-300">
         {status === 'success' ? (
           <Button mode="default" onClick={dismissCb} className="w-full">
@@ -79,7 +98,7 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
         ) : (
           <div className="flex items-center justify-between">
             <Button icon={<MdRefresh />} mode="primary" onClick={retryCb}>
-              Retry Loading Sample
+              Retry project set up
             </Button>
             <Button mode="default" onClick={dismissCb}>
               Close

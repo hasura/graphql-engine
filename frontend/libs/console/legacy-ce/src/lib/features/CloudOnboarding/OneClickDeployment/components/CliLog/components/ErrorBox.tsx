@@ -72,7 +72,7 @@ export function ErrorBox(props: Props) {
           <span className="text-white font-semibold text-md">Retry</span>
         </Button>
         <LinkButton
-          url="https://hasura.io/docs"
+          url="https://hasura.io/docs/latest/hasura-cloud/one-click-deploy/index/#troubleshooting"
           buttonText="Troubleshooting Docs"
           icon={<FaExternalLinkAlt className="text-white" />}
           iconPosition="end"
