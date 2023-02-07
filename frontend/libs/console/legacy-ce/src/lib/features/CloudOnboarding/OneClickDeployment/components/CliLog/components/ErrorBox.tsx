@@ -1,4 +1,5 @@
 import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
 import React from 'react';
 import {
   FaExclamationCircle,
@@ -57,26 +58,36 @@ export function ErrorBox(props: Props) {
       <p className="mb-sm text-white">{getErrorMessage()}</p>
 
       <div className="flex items-center">
-        <Button
-          mode="default"
-          id="one-click-deployment-error-retry"
-          data-testid="one-click-deployment-error-retry"
-          isLoading={isRetrying}
-          loadingText="Retrying"
-          disabled={isRetrying}
-          className="mr-sm bg-none bg-red-600 border-red-800 disabled:text-slate-50"
-          icon={<FaSyncAlt className="text-white" />}
-          iconPosition="start"
-          onClick={onRetryClick}
+        <Analytics
+          name="one-click-deployment-error-retry"
+          passHtmlAttributesToChildren
         >
-          <span className="text-white font-semibold text-md">Retry</span>
-        </Button>
-        <LinkButton
-          url="https://hasura.io/docs/latest/hasura-cloud/one-click-deploy/index/#troubleshooting"
-          buttonText="Troubleshooting Docs"
-          icon={<FaExternalLinkAlt className="text-white" />}
-          iconPosition="end"
-        />
+          <Button
+            mode="default"
+            id="one-click-deployment-error-retry"
+            data-testid="one-click-deployment-error-retry"
+            isLoading={isRetrying}
+            loadingText="Retrying"
+            disabled={isRetrying}
+            className="mr-sm bg-none bg-red-600 border-red-800 disabled:text-slate-50"
+            icon={<FaSyncAlt className="text-white" />}
+            iconPosition="start"
+            onClick={onRetryClick}
+          >
+            <span className="text-white font-semibold text-md">Retry</span>
+          </Button>
+        </Analytics>
+        <Analytics
+          name="one-click-deployment-error-trouble-shooting-button"
+          passHtmlAttributesToChildren
+        >
+          <LinkButton
+            url="https://hasura.io/docs/latest/hasura-cloud/one-click-deploy/index/#troubleshooting"
+            buttonText="Troubleshooting Docs"
+            icon={<FaExternalLinkAlt className="text-white" />}
+            iconPosition="end"
+          />
+        </Analytics>
       </div>
       {fallbackApps.length ? (
         <>
@@ -88,7 +99,12 @@ export function ErrorBox(props: Props) {
             {fallbackApps
               .map(transformFallbackAppToLinkButtonProps)
               .map(app => (
-                <LinkButton {...app} />
+                <Analytics
+                  name={`one-click-deployment-fallback-app-${app.buttonText}`}
+                  passHtmlAttributesToChildren
+                >
+                  <LinkButton {...app} />
+                </Analytics>
               ))}
           </div>
         </>

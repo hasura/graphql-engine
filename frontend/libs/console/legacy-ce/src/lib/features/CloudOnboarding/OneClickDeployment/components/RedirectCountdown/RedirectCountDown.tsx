@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
 
 type Props = {
   redirect: VoidFunction;
@@ -43,16 +44,21 @@ export const RedirectCountDown: React.VFC<Props> = props => {
         <p>Opening project in {count} seconds...</p>
       </div>
       <div className="flex w-1/4 justify-end items-center">
-        <Button
-          data-testid="redirect-countdown-redirect-button"
-          mode="primary"
-          disabled={loading}
-          isLoading={loading}
-          loadingText="Redirecting..."
-          onClick={initiateRedirect}
+        <Analytics
+          name="one-click-deployment-graphiql-open-project-button"
+          passHtmlAttributesToChildren
         >
-          View My Project
-        </Button>
+          <Button
+            data-testid="redirect-countdown-redirect-button"
+            mode="primary"
+            disabled={loading}
+            isLoading={loading}
+            loadingText="Redirecting..."
+            onClick={initiateRedirect}
+          >
+            View My Project
+          </Button>
+        </Analytics>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
+import { Analytics } from '@/features/Analytics';
 import { RequiredEnvVar } from '../../../../types';
 import { useNeonIntegrationForOneClickDeployment } from '../../hooks';
 import { transformNeonIntegrationStatusToNeonButtonProps } from '../../utils';
@@ -42,14 +43,19 @@ export function PgDatabaseField(props: PgDatabaseFieldProps) {
         <div className="font-bold text-gray-600 text-md">{dbEnvVar.Name} *</div>
         <div>
           {neonDBURL ? null : (
-            <InputModeToggle
-              showNeonButton={showNeonButton}
-              toggleShowNeonButton={toggleShowNeonButton}
-              disabled={
-                neonButtonProps.status.status === 'loading' ||
-                neonDBURL.length > 0
-              }
-            />
+            <Analytics
+              name="one-click-deployment-db-input-toggle"
+              passHtmlAttributesToChildren
+            >
+              <InputModeToggle
+                showNeonButton={showNeonButton}
+                toggleShowNeonButton={toggleShowNeonButton}
+                disabled={
+                  neonButtonProps.status.status === 'loading' ||
+                  neonDBURL.length > 0
+                }
+              />
+            </Analytics>
           )}
         </div>
       </div>

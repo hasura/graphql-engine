@@ -1,5 +1,6 @@
 import React from 'react';
 import { MdRefresh } from 'react-icons/md';
+import { Analytics } from '@/features/Analytics';
 import { FaExclamationCircle, FaPlusCircle, FaSpinner } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
 import { ErrorComponentTemplate } from '@/new-components/Form';
@@ -34,20 +35,25 @@ export function NeonButton(props: Props) {
   return (
     <>
       <div className="flex items-center">
-        <Button
-          onClick={neonButtonProps.onClickConnect}
-          icon={
-            neonButtonProps.icon
-              ? neonButtonIconMap[neonButtonProps.icon]
-              : undefined
-          }
-          size="md"
-          disabled={neonButtonProps.status.status === 'loading'}
+        <Analytics
+          name="one-click-deployment-neon-button"
+          passHtmlAttributesToChildren
         >
-          <span className="text-lg font-bold text-slate-900">
-            {neonButtonProps.buttonText}
-          </span>
-        </Button>
+          <Button
+            onClick={neonButtonProps.onClickConnect}
+            icon={
+              neonButtonProps.icon
+                ? neonButtonIconMap[neonButtonProps.icon]
+                : undefined
+            }
+            size="md"
+            disabled={neonButtonProps.status.status === 'loading'}
+          >
+            <span className="text-lg font-bold text-slate-900">
+              {neonButtonProps.buttonText}
+            </span>
+          </Button>
+        </Analytics>
       </div>
 
       {errorMessage ? (
