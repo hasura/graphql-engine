@@ -26,6 +26,6 @@ declare namespace Cypress {
     expectErrorNotificationWithTitle(title: string): Chainable<unknown>;
     expectErrorNotificationWithMessage(message: string): Chainable<unknown>;
 
-    snapshot(options?: { name?: string }): void;
+    toMatchSnapshot(options?: { name?: string }): void;
   }
 }

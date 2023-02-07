@@ -1,0 +1,119 @@
+exports[`Actions with Transform > When the users create, and delete a Action with Transform, everything should work #0`] =
+{
+  "bodyToSnapshot": [
+    {
+      "args": {
+        "enums": [],
+        "input_objects": [],
+        "objects": [
+          {
+            "description": null,
+            "fields": [
+              {
+                "description": null,
+                "name": "accessToken",
+                "type": "String!"
+              }
+            ],
+            "name": "LoginResponse"
+          }
+        ],
+        "scalars": []
+      },
+      "type": "set_custom_types"
+    },
+    {
+      "args": {
+        "comment": null,
+        "definition": {
+          "arguments": [
+            {
+              "description": null,
+              "name": "username",
+              "type": "String!"
+            },
+            {
+              "description": null,
+              "name": "password",
+              "type": "String!"
+            }
+          ],
+          "forward_client_headers": false,
+          "handler": "https://hasura-actions-demo.glitch.me",
+          "headers": [],
+          "kind": "synchronous",
+          "output_type": "LoginResponse",
+          "request_transform": {
+            "body": {
+              "action": "transform",
+              "template": "{\n              \"userInfo\": {\n                              \"name\": {{$body.input.username}},\n                                            \"password\": {{$body.input.password}},\n                                                          \"type\": {{$body.action.name}}\n                                                                      \n              }\n}"
+            },
+            "method": "POST",
+            "query_params": {
+              "id": "5",
+              "name": "{{$body.action.name}}"
+            },
+            "template_engine": "Kriti",
+            "url": "{{$base_url}}/{{$body.action.name}}",
+            "version": 2
+          },
+          "response_transform": {
+            "body": {
+              "action": "transform",
+              "template": "{\n              \"userInfo\": {\n                              \"name\": {{$body.input.username}},\n                                            \"password\": {{$body.input.password}},\n                                                          \"type\": {{$body.action.name}}\n                                                                      \n              }\n}"
+            },
+            "template_engine": "Kriti",
+            "version": 2
+          },
+          "timeout": null,
+          "type": "mutation"
+        },
+        "name": "login"
+      },
+      "type": "create_action"
+    }
+  ]
+};
+
+exports[`Actions with Transform > When the users create, and delete a Action with Transform, everything should work #1`] =
+{
+  "definition": {
+    "arguments": [
+      {
+        "name": "username",
+        "type": "String!"
+      },
+      {
+        "name": "password",
+        "type": "String!"
+      }
+    ],
+    "handler": "https://hasura-actions-demo.glitch.me",
+    "kind": "synchronous",
+    "output_type": "LoginResponse",
+    "request_transform": {
+      "body": {
+        "action": "transform",
+        "template": "{\n              \"userInfo\": {\n                              \"name\": {{$body.input.username}},\n                                            \"password\": {{$body.input.password}},\n                                                          \"type\": {{$body.action.name}}\n                                                                      \n              }\n}"
+      },
+      "method": "POST",
+      "query_params": {
+        "id": "5",
+        "name": "{{$body.action.name}}"
+      },
+      "template_engine": "Kriti",
+      "url": "{{$base_url}}/{{$body.action.name}}",
+      "version": 2
+    },
+    "response_transform": {
+      "body": {
+        "action": "transform",
+        "template": "{\n              \"userInfo\": {\n                              \"name\": {{$body.input.username}},\n                                            \"password\": {{$body.input.password}},\n                                                          \"type\": {{$body.action.name}}\n                                                                      \n              }\n}"
+      },
+      "template_engine": "Kriti",
+      "version": 2
+    },
+    "type": "mutation"
+  },
+  "name": "login"
+};
