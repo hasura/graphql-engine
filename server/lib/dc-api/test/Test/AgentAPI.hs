@@ -35,15 +35,19 @@ import Data.Text (Text)
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.API (NoContent, Union)
 import Servant.Client ((//))
-import Servant.Client.Generic (genericClient)
+import Servant.Client.Core (RunClient)
+import Servant.Client.Generic (AsClientT, genericClient)
 import Test.AgentClient (AgentClientT)
 import Test.AgentDatasets (DatasetCloneInfo (..), DatasetContext (..), HasDatasetContext, getDatasetContext)
 import Test.AgentTestContext (AgentTestContext (..), HasAgentTestContext, getAgentTestContext)
 import Test.Sandwich (HasBaseContext, expectationFailure)
 import Prelude
 
+client :: RunClient m => API.Routes (AsClientT m)
+client = genericClient @API.Routes
+
 getCapabilitiesGuarded :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m API.CapabilitiesResponse
-getCapabilitiesGuarded = guardCapabilitiesResponse =<< (genericClient // API._capabilities)
+getCapabilitiesGuarded = guardCapabilitiesResponse =<< (client // API._capabilities)
 
 guardCapabilitiesResponse :: MonadThrow m => Union API.CapabilitiesResponses -> m API.CapabilitiesResponse
 guardCapabilitiesResponse = API.capabilitiesCase defaultAction successAction errorAction
@@ -53,17 +57,17 @@ guardCapabilitiesResponse = API.capabilitiesCase defaultAction successAction err
     errorAction e = expectationFailure $ "Expected CapabilitiesResponse, got " <> show e
 
 getHealth :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m NoContent
-getHealth = (genericClient // API._health) Nothing Nothing
+getHealth = (client // API._health) Nothing Nothing
 
 getSourceHealth :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m NoContent
 getSourceHealth = do
   (sourceName, config) <- getSourceNameAndConfig
-  (genericClient // API._health) (Just sourceName) (Just config)
+  (client // API._health) (Just sourceName) (Just config)
 
 getSchemaGuarded :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m API.SchemaResponse
 getSchemaGuarded = do
   (sourceName, config) <- getSourceNameAndConfig
-  guardSchemaResponse =<< (genericClient // API._schema) sourceName config
+  guardSchemaResponse =<< (client // API._schema) sourceName config
 
 guardSchemaResponse :: MonadThrow m => Union API.SchemaResponses -> m API.SchemaResponse
 guardSchemaResponse = API.schemaCase defaultAction successAction errorAction
@@ -75,7 +79,7 @@ guardSchemaResponse = API.schemaCase defaultAction successAction errorAction
 queryGuarded :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.QueryRequest -> AgentClientT m API.QueryResponse
 queryGuarded queryRequest = do
   (sourceName, config) <- getSourceNameAndConfig
-  guardQueryResponse =<< (genericClient // API._query) sourceName config queryRequest
+  guardQueryResponse =<< (client // API._query) sourceName config queryRequest
 
 guardQueryResponse :: MonadThrow m => Union API.QueryResponses -> m API.QueryResponse
 guardQueryResponse = API.queryCase defaultAction successAction errorAction
@@ -87,7 +91,7 @@ guardQueryResponse = API.queryCase defaultAction successAction errorAction
 queryExpectError :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.QueryRequest -> AgentClientT m API.ErrorResponse
 queryExpectError queryRequest = do
   (sourceName, config) <- getSourceNameAndConfig
-  guardQueryErrorResponse =<< (genericClient // API._query) sourceName config queryRequest
+  guardQueryErrorResponse =<< (client // API._query) sourceName config queryRequest
 
 guardQueryErrorResponse :: MonadThrow m => Union API.QueryResponses -> m API.ErrorResponse
 guardQueryErrorResponse = API.queryCase defaultAction successAction errorAction
@@ -99,10 +103,10 @@ guardQueryErrorResponse = API.queryCase defaultAction successAction errorAction
 explain :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.QueryRequest -> AgentClientT m API.ExplainResponse
 explain queryRequest = do
   (sourceName, config) <- getSourceNameAndConfig
-  (genericClient // API._explain) sourceName config queryRequest
+  (client // API._explain) sourceName config queryRequest
 
 getMetrics :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m Text
-getMetrics = genericClient // API._metrics
+getMetrics = client // API._metrics
 
 -------------------------------------------------------------------------------
 
