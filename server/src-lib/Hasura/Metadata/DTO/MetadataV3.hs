@@ -7,6 +7,7 @@ import Autodocodec
     HasCodec (codec),
     object,
     optionalField,
+    optionalFieldWithOmittedDefault,
     optionalFieldWithOmittedDefaultWith,
     requiredFieldWith,
     (.=),
@@ -18,6 +19,7 @@ import Data.OpenApi qualified as OpenApi
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray, PlaceholderObject)
 import Hasura.Metadata.DTO.Utils (versionField)
 import Hasura.Prelude
+import Hasura.RQL.Types.CustomTypes (CustomTypes, emptyCustomTypes)
 import Hasura.RQL.Types.Metadata.Common (QueryCollections, RemoteSchemas, Sources, sourcesCodec)
 import Hasura.RQL.Types.QueryCollection qualified as QC
 import Hasura.RemoteSchema.Metadata.Core (RemoteSchemaMetadataG (_rsmName))
@@ -31,7 +33,7 @@ data MetadataV3 = MetadataV3
     metaV3QueryCollections :: QueryCollections,
     metaV3Allowlist :: Maybe PlaceholderArray,
     metaV3Actions :: Maybe PlaceholderArray,
-    metaV3CustomTypes :: Maybe PlaceholderObject,
+    metaV3CustomTypes :: CustomTypes,
     metaV3CronTriggers :: Maybe PlaceholderArray,
     metaV3RestEndpoints :: Maybe PlaceholderArray,
     metaV3ApiLimits :: Maybe PlaceholderObject,
@@ -65,7 +67,7 @@ instance HasCodec MetadataV3 where
           .= metaV3QueryCollections
         <*> optionalField "allowlist" "safe GraphQL operations - when allow lists are enabled only these operations are allowed" .= metaV3Allowlist
         <*> optionalField "actions" "action definitions which extend Hasura's schema with custom business logic using custom queries and mutations" .= metaV3Actions
-        <*> optionalField "custom_types" "custom type definitions" .= metaV3CustomTypes
+        <*> optionalFieldWithOmittedDefault "custom_types" emptyCustomTypes "custom type definitions" .= metaV3CustomTypes
         <*> optionalField "cron_triggers" "reliably trigger HTTP endpoints to run custom business logic periodically based on a cron schedule" .= metaV3CronTriggers
         <*> optionalField "rest_endpoints" "REST interfaces to saved GraphQL queries and mutations" .= metaV3RestEndpoints
         <*> optionalField "api_limits" "limts to depth and/or rate of API requests" .= metaV3ApiLimits
