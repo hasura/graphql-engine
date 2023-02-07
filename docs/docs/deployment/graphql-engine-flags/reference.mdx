@@ -228,14 +228,21 @@ List of domains, **including scheme (http/https) and port**, to allow for CORS.
 [Wildcard domains are allowed](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors). **Setting an empty
 value will block requests from all other domains**.
 
-|                     |                                                                                                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--cors-domain <DOMAINS>`                                                                                                                                                                                                              |
-| **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                                                                                                                                                           |
-| **Accepted values** | String (comma separated list of domains)                                                                                                                                                                                               |
-| **Default**         | **CE**, **EE**: `null` <br />**Cloud**: `*` Because the Console runs on the 'cloud.hasura.io' domain, Hasura Cloud automatically adds it as an allowed CORS domain. Setting an empty value will block requests from all other domains. |
-| **Example**         | "https://\*.foo.bar.com:8080, http://\*.localhost, http://localhost:3000, http://example.com"                                                                                                                                          |
-| **Supported in**    | CE, EE, Cloud                                                                                                                                                                                                                          |
+|                     |                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------|
+| **Flag**            | `--cors-domain <DOMAINS>`                                                                     |
+| **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                  |
+| **Accepted values** | String (comma separated list of domains)                                                      |
+| **Default**         | **CE**, **EE**: `null` <br />**Cloud**: `*`                                                   |
+| **Example**         | "https://\*.foo.bar.com:8080, http://\*.localhost, http://localhost:3000, http://example.com" |
+| **Supported in**    | CE, EE, Cloud                                                                                 |
+
+:::info Note
+
+Because the Console on Hasura Cloud runs on the 'cloud.hasura.io' domain, Hasura Cloud automatically adds it as an
+allowed CORS domain. Setting an empty value will block requests from all other domains.
+
+:::
 
 ### Dev Mode
 
@@ -320,7 +327,7 @@ Enable sending compressed logs to [metrics server](/enterprise/metrics.mdx).
 
 ### Enable Maintenance Mode
 
-Enabling [maintenance mode](/projects/maintenance-mode.mdx) disables updating of Metadata on the server.
+Enabling [maintenance mode](/hasura-cloud/projects/maintenance-mode.mdx) disables updating of Metadata on the server.
 
 |                     |                                             |
 | ------------------- | ------------------------------------------- |
@@ -971,7 +978,7 @@ Whether to use prepared statements for queries.
 ### v1 Boolean Null Collapse
 
 Evaluate `null` values in `where` input object to `True` instead of `error`. Learn more in our
-[upgrade guide](/projects/move-project-v2.mdx#sub-tasks-1).
+[upgrade guide](/hasura-cloud/projects/move-project-v2.mdx#sub-tasks-1).
 
 |                     |                                              |
 | ------------------- | -------------------------------------------- |
