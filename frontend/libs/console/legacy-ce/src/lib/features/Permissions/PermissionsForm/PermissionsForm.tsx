@@ -2,11 +2,20 @@ import React from 'react';
 import { useConsoleForm } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
+import {
+  MetadataSelector,
+  useMetadata,
+  useRoles,
+  useSupportedQueryTypes,
+} from '@/features/MetadataAPI';
+import { getTableDisplayName } from '@/features/DatabaseRelationships';
+
 import { PermissionsSchema, schema } from './../schema';
 import { AccessType, QueryType } from '../types';
 import {
   AggregationSection,
   BackendOnlySection,
+  ClonePermissionsSection,
   ColumnPermissionsSection,
   ColumnPresetsSection,
   RowPermissionsSection,
@@ -37,13 +46,23 @@ const Component = (props: ComponentProps) => {
     data,
   } = props;
 
+  const { data: metadataTables } = useMetadata(
+    MetadataSelector.getTables(dataSourceName)
+  );
+  const tables = metadataTables?.map(t => t.table) ?? [];
   // functions fired when the form is submitted
   const { updatePermissions, deletePermissions } = useUpdatePermissions({
     dataSourceName,
     table,
+    tables,
     queryType,
     roleName,
     accessType,
+  });
+  const { data: roles } = useRoles();
+  const { data: supportedQueryTypes } = useSupportedQueryTypes({
+    dataSourceName,
+    table,
   });
 
   const onSubmit = async (formData: PermissionsSchema) => {
@@ -56,9 +75,6 @@ const Component = (props: ComponentProps) => {
     handleClose();
   };
 
-  const isSubmittingError =
-    updatePermissions.isError || deletePermissions.isError;
-  //
   // for update it is possible to set pre update and post update row checks
   const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
 
@@ -73,12 +89,6 @@ const Component = (props: ComponentProps) => {
       defaultValues,
     },
   });
-
-  if (isSubmittingError) {
-    return (
-      <IndicatorCard status="negative">Error submitting form</IndicatorCard>
-    );
-  }
 
   // allRowChecks relates to other queries and is for duplicating from others
   const allRowChecks = defaultValues?.allRowChecks;
@@ -159,14 +169,14 @@ const Component = (props: ComponentProps) => {
         )}
 
         <hr className="my-4" />
-        {/* {!!tableNames?.length && (
-            <ClonePermissionsSection
-              queryType={queryType}
-              tables={tableNames}
-              supportedQueryTypes={supportedQueries}
-              roles={allRoles}
-            />
-          )} */}
+
+        <ClonePermissionsSection
+          queryType={queryType}
+          supportedQueryTypes={supportedQueryTypes}
+          tables={tables}
+          roles={roles}
+        />
+
         <div className="pt-2 flex gap-2">
           <Button
             type="submit"

@@ -42,5 +42,8 @@ export const gdc: Database = {
     getDefaultQueryRoot: async (table: Table) => {
       return (table as GDCTable).join('_');
     },
+    getSupportedQueryTypes: async () => {
+      return ['select'];
+    },
   },
 };

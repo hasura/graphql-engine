@@ -71,7 +71,6 @@ export const ColumnRootFieldPermissions: React.FC<
     'query_root_fields',
     'subscription_root_fields',
   ]);
-  console.log('table', table);
   const disabled = filterType === 'none';
   const { columns: tableColumns } = useListAllTableColumns(
     dataSourceName,
@@ -156,40 +155,49 @@ export const ColumnRootFieldPermissions: React.FC<
               <FaQuestionCircle aria-hidden="true" />
             </OverlayTrigger>
           </div>
-          <div
-            className={`px-md ${clsx(
-              !isRootPermissionsSwitchedOn && 'hidden'
-            )}`}
+
+          <OverlayTrigger
+            placement="right"
+            overlay={
+              <Tooltip tooltipContentChildren>
+                By enabling this you can customize the root field permissions.
+                When this switch is turned off, all values are enabled by
+                default.
+              </Tooltip>
+            }
           >
-            <SelectPermissionsRow
-              currentPermissions={queryRootFields}
-              description={<QueryRootFieldDescription />}
-              hasEnabledAggregations={hasEnabledAggregations}
-              hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
-              isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
-              permissionFields={queryRootPermissionFields}
-              permissionType={QUERY_ROOT_VALUES}
-              onToggleAll={() =>
-                onToggleAll(QUERY_ROOT_VALUES, queryRootFields)
-              }
-              onUpdate={onUpdatePermission}
-            />
-            <SelectPermissionsRow
-              currentPermissions={subscriptionRootFields}
-              description={<SubscriptionRootFieldDescription />}
-              hasEnabledAggregations={hasEnabledAggregations}
-              hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
-              isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
-              permissionFields={getFilteredSubscriptionRootPermissionFields(
-                subscriptionRootPermissionFields
-              )}
-              permissionType={SUBSCRIPTION_ROOT_VALUES}
-              onToggleAll={() =>
-                onToggleAll(SUBSCRIPTION_ROOT_VALUES, subscriptionRootFields)
-              }
-              onUpdate={onUpdatePermission}
-            />
-          </div>
+            <FaQuestionCircle aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <div
+          className={`px-md ${clsx(!isRootPermissionsSwitchedOn && 'hidden')}`}
+        >
+          <SelectPermissionsRow
+            currentPermissions={queryRootFields}
+            description={<QueryRootFieldDescription />}
+            hasEnabledAggregations={hasEnabledAggregations}
+            hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
+            isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
+            permissionFields={queryRootPermissionFields}
+            permissionType={QUERY_ROOT_VALUES}
+            onToggleAll={() => onToggleAll(QUERY_ROOT_VALUES, queryRootFields)}
+            onUpdate={onUpdatePermission}
+          />
+          <SelectPermissionsRow
+            currentPermissions={subscriptionRootFields}
+            description={<SubscriptionRootFieldDescription />}
+            hasEnabledAggregations={hasEnabledAggregations}
+            hasSelectedPrimaryKeys={hasSelectedPrimaryKeys}
+            isSubscriptionStreamingEnabled={isSubscriptionStreamingEnabled}
+            permissionFields={getFilteredSubscriptionRootPermissionFields(
+              subscriptionRootPermissionFields
+            )}
+            permissionType={SUBSCRIPTION_ROOT_VALUES}
+            onToggleAll={() =>
+              onToggleAll(SUBSCRIPTION_ROOT_VALUES, subscriptionRootFields)
+            }
+            onUpdate={onUpdatePermission}
+          />
         </div>
       </Collapse.Content>
     </Collapse>
