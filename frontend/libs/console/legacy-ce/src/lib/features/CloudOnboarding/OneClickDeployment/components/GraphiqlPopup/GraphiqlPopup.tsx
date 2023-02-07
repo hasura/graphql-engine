@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import { FaCheckCircle, FaGithub, FaTimesCircle } from 'react-icons/fa';
 import { MdRefresh } from 'react-icons/md';
@@ -92,17 +93,32 @@ export function GraphiqlPopup(props: GraphiqlPopupProps) {
       */}
       <div className="p-sm bg-slate-50 border-t border-slate-300">
         {status === 'success' ? (
-          <Button mode="default" onClick={dismissCb} className="w-full">
-            Close and Get Started
-          </Button>
+          <Analytics
+            name="one-click-deployment-graphiql-popup-get-started"
+            passHtmlAttributesToChildren
+          >
+            <Button mode="default" onClick={dismissCb} className="w-full">
+              Close and Get Started
+            </Button>
+          </Analytics>
         ) : (
           <div className="flex items-center justify-between">
-            <Button icon={<MdRefresh />} mode="primary" onClick={retryCb}>
-              Retry project set up
-            </Button>
-            <Button mode="default" onClick={dismissCb}>
-              Close
-            </Button>
+            <Analytics
+              name="one-click-deployment-graphiql-popup-retry"
+              passHtmlAttributesToChildren
+            >
+              <Button icon={<MdRefresh />} mode="primary" onClick={retryCb}>
+                Retry project set up
+              </Button>
+            </Analytics>
+            <Analytics
+              name="one-click-deployment-graphiql-popup-close"
+              passHtmlAttributesToChildren
+            >
+              <Button mode="default" onClick={dismissCb}>
+                Close
+              </Button>
+            </Analytics>
           </div>
         )}
       </div>
