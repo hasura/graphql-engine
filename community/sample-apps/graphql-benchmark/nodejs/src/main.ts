@@ -5,6 +5,7 @@ import { createSchema, createYoga } from "graphql-yoga";
 import { GraphQLError } from "graphql";
 import DataLoader from "dataloader";
 import { useDataLoader } from "@envelop/dataloader";
+import { EnvelopArmorPlugin } from '@escape.tech/graphql-armor';
 import type { Album, Artist, Genre, Resolvers, Track } from "./generated/graphql";
 import sql from "./db";
 import { genericBatchFunction } from "./dataloader";
@@ -161,6 +162,7 @@ const server = createServer(
         // @ts-ignore
         schema,
         plugins: [
+            EnvelopArmorPlugin(),
             useDataLoader(
                 "getAlbumsById",
                 (_context) =>

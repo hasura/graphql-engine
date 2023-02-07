@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@envelop/dataloader": "^4.0.4",
+    "@escape.tech/graphql-armor": "^1.7.0",
     "dataloader": "^2.2.1",
     "graphql": "^16.6.0",
     "graphql-yoga": "^3.5.1",
