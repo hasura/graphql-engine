@@ -61,17 +61,18 @@ All the log-types that can be enabled/disabled are:
 
 Apart from the above, there are other internal log-types which cannot be configured:
 
-| Log type                    | Description                                                                                         | Log Level          |
-|-----------------------------|-----------------------------------------------------------------------------------------------------|--------------------|
-| `pg-client`                 | Logs from the postgres client library                                                               | `warn`             |
-| `metadata`                  | Logs inconsistent Metadata items                                                                    | `warn`             |
-| `telemetry-log`             | Logs error (if any) while sending out telemetry data                                                | `info`             |
-| `event-trigger`             | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
-| `ws-server`                 | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
-| `schema-sync-thread`        | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
-| `health-check-log`          | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
-| `event-trigger-process`     | Logs the statistics of events fetched from database for each source                                 | `info` and `warn`  |
-| `scheduled-trigger-process` | Logs the statistics of scheduled and cron events fetched from metadata storage                      | `info` and `warn`  |
+| Log type                       | Description                                                                                         | Log Level          |
+|--------------------------------|-----------------------------------------------------------------------------------------------------|--------------------|
+| `pg-client`                    | Logs from the postgres client library                                                               | `warn`             |
+| `metadata`                     | Logs inconsistent Metadata items                                                                    | `warn`             |
+| `telemetry-log`                | Logs error (if any) while sending out telemetry data                                                | `info`             |
+| `event-trigger`                | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
+| `ws-server`                    | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
+| `schema-sync-thread`           | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
+| `health-check-log`             | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
+| `event-trigger-process`        | Logs the statistics of events fetched from database for each source                                 | `info` and `warn`  |
+| `scheduled-trigger-process`    | Logs the statistics of scheduled and cron events fetched from metadata storage                      | `info` and `warn`  |
+| `cron-event-generator-process` | Logs the cron triggers fetched from metadata storage for events generation                          | `info` and `warn`  |
 
 
 ## Logging levels
@@ -593,6 +594,53 @@ The `detail` field value is an object contains the following members.
 | `num_cron_events_fetched`              | int                        | The count of total cron events fetched                 |
 | `num_one_off_scheduled_events_fetched` | int                        | The count of total one-off scheduled events fetched    |
 | `num_fetches`                          | int                        | The number of fetches happened within 10 minutes       |
+
+### **cron-event-generator-process** log structure
+
+Every 10 minutes, the Hasura Engine logs the cron triggers fetched from metadata storage for events generation. The
+log also contains the number of times new triggers are fetched within the 10 minute timeframe.
+
+```json
+{
+  "detail": {
+    "cron_triggers": [
+      {
+        "max_scheduled_time": "2023-01-31T13:18:00Z",
+        "name": "every_two_minutes",
+        "upcoming_events_count": 99
+      }
+    ],
+    "num_fetches": 10
+  },
+  "level": "info",
+  "timestamp": "2023-01-31T15:31:55.773+0530",
+  "type": "cron-event-generator-process"
+}
+```
+The `type` in the log will be `cron-event-generator-process` and details of the cron event generator process will be
+under the `detail` key.
+
+The `detail` field value is an object containing the following members.
+
+| Name            | Type                               | Description                                      |
+|-----------------|------------------------------------|--------------------------------------------------|
+| `cron_triggers` | List of `CronTriggerStats` objects | The list of cron triggers fetched                |
+| `num_fetches`   | int                                | The number of fetches happened within 10 minutes |
+
+The `CronTriggerStats` object contains the following members.
+
+| Name                    | Type   | Description                                    |
+|-------------------------|--------|------------------------------------------------|
+| `name`                  | string | The name of the cron trigger                   |
+| `upcoming_events_count` | int    | The number of undelivered upcoming cron events |
+| `max_scheduled_time`    | string | The timestamp of the cron event occurring last |
+
+:::info Note
+
+A new set of cron events will be generated only for triggers with fewer than 100 upcoming events.
+Thus, the `upcoming_events_count` will be always `< 100`.
+
+:::
 
 ## Monitoring frameworks
 

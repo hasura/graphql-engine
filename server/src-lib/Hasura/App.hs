@@ -786,10 +786,16 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
       startEventTriggerPollerThread logger lockedEventsCtx cacheRef
       startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState
 
+      -- Create logger for logging the statistics of fetched cron triggers
+      fetchedCronTriggerStatsLogger <-
+        allocate
+          (createFetchedCronTriggerStatsLogger logger)
+          (closeFetchedCronTriggersStatsLogger logger)
+
       -- start a background thread to create new cron events
       _cronEventsThread <-
         C.forkManagedT "runCronEventsGenerator" logger $
-          runCronEventsGenerator logger (getSchemaCache cacheRef)
+          runCronEventsGenerator logger fetchedCronTriggerStatsLogger (getSchemaCache cacheRef)
 
       startScheduledEventsPollerThread logger lockedEventsCtx cacheRef
     EventingDisabled ->

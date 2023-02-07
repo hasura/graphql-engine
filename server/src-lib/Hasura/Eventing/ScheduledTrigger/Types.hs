@@ -2,6 +2,8 @@
 
 module Hasura.Eventing.ScheduledTrigger.Types
   ( CronTriggerStats (CronTriggerStats, _ctsMaxScheduledTime, _ctsName),
+    FetchedCronTriggerStats (..),
+    FetchedCronTriggerStatsLogger,
     RetryContext (RetryContext, _rctxConf),
     ScheduledEventOp (..),
     ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime, sewpRequestTransform, sewpResponseTransform),
@@ -39,6 +41,29 @@ data CronTriggerStats = CronTriggerStats
     _ctsMaxScheduledTime :: !UTCTime
   }
   deriving (Eq)
+
+$(J.deriveToJSON hasuraJSON ''CronTriggerStats)
+
+data FetchedCronTriggerStats = FetchedCronTriggerStats
+  { _fctsCronTriggers :: [CronTriggerStats],
+    _fctsNumFetches :: Int
+  }
+  deriving (Eq)
+
+$(J.deriveToJSON hasuraJSON ''FetchedCronTriggerStats)
+
+instance L.ToEngineLog FetchedCronTriggerStats L.Hasura where
+  toEngineLog stats =
+    (L.LevelInfo, L.cronEventGeneratorProcessType, J.toJSON stats)
+
+instance Semigroup FetchedCronTriggerStats where
+  (FetchedCronTriggerStats lTriggers lFetches) <> (FetchedCronTriggerStats rTriggers rFetches) =
+    FetchedCronTriggerStats (lTriggers <> rTriggers) (lFetches + rFetches)
+
+instance Monoid FetchedCronTriggerStats where
+  mempty = FetchedCronTriggerStats mempty 0
+
+type FetchedCronTriggerStatsLogger = FDebounce.Trigger FetchedCronTriggerStats FetchedCronTriggerStats
 
 data RetryContext = RetryContext
   { _rctxTries :: !Int,
