@@ -23,9 +23,9 @@ export const getStepText = (
         case 'success':
           return 'Cloned assets from GitHub';
         case 'error':
-          return 'Cloning assets from GitHub failed';
+          return 'Failed cloning assets from GitHub';
         default:
-          return 'Cloning assets from GitHub';
+          return 'Cloning assets from GitHub...';
       }
     case OneClickDeploymentState.ReadingEnvironmentVariables:
       switch (status.kind) {
@@ -43,11 +43,11 @@ export const getStepText = (
     case OneClickDeploymentState.ApplyingMetadataMigrationsSeeds:
       switch (status.kind) {
         case 'success':
-          return 'Deployed project successfully';
+          return 'Applied metadata, migrations and seeds successfully';
         case 'error':
-          return 'Failed deploying project';
+          return 'Failed applying metadata, migrations and seeds';
         default:
-          return 'Deploying project...';
+          return 'Applying metadata, migrations and seeds...';
       }
     case OneClickDeploymentState.Completed:
       return 'Your project is ready to go!';

@@ -16,14 +16,16 @@ type TriggerOneClickDeploymentResponse = {
 export const useTriggerDeployment = (projectId: string) => {
   const { fireNotification } = useFireNotification();
 
-  const updateTenantEnvMutationFn = (variables: { projectId: string }) => {
+  const triggerOneClickDeploymentMutationFn = (variables: {
+    projectId: string;
+  }) => {
     return controlPlaneClient.query<
       TriggerOneClickDeploymentResponse,
       TriggerOneClickDeploymentMutationVariables
     >(TRIGGER_ONE_CLICK_DEPLOYMENT, variables);
   };
 
-  const mutation = useMutation(updateTenantEnvMutationFn, {
+  const mutation = useMutation(triggerOneClickDeploymentMutationFn, {
     onSuccess: data => {
       // As graphql does not return error codes, react-query will always consider a
       // successful request, we have to parse the data to check for errors

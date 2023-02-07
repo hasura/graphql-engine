@@ -269,6 +269,15 @@ export function getGitRepoFullLinkFromDetails(gitRepoDetails: GitRepoDetails) {
 
 export function isHasuraPath(path: string) {
   const pathArray = path.split('/');
-
   return pathArray[0].trim() === 'hasura';
 }
+
+export const getSampleQueriesUrl = (gitRepoDetails: GitRepoDetails) => {
+  try {
+    const { url, branch, hasuraDirectory } = gitRepoDetails;
+    const { pathname } = new URL(url);
+    return `https://raw.githubusercontent.com${pathname}/${branch}/${hasuraDirectory}/sample-requests.graphql`;
+  } catch {
+    return '';
+  }
+};

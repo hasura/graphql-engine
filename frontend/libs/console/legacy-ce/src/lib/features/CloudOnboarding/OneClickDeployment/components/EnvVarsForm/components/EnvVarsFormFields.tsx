@@ -1,4 +1,5 @@
 import React from 'react';
+import globals from '@/Globals';
 import { InputField } from '@/new-components/Form';
 import { Collapsible } from '@/new-components/Collapsible';
 import { RequiredEnvVar } from '../../../types';
@@ -20,6 +21,8 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
     staticEnvVars,
   } = React.useMemo(() => getEnvVarFormSegments(envVars), [envVars]);
 
+  const neonDashboardLink = `https://console.${globals.neonRootDomain}/app/projects`;
+
   return (
     <>
       {databaseEnvVars.length > 0 ? (
@@ -33,12 +36,19 @@ export function EnvVarsFormFields(props: EnvVarsFormFieldsProps) {
               {isPGDatabaseEnvVarPresent && (
                 <>
                   <div className="flex w-[325px]" />
-                  <div className="flex text-gray-600">
-                    Database creation powered by{' '}
-                    <div className="ml-2">
-                      <NeonIcon />
+                  <a
+                    href={neonDashboardLink}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <div className="flex text-gray-600">
+                      Database creation powered by{' '}
+                      <div className="ml-2">
+                        <NeonIcon />
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 </>
               )}
             </div>
