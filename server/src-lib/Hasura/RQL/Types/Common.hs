@@ -543,10 +543,7 @@ data MetricsConfig = MetricsConfig
 $(deriveJSON (aesonPrefix snakeCase) ''MetricsConfig)
 
 emptyMetricsConfig :: MetricsConfig
-emptyMetricsConfig = MetricsConfig
-  { _mcAnalyzeQueryVariables = True,
-    _mcAnalyzeResponseBody = False
-  }
+emptyMetricsConfig = MetricsConfig False False
 
 data Comment
   = -- | Automatically generate a comment (derive it from DB comments, or a sensible default describing the source of the data)
