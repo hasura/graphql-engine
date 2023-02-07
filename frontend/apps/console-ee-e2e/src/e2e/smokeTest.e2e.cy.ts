@@ -1,5 +1,5 @@
 // The main reason behind this e2e is to make sure we don’t have circular dependency that block loading the console at all
-describe('console-ee is loading', () => {
+describe('Console EE', () => {
   beforeEach(() => cy.visit('/'));
 
   // The main goal of this E2E test is to make sure we don’t have circular dependencies that block

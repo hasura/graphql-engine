@@ -33,7 +33,7 @@ export default myDefineConfig({
     ...nxConfig,
 
     video: false,
-    baseUrl: 'http://localhost:4200',
+
     specPattern: [
       'src/e2e/**/*test.{js,jsx,ts,tsx}',
       'src/support/**/*unit.test.{js,ts}',
