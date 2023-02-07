@@ -134,8 +134,8 @@ can usually be customized. Please check the documentation for your observability
 
 ### Connection Type
 
-The protocol to be used for the communication with the receiver. Connections to the OTLP endpoint over the `HTTP`
-protocol are currently supported.
+The protocol and transport to be used for the communication with the receiver. Hasura currently only supports the
+OpenTelemetry Protocol over HTTP (OTLP/HTTP with binary-encoded Protobuf payloads).
 
 ### Data Type
 
@@ -145,7 +145,7 @@ supported.
 ### Batch Size
 
 Batch size is the maximum number of data points (spans in the context of traces) allowed per export request made to the
-observability tool. The batch size must be a positive integer between 1 and 512. Default size is 512.
+observability tool. Default size is 512.
 
 ### Headers
 
