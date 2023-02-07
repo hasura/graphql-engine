@@ -1,0 +1,219 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module contains the default types and functions that model Native</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- Queries.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.IR</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier">NativeQueryImpl</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html"><span class="hs-identifier">Hasura.NativeQuery.Metadata</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html"><span class="hs-identifier">Hasura.NativeQuery.Types</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier">ColumnValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- | The default implementation of an invocation of a native query.</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="NativeQueryImpl"><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier hs-var">NativeQueryImpl</span></a></span></span><span> </span><span id="local-6989586621690546145"><span class="annot"><a href="#local-6989586621690546145"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690546144"><span class="annot"><a href="#local-6989586621690546144"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryImpl"><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQueryImpl"><span class="hs-identifier hs-var">NativeQueryImpl</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The defined name of the native query.</span><span>
+</span><span id="line-16"></span><span>    </span><span class="hs-comment">-- When translating this is used as a key to look up the actual</span><span>
+</span><span id="line-17"></span><span>    </span><span class="hs-comment">-- native query definition.</span><span>
+</span><span id="line-18"></span><span>    </span><span id="nqName"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
+NativeQueryImpl b field -&gt; NativeQueryName
+</span><a href="Hasura.NativeQuery.IR.html#nqName"><span class="hs-identifier hs-var hs-var">nqName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="hs-comment">-- | The arguments passed to the native query, if any.</span><span>
+</span><span id="line-20"></span><span>    </span><span id="nqArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
+NativeQueryImpl b field
+-&gt; HashMap NativeQueryArgumentName (ColumnValue b)
+</span><a href="Hasura.NativeQuery.IR.html#nqArgs"><span class="hs-identifier hs-var hs-var">nqArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690546145"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="hs-comment">-- | The raw sql to use in the query</span><span>
+</span><span id="line-22"></span><span>    </span><span id="nqRawBody"><span class="annot"><span class="annottext">forall (b :: BackendType) field. NativeQueryImpl b field -&gt; Text
+</span><a href="Hasura.NativeQuery.IR.html#nqRawBody"><span class="hs-identifier hs-var hs-var">nqRawBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690546014"><span id="local-6989586621690546024"><span class="annot"><span class="annottext">NativeQueryImpl b field -&gt; NativeQueryImpl b field -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType) field.
+Backend b =&gt;
+NativeQueryImpl b field -&gt; NativeQueryImpl b field -&gt; Bool
+/= :: NativeQueryImpl b field -&gt; NativeQueryImpl b field -&gt; Bool
+$c/= :: forall (b :: BackendType) field.
+Backend b =&gt;
+NativeQueryImpl b field -&gt; NativeQueryImpl b field -&gt; Bool
+== :: NativeQueryImpl b field -&gt; NativeQueryImpl b field -&gt; Bool
+$c== :: forall (b :: BackendType) field.
+Backend b =&gt;
+NativeQueryImpl b field -&gt; NativeQueryImpl b field -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690546006"><span id="local-6989586621690546009"><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+forall (b :: BackendType) a b.
+a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
+forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: forall a b. a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
+$c&lt;$ :: forall (b :: BackendType) a b.
+a -&gt; NativeQueryImpl b b -&gt; NativeQueryImpl b a
+fmap :: forall a b. (a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+$cfmap :: forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; NativeQueryImpl b a -&gt; NativeQueryImpl b b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690545969"><span id="local-6989586621690545971"><span id="local-6989586621690545973"><span id="local-6989586621690545975"><span id="local-6989586621690545977"><span id="local-6989586621690545979"><span id="local-6989586621690545981"><span id="local-6989586621690545983"><span id="local-6989586621690545985"><span id="local-6989586621690545987"><span id="local-6989586621690545989"><span id="local-6989586621690545991"><span id="local-6989586621690545993"><span id="local-6989586621690545995"><span id="local-6989586621690545997"><span id="local-6989586621690546001"><span id="local-6989586621690546003"><span class="annot"><span class="annottext">forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; NativeQueryImpl b a -&gt; Bool
+forall (b :: BackendType) a. Num a =&gt; NativeQueryImpl b a -&gt; a
+forall (b :: BackendType) a. Ord a =&gt; NativeQueryImpl b a -&gt; a
+forall (b :: BackendType) m. Monoid m =&gt; NativeQueryImpl b m -&gt; m
+forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Bool
+forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Int
+forall (b :: BackendType) a. NativeQueryImpl b a -&gt; [a]
+forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
+forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: forall a. Num a =&gt; NativeQueryImpl b a -&gt; a
+$cproduct :: forall (b :: BackendType) a. Num a =&gt; NativeQueryImpl b a -&gt; a
+sum :: forall a. Num a =&gt; NativeQueryImpl b a -&gt; a
+$csum :: forall (b :: BackendType) a. Num a =&gt; NativeQueryImpl b a -&gt; a
+minimum :: forall a. Ord a =&gt; NativeQueryImpl b a -&gt; a
+$cminimum :: forall (b :: BackendType) a. Ord a =&gt; NativeQueryImpl b a -&gt; a
+maximum :: forall a. Ord a =&gt; NativeQueryImpl b a -&gt; a
+$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; NativeQueryImpl b a -&gt; a
+elem :: forall a. Eq a =&gt; a -&gt; NativeQueryImpl b a -&gt; Bool
+$celem :: forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; NativeQueryImpl b a -&gt; Bool
+length :: forall a. NativeQueryImpl b a -&gt; Int
+$clength :: forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Int
+null :: forall a. NativeQueryImpl b a -&gt; Bool
+$cnull :: forall (b :: BackendType) a. NativeQueryImpl b a -&gt; Bool
+toList :: forall a. NativeQueryImpl b a -&gt; [a]
+$ctoList :: forall (b :: BackendType) a. NativeQueryImpl b a -&gt; [a]
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
+$cfoldr1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; NativeQueryImpl b a -&gt; a
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+$cfoldr :: forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; NativeQueryImpl b a -&gt; b
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; NativeQueryImpl b a -&gt; m
+fold :: forall m. Monoid m =&gt; NativeQueryImpl b m -&gt; m
+$cfold :: forall (b :: BackendType) m. Monoid m =&gt; NativeQueryImpl b m -&gt; m
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690545953"><span id="local-6989586621690545955"><span id="local-6989586621690545957"><span id="local-6989586621690545962"><span class="annot"><span class="annottext">forall (b :: BackendType). Functor (NativeQueryImpl b)
+forall (b :: BackendType). Foldable (NativeQueryImpl b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+NativeQueryImpl b (m a) -&gt; m (NativeQueryImpl b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+Applicative f =&gt;
+NativeQueryImpl b (f a) -&gt; f (NativeQueryImpl b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; NativeQueryImpl b a -&gt; m (NativeQueryImpl b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+NativeQueryImpl b (m a) -&gt; m (NativeQueryImpl b a)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+NativeQueryImpl b (m a) -&gt; m (NativeQueryImpl b a)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; NativeQueryImpl b a -&gt; m (NativeQueryImpl b b)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; NativeQueryImpl b a -&gt; m (NativeQueryImpl b b)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+NativeQueryImpl b (f a) -&gt; f (NativeQueryImpl b a)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+Applicative f =&gt;
+NativeQueryImpl b (f a) -&gt; f (NativeQueryImpl b a)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; NativeQueryImpl b a -&gt; f (NativeQueryImpl b b)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690545936"><span id="local-6989586621690545938"><span id="local-6989586621690545950"><span class="annot"><span class="annottext">Int -&gt; NativeQueryImpl b field -&gt; ShowS
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType) field.
+Backend b =&gt;
+Int -&gt; NativeQueryImpl b field -&gt; ShowS
+forall (b :: BackendType) field.
+Backend b =&gt;
+[NativeQueryImpl b field] -&gt; ShowS
+forall (b :: BackendType) field.
+Backend b =&gt;
+NativeQueryImpl b field -&gt; String
+showList :: [NativeQueryImpl b field] -&gt; ShowS
+$cshowList :: forall (b :: BackendType) field.
+Backend b =&gt;
+[NativeQueryImpl b field] -&gt; ShowS
+show :: NativeQueryImpl b field -&gt; String
+$cshow :: forall (b :: BackendType) field.
+Backend b =&gt;
+NativeQueryImpl b field -&gt; String
+showsPrec :: Int -&gt; NativeQueryImpl b field -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType) field.
+Backend b =&gt;
+Int -&gt; NativeQueryImpl b field -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span></pre></body></html>
