@@ -30,12 +30,20 @@ export type Artist = {
   Name?: Maybe<Scalars['String']>;
 };
 
+export type Genre = {
+  __typename?: 'Genre';
+  GenreId: Scalars['Int'];
+  Name: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   Album?: Maybe<Album>;
   Albums: Array<Album>;
   Artist?: Maybe<Artist>;
   Artists: Array<Artist>;
+  Genre?: Maybe<Genre>;
+  Genres: Array<Genre>;
   Track?: Maybe<Track>;
   Tracks: Array<Track>;
 };
@@ -51,6 +59,11 @@ export type QueryArtistArgs = {
 };
 
 
+export type QueryGenreArgs = {
+  id: Scalars['Int'];
+};
+
+
 export type QueryTrackArgs = {
   id: Scalars['Int'];
 };
@@ -61,6 +74,8 @@ export type Track = {
   AlbumId?: Maybe<Scalars['Int']>;
   Bytes?: Maybe<Scalars['Int']>;
   Composer?: Maybe<Scalars['String']>;
+  Genre?: Maybe<Genre>;
+  GenreId: Scalars['Int'];
   MediaTypeId: Scalars['Int'];
   Milliseconds: Scalars['Int'];
   Name: Scalars['String'];
@@ -139,6 +154,7 @@ export type ResolversTypes = {
   Album: ResolverTypeWrapper<Album>;
   Artist: ResolverTypeWrapper<Artist>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  Genre: ResolverTypeWrapper<Genre>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
@@ -150,6 +166,7 @@ export type ResolversParentTypes = {
   Album: Album;
   Artist: Artist;
   Boolean: Scalars['Boolean'];
+  Genre: Genre;
   Int: Scalars['Int'];
   Query: {};
   String: Scalars['String'];
@@ -172,11 +189,19 @@ export type ArtistResolvers<ContextType = any, ParentType extends ResolversParen
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type GenreResolvers<ContextType = any, ParentType extends ResolversParentTypes['Genre'] = ResolversParentTypes['Genre']> = {
+  GenreId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   Album?: Resolver<Maybe<ResolversTypes['Album']>, ParentType, ContextType, RequireFields<QueryAlbumArgs, 'id'>>;
   Albums?: Resolver<Array<ResolversTypes['Album']>, ParentType, ContextType>;
   Artist?: Resolver<Maybe<ResolversTypes['Artist']>, ParentType, ContextType, RequireFields<QueryArtistArgs, 'id'>>;
   Artists?: Resolver<Array<ResolversTypes['Artist']>, ParentType, ContextType>;
+  Genre?: Resolver<Maybe<ResolversTypes['Genre']>, ParentType, ContextType, RequireFields<QueryGenreArgs, 'id'>>;
+  Genres?: Resolver<Array<ResolversTypes['Genre']>, ParentType, ContextType>;
   Track?: Resolver<Maybe<ResolversTypes['Track']>, ParentType, ContextType, RequireFields<QueryTrackArgs, 'id'>>;
   Tracks?: Resolver<Array<ResolversTypes['Track']>, ParentType, ContextType>;
 };
@@ -186,6 +211,8 @@ export type TrackResolvers<ContextType = any, ParentType extends ResolversParent
   AlbumId?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   Bytes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   Composer?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Genre?: Resolver<Maybe<ResolversTypes['Genre']>, ParentType, ContextType>;
+  GenreId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   MediaTypeId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   Milliseconds?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   Name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -196,6 +223,7 @@ export type TrackResolvers<ContextType = any, ParentType extends ResolversParent
 export type Resolvers<ContextType = any> = {
   Album?: AlbumResolvers<ContextType>;
   Artist?: ArtistResolvers<ContextType>;
+  Genre?: GenreResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Track?: TrackResolvers<ContextType>;
 };

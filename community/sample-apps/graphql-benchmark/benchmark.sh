@@ -1,6 +1,6 @@
 #!/bin/sh
 
-docker compose -f docker-compose.hasura.yml up -d
+docker compose -f docker-compose.hasura.yml up -d --build
 
 echo "Running Hasura Benchmark"
 
@@ -15,7 +15,7 @@ docker compose -f docker-compose.hasura.yml down
 
 echo "Hasura Benchmark done"
 
-docker compose -f docker-compose.node.yml up -d
+docker compose -f docker-compose.node.yml up -d --build
 
 echo "Running Nodejs Benchmark"
 

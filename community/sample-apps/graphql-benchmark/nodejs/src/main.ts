@@ -5,7 +5,7 @@ import { createSchema, createYoga } from "graphql-yoga";
 import { GraphQLError } from "graphql";
 import DataLoader from "dataloader";
 import { useDataLoader } from "@envelop/dataloader";
-import type { Album, Artist, Resolvers, Track } from "./generated/graphql";
+import type { Album, Artist, Genre, Resolvers, Track } from "./generated/graphql";
 import sql from "./db";
 import { genericBatchFunction } from "./dataloader";
 import { keyByArray } from "./utils";
@@ -78,6 +78,26 @@ const resolvers: Resolvers = {
             }
             return tracks;
         },
+        Genre: async (_parent, args, context, _info) => {
+            return (context.getGenreById as DataLoader<string, Genre>).load(
+                args.id.toString()
+            );
+        },
+        Genres: async (_parent, _args, context, _info) => {
+            const genres = await (
+                context.getAllGenres as DataLoader<string, Genre[]>
+            ).load('1');
+            if (!genres) {
+                throw new GraphQLError(`Albums not found.`);
+            }
+            for (const genre of genres) {
+                (context.getGenreById as DataLoader<string, Genre>).prime(
+                    genre.GenreId.toString(),
+                    genre
+                );
+            }
+            return genres;
+        },
     },
     Album: {
         async Artist(parent, _args, context, _info) {
@@ -119,6 +139,11 @@ const resolvers: Resolvers = {
         async Album(parent, _args, context, _info) {
             return (context.getAlbumsById as DataLoader<string, Album>).load(
                 parent.AlbumId!.toString()
+            );
+        },
+        async Genre(parent, _args, context, _info) {
+            return (context.getGenreById as DataLoader<string, Genre>).load(
+                parent.GenreId!.toString()
             );
         },
     }
@@ -193,6 +218,21 @@ const server = createServer(
                     new DataLoader(async (keys: Readonly<string[]>) => {
                         const tracks = await sql`SELECT * FROM ${sql("Track")}`;
                         return keys.map((_key) => tracks);
+                    })
+            ),
+            useDataLoader(
+                "getGenreById",
+                (_context) =>
+                    new DataLoader((keys: Readonly<string[]>) =>
+                        genericBatchFunction(keys, { name: "Genre", id: "GenreId" })
+                    )
+            ),
+            useDataLoader(
+                "getAllGenres",
+                (_context) =>
+                    new DataLoader(async (keys: Readonly<string[]>) => {
+                        const genres = await sql`SELECT * FROM ${sql("Genre")}`;
+                        return keys.map((_key) => genres);
                     })
             ),
         ],

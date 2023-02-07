@@ -9,6 +9,8 @@ type Query {
   Artists: [Artist!]!
   Track(id: Int!): Track
   Tracks: [Track!]!
+  Genre(id: Int!): Genre
+  Genres: [Genre!]!
 }
 
 type Album {
@@ -33,5 +35,12 @@ type Track {
   TrackId: Int!
   MediaTypeId: Int!
   Milliseconds: Int!
+  Name: String!
+  GenreId: Int!
+  Genre: Genre
+}
+
+type Genre {
+  GenreId: Int!
   Name: String!
 }

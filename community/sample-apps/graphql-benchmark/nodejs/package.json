@@ -11,7 +11,7 @@
     "@envelop/dataloader": "^4.0.4",
     "dataloader": "^2.2.1",
     "graphql": "^16.6.0",
-    "graphql-yoga": "^3.4.1",
+    "graphql-yoga": "^3.5.1",
     "postgres": "^3.3.3"
   },
   "scripts": {

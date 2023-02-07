@@ -15,7 +15,7 @@ queries:
     duration: 10s
     connections: 50
     query: |
-      query GetAllArtistsAlbumsAndTracks {
+      query GetAllArtistsAlbumsTracks_Genres {
         Artists {
           ArtistId
           Name
@@ -25,6 +25,11 @@ queries:
             Tracks {
               TrackId
               Name
+              Composer
+              Genre {
+                GenreId
+                Name
+              }
             }
           }
         }
