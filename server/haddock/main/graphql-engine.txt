@@ -25196,7 +25196,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -25206,7 +25206,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoJwtSecret] :: ServeOptionsRaw impl -> Maybe JWTConfig
 [rsoUnAuthRole] :: ServeOptionsRaw impl -> Maybe RoleName
 [rsoCorsConfig] :: ServeOptionsRaw impl -> Maybe CorsConfig
-[rsoEnableConsole] :: ServeOptionsRaw impl -> Bool
+[rsoConsoleStatus] :: ServeOptionsRaw impl -> ConsoleStatus
 [rsoConsoleAssetsDir] :: ServeOptionsRaw impl -> Maybe Text
 [rsoConsoleSentryDsn] :: ServeOptionsRaw impl -> Maybe Text
 [rsoEnableTelemetry] :: ServeOptionsRaw impl -> Maybe Bool
@@ -25244,6 +25244,12 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoDefaultNamingConvention] :: ServeOptionsRaw impl -> Maybe NamingCase
 [rsoExtensionsSchema] :: ServeOptionsRaw impl -> Maybe ExtensionsSchema
 [rsoMetadataDefaults] :: ServeOptionsRaw impl -> Maybe MetadataDefaults
+
+-- | Whether or not to serve Console assets.
+data ConsoleStatus
+ConsoleEnabled :: ConsoleStatus
+ConsoleDisabled :: ConsoleStatus
+isConsoleEnabled :: ConsoleStatus -> Bool
 
 -- | An <a>Int</a> representing a Port number in the range 0 to 65536.
 data Port
@@ -25301,7 +25307,7 @@ WSConnectionInitTimeout :: Refined NonNegative Seconds -> WSConnectionInitTimeou
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Bool -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> Bool -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ServeOptions impl
+ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Bool -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> Bool -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Port
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -25311,7 +25317,7 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soJwtSecret] :: ServeOptions impl -> [JWTConfig]
 [soUnAuthRole] :: ServeOptions impl -> Maybe RoleName
 [soCorsConfig] :: ServeOptions impl -> CorsConfig
-[soEnableConsole] :: ServeOptions impl -> Bool
+[soConsoleStatus] :: ServeOptions impl -> ConsoleStatus
 [soConsoleAssetsDir] :: ServeOptions impl -> Maybe Text
 [soConsoleSentryDsn] :: ServeOptions impl -> Maybe Text
 [soEnableTelemetry] :: ServeOptions impl -> Bool
@@ -25366,6 +25372,7 @@ data DowngradeOptions
 DowngradeOptions :: Text -> Bool -> DowngradeOptions
 [dgoTargetVersion] :: DowngradeOptions -> Text
 [dgoDryRun] :: DowngradeOptions -> Bool
+instance GHC.Base.Functor Hasura.Server.Init.Config.Option
 instance Data.Traversable.Traversable Hasura.Server.Init.Config.PostgresConnInfo
 instance Data.Foldable.Foldable Hasura.Server.Init.Config.PostgresConnInfo
 instance GHC.Base.Functor Hasura.Server.Init.Config.PostgresConnInfo
@@ -25376,6 +25383,10 @@ instance GHC.Read.Read Hasura.Server.Init.Config.PostgresConnDetailsRaw
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresConnDetailsRaw
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresConnInfoRaw
 instance GHC.Show.Show Hasura.Server.Init.Config.PostgresConnInfoRaw
+instance GHC.Generics.Generic Hasura.Server.Init.Config.ConsoleStatus
+instance GHC.Classes.Ord Hasura.Server.Init.Config.ConsoleStatus
+instance GHC.Classes.Eq Hasura.Server.Init.Config.ConsoleStatus
+instance GHC.Show.Show Hasura.Server.Init.Config.ConsoleStatus
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.Port
 instance Control.DeepSeq.NFData Hasura.Server.Init.Config.Port
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.Port
@@ -25412,6 +25423,10 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.Port
+instance Control.DeepSeq.NFData Hasura.Server.Init.Config.ConsoleStatus
+instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.ConsoleStatus
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.ConsoleStatus
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.ConsoleStatus
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresConnDetailsRaw
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresConnDetailsRaw
 
@@ -25450,14 +25465,14 @@ considerEnvs :: (Monad m, FromEnv a) => [String] -> WithEnvT m (Maybe a)
 --   value to parse successfully.
 withOptions :: (Monad m, FromEnv option) => Maybe option -> [Option ()] -> WithEnvT m (Maybe option)
 
--- | Given the parse result for an option and the 'Option def' record for
---   that option, query the environment, and then merge the results from
---   the parser and environment.
+-- | Given the parse result for an option and the <tt>Option</tt> record
+--   for that option, query the environment, and then merge the results
+--   from the parser and environment.
 withOption :: (Monad m, FromEnv option) => Maybe option -> Option () -> WithEnvT m (Maybe option)
 
--- | Given the parse result for an option and the 'Option def' record for
---   that option, query the environment, and then merge the results from
---   the parser, environment, and the default.
+-- | Given the parse result for an option and the <tt>Option</tt> record
+--   for that option, query the environment, and then merge the results
+--   from the parser, environment, and the default.
 withOptionDefault :: (Monad m, FromEnv option) => Maybe option -> Option option -> WithEnvT m option
 
 -- | Switches in 'optparse-applicative' have different semantics then
@@ -25471,13 +25486,21 @@ withOptionDefault :: (Monad m, FromEnv option) => Maybe option -> Option option 
 --   This function executes with 'withOption Nothing' when the Switch is
 --   absent, otherwise it returns <a>True</a>.
 --   
---   An alternative solution would be to make Switches return 'Maybe _',
---   where '_' is an option specific sum type. This would allow us to use
---   <a>withOptionDefault</a> directly. Additionally, all fields of
+--   NOTE: An alternative solution might be to make Switches return 'Maybe
+--   _', where '_' is an option specific sum type. This would allow us to
+--   use <a>withOptionDefault</a> directly. Additionally, all fields of
 --   <tt>ServeOptionsRaw</tt> would become <a>Maybe</a> or <tt>First</tt>
 --   values which would allow us to write a 'Monoid ServeOptionsRaw'
 --   instance for combing different option sources.
+--   
+--   A <a>Monoid</a> instance would be super valuable to cleanup arg/env
+--   parsing but this solution feels somewhat unsatisfying.
 withOptionSwitch :: Monad m => Bool -> Option Bool -> WithEnvT m Bool
+
+-- | Given an 'Iso a Bool' we can apply the same boolean env merging
+--   semantics as we do for <a>Bool</a> in <tt>withOptionsSwitch</tt> to
+--   <tt>a</tt>.
+withOptionSwitch' :: Monad m => a -> (a -> Bool, Bool -> a) -> Option a -> WithEnvT m a
 
 -- | A <a>Read</a> style parser used for consuming Env Vars and building
 --   <tt>ReadM</tt> parsers for 'optparse-applicative'.
@@ -25574,7 +25597,7 @@ jwtSecretOption :: Option ()
 unAuthRoleOption :: Option ()
 corsDomainOption :: Option CorsConfig
 disableCorsOption :: Option Bool
-enableConsoleOption :: Option Bool
+enableConsoleOption :: Option ConsoleStatus
 consoleAssetsDirOption :: Option ()
 consoleSentryDsnOption :: Option ()
 enableTelemetryOption :: Option Bool
@@ -26884,7 +26907,7 @@ renderHtmlTemplate :: Template -> Value -> Either String Text
 configApiGetHandler :: forall m. (MonadIO m, MonadBaseControl IO m, UserAuthentication (TraceT m), HttpLog m, HasReporter m, HasResourceLimits m) => ServerCtx -> Maybe Text -> SpockCtxT () m ()
 data HasuraApp
 HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState -> !IO () -> HasuraApp
-mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Bool -> SchemaCacheRef -> ConnectionOptions -> KeepAliveDelay -> HashSet (EngineLogType Hasura) -> ServerCtx -> WSConnectionInitTimeout -> Store EmptyMetrics -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, MonadVersionAPIWithExtraData m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorageQueryAPI m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Bool -> SchemaCacheRef -> ConnectionOptions -> KeepAliveDelay -> HashSet (EngineLogType Hasura) -> ServerCtx -> WSConnectionInitTimeout -> Store EmptyMetrics -> m HasuraApp
 instance Hasura.Server.App.ConsoleRenderer m => Hasura.Server.App.ConsoleRenderer (Hasura.Tracing.TraceT m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Except.ExceptT e m)
