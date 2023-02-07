@@ -1,11 +1,8 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { OverlayTrigger } from 'react-bootstrap';
-import { FaQuestionCircle } from 'react-icons/fa';
 import { Collapse } from '@/new-components/deprecated';
 import { Switch } from '@/new-components/Switch';
-import { Tooltip } from '@/new-components/Tooltip';
 import { Table } from '@/features/hasura-metadata-types';
 import { useListAllTableColumns } from '@/features/Data';
 import {
@@ -21,6 +18,7 @@ import {
 } from './types';
 import { useRootFieldPermissions } from './hooks/useRootFieldPermissions';
 import { useSourceSupportStreaming } from '../../hooks/useSourceSupportStreaming';
+import { IconTooltip } from '../../../../../new-components/Tooltip/IconTooltip';
 
 export type RootKeyValues = 'query_root_fields' | 'subscription_root_fields';
 
@@ -141,33 +139,12 @@ export const ColumnRootFieldPermissions: React.FC<
             <div className="mx-xs">
               Enable GraphQL root field visibility customization.
             </div>
-
-            <OverlayTrigger
-              placement="right"
-              overlay={
-                <Tooltip tooltipContentChildren>
-                  By enabling this you can customize the root field permissions.
-                  When this switch is turned off, all values are enabled by
-                  default.
-                </Tooltip>
+            <IconTooltip
+              message={
+                'By enabling this you can customize the root field permissions. When this switch is turned off, all values are enabled by default.'
               }
-            >
-              <FaQuestionCircle aria-hidden="true" />
-            </OverlayTrigger>
+            />
           </div>
-
-          <OverlayTrigger
-            placement="right"
-            overlay={
-              <Tooltip tooltipContentChildren>
-                By enabling this you can customize the root field permissions.
-                When this switch is turned off, all values are enabled by
-                default.
-              </Tooltip>
-            }
-          >
-            <FaQuestionCircle aria-hidden="true" />
-          </OverlayTrigger>
         </div>
         <div
           className={`px-md ${clsx(!isRootPermissionsSwitchedOn && 'hidden')}`}
