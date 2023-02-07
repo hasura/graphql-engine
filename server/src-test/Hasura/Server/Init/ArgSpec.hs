@@ -822,8 +822,8 @@ serveParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap UUT.rsoEnableConsole result `Hspec.shouldSatisfy` \case
-        Opt.Success enableConsole -> enableConsole == True
+      fmap UUT.rsoConsoleStatus result `Hspec.shouldSatisfy` \case
+        Opt.Success enableConsole -> enableConsole == UUT.ConsoleEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

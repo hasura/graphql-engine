@@ -36,6 +36,8 @@ module Hasura.Server.Init.Config
 
     -- * ServeOptionsRaw
     ServeOptionsRaw (..),
+    ConsoleStatus (..),
+    isConsoleEnabled,
     Port,
     _getPort,
     mkPort,
@@ -99,6 +101,7 @@ data Option def = Option
     _envVar :: String,
     _helpMessage :: String
   }
+  deriving (Functor)
 
 -- | Helper function for pretty printing @Option a@.
 optionPP :: Option a -> (String, String)
@@ -269,7 +272,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoJwtSecret :: Maybe Auth.JWTConfig,
     rsoUnAuthRole :: Maybe Session.RoleName,
     rsoCorsConfig :: Maybe Cors.CorsConfig,
-    rsoEnableConsole :: Bool,
+    rsoConsoleStatus :: ConsoleStatus,
     rsoConsoleAssetsDir :: Maybe Text,
     rsoConsoleSentryDsn :: Maybe Text,
     rsoEnableTelemetry :: Maybe Bool,
@@ -307,6 +310,25 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
     rsoMetadataDefaults :: Maybe MetadataDefaults
   }
+
+-- | Whether or not to serve Console assets.
+data ConsoleStatus = ConsoleEnabled | ConsoleDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData ConsoleStatus
+
+instance Hashable ConsoleStatus
+
+isConsoleEnabled :: ConsoleStatus -> Bool
+isConsoleEnabled = \case
+  ConsoleEnabled -> True
+  ConsoleDisabled -> False
+
+instance FromJSON ConsoleStatus where
+  parseJSON = fmap (bool ConsoleDisabled ConsoleEnabled) . Aeson.parseJSON
+
+instance ToJSON ConsoleStatus where
+  toJSON = Aeson.toJSON . isConsoleEnabled
 
 -- | An 'Int' representing a Port number in the range 0 to 65536.
 newtype Port = Port {_getPort :: Int}
@@ -442,7 +464,7 @@ data ServeOptions impl = ServeOptions
     soJwtSecret :: [Auth.JWTConfig],
     soUnAuthRole :: Maybe Session.RoleName,
     soCorsConfig :: Cors.CorsConfig,
-    soEnableConsole :: Bool,
+    soConsoleStatus :: ConsoleStatus,
     soConsoleAssetsDir :: Maybe Text,
     soConsoleSentryDsn :: Maybe Text,
     soEnableTelemetry :: Bool,

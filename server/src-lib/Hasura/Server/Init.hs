@@ -157,7 +157,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soJwtSecret <- maybeToList <$> withOption rsoJwtSecret jwtSecretOption
   soUnAuthRole <- withOption rsoUnAuthRole unAuthRoleOption
   soCorsConfig <- mkCorsConfig sor rsoCorsConfig
-  soEnableConsole <- withOptionSwitch rsoEnableConsole enableConsoleOption
+  soConsoleStatus <- withOptionSwitch' rsoConsoleStatus (isConsoleEnabled, bool ConsoleDisabled ConsoleEnabled) enableConsoleOption
   soConsoleAssetsDir <- withOption rsoConsoleAssetsDir consoleAssetsDirOption
   soConsoleSentryDsn <- withOption rsoConsoleSentryDsn consoleSentryDsnOption
   soEnableTelemetry <- withOptionDefault rsoEnableTelemetry enableTelemetryOption

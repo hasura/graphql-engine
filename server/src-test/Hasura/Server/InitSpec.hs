@@ -58,7 +58,7 @@ emptyServeOptionsRaw =
       rsoJwtSecret = Nothing,
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
-      rsoEnableConsole = False,
+      rsoConsoleStatus = UUT.ConsoleDisabled,
       rsoConsoleAssetsDir = Nothing,
       rsoConsoleSentryDsn = Nothing,
       rsoEnableTelemetry = Nothing,
@@ -450,7 +450,7 @@ mkServeOptionsSpec =
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
-    Hspec.describe "soEnableConsole" $ do
+    Hspec.describe "soConsoleStatus" $ do
       Hspec.it "Default == False" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
@@ -459,7 +459,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right (UUT._default UUT.enableConsoleOption)
+        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right (UUT._default UUT.enableConsoleOption)
 
       -- NOTE: This is a little confusing. We are first simulating
       -- not providing the '--enable-console' flag with the env var set to 'true'.
@@ -473,17 +473,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
+        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableConsole = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoConsoleStatus = UUT.ConsoleEnabled}
             -- When
             env = [(UUT._envVar UUT.enableConsoleOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
+        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
 
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do

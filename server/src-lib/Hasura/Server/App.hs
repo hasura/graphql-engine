@@ -806,8 +806,8 @@ mkWaiApp ::
   -- | Set of environment variables for reference in UIs
   Env.Environment ->
   CorsConfig ->
-  -- | is console enabled - TODO: better type
-  Bool ->
+  -- | Is console enabled
+  ConsoleStatus ->
   -- | filepath to the console static assets directory - TODO: better type
   Maybe Text ->
   -- | DSN for console sentry integration
@@ -893,13 +893,13 @@ httpApp ::
   (ServerCtx -> Spock.SpockT m ()) ->
   CorsConfig ->
   ServerCtx ->
-  Bool ->
+  ConsoleStatus ->
   Maybe Text ->
   Maybe Text ->
   Bool ->
   EKG.Store EKG.EmptyMetrics ->
   Spock.SpockT m ()
-httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore = do
+httpApp setupHook corsCfg serverCtx consoleStatus consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore = do
   -- Additional spock action to run
   setupHook serverCtx
 
@@ -909,7 +909,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
   -- API Console and Root Dir
-  when (enableConsole && enableMetadata) serveApiConsole
+  when (isConsoleEnabled consoleStatus && enableMetadata) serveApiConsole
 
   -- Local console assets for server and CLI consoles
   serveApiConsoleAssets

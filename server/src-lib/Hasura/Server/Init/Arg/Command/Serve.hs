@@ -475,17 +475,18 @@ disableCorsOption =
       Config._helpMessage = "Disable CORS. Do not send any CORS headers on any request"
     }
 
-parseEnableConsole :: Opt.Parser Bool
+parseEnableConsole :: Opt.Parser Config.ConsoleStatus
 parseEnableConsole =
-  Opt.switch
-    ( Opt.long "enable-console"
-        <> Opt.help (Config._helpMessage enableConsoleOption)
-    )
+  (bool Config.ConsoleDisabled Config.ConsoleEnabled)
+    <$> Opt.switch
+      ( Opt.long "enable-console"
+          <> Opt.help (Config._helpMessage enableConsoleOption)
+      )
 
-enableConsoleOption :: Config.Option Bool
+enableConsoleOption :: Config.Option Config.ConsoleStatus
 enableConsoleOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.ConsoleDisabled,
       Config._envVar = "HASURA_GRAPHQL_ENABLE_CONSOLE",
       Config._helpMessage = "Enable API Console (default: false)"
     }

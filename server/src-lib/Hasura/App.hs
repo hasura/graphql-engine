@@ -724,7 +724,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
           setupHook
           env
           soCorsConfig
-          soEnableConsole
+          soConsoleStatus
           soConsoleAssetsDir
           soConsoleSentryDsn
           soEnableTelemetry

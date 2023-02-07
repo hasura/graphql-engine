@@ -9,6 +9,7 @@ module Hasura.Server.Init.Env
     withOptionDefault,
     withOptions,
     withOptionSwitch,
+    withOptionSwitch',
     considerEnv,
     considerEnvs,
 
@@ -74,7 +75,7 @@ considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 withOptions :: (Monad m, FromEnv option) => Maybe option -> [Config.Option ()] -> WithEnvT m (Maybe option)
 withOptions parsed options = foldl1 (<|>) <$> traverse (withOption parsed) options
 
--- | Given the parse result for an option and the 'Option def' record
+-- | Given the parse result for an option and the 'Option' record
 -- for that option, query the environment, and then merge the results
 -- from the parser and environment.
 withOption :: (Monad m, FromEnv option) => Maybe option -> Config.Option () -> WithEnvT m (Maybe option)
@@ -82,9 +83,9 @@ withOption parsed option =
   let option' = option {Config._default = Nothing}
    in withOptionDefault (fmap Just parsed) option'
 
--- | Given the parse result for an option and the 'Option def' record
--- for that option, query the environment, and then merge the results
--- from the parser, environment, and the default.
+-- | Given the parse result for an option and the 'Option' record for
+-- that option, query the environment, and then merge the results from
+-- the parser, environment, and the default.
 withOptionDefault :: (Monad m, FromEnv option) => Maybe option -> Config.Option option -> WithEnvT m option
 withOptionDefault parsed Config.Option {..} =
   onNothing parsed (fromMaybe _default <$> considerEnv _envVar)
@@ -100,14 +101,25 @@ withOptionDefault parsed Config.Option {..} =
 -- This function executes with 'withOption Nothing' when the Switch is
 -- absent, otherwise it returns 'True'.
 --
--- An alternative solution would be to make Switches return 'Maybe _',
--- where '_' is an option specific sum type. This would allow us to
--- use 'withOptionDefault' directly. Additionally, all fields of
--- 'ServeOptionsRaw' would become 'Maybe' or 'First' values which
--- would allow us to write a 'Monoid ServeOptionsRaw' instance for
--- combing different option sources.
+-- NOTE: An alternative solution might be to make Switches return
+-- 'Maybe _', where '_' is an option specific sum type. This would
+-- allow us to use 'withOptionDefault' directly. Additionally, all
+-- fields of 'ServeOptionsRaw' would become 'Maybe' or 'First' values
+-- which would allow us to write a 'Monoid ServeOptionsRaw' instance
+-- for combing different option sources.
+--
+-- A 'Monoid' instance would be super valuable to cleanup arg/env
+-- parsing but this solution feels somewhat unsatisfying.
 withOptionSwitch :: Monad m => Bool -> Config.Option Bool -> WithEnvT m Bool
-withOptionSwitch parsed option = bool (withOptionDefault Nothing option) (pure True) parsed
+withOptionSwitch parsed option = withOptionSwitch' parsed (id, id) option
+
+-- | Given an 'Iso a Bool' we can apply the same boolean env merging
+-- semantics as we do for 'Bool' in `withOptionsSwitch' to @a@.
+withOptionSwitch' :: Monad m => a -> (a -> Bool, Bool -> a) -> Config.Option a -> WithEnvT m a
+withOptionSwitch' parsed (fwd, bwd) option =
+  if fwd parsed
+    then pure (bwd True)
+    else fmap bwd $ withOptionDefault Nothing (fmap fwd option)
 
 --------------------------------------------------------------------------------
 
