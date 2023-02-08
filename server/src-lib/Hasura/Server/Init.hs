@@ -178,7 +178,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soEnableAllowlist <- withOptionSwitch rsoEnableAllowlist enableAllowlistOption
   soEnabledLogTypes <- withOptionDefault rsoEnabledLogTypes (enabledLogsOption @impl)
   soLogLevel <- withOptionDefault rsoLogLevel logLevelOption
-  soDevMode <- withOptionSwitch rsoDevMode graphqlDevModeOption
+  soDevMode <- withOptionSwitch' rsoDevMode (isDevModeEnabled, bool DevModeDisabled DevModeEnabled) graphqlDevModeOption
   soResponseInternalErrorsConfig <- mkResponseInternalErrorsConfig sor soDevMode
   soEventsHttpPoolSize <- withOptionDefault rsoEventsHttpPoolSize graphqlEventsHttpPoolSizeOption
   soEventsFetchInterval <- withOptionDefault rsoEventsFetchInterval graphqlEventsFetchIntervalOption
@@ -274,12 +274,11 @@ mkCorsConfig ServeOptionsRaw {..} mCfg = do
 -- | Fetch admin internal errors setting from the environment and
 -- merge it with the value consumed from the parser conditionally
 -- based on the dev mode.
-mkResponseInternalErrorsConfig :: Monad m => ServeOptionsRaw imp -> Bool -> WithEnvT m ResponseInternalErrorsConfig
+mkResponseInternalErrorsConfig :: Monad m => ServeOptionsRaw imp -> DevModeStatus -> WithEnvT m ResponseInternalErrorsConfig
 mkResponseInternalErrorsConfig ServeOptionsRaw {..} devMode = do
   adminInternalErrors <- withOptionDefault rsoAdminInternalErrors graphqlAdminInternalErrorsOption
-
   if
-      | devMode -> pure InternalErrorsAllRequests
+      | isDevModeEnabled devMode -> pure InternalErrorsAllRequests
       | adminInternalErrors -> pure InternalErrorsAdminOnly
       | otherwise -> pure InternalErrorsDisabled
 

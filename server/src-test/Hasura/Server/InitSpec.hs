@@ -73,7 +73,7 @@ emptyServeOptionsRaw =
       rsoEnableAllowlist = False,
       rsoEnabledLogTypes = Nothing,
       rsoLogLevel = Nothing,
-      rsoDevMode = False,
+      rsoDevMode = UUT.DevModeDisabled,
       rsoAdminInternalErrors = Nothing,
       rsoEventsHttpPoolSize = Nothing,
       rsoEventsFetchInterval = Nothing,
@@ -876,18 +876,18 @@ mkServeOptionsSpec =
 
         fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
           Right (soDevMode, soResponseInternalErrorsConfig) ->
-            getAll $ foldMap All [soDevMode == True, soResponseInternalErrorsConfig == UUT.InternalErrorsAllRequests]
+            getAll $ foldMap All [soDevMode == UUT.DevModeEnabled, soResponseInternalErrorsConfig == UUT.InternalErrorsAllRequests]
           Left _err -> False
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = UUT.DevModeEnabled}
             -- When
             env = [(UUT._envVar UUT.graphqlDevModeOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soDevMode result `Hspec.shouldBe` Right True
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right UUT.DevModeEnabled
 
     Hspec.describe "soAdminInternalErrors" $ do
       Hspec.it "Default == InternalErrorsAdminOnly" $ do

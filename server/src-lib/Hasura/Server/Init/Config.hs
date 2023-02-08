@@ -38,6 +38,8 @@ module Hasura.Server.Init.Config
     ServeOptionsRaw (..),
     ConsoleStatus (..),
     isConsoleEnabled,
+    DevModeStatus (..),
+    isDevModeEnabled,
     TelemetryStatus (..),
     isTelemetryEnabled,
     WsReadCookieStatus (..),
@@ -292,7 +294,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEnableAllowlist :: Bool,
     rsoEnabledLogTypes :: Maybe (HashSet (Logging.EngineLogType impl)),
     rsoLogLevel :: Maybe Logging.LogLevel,
-    rsoDevMode :: Bool,
+    rsoDevMode :: DevModeStatus,
     rsoAdminInternalErrors :: Maybe Bool,
     rsoEventsHttpPoolSize :: Maybe (Refined Positive Int),
     rsoEventsFetchInterval :: Maybe (Refined NonNegative Milliseconds),
@@ -333,6 +335,27 @@ instance FromJSON ConsoleStatus where
 
 instance ToJSON ConsoleStatus where
   toJSON = Aeson.toJSON . isConsoleEnabled
+
+-- | A representation of whether or not to enable Hasura Dev Mode.
+--
+-- See: https://hasura.io/docs/latest/deployment/graphql-engine-flags/config-examples/#dev-mode
+data DevModeStatus = DevModeEnabled | DevModeDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData DevModeStatus
+
+instance Hashable DevModeStatus
+
+isDevModeEnabled :: DevModeStatus -> Bool
+isDevModeEnabled = \case
+  DevModeEnabled -> True
+  DevModeDisabled -> False
+
+instance FromJSON DevModeStatus where
+  parseJSON = fmap (bool DevModeDisabled DevModeEnabled) . Aeson.parseJSON
+
+instance ToJSON DevModeStatus where
+  toJSON = Aeson.toJSON . isDevModeEnabled
 
 -- | A representation of whether or not to enable telemetry that is isomorphic to 'Bool'.
 data TelemetryStatus = TelemetryEnabled | TelemetryDisabled
@@ -533,7 +556,7 @@ data ServeOptions impl = ServeOptions
     -- | See note '$experimentalFeatures'
     soExperimentalFeatures :: HashSet Server.Types.ExperimentalFeature,
     soEventsFetchBatchSize :: Refined NonNegative Int,
-    soDevMode :: Bool,
+    soDevMode :: DevModeStatus,
     soGracefulShutdownTimeout :: Refined NonNegative Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: Server.Types.EventingMode,

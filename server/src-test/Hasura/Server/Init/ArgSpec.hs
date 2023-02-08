@@ -1370,7 +1370,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoDevMode result `Hspec.shouldSatisfy` \case
-        Opt.Success devMode -> devMode == True
+        Opt.Success devMode -> UUT.isDevModeEnabled devMode
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

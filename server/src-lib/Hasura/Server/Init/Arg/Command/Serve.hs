@@ -772,17 +772,18 @@ parsePlanCacheSize =
             )
       )
 
-parseGraphqlDevMode :: Opt.Parser Bool
+parseGraphqlDevMode :: Opt.Parser Config.DevModeStatus
 parseGraphqlDevMode =
-  Opt.switch
-    ( Opt.long "dev-mode"
-        <> Opt.help (Config._helpMessage graphqlDevModeOption)
-    )
+  bool Config.DevModeDisabled Config.DevModeEnabled
+    <$> Opt.switch
+      ( Opt.long "dev-mode"
+          <> Opt.help (Config._helpMessage graphqlDevModeOption)
+      )
 
-graphqlDevModeOption :: Config.Option Bool
+graphqlDevModeOption :: Config.Option Config.DevModeStatus
 graphqlDevModeOption =
   Config.Option
-    { Config._default = False,
+    { Config._default = Config.DevModeDisabled,
       Config._envVar = "HASURA_GRAPHQL_DEV_MODE",
       Config._helpMessage = "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
     }
