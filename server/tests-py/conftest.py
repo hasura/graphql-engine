@@ -466,8 +466,11 @@ def hge_key(
         # If the environment variable is set, use it.
         # This will be used in the event that we start the server outside the test harness.
         # We skip the test if it explicitly requires that we have no admin secret.
+        super_marker = request.node.get_closest_marker('requires_an_admin_secret')
         anti_marker = request.node.get_closest_marker('no_admin_secret')
         env_key = os.environ.get('HASURA_GRAPHQL_ADMIN_SECRET')
+        if super_marker and not env_key:
+            pytest.skip('This test requires that the admin secret is set.')
         if anti_marker and env_key:
             pytest.skip('This test requires that the admin secret is not set.')
         return env_key
