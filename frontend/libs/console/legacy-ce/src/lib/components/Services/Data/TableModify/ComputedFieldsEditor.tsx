@@ -1,6 +1,7 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -10,7 +11,6 @@ import { dataSource, getComputedFieldComment } from '../../../../dataSources';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../types';
 import { Schema, ComputedField, Table } from '../../../../dataSources/types';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';

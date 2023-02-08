@@ -9,6 +9,7 @@ import {
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationships';
 import { Button } from '@/new-components/Button';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -26,7 +27,6 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
 import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -536,8 +536,10 @@ const Relationships = ({
                 <h4 className={styles.subheading_text}>
                   Table Relationships
                   <ToolTip message={'Relationships to tables / views'} />
-                  &nbsp;
-                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                  <KnowMoreLink
+                    href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html"
+                    className="font-normal"
+                  />
                 </h4>
                 {addedRelationshipsView}
                 {getAddRelSection()}

@@ -8,6 +8,7 @@ import 'brace/mode/json';
 import 'brace/theme/github';
 import { LS_KEYS, setLSItem, getLSItem } from '@/utils/localStorage';
 import { Button } from '@/new-components/Button';
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import { getPrimaryKeysFromTable } from './utils';
 import { RESET } from '../TableModify/ModifyActions';
 import {
@@ -78,7 +79,7 @@ import {
   dataSource,
   isFeatureSupported,
 } from '../../../../dataSources';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import {
   getFilterQueries,
   replaceLegacyOperators,
@@ -606,11 +607,7 @@ class Permissions extends Component {
         let knowMoreHtml;
         if (knowMoreRef) {
           knowMoreHtml = (
-            <span
-              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
-            >
-              <KnowMoreLink href={knowMoreRef} />
-            </span>
+            <KnowMoreLink href={knowMoreRef} className="font-normal" />
           );
         }
 

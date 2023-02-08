@@ -1,8 +1,9 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 
+import { KnowMoreLink } from '@/new-components/KnowMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
+
 import { checkConstraintExpression } from '../TooltipMessages';
 import { inputStyles } from '../../constants';
 
