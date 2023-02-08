@@ -20,6 +20,8 @@ module Test.AgentAPI
     queryExpectError,
     explain,
     getMetrics,
+    mutationGuarded,
+    guardMutationResponse,
     getSourceNameAndConfig,
     mergeAgentConfig,
   )
@@ -107,6 +109,18 @@ explain queryRequest = do
 
 getMetrics :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m Text
 getMetrics = client // API._metrics
+
+mutationGuarded :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.MutationRequest -> AgentClientT m API.MutationResponse
+mutationGuarded mutationRequest = do
+  (sourceName, config) <- getSourceNameAndConfig
+  guardMutationResponse =<< (client // API._mutation) sourceName config mutationRequest
+
+guardMutationResponse :: MonadThrow m => Union API.MutationResponses -> m API.MutationResponse
+guardMutationResponse = API.mutationCase defaultAction successAction errorAction
+  where
+    defaultAction = expectationFailure "Expected MutationResponse"
+    successAction q = pure q
+    errorAction e = expectationFailure $ "Expected MutationResponse, got " <> show e
 
 -------------------------------------------------------------------------------
 

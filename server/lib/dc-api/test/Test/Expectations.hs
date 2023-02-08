@@ -1,10 +1,11 @@
 module Test.Expectations
   ( jsonShouldBe,
     rowsShouldBe,
+    mutationResponseShouldBe,
   )
 where
 
-import Control.Lens ((%~), (&))
+import Control.Lens ((%~), (&), _Just)
 import Control.Monad (unless)
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -16,7 +17,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
 import Data.Yaml qualified as Yaml
 import GHC.Stack (HasCallStack)
-import Hasura.Backends.DataConnector.API (FieldName, FieldValue, deserializeAsRelationshipFieldValue, mkRelationshipFieldValue, qrRows)
+import Hasura.Backends.DataConnector.API
 import System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLayer (..), SGR (..), hSupportsANSIColor, setSGRCode)
 import System.IO (stdout)
 import Test.Sandwich (expectationFailure)
@@ -98,3 +99,11 @@ renderDiffString useColor actual expected =
 
     colorSpan c s = colorCode (SetColor Foreground Dull c) ++ s ++ colorCode Reset
     colorCode sgr = if useColor then setSGRCode [sgr] else ""
+
+mutationResponseShouldBe :: (HasCallStack, MonadThrow m, MonadIO m) => MutationResponse -> MutationResponse -> m ()
+mutationResponseShouldBe actual expected =
+  (normalizeMutationResponse actual) `jsonShouldBe` (normalizeMutationResponse expected)
+
+normalizeMutationResponse :: MutationResponse -> MutationResponse
+normalizeMutationResponse response =
+  response & mrOperationResults . traverse %~ (morReturning . _Just . traverse %~ normalize)

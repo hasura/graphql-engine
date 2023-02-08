@@ -9,6 +9,7 @@ module Test.Data
     allTableRows,
     -- = Utilities
     emptyQuery,
+    emptyMutationRequest,
     sortBy,
     filterColumnsByQueryFields,
     filterColumns,
@@ -28,13 +29,14 @@ module Test.Data
     _ColumnFieldNull,
     _RelationshipFieldRows,
     orderByColumn,
+    insertAutoIncPk,
   )
 where
 
 import Codec.Compression.GZip qualified as GZip
 import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
+import Control.Lens (Index, IxValue, Ixed, Traversal', at, ix, lens, (%~), (&), (?~), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Null, _Number, _String)
@@ -349,6 +351,7 @@ data TestData = TestData
     -- = Utility functions
     _tdColumnName :: Text -> API.ColumnName,
     _tdColumnField :: API.TableName -> Text -> API.Field,
+    _tdColumnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema,
     _tdQueryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
@@ -396,6 +399,7 @@ mkTestData schemaResponse TestConfig {..} =
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
       _tdColumnName = formatColumnName . API.ColumnName,
       _tdColumnField = columnField,
+      _tdColumnInsertSchema = columnInsertSchema,
       _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName $ API.ColumnName name),
       _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName . API.ColumnName,
       _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName . API.ColumnName,
@@ -435,6 +439,13 @@ mkTestData schemaResponse TestConfig {..} =
         columnName' = formatColumnName $ API.ColumnName columnName
         scalarType = findColumnScalarType schemaResponse tableName columnName'
 
+    columnInsertSchema :: API.TableName -> Text -> API.ColumnInsertSchema
+    columnInsertSchema tableName columnName =
+      API.ColumnInsertSchema columnName' scalarType
+      where
+        columnName' = formatColumnName $ API.ColumnName columnName
+        scalarType = findColumnScalarType schemaResponse tableName columnName'
+
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
   case NonEmpty.nonEmpty prefix of
@@ -456,6 +467,9 @@ findColumnScalarType API.SchemaResponse {..} tableName columnName =
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
+
+emptyMutationRequest :: API.MutationRequest
+emptyMutationRequest = API.MutationRequest mempty mempty mempty
 
 sortBy :: (Ixed m, Ord (IxValue m)) => Index m -> [m] -> [m]
 sortBy propName = sortOn (^? ix propName)
@@ -528,3 +542,11 @@ _RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
 orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
   API.OrderByElement targetPath (API.OrderByColumn columnName) orderDirection
+
+insertAutoIncPk :: Text -> Integer -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
+insertAutoIncPk pkFieldName startingPkId roows =
+  zip [startingPkId ..] roows
+    & fmap
+      ( \(albumId, albumRow) ->
+          albumRow & at (API.FieldName pkFieldName) ?~ API.mkColumnFieldValue (J.Number $ fromInteger albumId)
+      )
