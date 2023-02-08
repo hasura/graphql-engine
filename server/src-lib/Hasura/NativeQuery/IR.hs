@@ -13,7 +13,7 @@ import Hasura.RQL.Types.Column (ColumnValue)
 -- | The default implementation of an invocation of a native query.
 data NativeQueryImpl b field = NativeQueryImpl
   { -- | The defined name of the native query.
-    nqRootFieldName :: NativeQueryNameImpl,
+    nqRootFieldName :: NativeQueryName,
     -- | The raw sql to use in the query
     nqInterpolatedQuery :: InterpolatedQuery field,
     -- | The arguments passed to the native query, if any.

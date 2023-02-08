@@ -27,6 +27,7 @@ where
 import Control.Monad.Writer (Writer, runWriter)
 import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as Map
+import Data.Text.Extended (toTxt)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.RenameIdentifiers
@@ -41,7 +42,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
 import Hasura.NativeQuery.IR (NativeQueryImpl (..))
-import Hasura.NativeQuery.Metadata (NativeQueryNameImpl (..))
+import Hasura.NativeQuery.Metadata (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)
@@ -131,8 +132,8 @@ selectFromToFromItem prefix = \case
     S.FIIdentifier (S.tableAliasToIdentifier $ nativeQueryNameToAlias (nqRootFieldName nq))
 
 -- | Given a @NativeQueryName@, what should we call the CTE generated for it?
-nativeQueryNameToAlias :: NativeQueryNameImpl -> S.TableAlias
-nativeQueryNameToAlias nqName = S.mkTableAlias ("cte_" <> getNativeQueryNameImpl nqName)
+nativeQueryNameToAlias :: NativeQueryName -> S.TableAlias
+nativeQueryNameToAlias nqName = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName))
 
 -- | Converts a function name to an 'Identifier'.
 --
