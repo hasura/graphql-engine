@@ -901,7 +901,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnableTelemetry result `Hspec.shouldSatisfy` \case
-        Opt.Success enableTelemetry -> enableTelemetry == Just True
+        Opt.Success enableTelemetry -> enableTelemetry == Just UUT.TelemetryEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

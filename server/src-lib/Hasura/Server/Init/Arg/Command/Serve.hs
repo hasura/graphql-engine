@@ -530,7 +530,7 @@ consoleSentryDsnOption =
     }
 
 -- NOTE: Should this be an 'Opt.flag'?
-parseEnableTelemetry :: Opt.Parser (Maybe Bool)
+parseEnableTelemetry :: Opt.Parser (Maybe Config.TelemetryStatus)
 parseEnableTelemetry =
   Opt.optional $
     Opt.option
@@ -539,10 +539,10 @@ parseEnableTelemetry =
           <> Opt.help (Config._helpMessage enableTelemetryOption)
       )
 
-enableTelemetryOption :: Config.Option Bool
+enableTelemetryOption :: Config.Option Config.TelemetryStatus
 enableTelemetryOption =
   Config.Option
-    { _default = True,
+    { _default = Config.TelemetryEnabled,
       _envVar = "HASURA_GRAPHQL_ENABLE_TELEMETRY",
       _helpMessage = "Enable anonymous telemetry on the server and console. For more information, see: https://hasura.io/docs/latest/guides/telemetry (default: true)"
     }

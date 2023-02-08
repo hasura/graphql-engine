@@ -216,6 +216,9 @@ instance FromEnv Bool where
           ++ show falseVals
           ++ ". All values are case insensitive"
 
+instance FromEnv Config.TelemetryStatus where
+  fromEnv = fmap (bool Config.TelemetryDisabled Config.TelemetryEnabled) . fromEnv
+
 instance FromEnv Config.WsReadCookieStatus where
   fromEnv = fmap (bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled) . fromEnv
 

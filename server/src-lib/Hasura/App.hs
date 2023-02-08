@@ -820,7 +820,7 @@ mkHGEServer setupHook env ServeOptions {..} serverCtx@ServerCtx {..} ekgStore ch
 
   -- start a background thread for telemetry
   _telemetryThread <-
-    if soEnableTelemetry
+    if isTelemetryEnabled soEnableTelemetry
       then do
         lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
 
@@ -1248,14 +1248,14 @@ instance MonadIO m => MonadMetadataStorageQueryAPI (PGMetadataStorageAppT m)
 
 --- helper functions ---
 
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> Either String Text
+mkConsoleHTML :: Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template
     A.object
       [ "isAdminSecretSet" A..= isAdminSecretSet authMode,
         "consolePath" A..= consolePath,
-        "enableTelemetry" A..= boolToText enableTelemetry,
+        "enableTelemetry" A..= boolToText (isTelemetryEnabled enableTelemetry),
         "cdnAssets" A..= boolToText (isNothing consoleAssetsDir),
         "consoleSentryDsn" A..= fromMaybe "" consoleSentryDsn,
         "assetsVersion" A..= consoleAssetsVersion,

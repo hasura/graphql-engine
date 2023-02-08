@@ -729,7 +729,7 @@ consoleAssetsHandler logger loggingSettings dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> m (Either String Text)
+  renderConsole :: Text -> AuthMode -> TelemetryStatus -> Maybe Text -> Maybe Text -> m (Either String Text)
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
   renderConsole a b c d e = lift $ renderConsole a b c d e
@@ -814,7 +814,7 @@ mkWaiApp ::
   -- | DSN for console sentry integration
   Maybe Text ->
   -- | is telemetry enabled
-  Bool ->
+  TelemetryStatus ->
   SchemaCacheRef ->
   WS.ConnectionOptions ->
   KeepAliveDelay ->
@@ -897,7 +897,7 @@ httpApp ::
   ConsoleStatus ->
   Maybe Text ->
   Maybe Text ->
-  Bool ->
+  TelemetryStatus ->
   EKG.Store EKG.EmptyMetrics ->
   Spock.SpockT m ()
 httpApp setupHook corsCfg serverCtx consoleStatus consoleAssetsDir consoleSentryDsn enableTelemetry ekgStore = do

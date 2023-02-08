@@ -38,6 +38,8 @@ module Hasura.Server.Init.Config
     ServeOptionsRaw (..),
     ConsoleStatus (..),
     isConsoleEnabled,
+    TelemetryStatus (..),
+    isTelemetryEnabled,
     WsReadCookieStatus (..),
     isWsReadCookieEnabled,
     Port,
@@ -277,7 +279,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoConsoleStatus :: ConsoleStatus,
     rsoConsoleAssetsDir :: Maybe Text,
     rsoConsoleSentryDsn :: Maybe Text,
-    rsoEnableTelemetry :: Maybe Bool,
+    rsoEnableTelemetry :: Maybe TelemetryStatus,
     rsoWsReadCookie :: WsReadCookieStatus,
     rsoStringifyNum :: Schema.Options.StringifyNumbers,
     rsoDangerousBooleanCollapse :: Maybe Schema.Options.DangerouslyCollapseBooleans,
@@ -331,6 +333,25 @@ instance FromJSON ConsoleStatus where
 
 instance ToJSON ConsoleStatus where
   toJSON = Aeson.toJSON . isConsoleEnabled
+
+-- | A representation of whether or not to enable telemetry that is isomorphic to 'Bool'.
+data TelemetryStatus = TelemetryEnabled | TelemetryDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData TelemetryStatus
+
+instance Hashable TelemetryStatus
+
+isTelemetryEnabled :: TelemetryStatus -> Bool
+isTelemetryEnabled = \case
+  TelemetryEnabled -> True
+  TelemetryDisabled -> False
+
+instance FromJSON TelemetryStatus where
+  parseJSON = fmap (bool TelemetryDisabled TelemetryEnabled) . Aeson.parseJSON
+
+instance ToJSON TelemetryStatus where
+  toJSON = Aeson.toJSON . isTelemetryEnabled
 
 -- | A representation of whether or not to read the websocket cookie
 -- on initial handshake that is isomorphic to 'Bool'. See
@@ -490,7 +511,7 @@ data ServeOptions impl = ServeOptions
     soConsoleStatus :: ConsoleStatus,
     soConsoleAssetsDir :: Maybe Text,
     soConsoleSentryDsn :: Maybe Text,
-    soEnableTelemetry :: Bool,
+    soEnableTelemetry :: TelemetryStatus,
     soStringifyNum :: Schema.Options.StringifyNumbers,
     soDangerousBooleanCollapse :: Schema.Options.DangerouslyCollapseBooleans,
     soEnabledAPIs :: HashSet API,

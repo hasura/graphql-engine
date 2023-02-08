@@ -546,17 +546,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right UUT.TelemetryDisabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just UUT.TelemetryDisabled}
             -- When
             env = [(UUT._envVar UUT.enableTelemetryOption, "true")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right UUT.TelemetryDisabled
 
     Hspec.describe "soStringifyNum" $ do
       Hspec.it "Default == Don'tStringifyNumbers" $ do
