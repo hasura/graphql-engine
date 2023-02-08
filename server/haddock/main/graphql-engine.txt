@@ -25217,7 +25217,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe Bool -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -25231,7 +25231,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoConsoleAssetsDir] :: ServeOptionsRaw impl -> Maybe Text
 [rsoConsoleSentryDsn] :: ServeOptionsRaw impl -> Maybe Text
 [rsoEnableTelemetry] :: ServeOptionsRaw impl -> Maybe Bool
-[rsoWsReadCookie] :: ServeOptionsRaw impl -> Bool
+[rsoWsReadCookie] :: ServeOptionsRaw impl -> WsReadCookieStatus
 [rsoStringifyNum] :: ServeOptionsRaw impl -> StringifyNumbers
 [rsoDangerousBooleanCollapse] :: ServeOptionsRaw impl -> Maybe DangerouslyCollapseBooleans
 [rsoEnabledAPIs] :: ServeOptionsRaw impl -> Maybe (HashSet API)
@@ -25271,6 +25271,14 @@ data ConsoleStatus
 ConsoleEnabled :: ConsoleStatus
 ConsoleDisabled :: ConsoleStatus
 isConsoleEnabled :: ConsoleStatus -> Bool
+
+-- | A representation of whether or not to read the websocket cookie on
+--   initial handshake that is isomorphic to <a>Bool</a>. See
+--   <tt>wsReadCookieOption</tt> for more details.
+data WsReadCookieStatus
+WsReadCookieEnabled :: WsReadCookieStatus
+WsReadCookieDisabled :: WsReadCookieStatus
+isWsReadCookieEnabled :: WsReadCookieStatus -> Bool
 
 -- | An <a>Int</a> representing a Port number in the range 0 to 65536.
 data Port
@@ -25408,6 +25416,9 @@ instance GHC.Generics.Generic Hasura.Server.Init.Config.ConsoleStatus
 instance GHC.Classes.Ord Hasura.Server.Init.Config.ConsoleStatus
 instance GHC.Classes.Eq Hasura.Server.Init.Config.ConsoleStatus
 instance GHC.Show.Show Hasura.Server.Init.Config.ConsoleStatus
+instance GHC.Generics.Generic Hasura.Server.Init.Config.WsReadCookieStatus
+instance GHC.Classes.Eq Hasura.Server.Init.Config.WsReadCookieStatus
+instance GHC.Show.Show Hasura.Server.Init.Config.WsReadCookieStatus
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.Port
 instance Control.DeepSeq.NFData Hasura.Server.Init.Config.Port
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.Port
@@ -25444,6 +25455,10 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.Port
+instance Control.DeepSeq.NFData Hasura.Server.Init.Config.WsReadCookieStatus
+instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.WsReadCookieStatus
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.WsReadCookieStatus
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.WsReadCookieStatus
 instance Control.DeepSeq.NFData Hasura.Server.Init.Config.ConsoleStatus
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.ConsoleStatus
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.ConsoleStatus
@@ -25560,6 +25575,7 @@ instance Hasura.Server.Init.Env.FromEnv GHC.Types.Int
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.AdminSecretHash
 instance Hasura.Server.Init.Env.FromEnv Hasura.Session.RoleName
 instance Hasura.Server.Init.Env.FromEnv GHC.Types.Bool
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.WsReadCookieStatus
 instance Hasura.Server.Init.Env.FromEnv Data.Aeson.Types.Internal.Value
 instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Metadata.MetadataDefaults
 instance Hasura.Server.Init.Env.FromEnv Hasura.RQL.Types.Metadata.Metadata
@@ -25622,7 +25638,7 @@ enableConsoleOption :: Option ConsoleStatus
 consoleAssetsDirOption :: Option ()
 consoleSentryDsnOption :: Option ()
 enableTelemetryOption :: Option Bool
-wsReadCookieOption :: Option Bool
+wsReadCookieOption :: Option WsReadCookieStatus
 stringifyNumOption :: Option StringifyNumbers
 dangerousBooleanCollapseOption :: Option DangerouslyCollapseBooleans
 enabledAPIsOption :: Option (HashSet API)
